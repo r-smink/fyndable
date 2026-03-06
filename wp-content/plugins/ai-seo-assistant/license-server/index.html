@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SEO Assistant - License Server Admin</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-inactive {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .status-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .license-key {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .hidden {
+            display: none;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .tier-select {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .tier-option {
+            flex: 1;
+            min-width: 150px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tier-option:hover, .tier-option.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .tier-option h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .tier-option .price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .tier-option .sites {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 AI SEO Assistant License Server</h1>
+            <p>Beheer licenties voor je AI SEO Assistant plugin klanten</p>
+        </header>
+
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-licenses">0</div>
+                <div class="stat-label">Total Licenses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="active-licenses">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="expired-licenses">0</div>
+                <div class="stat-label">Expired</div>
+            </div>
+        </div>
+
+        <!-- Create License Form -->
+        <div class="card">
+            <h2>➕ Create New License</h2>
+            <div id="create-alert"></div>
+            
+            <form id="create-form">
+                <div class="form-group">
+                    <label>Tier</label>
+                    <div class="tier-select">
+                        <div class="tier-option" data-tier="starter" onclick="selectTier('starter')">
+                            <h3>Starter</h3>
+                            <div class="price">€49</div>
+                            <div class="sites">1 site</div>
+                        </div>
+                        <div class="tier-option" data-tier="professional" onclick="selectTier('professional')">
+                            <h3>Professional</h3>
+                            <div class="price">€99</div>
+                            <div class="sites">3 sites</div>
+                        </div>
+                        <div class="tier-option" data-tier="business" onclick="selectTier('business')">
+                            <h3>Business</h3>
+                            <div class="price">€199</div>
+                            <div class="sites">10 sites</div>
+                        </div>
+                        <div class="tier-option" data-tier="agency" onclick="selectTier('agency')">
+                            <h3>Agency</h3>
+                            <div class="price">€499</div>
+                            <div class="sites">100 sites</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="tier" name="tier" value="starter">
+                </div>
+
+                <div class="form-group">
+                    <label for="product_id">Product</label>
+                    <select id="product_id" name="product_id">
+                        <option value="ai-seo-assistant-pro">AI SEO Assistant Pro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="expires_days">Validity Period</label>
+                    <select id="expires_days" name="expires_days">
+                        <option value="30">30 days</option>
+                        <option value="90">90 days</option>
+                        <option value="365" selected>1 year</option>
+                        <option value="">Lifetime</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer_email">Customer Email</label>
+                    <input type="email" id="customer_email" name="customer_email" placeholder="customer@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer_name">Customer Name</label>
+                    <input type="text" id="customer_name" name="customer_name" placeholder="John Doe">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Optional notes..."></textarea>
+                </div>
+
+                <button type="submit">Create License</button>
+            </form>
+
+            <div id="created-license" class="hidden" style="margin-top: 20px; padding: 20px; background: #d4edda; border-radius: 4px;">
+                <h3>✅ License Created Successfully!</h3>
+                <p style="margin: 10px 0;">License Key:</p>
+                <div class="license-key" id="new-license-key"></div>
+                <p style="margin-top: 15px; font-size: 14px; color: #155724;">
+                    Send this key to your customer. They can activate it in their WordPress admin under AI SEO → License.
+                </p>
+                <button type="button" class="btn-secondary" onclick="copyLicenseKey()" style="margin-top: 10px;">Copy to Clipboard</button>
+            </div>
+        </div>
+
+        <!-- License List -->
+        <div class="card">
+            <h2>📋 License Overview</h2>
+            <div style="margin-bottom: 20px;">
+                <button type="button" class="btn-secondary" onclick="loadLicenses()">🔄 Refresh</button>
+                <select id="filter-status" onchange="loadLicenses()" style="width: auto; margin-left: 10px;">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="expired">Expired</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>License Key</th>
+                        <th>Customer</th>
+                        <th>Tier</th>
+                        <th>Status</th>
+                        <th>Sites</th>
+                        <th>Expires</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="license-table">
+                    <tr>
+                        <td colspan="7" style="text-align: center;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'license-server.php';
+
+        // Tier selection
+        function selectTier(tier) {
+            document.querySelectorAll('.tier-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.tier-option[data-tier="${tier}"]`).classList.add('selected');
+            document.getElementById('tier').value = tier;
+        }
+
+        // Select default tier
+        selectTier('starter');
+
+        // Create license form
+        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch(`${API_URL}?action=create_license`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('create-alert', 'success', 'License created successfully!');
+                    document.getElementById('new-license-key').textContent = data.license_key;
+                    document.getElementById('created-license').classList.remove('hidden');
+                    loadLicenses();
+                    this.reset();
+                    selectTier('starter');
+                } else {
+                    showAlert('create-alert', 'error', data.message || 'Failed to create license');
+                }
+            } catch (error) {
+                showAlert('create-alert', 'error', 'Network error: ' + error.message);
+            }
+        });
+
+        // Copy license key
+        function copyLicenseKey() {
+            const key = document.getElementById('new-license-key').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                alert('License key copied to clipboard!');
+            });
+        }
+
+        // Show alert
+        function showAlert(elementId, type, message) {
+            const alert = document.getElementById(elementId);
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            setTimeout(() => {
+                alert.className = 'hidden';
+            }, 5000);
+        }
+
+        // Load licenses
+        async function loadLicenses() {
+            const status = document.getElementById('filter-status').value;
+            const tbody = document.getElementById('license-table');
+            
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading...</td></tr>';
+            
+            try {
+                const url = new URL(API_URL, window.location.href);
+                url.searchParams.append('action', 'list_licenses');
+                if (status) url.searchParams.append('status', status);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.licenses) {
+                    updateStats(data.licenses);
+                    
+                    if (data.licenses.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No licenses found</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = data.licenses.map(license => {
+                        const sites = license.sites ? JSON.parse(license.sites) : [];
+                        return `
+                            <tr>
+                                <td><code>${maskLicenseKey(license.license_key)}</code></td>
+                                <td>${license.customer_name || '-'}<br><small>${license.customer_email || ''}</small></td>
+                                <td>${capitalize(license.tier)}</td>
+                                <td><span class="status-badge status-${license.status}">${license.status}</span></td>
+                                <td>${sites.length} / ${license.max_sites}</td>
+                                <td>${license.expires_at ? formatDate(license.expires_at) : 'Never'}</td>
+                                <td>${formatDate(license.created_at)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading licenses: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Update statistics
+        function updateStats(licenses) {
+            document.getElementById('total-licenses').textContent = licenses.length;
+            document.getElementById('active-licenses').textContent = licenses.filter(l => l.status === 'active').length;
+            document.getElementById('expired-licenses').textContent = licenses.filter(l => l.status === 'expired').length;
+        }
+
+        // Helper functions
+        function maskLicenseKey(key) {
+            return key.substring(0, 8) + '****' + key.substring(key.length - 4);
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString();
+        }
+
+        // Load on page load
+        loadLicenses();
+    </script>
+</body>
+</html>
