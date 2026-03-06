@@ -40,8 +40,11 @@ class AdminPage
     private LicenseManager $licenseManager;
     private LicenseAPI $licenseAPI;
     private FeatureGate $featureGate;
+    
+    // Content decay detection
+    private ContentDecay $contentDecay;
 
-    public function __construct(string $pluginFile, Settings $settings, SerpService $serp, SnapshotRepository $snapshots, LlmClient $llm, HealthLogger $health, AiOverviewRepository $aiOverviewRepo, CompetitorGapService $competitorGap, KeywordExplorer $keywordExplorer, AuditService $audit, BulkActions $bulk, PageSpeedClient $pageSpeed, PostTypes $postTypes, ImageClient $imageClient, GscClient $gsc, TopicRepository $topics, CalendarWorkflow $calendarWorkflow, PsiLogger $psiLogger, TechChecker $techChecker, PsiAlerter $psiAlerter, TruSEOSCORE $truseoScore, RedirectionManager $redirectionManager, NotFoundMonitor $notFoundMonitor, LinkAssistant $linkAssistant, ImageAltGenerator $imageAltGenerator, LocalSEO $localSEO, ImportExport $importExport, RolePermissions $rolePermissions, RobotsTxt $robotsTxt, LicenseManager $licenseManager, LicenseAPI $licenseAPI, FeatureGate $featureGate)
+    public function __construct(string $pluginFile, Settings $settings, SerpService $serp, SnapshotRepository $snapshots, LlmClient $llm, HealthLogger $health, AiOverviewRepository $aiOverviewRepo, CompetitorGapService $competitorGap, KeywordExplorer $keywordExplorer, AuditService $audit, BulkActions $bulk, PageSpeedClient $pageSpeed, PostTypes $postTypes, ImageClient $imageClient, GscClient $gsc, TopicRepository $topics, CalendarWorkflow $calendarWorkflow, PsiLogger $psiLogger, TechChecker $techChecker, PsiAlerter $psiAlerter, TruSEOSCORE $truseoScore, RedirectionManager $redirectionManager, NotFoundMonitor $notFoundMonitor, LinkAssistant $linkAssistant, ImageAltGenerator $imageAltGenerator, LocalSEO $localSEO, ImportExport $importExport, RolePermissions $rolePermissions, RobotsTxt $robotsTxt, LicenseManager $licenseManager, LicenseAPI $licenseAPI, FeatureGate $featureGate, ContentDecay $contentDecay)
     {
         $this->pluginFile = $pluginFile;
         $this->settings = $settings;
@@ -75,6 +78,7 @@ class AdminPage
         $this->licenseManager = $licenseManager;
         $this->licenseAPI = $licenseAPI;
         $this->featureGate = $featureGate;
+        $this->contentDecay = $contentDecay;
     }
 
     public function register(): void
@@ -242,6 +246,14 @@ class AdminPage
             'manage_options',
             'ai-seo-assistant-license',
             [$this, 'renderLicense']
+        );
+        add_submenu_page(
+            'ai-seo-assistant',
+            __('Content Decay', 'ai-seo-assistant'),
+            __('Content Decay', 'ai-seo-assistant'),
+            'manage_options',
+            'ai-seo-assistant-decay',
+            [$this, 'renderDecayPage']
         );
     }
 
@@ -717,6 +729,17 @@ class AdminPage
         $metrics = $this->snapshots->metrics();
         $trend = $this->snapshots->dailyAvgBest(14);
         $alertThreshold = (float)$this->settings->get('perf_threshold', 10);
+        
+        // Get decay stats
+        $decayStats = $this->contentDecay->getDecayStats();
+
+        // Enqueue modern admin styles
+        wp_enqueue_style(
+            'aiseo-admin-modern',
+            plugins_url('assets/admin-modern.css', $this->pluginFile),
+            [],
+            filemtime(plugin_dir_path($this->pluginFile) . 'assets/admin-modern.css')
+        );
 
         wp_enqueue_script(
             'chart-js',
@@ -739,54 +762,183 @@ class AdminPage
             'trends' => $trend,
         ]);
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('AI SEO Dashboard', 'ai-seo-assistant'); ?></h1>
-            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-                <div class="card" style="padding:12px; flex:1 1 180px; background:#f5f5f5;">
-                    <strong><?php esc_html_e('Tracked keywords', 'ai-seo-assistant'); ?></strong><br>
-                    <span style="font-size:20px;"><?php echo esc_html($metrics['tracked'] ?? 0); ?></span>
+        <div class="aiseo-wrapper">
+            <div class="aiseo-header">
+                <div>
+                    <h1><?php esc_html_e('AI SEO Assistant', 'ai-seo-assistant'); ?></h1>
+                    <p><?php esc_html_e('Your complete SEO command center', 'ai-seo-assistant'); ?></p>
                 </div>
-                <div class="card" style="padding:12px; flex:1 1 180px; background:#f5f5f5;">
-                    <strong><?php esc_html_e('Avg best position', 'ai-seo-assistant'); ?></strong><br>
-                    <span style="font-size:20px;"><?php echo esc_html($metrics['avg_pos'] ?? '—'); ?></span>
+                <span class="version">v0.1.0</span>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="aiseo-stats-grid">
+                <div class="aiseo-stat-card success">
+                    <div class="aiseo-stat-icon">📊</div>
+                    <div class="aiseo-stat-value"><?php echo esc_html($metrics['tracked'] ?? 0); ?></div>
+                    <div class="aiseo-stat-label"><?php esc_html_e('Tracked Keywords', 'ai-seo-assistant'); ?></div>
+                    <div class="aiseo-stat-change positive">
+                        <span>↗</span> <?php esc_html_e('Active tracking', 'ai-seo-assistant'); ?>
+                    </div>
                 </div>
-                <div class="card" style="padding:12px; flex:1 1 180px; background:#f5f5f5;">
-                    <strong><?php esc_html_e('% in top 3', 'ai-seo-assistant'); ?></strong><br>
-                    <span style="font-size:20px;"><?php echo esc_html($metrics['top3_pct'] ?? '—'); ?>%</span>
+                <div class="aiseo-stat-card info">
+                    <div class="aiseo-stat-icon">🎯</div>
+                    <div class="aiseo-stat-value"><?php echo esc_html($metrics['avg_pos'] ?? '—'); ?></div>
+                    <div class="aiseo-stat-label"><?php esc_html_e('Avg Best Position', 'ai-seo-assistant'); ?></div>
+                    <div class="aiseo-stat-change positive">
+                        <span>↗</span> <?php esc_html_e('SERP performance', 'ai-seo-assistant'); ?>
+                    </div>
+                </div>
+                <div class="aiseo-stat-card warning">
+                    <div class="aiseo-stat-icon">🏆</div>
+                    <div class="aiseo-stat-value"><?php echo esc_html($metrics['top3_pct'] ?? '—'); ?>%</div>
+                    <div class="aiseo-stat-label"><?php esc_html_e('Top 3 Rankings', 'ai-seo-assistant'); ?></div>
+                    <div class="aiseo-stat-change positive">
+                        <span>↗</span> <?php esc_html_e('Visibility', 'ai-seo-assistant'); ?>
+                    </div>
+                </div>
+                <div class="aiseo-stat-card danger">
+                    <div class="aiseo-stat-icon">⚠️</div>
+                    <div class="aiseo-stat-value"><?php echo esc_html(($decayStats['critical'] ?? 0) + ($decayStats['high'] ?? 0)); ?></div>
+                    <div class="aiseo-stat-label"><?php esc_html_e('Content Decay Alerts', 'ai-seo-assistant'); ?></div>
+                    <div class="aiseo-stat-change <?php echo (($decayStats['critical'] ?? 0) + ($decayStats['high'] ?? 0)) > 0 ? 'negative' : 'positive'; ?>">
+                        <span><?php echo (($decayStats['critical'] ?? 0) + ($decayStats['high'] ?? 0)) > 0 ? '⚠️' : '✓'; ?></span>
+                        <?php echo (($decayStats['critical'] ?? 0) + ($decayStats['high'] ?? 0)) > 0 ? esc_html__('Needs attention', 'ai-seo-assistant') : esc_html__('All good', 'ai-seo-assistant'); ?>
+                    </div>
                 </div>
             </div>
-            <div style="display:flex; gap:16px; flex-wrap:wrap;">
-                <div class="card" style="padding:12px; flex:1 1 220px;">
-                    <h2><?php esc_html_e('Snapshots per provider', 'ai-seo-assistant'); ?></h2>
-                    <canvas id="aiseo-counts" height="120"></canvas>
+
+            <!-- Quick Actions -->
+            <div class="aiseo-card">
+                <div class="aiseo-card-header">
+                    <h2><span class="dashicons dashicons-lightning"></span> <?php esc_html_e('Quick Actions', 'ai-seo-assistant'); ?></h2>
                 </div>
-                <div class="card" style="padding:12px; flex:1 1 220px;">
-                    <h2><?php esc_html_e('Health status mix', 'ai-seo-assistant'); ?></h2>
-                    <canvas id="aiseo-health" height="120"></canvas>
+                <div class="aiseo-card-body">
+                    <div class="aiseo-quick-actions">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-snapshots')); ?>" class="aiseo-quick-action">
+                            <div class="icon">🔍</div>
+                            <span><?php esc_html_e('SERP Snapshots', 'ai-seo-assistant'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-competitor')); ?>" class="aiseo-quick-action">
+                            <div class="icon">🎯</div>
+                            <span><?php esc_html_e('Competitor Gap', 'ai-seo-assistant'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-audit')); ?>" class="aiseo-quick-action">
+                            <div class="icon">🔧</div>
+                            <span><?php esc_html_e('SEO Audit', 'ai-seo-assistant'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-decay')); ?>" class="aiseo-quick-action">
+                            <div class="icon">📉</div>
+                            <span><?php esc_html_e('Content Decay', 'ai-seo-assistant'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-bulk')); ?>" class="aiseo-quick-action">
+                            <div class="icon">⚡</div>
+                            <span><?php esc_html_e('Bulk Actions', 'ai-seo-assistant'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-license')); ?>" class="aiseo-quick-action">
+                            <div class="icon">🔐</div>
+                            <span><?php esc_html_e('License', 'ai-seo-assistant'); ?></span>
+                        </a>
+                    </div>
                 </div>
-                <div class="card" style="padding:12px; flex:1 1 220px;">
-                    <h2><?php esc_html_e('Avg best position (14d)', 'ai-seo-assistant'); ?></h2>
-                    <canvas id="aiseo-trend" height="120"></canvas>
-                    <p style="color:#555;"><?php printf(__('Alert threshold: #%s', 'ai-seo-assistant'), $alertThreshold); ?></p>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="aiseo-grid-3">
+                <div class="aiseo-card">
+                    <div class="aiseo-card-header">
+                        <h2><?php esc_html_e('Snapshots per Provider', 'ai-seo-assistant'); ?></h2>
+                    </div>
+                    <div class="aiseo-card-body">
+                        <canvas id="aiseo-counts" height="200"></canvas>
+                    </div>
                 </div>
-                <div class="card" style="padding:12px; flex:1 1 220px;">
-                    <h2><?php esc_html_e('Laatste healthchecks', 'ai-seo-assistant'); ?></h2>
-                    <ul>
-                        <?php foreach ($health as $row): ?>
-                            <li><?php echo esc_html(sprintf('%s %s — %s', strtoupper($row['type']), $row['provider'], $row['status'])); ?>
-                                <br><small><?php echo esc_html($row['message']); ?></small>
-                                <br><small><?php echo esc_html(get_date_from_gmt($row['time'], 'Y-m-d H:i')); ?></small>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                <div class="aiseo-card">
+                    <div class="aiseo-card-header">
+                        <h2><?php esc_html_e('Health Status', 'ai-seo-assistant'); ?></h2>
+                    </div>
+                    <div class="aiseo-card-body">
+                        <canvas id="aiseo-health" height="200"></canvas>
+                    </div>
                 </div>
-                <div class="card" style="padding:12px; flex:1 1 220px;">
-                    <h2><?php esc_html_e('Laatste keywords', 'ai-seo-assistant'); ?></h2>
-                    <ul>
-                        <?php foreach ($keywords as $kw): ?>
-                            <li><?php echo esc_html($kw); ?></li>
-                        <?php endforeach; ?>
-                    </ul>
+                <div class="aiseo-card">
+                    <div class="aiseo-card-header">
+                        <h2><?php esc_html_e('Avg Position (14 days)', 'ai-seo-assistant'); ?></h2>
+                    </div>
+                    <div class="aiseo-card-body">
+                        <canvas id="aiseo-trend" height="200"></canvas>
+                        <p class="description" style="margin-top:10px;">
+                            <?php printf(esc_html__('Alert threshold: position #%s', 'ai-seo-assistant'), $alertThreshold); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest Data Row -->
+            <div class="aiseo-grid-2">
+                <div class="aiseo-card">
+                    <div class="aiseo-card-header">
+                        <h2><?php esc_html_e('Latest Healthchecks', 'ai-seo-assistant'); ?></h2>
+                    </div>
+                    <div class="aiseo-card-body">
+                        <?php if (!empty($health)): ?>
+                            <table class="aiseo-table">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('Type', 'ai-seo-assistant'); ?></th>
+                                        <th><?php esc_html_e('Provider', 'ai-seo-assistant'); ?></th>
+                                        <th><?php esc_html_e('Status', 'ai-seo-assistant'); ?></th>
+                                        <th><?php esc_html_e('Time', 'ai-seo-assistant'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach (array_slice($health, 0, 5) as $row): ?>
+                                        <tr>
+                                            <td><?php echo esc_html(strtoupper($row['type'])); ?></td>
+                                            <td><?php echo esc_html($row['provider']); ?></td>
+                                            <td>
+                                                <span class="aiseo-status <?php echo $row['status'] === 'ok' ? 'success' : 'danger'; ?>">
+                                                    <?php echo esc_html($row['status']); ?>
+                                                </span>
+                                            </td>
+                                            <td><?php echo esc_html(human_time_diff(strtotime($row['time']), current_time('timestamp')) . ' ago'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <div class="aiseo-empty-state">
+                                <div class="aiseo-empty-state-icon">🔍</div>
+                                <h3><?php esc_html_e('No healthchecks yet', 'ai-seo-assistant'); ?></h3>
+                                <p><?php esc_html_e('Healthchecks will appear here automatically.', 'ai-seo-assistant'); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="aiseo-card">
+                    <div class="aiseo-card-header">
+                        <h2><?php esc_html_e('Latest Keywords', 'ai-seo-assistant'); ?></h2>
+                    </div>
+                    <div class="aiseo-card-body">
+                        <?php if (!empty($keywords)): ?>
+                            <ul style="list-style:none; margin:0; padding:0;">
+                                <?php foreach (array_slice($keywords, 0, 8) as $kw): ?>
+                                    <li style="padding:10px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center;">
+                                        <span><?php echo esc_html($kw); ?></span>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-snapshots&k=' . urlencode($kw))); ?>" class="button button-small">
+                                            <?php esc_html_e('View', 'ai-seo-assistant'); ?>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <div class="aiseo-empty-state">
+                                <div class="aiseo-empty-state-icon">🔑</div>
+                                <h3><?php esc_html_e('No keywords yet', 'ai-seo-assistant'); ?></h3>
+                                <p><?php esc_html_e('Start tracking keywords to see them here.', 'ai-seo-assistant'); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1779,5 +1931,13 @@ class AdminPage
             'status' => $license['status'],
             'tier' => $this->licenseManager->getTier(),
         ]);
+    }
+
+    /**
+     * Render Content Decay page
+     */
+    public function renderDecayPage(): void
+    {
+        $this->contentDecay->renderDecayPage();
     }
 }

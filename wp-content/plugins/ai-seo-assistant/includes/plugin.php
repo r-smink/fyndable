@@ -60,6 +60,9 @@ class Plugin
     private LicenseManager $licenseManager;
     private LicenseAPI $licenseAPI;
     private FeatureGate $featureGate;
+    
+    // Content decay detection
+    private ContentDecay $contentDecay;
 
     private const LLM_HEALTH_HOOK = 'aiseoassistant_llm_health';
     private const SERP_HEALTH_HOOK = 'aiseoassistant_serp_health';
@@ -168,7 +171,12 @@ class Plugin
         $this->extendedSitemaps = new ExtendedSitemaps($this->sitemapGenerator, $this->settings);
         $this->extendedSitemaps->register();
 
-        $this->adminPage = new AdminPage($this->pluginFile, $this->settings, $this->serpService, $this->snapshots, $this->llmClient, $this->healthLogger, $this->aiOverviewRepo, $this->competitorGap, $this->keywordExplorer, $this->auditService, $this->bulkActions, $this->pageSpeed, $this->postTypes, $this->imageClient, $this->gscClient, $this->topicRepo, $this->calendarWorkflow, $this->psiLogger, $this->techChecker, $this->truseoScore, $this->redirectionManager, $this->notFoundMonitor, $this->linkAssistant, $this->imageAltGenerator, $this->localSEO, $this->importExport, $this->rolePermissions, $this->robotsTxt, $this->licenseManager, $this->licenseAPI, $this->featureGate);
+        // Initialize Content Decay Detection
+        $this->contentDecay = new ContentDecay($this->snapshots, $this->gscClient, $this->settings);
+        $this->contentDecay->maybeCreateTable();
+        $this->contentDecay->register();
+
+        $this->adminPage = new AdminPage($this->pluginFile, $this->settings, $this->serpService, $this->snapshots, $this->llmClient, $this->healthLogger, $this->aiOverviewRepo, $this->competitorGap, $this->keywordExplorer, $this->auditService, $this->bulkActions, $this->pageSpeed, $this->postTypes, $this->imageClient, $this->gscClient, $this->topicRepo, $this->calendarWorkflow, $this->psiLogger, $this->techChecker, $this->truseoScore, $this->redirectionManager, $this->notFoundMonitor, $this->linkAssistant, $this->imageAltGenerator, $this->localSEO, $this->importExport, $this->rolePermissions, $this->robotsTxt, $this->licenseManager, $this->licenseAPI, $this->featureGate, $this->contentDecay);
         $this->editorSidebar = new EditorSidebar($this->pluginFile, $this->settings);
         $this->restRoutes = new RestRoutes($this->settings, $this->llmClient);
 
@@ -191,6 +199,9 @@ class Plugin
         
         // License validation cron
         add_action('aiseoassistant_license_check', [$this->licenseManager, 'validate']);
+        
+        // Content decay cron
+        add_action('aiseoassistant_decay_check', [$this->contentDecay, 'runDecayCheck']);
 
         // Register cron hook.
         add_action(SerpService::CRON_HOOK, [$this->serpService, 'scheduledSnapshot']);
@@ -220,6 +231,9 @@ class Plugin
         }
         if (!wp_next_scheduled('aiseoassistant_license_check')) {
             wp_schedule_event(time() + 86400, 'daily', 'aiseoassistant_license_check');
+        }
+        if (!wp_next_scheduled('aiseoassistant_decay_check')) {
+            wp_schedule_event(time() + 10800, 'daily', 'aiseoassistant_decay_check');
         }
 
         // Flush rewrite rules for sitemaps
@@ -264,6 +278,10 @@ class Plugin
         $ts5 = wp_next_scheduled('aiseoassistant_license_check');
         if ($ts5) {
             wp_unschedule_event($ts5, 'aiseoassistant_license_check');
+        }
+        $ts6 = wp_next_scheduled('aiseoassistant_decay_check');
+        if ($ts6) {
+            wp_unschedule_event($ts6, 'aiseoassistant_decay_check');
         }
 
         flush_rewrite_rules();
