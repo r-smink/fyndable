@@ -53,8 +53,8 @@ A comprehensive WordPress SEO plugin with AI-powered content generation, SERP tr
 
 1. Copy the `ai-seo-assistant` folder into `wp-content/plugins/`
 2. Activate the plugin in WP Admin
-3. Go to **AI SEO → License** and activate your license (or start trial)
-4. Configure settings in **AI SEO → Settings**
+3. Start your **14-day free trial** (no credit card required)
+4. Upgrade to paid tier after trial or when ready
 
 ## ⚙️ Configuration
 
@@ -137,7 +137,6 @@ Decay triggers:
 
 | Tier | Price | Features | Max Keywords |
 |------|-------|----------|--------------|
-| Free | €0 | Basic SERP tracking, AI outlines, content audit | 5 keywords |
 | Trial | €0 | Full access for 14 days | 25 keywords |
 | Starter | €99/mo | Decay detection, link assistant, bulk actions | 50 keywords |
 | Professional | €249/mo | GSC integration, extended sitemaps, team features | 200 keywords |
