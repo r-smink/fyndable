@@ -160,7 +160,7 @@ class SchemaMarkup
     {
         return has_block('faq', $post->post_content) || 
                stripos($post->post_content, '[faq') !== false ||
-               preg_match('/<h[2-3][^>]*>.*?(faq|veelgestelde).*/i', $post->post_content);
+               preg_match('/<h[2-3][^>]*>.*?(faq|frequently asked|veelgestelde).*/i', $post->post_content);
     }
 
     private function hasHowTo(\WP_Post $post): bool

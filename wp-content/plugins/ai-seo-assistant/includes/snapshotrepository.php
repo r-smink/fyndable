@@ -5,11 +5,21 @@ namespace AISEOAssistant;
 class SnapshotRepository
 {
     private string $table;
+    private ?TenantRepository $tenants = null;
 
-    public function __construct()
+    public function __construct(?TenantRepository $tenants = null)
     {
         global $wpdb;
         $this->table = $wpdb->prefix . 'aiseoassistant_snapshots';
+        $this->tenants = $tenants;
+    }
+    
+    /**
+     * Get current tenant key if available
+     */
+    private function getTenantKey(): ?string
+    {
+        return $this->tenants?->getCurrentTenant();
     }
 
     public function maybeCreateTable(): void
@@ -20,11 +30,13 @@ class SnapshotRepository
         $charsetCollate = $wpdb->get_charset_collate();
         $sql = "CREATE TABLE {$this->table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tenant_id varchar(64) DEFAULT NULL,
             keyword varchar(255) NOT NULL,
             provider varchar(50) NOT NULL,
             results longtext NOT NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
+            KEY tenant_id (tenant_id),
             KEY keyword (keyword),
             KEY created_at (created_at)
         ) $charsetCollate;";
@@ -35,16 +47,20 @@ class SnapshotRepository
     public function save(string $keyword, string $provider, array $results): void
     {
         global $wpdb;
-        $wpdb->insert(
-            $this->table,
-            [
-                'keyword'   => $keyword,
-                'provider'  => $provider,
-                'results'   => wp_json_encode($results),
-                'created_at'=> current_time('mysql', true),
-            ],
-            ['%s', '%s', '%s', '%s']
-        );
+        $data = [
+            'keyword'   => $keyword,
+            'provider'  => $provider,
+            'results'   => wp_json_encode($results),
+            'created_at'=> current_time('mysql', true),
+        ];
+        
+        // Add tenant isolation if available
+        $tenantKey = $this->getTenantKey();
+        if ($tenantKey) {
+            $data['tenant_id'] = $tenantKey;
+        }
+        
+        $wpdb->insert($this->table, $data);
     }
 
     /**
@@ -53,10 +69,20 @@ class SnapshotRepository
     public function latest(int $limit = 50, string $keywordLike = ''): array
     {
         global $wpdb;
-        $sql = "SELECT * FROM {$this->table}";
+        $sql = "SELECT * FROM {$this->table} WHERE 1=1";
         $params = [];
+        
+        // Add tenant isolation
+        $tenantKey = $this->getTenantKey();
+        if ($tenantKey) {
+            $sql .= " AND tenant_id = %s";
+            $params[] = $tenantKey;
+        } else {
+            $sql .= " AND tenant_id IS NULL";
+        }
+        
         if ($keywordLike !== '') {
-            $sql .= " WHERE keyword LIKE %s";
+            $sql .= " AND keyword LIKE %s";
             $params[] = '%' . $wpdb->esc_like($keywordLike) . '%';
         }
         $sql .= " ORDER BY created_at DESC LIMIT %d";
@@ -77,7 +103,21 @@ class SnapshotRepository
     public function countsByProvider(): array
     {
         global $wpdb;
-        $rows = $wpdb->get_results("SELECT provider, COUNT(*) as c FROM {$this->table} GROUP BY provider", ARRAY_A);
+        $sql = "SELECT provider, COUNT(*) as c FROM {$this->table} WHERE 1=1";
+        $params = [];
+        
+        // Add tenant isolation
+        $tenantKey = $this->getTenantKey();
+        if ($tenantKey) {
+            $sql .= " AND tenant_id = %s";
+            $params[] = $tenantKey;
+        } else {
+            $sql .= " AND tenant_id IS NULL";
+        }
+        
+        $sql .= " GROUP BY provider";
+        
+        $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
         $out = [];
         foreach ($rows ?: [] as $row) {
             $out[$row['provider']] = (int)$row['c'];
@@ -92,7 +132,22 @@ class SnapshotRepository
     public function latestKeywords(int $limit = 10): array
     {
         global $wpdb;
-        return $wpdb->get_col($wpdb->prepare("SELECT keyword FROM {$this->table} ORDER BY created_at DESC LIMIT %d", $limit));
+        $sql = "SELECT keyword FROM {$this->table} WHERE 1=1";
+        $params = [];
+        
+        // Add tenant isolation
+        $tenantKey = $this->getTenantKey();
+        if ($tenantKey) {
+            $sql .= " AND tenant_id = %s";
+            $params[] = $tenantKey;
+        } else {
+            $sql .= " AND tenant_id IS NULL";
+        }
+        
+        $sql .= " ORDER BY created_at DESC LIMIT %d";
+        $params[] = $limit;
+        
+        return $wpdb->get_col($wpdb->prepare($sql, $params));
     }
 
     /**
@@ -101,10 +156,22 @@ class SnapshotRepository
     public function metrics(int $limit = 200): array
     {
         global $wpdb;
-        $rows = $wpdb->get_results(
-            $wpdb->prepare("SELECT results FROM {$this->table} ORDER BY created_at DESC LIMIT %d", $limit),
-            ARRAY_A
-        );
+        $sql = "SELECT results FROM {$this->table} WHERE 1=1";
+        $params = [];
+        
+        // Add tenant isolation
+        $tenantKey = $this->getTenantKey();
+        if ($tenantKey) {
+            $sql .= " AND tenant_id = %s";
+            $params[] = $tenantKey;
+        } else {
+            $sql .= " AND tenant_id IS NULL";
+        }
+        
+        $sql .= " ORDER BY created_at DESC LIMIT %d";
+        $params[] = $limit;
+        
+        $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
 
         $total = 0;
         $posSum = 0;
@@ -145,12 +212,20 @@ class SnapshotRepository
     public function dailyAvgBest(int $days = 14): array
     {
         global $wpdb;
-        $sql = $wpdb->prepare("
-            SELECT DATE(created_at) as d, results
-            FROM {$this->table}
-            WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
-        ", $days);
-        $rows = $wpdb->get_results($sql, ARRAY_A);
+        $sql = "SELECT DATE(created_at) as d, results FROM {$this->table} 
+                WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)";
+        $params = [$days];
+        
+        // Add tenant isolation
+        $tenantKey = $this->getTenantKey();
+        if ($tenantKey) {
+            $sql .= " AND tenant_id = %s";
+            $params[] = $tenantKey;
+        } else {
+            $sql .= " AND tenant_id IS NULL";
+        }
+        
+        $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
         $bucket = [];
         foreach ($rows ?: [] as $row) {
             $res = json_decode($row['results'], true) ?: [];

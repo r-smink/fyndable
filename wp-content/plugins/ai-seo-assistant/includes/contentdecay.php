@@ -5,8 +5,8 @@ namespace AISEOAssistant;
 /**
  * Content Decay Detection
  * 
- * Detecteert wanneer content rankings/traffic verliest en alerteert gebruikers.
- * Biedt historical trend graphs en auto-suggesties voor content refresh.
+ * Detects when content loses rankings/traffic and alerts users.
+ * Provides historical trend graphs and auto-suggestions for content refresh.
  */
 class ContentDecay
 {
@@ -167,25 +167,17 @@ class ContentDecay
     {
         global $wpdb;
         
-        // Posts met focus keyword meta
-        $metaPosts = $wpdb->get_col("
+        // Posts with focus keyphrase meta
+        $postIds = $wpdb->get_col("
             SELECT DISTINCT post_id 
             FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_aiseo_focus_keyword'
+            WHERE meta_key = '_aiseo_focus_keyphrase'
+            AND meta_value != ''
             AND post_id IN (
                 SELECT ID FROM {$wpdb->posts} 
                 WHERE post_status = 'publish'
             )
         ");
-        
-        // Posts in snapshot data
-        $snapshotPosts = $wpdb->get_col("
-            SELECT DISTINCT object_id 
-            FROM {$wpdb->prefix}aiseoassistant_snapshots
-            WHERE object_type = 'post'
-        ");
-        
-        $postIds = array_unique(array_merge($metaPosts, $snapshotPosts));
         
         if (empty($postIds)) {
             return [];
@@ -206,23 +198,19 @@ class ContentDecay
     {
         $keywords = [];
         
-        // Focus keyword uit meta
-        $focusKeyword = get_post_meta($post->ID, '_aiseo_focus_keyword', true);
-        if ($focusKeyword) {
-            $keywords[] = $focusKeyword;
+        // Focus keyphrase from meta
+        $focusKeyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+        if ($focusKeyphrase) {
+            $keywords[] = $focusKeyphrase;
         }
         
-        // Keywords uit snapshots
-        global $wpdb;
-        $snapshotKeywords = $wpdb->get_col($wpdb->prepare("
-            SELECT DISTINCT keyword 
-            FROM {$wpdb->prefix}aiseoassistant_snapshots
-            WHERE object_id = %d AND object_type = 'post'
-        ", $post->ID));
+        // Secondary keyphrases
+        $secondary = get_post_meta($post->ID, '_aiseo_secondary_keyphrases', true);
+        if ($secondary) {
+            $keywords = array_merge($keywords, array_map('trim', explode(',', $secondary)));
+        }
         
-        $keywords = array_unique(array_merge($keywords, $snapshotKeywords));
-        
-        return array_filter($keywords);
+        return array_unique(array_filter($keywords));
     }
     
     /**
@@ -246,16 +234,30 @@ class ContentDecay
             return $trends;
         }
         
-        // Vul aan uit snapshots
+        // Supplement from snapshots — parse position from JSON results
         $snapshots = $wpdb->get_results($wpdb->prepare("
-            SELECT best_position as position, created_at as date
+            SELECT results, DATE(created_at) as date
             FROM {$wpdb->prefix}aiseoassistant_snapshots
             WHERE keyword = %s 
             AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ORDER BY created_at DESC
         ", $keyword), ARRAY_A);
         
-        return array_merge($trends, $snapshots);
+        $parsed = [];
+        foreach ($snapshots as $snap) {
+            $results = json_decode($snap['results'], true) ?: [];
+            $bestPos = null;
+            foreach ($results as $item) {
+                if (isset($item['position'])) {
+                    $bestPos = $bestPos === null ? $item['position'] : min($bestPos, $item['position']);
+                }
+            }
+            if ($bestPos !== null) {
+                $parsed[] = ['position' => (float)$bestPos, 'date' => $snap['date']];
+            }
+        }
+        
+        return array_merge($trends, $parsed);
     }
     
     /**
@@ -263,7 +265,7 @@ class ContentDecay
      */
     private function calculateBaseline(array $trend): float
     {
-        // Gebruik de oudste 50% als baseline
+        // Use the oldest 50% as baseline
         $count = count($trend);
         $baselineCount = max(3, (int)($count * 0.5));
         $baselinePositions = array_slice($trend, -$baselineCount, $baselineCount);
@@ -364,14 +366,14 @@ class ContentDecay
         global $wpdb;
         $table = $wpdb->prefix . self::DECAY_TABLE;
         
-        // Check of er al een actieve alert is voor deze combinatie
+        // Check if there's already an active alert for this combination
         $existing = $wpdb->get_var($wpdb->prepare("
             SELECT id FROM $table 
             WHERE post_id = %d AND keyword = %s AND status = 'active'
         ", $data['post_id'], $data['keyword']));
         
         if ($existing) {
-            // Update bestaande alert
+            // Update existing alert
             $wpdb->update(
                 $table,
                 [

@@ -64,6 +64,15 @@ class Plugin
     // Content decay detection
     private ContentDecay $contentDecay;
 
+    // Content creation (killer features)
+    private ContentBrief $contentBrief;
+    private ContentWriter $contentWriter;
+
+    // SaaS / Multi-tenancy
+    private TenantRepository $tenants;
+    private LicenseKeyGenerator $licenseGenerator;
+    private LicenseAdmin $licenseAdmin;
+
     private const LLM_HEALTH_HOOK = 'aiseoassistant_llm_health';
     private const SERP_HEALTH_HOOK = 'aiseoassistant_serp_health';
     private const AI_OVERVIEW_HOOK = 'aiseoassistant_ai_overview';
@@ -80,7 +89,7 @@ class Plugin
         $this->snapshots->maybeCreateTable();
         $this->notifier = new AlertNotifier($this->settings);
         $this->healthLogger = new HealthLogger($this->notifier);
-        $this->llmClient = new LlmClient($this->settings, $this->healthLogger);
+        $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->tenants);
         $this->aiOverviewRepo = new AiOverviewRepository();
         $this->aiOverviewRepo->maybeCreateTable();
         $this->serpService = new SerpService($this->settings, [
@@ -109,6 +118,18 @@ class Plugin
         $this->techChecker = new TechChecker();
         $this->saasClient = new SaasClient($this->settings);
         $this->saasWebhook = new SaasWebhook($this->settings, $this->snapshots, $this->healthLogger);
+
+        // Initialize SaaS / Multi-tenancy system
+        $this->tenants = new TenantRepository();
+        $this->tenants->maybeCreateTables();
+        $this->tenants->migrateExistingTables();
+        
+        // Initialize repositories with tenant support
+        $this->snapshots = new SnapshotRepository($this->tenants);
+        $this->snapshots->maybeCreateTable();
+        
+        $this->licenseGenerator = new LicenseKeyGenerator($this->tenants);
+        $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
 
         // Initialize License Management
         $this->licenseManager = new LicenseManager($this->settings->get('license_server_url', ''), 'ai-seo-assistant-pro');
@@ -176,23 +197,29 @@ class Plugin
         $this->contentDecay->maybeCreateTable();
         $this->contentDecay->register();
 
+        // Initialize Content Brief & Writer (Surfer SEO + WP SEO AI killer features)
+        $this->contentBrief = new ContentBrief($this->serpService, $this->llmClient, $this->settings);
+        $this->contentBrief->register();
+        
+        $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief);
+        $this->contentWriter->register();
+
         $this->adminPage = new AdminPage($this->pluginFile, $this->settings, $this->serpService, $this->snapshots, $this->llmClient, $this->healthLogger, $this->aiOverviewRepo, $this->competitorGap, $this->keywordExplorer, $this->auditService, $this->bulkActions, $this->pageSpeed, $this->postTypes, $this->imageClient, $this->gscClient, $this->topicRepo, $this->calendarWorkflow, $this->psiLogger, $this->techChecker, $this->truseoScore, $this->redirectionManager, $this->notFoundMonitor, $this->linkAssistant, $this->imageAltGenerator, $this->localSEO, $this->importExport, $this->rolePermissions, $this->robotsTxt, $this->licenseManager, $this->licenseAPI, $this->featureGate, $this->contentDecay);
         $this->editorSidebar = new EditorSidebar($this->pluginFile, $this->settings);
         $this->restRoutes = new RestRoutes($this->settings, $this->llmClient);
 
         add_action('admin_menu', [$this->adminPage, 'register']);
+        add_action('admin_menu', [$this->licenseAdmin, 'register']);
+        add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_init', [$this->adminPage, 'registerSettings']);
         add_action('admin_init', [$this, 'checkLicenseOnAdminInit']);
         add_action('enqueue_block_editor_assets', [$this->editorSidebar, 'enqueue']);
         add_action('rest_api_init', [$this->restRoutes, 'register']);
         add_action('rest_api_init', [$this->saasWebhook, 'register']);
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
-        add_action('rest_api_init', [$this->aiRepurposer, 'registerRestRoutes']);
-        add_action('rest_api_init', [$this->imageAltGenerator, 'registerRestRoutes']);
-        add_action('rest_api_init', [$this->lsiKeywords, 'registerRestRoutes']);
-        add_action('rest_api_init', [$this->smartTags, 'registerRestRoutes']);
-        add_action('rest_api_init', [$this->linkAssistant, 'registerRestRoutes']);
-        add_action('rest_api_init', [$this->localSEO, 'registerRestRoutes']);
+        // Note: REST routes for feature modules (aiRepurposer, imageAltGenerator,
+        // lsiKeywords, smartTags, linkAssistant, localSEO, contentBrief, contentWriter)
+        // are registered within their own register() methods called above.
         add_action(self::LLM_HEALTH_HOOK, [$this->llmClient, 'runHealthcheckJob']);
         add_action(self::SERP_HEALTH_HOOK, [$this->serpService, 'runHealthcheckJob']);
         add_action(self::AI_OVERVIEW_HOOK, [$this->aiOverviewTracker, 'scheduled']);
@@ -216,6 +243,9 @@ class Plugin
         $this->redirectionManager->maybeCreateTable();
         $this->notFoundMonitor->maybeCreateTable();
         $this->seoRevisions->maybeCreateTable();
+        
+        // Create tenant/license tables
+        $this->tenants->maybeCreateTable();
 
         if (!wp_next_scheduled(SerpService::CRON_HOOK)) {
             wp_schedule_event(time() + 300, 'hourly', SerpService::CRON_HOOK);

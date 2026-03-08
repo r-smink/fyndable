@@ -85,17 +85,17 @@ class RestRoutes
             return new \WP_Error('invalid_topic', __('Topic is required', 'ai-seo-assistant'));
         }
 
-        $prompt = "Schrijf een korte SEO-outline (koppen en bullets) voor het onderwerp: {$topic}. "
-            . "Focus op intentie, entiteiten en FAQ. Max 8 bullets.";
+        $prompt = "Write a short SEO outline (headings and bullets) for the topic: {$topic}. "
+            . "Focus on intent, entities and FAQ. Max 8 bullets.";
 
         $extraTone = sanitize_text_field($request->get_param('tone') ?? '');
         $preset = sanitize_text_field($request->get_param('preset') ?? '');
 
-        $finalPrompt = $preset ? $preset . "\n\nOnderwerp: {$topic}" : "Onderwerp: {$topic}";
+        $finalPrompt = $preset ? $preset . "\n\nTopic: {$topic}" : "Topic: {$topic}";
         if ($extraTone) {
-            $finalPrompt .= "\nToon: {$extraTone}";
+            $finalPrompt .= "\nTone: {$extraTone}";
         }
-        $finalPrompt .= "\nSchrijf een outline met koppen/bullets en relevante FAQ.";
+        $finalPrompt .= "\nWrite an outline with headings/bullets and relevant FAQ.";
 
         $result = $this->llm->call($finalPrompt);
         if (is_wp_error($result)) {
@@ -145,17 +145,17 @@ class RestRoutes
 
     private function buildEditorPrompt(string $action, string $topic, string $preset, string $tone, string $content, string $selection, ?\WP_Post $promptTemplate, array $notes)
     {
-        $toneLine = $tone ? "Toon: {$tone}." : '';
+        $toneLine = $tone ? "Tone: {$tone}." : '';
         $kb = $notes ? "\nContext (notes):\n" . implode("\n---\n", $notes) : '';
         $template = $promptTemplate ? $promptTemplate->post_content : '';
         return match ($action) {
-            'rewrite' => $selection ? "Herschrijf de volgende tekst SEO-proof. {$toneLine}\n\n{$selection}{$kb}" : new \WP_Error('missing_selection', __('Selectie ontbreekt voor rewrite', 'ai-seo-assistant')),
-            'faq'     => "Maak een FAQ-sectie (5-8 vragen) voor het onderwerp '{$topic}'. {$toneLine}{$kb}",
-            'links'   => "Stel 5 contextuele interne link-ankers voor voor het onderwerp '{$topic}'. {$toneLine}{$kb}\nGeef output als bulletlijst met anker - suggestie url slug.",
-            'improve' => $selection ? "Verbeter stijl/leesbaarheid en SEO van deze alinea. {$toneLine}{$kb}\n\n{$selection}" : new \WP_Error('missing_selection', __('Selectie ontbreekt', 'ai-seo-assistant')),
-            'expand'  => $selection ? "Breid onderstaande paragraaf uit met voorbeelden en subkoppen. {$toneLine}{$kb}\n\n{$selection}" : new \WP_Error('missing_selection', __('Selectie ontbreekt', 'ai-seo-assistant')),
-            'cta'     => $selection ? "Voeg een duidelijke CTA toe aan deze paragraaf. {$toneLine}{$kb}\n\n{$selection}" : new \WP_Error('missing_selection', __('Selectie ontbreekt', 'ai-seo-assistant')),
-            default   => ($template ?: $preset) . "\nOnderwerp: {$topic}\n{$toneLine}{$kb}",
+            'rewrite' => $selection ? "Rewrite the following text SEO-optimized. {$toneLine}\n\n{$selection}{$kb}" : new \WP_Error('missing_selection', __('Selection is required for rewrite', 'ai-seo-assistant')),
+            'faq'     => "Create a FAQ section (5-8 questions) for the topic '{$topic}'. {$toneLine}{$kb}",
+            'links'   => "Suggest 5 contextual internal link anchors for the topic '{$topic}'. {$toneLine}{$kb}\nOutput as bullet list with anchor - suggested url slug.",
+            'improve' => $selection ? "Improve style/readability and SEO of this paragraph. {$toneLine}{$kb}\n\n{$selection}" : new \WP_Error('missing_selection', __('Selection is required', 'ai-seo-assistant')),
+            'expand'  => $selection ? "Expand the following paragraph with examples and subheadings. {$toneLine}{$kb}\n\n{$selection}" : new \WP_Error('missing_selection', __('Selection is required', 'ai-seo-assistant')),
+            'cta'     => $selection ? "Add a clear CTA to this paragraph. {$toneLine}{$kb}\n\n{$selection}" : new \WP_Error('missing_selection', __('Selection is required', 'ai-seo-assistant')),
+            default   => ($template ?: $preset) . "\nTopic: {$topic}\n{$toneLine}{$kb}",
         };
     }
 }

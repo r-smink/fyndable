@@ -18,7 +18,7 @@ class GscClient
     {
         $endpoint = $this->settings->get('gsc_proxy', '');
         if (!$endpoint) {
-            return new \WP_Error('gsc_proxy', __('GSC proxy endpoint ontbreekt', 'ai-seo-assistant'));
+            return new \WP_Error('gsc_proxy', __('GSC proxy endpoint is missing', 'ai-seo-assistant'));
         }
 
         $resp = wp_remote_post($endpoint, [

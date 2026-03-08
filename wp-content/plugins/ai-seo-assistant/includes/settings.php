@@ -101,4 +101,29 @@ class Settings
     {
         return (string)$this->get('webhook_secret', '');
     }
+
+    public function contentLanguage(): string
+    {
+        return (string)$this->get('content_language', 'en');
+    }
+
+    public function openaiModel(): string
+    {
+        return (string)$this->get('openai_model', 'gpt-4.1');
+    }
+
+    public function anthropicModel(): string
+    {
+        return (string)$this->get('anthropic_model', 'claude-sonnet-4-20250514');
+    }
+
+    public function mistralModel(): string
+    {
+        return (string)$this->get('mistral_model', 'mistral-large-latest');
+    }
+
+    public function llmRateLimit(): int
+    {
+        return (int)$this->get('llm_rate_limit', 60);
+    }
 }

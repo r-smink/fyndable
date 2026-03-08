@@ -24,7 +24,7 @@ class ImageClient
     {
         $apiKey = $this->settings->get('openai_key');
         if (!$apiKey) {
-            return new \WP_Error('missing_key', __('OpenAI key ontbreekt', 'ai-seo-assistant'));
+            return new \WP_Error('missing_key', __('OpenAI API key is missing', 'ai-seo-assistant'));
         }
         $resp = wp_remote_post('https://api.openai.com/v1/images/generations', [
             'timeout' => 30,
@@ -48,6 +48,6 @@ class ImageClient
         }
         $body = json_decode(wp_remote_retrieve_body($resp), true);
         $url = $body['data'][0]['url'] ?? '';
-        return $url ? ['url' => $url, 'provider' => 'openai'] : new \WP_Error('img_empty', __('Leeg beeldresultaat', 'ai-seo-assistant'));
+        return $url ? ['url' => $url, 'provider' => 'openai'] : new \WP_Error('img_empty', __('Empty image result', 'ai-seo-assistant'));
     }
 }

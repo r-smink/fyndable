@@ -269,11 +269,11 @@ class AdminPage
     public function render(): void
     {
         if (isset($_POST['aiseoassistant_llm_test'], $_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'aiseoassistant_llm_test')) {
-            $hc = $this->llm->healthcheck('Korte SEO-outline over test keyword; geef 3 bullets');
+            $hc = $this->llm->healthcheck('Short SEO outline for test keyword; give 3 bullets');
             if (is_wp_error($hc)) {
                 add_settings_error('aiseoassistant_llmtest', 'error', $hc->get_error_message(), 'error');
             } else {
-                add_settings_error('aiseoassistant_llmtest', 'success', sprintf(__('LLM OK via %s (%d woorden)', 'ai-seo-assistant'), $hc['provider'], $hc['words']), 'updated');
+                add_settings_error('aiseoassistant_llmtest', 'success', sprintf(__('LLM OK via %s (%d words)', 'ai-seo-assistant'), $hc['provider'], $hc['words']), 'updated');
             }
         }
 
@@ -303,7 +303,7 @@ class AdminPage
             $logs = $this->health->latest(5);
             if ($logs) : ?>
                 <div class="notice notice-info">
-                    <p><strong><?php esc_html_e('Laatste healthchecks', 'ai-seo-assistant'); ?></strong></p>
+                    <p><strong><?php esc_html_e('Latest health checks', 'ai-seo-assistant'); ?></strong></p>
                     <ul>
                         <?php foreach ($logs as $row): ?>
                             <li><?php echo esc_html(sprintf('[%s] %s %s — %s', $row['type'], $row['provider'], $row['status'], $row['message'])); ?>
@@ -372,7 +372,7 @@ class AdminPage
                                 <option value="anthropic" <?php selected($options['llm_provider'] ?? '', 'anthropic'); ?>>Anthropic (Claude Opus 4.5)</option>
                                 <option value="mistral" <?php selected($options['llm_provider'] ?? '', 'mistral'); ?>>Mistral (Large)</option>
                             </select>
-                            <p class="description"><?php esc_html_e('Kies primair model; fallback volgorde is OpenAI → Anthropic → Mistral.', 'ai-seo-assistant'); ?></p>
+                            <p class="description"><?php esc_html_e('Primary model; fallback order is OpenAI → Anthropic → Mistral.', 'ai-seo-assistant'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -388,6 +388,59 @@ class AdminPage
                         <td><input type="password" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[mistral_key]" value="<?php echo esc_attr($options['mistral_key'] ?? ''); ?>" class="regular-text" autocomplete="off"></td>
                     </tr>
                     <tr>
+                        <th scope="row"><?php esc_html_e('Content Language', 'ai-seo-assistant'); ?></th>
+                        <td>
+                            <select name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[content_language]">
+                                <?php
+                                $languages = [
+                                    'en' => 'English', 'nl' => 'Dutch', 'de' => 'German', 'fr' => 'French',
+                                    'es' => 'Spanish', 'it' => 'Italian', 'pt' => 'Portuguese', 'pl' => 'Polish',
+                                    'sv' => 'Swedish', 'da' => 'Danish', 'no' => 'Norwegian', 'fi' => 'Finnish',
+                                    'ja' => 'Japanese', 'ko' => 'Korean', 'zh' => 'Chinese', 'ar' => 'Arabic',
+                                    'tr' => 'Turkish', 'ru' => 'Russian', 'cs' => 'Czech', 'ro' => 'Romanian',
+                                ];
+                                $currentLang = $options['content_language'] ?? 'en';
+                                foreach ($languages as $code => $name) :
+                                ?>
+                                <option value="<?php echo esc_attr($code); ?>" <?php selected($currentLang, $code); ?>><?php echo esc_html($name); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description"><?php esc_html_e('Language for AI-generated content and responses.', 'ai-seo-assistant'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('OpenAI Model', 'ai-seo-assistant'); ?></th>
+                        <td>
+                            <select name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[openai_model]">
+                                <option value="gpt-4.1" <?php selected($options['openai_model'] ?? 'gpt-4.1', 'gpt-4.1'); ?>>GPT-4.1</option>
+                                <option value="gpt-4.1-mini" <?php selected($options['openai_model'] ?? '', 'gpt-4.1-mini'); ?>>GPT-4.1 Mini (faster/cheaper)</option>
+                                <option value="gpt-4.1-nano" <?php selected($options['openai_model'] ?? '', 'gpt-4.1-nano'); ?>>GPT-4.1 Nano (fastest/cheapest)</option>
+                                <option value="o3" <?php selected($options['openai_model'] ?? '', 'o3'); ?>>o3 (reasoning)</option>
+                                <option value="o4-mini" <?php selected($options['openai_model'] ?? '', 'o4-mini'); ?>>o4-mini (reasoning, cheaper)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Anthropic Model', 'ai-seo-assistant'); ?></th>
+                        <td>
+                            <select name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[anthropic_model]">
+                                <option value="claude-sonnet-4-20250514" <?php selected($options['anthropic_model'] ?? 'claude-sonnet-4-20250514', 'claude-sonnet-4-20250514'); ?>>Claude Sonnet 4</option>
+                                <option value="claude-3-5-haiku-20241022" <?php selected($options['anthropic_model'] ?? '', 'claude-3-5-haiku-20241022'); ?>>Claude 3.5 Haiku (faster/cheaper)</option>
+                                <option value="claude-opus-4-20250514" <?php selected($options['anthropic_model'] ?? '', 'claude-opus-4-20250514'); ?>>Claude Opus 4 (most capable)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Mistral Model', 'ai-seo-assistant'); ?></th>
+                        <td>
+                            <select name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[mistral_model]">
+                                <option value="mistral-large-latest" <?php selected($options['mistral_model'] ?? 'mistral-large-latest', 'mistral-large-latest'); ?>>Mistral Large</option>
+                                <option value="mistral-medium-latest" <?php selected($options['mistral_model'] ?? '', 'mistral-medium-latest'); ?>>Mistral Medium</option>
+                                <option value="mistral-small-latest" <?php selected($options['mistral_model'] ?? '', 'mistral-small-latest'); ?>>Mistral Small (cheapest)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><?php esc_html_e('LLM Temperature', 'ai-seo-assistant'); ?></th>
                         <td><input type="number" step="0.1" min="0" max="1" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_temperature]" value="<?php echo esc_attr($options['llm_temperature'] ?? 0.4); ?>" class="small-text"></td>
                     </tr>
@@ -396,14 +449,21 @@ class AdminPage
                         <td><input type="number" min="64" max="4000" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_max_tokens]" value="<?php echo esc_attr($options['llm_max_tokens'] ?? 600); ?>" class="small-text"></td>
                     </tr>
                     <tr>
-                        <th scope="row"><?php esc_html_e('Tone of voice (default)', 'ai-seo-assistant'); ?></th>
-                        <td><input type="text" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_tone]" value="<?php echo esc_attr($options['llm_tone'] ?? 'Deskundig, helder, to the point'); ?>" class="regular-text"></td>
+                        <th scope="row"><?php esc_html_e('API Rate Limit', 'ai-seo-assistant'); ?></th>
+                        <td>
+                            <input type="number" min="10" max="1000" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_rate_limit]" value="<?php echo esc_attr($options['llm_rate_limit'] ?? 60); ?>" class="small-text">
+                            <p class="description"><?php esc_html_e('Maximum LLM API calls per hour (protects against runaway costs).', 'ai-seo-assistant'); ?></p>
+                        </td>
                     </tr>
                     <tr>
-                        <th scope="row"><?php esc_html_e('Prompt presets (1 per regel)', 'ai-seo-assistant'); ?></th>
+                        <th scope="row"><?php esc_html_e('Tone of voice (default)', 'ai-seo-assistant'); ?></th>
+                        <td><input type="text" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_tone]" value="<?php echo esc_attr($options['llm_tone'] ?? 'Professional, clear, to the point'); ?>" class="regular-text"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Prompt presets (1 per line)', 'ai-seo-assistant'); ?></th>
                         <td>
-                            <textarea name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_presets]" rows="6" cols="60" class="large-text code" placeholder="<?php esc_attr_e('Briefing template...\nFAQ focus...\nTopical map outline...', 'ai-seo-assistant'); ?>"><?php echo esc_textarea($options['llm_presets'] ?? "Blog: Schrijf een SEO-outline met H1/H2/H3, bullets en suggesties voor interne links.\nFAQ: Maak een FAQ-sectie met 8 vragen en korte antwoorden, gestructureerd voor schema.\nProductpagina: Genereer structuur met USP's, specs, voordelen, FAQ en CTA.\nTopical map: Geef H2/H3 clusteropzet rond het onderwerp met interne link-aanwijzingen.\nLanding: Hero, proof, benefits, features, FAQ, CTA.\nCategory/Comparison: Overzicht, filters, top picks, FAQ, CTA."); ?></textarea>
-                            <p class="description"><?php esc_html_e('Verschillende prompt-templates; wordt getoond in de editor-sidebar.', 'ai-seo-assistant'); ?></p>
+                            <textarea name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[llm_presets]" rows="6" cols="60" class="large-text code" placeholder="<?php esc_attr_e('Briefing template...\nFAQ focus...\nTopical map outline...', 'ai-seo-assistant'); ?>"><?php echo esc_textarea($options['llm_presets'] ?? "Blog: Write an SEO outline with H1/H2/H3, bullets and internal link suggestions.\nFAQ: Create a FAQ section with 8 questions and short answers, structured for schema.\nProduct page: Generate structure with USPs, specs, benefits, FAQ and CTA.\nTopical map: Provide H2/H3 cluster layout around the topic with internal link directions.\nLanding: Hero, proof, benefits, features, FAQ, CTA.\nCategory/Comparison: Overview, filters, top picks, FAQ, CTA."); ?></textarea>
+                            <p class="description"><?php esc_html_e('Different prompt templates; shown in the editor sidebar.', 'ai-seo-assistant'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -411,10 +471,10 @@ class AdminPage
                         <td>
                             <label>
                                 <input type="checkbox" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[webhook_enabled]" value="1" <?php checked(!empty($options['webhook_enabled'])); ?> />
-                                <?php esc_html_e('Stuur alerts bij healthcheck-fouten', 'ai-seo-assistant'); ?>
+                                <?php esc_html_e('Send alerts on healthcheck failures', 'ai-seo-assistant'); ?>
                             </label>
                             <p><input type="url" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[webhook_url]" value="<?php echo esc_attr($options['webhook_url'] ?? ''); ?>" class="regular-text" placeholder="https://hooks.slack.com/services/..."></p>
-                            <p class="description"><?php esc_html_e('Berichtformaat: emoji + TYPE • provider — melding.', 'ai-seo-assistant'); ?></p>
+                            <p class="description"><?php esc_html_e('Message format: emoji + TYPE • provider — message.', 'ai-seo-assistant'); ?>
                             <p>
                                 <label><?php esc_html_e('Default competitor domains (comma sep)', 'ai-seo-assistant'); ?></label><br>
                                 <input type="text" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[competitor_domains]" value="<?php echo esc_attr($options['competitor_domains'] ?? ''); ?>" class="large-text" placeholder="ahrefs.com, moz.com">
@@ -694,8 +754,13 @@ class AdminPage
             'openai_key'   => trim($input['openai_key'] ?? ''),
             'anthropic_key'=> trim($input['anthropic_key'] ?? ''),
             'mistral_key'  => trim($input['mistral_key'] ?? ''),
+            'content_language' => sanitize_text_field($input['content_language'] ?? 'en'),
+            'openai_model' => sanitize_text_field($input['openai_model'] ?? 'gpt-4.1'),
+            'anthropic_model' => sanitize_text_field($input['anthropic_model'] ?? 'claude-sonnet-4-20250514'),
+            'mistral_model' => sanitize_text_field($input['mistral_model'] ?? 'mistral-large-latest'),
             'llm_temperature' => (float)($input['llm_temperature'] ?? 0.4),
             'llm_max_tokens'  => max(64, (int)($input['llm_max_tokens'] ?? 600)),
+            'llm_rate_limit'  => max(10, (int)($input['llm_rate_limit'] ?? 60)),
             'llm_tone'     => sanitize_text_field($input['llm_tone'] ?? ''),
             'llm_presets'  => trim($input['llm_presets'] ?? ''),
             'country'      => sanitize_text_field($input['country'] ?? 'us'),
@@ -732,6 +797,9 @@ class AdminPage
         
         // Get decay stats
         $decayStats = $this->contentDecay->getDecayStats();
+        
+        // Get LLM cost data
+        $llmCosts = $this->llm->getMonthlyCosts();
 
         // Enqueue modern admin styles
         wp_enqueue_style(
@@ -835,10 +903,50 @@ class AdminPage
                             <div class="icon">⚡</div>
                             <span><?php esc_html_e('Bulk Actions', 'ai-seo-assistant'); ?></span>
                         </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-brief')); ?>" class="aiseo-quick-action">
+                            <div class="icon">📋</div>
+                            <span><?php esc_html_e('Content Brief', 'ai-seo-assistant'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-writer')); ?>" class="aiseo-quick-action">
+                            <div class="icon">✍️</div>
+                            <span><?php esc_html_e('Content Writer', 'ai-seo-assistant'); ?></span>
+                        </a>
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-license')); ?>" class="aiseo-quick-action">
                             <div class="icon">🔐</div>
                             <span><?php esc_html_e('License', 'ai-seo-assistant'); ?></span>
                         </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Cost Tracking -->
+            <div class="aiseo-card">
+                <div class="aiseo-card-header">
+                    <h2><span class="dashicons dashicons-chart-bar"></span> <?php esc_html_e('API Usage & Costs', 'ai-seo-assistant'); ?></h2>
+                    <span style="font-size:12px;color:#666;"><?php echo esc_html($llmCosts['month'] ?? date('Y-m')); ?></span>
+                </div>
+                <div class="aiseo-card-body">
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
+                        <div style="text-align:center;padding:15px;background:#f0f7ff;border-radius:8px;">
+                            <div style="font-size:28px;font-weight:bold;color:#2563eb;"><?php echo esc_html($llmCosts['calls'] ?? 0); ?></div>
+                            <div style="font-size:13px;color:#666;"><?php esc_html_e('API Calls This Month', 'ai-seo-assistant'); ?></div>
+                        </div>
+                        <div style="text-align:center;padding:15px;background:#f0fdf4;border-radius:8px;">
+                            <div style="font-size:28px;font-weight:bold;color:#16a34a;">$<?php echo esc_html(number_format($llmCosts['total'] ?? 0, 2)); ?></div>
+                            <div style="font-size:13px;color:#666;"><?php esc_html_e('Estimated Cost This Month', 'ai-seo-assistant'); ?></div>
+                        </div>
+                        <div style="text-align:center;padding:15px;background:#fefce8;border-radius:8px;">
+                            <?php
+                            $rateLimit = (int)$this->settings->get('llm_rate_limit', 60);
+                            $currentCalls = get_transient('aiseo_llm_calls') ?: 0;
+                            $pct = $rateLimit > 0 ? round(($currentCalls / $rateLimit) * 100) : 0;
+                            ?>
+                            <div style="font-size:28px;font-weight:bold;color:#ca8a04;"><?php echo esc_html($currentCalls); ?>/<?php echo esc_html($rateLimit); ?></div>
+                            <div style="font-size:13px;color:#666;"><?php esc_html_e('Hourly Rate Limit', 'ai-seo-assistant'); ?></div>
+                            <div style="margin-top:5px;height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden;">
+                                <div style="width:<?php echo min(100, $pct); ?>%;height:100%;background:<?php echo $pct > 80 ? '#dc2626' : ($pct > 50 ? '#f59e0b' : '#22c55e'); ?>;border-radius:2px;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1201,21 +1309,21 @@ class AdminPage
             if (is_wp_error($res)) {
                 $notice = ['type' => 'error', 'msg' => $res->get_error_message()];
             } else {
-                $notice = ['type' => 'updated', 'msg' => sprintf(__('Meta + FAQ gegenereerd (%s)', 'ai-seo-assistant'), $res['provider'])];
+                $notice = ['type' => 'updated', 'msg' => sprintf(__('Meta + FAQ generated (%s)', 'ai-seo-assistant'), $res['provider'])];
             }
         }
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Bulk Actions', 'ai-seo-assistant'); ?></h1>
-            <p><?php esc_html_e('Posts zonder meta/faq – klik om automatisch meta + FAQ te laten genereren.', 'ai-seo-assistant'); ?></p>
+            <p><?php esc_html_e('Posts without meta/FAQ — click to auto-generate meta + FAQ.', 'ai-seo-assistant'); ?></p>
             <?php if ($notice): ?>
                 <div class="notice notice-<?php echo esc_attr($notice['type']); ?>"><p><?php echo esc_html($notice['msg']); ?></p></div>
             <?php endif; ?>
             <table class="widefat striped">
-                <thead><tr><th><?php esc_html_e('Post', 'ai-seo-assistant'); ?></th><th><?php esc_html_e('Actie', 'ai-seo-assistant'); ?></th></tr></thead>
+                <thead><tr><th><?php esc_html_e('Post', 'ai-seo-assistant'); ?></th><th><?php esc_html_e('Action', 'ai-seo-assistant'); ?></th></tr></thead>
                 <tbody>
                 <?php if (empty($posts)): ?>
-                    <tr><td colspan="2"><?php esc_html_e('Geen posts gevonden zonder meta.', 'ai-seo-assistant'); ?></td></tr>
+                    <tr><td colspan="2"><?php esc_html_e('No posts found without meta.', 'ai-seo-assistant'); ?></td></tr>
                 <?php else: foreach ($posts as $p): ?>
                     <tr>
                         <td><a href="<?php echo esc_url($p['edit_link']); ?>"><?php echo esc_html($p['title']); ?></a></td>
@@ -1223,7 +1331,7 @@ class AdminPage
                             <form method="post" style="display:inline;">
                                 <?php wp_nonce_field('aiseoassistant_bulkmeta'); ?>
                                 <input type="hidden" name="post_id" value="<?php echo esc_attr($p['ID']); ?>">
-                                <button class="button button-primary" type="submit"><?php esc_html_e('Genereer meta + FAQ', 'ai-seo-assistant'); ?></button>
+                                <button class="button button-primary" type="submit"><?php esc_html_e('Generate meta + FAQ', 'ai-seo-assistant'); ?></button>
                             </form>
                         </td>
                     </tr>
@@ -1316,15 +1424,15 @@ class AdminPage
                 <?php wp_nonce_field('aiseoassistant_img'); ?>
                 <p>
                     <label><?php esc_html_e('Prompt', 'ai-seo-assistant'); ?></label><br>
-                    <input type="text" name="img_prompt" class="large-text" placeholder="<?php esc_attr_e('b.v. Futuristische SEO robot op laptop', 'ai-seo-assistant'); ?>">
+                    <input type="text" name="img_prompt" class="large-text" placeholder="<?php esc_attr_e('e.g. Futuristic SEO robot on laptop', 'ai-seo-assistant'); ?>">
                 </p>
-                <?php submit_button(__('Genereer', 'ai-seo-assistant')); ?>
+                <?php submit_button(__('Generate', 'ai-seo-assistant')); ?>
             </form>
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
             <?php endif; ?>
             <?php if ($output): ?>
-                <h2><?php esc_html_e('Resultaat', 'ai-seo-assistant'); ?></h2>
+                <h2><?php esc_html_e('Result', 'ai-seo-assistant'); ?></h2>
                 <p><?php echo esc_html($output['provider']); ?></p>
                 <img src="<?php echo esc_url($output['url']); ?>" style="max-width:400px; height:auto;" />
             <?php endif; ?>
@@ -1387,7 +1495,7 @@ class AdminPage
                 <thead><tr><th><?php esc_html_e('Title', 'ai-seo-assistant'); ?></th><th><?php esc_html_e('Status', 'ai-seo-assistant'); ?></th><th><?php esc_html_e('Due', 'ai-seo-assistant'); ?></th><th><?php esc_html_e('Keyword', 'ai-seo-assistant'); ?></th><th><?php esc_html_e('Assignee', 'ai-seo-assistant'); ?></th></tr></thead>
                 <tbody>
                 <?php if (empty($upcoming)): ?>
-                    <tr><td colspan="5"><?php esc_html_e('Geen items', 'ai-seo-assistant'); ?></td></tr>
+                    <tr><td colspan="5"><?php esc_html_e('No items', 'ai-seo-assistant'); ?></td></tr>
                 <?php else: foreach ($upcoming as $item): ?>
                     <tr>
                         <td><a href="<?php echo esc_url($item['edit']); ?>"><?php echo esc_html($item['title']); ?></a></td>

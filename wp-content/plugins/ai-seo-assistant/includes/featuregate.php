@@ -29,6 +29,9 @@ class FeatureGate
         'image_alt',
         'ai_repurposing',
         'ai_features',
+        'content_brief',
+        'content_writer',
+        'content_decay',
     ];
     
     private const STARTER_FEATURES = [
@@ -61,6 +64,9 @@ class FeatureGate
         'image_alt',
         'seo_revisions',
         'import_export',
+        'content_brief',
+        'content_writer',
+        'content_decay',
     ];
     
     private const BUSINESS_FEATURES = [
@@ -84,6 +90,10 @@ class FeatureGate
         'seo_revisions',
         'role_permissions',
         'import_export',
+        'content_brief',
+        'content_writer',
+        'content_decay',
+        'ai_repurposing',
     ];
     
     private const AGENCY_FEATURES = [
@@ -110,6 +120,9 @@ class FeatureGate
         'seo_revisions',
         'role_permissions',
         'import_export',
+        'content_brief',
+        'content_writer',
+        'content_decay',
         'white_label',
         'priority_support',
         'api_access',
@@ -289,6 +302,21 @@ class FeatureGate
                 'description' => __('Full REST API access', 'ai-seo-assistant'),
                 'icon' => 'dashicons-rest-api',
             ],
+            'content_brief' => [
+                'name' => __('Content Brief Generator', 'ai-seo-assistant'),
+                'description' => __('Data-driven content briefs with SERP analysis, keyword difficulty, and content scoring', 'ai-seo-assistant'),
+                'icon' => 'dashicons-media-document',
+            ],
+            'content_writer' => [
+                'name' => __('AI Content Writer', 'ai-seo-assistant'),
+                'description' => __('Generate full SEO-optimized articles with AI, auto-create WordPress drafts', 'ai-seo-assistant'),
+                'icon' => 'dashicons-edit-large',
+            ],
+            'content_decay' => [
+                'name' => __('Content Decay Detection', 'ai-seo-assistant'),
+                'description' => __('Track ranking drops and get automated refresh suggestions', 'ai-seo-assistant'),
+                'icon' => 'dashicons-chart-area',
+            ],
         ];
         
         return $info[$feature] ?? [
@@ -324,7 +352,10 @@ class FeatureGate
             'local_seo' => 'business',
             'woocommerce_seo' => 'business',
             'role_permissions' => 'business',
-            'ai_repurposing' => 'agency',
+            'content_brief' => 'professional',
+            'content_writer' => 'professional',
+            'content_decay' => 'professional',
+            'ai_repurposing' => 'business',
             'ai_alt_text' => 'agency',
             'ai_keypoints' => 'agency',
             'white_label' => 'agency',

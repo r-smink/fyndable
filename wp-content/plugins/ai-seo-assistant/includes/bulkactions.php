@@ -25,11 +25,11 @@ class BulkActions
             'meta_query' => [
                 'relation' => 'OR',
                 [
-                    'key' => '_yoast_wpseo_metadesc',
+                    'key' => '_aiseo_description',
                     'compare' => 'NOT EXISTS'
                 ],
                 [
-                    'key' => '_yoast_wpseo_metadesc',
+                    'key' => '_aiseo_description',
                     'value' => '',
                     'compare' => '='
                 ]
@@ -52,7 +52,7 @@ class BulkActions
         if (!$post) {
             return new \WP_Error('not_found', __('Post not found', 'ai-seo-assistant'));
         }
-        $prompt = "Schrijf een meta description (max 155 tekens) en 5 FAQ-vragen met korte antwoorden voor: {$post->post_title}. Content:\n" . wp_strip_all_tags($post->post_content);
+        $prompt = "Write a meta description (max 155 characters) and 5 FAQ questions with short answers for: {$post->post_title}. Content:\n" . wp_strip_all_tags($post->post_content);
         $res = $this->llm->call($prompt);
         if (is_wp_error($res)) {
             return $res;
@@ -61,7 +61,7 @@ class BulkActions
         // First line meta, rest FAQs
         $lines = array_filter(array_map('trim', explode("\n", $text)));
         $meta = array_shift($lines) ?: '';
-        update_post_meta($postId, '_yoast_wpseo_metadesc', wp_trim_words($meta, 30, ''));
+        update_post_meta($postId, '_aiseo_description', wp_trim_words($meta, 30, ''));
         if (!$post->post_excerpt) {
             wp_update_post(['ID' => $postId, 'post_excerpt' => wp_trim_words($meta, 30, '')]);
         }
