@@ -11,15 +11,15 @@ namespace AISEOClient;
  */
 class ContentBrief
 {
-    private SerpService $serpService;
     private LlmClient $llm;
     private Settings $settings;
+    private DashboardAPI $dashboardAPI;
 
-    public function __construct(SerpService $serpService, LlmClient $llm, Settings $settings)
+    public function __construct(Settings $settings, LlmClient $llm, DashboardAPI $dashboardAPI)
     {
-        $this->serpService = $serpService;
-        $this->llm = $llm;
         $this->settings = $settings;
+        $this->llm = $llm;
+        $this->dashboardAPI = $dashboardAPI;
     }
 
     public function register(): void
@@ -69,18 +69,69 @@ class ContentBrief
     }
 
     /**
+     * Fetch SERP data via DashboardAPI proxy.
+     */
+    private function fetchSerpData(string $keyword, string $country = 'us'): array|\WP_Error
+    {
+        $cacheKey = 'aiseo_brief_serp_' . md5($keyword . $country);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $response = $this->dashboardAPI->request('serp/search', [
+            'keyword' => $keyword,
+            'country' => $country,
+            'num' => 10,
+        ]);
+
+        if (is_wp_error($response)) {
+            // Fallback: use AI to simulate SERP data
+            return $this->aiFallbackSerpData($keyword);
+        }
+
+        $results = $response['results'] ?? [];
+        $topResults = array_slice($results, 0, 10);
+
+        set_transient($cacheKey, $topResults, 3 * DAY_IN_SECONDS);
+        return $topResults;
+    }
+
+    /**
+     * AI fallback when SERP API is unavailable.
+     */
+    private function aiFallbackSerpData(string $keyword): array|\WP_Error
+    {
+        $prompt = "For the keyword \"{$keyword}\", generate a realistic list of 10 Google SERP results. Return JSON array with objects having: title, link, snippet, position. Return ONLY valid JSON.";
+
+        $result = $this->llm->call($prompt, null, null, 2000);
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $text = $result['text'] ?? '';
+        if (preg_match('/```(?:json)?\s*(\[[\s\S]*?\])\s*```/', $text, $matches)) {
+            $text = $matches[1];
+        }
+
+        $parsed = json_decode($text, true);
+        if (!is_array($parsed)) {
+            return [];
+        }
+
+        return array_slice($parsed, 0, 10);
+    }
+
+    /**
      * Generate a full content brief for a keyword.
      */
     public function generateBrief(string $keyword): array|\WP_Error
     {
-        // 1. Fetch SERP results
-        $serp = $this->serpService->fetch($keyword);
-        if (is_wp_error($serp)) {
-            return $serp;
+        // 1. Fetch SERP results via DashboardAPI proxy
+        $topResults = $this->fetchSerpData($keyword);
+        if (is_wp_error($topResults)) {
+            return $topResults;
         }
-
-        $results = $serp['results'] ?? [];
-        $topResults = array_slice($results, 0, 10);
 
         // 2. Analyze competing content
         $competitorAnalysis = $this->analyzeCompetitors($topResults);

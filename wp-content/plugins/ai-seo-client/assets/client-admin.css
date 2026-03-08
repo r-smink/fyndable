@@ -1,22 +1,237 @@
-/* AI SEO Client Admin Styles */
+/* AI SEO Client — Modern Admin Design System */
 
-.wrap.ai-seo-client {
-    max-width: 800px;
+/* ================================================
+   1. VARIABLES & BASE
+   ================================================ */
+:root {
+    --aiseo-primary: #2563eb;
+    --aiseo-primary-light: #eff6ff;
+    --aiseo-primary-dark: #1d4ed8;
+    --aiseo-success: #059669;
+    --aiseo-success-light: #ecfdf5;
+    --aiseo-warning: #d97706;
+    --aiseo-warning-light: #fffbeb;
+    --aiseo-danger: #dc2626;
+    --aiseo-danger-light: #fef2f2;
+    --aiseo-purple: #7c3aed;
+    --aiseo-purple-light: #f5f3ff;
+    --aiseo-gray-50: #f9fafb;
+    --aiseo-gray-100: #f3f4f6;
+    --aiseo-gray-200: #e5e7eb;
+    --aiseo-gray-300: #d1d5db;
+    --aiseo-gray-500: #6b7280;
+    --aiseo-gray-700: #374151;
+    --aiseo-gray-900: #111827;
+    --aiseo-radius: 8px;
+    --aiseo-radius-sm: 4px;
+    --aiseo-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --aiseo-shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+    --aiseo-transition: all .2s ease;
 }
 
-.ai-seo-client .card {
+/* ================================================
+   2. LAYOUT — .wrap overrides
+   ================================================ */
+.wrap.ai-seo-client,
+.wrap.aiseo-modern {
+    max-width: 1400px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.wrap.ai-seo-client h1,
+.wrap.aiseo-modern h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--aiseo-gray-900);
+    letter-spacing: -.025em;
+    margin-bottom: 4px;
+}
+
+.wrap.ai-seo-client > .description,
+.wrap.aiseo-modern > .description {
+    color: var(--aiseo-gray-500);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* ================================================
+   3. CARDS / POSTBOX overrides
+   ================================================ */
+.ai-seo-client .card,
+.aiseo-modern .card {
     background: #fff;
-    border: 1px solid #c3c4c7;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
-    padding: 20px;
+    border: 1px solid var(--aiseo-gray-200);
+    border-radius: var(--aiseo-radius);
+    box-shadow: var(--aiseo-shadow);
+    padding: 24px;
     margin-top: 20px;
 }
 
-.ai-seo-client .card h2 {
+.ai-seo-client .card h2,
+.aiseo-modern .card h2 {
     margin-top: 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f0f0f1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--aiseo-gray-100);
+    font-size: 18px;
+    font-weight: 600;
 }
+
+.aiseo-modern .postbox {
+    border: 1px solid var(--aiseo-gray-200);
+    border-radius: var(--aiseo-radius);
+    box-shadow: var(--aiseo-shadow);
+    background: #fff;
+}
+
+.aiseo-modern .postbox h2,
+.aiseo-modern .postbox h3 {
+    font-weight: 600;
+    color: var(--aiseo-gray-900);
+}
+
+/* ================================================
+   4. BUTTONS
+   ================================================ */
+.aiseo-modern .button,
+.ai-seo-client .button {
+    border-radius: 6px !important;
+    font-weight: 500;
+    transition: var(--aiseo-transition);
+    height: 36px;
+    line-height: 34px;
+    padding: 0 16px;
+}
+
+.aiseo-modern .button-primary,
+.ai-seo-client .button-primary {
+    background: var(--aiseo-primary) !important;
+    border-color: var(--aiseo-primary-dark) !important;
+    color: #fff !important;
+}
+
+.aiseo-modern .button-primary:hover,
+.ai-seo-client .button-primary:hover {
+    background: var(--aiseo-primary-dark) !important;
+    box-shadow: var(--aiseo-shadow-md);
+}
+
+.aiseo-modern .button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+/* ================================================
+   5. INPUTS
+   ================================================ */
+.aiseo-modern input[type="text"],
+.aiseo-modern input[type="url"],
+.aiseo-modern input[type="number"],
+.aiseo-modern select,
+.aiseo-modern textarea {
+    border: 1px solid var(--aiseo-gray-300);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    transition: var(--aiseo-transition);
+}
+
+.aiseo-modern input:focus,
+.aiseo-modern select:focus,
+.aiseo-modern textarea:focus {
+    border-color: var(--aiseo-primary);
+    box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+    outline: none;
+}
+
+/* ================================================
+   6. TABLES
+   ================================================ */
+.aiseo-modern .wp-list-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--aiseo-radius);
+    overflow: hidden;
+    border: 1px solid var(--aiseo-gray-200);
+}
+
+.aiseo-modern .wp-list-table thead th {
+    background: var(--aiseo-gray-50);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--aiseo-gray-500);
+    border-bottom: 1px solid var(--aiseo-gray-200);
+}
+
+.aiseo-modern .wp-list-table td {
+    border-bottom: 1px solid var(--aiseo-gray-100);
+}
+
+.aiseo-modern .wp-list-table tr:last-child td {
+    border-bottom: 0;
+}
+
+/* ================================================
+   7. STAT CARDS / METRIC BOXES
+   ================================================ */
+.aiseo-stat-card {
+    text-align: center;
+    padding: 20px 15px;
+    background: #fff;
+    border: 1px solid var(--aiseo-gray-200);
+    border-radius: var(--aiseo-radius);
+    box-shadow: var(--aiseo-shadow);
+}
+
+.aiseo-stat-card .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.aiseo-stat-card .stat-label {
+    font-size: 12px;
+    color: var(--aiseo-gray-500);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-top: 4px;
+}
+
+/* ================================================
+   8. BADGES / TAGS
+   ================================================ */
+.aiseo-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+}
+
+.aiseo-badge-success { background: var(--aiseo-success-light); color: var(--aiseo-success); }
+.aiseo-badge-warning { background: var(--aiseo-warning-light); color: var(--aiseo-warning); }
+.aiseo-badge-danger  { background: var(--aiseo-danger-light);  color: var(--aiseo-danger);  }
+.aiseo-badge-info    { background: var(--aiseo-primary-light); color: var(--aiseo-primary);  }
+.aiseo-badge-purple  { background: var(--aiseo-purple-light);  color: var(--aiseo-purple);   }
+
+/* ================================================
+   9. LICENSE PAGE
+   ================================================ */
+.ai-seo-client .license-status {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.ai-seo-client .license-status.active  { background: var(--aiseo-success-light); color: var(--aiseo-success); }
+.ai-seo-client .license-status.inactive { background: var(--aiseo-danger-light); color: var(--aiseo-danger); }
+.ai-seo-client .license-status.expired  { background: var(--aiseo-danger-light); color: var(--aiseo-danger); }
 
 .ai-seo-client .feature-list {
     list-style: none;
@@ -24,44 +239,137 @@
 }
 
 .ai-seo-client .feature-list li {
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f1;
+    padding: 10px 12px;
+    margin: 4px 0;
+    border-radius: var(--aiseo-radius-sm);
+    border-left: 3px solid var(--aiseo-success);
+    background: var(--aiseo-success-light);
+    font-size: 14px;
+    transition: var(--aiseo-transition);
+}
+
+.ai-seo-client .feature-list li:hover {
+    background: #d1fae5;
 }
 
 .ai-seo-client .feature-list li:before {
     content: "✓";
-    color: #00a32a;
+    color: var(--aiseo-success);
     font-weight: bold;
     margin-right: 10px;
 }
 
-.ai-seo-client .license-status {
-    display: inline-block;
-    padding: 5px 12px;
-    border-radius: 3px;
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
+/* ================================================
+   10. SCORE CIRCLES
+   ================================================ */
+.aiseo-score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
 }
 
-.ai-seo-client .license-status.active {
-    background: #edfaef;
-    color: #00a32a;
+.aiseo-score-good { background: var(--aiseo-success); }
+.aiseo-score-ok   { background: var(--aiseo-warning); }
+.aiseo-score-bad  { background: var(--aiseo-danger);  }
+
+/* ================================================
+   11. ANALYSIS LIST (TruSEO meta box)
+   ================================================ */
+.aiseo-analysis-list {
+    list-style: none;
+    padding: 0;
 }
 
-.ai-seo-client .license-status.inactive {
-    background: #fcf0f1;
-    color: #d63638;
-}
-
-.ai-seo-client .license-status.expired {
-    background: #fcf0f1;
-    color: #d63638;
-}
-
-.ai-seo-client code {
-    background: #f0f0f1;
-    padding: 2px 6px;
-    border-radius: 3px;
+.aiseo-analysis-list li {
+    padding: 10px 12px;
+    margin: 4px 0;
+    border-left: 3px solid var(--aiseo-gray-300);
+    border-radius: 0 var(--aiseo-radius-sm) var(--aiseo-radius-sm) 0;
     font-size: 13px;
+    transition: var(--aiseo-transition);
+}
+
+.aiseo-analysis-list li.good    { border-left-color: var(--aiseo-success); background: var(--aiseo-success-light); }
+.aiseo-analysis-list li.warning { border-left-color: var(--aiseo-warning); background: var(--aiseo-warning-light); }
+.aiseo-analysis-list li.error   { border-left-color: var(--aiseo-danger);  background: var(--aiseo-danger-light);  }
+
+/* ================================================
+   12. SERP PREVIEW
+   ================================================ */
+.aiseo-preview-box {
+    border: 1px solid var(--aiseo-gray-200);
+    padding: 16px;
+    background: #fff;
+    border-radius: var(--aiseo-radius);
+    margin: 15px 0;
+}
+
+.aiseo-preview-title {
+    color: #1a0dab;
+    font-size: 18px;
+    text-decoration: none;
+    line-height: 1.3;
+}
+
+.aiseo-preview-title:hover { text-decoration: underline; cursor: pointer; }
+.aiseo-preview-url  { color: #006621; font-size: 13px; margin: 2px 0; }
+.aiseo-preview-desc { color: #4d5156; font-size: 14px; line-height: 1.5; }
+
+/* ================================================
+   13. PROGRESS / LOADING
+   ================================================ */
+.aiseo-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--aiseo-gray-500);
+    font-size: 13px;
+}
+
+.aiseo-loading::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--aiseo-gray-200);
+    border-top-color: var(--aiseo-primary);
+    border-radius: 50%;
+    animation: aiseo-spin .7s linear infinite;
+}
+
+@keyframes aiseo-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ================================================
+   14. CODE
+   ================================================ */
+.ai-seo-client code,
+.aiseo-modern code {
+    background: var(--aiseo-gray-100);
+    padding: 2px 8px;
+    border-radius: var(--aiseo-radius-sm);
+    font-size: 13px;
+    color: var(--aiseo-gray-700);
+}
+
+/* ================================================
+   15. NOTICE OVERRIDES
+   ================================================ */
+.aiseo-modern .notice {
+    border-radius: var(--aiseo-radius-sm);
+}
+
+/* ================================================
+   16. RESPONSIVE
+   ================================================ */
+@media (max-width: 960px) {
+    .aiseo-modern [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
 }

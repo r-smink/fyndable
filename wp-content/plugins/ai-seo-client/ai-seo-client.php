@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AI SEO Client
  * Description: Client plugin for AI SEO SaaS - validates license and provides core SEO features
- * Version: 1.0.0
+ * Version: 0.5-beta
  * Author: Your Company
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AISEO_CLIENT_VERSION', '1.0.0');
+define('AISEO_CLIENT_VERSION', '0.5-beta');
 define('AISEO_CLIENT_PLUGIN_FILE', __FILE__);
 define('AISEO_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AISEO_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));

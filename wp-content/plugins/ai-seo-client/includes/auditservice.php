@@ -120,8 +120,16 @@ class AuditService
                     $issues[] = 'No schema JSON-LD';
                 }
                 // schema validation light
-                $schemaIssues = (new SchemaValidator())->validateHtml($html);
-                $issues = array_merge($issues, $schemaIssues);
+                if (preg_match_all('/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/is', $html, $schemaMatches)) {
+                    foreach ($schemaMatches[1] as $jsonBlock) {
+                        $parsed = json_decode(trim($jsonBlock), true);
+                        if (!is_array($parsed)) {
+                            $issues[] = 'Invalid JSON-LD block';
+                        } elseif (empty($parsed['@type'])) {
+                            $issues[] = 'JSON-LD missing @type';
+                        }
+                    }
+                }
             }
 
             $results[] = [

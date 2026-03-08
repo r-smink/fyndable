@@ -41,6 +41,21 @@ class Client
     private ?SeoReportExport $seoReportExport = null;
     private ?WooCommerceSeo $wooSeo = null;
     private ?PlagiarismChecker $plagiarismChecker = null;
+    private ?ContentOptimizer $contentOptimizer = null;
+    private ?SerpCompetitor $serpCompetitor = null;
+    private ?TopicCluster $topicCluster = null;
+    private ?KeywordDifficulty $keywordDifficulty = null;
+    private ?LSIKeywords $lsiKeywords = null;
+    private ?AIRepurposer $aiRepurposer = null;
+    private ?RolePermissions $rolePermissions = null;
+    private ?ExtendedSitemaps $extendedSitemaps = null;
+    private ?PageSpeedClient $pageSpeedClient = null;
+    private ?ContentBrief $contentBrief = null;
+    private ?KeywordExplorer $keywordExplorer = null;
+    private ?ContentRewriter $contentRewriter = null;
+    private ?ReadabilityScore $readabilityScore = null;
+    private ?IndexNow $indexNow = null;
+    private ?GscDashboard $gscDashboard = null;
 
     public function init(): void
     {
@@ -134,6 +149,23 @@ class Client
         $this->hreflang = new Hreflang($this->settings);
         $this->hreflang->register();
         
+        $this->rolePermissions = new RolePermissions();
+        $this->rolePermissions->register();
+        
+        $this->lsiKeywords = new LSIKeywords($this->settings, $this->llmClient);
+        $this->lsiKeywords->register();
+        
+        $this->extendedSitemaps = new ExtendedSitemaps($this->sitemapGenerator, $this->settings);
+        $this->extendedSitemaps->register();
+        
+        $this->pageSpeedClient = new PageSpeedClient($this->settings);
+        
+        $this->readabilityScore = new ReadabilityScore($this->settings, $this->llmClient);
+        $this->readabilityScore->register();
+        
+        $this->indexNow = new IndexNow($this->settings);
+        $this->indexNow->register();
+        
         // Starter+ features
         if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial'])) {
             $this->linkAssistant = new LinkAssistant($this->settings);
@@ -141,6 +173,12 @@ class Client
             
             $this->redirectManager = new RedirectionManager($this->settings);
             $this->redirectManager->register();
+            
+            $this->imageAltGenerator = new ImageAltGenerator($this->settings, $this->llmClient, new ImageClient());
+            $this->imageAltGenerator->register();
+            
+            $this->contentRewriter = new ContentRewriter($this->settings, $this->llmClient);
+            $this->contentRewriter->register();
         }
         
         // Professional+ features
@@ -162,6 +200,28 @@ class Client
             
             $this->wooSeo = new WooCommerceSeo($this->settings, $this->llmClient);
             $this->wooSeo->register();
+            
+            $this->contentOptimizer = new ContentOptimizer($this->settings, $this->llmClient, $this->dashboardAPI);
+            $this->contentOptimizer->register();
+            
+            $this->serpCompetitor = new SerpCompetitor($this->settings, $this->llmClient, $this->dashboardAPI);
+            $this->serpCompetitor->register();
+            
+            $this->topicCluster = new TopicCluster($this->settings, $this->llmClient);
+            $this->topicCluster->register();
+            
+            $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient);
+            $this->keywordDifficulty->register();
+            
+            $this->contentBrief = new ContentBrief($this->settings, $this->llmClient, $this->dashboardAPI);
+            $this->contentBrief->register();
+            
+            $this->keywordExplorer = new KeywordExplorer($this->settings, $this->dashboardAPI, $this->llmClient);
+            $this->keywordExplorer->register();
+            
+            $gscClient = new GscClient($this->settings);
+            $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
+            $this->gscDashboard->register();
         }
         
         // Business+ features
@@ -169,12 +229,15 @@ class Client
             $this->contentWriter = new ContentWriter($this->llmClient, $this->settings);
             $this->contentWriter->register();
             
+            $this->aiRepurposer = new AIRepurposer($this->settings, $this->llmClient);
+            $this->aiRepurposer->register();
+            
             $this->bulkActions = new BulkActions($this->settings, $this->llmClient);
             $this->bulkActions->register();
             
             $snapshots = new SnapshotRepository();
-            $gscClient = new GscClient($this->settings);
-            $this->contentDecay = new ContentDecay($snapshots, $gscClient, $this->settings);
+            $gscClientBiz = new GscClient($this->settings);
+            $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings);
             $this->contentDecay->register();
             
             $this->auditService = new AuditService();
