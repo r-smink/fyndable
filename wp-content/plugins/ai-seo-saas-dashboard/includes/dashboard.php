@@ -15,6 +15,8 @@ class Dashboard
     private LicenseKeyGenerator $licenseGenerator;
     private LicenseAdmin $licenseAdmin;
     private LicenseAPI $licenseAPI;
+    private SaaSSettings $saasSettings;
+    private ApiGateway $apiGateway;
 
     public function __construct()
     {
@@ -31,13 +33,20 @@ class Dashboard
         $this->licenseGenerator = new LicenseKeyGenerator($this->tenants);
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
+        $this->saasSettings = new SaaSSettings();
+        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings);
 
         // Register admin menu
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
+        add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
 
         // Register REST API for client plugin communication
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
+        add_action('rest_api_init', [$this->apiGateway, 'register']);
+        
+        // Register settings
+        add_action('admin_init', [$this->saasSettings, 'registerSettings']);
 
         // Register activation hook for table creation
         register_activation_hook($this->pluginFile, [$this, 'activate']);

@@ -13,6 +13,22 @@ class Client
     private LicenseValidator $licenseValidator;
     private DashboardAPI $dashboardAPI;
     private Settings $settings;
+    
+    // SEO Feature instances
+    private ?TruSEOScore $truSEO = null;
+    private ?ContentWriter $contentWriter = null;
+    private ?SchemaMarkup $schemaMarkup = null;
+    private ?LinkAssistant $linkAssistant = null;
+    private ?ImageAltGenerator $imageAltGenerator = null;
+    private ?SitemapGenerator $sitemapGenerator = null;
+    private ?SmartTags $smartTags = null;
+    private ?ContentDecay $contentDecay = null;
+    private ?AuditService $auditService = null;
+    private ?LocalSEO $localSEO = null;
+    private ?RedirectionManager $redirectManager = null;
+    private ?NotFoundMonitor $notFoundMonitor = null;
+    private ?RobotsTxt $robotsTxt = null;
+    private ?SeoRevisions $seoRevisions = null;
 
     public function init(): void
     {
@@ -36,6 +52,9 @@ class Client
             wp_schedule_event(time(), 'daily', 'ai_seo_client_license_check');
         }
         add_action('ai_seo_client_license_check', [$this->licenseValidator, 'validateStoredLicense']);
+        
+        // Initialize SEO features (after init hook so license is validated)
+        add_action('init', [$this, 'initializeFeatures'], 20);
     }
 
     public function activate(): void
@@ -54,6 +73,70 @@ class Client
     {
         // Check if license is valid on every page load (cached)
         $this->licenseValidator->validateStoredLicense();
+    }
+    
+    /**
+     * Initialize SEO features based on license tier
+     */
+    public function initializeFeatures(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            return;
+        }
+        
+        $tier = $this->licenseValidator->getLicenseTier();
+        
+        // Core features - available to all tiers
+        $this->truSEO = new TruSEOScore($this->settings);
+        $this->truSEO->register();
+        
+        $this->smartTags = new SmartTags($this->settings);
+        $this->smartTags->register();
+        
+        $this->sitemapGenerator = new SitemapGenerator($this->settings);
+        $this->sitemapGenerator->register();
+        
+        // Professional+ features
+        if (in_array($tier, ['professional', 'business', 'agency', 'trial'])) {
+            $this->linkAssistant = new LinkAssistant($this->settings);
+            $this->linkAssistant->register();
+            
+            $this->imageAltGenerator = new ImageAltGenerator($this->settings);
+            $this->imageAltGenerator->register();
+            
+            $this->redirectManager = new RedirectionManager($this->settings);
+            $this->redirectManager->register();
+            
+            $this->robotsTxt = new RobotsTxt($this->settings);
+            $this->robotsTxt->register();
+        }
+        
+        // Business+ features
+        if (in_array($tier, ['business', 'agency'])) {
+            $this->contentWriter = new ContentWriter($this->settings, $this->dashboardAPI);
+            $this->contentWriter->register();
+            
+            $this->contentDecay = new ContentDecay($this->settings);
+            $this->contentDecay->register();
+            
+            $this->auditService = new AuditService($this->settings);
+            $this->auditService->register();
+            
+            $this->schemaMarkup = new SchemaMarkup($this->settings);
+            $this->schemaMarkup->register();
+            
+            $this->localSEO = new LocalSEO($this->settings);
+            $this->localSEO->register();
+            
+            $this->notFoundMonitor = new NotFoundMonitor($this->settings);
+            $this->notFoundMonitor->register();
+        }
+        
+        // Agency only features
+        if ($tier === 'agency') {
+            $this->seoRevisions = new SeoRevisions($this->settings);
+            $this->seoRevisions->register();
+        }
     }
 
     /**
@@ -82,13 +165,15 @@ class Client
 
         // Only show features menu if license is active
         if ($this->licenseValidator->isLicenseValid()) {
+            $tier = $this->licenseValidator->getLicenseTier();
+            
             add_submenu_page(
                 'ai-seo-client',
-                __('SEO Features', 'ai-seo-client'),
-                __('Features', 'ai-seo-client'),
+                __('SEO Dashboard', 'ai-seo-client'),
+                __('Dashboard', 'ai-seo-client'),
                 'manage_options',
-                'ai-seo-features',
-                [$this, 'renderFeaturesPage']
+                'ai-seo-dashboard',
+                [$this, 'renderDashboardPage']
             );
         }
     }
@@ -212,14 +297,14 @@ class Client
     }
 
     /**
-     * Render features page (only shown when licensed)
+     * Render dashboard page (only shown when licensed)
      */
-    public function renderFeaturesPage(): void
+    public function renderDashboardPage(): void
     {
         $tier = $this->licenseValidator->getLicenseTier();
         ?>
         <div class="wrap ai-seo-client">
-            <h1><?php esc_html_e('AI SEO Features', 'ai-seo-client'); ?></h1>
+            <h1><?php esc_html_e('AI SEO Dashboard', 'ai-seo-client'); ?></h1>
             
             <div class="card">
                 <h2><?php esc_html_e('Your License Tier', 'ai-seo-client'); ?>: <?php echo esc_html(ucfirst($tier)); ?></h2>

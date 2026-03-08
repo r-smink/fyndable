@@ -173,4 +173,98 @@ class DashboardAPI
 
         return $body;
     }
+
+    /**
+     * Generate AI content through dashboard proxy
+     */
+    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature): array|\WP_Error
+    {
+        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/ai/generate',
+            [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'body' => json_encode([
+                    'messages' => $messages,
+                    'model' => $model,
+                    'max_tokens' => $maxTokens,
+                    'temperature' => $temperature,
+                ]),
+                'timeout' => 60,
+                'sslverify' => true,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return new \WP_Error('connection_error', __('Could not connect to AI service.', 'ai-seo-client'));
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode === 429) {
+            return new \WP_Error('usage_exceeded', $body['message'] ?? __('Usage limit exceeded', 'ai-seo-client'));
+        }
+
+        if ($statusCode !== 200 || empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'ai_failed',
+                $body['message'] ?? __('AI generation failed', 'ai-seo-client')
+            );
+        }
+
+        return $body;
+    }
+
+    /**
+     * Check usage status from dashboard
+     */
+    public function checkUsageStatus(): array|\WP_Error
+    {
+        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/usage/check',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => true,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return new \WP_Error('connection_error', __('Could not retrieve usage status.', 'ai-seo-client'));
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'status_failed',
+                $body['message'] ?? __('Could not retrieve usage status.', 'ai-seo-client')
+            );
+        }
+
+        return $body;
+    }
 }

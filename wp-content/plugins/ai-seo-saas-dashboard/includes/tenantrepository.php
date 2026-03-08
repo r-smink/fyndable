@@ -547,9 +547,27 @@ class TenantRepository
     }
     
     /**
+     * Update tenant's monthly API cost
+     */
+    public function updateMonthlyCost(int $tenantId, float $cost): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . AISEO_TABLE_TENANTS;
+        
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$table} 
+             SET monthly_api_cost = monthly_api_cost + %f,
+                 updated_at = NOW()
+             WHERE id = %d",
+            $cost,
+            $tenantId
+        ));
+    }
+
+    /**
      * Check if tenant has exceeded limits
      */
-    public function checkTenantLimits(string $tenantKey): array
+    public function checkTenantLimits(string $tenantKey, array $tierLimits = []): array
     {
         $tenant = $this->getTenant($tenantKey);
         if (!$tenant) {
@@ -566,11 +584,21 @@ class TenantRepository
         
         $usage = $this->getTenantUsage($tenantKey);
         
+        // Get limits from tier settings or use defaults
+        $apiLimit = $tierLimits['api_calls'] ?? (int)$tenant['api_calls_limit'];
+        $costLimit = $tierLimits['api_cost'] ?? 100; // Default $100 cost limit
+        $currentCost = (float)($usage['api_cost'] ?? 0);
+        
         $checks = [
             'api_calls' => [
                 'used' => (int)$usage['api_calls'],
-                'limit' => (int)$tenant['api_calls_limit'],
-                'exceeded' => (int)$usage['api_calls'] >= (int)$tenant['api_calls_limit'],
+                'limit' => $apiLimit,
+                'exceeded' => (int)$usage['api_calls'] >= $apiLimit,
+            ],
+            'api_cost' => [
+                'used' => $currentCost,
+                'limit' => $costLimit,
+                'exceeded' => $currentCost >= $costLimit,
             ],
         ];
         
