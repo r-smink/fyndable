@@ -20,7 +20,7 @@ class LinkAssistant
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/suggest-links', [
+        register_rest_route('aiseoclient/v1', '/suggest-links', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggestLinks'],
             'permission_callback' => function () {
@@ -28,7 +28,7 @@ class LinkAssistant
             },
         ]);
 
-        register_rest_route('aiseoassistant/v1', '/orphan-pages', [
+        register_rest_route('aiseoclient/v1', '/orphan-pages', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetOrphanPages'],
             'permission_callback' => function () {

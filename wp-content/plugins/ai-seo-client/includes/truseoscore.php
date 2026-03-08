@@ -447,16 +447,37 @@ class TruSEOSCORE
     {
         wp_enqueue_script(
             'aiseo-truseo-editor',
-            plugins_url('assets/truseo-editor.js', __DIR__ . '/ai-seo-assistant.php'),
+            AISEO_CLIENT_PLUGIN_URL . 'assets/truseo-editor.js',
             ['wp-plugins', 'wp-edit-post', 'wp-element', 'wp-data', 'wp-api-fetch'],
-            '1.0',
+            AISEO_CLIENT_VERSION,
             true
         );
+
+        wp_enqueue_script(
+            'aiseo-seo-sidebar',
+            AISEO_CLIENT_PLUGIN_URL . 'assets/seo-sidebar.js',
+            ['wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-api-fetch'],
+            AISEO_CLIENT_VERSION,
+            true
+        );
+
+        // Register meta fields for REST API
+        $metaFields = ['_aiseo_focus_keyphrase', '_aiseo_title', '_aiseo_description', '_aiseo_score'];
+        foreach ($metaFields as $key) {
+            register_post_meta('', $key, [
+                'show_in_rest' => true,
+                'single' => true,
+                'type' => $key === '_aiseo_score' ? 'integer' : 'string',
+                'auth_callback' => function () {
+                    return current_user_can('edit_posts');
+                },
+            ]);
+        }
     }
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/analyze', [
+        register_rest_route('aiseoclient/v1', '/analyze', [
             'methods' => 'POST',
             'callback' => [$this, 'restAnalyze'],
             'permission_callback' => function () {

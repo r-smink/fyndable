@@ -42,7 +42,7 @@ class ContentWriter
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/write-article', [
+        register_rest_route('aiseoclient/v1', '/write-article', [
             'methods' => 'POST',
             'callback' => [$this, 'restWriteArticle'],
             'permission_callback' => function () {
@@ -59,7 +59,7 @@ class ContentWriter
             ],
         ]);
 
-        register_rest_route('aiseoassistant/v1', '/write-section', [
+        register_rest_route('aiseoclient/v1', '/write-section', [
             'methods' => 'POST',
             'callback' => [$this, 'restWriteSection'],
             'permission_callback' => function () {
@@ -627,7 +627,7 @@ Requirements:
                 $('#writer-result').hide();
 
                 wp.apiFetch({
-                    path: 'aiseoassistant/v1/write-article',
+                    path: 'aiseoclient/v1/write-article',
                     method: 'POST',
                     data: {
                         keyword: keyword,

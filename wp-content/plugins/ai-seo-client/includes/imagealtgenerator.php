@@ -86,7 +86,7 @@ class ImageAltGenerator
                 btn.prop('disabled', true).text('<?php esc_html_e('Analyzing...', 'ai-seo-client'); ?>');
                 
                 wp.apiFetch({
-                    path: 'aiseoassistant/v1/generate-alt',
+                    path: 'aiseoclient/v1/generate-alt',
                     method: 'POST',
                     data: { attachment_id: attachmentId }
                 }).then(function(response) {
@@ -264,7 +264,7 @@ class ImageAltGenerator
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/generate-alt', [
+        register_rest_route('aiseoclient/v1', '/generate-alt', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateAlt'],
             'permission_callback' => function () {
@@ -272,7 +272,7 @@ class ImageAltGenerator
             },
         ]);
 
-        register_rest_route('aiseoassistant/v1', '/bulk-generate-alt', [
+        register_rest_route('aiseoclient/v1', '/bulk-generate-alt', [
             'methods' => 'POST',
             'callback' => [$this, 'restBulkGenerateAlt'],
             'permission_callback' => function () {
@@ -280,7 +280,7 @@ class ImageAltGenerator
             },
         ]);
 
-        register_rest_route('aiseoassistant/v1', '/missing-alt-images', [
+        register_rest_route('aiseoclient/v1', '/missing-alt-images', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetMissingAltImages'],
             'permission_callback' => function () {

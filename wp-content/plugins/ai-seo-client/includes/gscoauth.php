@@ -30,7 +30,7 @@ class GscOAuth
 
     public function callbackUrl(): string
     {
-        return rest_url('aiseoassistant/v1/gsc-callback');
+        return rest_url('aiseoclient/v1/gsc-callback');
     }
 
     public function handleCallback(string $code): array|\WP_Error
@@ -55,13 +55,13 @@ class GscOAuth
         if ($codeResp !== 200) return new \WP_Error('gsc_token', __('Token exchange failed', 'ai-seo-assistant'), $resp);
         $body = json_decode(wp_remote_retrieve_body($resp), true);
         if (!is_array($body)) return new \WP_Error('gsc_token', __('Invalid token response', 'ai-seo-assistant'));
-        update_option('aiseoassistant_gsc_tokens', $body, false);
+        update_option('aiseoclient_gsc_tokens', $body, false);
         return $body;
     }
 
     public function refresh(): array|\WP_Error
     {
-        $tokens = get_option('aiseoassistant_gsc_tokens', []);
+        $tokens = get_option('aiseoclient_gsc_tokens', []);
         $refresh = $tokens['refresh_token'] ?? '';
         if (!$refresh) return new \WP_Error('gsc_refresh', __('Missing refresh token', 'ai-seo-assistant'));
         $clientId = $this->settings->get('gsc_client_id', '');
@@ -80,13 +80,13 @@ class GscOAuth
         $body = json_decode(wp_remote_retrieve_body($resp), true);
         if (!is_array($body)) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-assistant'));
         $body['refresh_token'] = $refresh;
-        update_option('aiseoassistant_gsc_tokens', $body, false);
+        update_option('aiseoclient_gsc_tokens', $body, false);
         return $body;
     }
 
     public function getAccessToken(): string
     {
-        $tokens = get_option('aiseoassistant_gsc_tokens', []);
+        $tokens = get_option('aiseoclient_gsc_tokens', []);
         if (!empty($tokens['access_token']) && isset($tokens['expires_in'])) {
             return $tokens['access_token'];
         }

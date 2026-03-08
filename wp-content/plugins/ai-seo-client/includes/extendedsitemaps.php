@@ -371,7 +371,7 @@ class ExtendedSitemaps
     {
         // Trigger sitemap update for category changes
         if ($taxonomy === 'category') {
-            do_action('aiseoassistant_generate_sitemap');
+            do_action('aiseoclient_generate_sitemap');
         }
     }
 

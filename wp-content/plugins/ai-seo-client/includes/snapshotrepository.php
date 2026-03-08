@@ -10,7 +10,7 @@ class SnapshotRepository
     public function __construct(?TenantRepository $tenants = null)
     {
         global $wpdb;
-        $this->table = $wpdb->prefix . 'aiseoassistant_snapshots';
+        $this->table = $wpdb->prefix . 'aiseoclient_snapshots';
         $this->tenants = $tenants;
     }
     

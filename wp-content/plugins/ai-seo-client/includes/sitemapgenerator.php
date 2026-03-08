@@ -20,7 +20,7 @@ class SitemapGenerator
         add_action('template_redirect', [$this, 'maybeServeSitemap']);
         add_action('save_post', [$this, 'onPostSave'], 10, 3);
         add_action('delete_post', [$this, 'onPostDelete']);
-        add_action('aiseoassistant_generate_sitemap', [$this, 'generateAll']);
+        add_action('aiseoclient_generate_sitemap', [$this, 'generateAll']);
     }
 
     public function addRewriteRules(): void
@@ -256,12 +256,12 @@ class SitemapGenerator
         if ($post->post_status !== 'publish') {
             return;
         }
-        wp_schedule_single_event(time(), 'aiseoassistant_generate_sitemap');
+        wp_schedule_single_event(time(), 'aiseoclient_generate_sitemap');
     }
 
     public function onPostDelete(int $postId): void
     {
-        wp_schedule_single_event(time(), 'aiseoassistant_generate_sitemap');
+        wp_schedule_single_event(time(), 'aiseoclient_generate_sitemap');
     }
 
     public function generateAll(): void

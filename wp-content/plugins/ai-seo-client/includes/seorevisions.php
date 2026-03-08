@@ -215,7 +215,7 @@ class SEORevisions
                 }
                 
                 wp.apiFetch({
-                    path: 'aiseoassistant/v1/restore-revision',
+                    path: 'aiseoclient/v1/restore-revision',
                     method: 'POST',
                     data: { revision_id: revId }
                 }).then(function() {
@@ -229,7 +229,7 @@ class SEORevisions
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/restore-revision', [
+        register_rest_route('aiseoclient/v1', '/restore-revision', [
             'methods' => 'POST',
             'callback' => [$this, 'restRestoreRevision'],
             'permission_callback' => function () {

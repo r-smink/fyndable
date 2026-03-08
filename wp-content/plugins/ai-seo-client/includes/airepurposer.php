@@ -76,7 +76,7 @@ class AIRepurposer
                 btn.prop('disabled', true).text('<?php esc_html_e('Generating...', 'ai-seo-client'); ?>');
                 
                 wp.apiFetch({
-                    path: 'aiseoassistant/v1/repurpose',
+                    path: 'aiseoclient/v1/repurpose',
                     method: 'POST',
                     data: {
                         post_id: postId,
@@ -104,7 +104,7 @@ class AIRepurposer
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/repurpose', [
+        register_rest_route('aiseoclient/v1', '/repurpose', [
             'methods' => 'POST',
             'callback' => [$this, 'restRepurpose'],
             'permission_callback' => function () {

@@ -4,7 +4,7 @@ namespace AISEOClient;
 
 class HealthLogger
 {
-    private const OPTION = 'aiseoassistant_health_log';
+    private const OPTION = 'aiseoclient_health_log';
     private const LIMIT = 20;
     private ?AlertNotifier $notifier = null;
 

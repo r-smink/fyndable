@@ -269,12 +269,12 @@ class LocalSEO
         <table class="form-table">
             <tr>
                 <th><?php esc_html_e('Business Name', 'ai-seo-client'); ?></th>
-                <td><input type="text" name="aiseoassistant[local_business_name]" value="<?php echo esc_attr($options['local_business_name'] ?? ''); ?>" class="regular-text"></td>
+                <td><input type="text" name="aiseoclient[local_business_name]" value="<?php echo esc_attr($options['local_business_name'] ?? ''); ?>" class="regular-text"></td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Business Type', 'ai-seo-client'); ?></th>
                 <td>
-                    <select name="aiseoassistant[local_business_type]">
+                    <select name="aiseoclient[local_business_type]">
                         <option value="LocalBusiness"><?php esc_html_e('Local Business', 'ai-seo-client'); ?></option>
                         <option value="Restaurant"><?php esc_html_e('Restaurant', 'ai-seo-client'); ?></option>
                         <option value="Store"><?php esc_html_e('Store', 'ai-seo-client'); ?></option>
@@ -291,47 +291,47 @@ class LocalSEO
             </tr>
             <tr>
                 <th><?php esc_html_e('Description', 'ai-seo-client'); ?></th>
-                <td><textarea name="aiseoassistant[local_description]" rows="3" class="large-text"><?php echo esc_textarea($options['local_description'] ?? ''); ?></textarea></td>
+                <td><textarea name="aiseoclient[local_description]" rows="3" class="large-text"><?php echo esc_textarea($options['local_description'] ?? ''); ?></textarea></td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Address', 'ai-seo-client'); ?></th>
                 <td>
-                    <p><input type="text" name="aiseoassistant[local_street]" value="<?php echo esc_attr($options['local_street'] ?? ''); ?>" class="regular-text" placeholder="Street Address"></p>
-                    <p><input type="text" name="aiseoassistant[local_city]" value="<?php echo esc_attr($options['local_city'] ?? ''); ?>" placeholder="City" style="width:200px;"></p>
-                    <p><input type="text" name="aiseoassistant[local_state]" value="<?php echo esc_attr($options['local_state'] ?? ''); ?>" placeholder="State/Province" style="width:150px;"></p>
-                    <p><input type="text" name="aiseoassistant[local_postal]" value="<?php echo esc_attr($options['local_postal'] ?? ''); ?>" placeholder="Postal Code" style="width:100px;"></p>
-                    <p><input type="text" name="aiseoassistant[local_country]" value="<?php echo esc_attr($options['local_country'] ?? 'NL'); ?>" placeholder="Country" style="width:100px;"></p>
+                    <p><input type="text" name="aiseoclient[local_street]" value="<?php echo esc_attr($options['local_street'] ?? ''); ?>" class="regular-text" placeholder="Street Address"></p>
+                    <p><input type="text" name="aiseoclient[local_city]" value="<?php echo esc_attr($options['local_city'] ?? ''); ?>" placeholder="City" style="width:200px;"></p>
+                    <p><input type="text" name="aiseoclient[local_state]" value="<?php echo esc_attr($options['local_state'] ?? ''); ?>" placeholder="State/Province" style="width:150px;"></p>
+                    <p><input type="text" name="aiseoclient[local_postal]" value="<?php echo esc_attr($options['local_postal'] ?? ''); ?>" placeholder="Postal Code" style="width:100px;"></p>
+                    <p><input type="text" name="aiseoclient[local_country]" value="<?php echo esc_attr($options['local_country'] ?? 'NL'); ?>" placeholder="Country" style="width:100px;"></p>
                 </td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Coordinates', 'ai-seo-client'); ?></th>
                 <td>
-                    Lat: <input type="text" name="aiseoassistant[local_latitude]" value="<?php echo esc_attr($options['local_latitude'] ?? ''); ?>" style="width:100px;">
-                    Lng: <input type="text" name="aiseoassistant[local_longitude]" value="<?php echo esc_attr($options['local_longitude'] ?? ''); ?>" style="width:100px;">
+                    Lat: <input type="text" name="aiseoclient[local_latitude]" value="<?php echo esc_attr($options['local_latitude'] ?? ''); ?>" style="width:100px;">
+                    Lng: <input type="text" name="aiseoclient[local_longitude]" value="<?php echo esc_attr($options['local_longitude'] ?? ''); ?>" style="width:100px;">
                 </td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Contact', 'ai-seo-client'); ?></th>
                 <td>
-                    <p>Phone: <input type="text" name="aiseoassistant[local_phone]" value="<?php echo esc_attr($options['local_phone'] ?? ''); ?>"></p>
-                    <p>Email: <input type="email" name="aiseoassistant[local_email]" value="<?php echo esc_attr($options['local_email'] ?? ''); ?>"></p>
+                    <p>Phone: <input type="text" name="aiseoclient[local_phone]" value="<?php echo esc_attr($options['local_phone'] ?? ''); ?>"></p>
+                    <p>Email: <input type="email" name="aiseoclient[local_email]" value="<?php echo esc_attr($options['local_email'] ?? ''); ?>"></p>
                 </td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Opening Hours', 'ai-seo-client'); ?></th>
                 <td>
-                    <textarea name="aiseoassistant[local_opening_hours]" rows="5" class="large-text" placeholder="Mo-Fr 09:00-17:00&#10;Sa 10:00-14:00"><?php echo esc_textarea($options['local_opening_hours'] ?? ''); ?></textarea>
+                    <textarea name="aiseoclient[local_opening_hours]" rows="5" class="large-text" placeholder="Mo-Fr 09:00-17:00&#10;Sa 10:00-14:00"><?php echo esc_textarea($options['local_opening_hours'] ?? ''); ?></textarea>
                     <p class="description"><?php esc_html_e('One per line. Format: Mo-Fr 09:00-17:00', 'ai-seo-client'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Business Image', 'ai-seo-client'); ?></th>
-                <td><input type="url" name="aiseoassistant[local_image]" value="<?php echo esc_attr($options['local_image'] ?? ''); ?>" class="regular-text"></td>
+                <td><input type="url" name="aiseoclient[local_image]" value="<?php echo esc_attr($options['local_image'] ?? ''); ?>" class="regular-text"></td>
             </tr>
             <tr>
                 <th><?php esc_html_e('Price Range', 'ai-seo-client'); ?></th>
                 <td>
-                    <select name="aiseoassistant[local_price_range]">
+                    <select name="aiseoclient[local_price_range]">
                         <option value="$">$ (Inexpensive)</option>
                         <option value="$$">$$ (Moderate)</option>
                         <option value="$$$">$$$ (Expensive)</option>
@@ -345,7 +345,7 @@ class LocalSEO
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/local-schema', [
+        register_rest_route('aiseoclient/v1', '/local-schema', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetLocalSchema'],
             'permission_callback' => '__return_true',

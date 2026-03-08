@@ -110,7 +110,7 @@ class LSIKeywords
                 btn.prop('disabled', true);
                 
                 wp.apiFetch({
-                    path: 'aiseoassistant/v1/lsi-suggest',
+                    path: 'aiseoclient/v1/lsi-suggest',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {
@@ -291,7 +291,7 @@ Output as a comma-separated list only.";
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/lsi-suggest', [
+        register_rest_route('aiseoclient/v1', '/lsi-suggest', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggestLSI'],
             'permission_callback' => function () {
@@ -299,7 +299,7 @@ Output as a comma-separated list only.";
             },
         ]);
 
-        register_rest_route('aiseoassistant/v1', '/lsi-check', [
+        register_rest_route('aiseoclient/v1', '/lsi-check', [
             'methods' => 'POST',
             'callback' => [$this, 'restCheckUsage'],
             'permission_callback' => function () {

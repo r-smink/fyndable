@@ -30,13 +30,13 @@ class ContentDecay
      */
     public function register(): void
     {
-        add_action('aiseoassistant_decay_check', [$this, 'runDecayCheck']);
+        add_action('aiseoclient_decay_check', [$this, 'runDecayCheck']);
         add_action('admin_notices', [$this, 'showDecayAlerts']);
         add_action('add_meta_boxes', [$this, 'addDecayMetaBox']);
         
         // Cron voor dagelijkse decay check
-        if (!wp_next_scheduled('aiseoassistant_decay_check')) {
-            wp_schedule_event(time(), 'daily', 'aiseoassistant_decay_check');
+        if (!wp_next_scheduled('aiseoclient_decay_check')) {
+            wp_schedule_event(time(), 'daily', 'aiseoclient_decay_check');
         }
         
         // Admin menu
@@ -237,7 +237,7 @@ class ContentDecay
         // Supplement from snapshots — parse position from JSON results
         $snapshots = $wpdb->get_results($wpdb->prepare("
             SELECT results, DATE(created_at) as date
-            FROM {$wpdb->prefix}aiseoassistant_snapshots
+            FROM {$wpdb->prefix}aiseoclient_snapshots
             WHERE keyword = %s 
             AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ORDER BY created_at DESC
@@ -899,7 +899,7 @@ class ContentDecay
      */
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/decay', [
+        register_rest_route('aiseoclient/v1', '/decay', [
             'methods' => 'GET',
             'callback' => [$this, 'getDecayData'],
             'permission_callback' => function () {
@@ -907,7 +907,7 @@ class ContentDecay
             },
         ]);
         
-        register_rest_route('aiseoassistant/v1', '/decay/(?P<id>\d+)', [
+        register_rest_route('aiseoclient/v1', '/decay/(?P<id>\d+)', [
             'methods' => 'POST',
             'callback' => [$this, 'updateDecayStatus'],
             'permission_callback' => function () {

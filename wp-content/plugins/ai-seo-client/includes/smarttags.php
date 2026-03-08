@@ -72,7 +72,7 @@ class SmartTags
                 btn.prop('disabled', true).text('<?php esc_html_e('Analyzing...', 'ai-seo-client'); ?>');
                 
                 wp.apiFetch({
-                    path: 'aiseoassistant/v1/generate-tags',
+                    path: 'aiseoclient/v1/generate-tags',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {
@@ -186,7 +186,7 @@ Content: " . wp_trim_words(strip_tags($post->post_content), 200);
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoassistant/v1', '/generate-tags', [
+        register_rest_route('aiseoclient/v1', '/generate-tags', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateTags'],
             'permission_callback' => function () {

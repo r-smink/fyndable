@@ -13,6 +13,8 @@ class Client
     private LicenseValidator $licenseValidator;
     private DashboardAPI $dashboardAPI;
     private Settings $settings;
+    private ?LlmClient $llmClient = null;
+    private ?HealthLogger $healthLogger = null;
     
     // SEO Feature instances
     private ?TruSEOScore $truSEO = null;
@@ -29,12 +31,24 @@ class Client
     private ?NotFoundMonitor $notFoundMonitor = null;
     private ?RobotsTxt $robotsTxt = null;
     private ?SeoRevisions $seoRevisions = null;
+    private ?OpenGraph $openGraph = null;
+    private ?CanonicalUrl $canonicalUrl = null;
+    private ?Breadcrumbs $breadcrumbs = null;
+    private ?BulkActions $bulkActions = null;
+    private ?SeoDashboard $seoDashboard = null;
+    private ?RankTracker $rankTracker = null;
+    private ?Hreflang $hreflang = null;
+    private ?SeoReportExport $seoReportExport = null;
+    private ?WooCommerceSeo $wooSeo = null;
+    private ?PlagiarismChecker $plagiarismChecker = null;
 
     public function init(): void
     {
         $this->settings = new Settings();
         $this->licenseValidator = new LicenseValidator($this->settings);
         $this->dashboardAPI = new DashboardAPI($this->settings);
+        $this->healthLogger = new HealthLogger();
+        $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
 
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
@@ -64,6 +78,12 @@ class Client
         add_option(AISEO_CLIENT_TENANT_OPTION, '');
         add_option('ai_seo_client_dashboard_url', '');
         add_option('ai_seo_client_license_status', 'inactive');
+        
+        // Create rank tracker tables
+        $settings = new Settings();
+        $dashAPI = new DashboardAPI($settings);
+        $rt = new RankTracker($settings, $dashAPI);
+        $rt->createTables();
     }
 
     /**
@@ -86,42 +106,45 @@ class Client
         
         $tier = $this->licenseValidator->getLicenseTier();
         
-        // Core features - available to all tiers
-        $this->truSEO = new TruSEOScore($this->settings);
+        // Core features - available to all tiers (free, starter, trial, professional, business, agency)
+        $this->truSEO = new TruSEOScore($this->settings, $this->llmClient);
         $this->truSEO->register();
         
-        $this->smartTags = new SmartTags($this->settings);
+        $this->smartTags = new SmartTags($this->llmClient);
         $this->smartTags->register();
         
-        $this->sitemapGenerator = new SitemapGenerator($this->settings);
+        $this->sitemapGenerator = new SitemapGenerator(AISEO_CLIENT_PLUGIN_FILE, $this->settings);
         $this->sitemapGenerator->register();
         
-        // Professional+ features
-        if (in_array($tier, ['professional', 'business', 'agency', 'trial'])) {
+        $this->robotsTxt = new RobotsTxt($this->settings);
+        $this->robotsTxt->register();
+        
+        $this->openGraph = new OpenGraph($this->settings, $this->llmClient);
+        $this->openGraph->register();
+        
+        $this->canonicalUrl = new CanonicalUrl($this->settings);
+        $this->canonicalUrl->register();
+        
+        $this->breadcrumbs = new Breadcrumbs($this->settings);
+        $this->breadcrumbs->register();
+        
+        $this->seoDashboard = new SeoDashboard($this->settings);
+        $this->seoDashboard->register();
+        
+        $this->hreflang = new Hreflang($this->settings);
+        $this->hreflang->register();
+        
+        // Starter+ features
+        if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial'])) {
             $this->linkAssistant = new LinkAssistant($this->settings);
             $this->linkAssistant->register();
             
-            $this->imageAltGenerator = new ImageAltGenerator($this->settings);
-            $this->imageAltGenerator->register();
-            
             $this->redirectManager = new RedirectionManager($this->settings);
             $this->redirectManager->register();
-            
-            $this->robotsTxt = new RobotsTxt($this->settings);
-            $this->robotsTxt->register();
         }
         
-        // Business+ features
-        if (in_array($tier, ['business', 'agency'])) {
-            $this->contentWriter = new ContentWriter($this->settings, $this->dashboardAPI);
-            $this->contentWriter->register();
-            
-            $this->contentDecay = new ContentDecay($this->settings);
-            $this->contentDecay->register();
-            
-            $this->auditService = new AuditService($this->settings);
-            $this->auditService->register();
-            
+        // Professional+ features
+        if (in_array($tier, ['professional', 'business', 'agency', 'trial'])) {
             $this->schemaMarkup = new SchemaMarkup($this->settings);
             $this->schemaMarkup->register();
             
@@ -130,12 +153,40 @@ class Client
             
             $this->notFoundMonitor = new NotFoundMonitor($this->settings);
             $this->notFoundMonitor->register();
+            
+            $this->rankTracker = new RankTracker($this->settings, $this->dashboardAPI);
+            $this->rankTracker->register();
+            
+            $this->seoReportExport = new SeoReportExport($this->settings);
+            $this->seoReportExport->register();
+            
+            $this->wooSeo = new WooCommerceSeo($this->settings, $this->llmClient);
+            $this->wooSeo->register();
+        }
+        
+        // Business+ features
+        if (in_array($tier, ['business', 'agency'])) {
+            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings);
+            $this->contentWriter->register();
+            
+            $this->bulkActions = new BulkActions($this->settings, $this->llmClient);
+            $this->bulkActions->register();
+            
+            $snapshots = new SnapshotRepository();
+            $gscClient = new GscClient($this->settings);
+            $this->contentDecay = new ContentDecay($snapshots, $gscClient, $this->settings);
+            $this->contentDecay->register();
+            
+            $this->auditService = new AuditService();
         }
         
         // Agency only features
         if ($tier === 'agency') {
-            $this->seoRevisions = new SeoRevisions($this->settings);
+            $this->seoRevisions = new SeoRevisions();
             $this->seoRevisions->register();
+            
+            $this->plagiarismChecker = new PlagiarismChecker($this->settings, $this->llmClient);
+            $this->plagiarismChecker->register();
         }
     }
 
@@ -197,7 +248,7 @@ class Client
         wp_enqueue_script(
             'ai-seo-client-admin',
             AISEO_CLIENT_PLUGIN_URL . 'assets/client-admin.js',
-            ['jquery'],
+            ['jquery', 'wp-api-fetch'],
             AISEO_CLIENT_VERSION,
             true
         );
@@ -301,34 +352,9 @@ class Client
      */
     public function renderDashboardPage(): void
     {
-        $tier = $this->licenseValidator->getLicenseTier();
-        ?>
-        <div class="wrap ai-seo-client">
-            <h1><?php esc_html_e('AI SEO Dashboard', 'ai-seo-client'); ?></h1>
-            
-            <div class="card">
-                <h2><?php esc_html_e('Your License Tier', 'ai-seo-client'); ?>: <?php echo esc_html(ucfirst($tier)); ?></h2>
-                <p><?php esc_html_e('Available features based on your subscription tier:', 'ai-seo-client'); ?></p>
-                
-                <ul class="feature-list">
-                    <li><?php esc_html_e('Content Analysis', 'ai-seo-client'); ?></li>
-                    <li><?php esc_html_e('Meta Tag Optimization', 'ai-seo-client'); ?></li>
-                    <?php if (in_array($tier, ['professional', 'business', 'agency'])): ?>
-                        <li><?php esc_html_e('SERP Tracking', 'ai-seo-client'); ?></li>
-                        <li><?php esc_html_e('Keyword Research', 'ai-seo-client'); ?></li>
-                    <?php endif; ?>
-                    <?php if (in_array($tier, ['business', 'agency'])): ?>
-                        <li><?php esc_html_e('Content Decay Alerts', 'ai-seo-client'); ?></li>
-                        <li><?php esc_html_e('AI Content Generation', 'ai-seo-client'); ?></li>
-                    <?php endif; ?>
-                    <?php if ($tier === 'agency'): ?>
-                        <li><?php esc_html_e('Multi-site Management', 'ai-seo-client'); ?></li>
-                        <li><?php esc_html_e('White Label Reports', 'ai-seo-client'); ?></li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
-        <?php
+        if ($this->seoDashboard) {
+            $this->seoDashboard->renderPage();
+        }
     }
 
     /**
