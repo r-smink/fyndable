@@ -65,6 +65,12 @@ class Client
     private ?InternationalSEO $internationalSEO = null;
     private ?TechnicalSEOAuditor $technicalSEOAuditor = null;
     private ?ContentCalendar $contentCalendar = null;
+    private ?AdvancedBacklinks $advancedBacklinks = null;
+    private ?SmartInternalLinking $smartInternalLinking = null;
+    private ?EEATValidator $eeatValidator = null;
+    private ?VideoSEO $videoSEO = null;
+    private ?FAQSchema $faqSchema = null;
+    private ?AIImageGenerator $aiImageGenerator = null;
 
     public function init(): void
     {
@@ -187,6 +193,26 @@ class Client
         $this->contentCalendar = new ContentCalendar($this->settings, $this->llmClient);
         $this->contentCalendar->register();
         
+        // Smart Internal Linking - available to all tiers
+        $this->smartInternalLinking = new SmartInternalLinking($this->settings, $this->llmClient);
+        $this->smartInternalLinking->register();
+        
+        // E-E-A-T Validator - available to all tiers
+        $this->eeatValidator = new EEATValidator($this->settings, $this->llmClient);
+        $this->eeatValidator->register();
+        
+        // Video SEO - available to all tiers
+        $this->videoSEO = new VideoSEO($this->settings, $this->llmClient);
+        $this->videoSEO->register();
+        
+        // FAQ Schema - available to all tiers
+        $this->faqSchema = new FAQSchema($this->settings, $this->llmClient);
+        $this->faqSchema->register();
+        
+        // AI Image Generator - available to all tiers
+        $this->aiImageGenerator = new AIImageGenerator($this->settings, $this->llmClient);
+        $this->aiImageGenerator->register();
+        
         // Starter+ features
         if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial'])) {
             $this->linkAssistant = new LinkAssistant($this->settings);
@@ -263,6 +289,10 @@ class Client
             // Technical SEO Auditor
             $this->technicalSEOAuditor = new TechnicalSEOAuditor($this->settings);
             $this->technicalSEOAuditor->register();
+            
+            // Advanced Backlinks
+            $this->advancedBacklinks = new AdvancedBacklinks($this->settings, $this->llmClient);
+            $this->advancedBacklinks->register();
         }
         
         // Business+ features
