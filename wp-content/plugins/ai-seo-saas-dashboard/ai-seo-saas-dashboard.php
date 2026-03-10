@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: AI SEO SaaS Dashboard
+ * Plugin Name: SSEO AI SaaS Dashboard
  * Description: Multi-tenant license and tenant management dashboard for AI SEO Assistant SaaS
  * Version: 1.0.0
- * Author: AI SEO Solutions
+ * Author: Rick Smink
  * Text Domain: ai-seo-saas
  * Domain Path: /languages
  */

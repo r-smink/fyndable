@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: AI SEO Client
+ * Plugin Name: SSEO AI Client
  * Description: Client plugin for AI SEO SaaS - validates license and provides core SEO features
  * Version: 0.5-beta
- * Author: Your Company
+ * Author: Rick Smink
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: ai-seo-client
