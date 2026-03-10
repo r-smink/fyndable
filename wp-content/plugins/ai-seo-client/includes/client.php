@@ -56,6 +56,15 @@ class Client
     private ?ReadabilityScore $readabilityScore = null;
     private ?IndexNow $indexNow = null;
     private ?GscDashboard $gscDashboard = null;
+    private ?BacklinkAnalyzer $backlinkAnalyzer = null;
+    private ?SerpFeatureTracker $serpFeatureTracker = null;
+    private ?ExternalIntegrations $externalIntegrations = null;
+    private ?CompetitorResearch $competitorResearch = null;
+    private ?WhiteLabelManager $whiteLabelManager = null;
+    private ?ContentPerformanceMonitor $contentPerformanceMonitor = null;
+    private ?InternationalSEO $internationalSEO = null;
+    private ?TechnicalSEOAuditor $technicalSEOAuditor = null;
+    private ?ContentCalendar $contentCalendar = null;
 
     public function init(): void
     {
@@ -166,6 +175,18 @@ class Client
         $this->indexNow = new IndexNow($this->settings);
         $this->indexNow->register();
         
+        // External Integrations - available to all tiers
+        $this->externalIntegrations = new ExternalIntegrations($this->settings);
+        $this->externalIntegrations->register();
+        
+        // Content Performance Monitor - available to all tiers
+        $this->contentPerformanceMonitor = new ContentPerformanceMonitor($this->settings);
+        $this->contentPerformanceMonitor->register();
+        
+        // Content Calendar - available to all tiers
+        $this->contentCalendar = new ContentCalendar($this->settings, $this->llmClient);
+        $this->contentCalendar->register();
+        
         // Starter+ features
         if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial'])) {
             $this->linkAssistant = new LinkAssistant($this->settings);
@@ -222,6 +243,26 @@ class Client
             $gscClient = new GscClient($this->settings);
             $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
             $this->gscDashboard->register();
+            
+            // SERP Feature Tracker
+            $this->serpFeatureTracker = new SerpFeatureTracker($this->settings, $this->llmClient);
+            $this->serpFeatureTracker->register();
+            
+            // Backlink Analyzer
+            $this->backlinkAnalyzer = new BacklinkAnalyzer($this->settings);
+            $this->backlinkAnalyzer->register();
+            
+            // Competitor Research
+            $this->competitorResearch = new CompetitorResearch($this->settings, $this->llmClient, $this->dashboardAPI);
+            $this->competitorResearch->register();
+            
+            // International SEO
+            $this->internationalSEO = new InternationalSEO($this->settings, $this->llmClient, $this->dashboardAPI);
+            $this->internationalSEO->register();
+            
+            // Technical SEO Auditor
+            $this->technicalSEOAuditor = new TechnicalSEOAuditor($this->settings);
+            $this->technicalSEOAuditor->register();
         }
         
         // Business+ features
@@ -250,6 +291,10 @@ class Client
             
             $this->plagiarismChecker = new PlagiarismChecker($this->settings, $this->llmClient);
             $this->plagiarismChecker->register();
+            
+            // White-Label Manager (Agency only)
+            $this->whiteLabelManager = new WhiteLabelManager($this->settings);
+            $this->whiteLabelManager->register();
         }
     }
 
