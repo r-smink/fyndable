@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class TruSEOSCORE
 {
@@ -38,10 +38,10 @@ class TruSEOSCORE
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $focusKeyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
-        $secondaryKeyphrases = get_post_meta($post->ID, '_aiseo_secondary_keyphrases', true);
-        $title = get_post_meta($post->ID, '_aiseo_title', true) ?: $this->generateDefaultTitle($post);
-        $description = get_post_meta($post->ID, '_aiseo_description', true) ?: $this->generateDefaultDescription($post);
+        $focusKeyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
+        $secondaryKeyphrases = get_post_meta($post->ID, '_sseo_ai_secondary_keyphrases', true);
+        $title = get_post_meta($post->ID, '_sseo_ai_title', true) ?: $this->generateDefaultTitle($post);
+        $description = get_post_meta($post->ID, '_sseo_ai_description', true) ?: $this->generateDefaultDescription($post);
         $score = $this->calculateScore($post, $focusKeyphrase);
         $analysis = $this->getAnalysis($post, $focusKeyphrase);
         
@@ -142,21 +142,21 @@ class TruSEOSCORE
         }
 
         if (isset($_POST['aiseo_focus_keyphrase'])) {
-            update_post_meta($postId, '_aiseo_focus_keyphrase', sanitize_text_field($_POST['aiseo_focus_keyphrase']));
+            update_post_meta($postId, '_sseo_ai_focus_keyphrase', sanitize_text_field($_POST['aiseo_focus_keyphrase']));
         }
         if (isset($_POST['aiseo_secondary_keyphrases'])) {
-            update_post_meta($postId, '_aiseo_secondary_keyphrases', sanitize_text_field($_POST['aiseo_secondary_keyphrases']));
+            update_post_meta($postId, '_sseo_ai_secondary_keyphrases', sanitize_text_field($_POST['aiseo_secondary_keyphrases']));
         }
         if (isset($_POST['aiseo_title'])) {
-            update_post_meta($postId, '_aiseo_title', sanitize_text_field($_POST['aiseo_title']));
+            update_post_meta($postId, '_sseo_ai_title', sanitize_text_field($_POST['aiseo_title']));
         }
         if (isset($_POST['aiseo_description'])) {
-            update_post_meta($postId, '_aiseo_description', sanitize_text_field($_POST['aiseo_description']));
+            update_post_meta($postId, '_sseo_ai_description', sanitize_text_field($_POST['aiseo_description']));
         }
 
         // Save score
         $score = $this->calculateScore($post, $_POST['aiseo_focus_keyphrase'] ?? '');
-        update_post_meta($postId, '_aiseo_score', $score);
+        update_post_meta($postId, '_sseo_ai_score', $score);
     }
 
     public function calculateScore(\WP_Post $post, string $focusKeyphrase): int
@@ -202,8 +202,8 @@ class TruSEOSCORE
         }
 
         // SEO meta (max 20 points)
-        $title = get_post_meta($post->ID, '_aiseo_title', true);
-        $desc = get_post_meta($post->ID, '_aiseo_description', true);
+        $title = get_post_meta($post->ID, '_sseo_ai_title', true);
+        $desc = get_post_meta($post->ID, '_sseo_ai_description', true);
         if ($title && strlen($title) >= 30 && strlen($title) <= 60) $score += 10;
         if ($desc && strlen($desc) >= 120 && strlen($desc) <= 160) $score += 10;
 
@@ -447,27 +447,27 @@ class TruSEOSCORE
     {
         wp_enqueue_script(
             'aiseo-truseo-editor',
-            AISEO_CLIENT_PLUGIN_URL . 'assets/truseo-editor.js',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/truseo-editor.js',
             ['wp-plugins', 'wp-edit-post', 'wp-element', 'wp-data', 'wp-api-fetch'],
-            AISEO_CLIENT_VERSION,
+            SSEO_AI_CLIENT_VERSION,
             true
         );
 
         wp_enqueue_script(
             'aiseo-seo-sidebar',
-            AISEO_CLIENT_PLUGIN_URL . 'assets/seo-sidebar.js',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/seo-sidebar.js',
             ['wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-api-fetch'],
-            AISEO_CLIENT_VERSION,
+            SSEO_AI_CLIENT_VERSION,
             true
         );
 
         // Register meta fields for REST API
-        $metaFields = ['_aiseo_focus_keyphrase', '_aiseo_title', '_aiseo_description', '_aiseo_score'];
+        $metaFields = ['_sseo_ai_focus_keyphrase', '_sseo_ai_title', '_sseo_ai_description', '_sseo_ai_score'];
         foreach ($metaFields as $key) {
             register_post_meta('', $key, [
                 'show_in_rest' => true,
                 'single' => true,
-                'type' => $key === '_aiseo_score' ? 'integer' : 'string',
+                'type' => $key === '_sseo_ai_score' ? 'integer' : 'string',
                 'auth_callback' => function () {
                     return current_user_can('edit_posts');
                 },
@@ -477,7 +477,7 @@ class TruSEOSCORE
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/analyze', [
+        register_rest_route('sseo-ai/v1', '/analyze', [
             'methods' => 'POST',
             'callback' => [$this, 'restAnalyze'],
             'permission_callback' => function () {
@@ -511,7 +511,7 @@ class TruSEOSCORE
 
     public function getPostScore(int $postId): ?int
     {
-        $score = get_post_meta($postId, '_aiseo_score', true);
+        $score = get_post_meta($postId, '_sseo_ai_score', true);
         return $score !== '' ? (int)$score : null;
     }
 
@@ -523,7 +523,7 @@ class TruSEOSCORE
             'posts_per_page' => $limit,
             'meta_query' => [
                 [
-                    'key' => '_aiseo_score',
+                    'key' => '_sseo_ai_score',
                     'value' => $minScore,
                     'compare' => '<=',
                     'type' => 'NUMERIC',

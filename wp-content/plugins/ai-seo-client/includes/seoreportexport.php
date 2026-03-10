@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * SEO Report Export (CSV / HTML-PDF)
@@ -21,8 +21,8 @@ class SeoReportExport
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenu']);
-        add_action('admin_post_aiseo_export_csv', [$this, 'handleCsvExport']);
-        add_action('admin_post_aiseo_export_pdf', [$this, 'handlePdfExport']);
+        add_action('admin_post_sseo_ai_export_csv', [$this, 'handleCsvExport']);
+        add_action('admin_post_sseo_ai_export_pdf', [$this, 'handlePdfExport']);
     }
 
     public function addMenu(): void
@@ -58,11 +58,11 @@ class SeoReportExport
         $scored = 0;
 
         foreach ($posts as $post) {
-            $seoTitle = get_post_meta($post->ID, '_aiseo_title', true);
-            $seoDesc = get_post_meta($post->ID, '_aiseo_description', true);
-            $keyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
-            $ogTitle = get_post_meta($post->ID, '_aiseo_og_title', true);
-            $score = get_post_meta($post->ID, '_aiseo_score', true);
+            $seoTitle = get_post_meta($post->ID, '_sseo_ai_title', true);
+            $seoDesc = get_post_meta($post->ID, '_sseo_ai_description', true);
+            $keyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
+            $ogTitle = get_post_meta($post->ID, '_sseo_ai_og_title', true);
+            $score = get_post_meta($post->ID, '_sseo_ai_score', true);
             $wordCount = str_word_count(wp_strip_all_tags($post->post_content));
 
             $issues = [];

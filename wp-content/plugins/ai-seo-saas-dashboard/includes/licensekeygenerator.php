@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * Self-Hosted License Key Generator
@@ -11,7 +11,7 @@ namespace AISEOSaaS;
  */
 class LicenseKeyGenerator
 {
-    private const LICENSE_KEYS_TABLE = 'aiseo_license_keys';
+    private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
     
     private TenantRepository $tenants;
     
@@ -464,12 +464,12 @@ class LicenseKeyGenerator
         
         $attempts = 0;
         do {
-            // Format: AISEO-XXXX-XXXX-XXXX-XXXX
+            // Format: SSEO-AI-XXXX-XXXX-XXXX
             $parts = [];
-            for ($i = 0; $i < 4; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 $parts[] = strtoupper(bin2hex(random_bytes(4)));
             }
-            $key = 'AISEO-' . implode('-', $parts);
+            $key = 'SSEO-AI-' . implode('-', $parts);
             
             // Check uniqueness
             $exists = $wpdb->get_var($wpdb->prepare(

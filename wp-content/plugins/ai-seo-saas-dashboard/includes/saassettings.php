@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * SaaS Settings Manager
@@ -26,20 +26,20 @@ class SaaSSettings
     public function addSettingsMenu(): void
     {
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('SaaS Settings', 'ai-seo-saas'),
             __('Settings', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-settings',
+            'sseo-ai-settings',
             [$this, 'renderSettingsPage']
         );
         
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('Cost Dashboard', 'ai-seo-saas'),
             __('Cost Dashboard', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-costs',
+            'sseo-ai-costs',
             [$this, 'renderCostDashboard']
         );
     }
@@ -158,7 +158,7 @@ class SaaSSettings
     {
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('AI SEO SaaS Settings', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('SSEO AI SaaS Settings', 'ai-seo-saas'); ?></h1>
             
             <form method="post" action="options.php">
                 <?php settings_fields('ai_seo_saas_settings'); ?>
@@ -222,7 +222,7 @@ class SaaSSettings
         
         // Get current month's usage
         $currentMonth = date('Y-m');
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
+        $tableUsage = $wpdb->prefix . 'sseo_ai_tenant_usage';
         
         $monthlyStats = $wpdb->get_row(
             "SELECT 
@@ -242,7 +242,7 @@ class SaaSSettings
                 SUM(u.api_calls) as total_calls,
                 SUM(u.api_cost) as total_cost
             FROM {$tableUsage} u
-            JOIN {$wpdb->prefix}" . AISEO_TABLE_TENANTS . " t ON u.tenant_id = t.id
+            JOIN {$wpdb->prefix}sseo_ai_tenants t ON u.tenant_id = t.id
             WHERE DATE_FORMAT(u.created_at, '%Y-%m') = '{$currentMonth}'
             GROUP BY t.id
             ORDER BY total_cost DESC
@@ -252,7 +252,7 @@ class SaaSSettings
         // Get tier distribution
         $tierDistribution = $wpdb->get_results(
             "SELECT license_tier, COUNT(*) as count, SUM(monthly_api_cost) as total_cost
-            FROM {$wpdb->prefix}" . AISEO_TABLE_TENANTS . "
+            FROM {$wpdb->prefix}sseo_ai_tenants
             WHERE status = 'active'
             GROUP BY license_tier"
         );

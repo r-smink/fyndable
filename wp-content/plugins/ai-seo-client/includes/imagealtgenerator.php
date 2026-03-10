@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class ImageAltGenerator
 {
@@ -43,7 +43,7 @@ class ImageAltGenerator
         }
 
         $currentAlt = get_post_meta($post->ID, '_wp_attachment_image_alt', true);
-        $generatedAlt = get_post_meta($post->ID, '_aiseo_generated_alt', true);
+        $generatedAlt = get_post_meta($post->ID, '_sseo_ai_generated_alt', true);
         ?>
         <div class="aiseo-image-alt-box">
             <p>
@@ -120,7 +120,7 @@ class ImageAltGenerator
             return;
         }
 
-        $generatedAlt = get_post_meta($post->ID, '_aiseo_generated_alt', true);
+        $generatedAlt = get_post_meta($post->ID, '_sseo_ai_generated_alt', true);
         if (!$generatedAlt) {
             return;
         }
@@ -159,7 +159,7 @@ class ImageAltGenerator
         $altText = $this->generateAltText($attachmentId);
         if (!is_wp_error($altText) && !empty($altText)) {
             update_post_meta($attachmentId, '_wp_attachment_image_alt', $altText);
-            update_post_meta($attachmentId, '_aiseo_generated_alt', $altText);
+            update_post_meta($attachmentId, '_sseo_ai_generated_alt', $altText);
         }
 
         return $metadata;
@@ -254,7 +254,7 @@ class ImageAltGenerator
                 $results['errors'][$id] = $altText->get_error_message();
             } else {
                 update_post_meta($id, '_wp_attachment_image_alt', $altText);
-                update_post_meta($id, '_aiseo_generated_alt', $altText);
+                update_post_meta($id, '_sseo_ai_generated_alt', $altText);
                 $results['success']++;
             }
         }
@@ -264,7 +264,7 @@ class ImageAltGenerator
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/generate-alt', [
+        register_rest_route('sseo-ai/v1', '/generate-alt', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateAlt'],
             'permission_callback' => function () {
@@ -272,7 +272,7 @@ class ImageAltGenerator
             },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/bulk-generate-alt', [
+        register_rest_route('sseo-ai/v1', '/bulk-generate-alt', [
             'methods' => 'POST',
             'callback' => [$this, 'restBulkGenerateAlt'],
             'permission_callback' => function () {
@@ -280,7 +280,7 @@ class ImageAltGenerator
             },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/missing-alt-images', [
+        register_rest_route('sseo-ai/v1', '/missing-alt-images', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetMissingAltImages'],
             'permission_callback' => function () {
@@ -350,7 +350,7 @@ class ImageAltGenerator
 
         $aiGenerated = $wpdb->get_var(
             "SELECT COUNT(*) FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_aiseo_generated_alt'"
+            WHERE meta_key = '_sseo_ai_generated_alt'"
         );
 
         return [

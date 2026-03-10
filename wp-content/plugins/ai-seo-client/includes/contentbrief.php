@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Brief Generator
@@ -42,7 +42,7 @@ class ContentBrief
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/content-brief', [
+        register_rest_route('sseo-ai/v1', '/content-brief', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateBrief'],
             'permission_callback' => function () {
@@ -54,7 +54,7 @@ class ContentBrief
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/content-brief/score', [
+        register_rest_route('sseo-ai/v1', '/content-brief/score', [
             'methods' => 'POST',
             'callback' => [$this, 'restScoreContent'],
             'permission_callback' => function () {

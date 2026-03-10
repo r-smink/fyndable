@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Google Search Console Dashboard
@@ -42,7 +42,7 @@ class GscDashboard
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/gsc/overview', [
+        register_rest_route('sseo-ai/v1', '/gsc/overview', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetOverview'],
             'permission_callback' => fn() => current_user_can('manage_options'),
@@ -51,7 +51,7 @@ class GscDashboard
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/gsc/queries', [
+        register_rest_route('sseo-ai/v1', '/gsc/queries', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetTopQueries'],
             'permission_callback' => fn() => current_user_can('manage_options'),
@@ -61,7 +61,7 @@ class GscDashboard
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/gsc/pages', [
+        register_rest_route('sseo-ai/v1', '/gsc/pages', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetTopPages'],
             'permission_callback' => fn() => current_user_can('manage_options'),

@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Breadcrumbs Module
@@ -29,10 +29,10 @@ class Breadcrumbs
 
     public function registerSettings(): void
     {
-        register_setting('ai_seo_client_settings', 'aiseo_breadcrumbs_enabled', ['sanitize_callback' => 'absint']);
-        register_setting('ai_seo_client_settings', 'aiseo_breadcrumbs_separator', ['sanitize_callback' => 'sanitize_text_field']);
-        register_setting('ai_seo_client_settings', 'aiseo_breadcrumbs_home_label', ['sanitize_callback' => 'sanitize_text_field']);
-        register_setting('ai_seo_client_settings', 'aiseo_breadcrumbs_show_home', ['sanitize_callback' => 'absint']);
+        register_setting('sseo_ai_client_settings', 'aiseo_breadcrumbs_enabled', ['sanitize_callback' => 'absint']);
+        register_setting('sseo_ai_client_settings', 'aiseo_breadcrumbs_separator', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('sseo_ai_client_settings', 'aiseo_breadcrumbs_home_label', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('sseo_ai_client_settings', 'aiseo_breadcrumbs_show_home', ['sanitize_callback' => 'absint']);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Hreflang / Multi-language SEO
@@ -28,8 +28,8 @@ class Hreflang
 
     public function registerSettings(): void
     {
-        register_setting('ai_seo_client_settings', 'aiseo_hreflang_default_lang', ['sanitize_callback' => 'sanitize_text_field']);
-        register_setting('ai_seo_client_settings', 'aiseo_hreflang_mode', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('sseo_ai_client_settings', 'aiseo_hreflang_default_lang', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('sseo_ai_client_settings', 'aiseo_hreflang_mode', ['sanitize_callback' => 'sanitize_text_field']);
     }
 
     /**
@@ -232,7 +232,7 @@ class Hreflang
         global $post;
         if (!$post) return [];
 
-        $mappings = get_post_meta($post->ID, '_aiseo_hreflang_map', true);
+        $mappings = get_post_meta($post->ID, '_sseo_ai_hreflang_map', true);
         if (!is_array($mappings) || empty($mappings)) {
             return [];
         }
@@ -280,7 +280,7 @@ class Hreflang
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $mappings = get_post_meta($post->ID, '_aiseo_hreflang_map', true);
+        $mappings = get_post_meta($post->ID, '_sseo_ai_hreflang_map', true);
         if (!is_array($mappings)) {
             $mappings = [];
         }
@@ -382,9 +382,9 @@ class Hreflang
         }
 
         if (!empty($mappings)) {
-            update_post_meta($postId, '_aiseo_hreflang_map', $mappings);
+            update_post_meta($postId, '_sseo_ai_hreflang_map', $mappings);
         } else {
-            delete_post_meta($postId, '_aiseo_hreflang_map');
+            delete_post_meta($postId, '_sseo_ai_hreflang_map');
         }
     }
 

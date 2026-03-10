@@ -1,4 +1,4 @@
-# AI SEO SaaS - Plugin Split
+# SSEO AI SaaS - Plugin Split
 
 This is a refactored version of the AI SEO Assistant plugin, split into two separate plugins for SaaS deployment:
 
@@ -23,10 +23,10 @@ This is a refactored version of the AI SEO Assistant plugin, split into two sepa
 - `POST /wp-json/ai-seo-saas/v1/usage/report` - Report usage metrics
 
 **Database Tables:**
-- `{prefix}aiseo_tenants` - Tenant accounts
-- `{prefix}aiseo_tenant_settings` - Tenant-specific settings
-- `{prefix}aiseo_tenant_usage` - Usage tracking for billing
-- `{prefix}aiseo_license_keys` - License key storage
+- `{prefix}sseo_ai_tenants` - Tenant accounts
+- `{prefix}sseo_ai_tenant_settings` - Tenant-specific settings
+- `{prefix}sseo_ai_tenant_usage` - Usage tracking for billing
+- `{prefix}sseo_ai_license_keys` - License key storage
 
 ### 2. ai-seo-client (Client Plugin)
 **Location:** `/wp-content/plugins/ai-seo-client/`
@@ -63,14 +63,14 @@ This is a refactored version of the AI SEO Assistant plugin, split into two sepa
 3. Go to **AI SEO > License** in wp-admin
 4. Enter:
    - SaaS Dashboard URL (e.g., `https://your-saas-domain.com`)
-   - License key (format: `AISEO-XXXX-XXXX-XXXX-XXXX`)
+   - License key (format: `SSEO-AI-XXXX-XXXX-XXXX`)
 5. Click **Activate License**
 
 ## License Key Format
 
-License keys follow the format: `AISEO-XXXX-XXXX-XXXX-XXXX`
+License keys follow the format: `SSEO-AI-XXXX-XXXX-XXXX`
 
-Example: `AISEO-A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6`
+Example: `SSEO-AI-A1B2C3D4-E5F6G7H8-I9J0K1L2`
 
 ## License Types
 
@@ -141,5 +141,5 @@ Both plugins share `includes/shared-config.php` for:
 
 **Usage not tracking:**
 - Verify tenant key is stored on client site
-- Check `ai_seo_client_tenant` option exists
+- Check `sseo_ai_client_tenant` option exists
 - Ensure cron is running for scheduled checks

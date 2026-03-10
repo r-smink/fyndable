@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * WooCommerce SEO
@@ -40,7 +40,7 @@ class WooCommerceSeo
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/woo/generate-description', [
+        register_rest_route('sseo-ai/v1', '/woo/generate-description', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateDescription'],
             'permission_callback' => function () {
@@ -52,7 +52,7 @@ class WooCommerceSeo
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/woo/generate-meta', [
+        register_rest_route('sseo-ai/v1', '/woo/generate-meta', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateMeta'],
             'permission_callback' => function () {
@@ -105,7 +105,7 @@ class WooCommerceSeo
         }
 
         // Brand (from product attribute or custom meta)
-        $brand = get_post_meta($post->ID, '_aiseo_product_brand', true);
+        $brand = get_post_meta($post->ID, '_sseo_ai_product_brand', true);
         if (!$brand) {
             $brand = $product->get_attribute('brand') ?: $product->get_attribute('merk');
         }
@@ -114,8 +114,8 @@ class WooCommerceSeo
         }
 
         // GTIN / MPN
-        $gtin = get_post_meta($post->ID, '_aiseo_product_gtin', true) ?: $product->get_attribute('gtin');
-        $mpn = get_post_meta($post->ID, '_aiseo_product_mpn', true) ?: $product->get_attribute('mpn');
+        $gtin = get_post_meta($post->ID, '_sseo_ai_product_gtin', true) ?: $product->get_attribute('gtin');
+        $mpn = get_post_meta($post->ID, '_sseo_ai_product_mpn', true) ?: $product->get_attribute('mpn');
         if ($gtin) $schema['gtin13'] = $gtin;
         if ($mpn) $schema['mpn'] = $mpn;
 
@@ -228,9 +228,9 @@ class WooCommerceSeo
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $brand = get_post_meta($post->ID, '_aiseo_product_brand', true);
-        $gtin = get_post_meta($post->ID, '_aiseo_product_gtin', true);
-        $mpn = get_post_meta($post->ID, '_aiseo_product_mpn', true);
+        $brand = get_post_meta($post->ID, '_sseo_ai_product_brand', true);
+        $gtin = get_post_meta($post->ID, '_sseo_ai_product_gtin', true);
+        $mpn = get_post_meta($post->ID, '_sseo_ai_product_mpn', true);
 
         wp_nonce_field('aiseo_woo_save', 'aiseo_woo_nonce');
         ?>
@@ -350,7 +350,7 @@ class WooCommerceSeo
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
         if (!current_user_can('edit_post', $postId)) return;
 
-        $fields = ['_aiseo_product_brand' => 'aiseo_product_brand', '_aiseo_product_gtin' => 'aiseo_product_gtin', '_aiseo_product_mpn' => 'aiseo_product_mpn'];
+        $fields = ['_sseo_ai_product_brand' => 'aiseo_product_brand', '_sseo_ai_product_gtin' => 'aiseo_product_gtin', '_sseo_ai_product_mpn' => 'aiseo_product_mpn'];
         foreach ($fields as $metaKey => $postKey) {
             if (isset($_POST[$postKey])) {
                 update_post_meta($postId, $metaKey, sanitize_text_field($_POST[$postKey]));
@@ -484,13 +484,13 @@ Return JSON only (no markdown):
 
         // Save to post meta
         if (!empty($data['seo_title'])) {
-            update_post_meta($productId, '_aiseo_title', sanitize_text_field($data['seo_title']));
+            update_post_meta($productId, '_sseo_ai_title', sanitize_text_field($data['seo_title']));
         }
         if (!empty($data['seo_description'])) {
-            update_post_meta($productId, '_aiseo_description', sanitize_text_field($data['seo_description']));
+            update_post_meta($productId, '_sseo_ai_description', sanitize_text_field($data['seo_description']));
         }
         if (!empty($data['focus_keyphrase'])) {
-            update_post_meta($productId, '_aiseo_focus_keyphrase', sanitize_text_field($data['focus_keyphrase']));
+            update_post_meta($productId, '_sseo_ai_focus_keyphrase', sanitize_text_field($data['focus_keyphrase']));
         }
 
         return [

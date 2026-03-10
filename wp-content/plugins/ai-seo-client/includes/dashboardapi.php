@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Dashboard API Client
@@ -115,9 +115,9 @@ class DashboardAPI
      */
     public function reportUsage(string $metric, int $count = 1, float $cost = 0): bool
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
             return false;
@@ -179,9 +179,9 @@ class DashboardAPI
      */
     public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature): array|\WP_Error
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
@@ -232,9 +232,9 @@ class DashboardAPI
      */
     public function checkUsageStatus(): array|\WP_Error
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));

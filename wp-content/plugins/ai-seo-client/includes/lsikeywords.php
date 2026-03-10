@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class LSIKeywords
 {
@@ -38,9 +38,9 @@ class LSIKeywords
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $focusKeyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
-        $suggested = get_post_meta($post->ID, '_aiseo_lsi_suggestions', true);
-        $used = get_post_meta($post->ID, '_aiseo_lsi_used', true) ?: [];
+        $focusKeyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
+        $suggested = get_post_meta($post->ID, '_sseo_ai_lsi_suggestions', true);
+        $used = get_post_meta($post->ID, '_sseo_ai_lsi_used', true) ?: [];
         
         wp_nonce_field('aiseo_lsi_save', 'aiseo_lsi_nonce');
         ?>
@@ -166,7 +166,7 @@ class LSIKeywords
         if (isset($_POST['aiseo_lsi_used'])) {
             $used = json_decode(sanitize_text_field($_POST['aiseo_lsi_used']), true);
             if (is_array($used)) {
-                update_post_meta($postId, '_aiseo_lsi_used', $used);
+                update_post_meta($postId, '_sseo_ai_lsi_used', $used);
             }
         }
     }
@@ -280,7 +280,7 @@ Output as a comma-separated list only.";
             return 0;
         }
 
-        $suggested = get_post_meta($postId, '_aiseo_lsi_suggestions', true);
+        $suggested = get_post_meta($postId, '_sseo_ai_lsi_suggestions', true);
         if (empty($suggested)) {
             return 0;
         }
@@ -291,7 +291,7 @@ Output as a comma-separated list only.";
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/lsi-suggest', [
+        register_rest_route('sseo-ai/v1', '/lsi-suggest', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggestLSI'],
             'permission_callback' => function () {
@@ -299,7 +299,7 @@ Output as a comma-separated list only.";
             },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/lsi-check', [
+        register_rest_route('sseo-ai/v1', '/lsi-check', [
             'methods' => 'POST',
             'callback' => [$this, 'restCheckUsage'],
             'permission_callback' => function () {
@@ -311,14 +311,14 @@ Output as a comma-separated list only.";
     public function restSuggestLSI(\WP_REST_Request $request): array
     {
         $postId = (int)$request->get_param('post_id');
-        $focusKeyphrase = get_post_meta($postId, '_aiseo_focus_keyphrase', true);
+        $focusKeyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
 
         if (!$focusKeyphrase) {
             return new \WP_Error('no_keyphrase', __('No focus keyphrase set', 'ai-seo-client'));
         }
 
         $keywords = $this->suggestLSIKeywords($focusKeyphrase);
-        update_post_meta($postId, '_aiseo_lsi_suggestions', $keywords);
+        update_post_meta($postId, '_sseo_ai_lsi_suggestions', $keywords);
 
         return ['keywords' => $keywords];
     }

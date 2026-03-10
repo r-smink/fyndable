@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class AIRepurposer
 {
@@ -104,7 +104,7 @@ class AIRepurposer
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/repurpose', [
+        register_rest_route('sseo-ai/v1', '/repurpose', [
             'methods' => 'POST',
             'callback' => [$this, 'restRepurpose'],
             'permission_callback' => function () {

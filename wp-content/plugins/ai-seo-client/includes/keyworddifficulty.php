@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Personalized Keyword Difficulty Score
@@ -31,7 +31,7 @@ class KeywordDifficulty
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/keyword-difficulty', [
+        register_rest_route('sseo-ai/v1', '/keyword-difficulty', [
             'methods' => 'POST',
             'callback' => [$this, 'restAnalyzeDifficulty'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -40,7 +40,7 @@ class KeywordDifficulty
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/keyword-difficulty/batch', [
+        register_rest_route('sseo-ai/v1', '/keyword-difficulty/batch', [
             'methods' => 'POST',
             'callback' => [$this, 'restBatchAnalyze'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -107,7 +107,7 @@ class KeywordDifficulty
 
         foreach ($posts as $postId) {
             $title = strtolower(get_the_title($postId));
-            $keyphrase = strtolower(get_post_meta($postId, '_aiseo_focus_keyphrase', true) ?: '');
+            $keyphrase = strtolower(get_post_meta($postId, '_sseo_ai_focus_keyphrase', true) ?: '');
 
             $isRelated = false;
             foreach ($words as $word) {
@@ -123,7 +123,7 @@ class KeywordDifficulty
                 if ($post) {
                     $totalWordCount += str_word_count(wp_strip_all_tags($post->post_content));
                 }
-                $score = get_post_meta($postId, '_aiseo_score', true);
+                $score = get_post_meta($postId, '_sseo_ai_score', true);
                 if ($score !== '') {
                     $seoScores[] = (int) $score;
                 }

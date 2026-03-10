@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Topic Cluster / Topical Authority Map
@@ -43,7 +43,7 @@ class TopicCluster
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/clusters/generate', [
+        register_rest_route('sseo-ai/v1', '/clusters/generate', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateCluster'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -53,7 +53,7 @@ class TopicCluster
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/clusters/audit', [
+        register_rest_route('sseo-ai/v1', '/clusters/audit', [
             'methods' => 'POST',
             'callback' => [$this, 'restAuditExistingContent'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -62,7 +62,7 @@ class TopicCluster
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/clusters/save', [
+        register_rest_route('sseo-ai/v1', '/clusters/save', [
             'methods' => 'POST',
             'callback' => [$this, 'restSaveCluster'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -71,13 +71,13 @@ class TopicCluster
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/clusters/list', [
+        register_rest_route('sseo-ai/v1', '/clusters/list', [
             'methods' => 'GET',
             'callback' => [$this, 'restListClusters'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
 
-        register_rest_route('aiseoclient/v1', '/clusters/(?P<id>\d+)', [
+        register_rest_route('sseo-ai/v1', '/clusters/(?P<id>\d+)', [
             'methods' => 'DELETE',
             'callback' => [$this, 'restDeleteCluster'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -212,13 +212,13 @@ PROMPT;
             }
 
             // Also check focus keyphrase
-            $keyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+            $keyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
             if ($keyphrase && stripos(strtolower($keyphrase), strtolower($topic)) !== false) {
                 $matchScore += 10;
             }
 
             if ($matchScore >= 3) {
-                $seoScore = get_post_meta($post->ID, '_aiseo_score', true);
+                $seoScore = get_post_meta($post->ID, '_sseo_ai_score', true);
                 $wordCount = str_word_count(wp_strip_all_tags($post->post_content));
 
                 $existingContent[] = [

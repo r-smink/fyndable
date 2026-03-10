@@ -3,7 +3,7 @@
  */
 
 /* License Status Badge */
-.aiseo-license-badge {
+.sseo-ai-license-badge {
     display: inline-flex;
     align-items: center;
     padding: 6px 12px;
@@ -14,48 +14,48 @@
     letter-spacing: 0.5px;
 }
 
-.aiseo-license-badge--active {
+.sseo-ai-license-badge--active {
     background: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
 }
 
-.aiseo-license-badge--trial {
+.sseo-ai-license-badge--trial {
     background: #fff3cd;
     color: #856404;
     border: 1px solid #ffeaa7;
 }
 
-.aiseo-license-badge--expired {
+.sseo-ai-license-badge--expired {
     background: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
 
-.aiseo-license-badge--inactive {
+.sseo-ai-license-badge--inactive {
     background: #e2e3e5;
     color: #383d41;
     border: 1px solid #d6d8db;
 }
 
 /* Feature Availability Indicators */
-.aiseo-feature-available {
+.sseo-ai-feature-available {
     color: #28a745;
     font-size: 18px;
 }
 
-.aiseo-feature-locked {
+.sseo-ai-feature-locked {
     color: #dc3545;
     font-size: 18px;
     cursor: pointer;
 }
 
-.aiseo-feature-locked:hover {
+.sseo-ai-feature-locked:hover {
     opacity: 0.8;
 }
 
 /* License Card Styles */
-.aiseo-license-card {
+.sseo-ai-license-card {
     background: #fff;
     border: 1px solid #ccd0d4;
     box-shadow: 0 1px 1px rgba(0,0,0,.04);
@@ -64,60 +64,60 @@
     border-radius: 4px;
 }
 
-.aiseo-license-card h2 {
+.sseo-ai-license-card h2 {
     margin-top: 0;
     padding-bottom: 15px;
     border-bottom: 1px solid #f0f0f0;
 }
 
-.aiseo-license-card--trial {
+.sseo-ai-license-card--trial {
     background: linear-gradient(135deg, #fff3cd 0%, #fff 100%);
     border-color: #ffeaa7;
 }
 
-.aiseo-license-card--premium {
+.sseo-ai-license-card--premium {
     background: linear-gradient(135deg, #d4edda 0%, #fff 100%);
     border-color: #c3e6cb;
 }
 
 /* Feature Comparison Table */
-.aiseo-feature-table {
+.sseo-ai-feature-table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
 }
 
-.aiseo-feature-table th,
-.aiseo-feature-table td {
+.sseo-ai-feature-table th,
+.sseo-ai-feature-table td {
     padding: 12px;
     text-align: center;
     border-bottom: 1px solid #f0f0f0;
 }
 
-.aiseo-feature-table th:first-child,
-.aiseo-feature-table td:first-child {
+.sseo-ai-feature-table th:first-child,
+.sseo-ai-feature-table td:first-child {
     text-align: left;
     font-weight: 600;
 }
 
-.aiseo-feature-table th {
+.sseo-ai-feature-table th {
     background: #f8f9fa;
     font-weight: 600;
     color: #23282d;
 }
 
-.aiseo-feature-table .check {
+.sseo-ai-feature-table .check {
     color: #28a745;
     font-size: 18px;
 }
 
-.aiseo-feature-table .cross {
+.sseo-ai-feature-table .cross {
     color: #dc3545;
     font-size: 18px;
 }
 
 /* Trial Countdown */
-.aiseo-trial-countdown {
+.sseo-ai-trial-countdown {
     background: #fff3cd;
     border: 1px solid #ffeaa7;
     border-radius: 4px;
@@ -128,28 +128,28 @@
     justify-content: space-between;
 }
 
-.aiseo-trial-countdown__text {
+.sseo-ai-trial-countdown__text {
     font-size: 14px;
     color: #856404;
 }
 
-.aiseo-trial-countdown__days {
+.sseo-ai-trial-countdown__days {
     font-size: 24px;
     font-weight: 700;
     color: #856404;
 }
 
 /* License Key Input */
-.aiseo-license-input {
+.sseo-ai-license-input {
     position: relative;
 }
 
-.aiseo-license-input input {
+.sseo-ai-license-input input {
     font-family: monospace;
     letter-spacing: 1px;
 }
 
-.aiseo-license-input__icon {
+.sseo-ai-license-input__icon {
     position: absolute;
     right: 10px;
     top: 50%;
@@ -158,7 +158,7 @@
 }
 
 /* Upgrade CTA */
-.aiseo-upgrade-cta {
+.sseo-ai-upgrade-cta {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
     padding: 20px;
@@ -167,17 +167,17 @@
     text-align: center;
 }
 
-.aiseo-upgrade-cta h3 {
+.sseo-ai-upgrade-cta h3 {
     margin: 0 0 10px;
     color: #fff;
 }
 
-.aiseo-upgrade-cta p {
+.sseo-ai-upgrade-cta p {
     margin: 0 0 15px;
     opacity: 0.9;
 }
 
-.aiseo-upgrade-cta .button {
+.sseo-ai-upgrade-cta .button {
     background: #fff;
     color: #667eea;
     border: none;
@@ -185,13 +185,13 @@
     font-weight: 600;
 }
 
-.aiseo-upgrade-cta .button:hover {
+.sseo-ai-upgrade-cta .button:hover {
     background: #f8f9fa;
     color: #764ba2;
 }
 
 /* Usage Limits Bar */
-.aiseo-usage-bar {
+.sseo-ai-usage-bar {
     background: #e9ecef;
     border-radius: 10px;
     height: 10px;
@@ -199,30 +199,30 @@
     margin: 10px 0;
 }
 
-.aiseo-usage-bar__fill {
+.sseo-ai-usage-bar__fill {
     height: 100%;
     border-radius: 10px;
     transition: width 0.3s ease;
 }
 
-.aiseo-usage-bar__fill--low {
+.sseo-ai-usage-bar__fill--low {
     background: #28a745;
 }
 
-.aiseo-usage-bar__fill--medium {
+.sseo-ai-usage-bar__fill--medium {
     background: #ffc107;
 }
 
-.aiseo-usage-bar__fill--high {
+.sseo-ai-usage-bar__fill--high {
     background: #dc3545;
 }
 
 /* Tooltip for locked features */
-.aiseo-locked-tooltip {
+.sseo-ai-locked-tooltip {
     position: relative;
 }
 
-.aiseo-locked-tooltip:hover::after {
+.sseo-ai-locked-tooltip:hover::after {
     content: attr(data-message);
     position: absolute;
     bottom: 100%;
@@ -237,7 +237,7 @@
     z-index: 1000;
 }
 
-.aiseo-locked-tooltip:hover::before {
+.sseo-ai-locked-tooltip:hover::before {
     content: '';
     position: absolute;
     bottom: 100%;
@@ -250,18 +250,18 @@
 
 /* SaaS License Admin Additional Styles */
 
-.aiseo-license-admin {
+.sseo-ai-license-admin {
     max-width: 1400px;
 }
 
-.aiseo-license-admin .aiseo-stats-grid {
+.sseo-ai-license-admin .sseo-ai-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     margin: 20px 0;
 }
 
-.aiseo-license-admin .stat-card {
+.sseo-ai-license-admin .stat-card {
     background: #fff;
     border: 1px solid #c3c4c7;
     border-radius: 4px;
@@ -269,20 +269,20 @@
     text-align: center;
 }
 
-.aiseo-license-admin .stat-value {
+.sseo-ai-license-admin .stat-value {
     font-size: 36px;
     font-weight: bold;
     color: #2271b1;
     line-height: 1.2;
 }
 
-.aiseo-license-admin .stat-label {
+.sseo-ai-license-admin .stat-label {
     color: #646970;
     font-size: 14px;
     margin-top: 5px;
 }
 
-.aiseo-license-admin .aiseo-card {
+.sseo-ai-license-admin .sseo-ai-card {
     background: #fff;
     border: 1px solid #c3c4c7;
     border-radius: 4px;
@@ -290,120 +290,120 @@
     margin: 20px 0;
 }
 
-.aiseo-license-admin .aiseo-card h2,
-.aiseo-license-admin .aiseo-card h3 {
+.sseo-ai-license-admin .sseo-ai-card h2,
+.sseo-ai-license-admin .sseo-ai-card h3 {
     margin-top: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid #c3c4c7;
 }
 
-.aiseo-license-admin .quick-actions {
+.sseo-ai-license-admin .quick-actions {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
 }
 
-.aiseo-license-admin .quick-actions .button-hero {
+.sseo-ai-license-admin .quick-actions .button-hero {
     padding: 15px 30px;
     font-size: 16px;
     height: auto;
 }
 
-.aiseo-license-admin .aiseo-grid-2 {
+.sseo-ai-license-admin .sseo-ai-grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
-.aiseo-license-admin .aiseo-grid-3 {
+.sseo-ai-license-admin .sseo-ai-grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
-.aiseo-license-admin .badge-active {
+.sseo-ai-license-admin .badge-active {
     background: #00a32a;
     color: #fff;
 }
 
-.aiseo-license-admin .badge-used {
+.sseo-ai-license-admin .badge-used {
     background: #2271b1;
     color: #fff;
 }
 
-.aiseo-license-admin .badge-revoked {
+.sseo-ai-license-admin .badge-revoked {
     background: #d63638;
     color: #fff;
 }
 
-.aiseo-license-admin .badge-expired {
+.sseo-ai-license-admin .badge-expired {
     background: #dba617;
     color: #000;
 }
 
-.aiseo-license-admin .badge-suspended {
+.sseo-ai-license-admin .badge-suspended {
     background: #d63638;
     color: #fff;
 }
 
-.aiseo-license-admin .generated-licenses {
+.sseo-ai-license-admin .generated-licenses {
     background: #edfaef;
     border-color: #00a32a;
 }
 
-.aiseo-license-admin .generated-licenses .license-key {
+.sseo-ai-license-admin .generated-licenses .license-key {
     font-weight: bold;
     background: #00a32a;
     color: #fff;
 }
 
-.aiseo-license-admin .tenant-usage-card {
+.sseo-ai-license-admin .tenant-usage-card {
     padding: 15px;
 }
 
-.aiseo-license-admin .tenant-usage-card h3 {
+.sseo-ai-license-admin .tenant-usage-card h3 {
     margin: 0 0 5px 0;
     font-size: 16px;
     border: none;
     padding: 0;
 }
 
-.aiseo-license-admin .tenant-domain {
+.sseo-ai-license-admin .tenant-domain {
     color: #646970;
     font-size: 12px;
     margin: 0 0 15px 0;
 }
 
-.aiseo-license-admin .usage-stats {
+.sseo-ai-license-admin .usage-stats {
     display: grid;
     gap: 10px;
 }
 
-.aiseo-license-admin .usage-stat {
+.sseo-ai-license-admin .usage-stat {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid #f0f0f1;
 }
 
-.aiseo-license-admin .usage-stat:last-child {
+.sseo-ai-license-admin .usage-stat:last-child {
     border-bottom: none;
 }
 
-.aiseo-license-admin .usage-label {
+.sseo-ai-license-admin .usage-label {
     color: #646970;
 }
 
-.aiseo-license-admin .usage-value {
+.sseo-ai-license-admin .usage-value {
     font-weight: bold;
     color: #2271b1;
 }
 
-.aiseo-license-admin .usage-value.exceeded {
+.sseo-ai-license-admin .usage-value.exceeded {
     color: #d63638;
 }
 
-.aiseo-license-admin .tenant-tier {
+.sseo-ai-license-admin .tenant-tier {
     margin: 15px 0 0 0;
     padding-top: 15px;
     border-top: 1px solid #f0f0f1;
@@ -412,26 +412,26 @@
 }
 
 @media screen and (max-width: 1200px) {
-    .aiseo-license-admin .aiseo-stats-grid {
+    .sseo-ai-license-admin .sseo-ai-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .aiseo-license-admin .aiseo-grid-2,
-    .aiseo-license-admin .aiseo-grid-3 {
+    .sseo-ai-license-admin .sseo-ai-grid-2,
+    .sseo-ai-license-admin .sseo-ai-grid-3 {
         grid-template-columns: 1fr;
     }
 }
 
 @media screen and (max-width: 782px) {
-    .aiseo-license-admin .aiseo-stats-grid {
+    .sseo-ai-license-admin .sseo-ai-stats-grid {
         grid-template-columns: 1fr;
     }
     
-    .aiseo-license-admin .quick-actions {
+    .sseo-ai-license-admin .quick-actions {
         flex-direction: column;
     }
     
-    .aiseo-license-admin .quick-actions .button-hero {
+    .sseo-ai-license-admin .quick-actions .button-hero {
         width: 100%;
         text-align: center;
     }

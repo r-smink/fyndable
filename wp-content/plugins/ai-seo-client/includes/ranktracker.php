@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Keyword Rank Tracker
@@ -21,8 +21,8 @@ class RankTracker
         global $wpdb;
         $this->settings = $settings;
         $this->dashboardAPI = $dashboardAPI;
-        $this->tableName = $wpdb->prefix . 'aiseo_rank_history';
-        $this->keywordsTable = $wpdb->prefix . 'aiseo_tracked_keywords';
+        $this->tableName = $wpdb->prefix . 'sseo_ai_rank_history';
+        $this->keywordsTable = $wpdb->prefix . 'sseo_ai_tracked_keywords';
     }
 
     public function register(): void
@@ -31,10 +31,10 @@ class RankTracker
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
 
         // Daily cron for rank checking
-        if (!wp_next_scheduled('aiseo_rank_check_cron')) {
-            wp_schedule_event(time(), 'daily', 'aiseo_rank_check_cron');
+        if (!wp_next_scheduled('sseo_ai_rank_check_cron')) {
+            wp_schedule_event(time(), 'daily', 'sseo_ai_rank_check_cron');
         }
-        add_action('aiseo_rank_check_cron', [$this, 'runDailyCheck']);
+        add_action('sseo_ai_rank_check_cron', [$this, 'runDailyCheck']);
     }
 
     /**
@@ -95,13 +95,13 @@ class RankTracker
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/ranks/keywords', [
+        register_rest_route('sseo-ai/v1', '/ranks/keywords', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetKeywords'],
             'permission_callback' => function () { return current_user_can('manage_options'); },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/ranks/add', [
+        register_rest_route('sseo-ai/v1', '/ranks/add', [
             'methods' => 'POST',
             'callback' => [$this, 'restAddKeyword'],
             'permission_callback' => function () { return current_user_can('manage_options'); },
@@ -112,7 +112,7 @@ class RankTracker
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/ranks/delete', [
+        register_rest_route('sseo-ai/v1', '/ranks/delete', [
             'methods' => 'POST',
             'callback' => [$this, 'restDeleteKeyword'],
             'permission_callback' => function () { return current_user_can('manage_options'); },
@@ -121,13 +121,13 @@ class RankTracker
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/ranks/history/(?P<id>\d+)', [
+        register_rest_route('sseo-ai/v1', '/ranks/history/(?P<id>\d+)', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetHistory'],
             'permission_callback' => function () { return current_user_can('manage_options'); },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/ranks/check-now', [
+        register_rest_route('sseo-ai/v1', '/ranks/check-now', [
             'methods' => 'POST',
             'callback' => [$this, 'restCheckNow'],
             'permission_callback' => function () { return current_user_can('manage_options'); },
@@ -295,9 +295,9 @@ class RankTracker
      */
     private function checkKeywordPosition(string $keyword, string $targetUrl, string $country): ?int
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
             return null;

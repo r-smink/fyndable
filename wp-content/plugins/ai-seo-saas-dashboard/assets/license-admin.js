@@ -1,12 +1,12 @@
 /**
- * AI SEO Assistant - License Admin JavaScript
+ * SSEO AI - License Admin JavaScript
  */
 (function($) {
     'use strict';
 
     $(document).ready(function() {
         // License activation form handling
-        $('#aiseo-license-form').on('submit', function(e) {
+        $('#sseo-ai-license-form').on('submit', function(e) {
             e.preventDefault();
             
             var $form = $(this);
@@ -21,12 +21,12 @@
             $submitBtn.prop('disabled', true).text('Activating...');
             
             $.ajax({
-                url: aiseoLicense.ajaxUrl,
+                url: sseoAiLicense.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'aiseo_activate_license',
+                    action: 'sseo_ai_activate_license',
                     license_key: licenseKey,
-                    nonce: aiseoLicense.nonce
+                    nonce: sseoAiLicense.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -47,7 +47,7 @@
         });
 
         // License deactivation
-        $('#aiseo-deactivate-license').on('click', function(e) {
+        $('#sseo-ai-deactivate-license').on('click', function(e) {
             e.preventDefault();
             
             if (!confirm('Are you sure you want to deactivate this license?')) {
@@ -58,11 +58,11 @@
             $btn.prop('disabled', true).text('Deactivating...');
             
             $.ajax({
-                url: aiseoLicense.ajaxUrl,
+                url: sseoAiLicense.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'aiseo_deactivate_license',
-                    nonce: aiseoLicense.nonce
+                    action: 'sseo_ai_deactivate_license',
+                    nonce: sseoAiLicense.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -83,18 +83,18 @@
         });
 
         // Start trial
-        $('#aiseo-start-trial').on('click', function(e) {
+        $('#sseo-ai-start-trial').on('click', function(e) {
             e.preventDefault();
             
             var $btn = $(this);
             $btn.prop('disabled', true).text('Starting trial...');
             
             $.ajax({
-                url: aiseoLicense.ajaxUrl,
+                url: sseoAiLicense.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'aiseo_start_trial',
-                    nonce: aiseoLicense.nonce
+                    action: 'sseo_ai_start_trial',
+                    nonce: sseoAiLicense.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -115,7 +115,7 @@
         });
 
         // Check license status periodically
-        if ($('#aiseo-license-status').length) {
+        if ($('#sseo-ai-license-status').length) {
             setInterval(function() {
                 checkLicenseStatus();
             }, 300000); // Every 5 minutes
@@ -123,14 +123,14 @@
 
         function checkLicenseStatus() {
             $.ajax({
-                url: aiseoLicense.ajaxUrl,
+                url: sseoAiLicense.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'aiseo_check_license_status',
-                    nonce: aiseoLicense.nonce
+                    action: 'sseo_ai_check_license_status',
+                    nonce: sseoAiLicense.nonce
                 },
                 success: function(response) {
-                    if (response.success && response.data.status !== $('#aiseo-license-status').data('status')) {
+                    if (response.success && response.data.status !== $('#sseo-ai-license-status').data('status')) {
                         window.location.reload();
                     }
                 }
@@ -149,7 +149,7 @@
         }
 
         // Copy license key to clipboard
-        $('.aiseo-copy-key').on('click', function(e) {
+        $('.sseo-ai-copy-key').on('click', function(e) {
             e.preventDefault();
             var key = $(this).data('key');
             
@@ -171,7 +171,7 @@
 
     // SaaS License Admin Functions
     // Copy single license key
-    window.aiseoCopyLicense = function(key) {
+    window.sseoAiCopyLicense = function(key) {
         navigator.clipboard.writeText(key).then(function() {
             alert('License key copied to clipboard!');
         }).catch(function() {
@@ -187,7 +187,7 @@
     };
 
     // Copy all generated licenses
-    window.aiseoCopyAllLicenses = function() {
+    window.sseoAiCopyAllLicenses = function() {
         var keys = [];
         jQuery('.generated-licenses .license-key').each(function() {
             keys.push(jQuery(this).text().trim());

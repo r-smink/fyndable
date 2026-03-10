@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * AI SEO Client Main Class
@@ -77,10 +77,10 @@ class Client
         add_action('admin_post_ai_seo_deactivate_license', [$this, 'handleLicenseDeactivation']);
 
         // Health check - validate license periodically
-        if (!wp_next_scheduled('ai_seo_client_license_check')) {
-            wp_schedule_event(time(), 'daily', 'ai_seo_client_license_check');
+        if (!wp_next_scheduled('sseo_ai_client_license_check')) {
+            wp_schedule_event(time(), 'daily', 'sseo_ai_client_license_check');
         }
-        add_action('ai_seo_client_license_check', [$this->licenseValidator, 'validateStoredLicense']);
+        add_action('sseo_ai_client_license_check', [$this->licenseValidator, 'validateStoredLicense']);
         
         // Initialize SEO features (after init hook so license is validated)
         add_action('init', [$this, 'initializeFeatures'], 20);
@@ -89,10 +89,10 @@ class Client
     public function activate(): void
     {
         // Set default options
-        add_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        add_option(AISEO_CLIENT_TENANT_OPTION, '');
-        add_option('ai_seo_client_dashboard_url', '');
-        add_option('ai_seo_client_license_status', 'inactive');
+        add_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        add_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        add_option('sseo_ai_client_dashboard_url', '');
+        add_option('sseo_ai_client_license_status', 'inactive');
         
         // Create rank tracker tables
         $settings = new Settings();
@@ -303,22 +303,22 @@ class Client
 
         wp_enqueue_style(
             'ai-seo-client-admin',
-            AISEO_CLIENT_PLUGIN_URL . 'assets/client-admin.css',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin.css',
             [],
-            AISEO_CLIENT_VERSION
+            SSEO_AI_CLIENT_VERSION
         );
 
         wp_enqueue_script(
             'ai-seo-client-admin',
-            AISEO_CLIENT_PLUGIN_URL . 'assets/client-admin.js',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin.js',
             ['jquery', 'wp-api-fetch'],
-            AISEO_CLIENT_VERSION,
+            SSEO_AI_CLIENT_VERSION,
             true
         );
 
         wp_localize_script('ai-seo-client-admin', 'aiSeoClient', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('ai_seo_client_nonce'),
+            'nonce' => wp_create_nonce('sseo_ai_client_nonce'),
             'isLicensed' => $this->licenseValidator->isLicenseValid(),
         ]);
     }
@@ -328,10 +328,10 @@ class Client
      */
     public function renderLicensePage(): void
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $licenseStatus = get_option('ai_seo_client_license_status', 'inactive');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $licenseStatus = get_option('sseo_ai_client_license_status', 'inactive');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
         ?>
         <div class="wrap ai-seo-client">
             <h1><?php esc_html_e('AI SEO License Activation', 'ai-seo-client'); ?></h1>
@@ -442,7 +442,7 @@ class Client
         }
 
         // Store dashboard URL
-        update_option('ai_seo_client_dashboard_url', $dashboardUrl);
+        update_option('sseo_ai_client_dashboard_url', $dashboardUrl);
 
         // Attempt activation
         $result = $this->dashboardAPI->activateLicense($licenseKey, $dashboardUrl);
@@ -453,13 +453,13 @@ class Client
         }
 
         // Store license and tenant info
-        update_option(AISEO_CLIENT_LICENSE_OPTION, $licenseKey);
-        update_option(AISEO_CLIENT_TENANT_OPTION, $result['tenant_key']);
-        update_option('ai_seo_client_license_status', 'active');
-        update_option('ai_seo_client_license_tier', $result['tier']);
-        update_option('ai_seo_client_license_expires', $result['expires_at'] ?? '');
-        update_option('ai_seo_client_rate_limit', $result['rate_limit'] ?? 60);
-        update_option('ai_seo_client_api_limit', $result['api_calls_limit'] ?? 1000);
+        update_option(SSEO_AI_CLIENT_LICENSE_OPTION, $licenseKey);
+        update_option(SSEO_AI_CLIENT_TENANT_OPTION, $result['tenant_key']);
+        update_option('sseo_ai_client_license_status', 'active');
+        update_option('sseo_ai_client_license_tier', $result['tier']);
+        update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
+        update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&activated=1'));
         exit;
@@ -478,9 +478,9 @@ class Client
             wp_die(__('Insufficient permissions', 'ai-seo-client'));
         }
 
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         if ($licenseKey && $tenantKey && $dashboardUrl) {
             // Notify dashboard of deactivation
@@ -488,11 +488,11 @@ class Client
         }
 
         // Clear local license data
-        update_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        update_option(AISEO_CLIENT_TENANT_OPTION, '');
-        update_option('ai_seo_client_license_status', 'inactive');
-        delete_option('ai_seo_client_license_tier');
-        delete_option('ai_seo_client_license_expires');
+        update_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        update_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        update_option('sseo_ai_client_license_status', 'inactive');
+        delete_option('sseo_ai_client_license_tier');
+        delete_option('sseo_ai_client_license_expires');
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&deactivated=1'));
         exit;

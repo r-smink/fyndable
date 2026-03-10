@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Canonical URL Management
@@ -57,7 +57,7 @@ class CanonicalUrl
             }
 
             // Check for per-post override
-            $custom = get_post_meta($post->ID, '_aiseo_canonical_url', true);
+            $custom = get_post_meta($post->ID, '_sseo_ai_canonical_url', true);
             if ($custom) {
                 return $custom;
             }
@@ -87,7 +87,7 @@ class CanonicalUrl
         if (is_home()) {
             $pageId = get_option('page_for_posts');
             if ($pageId) {
-                $custom = get_post_meta($pageId, '_aiseo_canonical_url', true);
+                $custom = get_post_meta($pageId, '_sseo_ai_canonical_url', true);
                 if ($custom) {
                     return $custom;
                 }
@@ -180,7 +180,7 @@ class CanonicalUrl
      */
     public function renderMetaBox(\WP_Post $post): void
     {
-        $canonical = get_post_meta($post->ID, '_aiseo_canonical_url', true);
+        $canonical = get_post_meta($post->ID, '_sseo_ai_canonical_url', true);
         $default = get_permalink($post->ID);
         wp_nonce_field('aiseo_canonical_save', 'aiseo_canonical_nonce');
         ?>
@@ -230,9 +230,9 @@ class CanonicalUrl
         $canonical = isset($_POST['aiseo_canonical_url']) ? esc_url_raw($_POST['aiseo_canonical_url']) : '';
 
         if ($canonical) {
-            update_post_meta($postId, '_aiseo_canonical_url', $canonical);
+            update_post_meta($postId, '_sseo_ai_canonical_url', $canonical);
         } else {
-            delete_post_meta($postId, '_aiseo_canonical_url');
+            delete_post_meta($postId, '_sseo_ai_canonical_url');
         }
     }
 }
