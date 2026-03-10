@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class NotFoundMonitor
 {
@@ -11,7 +11,7 @@ class NotFoundMonitor
     {
         global $wpdb;
         $this->settings = $settings;
-        $this->tableName = $wpdb->prefix . 'aiseo_404s';
+        $this->tableName = $wpdb->prefix . 'sseo_ai_404s';
     }
 
     public function register(): void
@@ -93,7 +93,7 @@ class NotFoundMonitor
         }
 
         // Only run periodically
-        $lastCheck = get_post_meta(get_the_ID(), '_aiseo_link_check', true);
+        $lastCheck = get_post_meta(get_the_ID(), '_sseo_ai_link_check', true);
         if ($lastCheck && strtotime($lastCheck) > strtotime('-1 day')) {
             return;
         }
@@ -102,10 +102,10 @@ class NotFoundMonitor
         $broken = $this->scanForBrokenLinks($post->post_content);
 
         if ($broken) {
-            update_post_meta($post->ID, '_aiseo_broken_links', $broken);
+            update_post_meta($post->ID, '_sseo_ai_broken_links', $broken);
         }
 
-        update_post_meta($post->ID, '_aiseo_link_check', current_time('mysql'));
+        update_post_meta($post->ID, '_sseo_ai_link_check', current_time('mysql'));
     }
 
     public function scanForBrokenLinks(string $content): array

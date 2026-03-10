@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * API Gateway / Proxy
@@ -108,7 +108,7 @@ class ApiGateway
         
         // Get current month's usage
         global $wpdb;
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
+        $tableUsage = $wpdb->prefix . SSEO_AI_TABLE_TENANT_USAGE;
         $currentMonth = date('Y-m');
         
         $usage = $wpdb->get_row($wpdb->prepare(
@@ -258,7 +258,7 @@ class ApiGateway
         $costLimit = $this->settings->getCostLimitForTier($tier);
         
         global $wpdb;
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
+        $tableUsage = $wpdb->prefix . SSEO_AI_TABLE_TENANT_USAGE;
         $currentMonth = date('Y-m');
         
         $usage = $wpdb->get_row($wpdb->prepare(
@@ -316,7 +316,7 @@ class ApiGateway
     private function trackUsage(int $tenantId, string $metric, int $count, float $cost): void
     {
         global $wpdb;
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
+        $tableUsage = $wpdb->prefix . SSEO_AI_TABLE_TENANT_USAGE;
         
         $wpdb->insert($tableUsage, [
             'tenant_id' => $tenantId,

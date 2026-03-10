@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * License Validator
@@ -21,7 +21,7 @@ class LicenseValidator
      */
     public function isLicenseValid(): bool
     {
-        $status = get_option('ai_seo_client_license_status', 'inactive');
+        $status = get_option('sseo_ai_client_license_status', 'inactive');
         return $status === 'active';
     }
 
@@ -30,7 +30,7 @@ class LicenseValidator
      */
     public function getLicenseTier(): string
     {
-        return get_option('ai_seo_client_license_tier', 'free');
+        return get_option('sseo_ai_client_license_tier', 'free');
     }
 
     /**
@@ -38,12 +38,12 @@ class LicenseValidator
      */
     public function validateStoredLicense(): void
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
-            update_option('ai_seo_client_license_status', 'inactive');
+            update_option('sseo_ai_client_license_status', 'inactive');
             return;
         }
 
@@ -76,18 +76,18 @@ class LicenseValidator
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (empty($body['success']) || !$body['valid']) {
-            update_option('ai_seo_client_license_status', 'invalid');
+            update_option('sseo_ai_client_license_status', 'invalid');
             return;
         }
 
         // Update local options with latest data
-        update_option('ai_seo_client_license_status', 'active');
-        update_option('ai_seo_client_license_tier', $body['tier'] ?? 'free');
+        update_option('sseo_ai_client_license_status', 'active');
+        update_option('sseo_ai_client_license_tier', $body['tier'] ?? 'free');
         if (!empty($body['expires_at'])) {
-            update_option('ai_seo_client_license_expires', $body['expires_at']);
+            update_option('sseo_ai_client_license_expires', $body['expires_at']);
         }
         if (!empty($body['rate_limit'])) {
-            update_option('ai_seo_client_rate_limit', $body['rate_limit']);
+            update_option('sseo_ai_client_rate_limit', $body['rate_limit']);
         }
     }
 
@@ -115,7 +115,7 @@ class LicenseValidator
      */
     public function getRateLimit(): int
     {
-        return (int)get_option('ai_seo_client_rate_limit', 60);
+        return (int)get_option('sseo_ai_client_rate_limit', 60);
     }
 
     /**
@@ -123,7 +123,7 @@ class LicenseValidator
      */
     public function getApiLimit(): int
     {
-        return (int)get_option('ai_seo_client_api_limit', 1000);
+        return (int)get_option('sseo_ai_client_api_limit', 1000);
     }
 
     /**
@@ -131,7 +131,7 @@ class LicenseValidator
      */
     public function isExpiringSoon(int $days = 7): bool
     {
-        $expires = get_option('ai_seo_client_license_expires', '');
+        $expires = get_option('sseo_ai_client_license_expires', '');
         if (empty($expires)) {
             return false;
         }

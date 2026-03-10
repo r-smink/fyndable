@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * License Key Admin Interface
@@ -31,54 +31,54 @@ class LicenseAdmin
             __('License Management', 'ai-seo-saas'),
             __('Licenses', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             [$this, 'renderLicenseDashboard'],
             'dashicons-admin-network',
             30
         );
         
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('License Dashboard', 'ai-seo-saas'),
             __('Dashboard', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             [$this, 'renderLicenseDashboard']
         );
         
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('Generate License Keys', 'ai-seo-saas'),
             __('Generate Keys', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-generate-licenses',
+            'sseo-ai-generate-licenses',
             [$this, 'renderGeneratePage']
         );
         
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('View All Licenses', 'ai-seo-saas'),
             __('All Licenses', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-view-licenses',
+            'sseo-ai-view-licenses',
             [$this, 'renderAllLicenses']
         );
         
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('Tenants', 'ai-seo-saas'),
             __('Tenants', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-tenants',
+            'sseo-ai-tenants',
             [$this, 'renderTenantsPage']
         );
         
         add_submenu_page(
-            'aiseo-licenses',
+            'sseo-ai-licenses',
             __('Usage Reports', 'ai-seo-saas'),
             __('Usage Reports', 'ai-seo-saas'),
             'manage_options',
-            'aiseo-usage-reports',
+            'sseo-ai-usage-reports',
             [$this, 'renderUsageReports']
         );
     }
@@ -88,19 +88,19 @@ class LicenseAdmin
      */
     public function enqueueAssets(string $hook): void
     {
-        if (strpos($hook, 'aiseo') === false) {
+        if (strpos($hook, 'sseo-ai') === false) {
             return;
         }
         
         wp_enqueue_style(
-            'aiseo-license-admin',
+            'sseo-ai-license-admin',
             plugins_url('assets/license-admin.css', $this->pluginFile),
             [],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
         );
         
         wp_enqueue_script(
-            'aiseo-license-admin',
+            'sseo-ai-license-admin',
             plugins_url('assets/license-admin.js', $this->pluginFile),
             ['jquery'],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.js'),
@@ -117,11 +117,11 @@ class LicenseAdmin
         $recentLicenses = $this->licenseGenerator->getLicenses(['status' => 'active'], 10, 0);
         $recentTenants = $this->tenants->getTenants([], 10, 0);
         ?>
-        <div class="wrap aiseo-license-admin">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('License Management Dashboard', 'ai-seo-saas'); ?></h1>
             
             <!-- Stats Cards -->
-            <div class="aiseo-stats-grid">
+            <div class="sseo-ai-stats-grid">
                 <div class="stat-card">
                     <div class="stat-value"><?php echo number_format($stats['total']); ?></div>
                     <div class="stat-label"><?php esc_html_e('Total Licenses', 'ai-seo-saas'); ?></div>
@@ -141,24 +141,24 @@ class LicenseAdmin
             </div>
             
             <!-- Quick Actions -->
-            <div class="aiseo-card">
+            <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Quick Actions', 'ai-seo-saas'); ?></h2>
                 <div class="quick-actions">
-                    <a href="<?php echo admin_url('admin.php?page=aiseo-generate-licenses'); ?>" class="button button-primary button-hero">
+                    <a href="<?php echo admin_url('admin.php?page=sseo-ai-generate-licenses'); ?>" class="button button-primary button-hero">
                         <?php esc_html_e('Generate License Keys', 'ai-seo-saas'); ?>
                     </a>
-                    <a href="<?php echo admin_url('admin.php?page=aiseo-view-licenses'); ?>" class="button button-secondary button-hero">
+                    <a href="<?php echo admin_url('admin.php?page=sseo-ai-view-licenses'); ?>" class="button button-secondary button-hero">
                         <?php esc_html_e('View All Licenses', 'ai-seo-saas'); ?>
                     </a>
-                    <a href="<?php echo admin_url('admin.php?page=aiseo-tenants'); ?>" class="button button-secondary button-hero">
+                    <a href="<?php echo admin_url('admin.php?page=sseo-ai-tenants'); ?>" class="button button-secondary button-hero">
                         <?php esc_html_e('Manage Tenants', 'ai-seo-saas'); ?>
                     </a>
                 </div>
             </div>
             
             <!-- Stats by Type -->
-            <div class="aiseo-grid-2">
-                <div class="aiseo-card">
+            <div class="sseo-ai-grid-2">
+                <div class="sseo-ai-card">
                     <h3><?php esc_html_e('Licenses by Status', 'ai-seo-saas'); ?></h3>
                     <table class="wp-list-table widefat striped">
                         <thead>
@@ -178,7 +178,7 @@ class LicenseAdmin
                     </table>
                 </div>
                 
-                <div class="aiseo-card">
+                <div class="sseo-ai-card">
                     <h3><?php esc_html_e('Licenses by Type', 'ai-seo-saas'); ?></h3>
                     <table class="wp-list-table widefat striped">
                         <thead>
@@ -200,7 +200,7 @@ class LicenseAdmin
             </div>
             
             <!-- Recent Licenses -->
-            <div class="aiseo-card">
+            <div class="sseo-ai-card">
                 <h3><?php esc_html_e('Recent Licenses', 'ai-seo-saas'); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -265,7 +265,7 @@ class LicenseAdmin
             }
         }
         ?>
-        <div class="wrap aiseo-license-admin">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Generate License Keys', 'ai-seo-saas'); ?></h1>
             
             <?php if ($error): ?>
@@ -287,7 +287,7 @@ class LicenseAdmin
                     ?></p>
                 </div>
                 
-                <div class="aiseo-card generated-licenses">
+                <div class="sseo-ai-card generated-licenses">
                     <h3><?php esc_html_e('Generated License Keys', 'ai-seo-saas'); ?></h3>
                     <table class="wp-list-table widefat striped">
                         <thead>
@@ -310,13 +310,13 @@ class LicenseAdmin
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <button type="button" class="button" onclick="aiseoCopyAllLicenses()">
+                    <button type="button" class="button" onclick="sseoAiCopyAllLicenses()">
                         <?php esc_html_e('Copy All to Clipboard', 'ai-seo-saas'); ?>
                     </button>
                 </div>
             <?php endif; ?>
             
-            <div class="aiseo-card">
+            <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Generate New License Keys', 'ai-seo-saas'); ?></h2>
                 <form method="post">
                     <?php wp_nonce_field('generate_license'); ?>
@@ -441,13 +441,13 @@ class LicenseAdmin
         $total = $this->licenseGenerator->countLicenses(array_filter($filters));
         $totalPages = ceil($total / $perPage);
         ?>
-        <div class="wrap aiseo-license-admin">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('All License Keys', 'ai-seo-saas'); ?></h1>
             
             <!-- Filters -->
             <div class="tablenav top">
                 <form method="get" class="alignleft actions">
-                    <input type="hidden" name="page" value="aiseo-view-licenses">
+                    <input type="hidden" name="page" value="sseo-ai-view-licenses">
                     
                     <select name="status">
                         <option value=""><?php esc_html_e('All Statuses', 'ai-seo-saas'); ?></option>
@@ -480,7 +480,7 @@ class LicenseAdmin
                 </form>
                 
                 <div class="alignright">
-                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=aiseo-view-licenses&action=export'), 'export_licenses'); ?>" class="button">
+                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button">
                         <?php esc_html_e('Export CSV', 'ai-seo-saas'); ?>
                     </a>
                 </div>
@@ -512,7 +512,7 @@ class LicenseAdmin
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'ai-seo-saas') . '</em>'; ?></td>
                         <td>
                             <?php if ($license['status'] === 'active'): ?>
-                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=aiseo-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action'); ?>" 
+                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action'); ?>" 
                                    class="button button-small" 
                                    onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license?', 'ai-seo-saas'); ?>')">
                                     <?php esc_html_e('Revoke', 'ai-seo-saas'); ?>
@@ -557,10 +557,10 @@ class LicenseAdmin
     {
         $tenants = $this->tenants->getTenants([], 50, 0);
         ?>
-        <div class="wrap aiseo-license-admin">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Tenant Management', 'ai-seo-saas'); ?></h1>
             
-            <div class="aiseo-card">
+            <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Active Tenants', 'ai-seo-saas'); ?></h2>
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -600,15 +600,15 @@ class LicenseAdmin
     {
         $tenants = $this->tenants->getTenants(['status' => 'active'], 100, 0);
         ?>
-        <div class="wrap aiseo-license-admin">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Usage Reports', 'ai-seo-saas'); ?></h1>
             
-            <div class="aiseo-grid-3">
+            <div class="sseo-ai-grid-3">
                 <?php foreach ($tenants as $tenant): 
                     $usage = $this->tenants->getTenantUsage($tenant['tenant_key']);
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
                 ?>
-                <div class="aiseo-card tenant-usage-card">
+                <div class="sseo-ai-card tenant-usage-card">
                     <h3><?php echo esc_html($tenant['name']); ?></h3>
                     <p class="tenant-domain"><?php echo esc_html($tenant['domain'] ?: 'No domain'); ?></p>
                     

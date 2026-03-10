@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Optimizer — NLP Content Score + Topic Model
@@ -49,7 +49,7 @@ class ContentOptimizer
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/optimizer/topic-model', [
+        register_rest_route('sseo-ai/v1', '/optimizer/topic-model', [
             'methods' => 'POST',
             'callback' => [$this, 'restGetTopicModel'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -59,7 +59,7 @@ class ContentOptimizer
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/optimizer/score', [
+        register_rest_route('sseo-ai/v1', '/optimizer/score', [
             'methods' => 'POST',
             'callback' => [$this, 'restScoreContent'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -70,7 +70,7 @@ class ContentOptimizer
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/optimizer/suggest-terms', [
+        register_rest_route('sseo-ai/v1', '/optimizer/suggest-terms', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggestTermInsertions'],
             'permission_callback' => fn() => current_user_can('edit_posts'),

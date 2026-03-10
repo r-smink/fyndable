@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * LLM Client - Proxied through SaaS Dashboard
@@ -31,9 +31,9 @@ class LlmClient
      */
     public function isAvailable(): bool
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
         
         return !empty($licenseKey) && !empty($tenantKey) && !empty($dashboardUrl);
     }
@@ -81,14 +81,14 @@ class LlmClient
      */
     private function checkRateLimit(): bool
     {
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         if (empty($tenantKey)) {
             return false;
         }
         
         $key = self::RATE_LIMIT_KEY . $tenantKey;
         $calls = get_transient($key) ?: 0;
-        $limit = (int)get_option('ai_seo_client_rate_limit', 60); // per hour
+        $limit = (int)get_option('sseo_ai_client_rate_limit', 60); // per hour
         
         return $calls < $limit;
     }
@@ -98,7 +98,7 @@ class LlmClient
      */
     private function incrementRateLimit(): void
     {
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         if (empty($tenantKey)) {
             return;
         }

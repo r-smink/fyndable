@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * License API REST Endpoints

@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class LinkAssistant
 {
@@ -20,7 +20,7 @@ class LinkAssistant
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/suggest-links', [
+        register_rest_route('sseo-ai/v1', '/suggest-links', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggestLinks'],
             'permission_callback' => function () {
@@ -28,7 +28,7 @@ class LinkAssistant
             },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/orphan-pages', [
+        register_rest_route('sseo-ai/v1', '/orphan-pages', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetOrphanPages'],
             'permission_callback' => function () {
@@ -52,8 +52,8 @@ class LinkAssistant
         ]);
 
         // Get current post keywords
-        $focusKeyphrase = get_post_meta($postId, '_aiseo_focus_keyphrase', true);
-        $secondary = get_post_meta($postId, '_aiseo_secondary_keyphrases', true);
+        $focusKeyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+        $secondary = get_post_meta($postId, '_sseo_ai_secondary_keyphrases', true);
         $currentKeywords = array_filter(array_merge(
             $focusKeyphrase ? [$focusKeyphrase] : [],
             $secondary ? explode(',', $secondary) : []
@@ -197,13 +197,13 @@ class LinkAssistant
         $keywords = [];
 
         // From focus keyphrase
-        $focus = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+        $focus = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
         if ($focus) {
             $keywords[] = strtolower(trim($focus));
         }
 
         // From secondary keyphrases
-        $secondary = get_post_meta($post->ID, '_aiseo_secondary_keyphrases', true);
+        $secondary = get_post_meta($post->ID, '_sseo_ai_secondary_keyphrases', true);
         if ($secondary) {
             $keywords = array_merge($keywords, array_map('strtolower', array_map('trim', explode(',', $secondary))));
         }
@@ -280,7 +280,7 @@ class LinkAssistant
     private function suggestAnchor(string $content, \WP_Post $post): string
     {
         $title = $post->post_title;
-        $focus = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+        $focus = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
 
         // Use focus keyphrase if it exists in content
         if ($focus && stripos($content, $focus) !== false) {
@@ -306,7 +306,7 @@ class LinkAssistant
 
         // Extract and store outgoing links
         $links = $this->extractLinks($post->post_content);
-        update_post_meta($postId, '_aiseo_outgoing_links', $links);
+        update_post_meta($postId, '_sseo_ai_outgoing_links', $links);
     }
 
     private function extractLinks(string $content): array
@@ -351,7 +351,7 @@ class LinkAssistant
 
         // Total internal links
         $postsWithLinks = $wpdb->get_var(
-            "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_aiseo_outgoing_links' AND meta_value != 'a:0:{}'"
+            "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_sseo_ai_outgoing_links' AND meta_value != 'a:0:{}'"
         );
 
         $totalPosts = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type IN ('post', 'page')");

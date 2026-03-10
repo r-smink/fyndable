@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * SaaS Dashboard Main Class
@@ -20,7 +20,7 @@ class Dashboard
 
     public function __construct()
     {
-        $this->pluginFile = AISEO_SAAS_PLUGIN_FILE;
+        $this->pluginFile = SSEO_AI_SAAS_PLUGIN_FILE;
     }
 
     public function init(): void

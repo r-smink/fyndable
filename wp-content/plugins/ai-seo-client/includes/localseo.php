@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class LocalSEO
 {
@@ -61,9 +61,9 @@ class LocalSEO
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $isLocationPage = get_post_meta($post->ID, '_aiseo_is_location_page', true);
-        $locationName = get_post_meta($post->ID, '_aiseo_location_name', true);
-        $locationAddress = get_post_meta($post->ID, '_aiseo_location_address', true);
+        $isLocationPage = get_post_meta($post->ID, '_sseo_ai_is_location_page', true);
+        $locationName = get_post_meta($post->ID, '_sseo_ai_location_name', true);
+        $locationAddress = get_post_meta($post->ID, '_sseo_ai_location_address', true);
         ?>
         <p>
             <label>
@@ -89,13 +89,13 @@ class LocalSEO
             return;
         }
 
-        update_post_meta($postId, '_aiseo_is_location_page', !empty($_POST['aiseo_is_location_page']) ? 1 : 0);
+        update_post_meta($postId, '_sseo_ai_is_location_page', !empty($_POST['aiseo_is_location_page']) ? 1 : 0);
         
         if (isset($_POST['aiseo_location_name'])) {
-            update_post_meta($postId, '_aiseo_location_name', sanitize_text_field($_POST['aiseo_location_name']));
+            update_post_meta($postId, '_sseo_ai_location_name', sanitize_text_field($_POST['aiseo_location_name']));
         }
         if (isset($_POST['aiseo_location_address'])) {
-            update_post_meta($postId, '_aiseo_location_address', sanitize_textarea_field($_POST['aiseo_location_address']));
+            update_post_meta($postId, '_sseo_ai_location_address', sanitize_textarea_field($_POST['aiseo_location_address']));
         }
     }
 
@@ -345,7 +345,7 @@ class LocalSEO
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/local-schema', [
+        register_rest_route('sseo-ai/v1', '/local-schema', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetLocalSchema'],
             'permission_callback' => '__return_true',

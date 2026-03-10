@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * Tenant Management Repository
@@ -10,10 +10,10 @@ namespace AISEOSaaS;
  */
 class TenantRepository
 {
-    private const TENANTS_TABLE = 'aiseo_tenants';
-    private const TENANT_SETTINGS_TABLE = 'aiseo_tenant_settings';
-    private const TENANT_USAGE_TABLE = 'aiseo_tenant_usage';
-    private const LICENSE_KEYS_TABLE = 'aiseo_license_keys';
+    private const TENANTS_TABLE = 'sseo_ai_tenants';
+    private const TENANT_SETTINGS_TABLE = 'sseo_ai_tenant_settings';
+    private const TENANT_USAGE_TABLE = 'sseo_ai_tenant_usage';
+    private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
     
     private ?string $currentTenantId = null;
     
@@ -552,7 +552,7 @@ class TenantRepository
     public function updateMonthlyCost(int $tenantId, float $cost): void
     {
         global $wpdb;
-        $table = $wpdb->prefix . AISEO_TABLE_TENANTS;
+        $table = $wpdb->prefix . 'sseo_ai_tenants';
         
         $wpdb->query($wpdb->prepare(
             "UPDATE {$table} 
@@ -622,14 +622,24 @@ class TenantRepository
         global $wpdb;
         
         $tables = [
-            'aiseoassistant_snapshots',
-            'aiseoassistant_ai_overviews',
-            'aiseo_content_decay',
-            'aiseo_position_trends',
+            'sseo_ai_snapshots',
+            'sseo_ai_ai_overviews',
+            'sseo_ai_content_decay',
+            'sseo_ai_position_trends',
         ];
         
         foreach ($tables as $table) {
             $fullTable = $wpdb->prefix . $table;
+            
+            // Check if table exists first
+            $tableExists = $wpdb->get_var($wpdb->prepare(
+                "SHOW TABLES LIKE %s",
+                $fullTable
+            ));
+            
+            if (!$tableExists) {
+                continue; // Skip if table doesn't exist
+            }
             
             // Check if tenant_id column exists
             $columnExists = $wpdb->get_results($wpdb->prepare(

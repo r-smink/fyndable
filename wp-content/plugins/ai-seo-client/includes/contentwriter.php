@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * AI Content Writer
@@ -42,7 +42,7 @@ class ContentWriter
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/write-article', [
+        register_rest_route('sseo-ai/v1', '/write-article', [
             'methods' => 'POST',
             'callback' => [$this, 'restWriteArticle'],
             'permission_callback' => function () {
@@ -59,7 +59,7 @@ class ContentWriter
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/write-section', [
+        register_rest_route('sseo-ai/v1', '/write-section', [
             'methods' => 'POST',
             'callback' => [$this, 'restWriteSection'],
             'permission_callback' => function () {
@@ -447,11 +447,11 @@ Requirements:
         }
 
         // Set SEO meta
-        update_post_meta($postId, '_aiseo_focus_keyphrase', $articleData['keyword']);
-        update_post_meta($postId, '_aiseo_title', $articleData['title']);
-        update_post_meta($postId, '_aiseo_description', $articleData['meta_description'] ?? '');
-        update_post_meta($postId, '_aiseo_generated', true);
-        update_post_meta($postId, '_aiseo_generated_at', current_time('mysql'));
+        update_post_meta($postId, '_sseo_ai_focus_keyphrase', $articleData['keyword']);
+        update_post_meta($postId, '_sseo_ai_title', $articleData['title']);
+        update_post_meta($postId, '_sseo_ai_description', $articleData['meta_description'] ?? '');
+        update_post_meta($postId, '_sseo_ai_generated', true);
+        update_post_meta($postId, '_sseo_ai_generated_at', current_time('mysql'));
 
         return $postId;
     }

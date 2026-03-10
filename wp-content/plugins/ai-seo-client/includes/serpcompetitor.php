@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * SERP Competitor Content Analysis
@@ -43,7 +43,7 @@ class SerpCompetitor
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/serp/analyze', [
+        register_rest_route('sseo-ai/v1', '/serp/analyze', [
             'methods' => 'POST',
             'callback' => [$this, 'restAnalyzeSerp'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -53,7 +53,7 @@ class SerpCompetitor
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/serp/compare', [
+        register_rest_route('sseo-ai/v1', '/serp/compare', [
             'methods' => 'POST',
             'callback' => [$this, 'restCompareContent'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -63,7 +63,7 @@ class SerpCompetitor
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/serp/gap-analysis', [
+        register_rest_route('sseo-ai/v1', '/serp/gap-analysis', [
             'methods' => 'POST',
             'callback' => [$this, 'restGapAnalysis'],
             'permission_callback' => fn() => current_user_can('edit_posts'),

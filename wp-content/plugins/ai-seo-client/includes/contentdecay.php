@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Decay Detection
@@ -10,9 +10,9 @@ namespace AISEOClient;
  */
 class ContentDecay
 {
-    private const DECAY_TABLE = 'aiseo_content_decay';
-    private const TREND_TABLE = 'aiseo_position_trends';
-    private const ALERT_OPTION = 'aiseo_decay_alerts';
+    private const DECAY_TABLE = 'sseo_ai_content_decay';
+    private const TREND_TABLE = 'sseo_ai_position_trends';
+    private const ALERT_OPTION = 'sseo_ai_decay_alerts';
     
     private SnapshotRepository $snapshots;
     private GscClient $gscClient;
@@ -171,7 +171,7 @@ class ContentDecay
         $postIds = $wpdb->get_col("
             SELECT DISTINCT post_id 
             FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_aiseo_focus_keyphrase'
+            WHERE meta_key = '_sseo_ai_focus_keyphrase'
             AND meta_value != ''
             AND post_id IN (
                 SELECT ID FROM {$wpdb->posts} 
@@ -199,13 +199,13 @@ class ContentDecay
         $keywords = [];
         
         // Focus keyphrase from meta
-        $focusKeyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+        $focusKeyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
         if ($focusKeyphrase) {
             $keywords[] = $focusKeyphrase;
         }
         
         // Secondary keyphrases
-        $secondary = get_post_meta($post->ID, '_aiseo_secondary_keyphrases', true);
+        $secondary = get_post_meta($post->ID, '_sseo_ai_secondary_keyphrases', true);
         if ($secondary) {
             $keywords = array_merge($keywords, array_map('trim', explode(',', $secondary)));
         }
@@ -899,7 +899,7 @@ class ContentDecay
      */
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/decay', [
+        register_rest_route('sseo-ai/v1', '/decay', [
             'methods' => 'GET',
             'callback' => [$this, 'getDecayData'],
             'permission_callback' => function () {
@@ -907,7 +907,7 @@ class ContentDecay
             },
         ]);
         
-        register_rest_route('aiseoclient/v1', '/decay/(?P<id>\d+)', [
+        register_rest_route('sseo-ai/v1', '/decay/(?P<id>\d+)', [
             'methods' => 'POST',
             'callback' => [$this, 'updateDecayStatus'],
             'permission_callback' => function () {

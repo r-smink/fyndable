@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name: AI SEO Client
+ * Plugin Name: SSEO AI Client
  * Description: Client plugin for AI SEO SaaS - validates license and provides core SEO features
  * Version: 0.5-beta
- * Author: Your Company
+ * Author: Rick Smink
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain: ai-seo-client
+ * Text Domain: sseo-ai-client
  * Domain Path: /languages
  */
 
@@ -14,17 +14,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AISEO_CLIENT_VERSION', '0.5-beta');
-define('AISEO_CLIENT_PLUGIN_FILE', __FILE__);
-define('AISEO_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('AISEO_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('AISEO_CLIENT_LICENSE_OPTION', 'ai_seo_client_license');
-define('AISEO_CLIENT_TENANT_OPTION', 'ai_seo_client_tenant');
+define('SSEO_AI_CLIENT_VERSION', '0.5-beta');
+define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
+define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('SSEO_AI_CLIENT_LICENSE_OPTION', 'sseo_ai_client_license');
+define('SSEO_AI_CLIENT_TENANT_OPTION', 'sseo_ai_client_tenant');
 
 // Autoloader
 spl_autoload_register(function ($class) {
-    $prefix = 'AISEOClient\\';
-    $baseDir = AISEO_CLIENT_PLUGIN_DIR . 'includes/';
+    $prefix = 'SSEOAIClient\\';
+    $baseDir = SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/';
 
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
@@ -41,13 +41,13 @@ spl_autoload_register(function ($class) {
 
 // Activation hook
 register_activation_hook(__FILE__, function () {
-    require_once AISEO_CLIENT_PLUGIN_DIR . 'includes/client.php';
-    $client = new \AISEOClient\Client();
+    require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
+    $client = new \SSEOAIClient\Client();
     $client->activate();
 });
 
 // Initialize plugin
 add_action('plugins_loaded', function () {
-    $client = new \AISEOClient\Client();
+    $client = new \SSEOAIClient\Client();
     $client->init();
 });

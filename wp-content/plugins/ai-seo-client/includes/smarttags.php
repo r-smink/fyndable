@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class SmartTags
 {
@@ -32,7 +32,7 @@ class SmartTags
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $suggested = get_post_meta($post->ID, '_aiseo_tag_suggestions', true);
+        $suggested = get_post_meta($post->ID, '_sseo_ai_tag_suggestions', true);
         $currentTags = get_the_tags($post->ID);
         $currentTagNames = $currentTags ? wp_list_pluck($currentTags, 'name') : [];
         ?>
@@ -119,7 +119,7 @@ class SmartTags
         $suggested = $this->generateTags($post);
         
         if (!empty($suggested)) {
-            update_post_meta($postId, '_aiseo_tag_suggestions', $suggested);
+            update_post_meta($postId, '_sseo_ai_tag_suggestions', $suggested);
 
             // Auto-apply top tags if enabled
             $autoApply = get_option('aiseo_auto_apply_tags', 0);
@@ -186,7 +186,7 @@ Content: " . wp_trim_words(strip_tags($post->post_content), 200);
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/generate-tags', [
+        register_rest_route('sseo-ai/v1', '/generate-tags', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateTags'],
             'permission_callback' => function () {
@@ -205,7 +205,7 @@ Content: " . wp_trim_words(strip_tags($post->post_content), 200);
         }
 
         $tags = $this->generateTags($post);
-        update_post_meta($postId, '_aiseo_tag_suggestions', $tags);
+        update_post_meta($postId, '_sseo_ai_tag_suggestions', $tags);
 
         return ['tags' => $tags];
     }

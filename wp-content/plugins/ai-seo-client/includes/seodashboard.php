@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * SEO Dashboard
@@ -24,7 +24,7 @@ class SeoDashboard
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/dashboard/overview', [
+        register_rest_route('sseo-ai/v1', '/dashboard/overview', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetOverview'],
             'permission_callback' => function () {
@@ -77,10 +77,10 @@ class SeoDashboard
             $content = $post->post_content;
             $wordCount = str_word_count(wp_strip_all_tags($content));
 
-            $seoTitle = get_post_meta($postId, '_aiseo_title', true);
-            $seoDesc = get_post_meta($postId, '_aiseo_description', true);
-            $keyphrase = get_post_meta($postId, '_aiseo_focus_keyphrase', true);
-            $ogTitle = get_post_meta($postId, '_aiseo_og_title', true);
+            $seoTitle = get_post_meta($postId, '_sseo_ai_title', true);
+            $seoDesc = get_post_meta($postId, '_sseo_ai_description', true);
+            $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+            $ogTitle = get_post_meta($postId, '_sseo_ai_og_title', true);
 
             if ($seoTitle) $withTitle++;
             if ($seoDesc) $withDesc++;
