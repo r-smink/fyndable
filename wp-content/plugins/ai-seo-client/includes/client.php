@@ -334,8 +334,8 @@ class Client
     public function registerAdminMenu(): void
     {
         add_menu_page(
-            __('AI SEO Client', 'ai-seo-client'),
-            __('AI SEO', 'ai-seo-client'),
+            __('SSEO AI', 'ai-seo-client'),
+            __('SSEO AI', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
             [$this, 'renderLicensePage'],

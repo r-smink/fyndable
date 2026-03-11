@@ -37,12 +37,12 @@
         // Validate license key format
         $('#license_key').on('blur', function() {
             const key = $(this).val().trim();
-            const pattern = /^AISEO-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/;
+            const pattern = /^SSEO-AI-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/;
             
             if (key && !pattern.test(key)) {
                 $(this).addClass('error');
                 if (!$(this).next('.description').length) {
-                    $(this).after('<p class="description error-message" style="color: #d63638;">Invalid license key format. Expected format: AISEO-XXXX-XXXX-XXXX-XXXX</p>');
+                    $(this).after('<p class="description error-message" style="color: #d63638;">Invalid license key format. Expected format: SSEO-AI-XXXX-XXXX-XXXX</p>');
                 }
             } else {
                 $(this).removeClass('error');

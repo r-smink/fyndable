@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: SSEO AI Client
- * Description: Client plugin for AI SEO SaaS - validates license and provides core SEO features
+ * Plugin Name: SSEO AI
+ * Description: Advanced AI-powered SEO plugin with comprehensive optimization features
  * Version: 0.5-beta
  * Author: Rick Smink
  * License: GPL-2.0+

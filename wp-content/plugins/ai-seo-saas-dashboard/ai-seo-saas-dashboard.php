@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: SSEO AI SaaS Dashboard
- * Description: Multi-tenant license and tenant management dashboard for AI SEO Assistant SaaS
+ * Description: Multi-tenant license and tenant management dashboard for SSEO AI SaaS
  * Version: 1.0.0
  * Author: Rick Smink
  * Text Domain: sseo-ai-saas
