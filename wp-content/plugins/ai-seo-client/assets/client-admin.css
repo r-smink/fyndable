@@ -218,29 +218,38 @@
 /* ================================================
    5. AI TOOL CARDS
    ================================================ */
-.ai-tool-card {
+.ai-tool-card,
+a.ai-tool-card {
+    display: block;
     background: #fff;
     border: 2px solid var(--sseo-gray-200);
     border-radius: var(--sseo-radius-sm);
     padding: 24px;
     transition: var(--sseo-transition);
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
 }
 
-.ai-tool-card:hover {
+.ai-tool-card:hover,
+a.ai-tool-card:hover {
     border-color: var(--sseo-primary);
     transform: translateY(-4px);
     box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15);
+    text-decoration: none;
+    color: inherit;
 }
 
-.ai-tool-card h3 {
+.ai-tool-card h3,
+a.ai-tool-card h3 {
     font-size: 18px;
     font-weight: 600;
     color: var(--sseo-gray-900);
     margin: 0 0 12px 0;
 }
 
-.ai-tool-card p {
+.ai-tool-card p,
+a.ai-tool-card p {
     font-size: 14px;
     color: var(--sseo-gray-600);
     margin: 0;

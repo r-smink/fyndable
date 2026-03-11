@@ -340,11 +340,11 @@ class Client
         $isLicenseValid = $this->licenseValidator->isLicenseValid();
         
         add_menu_page(
-            __('SEO AI', 'ai-seo-client'),
-            __('SEO AI', 'ai-seo-client'),
+            __('SSEO AI', 'ai-seo-client'),
+            __('SSEO AI', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
-            $isLicenseValid ? [$this, 'renderDashboardPage'] : [$this, 'renderLicensePage'],
+            [$this, 'renderDashboardPage'],
             'dashicons-chart-line',
             30
         );
@@ -453,33 +453,20 @@ class Client
             return;
         }
         
-        // List of old submenu slugs to remove (keep only the 8 main categories)
-        $slugsToRemove = [
-            'ai-seo-content-writer',
-            'ai-seo-content-optimizer',
-            'ai-seo-content-brief',
-            'ai-seo-video-seo',
-            'ai-seo-faq-schema',
-            'ai-seo-eeat',
-            'ai-seo-internal-linking',
-            'ai-seo-performance',
-            'ai-seo-topic-clusters',
-            'ai-seo-serp-analysis',
-            'ai-seo-serp-features',
-            'ai-seo-competitor-research',
-            'ai-seo-rank-tracker',
-            'ai-seo-search-console',
-            'ai-seo-seo-report',
-            'ai-seo-technical-audit',
-            'ai-seo-international-seo',
-            'ai-seo-white-label',
-            'ai-seo-client-portal',
-            'ai-seo-team',
-            'ai-seo-billing',
+        // Whitelist: ONLY keep these 8 menu slugs
+        $slugsToKeep = [
+            'ai-seo-client',           // Statistics (main)
+            'ai-seo-content-calendar', // Content Calendar
+            'ai-seo-topic-cluster',    // Topic Cluster
+            'ai-seo-ai-tools',         // AI Tools
+            'ai-seo-audit',            // Site Audit
+            'ai-seo-integrations',     // Integrations
+            'ai-seo-settings',         // Settings
+            'ai-seo-connection',       // Connection
         ];
         
         foreach ($submenu['ai-seo-client'] as $key => $item) {
-            if (in_array($item[2], $slugsToRemove)) {
+            if (!in_array($item[2], $slugsToKeep)) {
                 unset($submenu['ai-seo-client'][$key]);
             }
         }
@@ -631,12 +618,32 @@ class Client
     }
 
     /**
-     * Render dashboard page (only shown when licensed)
+     * Render dashboard page
      */
     public function renderDashboardPage(): void
     {
+        // Check if license is valid
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicensePage();
+            return;
+        }
+        
         if ($this->seoDashboard) {
             $this->seoDashboard->renderPage();
+        } else {
+            // Fallback if seoDashboard not initialized
+            ?>
+            <div class="wrap sseo-ai-modern">
+                <div class="sseo-ai-header">
+                    <h1><?php esc_html_e('Statistics', 'ai-seo-client'); ?></h1>
+                </div>
+                <div class="sseo-ai-content">
+                    <div class="sseo-ai-dashboard-card">
+                        <p><?php esc_html_e('Dashboard loading...', 'ai-seo-client'); ?></p>
+                    </div>
+                </div>
+            </div>
+            <?php
         }
     }
 
@@ -740,45 +747,45 @@ class Client
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-writer')); ?>" class="ai-tool-card">
                             <h3>🤖 <?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content generation for blog posts and articles', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-rewriter')); ?>" class="ai-tool-card">
                             <h3>✍️ <?php esc_html_e('Content Rewriter', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Rewrite and optimize existing content', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-image-generator')); ?>" class="ai-tool-card">
                             <h3>🎨 <?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate featured images and graphics', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-image-alt')); ?>" class="ai-tool-card">
                             <h3>🖼️ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Auto-generate SEO-friendly alt text for images', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-faq-schema')); ?>" class="ai-tool-card">
                             <h3>❓ <?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate FAQ schema from content', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-video-seo')); ?>" class="ai-tool-card">
                             <h3>🎥 <?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Video transcript generation and optimization', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-repurposer')); ?>" class="ai-tool-card">
                             <h3>🔄 <?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-optimizer')); ?>" class="ai-tool-card">
                             <h3>📊 <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
                     </div>
                 </div>
@@ -803,35 +810,35 @@ class Client
                     <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Identify and fix technical SEO issues across your entire site', 'ai-seo-client'); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
                             <h3>🔍 <?php esc_html_e('Technical SEO', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Crawl errors, broken links, redirect chains', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-performance')); ?>" class="ai-tool-card">
                             <h3>⚡ <?php esc_html_e('Page Speed', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Core Web Vitals and performance metrics', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
                             <h3>📱 <?php esc_html_e('Mobile Usability', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Mobile-friendly testing and optimization', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
                             <h3>🏗️ <?php esc_html_e('Site Structure', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('URL structure, sitemap, and navigation analysis', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
                             <h3>🔒 <?php esc_html_e('Security Check', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('HTTPS, mixed content, and security headers', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-schema')); ?>" class="ai-tool-card">
                             <h3>📋 <?php esc_html_e('Schema Markup', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Structured data validation and suggestions', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -855,35 +862,35 @@ class Client
                     <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Integrate with popular SEO and marketing platforms', 'ai-seo-client'); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-external-integrations')); ?>" class="ai-tool-card">
                             <h3>📊 <?php esc_html_e('Google Analytics', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Track traffic and conversion data', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-search-console')); ?>" class="ai-tool-card">
                             <h3>🔎 <?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Monitor search performance and indexing', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-external-integrations')); ?>" class="ai-tool-card">
                             <h3>📈 <?php esc_html_e('SEMrush', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Keyword research and competitor analysis', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-external-integrations')); ?>" class="ai-tool-card">
                             <h3>🔗 <?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Backlink monitoring and site explorer', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-external-integrations')); ?>" class="ai-tool-card">
                             <h3>📧 <?php esc_html_e('Email Marketing', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Mailchimp, ConvertKit, ActiveCampaign', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                         
-                        <div class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-external-integrations')); ?>" class="ai-tool-card">
                             <h3>💬 <?php esc_html_e('Social Media', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Auto-share content to social platforms', 'ai-seo-client'); ?></p>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>
