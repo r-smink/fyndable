@@ -478,7 +478,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/serp/analyze',
+                    path: '/sseo-ai/v1/serp/analyze',
                     method: 'POST',
                     data: { keyword: kw }
                 }).then(function(data) {
@@ -551,7 +551,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Comparing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/serp/compare',
+                    path: '/sseo-ai/v1/serp/compare',
                     method: 'POST',
                     data: { keyword: kw, content: content }
                 }).then(function(res) {
@@ -595,7 +595,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing gaps...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/serp/gap-analysis',
+                    path: '/sseo-ai/v1/serp/gap-analysis',
                     method: 'POST',
                     data: { keyword: kw, content: content }
                 }).then(function(res) {
