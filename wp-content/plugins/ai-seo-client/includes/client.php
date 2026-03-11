@@ -339,38 +339,31 @@ class Client
     {
         $isLicenseValid = $this->licenseValidator->isLicenseValid();
         
-        // Store instance for callbacks
-        $self = $this;
-        
-        // Main menu - always use renderMainPage which handles both states
-        $mainCallback = function() use ($self) {
-            $self->renderMainPage();
-        };
-        
+        // Main menu - redirect to connection page to avoid permission issues
         add_menu_page(
             __('SSEO AI', 'ai-seo-client'),
             __('SSEO AI', 'ai-seo-client'),
             'manage_options',
-            'ai-seo-client',
-            $mainCallback,
+            'ai-seo-connection',
+            [$this, 'renderConnectionPage'],
             'dashicons-chart-line',
             30
         );
 
         if ($isLicenseValid) {
-            // 1. Statistics/Dashboard - first submenu replaces the main menu item
+            // 1. Statistics/Dashboard
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Statistics', 'ai-seo-client'),
                 __('Statistics', 'ai-seo-client'),
                 'manage_options',
-                'ai-seo-client',
-                $mainCallback
+                'ai-seo-dashboard',
+                [$this, 'renderDashboardPage']
             );
             
             // 2. Content Calendar
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Content Calendar', 'ai-seo-client'),
                 __('Content Calendar', 'ai-seo-client'),
                 'manage_options',
@@ -380,7 +373,7 @@ class Client
             
             // 3. Topic Cluster
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Topic Cluster', 'ai-seo-client'),
                 __('Topic Cluster', 'ai-seo-client'),
                 'manage_options',
@@ -390,7 +383,7 @@ class Client
             
             // 4. AI Tools
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('AI Tools', 'ai-seo-client'),
                 __('AI Tools', 'ai-seo-client'),
                 'manage_options',
@@ -400,7 +393,7 @@ class Client
             
             // 5. Site Audit
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Site Audit', 'ai-seo-client'),
                 __('Site Audit', 'ai-seo-client'),
                 'manage_options',
@@ -410,7 +403,7 @@ class Client
             
             // 6. Integrations
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Integrations', 'ai-seo-client'),
                 __('Integrations', 'ai-seo-client'),
                 'manage_options',
@@ -420,7 +413,7 @@ class Client
             
             // 7. Settings
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Settings', 'ai-seo-client'),
                 __('Settings', 'ai-seo-client'),
                 'manage_options',
@@ -428,9 +421,9 @@ class Client
                 [$this, 'renderSettingsPage']
             );
             
-            // 8. Connection (License Details)
+            // 8. Connection (License Details) - rename to Connection
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Connection', 'ai-seo-client'),
                 __('Connection', 'ai-seo-client'),
                 'manage_options',
@@ -440,12 +433,12 @@ class Client
         } else {
             // Show only connection page when not licensed
             add_submenu_page(
-                'ai-seo-client',
+                'ai-seo-connection',
                 __('Connection', 'ai-seo-client'),
                 __('Connection', 'ai-seo-client'),
                 'manage_options',
-                'ai-seo-client',
-                $mainCallback
+                'ai-seo-connection',
+                [$this, 'renderConnectionPage']
             );
         }
     }
@@ -457,37 +450,37 @@ class Client
     {
         global $submenu;
         
-        if (!isset($submenu['ai-seo-client'])) {
+        if (!isset($submenu['ai-seo-connection'])) {
             return;
         }
         
-        // Whitelist: ONLY keep these 8 menu slugs
+        // Whitelist: ONLY keep these 9 menu slugs (including dashboard)
         $slugsToKeep = [
-            'ai-seo-client',           // Statistics (main)
+            'ai-seo-connection',       // Connection (main)
+            'ai-seo-dashboard',        // Statistics
             'ai-seo-content-calendar', // Content Calendar
             'ai-seo-topic-cluster',    // Topic Cluster
             'ai-seo-ai-tools',         // AI Tools
             'ai-seo-audit',            // Site Audit
             'ai-seo-integrations',     // Integrations
             'ai-seo-settings',         // Settings
-            'ai-seo-connection',       // Connection
         ];
         
         // Track which slugs we've seen to remove duplicates
         $seenSlugs = [];
         
-        foreach ($submenu['ai-seo-client'] as $key => $item) {
+        foreach ($submenu['ai-seo-connection'] as $key => $item) {
             $slug = $item[2];
             
             // Remove if not in whitelist
             if (!in_array($slug, $slugsToKeep)) {
-                unset($submenu['ai-seo-client'][$key]);
+                unset($submenu['ai-seo-connection'][$key]);
                 continue;
             }
             
             // Remove duplicates - keep only the first occurrence
             if (isset($seenSlugs[$slug])) {
-                unset($submenu['ai-seo-client'][$key]);
+                unset($submenu['ai-seo-connection'][$key]);
             } else {
                 $seenSlugs[$slug] = true;
             }
