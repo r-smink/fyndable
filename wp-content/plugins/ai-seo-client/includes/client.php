@@ -472,7 +472,7 @@ class Client
                                     <input type="text" name="license_key" id="license_key" 
                                            value="<?php echo esc_attr($licenseKey); ?>" 
                                            class="regular-text" 
-                                           placeholder="AISEO-XXXX-XXXX-XXXX-XXXX" required>
+                                           placeholder="SSEO-AI-XXXX-XXXX-XXXX-XXXX" required>
                                 </td>
                             </tr>
                         </table>
