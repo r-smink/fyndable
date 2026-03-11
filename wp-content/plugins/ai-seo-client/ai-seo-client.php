@@ -2,8 +2,8 @@
 /**
  * Plugin Name: SSEO AI
  * Description: Advanced AI-powered SEO plugin with comprehensive optimization features
- * Version: 0.7.5
- * Author: Rick Smink
+ * Version: 0.9
+ * Author: SSEO AI
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: sseo-ai-client
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_CLIENT_VERSION', '0.8.2');
+define('SSEO_AI_CLIENT_VERSION', '0.9.0');
 define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));

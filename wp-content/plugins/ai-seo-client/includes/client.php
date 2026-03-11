@@ -349,7 +349,7 @@ class Client
         );
 
         if ($isLicenseValid) {
-            // Statistics/Dashboard
+            // 1. Statistics/Dashboard
             add_submenu_page(
                 'ai-seo-client',
                 __('Statistics', 'ai-seo-client'),
@@ -359,37 +359,27 @@ class Client
                 [$this, 'renderDashboardPage']
             );
             
-            // Content Calendar
+            // 2. Content Calendar
             add_submenu_page(
                 'ai-seo-client',
                 __('Content Calendar', 'ai-seo-client'),
                 __('Content Calendar', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-content-calendar',
-                [$this, 'renderPlaceholderPage']
+                [$this, 'renderContentCalendarPage']
             );
             
-            // Topic Cluster
+            // 3. Topic Cluster
             add_submenu_page(
                 'ai-seo-client',
                 __('Topic Cluster', 'ai-seo-client'),
                 __('Topic Cluster', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-topic-cluster',
-                [$this, 'renderPlaceholderPage']
+                [$this, 'renderTopicClusterPage']
             );
             
-            // Integrations
-            add_submenu_page(
-                'ai-seo-client',
-                __('Integrations', 'ai-seo-client'),
-                __('Integrations', 'ai-seo-client'),
-                'manage_options',
-                'ai-seo-integrations',
-                [$this, 'renderPlaceholderPage']
-            );
-            
-            // AI Tools (parent for submenu)
+            // 4. AI Tools
             add_submenu_page(
                 'ai-seo-client',
                 __('AI Tools', 'ai-seo-client'),
@@ -399,17 +389,27 @@ class Client
                 [$this, 'renderAIToolsPage']
             );
             
-            // Site Audit
+            // 5. Site Audit
             add_submenu_page(
                 'ai-seo-client',
                 __('Site Audit', 'ai-seo-client'),
                 __('Site Audit', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-audit',
-                [$this, 'renderAuditPage']
+                [$this, 'renderSiteAuditPage']
             );
             
-            // Settings
+            // 6. Integrations
+            add_submenu_page(
+                'ai-seo-client',
+                __('Integrations', 'ai-seo-client'),
+                __('Integrations', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-integrations',
+                [$this, 'renderIntegrationsPage']
+            );
+            
+            // 7. Settings
             add_submenu_page(
                 'ai-seo-client',
                 __('Settings', 'ai-seo-client'),
@@ -419,7 +419,7 @@ class Client
                 [$this, 'renderSettingsPage']
             );
             
-            // Connection (License Details)
+            // 8. Connection (License Details)
             add_submenu_page(
                 'ai-seo-client',
                 __('Connection', 'ai-seo-client'),
@@ -597,29 +597,83 @@ class Client
     }
 
     /**
-     * Render placeholder page
+     * Render Content Calendar page
      */
-    public function renderPlaceholderPage(): void
+    public function renderContentCalendarPage(): void
     {
-        $current_screen = get_current_screen();
-        $page_title = 'Feature';
-        
-        if (strpos($current_screen->id, 'content-calendar') !== false) {
-            $page_title = 'Content Calendar';
-        } elseif (strpos($current_screen->id, 'topic-cluster') !== false) {
-            $page_title = 'Topic Cluster';
-        } elseif (strpos($current_screen->id, 'integrations') !== false) {
-            $page_title = 'Integrations';
-        }
-        
         ?>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
-                <h1><?php echo esc_html($page_title); ?></h1>
+                <h1><?php esc_html_e('Content Calendar', 'ai-seo-client'); ?></h1>
             </div>
             <div class="sseo-ai-content">
                 <div class="sseo-ai-dashboard-card">
-                    <p><?php echo esc_html($page_title); ?> functionality coming soon...</p>
+                    <h2><?php esc_html_e('Plan Your Content Strategy', 'ai-seo-client'); ?></h2>
+                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Organize and schedule your content with AI-powered suggestions', 'ai-seo-client'); ?></p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="ai-tool-card">
+                            <h3>📅 <?php esc_html_e('Editorial Calendar', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Visual calendar view of your content pipeline', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🎯 <?php esc_html_e('Content Ideas', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('AI-generated topic suggestions based on trends', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📊 <?php esc_html_e('Publishing Schedule', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Optimize posting times for maximum engagement', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🔔 <?php esc_html_e('Deadline Reminders', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Never miss a publication deadline', 'ai-seo-client'); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Topic Cluster page
+     */
+    public function renderTopicClusterPage(): void
+    {
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Topic Cluster', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Build Topic Authority', 'ai-seo-client'); ?></h2>
+                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Create interconnected content clusters to dominate search rankings', 'ai-seo-client'); ?></p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="ai-tool-card">
+                            <h3>🎯 <?php esc_html_e('Pillar Pages', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Create comprehensive pillar content for core topics', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🔗 <?php esc_html_e('Cluster Content', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Generate supporting articles linked to pillars', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🕸️ <?php esc_html_e('Internal Linking', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('AI-suggested internal link opportunities', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📈 <?php esc_html_e('Cluster Performance', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Track rankings and traffic for each cluster', 'ai-seo-client'); ?></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -690,9 +744,9 @@ class Client
     }
 
     /**
-     * Render audit page
+     * Render Site Audit page
      */
-    public function renderAuditPage(): void
+    public function renderSiteAuditPage(): void
     {
         ?>
         <div class="wrap sseo-ai-modern">
@@ -701,7 +755,92 @@ class Client
             </div>
             <div class="sseo-ai-content">
                 <div class="sseo-ai-dashboard-card">
-                    <p><?php esc_html_e('Site audit functionality coming soon...', 'ai-seo-client'); ?></p>
+                    <h2><?php esc_html_e('Comprehensive SEO Analysis', 'ai-seo-client'); ?></h2>
+                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Identify and fix technical SEO issues across your entire site', 'ai-seo-client'); ?></p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="ai-tool-card">
+                            <h3>🔍 <?php esc_html_e('Technical SEO', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Crawl errors, broken links, redirect chains', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>⚡ <?php esc_html_e('Page Speed', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Core Web Vitals and performance metrics', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📱 <?php esc_html_e('Mobile Usability', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Mobile-friendly testing and optimization', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🏗️ <?php esc_html_e('Site Structure', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('URL structure, sitemap, and navigation analysis', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🔒 <?php esc_html_e('Security Check', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('HTTPS, mixed content, and security headers', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📋 <?php esc_html_e('Schema Markup', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Structured data validation and suggestions', 'ai-seo-client'); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Integrations page
+     */
+    public function renderIntegrationsPage(): void
+    {
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Integrations', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Connect Your Tools', 'ai-seo-client'); ?></h2>
+                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Integrate with popular SEO and marketing platforms', 'ai-seo-client'); ?></p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="ai-tool-card">
+                            <h3>📊 <?php esc_html_e('Google Analytics', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Track traffic and conversion data', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🔎 <?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Monitor search performance and indexing', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📈 <?php esc_html_e('SEMrush', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Keyword research and competitor analysis', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🔗 <?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Backlink monitoring and site explorer', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📧 <?php esc_html_e('Email Marketing', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Mailchimp, ConvertKit, ActiveCampaign', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>💬 <?php esc_html_e('Social Media', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Auto-share content to social platforms', 'ai-seo-client'); ?></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

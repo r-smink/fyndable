@@ -2,8 +2,8 @@
 /**
  * Plugin Name: SSEO AI SaaS Dashboard
  * Description: Multi-tenant license and tenant management dashboard for SSEO AI SaaS
- * Version: 0.7.5
- * Author: Rick Smink
+ * Version: 0.9
+ * Author: SSEO AI
  * Text Domain: sseo-ai-saas
  * Domain Path: /languages
  */
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_SAAS_VERSION', '1.0.0');
+define('SSEO_AI_SAAS_VERSION', '0.9.0');
 define('SSEO_AI_SAAS_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_SAAS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_SAAS_PLUGIN_URL', plugin_dir_url(__FILE__));
