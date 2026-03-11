@@ -85,6 +85,7 @@ class Client
 
         // Add admin menu for license activation
         add_action('admin_menu', [$this, 'registerAdminMenu']);
+        add_action('admin_menu', [$this, 'removeOldSubmenus'], 999);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
         // Handle license activation form
@@ -438,6 +439,49 @@ class Client
                 'ai-seo-client',
                 [$this, 'renderLicensePage']
             );
+        }
+    }
+
+    /**
+     * Remove old submenu pages that are now consolidated into main categories
+     */
+    public function removeOldSubmenus(): void
+    {
+        global $submenu;
+        
+        if (!isset($submenu['ai-seo-client'])) {
+            return;
+        }
+        
+        // List of old submenu slugs to remove (keep only the 8 main categories)
+        $slugsToRemove = [
+            'ai-seo-content-writer',
+            'ai-seo-content-optimizer',
+            'ai-seo-content-brief',
+            'ai-seo-video-seo',
+            'ai-seo-faq-schema',
+            'ai-seo-eeat',
+            'ai-seo-internal-linking',
+            'ai-seo-performance',
+            'ai-seo-topic-clusters',
+            'ai-seo-serp-analysis',
+            'ai-seo-serp-features',
+            'ai-seo-competitor-research',
+            'ai-seo-rank-tracker',
+            'ai-seo-search-console',
+            'ai-seo-seo-report',
+            'ai-seo-technical-audit',
+            'ai-seo-international-seo',
+            'ai-seo-white-label',
+            'ai-seo-client-portal',
+            'ai-seo-team',
+            'ai-seo-billing',
+        ];
+        
+        foreach ($submenu['ai-seo-client'] as $key => $item) {
+            if (in_array($item[2], $slugsToRemove)) {
+                unset($submenu['ai-seo-client'][$key]);
+            }
         }
     }
 
