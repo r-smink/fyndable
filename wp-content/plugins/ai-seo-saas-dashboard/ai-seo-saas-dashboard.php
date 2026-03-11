@@ -42,6 +42,14 @@ register_activation_hook(__FILE__, function () {
     $tenants = new \SSEOAISaaS\TenantRepository();
     $tenants->maybeCreateTables();
     $tenants->migrateExistingTables();
+    
+    // Flush rewrite rules to register REST API routes
+    flush_rewrite_rules();
+});
+
+// Deactivation hook
+register_deactivation_hook(__FILE__, function () {
+    flush_rewrite_rules();
 });
 
 // Initialize

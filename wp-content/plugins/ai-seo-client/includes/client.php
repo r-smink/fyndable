@@ -143,7 +143,7 @@ class Client
         $this->smartTags = new SmartTags($this->llmClient);
         $this->smartTags->register();
         
-        $this->sitemapGenerator = new SitemapGenerator(AISEO_CLIENT_PLUGIN_FILE, $this->settings);
+        $this->sitemapGenerator = new SitemapGenerator(SSEO_AI_CLIENT_PLUGIN_FILE, $this->settings);
         $this->sitemapGenerator->register();
         
         $this->robotsTxt = new RobotsTxt($this->settings);
