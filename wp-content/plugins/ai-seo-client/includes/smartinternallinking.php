@@ -429,7 +429,7 @@ class SmartInternalLinking
         
         // Get all published posts and pages
         $allPosts = $wpdb->get_results("
-            SELECT ID, post_title, post_type, post_content
+            SELECT ID, post_title, post_type, post_content, post_date
             FROM {$wpdb->posts}
             WHERE post_status = 'publish'
             AND post_type IN ('post', 'page')
@@ -480,7 +480,7 @@ class SmartInternalLinking
     /**
      * Calculate orphan priority score
      */
-    private function calculateOrphanPriority(\WP_Post $post): int
+    private function calculateOrphanPriority(\stdClass $post): int
     {
         $score = 0;
         
@@ -521,7 +521,7 @@ class SmartInternalLinking
     /**
      * Find suggested source pages
      */
-    private function findSuggestedSources(\WP_Post $orphanPost): array
+    private function findSuggestedSources(\stdClass $orphanPost): array
     {
         global $wpdb;
         

@@ -90,6 +90,9 @@ class Client
         // Handle license activation form
         add_action('admin_post_ai_seo_activate_license', [$this, 'handleLicenseActivation']);
         add_action('admin_post_ai_seo_deactivate_license', [$this, 'handleLicenseDeactivation']);
+        
+        // Handle settings save
+        add_action('admin_post_ai_seo_save_settings', [$this, 'handleSettingsSave']);
 
         // Health check - validate license periodically
         if (!wp_next_scheduled('sseo_ai_client_license_check')) {
@@ -333,36 +336,107 @@ class Client
      */
     public function registerAdminMenu(): void
     {
+        $isLicenseValid = $this->licenseValidator->isLicenseValid();
+        
         add_menu_page(
-            __('SSEO AI', 'ai-seo-client'),
-            __('SSEO AI', 'ai-seo-client'),
+            __('SEO AI', 'ai-seo-client'),
+            __('SEO AI', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
-            [$this, 'renderLicensePage'],
-            'dashicons-search',
+            $isLicenseValid ? [$this, 'renderDashboardPage'] : [$this, 'renderLicensePage'],
+            'dashicons-chart-line',
             30
         );
 
-        add_submenu_page(
-            'ai-seo-client',
-            __('License Activation', 'ai-seo-client'),
-            __('License', 'ai-seo-client'),
-            'manage_options',
-            'ai-seo-client',
-            [$this, 'renderLicensePage']
-        );
-
-        // Only show features menu if license is active
-        if ($this->licenseValidator->isLicenseValid()) {
-            $tier = $this->licenseValidator->getLicenseTier();
-            
+        if ($isLicenseValid) {
+            // Statistics/Dashboard
             add_submenu_page(
                 'ai-seo-client',
-                __('SEO Dashboard', 'ai-seo-client'),
-                __('Dashboard', 'ai-seo-client'),
+                __('Statistics', 'ai-seo-client'),
+                __('Statistics', 'ai-seo-client'),
                 'manage_options',
-                'ai-seo-dashboard',
+                'ai-seo-client',
                 [$this, 'renderDashboardPage']
+            );
+            
+            // Content Calendar
+            add_submenu_page(
+                'ai-seo-client',
+                __('Content Calendar', 'ai-seo-client'),
+                __('Content Calendar', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-content-calendar',
+                [$this, 'renderPlaceholderPage']
+            );
+            
+            // Topic Cluster
+            add_submenu_page(
+                'ai-seo-client',
+                __('Topic Cluster', 'ai-seo-client'),
+                __('Topic Cluster', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-topic-cluster',
+                [$this, 'renderPlaceholderPage']
+            );
+            
+            // Integrations
+            add_submenu_page(
+                'ai-seo-client',
+                __('Integrations', 'ai-seo-client'),
+                __('Integrations', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-integrations',
+                [$this, 'renderPlaceholderPage']
+            );
+            
+            // AI Tools (parent for submenu)
+            add_submenu_page(
+                'ai-seo-client',
+                __('AI Tools', 'ai-seo-client'),
+                __('AI Tools', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-ai-tools',
+                [$this, 'renderAIToolsPage']
+            );
+            
+            // Site Audit
+            add_submenu_page(
+                'ai-seo-client',
+                __('Site Audit', 'ai-seo-client'),
+                __('Site Audit', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-audit',
+                [$this, 'renderAuditPage']
+            );
+            
+            // Settings
+            add_submenu_page(
+                'ai-seo-client',
+                __('Settings', 'ai-seo-client'),
+                __('Settings', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-settings',
+                [$this, 'renderSettingsPage']
+            );
+            
+            // Connection (License Details)
+            add_submenu_page(
+                'ai-seo-client',
+                __('Connection', 'ai-seo-client'),
+                __('Connection', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-connection',
+                [$this, 'renderConnectionPage']
+            );
+        } else {
+            // Show only connection page when not licensed
+            add_submenu_page(
+                'ai-seo-client',
+                __('Connection', 'ai-seo-client'),
+                __('Connection', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-client',
+                [$this, 'renderLicensePage']
             );
         }
     }
@@ -523,16 +597,368 @@ class Client
     }
 
     /**
-     * Handle license activation form submission
+     * Render placeholder page
      */
-    public function handleLicenseActivation(): void
+    public function renderPlaceholderPage(): void
     {
-        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'activate_license')) {
+        $current_screen = get_current_screen();
+        $page_title = 'Feature';
+        
+        if (strpos($current_screen->id, 'content-calendar') !== false) {
+            $page_title = 'Content Calendar';
+        } elseif (strpos($current_screen->id, 'topic-cluster') !== false) {
+            $page_title = 'Topic Cluster';
+        } elseif (strpos($current_screen->id, 'integrations') !== false) {
+            $page_title = 'Integrations';
+        }
+        
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php echo esc_html($page_title); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
+                    <p><?php echo esc_html($page_title); ?> functionality coming soon...</p>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render AI Tools page
+     */
+    public function renderAIToolsPage(): void
+    {
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('AI Tools', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Available AI Tools', 'ai-seo-client'); ?></h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
+                        
+                        <div class="ai-tool-card">
+                            <h3>🤖 <?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('AI-powered content generation for blog posts and articles', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>✍️ <?php esc_html_e('Content Rewriter', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Rewrite and optimize existing content', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🎨 <?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Generate featured images and graphics', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🖼️ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Auto-generate SEO-friendly alt text for images', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>❓ <?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Generate FAQ schema from content', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🎥 <?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Video transcript generation and optimization', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>🔄 <?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <div class="ai-tool-card">
+                            <h3>📊 <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render audit page
+     */
+    public function renderAuditPage(): void
+    {
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Site Audit', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
+                    <p><?php esc_html_e('Site audit functionality coming soon...', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render settings page
+     */
+    public function renderSettingsPage(): void
+    {
+        // Get current settings
+        $promptSettings = get_option('sseo_ai_prompt_settings', '');
+        $locations = get_option('sseo_ai_locations', '');
+        $targetedAudience = get_option('sseo_ai_targeted_audience', '');
+        $brandName = get_option('sseo_ai_brand_name', '');
+        $brandVoice = get_option('sseo_ai_brand_voice', '');
+        
+        // Check for success message
+        $success = isset($_GET['settings-updated']) && $_GET['settings-updated'] === '1';
+        
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Settings', 'ai-seo-client'); ?></h1>
+            </div>
+            
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-settings-card">
+                    
+                    <?php if ($success): ?>
+                        <div class="sseo-ai-notice sseo-ai-notice-success">
+                            <strong>✓</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="sseo-ai-settings-form">
+                        <input type="hidden" name="action" value="ai_seo_save_settings">
+                        <?php wp_nonce_field('save_settings'); ?>
+                        
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Brand Information', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Configure your brand details for AI-generated content', 'ai-seo-client'); ?></p>
+                            
+                            <div class="form-field">
+                                <label for="brand_name"><?php esc_html_e('Brand Name', 'ai-seo-client'); ?></label>
+                                <input type="text" name="brand_name" id="brand_name" 
+                                       value="<?php echo esc_attr($brandName); ?>" 
+                                       placeholder="e.g., NextBuzz">
+                                <p class="field-description"><?php esc_html_e('Your company or brand name', 'ai-seo-client'); ?></p>
+                            </div>
+                            
+                            <div class="form-field">
+                                <label for="brand_voice"><?php esc_html_e('Brand Voice & Tone', 'ai-seo-client'); ?></label>
+                                <select name="brand_voice" id="brand_voice">
+                                    <option value=""><?php esc_html_e('Select tone...', 'ai-seo-client'); ?></option>
+                                    <option value="professional" <?php selected($brandVoice, 'professional'); ?>><?php esc_html_e('Professional', 'ai-seo-client'); ?></option>
+                                    <option value="friendly" <?php selected($brandVoice, 'friendly'); ?>><?php esc_html_e('Friendly', 'ai-seo-client'); ?></option>
+                                    <option value="casual" <?php selected($brandVoice, 'casual'); ?>><?php esc_html_e('Casual', 'ai-seo-client'); ?></option>
+                                    <option value="authoritative" <?php selected($brandVoice, 'authoritative'); ?>><?php esc_html_e('Authoritative', 'ai-seo-client'); ?></option>
+                                    <option value="conversational" <?php selected($brandVoice, 'conversational'); ?>><?php esc_html_e('Conversational', 'ai-seo-client'); ?></option>
+                                    <option value="technical" <?php selected($brandVoice, 'technical'); ?>><?php esc_html_e('Technical', 'ai-seo-client'); ?></option>
+                                </select>
+                                <p class="field-description"><?php esc_html_e('The tone of voice for AI-generated content', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Define who your content is for', 'ai-seo-client'); ?></p>
+                            
+                            <div class="form-field">
+                                <label for="targeted_audience"><?php esc_html_e('Targeted Audience', 'ai-seo-client'); ?></label>
+                                <textarea name="targeted_audience" id="targeted_audience" rows="4" 
+                                          placeholder="e.g., Small business owners, marketing professionals, entrepreneurs aged 25-45"><?php echo esc_textarea($targetedAudience); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Describe your target audience demographics, interests, and characteristics', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Location Settings', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
+                            
+                            <div class="form-field">
+                                <label for="locations"><?php esc_html_e('Target Locations', 'ai-seo-client'); ?></label>
+                                <textarea name="locations" id="locations" rows="3" 
+                                          placeholder="e.g., Amsterdam, Rotterdam, Utrecht"><?php echo esc_textarea($locations); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Enter cities, regions, or countries (comma-separated)', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('AI Prompt Settings', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Custom instructions for AI content generation', 'ai-seo-client'); ?></p>
+                            
+                            <div class="form-field">
+                                <label for="prompt_settings"><?php esc_html_e('Custom Prompt Instructions', 'ai-seo-client'); ?></label>
+                                <textarea name="prompt_settings" id="prompt_settings" rows="6" 
+                                          placeholder="e.g., Always include actionable tips, use bullet points for readability, focus on practical examples..."><?php echo esc_textarea($promptSettings); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Additional instructions that will be included in all AI prompts', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-actions">
+                            <button type="submit" class="button button-primary button-large">
+                                <?php esc_html_e('Save Settings', 'ai-seo-client'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Handle settings save
+     */
+    public function handleSettingsSave(): void
+    {
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'save_settings')) {
             wp_die(__('Security check failed', 'ai-seo-client'));
         }
 
         if (!current_user_can('manage_options')) {
             wp_die(__('Insufficient permissions', 'ai-seo-client'));
+        }
+
+        // Sanitize and save settings
+        update_option('sseo_ai_brand_name', sanitize_text_field($_POST['brand_name'] ?? ''));
+        update_option('sseo_ai_brand_voice', sanitize_text_field($_POST['brand_voice'] ?? ''));
+        update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
+        update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
+        update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
+
+        // Redirect back with success message
+        wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
+        exit;
+    }
+
+    /**
+     * Render connection page (license details)
+     */
+    public function renderConnectionPage(): void
+    {
+        $licenseStatus = get_option('sseo_ai_client_license_status', 'inactive');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $tier = get_option('sseo_ai_client_license_tier', 'free');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        
+        // Mask the keys for display
+        $maskedLicenseKey = !empty($licenseKey) ? substr($licenseKey, 0, 12) . str_repeat('*', 20) . substr($licenseKey, -8) : '';
+        $maskedTenantKey = !empty($tenantKey) ? substr($tenantKey, 0, 8) . str_repeat('*', 20) . substr($tenantKey, -8) : '';
+        
+        ?>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Connection', 'ai-seo-client'); ?></h1>
+            </div>
+            
+            <div class="sseo-ai-content">
+                <?php if ($licenseStatus === 'active'): ?>
+                    <div class="sseo-ai-connection-card">
+                        <div class="connection-status">
+                            <h2>
+                                <?php esc_html_e('You are connected', 'ai-seo-client'); ?><br>
+                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php esc_html_e('SEO AI Service', 'ai-seo-client'); ?></span>
+                            </h2>
+                        </div>
+                        
+                        <div class="connection-details">
+                            <div class="detail-item">
+                                <label><?php esc_html_e('Your connection e-mail:', 'ai-seo-client'); ?></label>
+                                <div class="detail-value"><?php echo esc_html(wp_get_current_user()->user_email); ?></div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label><?php esc_html_e('Your connection API Key:', 'ai-seo-client'); ?></label>
+                                <div class="detail-value"><?php echo esc_html($maskedTenantKey); ?></div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label><?php esc_html_e('License Key:', 'ai-seo-client'); ?></label>
+                                <div class="detail-value"><?php echo esc_html($maskedLicenseKey); ?></div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label><?php esc_html_e('License Tier:', 'ai-seo-client'); ?></label>
+                                <div class="detail-value"><?php echo esc_html(ucfirst($tier)); ?></div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label><?php esc_html_e('Dashboard URL:', 'ai-seo-client'); ?></label>
+                                <div class="detail-value"><?php echo esc_html($dashboardUrl); ?></div>
+                            </div>
+                        </div>
+                        
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 30px;">
+                            <input type="hidden" name="action" value="ai_seo_deactivate_license">
+                            <?php wp_nonce_field('deactivate_license'); ?>
+                            <button type="submit" class="button button-secondary">
+                                <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
+                            </button>
+                        </form>
+                    </div>
+                <?php else: ?>
+                    <div class="sseo-ai-connection-card">
+                        <div class="connection-status">
+                            <h2><?php esc_html_e('Connect to SEO AI Service', 'ai-seo-client'); ?></h2>
+                            <p><?php esc_html_e('Enter your license details to activate the plugin', 'ai-seo-client'); ?></p>
+                        </div>
+                        
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="connection-form">
+                            <input type="hidden" name="action" value="ai_seo_activate_license">
+                            <?php wp_nonce_field('activate_license'); ?>
+                            
+                            <div class="form-field">
+                                <label for="dashboard_url"><?php esc_html_e('Dashboard URL', 'ai-seo-client'); ?></label>
+                                <input type="url" name="dashboard_url" id="dashboard_url" 
+                                       placeholder="https://your-saas-domain.com" required>
+                            </div>
+                            
+                            <div class="form-field">
+                                <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
+                                <input type="text" name="license_key" id="license_key" 
+                                       placeholder="SSEO-AI-XXXX-XXXX-XXXX" required>
+                            </div>
+                            
+                            <button type="submit" class="button button-primary">
+                                <?php esc_html_e('Connect', 'ai-seo-client'); ?>
+                            </button>
+                        </form>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Handle license activation form submission
+     */
+    public function handleLicenseActivation(): void
+    {
+        error_log('SSEO AI: License activation handler called');
+        error_log('SSEO AI: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        error_log('SSEO AI: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
+        
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'activate_license')) {
+            error_log('SSEO AI: Nonce verification failed');
+            wp_die(__('Security check failed. Please try again.', 'ai-seo-client'));
+        }
+
+        if (!current_user_can('manage_options')) {
+            error_log('SSEO AI: User lacks manage_options capability');
+            wp_die(__('Insufficient permissions. You must be an administrator to activate licenses.', 'ai-seo-client'));
         }
 
         $licenseKey = sanitize_text_field($_POST['license_key'] ?? '');
@@ -571,7 +997,11 @@ class Client
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
 
-        wp_redirect(admin_url('admin.php?page=ai-seo-client&activated=1'));
+        // Set a transient to show success message on next page load
+        set_transient('sseo_ai_activation_success', true, 30);
+        
+        // Redirect to dashboard instead of license page
+        wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
         exit;
     }
 

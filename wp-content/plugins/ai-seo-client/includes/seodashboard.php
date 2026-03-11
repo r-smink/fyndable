@@ -230,9 +230,12 @@ class SeoDashboard
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('SEO Dashboard', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Site-wide SEO health overview. Scan your site to see how well optimized your content is.', 'ai-seo-client'); ?></p>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Statistics', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
 
             <div style="max-width:1100px;">
                 <p>
@@ -363,6 +366,9 @@ class SeoDashboard
             });
         });
         </script>
+                </div>
+            </div>
+        </div>
         <?php
     }
 }

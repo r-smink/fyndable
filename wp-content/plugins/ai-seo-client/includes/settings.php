@@ -9,6 +9,7 @@ namespace SSEOAIClient;
  */
 class Settings
 {
+    public const OPTION_KEY = 'sseo_ai_client_settings';
     private const OPTION_GROUP = 'sseo_ai_client_settings';
 
     /**
@@ -75,6 +76,14 @@ class Settings
         }
 
         return $settings;
+    }
+
+    /**
+     * Alias for getAll() for backwards compatibility
+     */
+    public function all(): array
+    {
+        return $this->getAll();
     }
 
     /**
