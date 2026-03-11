@@ -17,6 +17,7 @@ class Dashboard
     private LicenseAPI $licenseAPI;
     private SaaSSettings $saasSettings;
     private ApiGateway $apiGateway;
+    private WhiteLabelAdmin $whiteLabelAdmin;
 
     public function __construct()
     {
@@ -35,10 +36,12 @@ class Dashboard
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
         $this->saasSettings = new SaaSSettings();
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings);
+        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
 
         // Register admin menu
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
+        add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
 
         // Register REST API for client plugin communication
@@ -47,6 +50,7 @@ class Dashboard
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
+        add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
 
         // Register activation hook for table creation
         register_activation_hook($this->pluginFile, [$this, 'activate']);

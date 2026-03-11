@@ -271,7 +271,8 @@ class ContentDecay
         $baselinePositions = array_slice($trend, -$baselineCount, $baselineCount);
         
         $sum = array_sum(array_column($baselinePositions, 'position'));
-        return round($sum / count($baselinePositions), 2);
+        $baselineCount = count($baselinePositions);
+        return $baselineCount > 0 ? round($sum / $baselineCount, 2) : 0;
     }
     
     /**

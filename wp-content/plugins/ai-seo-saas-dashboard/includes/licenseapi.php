@@ -208,6 +208,10 @@ class LicenseAPI
         }
 
         error_log('SSEO AI Dashboard: Activation successful - Tenant: ' . $result['tenant_key']);
+        
+        // Get white-label settings to sync to client
+        $whiteLabelData = $this->getWhiteLabelData($result['tenant_key']);
+        
         return new \WP_REST_Response([
             'success' => true,
             'activated' => true,
@@ -218,7 +222,31 @@ class LicenseAPI
             'rate_limit' => $result['rate_limit'],
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
+            'white_label' => $whiteLabelData,
         ], 200);
+    }
+    
+    /**
+     * Get white-label data for tenant
+     */
+    private function getWhiteLabelData(string $tenantKey): array
+    {
+        // First check tenant-specific white-label settings
+        $tenantBrand = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
+        
+        if ($tenantBrand) {
+            return is_array($tenantBrand) ? $tenantBrand : json_decode($tenantBrand, true) ?: [];
+        }
+        
+        // Fall back to global white-label settings
+        return [
+            'company_name' => get_option('sseo_ai_saas_wl_company_name', ''),
+            'company_logo' => get_option('sseo_ai_saas_wl_company_logo', ''),
+            'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#2563eb'),
+            'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#1e40af'),
+            'support_email' => get_option('sseo_ai_saas_wl_support_email', ''),
+            'support_url' => get_option('sseo_ai_saas_wl_support_url', ''),
+        ];
     }
 
     /**

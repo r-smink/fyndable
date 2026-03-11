@@ -340,10 +340,14 @@ class Client
     {
         $isLicenseValid = $this->licenseValidator->isLicenseValid();
         
+        // Get white-label company name if set
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('SSEO AI', 'ai-seo-client');
+        
         // Main menu - use ai-seo-client as slug so all feature submenus work
         add_menu_page(
-            __('SSEO AI', 'ai-seo-client'),
-            __('SSEO AI', 'ai-seo-client'),
+            $menuName,
+            $menuName,
             'manage_options',
             'ai-seo-client',
             [$this, 'renderConnectionPage'],
@@ -395,12 +399,38 @@ class Client
             SSEO_AI_CLIENT_VERSION,
             true
         );
+        
+        // Get white-label settings
+        $whiteLabel = get_option('sseo_ai_white_label', []);
 
         wp_localize_script('ai-seo-client-admin', 'aiSeoClient', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('sseo_ai_client_nonce'),
             'isLicensed' => $this->licenseValidator->isLicenseValid(),
+            'whiteLabel' => $whiteLabel,
         ]);
+        
+        // Apply white-label CSS variables
+        if (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color'])) {
+            $primaryColor = $whiteLabel['primary_color'] ?? '#2563eb';
+            $secondaryColor = $whiteLabel['secondary_color'] ?? '#1e40af';
+            wp_add_inline_style('ai-seo-client-admin', "
+                :root {
+                    --sseo-primary-color: {$primaryColor};
+                    --sseo-secondary-color: {$secondaryColor};
+                }
+                .sseo-ai-header, .ai-tool-card:hover {
+                    border-color: {$primaryColor} !important;
+                }
+                .button-primary.sseo-btn, .sseo-ai-btn-primary {
+                    background-color: {$primaryColor} !important;
+                    border-color: {$primaryColor} !important;
+                }
+                .sseo-ai-header h1::before {
+                    color: {$primaryColor};
+                }
+            ");
+        }
     }
 
     /**
@@ -1092,6 +1122,11 @@ class Client
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
+        
+        // Store white-label settings from SaaS dashboard
+        if (!empty($result['white_label'])) {
+            update_option('sseo_ai_white_label', $result['white_label']);
+        }
 
         // Set a transient to show success message on next page load
         set_transient('sseo_ai_activation_success', true, 30);

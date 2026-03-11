@@ -41,41 +41,10 @@ class WhiteLabelManager
     
     public function addMenu(): void
     {
-        add_submenu_page(
-            'ai-seo-client',
-            __('White-Label Settings', 'ai-seo-client'),
-            __('White-Label', 'ai-seo-client'),
-            'manage_options',
-            'ai-seo-white-label',
-            [$this, 'renderSettings']
-        );
-        
-        add_submenu_page(
-            'ai-seo-client',
-            __('Client Portal', 'ai-seo-client'),
-            __('Client Portal', 'ai-seo-client'),
-            'manage_options',
-            'ai-seo-client-portal',
-            [$this, 'renderClientPortal']
-        );
-        
-        add_submenu_page(
-            'ai-seo-client',
-            __('Team Workspace', 'ai-seo-client'),
-            __('Team', 'ai-seo-client'),
-            'manage_options',
-            'ai-seo-team',
-            [$this, 'renderTeamWorkspace']
-        );
-        
-        add_submenu_page(
-            'ai-seo-client',
-            __('Billing & Invoicing', 'ai-seo-client'),
-            __('Billing', 'ai-seo-client'),
-            'manage_options',
-            'ai-seo-billing',
-            [$this, 'renderBilling']
-        );
+        // SaaS-only features - disabled in client plugin
+        // White-Label, Client Portal, Team Workspace, and Billing
+        // are only available in the SaaS Dashboard
+        return;
     }
     
     /**

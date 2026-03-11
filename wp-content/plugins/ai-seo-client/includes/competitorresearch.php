@@ -563,7 +563,8 @@ Provide a brief analysis (2-3 sentences):";
             $intervals[] = $timestamps[$i] - $timestamps[$i + 1];
         }
         
-        $avgInterval = array_sum($intervals) / count($intervals);
+        $intervalCount = count($intervals);
+        $avgInterval = $intervalCount > 0 ? array_sum($intervals) / $intervalCount : 0;
         $daysInterval = $avgInterval / DAY_IN_SECONDS;
         
         if ($daysInterval < 1) {

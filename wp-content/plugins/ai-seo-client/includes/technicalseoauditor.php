@@ -796,14 +796,18 @@ class TechnicalSEOAuditor
     
     private function calculateCrawlabilityScore(array $checks): int
     {
+        $checkCount = count($checks);
+        if ($checkCount === 0) return 0;
         $passed = count(array_filter($checks, fn($c) => $c['status'] === 'pass'));
-        return round(($passed / count($checks)) * 100);
+        return round(($passed / $checkCount) * 100);
     }
     
     private function calculatePerformanceScore(array $metrics): int
     {
+        $metricCount = count($metrics);
+        if ($metricCount === 0) return 0;
         $good = count(array_filter($metrics, fn($m) => $m['status'] === 'good'));
-        return round(($good / count($metrics)) * 100);
+        return round(($good / $metricCount) * 100);
     }
     
     private function calculateStructureScore(array $issues): int

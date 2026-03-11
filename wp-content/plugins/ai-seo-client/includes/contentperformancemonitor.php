@@ -514,7 +514,8 @@ class ContentPerformanceMonitor
             $totalDays += ($rankDate - $publishDate) / DAY_IN_SECONDS;
         }
         
-        $avgDays = round($totalDays / count($results));
+        $resultCount = count($results);
+        $avgDays = $resultCount > 0 ? round($totalDays / $resultCount) : 0;
         return (string)$avgDays;
     }
     

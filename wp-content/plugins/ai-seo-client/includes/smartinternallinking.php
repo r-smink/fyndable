@@ -593,7 +593,8 @@ class SmartInternalLinking
             }
         }
         
-        return min(100, ($matches / count($keywords)) * 100);
+        $keywordCount = count($keywords);
+        return $keywordCount > 0 ? min(100, ($matches / $keywordCount) * 100) : 0;
     }
     
     /**

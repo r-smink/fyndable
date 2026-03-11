@@ -505,7 +505,8 @@ class EEATValidator
             }
         }
         
-        $score += min(40, ($firstPersonCount / count($posts)) * 100);
+        $postCount = count($posts);
+        $score += $postCount > 0 ? min(40, ($firstPersonCount / $postCount) * 100) : 0;
         
         // Check for case studies/examples
         $caseStudyCount = $wpdb->get_var("
@@ -549,7 +550,8 @@ class EEATValidator
             }
         }
         
-        $score += min(50, ($credentialedAuthors / count($users)) * 100);
+        $userCount = count($users);
+        $score += $userCount > 0 ? min(50, ($credentialedAuthors / $userCount) * 100) : 0;
         
         // Check for citations/references
         global $wpdb;
@@ -591,7 +593,8 @@ class EEATValidator
             }
         }
         
-        $score += min(40, ($socialProfiles / count($users)) * 100);
+        $userCount = count($users);
+        $score += $userCount > 0 ? min(40, ($socialProfiles / $userCount) * 100) : 0;
         
         return min(100, (int)$score);
     }
@@ -636,7 +639,8 @@ class EEATValidator
             }
         }
         
-        $score += min(20, ($biosCount / count($users)) * 100);
+        $userCount = count($users);
+        $score += $userCount > 0 ? min(20, ($biosCount / $userCount) * 100) : 0;
         
         return min(100, (int)$score);
     }
