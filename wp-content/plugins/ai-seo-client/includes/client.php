@@ -339,25 +339,26 @@ class Client
     {
         $isLicenseValid = $this->licenseValidator->isLicenseValid();
         
+        // Main menu - always use renderMainPage which handles both states
         add_menu_page(
             __('SSEO AI', 'ai-seo-client'),
             __('SSEO AI', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
-            [$this, 'renderDashboardPage'],
+            [$this, 'renderMainPage'],
             'dashicons-chart-line',
             30
         );
 
         if ($isLicenseValid) {
-            // 1. Statistics/Dashboard
+            // 1. Statistics/Dashboard - first submenu replaces the main menu item
             add_submenu_page(
                 'ai-seo-client',
                 __('Statistics', 'ai-seo-client'),
                 __('Statistics', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-client',
-                [$this, 'renderDashboardPage']
+                [$this, 'renderMainPage']
             );
             
             // 2. Content Calendar
@@ -437,7 +438,7 @@ class Client
                 __('Connection', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-client',
-                [$this, 'renderLicensePage']
+                [$this, 'renderMainPage']
             );
         }
     }
@@ -618,16 +619,22 @@ class Client
     }
 
     /**
+     * Render main page - handles both licensed and unlicensed states
+     */
+    public function renderMainPage(): void
+    {
+        if ($this->licenseValidator->isLicenseValid()) {
+            $this->renderDashboardPage();
+        } else {
+            $this->renderLicensePage();
+        }
+    }
+
+    /**
      * Render dashboard page
      */
     public function renderDashboardPage(): void
     {
-        // Check if license is valid
-        if (!$this->licenseValidator->isLicenseValid()) {
-            $this->renderLicensePage();
-            return;
-        }
-        
         if ($this->seoDashboard) {
             $this->seoDashboard->renderPage();
         } else {
