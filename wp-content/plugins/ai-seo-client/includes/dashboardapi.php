@@ -23,9 +23,15 @@ class DashboardAPI
     {
         $siteUrl = get_site_url();
         $siteName = get_bloginfo('name');
+        
+        $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
+        
+        error_log('SSEO AI: Attempting license activation');
+        error_log('SSEO AI: API URL: ' . $apiUrl);
+        error_log('SSEO AI: License Key: ' . substr($licenseKey, 0, 15) . '...');
 
         $response = wp_remote_post(
-            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate',
+            $apiUrl,
             [
                 'body' => [
                     'license_key' => $licenseKey,
@@ -33,25 +39,33 @@ class DashboardAPI
                     'site_name' => $siteName,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false, // Disable SSL verification for local testing
             ]
         );
 
         if (is_wp_error($response)) {
-            return new \WP_Error(
-                'connection_error',
-                __('Could not connect to license server. Please try again.', 'ai-seo-client')
-            );
+            $errorMsg = 'Connection error: ' . $response->get_error_message();
+            error_log('SSEO AI: ' . $errorMsg);
+            return new \WP_Error('connection_error', $errorMsg);
         }
 
         $statusCode = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $rawBody = wp_remote_retrieve_body($response);
+        $body = json_decode($rawBody, true);
+        
+        error_log('SSEO AI: Response status: ' . $statusCode);
+        error_log('SSEO AI: Response body: ' . $rawBody);
 
         if ($statusCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
+            error_log('SSEO AI: Activation failed: ' . $message);
+            if (!empty($body['error'])) {
+                error_log('SSEO AI: Error code: ' . $body['error']);
+            }
             return new \WP_Error('activation_failed', $message);
         }
 
+        error_log('SSEO AI: Activation successful');
         return $body;
     }
 

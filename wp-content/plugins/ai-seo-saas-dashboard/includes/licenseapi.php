@@ -181,6 +181,10 @@ class LicenseAPI
         $siteUrl = $request->get_param('site_url');
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
 
+        error_log('SSEO AI Dashboard: License activation request received');
+        error_log('SSEO AI Dashboard: License Key: ' . substr($licenseKey, 0, 15) . '...');
+        error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
+
         // Get client IP
         $ipAddress = $request->get_header('X-Forwarded-For') 
             ?: $request->get_header('X-Real-IP') 
@@ -195,6 +199,7 @@ class LicenseAPI
         $result = $this->licenseGenerator->activateLicense($licenseKey, $activationData);
 
         if (is_wp_error($result)) {
+            error_log('SSEO AI Dashboard: Activation failed - ' . $result->get_error_code() . ': ' . $result->get_error_message());
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => $result->get_error_code(),
@@ -202,6 +207,7 @@ class LicenseAPI
             ], 400);
         }
 
+        error_log('SSEO AI Dashboard: Activation successful - Tenant: ' . $result['tenant_key']);
         return new \WP_REST_Response([
             'success' => true,
             'activated' => true,
