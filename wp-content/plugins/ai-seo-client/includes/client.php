@@ -409,7 +409,34 @@ class Client
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
         ?>
         <div class="wrap ai-seo-client">
-            <h1><?php esc_html_e('AI SEO License Activation', 'ai-seo-client'); ?></h1>
+            <h1><?php esc_html_e('SSEO AI License Activation', 'ai-seo-client'); ?></h1>
+
+            <?php
+            // Show activation success message
+            if (isset($_GET['activated']) && $_GET['activated'] == '1'): ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><strong><?php esc_html_e('License activated successfully!', 'ai-seo-client'); ?></strong></p>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            // Show deactivation message
+            if (isset($_GET['deactivated']) && $_GET['deactivated'] == '1'): ?>
+                <div class="notice notice-info is-dismissible">
+                    <p><?php esc_html_e('License deactivated.', 'ai-seo-client'); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            // Show error messages
+            if (isset($_GET['error'])): 
+                $error = sanitize_text_field($_GET['error']);
+                ?>
+                <div class="notice notice-error is-dismissible">
+                    <p><strong><?php esc_html_e('Activation Error:', 'ai-seo-client'); ?></strong></p>
+                    <p><?php echo esc_html(urldecode($error)); ?></p>
+                </div>
+            <?php endif; ?>
 
             <?php if ($licenseStatus === 'active'): ?>
                 <div class="notice notice-success">
@@ -512,7 +539,7 @@ class Client
         $dashboardUrl = esc_url_raw($_POST['dashboard_url'] ?? '');
 
         if (empty($licenseKey) || empty($dashboardUrl)) {
-            wp_redirect(admin_url('admin.php?page=ai-seo-client&error=missing_fields'));
+            wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Missing license key or dashboard URL')));
             exit;
         }
 
@@ -523,7 +550,15 @@ class Client
         $result = $this->dashboardAPI->activateLicense($licenseKey, $dashboardUrl);
 
         if (is_wp_error($result)) {
-            wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode($result->get_error_message())));
+            $errorMsg = $result->get_error_message();
+            error_log('SSEO AI License Activation Failed: ' . $errorMsg);
+            wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode($errorMsg)));
+            exit;
+        }
+
+        if (empty($result['tenant_key'])) {
+            error_log('SSEO AI License Activation: No tenant_key in response');
+            wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Invalid response from dashboard - no tenant key')));
             exit;
         }
 
