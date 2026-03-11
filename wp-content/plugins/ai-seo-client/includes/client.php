@@ -83,8 +83,8 @@ class Client
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
 
-        // Add admin menu for license activation
-        add_action('admin_menu', [$this, 'registerAdminMenu']);
+        // Add admin menu for license activation - use priority 5 to register before other features
+        add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
         add_action('admin_menu', [$this, 'removeOldSubmenus'], 999);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
@@ -339,13 +339,20 @@ class Client
     {
         $isLicenseValid = $this->licenseValidator->isLicenseValid();
         
+        // Store instance for callbacks
+        $self = $this;
+        
         // Main menu - always use renderMainPage which handles both states
+        $mainCallback = function() use ($self) {
+            $self->renderMainPage();
+        };
+        
         add_menu_page(
             __('SSEO AI', 'ai-seo-client'),
             __('SSEO AI', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
-            [$this, 'renderMainPage'],
+            $mainCallback,
             'dashicons-chart-line',
             30
         );
@@ -358,7 +365,7 @@ class Client
                 __('Statistics', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-client',
-                [$this, 'renderMainPage']
+                $mainCallback
             );
             
             // 2. Content Calendar
@@ -438,7 +445,7 @@ class Client
                 __('Connection', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-client',
-                [$this, 'renderMainPage']
+                $mainCallback
             );
         }
     }
@@ -466,9 +473,23 @@ class Client
             'ai-seo-connection',       // Connection
         ];
         
+        // Track which slugs we've seen to remove duplicates
+        $seenSlugs = [];
+        
         foreach ($submenu['ai-seo-client'] as $key => $item) {
-            if (!in_array($item[2], $slugsToKeep)) {
+            $slug = $item[2];
+            
+            // Remove if not in whitelist
+            if (!in_array($slug, $slugsToKeep)) {
                 unset($submenu['ai-seo-client'][$key]);
+                continue;
+            }
+            
+            // Remove duplicates - keep only the first occurrence
+            if (isset($seenSlugs[$slug])) {
+                unset($submenu['ai-seo-client'][$key]);
+            } else {
+                $seenSlugs[$slug] = true;
             }
         }
     }
