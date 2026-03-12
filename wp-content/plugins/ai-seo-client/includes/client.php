@@ -364,6 +364,16 @@ class Client
             'ai-seo-client',
             [$this, 'renderConnectionPage']
         );
+        
+        // SaaS Dashboard - shows tenant stats from the SaaS
+        add_submenu_page(
+            'ai-seo-client',
+            __('SaaS Dashboard', 'ai-seo-client'),
+            __('SaaS Dashboard', 'ai-seo-client'),
+            'manage_options',
+            'ai-seo-saas-dashboard',
+            [$this, 'renderSaasDashboard']
+        );
     }
 
     /**

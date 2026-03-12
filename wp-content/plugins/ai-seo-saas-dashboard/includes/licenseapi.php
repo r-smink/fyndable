@@ -142,6 +142,25 @@ class LicenseAPI
                 ],
             ],
         ]);
+
+        // Get tenant dashboard data (for client plugin)
+        register_rest_route($this->namespace, '/tenant/dashboard', [
+            'methods' => 'POST',
+            'callback' => [$this, 'getTenantDashboard'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'tenant_key' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'license_key' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -227,25 +246,31 @@ class LicenseAPI
     }
     
     /**
-     * Get white-label data for tenant
+     * Get white-label data for tenant - ONLY tenant-level (no global fallback)
      */
     private function getWhiteLabelData(string $tenantKey): array
     {
-        // First check tenant-specific white-label settings
+        // Only tenant-specific white-label settings (no global fallback)
         $tenantBrand = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
+        $enabled = $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
         
-        if ($tenantBrand) {
-            return is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
+        // Only return white-label if explicitly enabled and configured
+        if ($enabled && $tenantBrand) {
+            $brand = is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
+            if (!empty($brand['company_name'])) {
+                return $brand;
+            }
         }
         
-        // Fall back to global white-label settings
+        // Return empty if no tenant white-label configured
         return [
-            'company_name' => get_option('sseo_ai_saas_wl_company_name', ''),
-            'company_logo' => get_option('sseo_ai_saas_wl_company_logo', ''),
-            'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#2563eb'),
-            'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#1e40af'),
-            'support_email' => get_option('sseo_ai_saas_wl_support_email', ''),
-            'support_url' => get_option('sseo_ai_saas_wl_support_url', ''),
+            'company_name' => '',
+            'company_logo' => '',
+            'primary_color' => '#2563eb',
+            'secondary_color' => '#1e40af',
+            'support_email' => '',
+            'support_url' => '',
+            'enabled' => false,
         ];
     }
 
@@ -334,6 +359,58 @@ class LicenseAPI
         return new \WP_REST_Response([
             'success' => true,
             'deactivated' => true,
+        ], 200);
+    }
+
+    /**
+     * Get tenant dashboard data for client plugin
+     */
+    public function getTenantDashboard(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $licenseKey = $request->get_param('license_key');
+
+        // Verify tenant belongs to this license
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_tenant',
+                'message' => 'Tenant not found or license mismatch',
+            ], 403);
+        }
+
+        $currentPeriod = current_time('Y-m');
+        $usage = $this->tenants->getTenantUsage($tenantKey, $currentPeriod);
+        $limits = $this->tenants->checkTenantLimits($tenantKey);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'tenant' => [
+                'tenant_key' => $tenant['tenant_key'],
+                'name' => $tenant['name'],
+                'email' => $tenant['email'],
+                'tier' => $tenant['tier'],
+                'status' => $tenant['status'],
+                'created_at' => $tenant['created_at'],
+                'expires_at' => $tenant['expires_at'],
+                'max_sites' => (int)$tenant['max_sites'],
+                'rate_limit' => (int)$tenant['rate_limit'],
+                'api_calls_limit' => (int)$tenant['api_calls_limit'],
+            ],
+            'usage' => [
+                'current_month' => [
+                    'api_calls' => (int)($usage['api_calls'] ?? 0),
+                    'api_calls_limit' => (int)$tenant['api_calls_limit'],
+                    'content_generated' => (int)($usage['content_generated'] ?? 0),
+                    'serp_requests' => (int)($usage['serp_requests'] ?? 0),
+                    'keywords_tracked' => (int)($usage['keywords_tracked'] ?? 0),
+                    'api_cost' => (float)($usage['api_cost'] ?? 0),
+                ],
+                'remaining_calls' => max(0, (int)$tenant['api_calls_limit'] - (int)($usage['api_calls'] ?? 0)),
+            ],
+            'white_label' => $this->getWhiteLabelData($tenantKey),
+            'limits' => $limits['checks'] ?? [],
         ], 200);
     }
 }

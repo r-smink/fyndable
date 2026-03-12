@@ -31,15 +31,9 @@ class WhiteLabelAdmin
 
     public function addMenu(): void
     {
-        add_submenu_page(
-            'sseo-ai-licenses',
-            __('White-Label Settings', 'sseo-ai-saas'),
-            __('White-Label', 'sseo-ai-saas'),
-            'manage_options',
-            'sseo-ai-white-label',
-            [$this, 'renderWhiteLabelSettings']
-        );
-
+        // Removed: Global White-Label menu - now only tenant-level white-label exists
+        
+        // Client Portal - where tenant white-label is managed
         add_submenu_page(
             'sseo-ai-licenses',
             __('Client Portal', 'sseo-ai-saas'),
@@ -70,13 +64,8 @@ class WhiteLabelAdmin
 
     public function registerSettings(): void
     {
-        // White-label branding
-        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_company_name');
-        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_company_logo');
-        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_primary_color');
-        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_secondary_color');
-        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_support_email');
-        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_support_url');
+        // Global white-label settings removed - now only tenant-level white-label
+        // White-label is configured per-tenant in Client Portal
         
         // Billing settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_key');
