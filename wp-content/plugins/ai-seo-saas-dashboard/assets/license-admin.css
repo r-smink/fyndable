@@ -411,6 +411,55 @@
     color: #1d2327;
 }
 
+/* Tier Badges */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-basic {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.badge-starter {
+    background: #e7f3ff;
+    color: #2271b1;
+}
+
+.badge-professional {
+    background: #c5d9ed;
+    color: #1d2327;
+}
+
+.badge-business {
+    background: #dba617;
+    color: #fff;
+}
+
+.badge-agency {
+    background: #00a32a;
+    color: #fff;
+}
+
+.badge-administrator {
+    background: #2271b1;
+    color: #fff;
+}
+
+.badge-editor {
+    background: #dba617;
+    color: #000;
+}
+
+.badge-user {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
 @media screen and (max-width: 1200px) {
     .sseo-ai-license-admin .sseo-ai-stats-grid {
         grid-template-columns: repeat(2, 1fr);

@@ -43,6 +43,7 @@ class Dashboard
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
+        add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
 
         // Register REST API for client plugin communication
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
