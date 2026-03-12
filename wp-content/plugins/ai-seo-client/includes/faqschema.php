@@ -56,12 +56,15 @@ class FAQSchema
         $recentFAQs = $this->getRecentFAQPosts();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('FAQ Schema Generator', 'ai-seo-client'); ?></h1>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('FAQ Schema Generator', 'ai-seo-client'); ?></h1>
+            </div>
             
-            <!-- FAQ Statistics -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('FAQ Schema Overview', 'ai-seo-client'); ?></h2>
+            <div class="sseo-ai-content">
+                <!-- FAQ Statistics -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('FAQ Schema Overview', 'ai-seo-client'); ?></h2>
                 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
                     <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
@@ -92,7 +95,7 @@ class FAQSchema
             </div>
             
             <!-- Recent FAQ Posts -->
-            <div class="card">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Recent Posts with FAQs', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($recentFAQs)): ?>
@@ -135,6 +138,7 @@ class FAQSchema
                 <?php else: ?>
                 <p><?php esc_html_e('No FAQ posts found. Add FAQs to your posts to see them here.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
+            </div>
             </div>
         </div>
         <?php

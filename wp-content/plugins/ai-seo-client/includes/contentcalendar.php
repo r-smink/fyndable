@@ -45,7 +45,7 @@ class ContentCalendar
             'ai-seo-client',
             __('Content Calendar', 'ai-seo-client'),
             __('Content Calendar', 'ai-seo-client'),
-            'edit_posts',
+            'manage_options',
             'ai-seo-content-calendar',
             [$this, 'renderCalendar']
         );

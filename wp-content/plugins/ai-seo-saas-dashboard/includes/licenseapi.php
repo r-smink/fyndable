@@ -235,7 +235,7 @@ class LicenseAPI
         $tenantBrand = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
         
         if ($tenantBrand) {
-            return is_array($tenantBrand) ? $tenantBrand : json_decode($tenantBrand, true) ?: [];
+            return is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
         }
         
         // Fall back to global white-label settings

@@ -493,7 +493,7 @@ class ContentPerformanceMonitor
         global $wpdb;
         
         $results = $wpdb->get_results("
-            SELECT post_id, post_date, 
+            SELECT p.ID as post_id, p.post_date, 
                    (SELECT MIN(created_at) FROM {$wpdb->prefix}sseo_ai_rank_history 
                     WHERE post_id = p.ID AND position <= 10) as first_rank_date
             FROM {$wpdb->posts} p

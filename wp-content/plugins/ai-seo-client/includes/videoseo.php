@@ -42,7 +42,7 @@ class VideoSEO
             'ai-seo-client',
             __('Video SEO', 'ai-seo-client'),
             __('Video SEO', 'ai-seo-client'),
-            'edit_posts',
+            'manage_options',
             'ai-seo-video-seo',
             [$this, 'renderDashboard']
         );
@@ -57,12 +57,15 @@ class VideoSEO
         $recentVideos = $this->getRecentVideos();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Video SEO Optimizer', 'ai-seo-client'); ?></h1>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Video SEO Optimizer', 'ai-seo-client'); ?></h1>
+            </div>
             
-            <!-- Video Statistics -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Video SEO Overview', 'ai-seo-client'); ?></h2>
+            <div class="sseo-ai-content">
+                <!-- Video Statistics -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Video SEO Overview', 'ai-seo-client'); ?></h2>
                 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
                     <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
@@ -93,7 +96,7 @@ class VideoSEO
             </div>
             
             <!-- Recent Videos -->
-            <div class="card">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Recent Videos', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($recentVideos)): ?>
@@ -153,6 +156,7 @@ class VideoSEO
                 <?php else: ?>
                 <p><?php esc_html_e('No videos found. Add videos to your posts to see them here.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
+            </div>
             </div>
         </div>
         

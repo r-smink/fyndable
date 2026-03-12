@@ -37,7 +37,7 @@ class AIImageGenerator
             'ai-seo-client',
             __('AI Image Generator', 'ai-seo-client'),
             __('AI Images', 'ai-seo-client'),
-            'upload_files',
+            'manage_options',
             'ai-seo-image-generator',
             [$this, 'renderDashboard']
         );
@@ -51,12 +51,15 @@ class AIImageGenerator
         $stats = $this->getImageStats();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('AI Image Generator', 'ai-seo-client'); ?></h1>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('AI Image Generator', 'ai-seo-client'); ?></h1>
+            </div>
             
-            <!-- Image Statistics -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('AI Image Overview', 'ai-seo-client'); ?></h2>
+            <div class="sseo-ai-content">
+                <!-- Image Statistics -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('AI Image Overview', 'ai-seo-client'); ?></h2>
                 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
                     <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
@@ -87,7 +90,7 @@ class AIImageGenerator
             </div>
             
             <!-- Bulk Image Generation -->
-            <div class="card">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Bulk Image Generation', 'ai-seo-client'); ?></h2>
                 
                 <form method="post" id="bulk-image-form">
@@ -162,6 +165,7 @@ class AIImageGenerator
                         <p id="progress-text" style="margin-top: 10px;">0 / 0 images generated</p>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
         

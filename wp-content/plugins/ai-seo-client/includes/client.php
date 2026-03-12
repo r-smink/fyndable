@@ -689,8 +689,8 @@ class Client
                         </a>
                         
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-bulk')); ?>" class="ai-tool-card">
-                            <h3>✍️ <?php esc_html_e('Content Rewriter', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Rewrite and optimize existing content', 'ai-seo-client'); ?></p>
+                            <h3>✍️ <?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></h3>
+                            <p><?php esc_html_e('Bulk generate meta titles and descriptions', 'ai-seo-client'); ?></p>
                         </a>
                         
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-image-generator')); ?>" class="ai-tool-card">
@@ -700,7 +700,7 @@ class Client
                         
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-image-generator')); ?>" class="ai-tool-card">
                             <h3>🖼️ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Auto-generate SEO-friendly alt text for images', 'ai-seo-client'); ?></p>
+                            <p><?php esc_html_e('Available in post editor sidebar', 'ai-seo-client'); ?></p>
                         </a>
                         
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-faq-schema')); ?>" class="ai-tool-card">
@@ -718,7 +718,7 @@ class Client
                             <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
                         </a>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-optimizer')); ?>" class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-optimizer')); ?>" class="ai-tool-card">
                             <h3>📊 <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
                         </a>
@@ -771,7 +771,7 @@ class Client
                             <p><?php esc_html_e('HTTPS, mixed content, and security headers', 'ai-seo-client'); ?></p>
                         </a>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-schema')); ?>" class="ai-tool-card">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-schema')); ?>" class="ai-tool-card">
                             <h3>📋 <?php esc_html_e('Schema Markup', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Structured data validation and suggestions', 'ai-seo-client'); ?></p>
                         </a>
