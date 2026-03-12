@@ -67,6 +67,18 @@ class SaaSSettings
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_cost_limit', ['default' => 100]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_cost_limit', ['default' => 500]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_cost_limit', ['default' => 2000]);
+        
+        // Billing settings - Payment providers
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_payment_provider', ['default' => 'stripe']);
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_currency', ['default' => 'EUR']);
+        
+        // Stripe settings
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_key');
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_secret');
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_webhook_secret');
+        
+        // Mollie settings
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_api_key');
     }
     
     /**

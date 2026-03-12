@@ -288,6 +288,14 @@ class TenantRepository
     }
     
     /**
+     * Get all tenants (wrapper for getTenants without filters)
+     */
+    public function getAllTenants(int $limit = 100): array
+    {
+        return $this->getTenants([], $limit, 0);
+    }
+
+    /**
      * Get all tenants with optional filtering
      */
     public function getTenants(array $filters = [], int $limit = 50, int $offset = 0): array

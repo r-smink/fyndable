@@ -18,6 +18,8 @@ class Dashboard
     private SaaSSettings $saasSettings;
     private ApiGateway $apiGateway;
     private WhiteLabelAdmin $whiteLabelAdmin;
+    private PaymentProcessor $paymentProcessor;
+    private WebhookHandler $webhookHandler;
 
     public function __construct()
     {
@@ -37,6 +39,8 @@ class Dashboard
         $this->saasSettings = new SaaSSettings();
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings);
         $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
+        $this->paymentProcessor = new PaymentProcessor($this->tenants);
+        $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
 
         // Register admin menu
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
@@ -48,6 +52,7 @@ class Dashboard
         // Register REST API for client plugin communication
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
         add_action('rest_api_init', [$this->apiGateway, 'register']);
+        add_action('rest_api_init', [$this->webhookHandler, 'register']);
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
