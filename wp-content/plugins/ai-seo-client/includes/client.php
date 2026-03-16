@@ -83,10 +83,8 @@ class Client
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
 
-        // Add admin menu for license activation - use priority 5 to register before other features
+        // Add admin menu for license activation
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
-        // Clean up duplicate submenus after all features have registered
-        add_action('admin_menu', [$this, 'removeOldSubmenus'], 999);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
         // Handle license activation form
@@ -339,12 +337,13 @@ class Client
     public function registerAdminMenu(): void
     {
         $isLicenseValid = $this->licenseValidator->isLicenseValid();
+        $tier = $this->licenseValidator->getLicenseTier();
         
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('SSEO AI', 'ai-seo-client');
         
-        // Main menu - use ai-seo-client as slug so all feature submenus work
+        // Main menu
         add_menu_page(
             $menuName,
             $menuName,
@@ -355,57 +354,108 @@ class Client
             30
         );
 
-        // First submenu replaces the main menu link text
+        // Connection (first submenu replaces main menu text)
         add_submenu_page(
             'ai-seo-client',
             __('Connection', 'ai-seo-client'),
-            __('Connection', 'ai-seo-client'),
+            __('🔗 Connection', 'ai-seo-client'),
             'manage_options',
-            'ai-seo-client', // Same slug as main menu
+            'ai-seo-client',
             [$this, 'renderConnectionPage']
         );
         
-        // Add Settings submenu
+        // Only show feature menus if license is valid
+        if ($isLicenseValid) {
+            // 1. Dashboard / Statistics
+            add_submenu_page(
+                'ai-seo-client',
+                __('Dashboard', 'ai-seo-client'),
+                __('📊 Dashboard', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-dashboard',
+                [$this, 'renderDashboardPage']
+            );
+            
+            // 2. Content Calendar
+            add_submenu_page(
+                'ai-seo-client',
+                __('Content Calendar', 'ai-seo-client'),
+                __('📅 Content Calendar', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-content-calendar',
+                [$this, 'renderContentCalendarPage']
+            );
+            
+            // 3. Topic Clusters
+            add_submenu_page(
+                'ai-seo-client',
+                __('Topic Clusters', 'ai-seo-client'),
+                __('🎯 Topic Clusters', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-topic-clusters',
+                [$this, 'renderTopicClusterPage']
+            );
+            
+            // 4. AI Tools
+            add_submenu_page(
+                'ai-seo-client',
+                __('AI Tools', 'ai-seo-client'),
+                __('🤖 AI Tools', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-ai-tools',
+                [$this, 'renderAIToolsPage']
+            );
+            
+            // 5. Site Audit
+            add_submenu_page(
+                'ai-seo-client',
+                __('Site Audit', 'ai-seo-client'),
+                __('🔍 Site Audit', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-site-audit',
+                [$this, 'renderSiteAuditPage']
+            );
+            
+            // 6. Rank Tracker
+            add_submenu_page(
+                'ai-seo-client',
+                __('Rank Tracker', 'ai-seo-client'),
+                __('📈 Rank Tracker', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-rank-tracker',
+                [$this, 'renderRankTrackerPage']
+            );
+            
+            // 7. Link Manager
+            add_submenu_page(
+                'ai-seo-client',
+                __('Link Manager', 'ai-seo-client'),
+                __('🔗 Link Manager', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-link-manager',
+                [$this, 'renderLinkManagerPage']
+            );
+            
+            // 8. Integrations
+            add_submenu_page(
+                'ai-seo-client',
+                __('Integrations', 'ai-seo-client'),
+                __('🔌 Integrations', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-integrations',
+                [$this, 'renderIntegrationsPage']
+            );
+        }
+        
+        // Settings (always visible)
         add_submenu_page(
             'ai-seo-client',
             __('Settings', 'ai-seo-client'),
-            __('Settings', 'ai-seo-client'),
+            __('⚙️ Settings', 'ai-seo-client'),
             'manage_options',
             'ai-seo-settings',
             [$this, 'renderSettingsPage']
         );
-        
-        // SaaS Dashboard removed - was causing fatal error, license activation is the primary function
-    }
-
-    /**
-     * Remove ALL submenu pages to clean up the menu
-     * Only keep Connection and Settings submenu
-     */
-    public function removeOldSubmenus(): void
-    {
-        global $submenu;
-        
-        if (!isset($submenu['ai-seo-client']) || !is_array($submenu['ai-seo-client'])) {
-            return;
-        }
-        
-        // List of allowed submenu slugs (Connection = ai-seo-client, Settings = ai-seo-settings)
-        $allowedSlugs = ['ai-seo-client', 'ai-seo-settings'];
-        
-        // Get all current submenu items
-        $itemsToRemove = [];
-        foreach ($submenu['ai-seo-client'] as $key => $item) {
-            $slug = $item[2] ?? '';
-            if (!in_array($slug, $allowedSlugs, true)) {
-                $itemsToRemove[] = $slug;
-            }
-        }
-        
-        // Remove each unwanted submenu using WordPress function (preserves permissions)
-        foreach ($itemsToRemove as $slug) {
-            remove_submenu_page('ai-seo-client', $slug);
-        }
     }
 
     /**
@@ -863,13 +913,72 @@ class Client
     }
 
     /**
+     * Render Rank Tracker page
+     */
+    public function renderRankTrackerPage(): void
+    {
+        $this->renderFeaturePage(
+            __('Rank Tracker', 'ai-seo-client'),
+            __('Monitor Your Search Rankings', 'ai-seo-client'),
+            __('Track keyword positions and monitor ranking changes over time', 'ai-seo-client'),
+            [
+                ['icon' => '📈', 'title' => __('Keyword Tracking', 'ai-seo-client'), 'desc' => __('Monitor positions for your target keywords', 'ai-seo-client')],
+                ['icon' => '📊', 'title' => __('Ranking History', 'ai-seo-client'), 'desc' => __('View historical ranking data and trends', 'ai-seo-client')],
+                ['icon' => '🎯', 'title' => __('Competitor Tracking', 'ai-seo-client'), 'desc' => __('Compare your rankings with competitors', 'ai-seo-client')],
+                ['icon' => '🔔', 'title' => __('Rank Alerts', 'ai-seo-client'), 'desc' => __('Get notified when rankings change significantly', 'ai-seo-client')],
+                ['icon' => '🌍', 'title' => __('Local Rankings', 'ai-seo-client'), 'desc' => __('Track rankings in specific locations', 'ai-seo-client')],
+                ['icon' => '📱', 'title' => __('Mobile vs Desktop', 'ai-seo-client'), 'desc' => __('Compare mobile and desktop rankings', 'ai-seo-client')],
+            ]
+        );
+    }
+
+    /**
+     * Render Link Manager page
+     */
+    public function renderLinkManagerPage(): void
+    {
+        $this->renderFeaturePage(
+            __('Link Manager', 'ai-seo-client'),
+            __('Manage Your Link Strategy', 'ai-seo-client'),
+            __('Monitor internal and external links, find broken links, and optimize your link structure', 'ai-seo-client'),
+            [
+                ['icon' => '🔗', 'title' => __('Internal Links', 'ai-seo-client'), 'desc' => __('Analyze and optimize internal link structure', 'ai-seo-client')],
+                ['icon' => '🔍', 'title' => __('Broken Links', 'ai-seo-client'), 'desc' => __('Find and fix broken links on your site', 'ai-seo-client')],
+                ['icon' => '↩️', 'title' => __('Redirects', 'ai-seo-client'), 'desc' => __('Manage 301/302 redirects easily', 'ai-seo-client')],
+                ['icon' => '🔄', 'title' => __('Link Suggestions', 'ai-seo-client'), 'desc' => __('AI-powered internal linking suggestions', 'ai-seo-client')],
+                ['icon' => '📊', 'title' => __('Link Reports', 'ai-seo-client'), 'desc' => __('Detailed reports on link health', 'ai-seo-client')],
+                ['icon' => '⚠️', 'title' => __('404 Monitor', 'ai-seo-client'), 'desc' => __('Track and resolve 404 errors', 'ai-seo-client')],
+            ]
+        );
+    }
+
+    /**
      * Render Integrations page
      */
     public function renderIntegrationsPage(): void
     {
+        $this->renderFeaturePage(
+            __('Integrations', 'ai-seo-client'),
+            __('Connect Your Tools', 'ai-seo-client'),
+            __('Integrate with popular SEO and marketing platforms', 'ai-seo-client'),
+            [
+                ['icon' => '📊', 'title' => __('Google Analytics', 'ai-seo-client'), 'desc' => __('Track traffic and conversion data', 'ai-seo-client')],
+                ['icon' => '🔎', 'title' => __('Google Search Console', 'ai-seo-client'), 'desc' => __('Monitor search performance and indexing', 'ai-seo-client')],
+                ['icon' => '📈', 'title' => __('SEMrush', 'ai-seo-client'), 'desc' => __('Keyword research and competitor analysis', 'ai-seo-client')],
+                ['icon' => '🔗', 'title' => __('Ahrefs', 'ai-seo-client'), 'desc' => __('Backlink monitoring and site explorer', 'ai-seo-client')],
+                ['icon' => '📧', 'title' => __('Email Marketing', 'ai-seo-client'), 'desc' => __('Mailchimp, ConvertKit, ActiveCampaign', 'ai-seo-client')],
+                ['icon' => '💬', 'title' => __('Social Media', 'ai-seo-client'), 'desc' => __('Auto-share content to social platforms', 'ai-seo-client')],
+            ]
+        );
+    }
+
+    /**
+     * Helper: Render a feature page with cards
+     */
+    private function renderFeaturePage(string $title, string $heading, string $description, array $cards): void
+    {
         ?>
         <style>
-            /* Critical layout CSS */
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
@@ -882,43 +991,20 @@ class Client
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Integrations', 'ai-seo-client'); ?></h1>
+                <h1><?php echo esc_html($title); ?></h1>
             </div>
             <div class="sseo-ai-content">
                 <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Connect Your Tools', 'ai-seo-client'); ?></h2>
-                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Integrate with popular SEO and marketing platforms', 'ai-seo-client'); ?></p>
+                    <h2><?php echo esc_html($heading); ?></h2>
+                    <p style="margin-bottom: 30px; color: #646970;"><?php echo esc_html($description); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <?php foreach ($cards as $card): ?>
                         <div class="ai-tool-card">
-                            <h3>📊 <?php esc_html_e('Google Analytics', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Track traffic and conversion data', 'ai-seo-client'); ?></p>
+                            <h3><?php echo esc_html($card['icon'] . ' ' . $card['title']); ?></h3>
+                            <p><?php echo esc_html($card['desc']); ?></p>
                         </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🔎 <?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Monitor search performance and indexing', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📈 <?php esc_html_e('SEMrush', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Keyword research and competitor analysis', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🔗 <?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Backlink monitoring and site explorer', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📧 <?php esc_html_e('Email Marketing', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Mailchimp, ConvertKit, ActiveCampaign', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>💬 <?php esc_html_e('Social Media', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Auto-share content to social platforms', 'ai-seo-client'); ?></p>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>

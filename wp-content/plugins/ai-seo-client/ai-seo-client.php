@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SSEO AI
  * Description: Advanced AI-powered SEO plugin with comprehensive optimization features
- * Version: 1.0.9
+ * Version: 1.1.1
  * Author: SSEO AI
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_CLIENT_VERSION', '1.0.9');
+define('SSEO_AI_CLIENT_VERSION', '1.1.1');
 define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -35,13 +35,20 @@ spl_autoload_register(function ($class) {
     $file = $baseDir . str_replace('\\', '/', strtolower($relativeClass)) . '.php';
 
     if (file_exists($file)) {
-        require $file;
+        require_once $file;
     }
 });
 
+// Explicitly require core files to ensure they're loaded
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/settings.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/licensevalidator.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/dashboardapi.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/healthlogger.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/llmclient.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
+
 // Activation hook
 register_activation_hook(__FILE__, function () {
-    require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
     $client = new \SSEOAIClient\Client();
     $client->activate();
 });
