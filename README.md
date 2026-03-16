@@ -20,7 +20,7 @@ SSEO AI is a complete **multi-tenant SaaS platform** for WordPress SEO optimizat
 🎨 **White-Label Support** - Customize branding, colors, and company name  
 🤖 **AI-Powered** - Integrated with OpenAI, Anthropic, and Mistral  
 📊 **40+ SEO Features** - Content optimization, rank tracking, schema markup, and more  
-💰 **Tiered Pricing** - Free, Starter, Professional, Business, and Agency plans  
+💰 **Tiered Pricing** - Starter, Professional, Business, and Agency plans  
 🔒 **Secure** - License validation, rate limiting, and tenant isolation  
 📈 **Usage Tracking** - Monitor API calls, costs, and feature usage per tenant  
 
@@ -34,28 +34,6 @@ SSEO AI is a complete **multi-tenant SaaS platform** for WordPress SEO optimizat
 
 ### For SaaS Providers
 
-1. **Install SaaS Dashboard Plugin**
-   ```bash
-   cd wp-content/plugins/
-   unzip ai-seo-saas-dashboard.zip
-   wp plugin activate ai-seo-saas-dashboard
-   ```
-
-2. **Configure API Keys**
-   - Navigate to: **SSEO AI SaaS → Settings**
-   - Add OpenAI API key
-   - Add SERP API key (optional)
-
-3. **Generate License**
-   - Go to: **SSEO AI SaaS → Licenses**
-   - Click **Generate New License**
-   - Select tier and expiration
-   - Copy license key
-
-4. **Configure White-Label** (Optional)
-   - Go to: **SSEO AI SaaS → White-Label**
-   - Set company name, logo, colors
-   - Settings sync to clients on activation
 
 ### For Customers
 
@@ -104,19 +82,15 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
 ## 💎 Feature Tiers
 
-### Free Tier
-- Basic SEO meta fields
-- XML sitemap
-- Robots.txt editor
 
-### Starter Tier ($19/month)
+### Starter Tier (€99/month)
 - All Free features
 - Link Assistant
 - Redirect Manager
 - Image Alt Generator
 - Content Rewriter
 
-### Professional Tier ($49/month)
+### Professional Tier (€199/month)
 - All Starter features
 - Schema Markup
 - Local SEO
@@ -127,14 +101,14 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 - Keyword Explorer
 - Google Search Console Integration
 
-### Business Tier ($79/month)
+### Business Tier (€299/month)
 - All Professional features
 - AI Content Writer
 - Content Repurposer
 - Bulk Optimizer
 - Content Decay Monitor
 
-### Agency Tier ($99/month)
+### Agency Tier (€499/month)
 - All Business features
 - SEO Revisions
 - AI Plagiarism Checker
@@ -146,12 +120,12 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
 **Backend:**
 - WordPress 6.0+
-- PHP 7.4+
+- PHP 8.1+
 - MySQL 5.7+
 
 **APIs:**
-- OpenAI GPT-4 / GPT-3.5
-- Anthropic Claude
+- OpenAI GPT-4+ / GPT-3.5+
+- Anthropic Claude+
 - Mistral AI
 - SERP APIs (SerpAPI, DataForSEO)
 
