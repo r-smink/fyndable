@@ -195,7 +195,7 @@ All endpoints use namespace `aiseoclient/v1`.
 
 ## Competitive Advantage
 
-| Feature | RankMath | Yoast | AIOSEO | WPSEO AI | MarketMuse | NeuronWriter | SurferSEO | **AI SEO Client** |
+| Feature | RankMath | Yoast | AIOSEO | WPSEO AI | MarketMuse | NeuronWriter | SurferSEO | **SSEO AI Client** |
 |---------|---------|-------|--------|----------|-----------|-------------|-----------|-------------------|
 | On-page SEO Score | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ |
 | NLP Content Score | — | — | — | Partial | ✅ | ✅ | ✅ | ✅ |
