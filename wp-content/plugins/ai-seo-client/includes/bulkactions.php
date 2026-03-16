@@ -23,7 +23,7 @@ class BulkActions
 
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_filter('manage_posts_columns', [$this, 'addSeoColumn']);
         add_action('manage_posts_custom_column', [$this, 'renderSeoColumn'], 10, 2);

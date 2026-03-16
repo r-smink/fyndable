@@ -28,7 +28,7 @@ class CompetitorResearch
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_analyze_competitor', [$this, 'ajaxAnalyzeCompetitor']);
         add_action('wp_ajax_sseo_ai_detect_ai_content', [$this, 'ajaxDetectAIContent']);

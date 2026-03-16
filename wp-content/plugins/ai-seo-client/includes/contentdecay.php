@@ -30,6 +30,7 @@ class ContentDecay
      */
     public function register(): void
     {
+        // Menu registration moved to Client class
         add_action('aiseoclient_decay_check', [$this, 'runDecayCheck']);
         add_action('admin_notices', [$this, 'showDecayAlerts']);
         add_action('add_meta_boxes', [$this, 'addDecayMetaBox']);
@@ -39,8 +40,7 @@ class ContentDecay
             wp_schedule_event(time(), 'daily', 'aiseoclient_decay_check');
         }
         
-        // Admin menu
-        add_action('admin_menu', [$this, 'addDecayMenu']);
+        // Admin menu moved to Client class
         
         // REST API
         add_action('rest_api_init', [$this, 'registerRestRoutes']);

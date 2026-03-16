@@ -24,7 +24,7 @@ class AdvancedBacklinks
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_find_broken_backlinks', [$this, 'ajaxFindBrokenBacklinks']);
         add_action('wp_ajax_sseo_ai_analyze_competitor_backlinks', [$this, 'ajaxAnalyzeCompetitorBacklinks']);

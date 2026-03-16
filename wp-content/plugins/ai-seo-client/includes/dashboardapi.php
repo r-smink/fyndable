@@ -27,11 +27,19 @@ class DashboardAPI
         // Ensure HTTPS and normalize URL to prevent 301 redirects
         $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         
-        $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
-        
         error_log('SSEO AI: Attempting license activation');
-        error_log('SSEO AI: API URL: ' . $apiUrl);
+        error_log('SSEO AI: Dashboard URL: ' . $dashboardUrl);
         error_log('SSEO AI: License Key: ' . substr($licenseKey, 0, 15) . '...');
+
+        // Check if SaaS Dashboard plugin is active on this same WordPress installation
+        // This avoids HTTP loopback issues on shared hosting
+        if ($this->isSameSiteActivation($dashboardUrl)) {
+            error_log('SSEO AI: Detected same-site installation, using direct PHP activation');
+            return $this->activateLicenseDirectly($licenseKey, $siteUrl, $siteName);
+        }
+
+        $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
+        error_log('SSEO AI: API URL: ' . $apiUrl);
 
         // First test basic connectivity with a simple GET request
         error_log('SSEO AI: Testing basic connectivity to ' . $dashboardUrl);
@@ -426,5 +434,151 @@ class DashboardAPI
         }
 
         return $body;
+    }
+
+    /**
+     * Check if the dashboard URL points to the same WordPress installation
+     * This helps avoid HTTP loopback issues on shared hosting
+     */
+    private function isSameSiteActivation(string $dashboardUrl): bool
+    {
+        // Compare URLs first (normalize both)
+        $currentSite = rtrim(get_site_url(), '/');
+        $dashboardSite = rtrim($dashboardUrl, '/');
+        
+        // Remove protocol for comparison
+        $currentSiteNorm = preg_replace('#^https?://#', '', $currentSite);
+        $dashboardSiteNorm = preg_replace('#^https?://#', '', $dashboardSite);
+        
+        $urlsMatch = strcasecmp($currentSiteNorm, $dashboardSiteNorm) === 0;
+        
+        error_log('SSEO AI: Same-site check - Current: ' . $currentSiteNorm . ', Dashboard: ' . $dashboardSiteNorm . ', Match: ' . ($urlsMatch ? 'yes' : 'no'));
+        
+        if (!$urlsMatch) {
+            return false;
+        }
+        
+        // Check if SaaS Dashboard plugin classes are available
+        // Try multiple class checks as they may be loaded at different times
+        $saasAvailable = class_exists('\\SSEOAISaaS\\TenantRepository') || 
+                         class_exists('\\SSEOAISaaS\\LicenseKeyGenerator') ||
+                         class_exists('\\SSEOAISaaS\\LicenseAPI') ||
+                         defined('SSEO_AI_SAAS_VERSION');
+        
+        error_log('SSEO AI: SaaS Dashboard available: ' . ($saasAvailable ? 'yes' : 'no'));
+        
+        // If URLs match but SaaS not loaded, try to load it
+        if (!$saasAvailable && $urlsMatch) {
+            // Check if the SaaS plugin file exists
+            $saasPluginFile = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/ai-seo-saas-dashboard.php';
+            if (file_exists($saasPluginFile) && is_plugin_active('ai-seo-saas-dashboard/ai-seo-saas-dashboard.php')) {
+                error_log('SSEO AI: SaaS plugin exists and is active, attempting to load classes');
+                // Include the necessary files
+                $saasDir = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/includes/';
+                if (file_exists($saasDir . 'tenantrepository.php')) {
+                    require_once $saasDir . 'tenantrepository.php';
+                }
+                if (file_exists($saasDir . 'licensekeygenerator.php')) {
+                    require_once $saasDir . 'licensekeygenerator.php';
+                }
+                $saasAvailable = class_exists('\\SSEOAISaaS\\TenantRepository');
+                error_log('SSEO AI: After manual load, SaaS available: ' . ($saasAvailable ? 'yes' : 'no'));
+            }
+        }
+        
+        return $urlsMatch && $saasAvailable;
+    }
+
+    /**
+     * Activate license directly via PHP when on same WordPress installation
+     * Bypasses HTTP completely to avoid loopback timeout issues
+     */
+    private function activateLicenseDirectly(string $licenseKey, string $siteUrl, string $siteName): array|\WP_Error
+    {
+        // Get the SaaS Dashboard classes
+        if (!class_exists('\\SSEOAISaaS\\TenantRepository') || !class_exists('\\SSEOAISaaS\\LicenseKeyGenerator')) {
+            return new \WP_Error('saas_not_available', __('SaaS Dashboard plugin is not properly loaded.', 'ai-seo-client'));
+        }
+
+        try {
+            $tenants = new \SSEOAISaaS\TenantRepository();
+            $licenseGenerator = new \SSEOAISaaS\LicenseKeyGenerator($tenants);
+
+            // Validate the license key using LicenseKeyGenerator
+            $license = $licenseGenerator->getLicense($licenseKey);
+            
+            if (!$license) {
+                return new \WP_Error('invalid_license', __('Invalid license key.', 'ai-seo-client'));
+            }
+
+            if ($license['status'] === 'revoked') {
+                return new \WP_Error('license_revoked', __('This license has been revoked.', 'ai-seo-client'));
+            }
+
+            if ($license['status'] === 'expired' || 
+                (!empty($license['expires_at']) && strtotime($license['expires_at']) < time())) {
+                return new \WP_Error('license_expired', __('This license has expired.', 'ai-seo-client'));
+            }
+
+            // Check if license is already used
+            $domain = parse_url($siteUrl, PHP_URL_HOST);
+            $existingTenant = $tenants->getTenantByLicense($licenseKey);
+
+            if ($license['status'] === 'used' && $existingTenant) {
+                // Check if it's the same site reactivating
+                if ($existingTenant['domain'] !== $domain) {
+                    return new \WP_Error('license_in_use', __('This license is already activated on another site.', 'ai-seo-client'));
+                }
+            }
+
+            if ($existingTenant) {
+                // Reactivate existing tenant
+                $tenants->updateTenant($existingTenant['tenant_key'], [
+                    'status' => 'active',
+                    'domain' => $domain,
+                    'name' => $siteName,
+                ]);
+                $tenantKey = $existingTenant['tenant_key'];
+            } else {
+                // Create new tenant
+                $tenantKey = $tenants->createTenant([
+                    'name' => $siteName,
+                    'domain' => $domain,
+                    'email' => get_option('admin_email'),
+                    'license_key' => $licenseKey,
+                    'tier' => $license['tier'],
+                    'max_sites' => $license['max_sites'],
+                    'rate_limit' => $license['rate_limit'],
+                    'api_calls_limit' => $license['api_calls_limit'],
+                    'expires_at' => $license['expires_at'],
+                ]);
+
+                if (!$tenantKey) {
+                    return new \WP_Error('tenant_creation_failed', __('Failed to create tenant.', 'ai-seo-client'));
+                }
+
+                // Mark license as used
+                $licenseGenerator->markLicenseUsed($licenseKey);
+            }
+
+            // Get white-label settings
+            $whiteLabel = get_option('sseo_ai_saas_white_label', []);
+
+            error_log('SSEO AI: Direct activation successful, tenant_key: ' . $tenantKey);
+
+            return [
+                'success' => true,
+                'tenant_key' => $tenantKey,
+                'tier' => $license['tier'],
+                'expires_at' => $license['expires_at'],
+                'rate_limit' => $license['rate_limit'],
+                'api_calls_limit' => $license['api_calls_limit'],
+                'white_label' => $whiteLabel,
+            ];
+
+        } catch (\Exception $e) {
+            error_log('SSEO AI: Direct activation error: ' . $e->getMessage());
+            return new \WP_Error('activation_error', $e->getMessage());
+        }
     }
 }

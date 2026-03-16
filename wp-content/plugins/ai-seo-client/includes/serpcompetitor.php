@@ -26,7 +26,7 @@ class SerpCompetitor
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
     }
 
     public function addMenu(): void

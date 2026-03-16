@@ -511,10 +511,10 @@ class LicenseAdmin
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'ai-seo-saas') . '</em>'; ?></td>
                         <td>
-                            <?php if ($license['status'] === 'active'): ?>
+                            <?php if (in_array($license['status'], ['active', 'used'], true)): ?>
                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action'); ?>" 
                                    class="button button-small" 
-                                   onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license?', 'ai-seo-saas'); ?>')">
+                                   onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license? This will also suspend the associated tenant.', 'ai-seo-saas'); ?>')">
                                     <?php esc_html_e('Revoke', 'ai-seo-saas'); ?>
                                 </a>
                             <?php endif; ?>

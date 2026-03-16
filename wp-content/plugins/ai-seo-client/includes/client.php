@@ -666,111 +666,23 @@ class Client
     }
 
     /**
-     * Render Content Calendar page
+     * Render Content Calendar page - delegates to ContentCalendar class
      */
     public function renderContentCalendarPage(): void
     {
-        ?>
-        <style>
-            /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
-            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
-            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Content Calendar', 'ai-seo-client'); ?></h1>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Plan Your Content Strategy', 'ai-seo-client'); ?></h2>
-                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Organize and schedule your content with AI-powered suggestions', 'ai-seo-client'); ?></p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <div class="ai-tool-card">
-                            <h3>📅 <?php esc_html_e('Editorial Calendar', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Visual calendar view of your content pipeline', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🎯 <?php esc_html_e('Content Ideas', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('AI-generated topic suggestions based on trends', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📊 <?php esc_html_e('Publishing Schedule', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Optimize posting times for maximum engagement', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🔔 <?php esc_html_e('Deadline Reminders', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Never miss a publication deadline', 'ai-seo-client'); ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php
+        if ($this->contentCalendar) {
+            $this->contentCalendar->renderCalendar();
+        }
     }
 
     /**
-     * Render Topic Cluster page
+     * Render Topic Cluster page - delegates to TopicCluster class
      */
     public function renderTopicClusterPage(): void
     {
-        ?>
-        <style>
-            /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
-            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
-            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Topic Cluster', 'ai-seo-client'); ?></h1>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Build Topic Authority', 'ai-seo-client'); ?></h2>
-                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Create interconnected content clusters to dominate search rankings', 'ai-seo-client'); ?></p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <div class="ai-tool-card">
-                            <h3>🎯 <?php esc_html_e('Pillar Pages', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Create comprehensive pillar content for core topics', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🔗 <?php esc_html_e('Cluster Content', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Generate supporting articles linked to pillars', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🕸️ <?php esc_html_e('Internal Linking', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('AI-suggested internal link opportunities', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📈 <?php esc_html_e('Cluster Performance', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Track rankings and traffic for each cluster', 'ai-seo-client'); ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php
+        if ($this->topicCluster) {
+            $this->topicCluster->renderPage();
+        }
     }
 
     /**
@@ -849,127 +761,43 @@ class Client
     }
 
     /**
-     * Render Site Audit page
+     * Render Site Audit page - delegates to TechnicalSEOAuditor class
      */
     public function renderSiteAuditPage(): void
     {
-        ?>
-        <style>
-            /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
-            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
-            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Site Audit', 'ai-seo-client'); ?></h1>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Comprehensive SEO Analysis', 'ai-seo-client'); ?></h2>
-                    <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Identify and fix technical SEO issues across your entire site', 'ai-seo-client'); ?></p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <div class="ai-tool-card">
-                            <h3>🔍 <?php esc_html_e('Technical SEO', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Crawl errors, broken links, redirect chains', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>⚡ <?php esc_html_e('Page Speed', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Core Web Vitals and performance metrics', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📱 <?php esc_html_e('Mobile Usability', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Mobile-friendly testing and optimization', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🏗️ <?php esc_html_e('Site Structure', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('URL structure, sitemap, and navigation analysis', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🔒 <?php esc_html_e('Security Check', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('HTTPS, mixed content, and security headers', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📋 <?php esc_html_e('Schema Markup', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Structured data validation and suggestions', 'ai-seo-client'); ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php
+        if ($this->technicalSEOAuditor) {
+            $this->technicalSEOAuditor->renderDashboard();
+        }
     }
 
     /**
-     * Render Rank Tracker page
+     * Render Rank Tracker page - delegates to RankTracker class
      */
     public function renderRankTrackerPage(): void
     {
-        $this->renderFeaturePage(
-            __('Rank Tracker', 'ai-seo-client'),
-            __('Monitor Your Search Rankings', 'ai-seo-client'),
-            __('Track keyword positions and monitor ranking changes over time', 'ai-seo-client'),
-            [
-                ['icon' => '📈', 'title' => __('Keyword Tracking', 'ai-seo-client'), 'desc' => __('Monitor positions for your target keywords', 'ai-seo-client')],
-                ['icon' => '📊', 'title' => __('Ranking History', 'ai-seo-client'), 'desc' => __('View historical ranking data and trends', 'ai-seo-client')],
-                ['icon' => '🎯', 'title' => __('Competitor Tracking', 'ai-seo-client'), 'desc' => __('Compare your rankings with competitors', 'ai-seo-client')],
-                ['icon' => '🔔', 'title' => __('Rank Alerts', 'ai-seo-client'), 'desc' => __('Get notified when rankings change significantly', 'ai-seo-client')],
-                ['icon' => '🌍', 'title' => __('Local Rankings', 'ai-seo-client'), 'desc' => __('Track rankings in specific locations', 'ai-seo-client')],
-                ['icon' => '📱', 'title' => __('Mobile vs Desktop', 'ai-seo-client'), 'desc' => __('Compare mobile and desktop rankings', 'ai-seo-client')],
-            ]
-        );
+        if ($this->rankTracker) {
+            $this->rankTracker->renderPage();
+        }
     }
 
     /**
-     * Render Link Manager page
+     * Render Link Manager page - delegates to SmartInternalLinking class
      */
     public function renderLinkManagerPage(): void
     {
-        $this->renderFeaturePage(
-            __('Link Manager', 'ai-seo-client'),
-            __('Manage Your Link Strategy', 'ai-seo-client'),
-            __('Monitor internal and external links, find broken links, and optimize your link structure', 'ai-seo-client'),
-            [
-                ['icon' => '🔗', 'title' => __('Internal Links', 'ai-seo-client'), 'desc' => __('Analyze and optimize internal link structure', 'ai-seo-client')],
-                ['icon' => '🔍', 'title' => __('Broken Links', 'ai-seo-client'), 'desc' => __('Find and fix broken links on your site', 'ai-seo-client')],
-                ['icon' => '↩️', 'title' => __('Redirects', 'ai-seo-client'), 'desc' => __('Manage 301/302 redirects easily', 'ai-seo-client')],
-                ['icon' => '🔄', 'title' => __('Link Suggestions', 'ai-seo-client'), 'desc' => __('AI-powered internal linking suggestions', 'ai-seo-client')],
-                ['icon' => '📊', 'title' => __('Link Reports', 'ai-seo-client'), 'desc' => __('Detailed reports on link health', 'ai-seo-client')],
-                ['icon' => '⚠️', 'title' => __('404 Monitor', 'ai-seo-client'), 'desc' => __('Track and resolve 404 errors', 'ai-seo-client')],
-            ]
-        );
+        if ($this->smartInternalLinking) {
+            $this->smartInternalLinking->renderDashboard();
+        }
     }
 
     /**
-     * Render Integrations page
+     * Render Integrations page - delegates to ExternalIntegrations class
      */
     public function renderIntegrationsPage(): void
     {
-        $this->renderFeaturePage(
-            __('Integrations', 'ai-seo-client'),
-            __('Connect Your Tools', 'ai-seo-client'),
-            __('Integrate with popular SEO and marketing platforms', 'ai-seo-client'),
-            [
-                ['icon' => '📊', 'title' => __('Google Analytics', 'ai-seo-client'), 'desc' => __('Track traffic and conversion data', 'ai-seo-client')],
-                ['icon' => '🔎', 'title' => __('Google Search Console', 'ai-seo-client'), 'desc' => __('Monitor search performance and indexing', 'ai-seo-client')],
-                ['icon' => '📈', 'title' => __('SEMrush', 'ai-seo-client'), 'desc' => __('Keyword research and competitor analysis', 'ai-seo-client')],
-                ['icon' => '🔗', 'title' => __('Ahrefs', 'ai-seo-client'), 'desc' => __('Backlink monitoring and site explorer', 'ai-seo-client')],
-                ['icon' => '📧', 'title' => __('Email Marketing', 'ai-seo-client'), 'desc' => __('Mailchimp, ConvertKit, ActiveCampaign', 'ai-seo-client')],
-                ['icon' => '💬', 'title' => __('Social Media', 'ai-seo-client'), 'desc' => __('Auto-share content to social platforms', 'ai-seo-client')],
-            ]
-        );
+        if ($this->externalIntegrations) {
+            $this->externalIntegrations->renderSettings();
+        }
     }
 
     /**

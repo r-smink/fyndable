@@ -24,7 +24,7 @@ class AIImageGenerator
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('add_meta_boxes', [$this, 'addMetaBox']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_generate_featured_image', [$this, 'ajaxGenerateFeaturedImage']);

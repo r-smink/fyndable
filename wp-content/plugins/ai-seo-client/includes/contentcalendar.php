@@ -27,7 +27,7 @@ class ContentCalendar
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('transition_post_status', [$this, 'handleStatusChange'], 10, 3);
