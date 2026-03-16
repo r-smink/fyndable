@@ -20,7 +20,7 @@ class SeoReportExport
 
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('admin_post_sseo_ai_export_csv', [$this, 'handleCsvExport']);
         add_action('admin_post_sseo_ai_export_pdf', [$this, 'handlePdfExport']);
     }

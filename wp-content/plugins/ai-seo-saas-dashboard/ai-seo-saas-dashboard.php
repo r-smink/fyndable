@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: SSEO AI SaaS Dashboard
- * Description: Multi-tenant license and tenant management dashboard for AI SEO Assistant SaaS
- * Version: 1.0.0
- * Author: Rick Smink
+ * Description: Multi-tenant license and tenant management dashboard for SSEO AI SaaS
+ * Version: 1.1.0
+ * Author: SSEO AI
  * Text Domain: sseo-ai-saas
  * Domain Path: /languages
  */
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_SAAS_VERSION', '1.0.0');
+define('SSEO_AI_SAAS_VERSION', '1.1.0');
 define('SSEO_AI_SAAS_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_SAAS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_SAAS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -42,6 +42,14 @@ register_activation_hook(__FILE__, function () {
     $tenants = new \SSEOAISaaS\TenantRepository();
     $tenants->maybeCreateTables();
     $tenants->migrateExistingTables();
+    
+    // Flush rewrite rules to register REST API routes
+    flush_rewrite_rules();
+});
+
+// Deactivation hook
+register_deactivation_hook(__FILE__, function () {
+    flush_rewrite_rules();
 });
 
 // Initialize

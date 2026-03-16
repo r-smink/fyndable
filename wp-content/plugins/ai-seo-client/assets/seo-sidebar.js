@@ -86,7 +86,7 @@
 			if (!postContent && !postTitle) return;
 			setLoading(true);
 			apiFetch({
-				path: '/aiseoclient/v1/analyze',
+				path: '/sseo-ai/v1/analyze',
 				method: 'POST',
 				data: {
 					content: postContent,
@@ -111,7 +111,7 @@
 			if (!postId) return;
 			setGenerating(true);
 			apiFetch({
-				path: '/aiseoclient/v1/bulk/generate-meta',
+				path: '/sseo-ai/v1/bulk/generate-meta',
 				method: 'POST',
 				data: {
 					post_id: postId,

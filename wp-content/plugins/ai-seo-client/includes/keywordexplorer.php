@@ -193,7 +193,8 @@ class KeywordExplorer
         }
         $ia = array_intersect($a, $b);
         $ua = array_unique(array_merge($a, $b));
-        return count($ia) / count($ua);
+        $uaCount = count($ua);
+        return $uaCount > 0 ? count($ia) / $uaCount : 0;
     }
 
     // REST handlers

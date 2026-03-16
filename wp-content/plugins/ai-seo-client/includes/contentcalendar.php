@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Calendar & Workflow Manager
@@ -27,7 +27,7 @@ class ContentCalendar
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('transition_post_status', [$this, 'handleStatusChange'], 10, 3);
@@ -45,7 +45,7 @@ class ContentCalendar
             'ai-seo-client',
             __('Content Calendar', 'ai-seo-client'),
             __('Content Calendar', 'ai-seo-client'),
-            'edit_posts',
+            'manage_options',
             'ai-seo-content-calendar',
             [$this, 'renderCalendar']
         );

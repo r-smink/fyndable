@@ -85,12 +85,12 @@
 
 			try {
 				if (action === 'image') {
-					const res = await apiFetch({ path: '/aiseoclient/v1/editor-image', method: 'POST', data: { prompt: topic } });
+					const res = await apiFetch({ path: '/sseo-ai/v1/editor-image', method: 'POST', data: { prompt: topic } });
 					setImageUrl(res?.url || '');
 					return;
 				}
 				const res = await apiFetch({
-					path: '/aiseoclient/v1/editor-action',
+					path: '/sseo-ai/v1/editor-action',
 					method: 'POST',
 					data: { action, topic, preset, tone, content, selection: selectionText, prompt_id: promptId, notes: noteIds }
 				});

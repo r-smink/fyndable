@@ -23,32 +23,194 @@ class DashboardAPI
     {
         $siteUrl = get_site_url();
         $siteName = get_bloginfo('name');
+        
+        // Ensure HTTPS and normalize URL to prevent 301 redirects
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        
+        error_log('SSEO AI: Attempting license activation');
+        error_log('SSEO AI: Dashboard URL: ' . $dashboardUrl);
+        error_log('SSEO AI: License Key: ' . substr($licenseKey, 0, 15) . '...');
 
-        $response = wp_remote_post(
-            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate',
-            [
-                'body' => [
+        // Check if SaaS Dashboard plugin is active on this same WordPress installation
+        // This avoids HTTP loopback issues on shared hosting
+        if ($this->isSameSiteActivation($dashboardUrl)) {
+            error_log('SSEO AI: Detected same-site installation, using direct PHP activation');
+            return $this->activateLicenseDirectly($licenseKey, $siteUrl, $siteName);
+        }
+
+        $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
+        error_log('SSEO AI: API URL: ' . $apiUrl);
+
+        // First test basic connectivity with a simple GET request
+        error_log('SSEO AI: Testing basic connectivity to ' . $dashboardUrl);
+        $testResponse = wp_remote_get($dashboardUrl, [
+            'timeout' => 15,
+            'sslverify' => false,
+        ]);
+        
+        if (is_wp_error($testResponse)) {
+            error_log('SSEO AI: WordPress HTTP API failed: ' . $testResponse->get_error_message());
+            error_log('SSEO AI: Attempting native curl fallback...');
+            
+            // Try native curl as fallback
+            $response = $this->curlPost($apiUrl, [
+                'license_key' => $licenseKey,
+                'site_url' => $siteUrl,
+                'site_name' => $siteName,
+            ]);
+            
+            if (is_wp_error($response)) {
+                error_log('SSEO AI: Native curl also failed: ' . $response->get_error_message());
+                return $response;
+            }
+        } else {
+            $testCode = wp_remote_retrieve_response_code($testResponse);
+            error_log('SSEO AI: Basic connectivity test passed, status: ' . $testCode);
+            
+            // Use WordPress HTTP API
+            $response = wp_remote_post(
+                $apiUrl,
+                [
+                    'body' => [
+                        'license_key' => $licenseKey,
+                        'site_url' => $siteUrl,
+                        'site_name' => $siteName,
+                    ],
+                    'timeout' => 60,
+                    'sslverify' => false,
+                    'redirection' => 0,
+                ]
+            );
+            
+            if (is_wp_error($response)) {
+                error_log('SSEO AI: wp_remote_post failed, trying curl fallback...');
+                $response = $this->curlPost($apiUrl, [
                     'license_key' => $licenseKey,
                     'site_url' => $siteUrl,
                     'site_name' => $siteName,
-                ],
-                'timeout' => 30,
-                'sslverify' => true,
-            ]
-        );
-
-        if (is_wp_error($response)) {
-            return new \WP_Error(
-                'connection_error',
-                __('Could not connect to license server. Please try again.', 'ai-seo-client')
-            );
+                ]);
+            }
         }
 
-        $statusCode = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        // Handle 301/302 redirect manually to preserve POST data
+        if (!is_wp_error($response) && isset($response['headers']) && isset($response['response'])) {
+            // This is a WP_HTTP_Response object from wp_remote_post
+            $statusCode = wp_remote_retrieve_response_code($response);
+            if (in_array($statusCode, [301, 302, 307, 308])) {
+                $headers = wp_remote_retrieve_headers($response);
+                $location = $headers['location'] ?? '';
+                if ($location) {
+                    error_log('SSEO AI: Following redirect to: ' . $location);
+                    $response = wp_remote_post(
+                        $location,
+                        [
+                            'body' => [
+                                'license_key' => $licenseKey,
+                                'site_url' => $siteUrl,
+                                'site_name' => $siteName,
+                            ],
+                            'timeout' => 60,
+                            'sslverify' => false,
+                            'redirection' => 0,
+                        ]
+                    );
+                }
+            }
+            
+            if (is_wp_error($response)) {
+                return $response;
+            }
+            
+            $statusCode = wp_remote_retrieve_response_code($response);
+            $rawBody = wp_remote_retrieve_body($response);
+            $body = json_decode($rawBody, true);
+        } elseif (!is_wp_error($response)) {
+            // This is the direct result from curl (already decoded JSON)
+            $body = $response;
+            $statusCode = 200; // curl method already validates
+        } else {
+            return $response;
+        }
+        
+        error_log('SSEO AI: Response status: ' . $statusCode);
+        error_log('SSEO AI: Response body: ' . json_encode($body));
 
         if ($statusCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
+            error_log('SSEO AI: Activation failed: ' . $message);
+            if (!empty($body['error'])) {
+                error_log('SSEO AI: Error code: ' . $body['error']);
+            }
+            return new \WP_Error('activation_failed', $message);
+        }
+
+        error_log('SSEO AI: Activation successful');
+        return $body;
+    }
+
+    /**
+     * Normalize dashboard URL to prevent 301 redirects
+     */
+    private function normalizeDashboardUrl(string $url): string
+    {
+        // Force HTTPS
+        $url = str_replace('http://', 'https://', $url);
+        
+        // Remove www. if present (most modern sites redirect www to non-www)
+        $url = str_replace('https://www.', 'https://', $url);
+        
+        return $url;
+    }
+
+    /**
+     * Native curl POST request fallback when WordPress HTTP API fails
+     */
+    private function curlPost(string $url, array $data): array|\WP_Error
+    {
+        if (!function_exists('curl_init')) {
+            return new \WP_Error('curl_not_available', __('cURL extension not available', 'ai-seo-client'));
+        }
+
+        error_log('SSEO AI: Using native curl for POST to: ' . $url);
+
+        $ch = curl_init();
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($data),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_CONNECTTIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'User-Agent: WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+
+        if ($error) {
+            error_log('SSEO AI: cURL error: ' . $error);
+            return new \WP_Error('curl_error', 'cURL error: ' . $error);
+        }
+
+        error_log('SSEO AI: cURL response code: ' . $httpCode);
+        error_log('SSEO AI: cURL response body: ' . substr($response, 0, 500));
+
+        $body = json_decode($response, true);
+        
+        if ($httpCode !== 200 || empty($body['success'])) {
+            $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
+            error_log('SSEO AI: cURL activation failed: ' . $message);
             return new \WP_Error('activation_failed', $message);
         }
 
@@ -69,6 +231,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -91,6 +254,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -135,6 +299,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -155,6 +320,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -203,6 +369,7 @@ class DashboardAPI
                 ]),
                 'timeout' => 60,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -249,6 +416,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -266,5 +434,151 @@ class DashboardAPI
         }
 
         return $body;
+    }
+
+    /**
+     * Check if the dashboard URL points to the same WordPress installation
+     * This helps avoid HTTP loopback issues on shared hosting
+     */
+    private function isSameSiteActivation(string $dashboardUrl): bool
+    {
+        // Compare URLs first (normalize both)
+        $currentSite = rtrim(get_site_url(), '/');
+        $dashboardSite = rtrim($dashboardUrl, '/');
+        
+        // Remove protocol for comparison
+        $currentSiteNorm = preg_replace('#^https?://#', '', $currentSite);
+        $dashboardSiteNorm = preg_replace('#^https?://#', '', $dashboardSite);
+        
+        $urlsMatch = strcasecmp($currentSiteNorm, $dashboardSiteNorm) === 0;
+        
+        error_log('SSEO AI: Same-site check - Current: ' . $currentSiteNorm . ', Dashboard: ' . $dashboardSiteNorm . ', Match: ' . ($urlsMatch ? 'yes' : 'no'));
+        
+        if (!$urlsMatch) {
+            return false;
+        }
+        
+        // Check if SaaS Dashboard plugin classes are available
+        // Try multiple class checks as they may be loaded at different times
+        $saasAvailable = class_exists('\\SSEOAISaaS\\TenantRepository') || 
+                         class_exists('\\SSEOAISaaS\\LicenseKeyGenerator') ||
+                         class_exists('\\SSEOAISaaS\\LicenseAPI') ||
+                         defined('SSEO_AI_SAAS_VERSION');
+        
+        error_log('SSEO AI: SaaS Dashboard available: ' . ($saasAvailable ? 'yes' : 'no'));
+        
+        // If URLs match but SaaS not loaded, try to load it
+        if (!$saasAvailable && $urlsMatch) {
+            // Check if the SaaS plugin file exists
+            $saasPluginFile = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/ai-seo-saas-dashboard.php';
+            if (file_exists($saasPluginFile) && is_plugin_active('ai-seo-saas-dashboard/ai-seo-saas-dashboard.php')) {
+                error_log('SSEO AI: SaaS plugin exists and is active, attempting to load classes');
+                // Include the necessary files
+                $saasDir = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/includes/';
+                if (file_exists($saasDir . 'tenantrepository.php')) {
+                    require_once $saasDir . 'tenantrepository.php';
+                }
+                if (file_exists($saasDir . 'licensekeygenerator.php')) {
+                    require_once $saasDir . 'licensekeygenerator.php';
+                }
+                $saasAvailable = class_exists('\\SSEOAISaaS\\TenantRepository');
+                error_log('SSEO AI: After manual load, SaaS available: ' . ($saasAvailable ? 'yes' : 'no'));
+            }
+        }
+        
+        return $urlsMatch && $saasAvailable;
+    }
+
+    /**
+     * Activate license directly via PHP when on same WordPress installation
+     * Bypasses HTTP completely to avoid loopback timeout issues
+     */
+    private function activateLicenseDirectly(string $licenseKey, string $siteUrl, string $siteName): array|\WP_Error
+    {
+        // Get the SaaS Dashboard classes
+        if (!class_exists('\\SSEOAISaaS\\TenantRepository') || !class_exists('\\SSEOAISaaS\\LicenseKeyGenerator')) {
+            return new \WP_Error('saas_not_available', __('SaaS Dashboard plugin is not properly loaded.', 'ai-seo-client'));
+        }
+
+        try {
+            $tenants = new \SSEOAISaaS\TenantRepository();
+            $licenseGenerator = new \SSEOAISaaS\LicenseKeyGenerator($tenants);
+
+            // Validate the license key using LicenseKeyGenerator
+            $license = $licenseGenerator->getLicense($licenseKey);
+            
+            if (!$license) {
+                return new \WP_Error('invalid_license', __('Invalid license key.', 'ai-seo-client'));
+            }
+
+            if ($license['status'] === 'revoked') {
+                return new \WP_Error('license_revoked', __('This license has been revoked.', 'ai-seo-client'));
+            }
+
+            if ($license['status'] === 'expired' || 
+                (!empty($license['expires_at']) && strtotime($license['expires_at']) < time())) {
+                return new \WP_Error('license_expired', __('This license has expired.', 'ai-seo-client'));
+            }
+
+            // Check if license is already used
+            $domain = parse_url($siteUrl, PHP_URL_HOST);
+            $existingTenant = $tenants->getTenantByLicense($licenseKey);
+
+            if ($license['status'] === 'used' && $existingTenant) {
+                // Check if it's the same site reactivating
+                if ($existingTenant['domain'] !== $domain) {
+                    return new \WP_Error('license_in_use', __('This license is already activated on another site.', 'ai-seo-client'));
+                }
+            }
+
+            if ($existingTenant) {
+                // Reactivate existing tenant
+                $tenants->updateTenant($existingTenant['tenant_key'], [
+                    'status' => 'active',
+                    'domain' => $domain,
+                    'name' => $siteName,
+                ]);
+                $tenantKey = $existingTenant['tenant_key'];
+            } else {
+                // Create new tenant
+                $tenantKey = $tenants->createTenant([
+                    'name' => $siteName,
+                    'domain' => $domain,
+                    'email' => get_option('admin_email'),
+                    'license_key' => $licenseKey,
+                    'tier' => $license['tier'],
+                    'max_sites' => $license['max_sites'],
+                    'rate_limit' => $license['rate_limit'],
+                    'api_calls_limit' => $license['api_calls_limit'],
+                    'expires_at' => $license['expires_at'],
+                ]);
+
+                if (!$tenantKey) {
+                    return new \WP_Error('tenant_creation_failed', __('Failed to create tenant.', 'ai-seo-client'));
+                }
+
+                // Mark license as used
+                $licenseGenerator->markLicenseUsed($licenseKey);
+            }
+
+            // Get white-label settings
+            $whiteLabel = get_option('sseo_ai_saas_white_label', []);
+
+            error_log('SSEO AI: Direct activation successful, tenant_key: ' . $tenantKey);
+
+            return [
+                'success' => true,
+                'tenant_key' => $tenantKey,
+                'tier' => $license['tier'],
+                'expires_at' => $license['expires_at'],
+                'rate_limit' => $license['rate_limit'],
+                'api_calls_limit' => $license['api_calls_limit'],
+                'white_label' => $whiteLabel,
+            ];
+
+        } catch (\Exception $e) {
+            error_log('SSEO AI: Direct activation error: ' . $e->getMessage());
+            return new \WP_Error('activation_error', $e->getMessage());
+        }
     }
 }

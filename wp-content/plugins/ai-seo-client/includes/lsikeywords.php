@@ -286,7 +286,8 @@ Output as a comma-separated list only.";
         }
 
         $count = count(array_intersect($usedKeywords, $suggested));
-        return round(($count / count($suggested)) * 100, 1);
+        $suggestedCount = count($suggested);
+        return $suggestedCount > 0 ? round(($count / $suggestedCount) * 100, 1) : 0;
     }
 
     public function registerRestRoutes(): void

@@ -26,7 +26,7 @@ class TopicCluster
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
     }
 
     public function addMenu(): void
@@ -394,7 +394,7 @@ PROMPT;
 
             // Load saved clusters
             function loadSaved() {
-                wp.apiFetch({ path: '/aiseoclient/v1/clusters/list' }).then(function(list) {
+                wp.apiFetch({ path: '/sseo-ai/v1/clusters/list' }).then(function(list) {
                     if (!list || !list.length) {
                         $('#tc-saved-list').html('<p style="color:#999;"><?php echo esc_js(__('No saved clusters yet.', 'ai-seo-client')); ?></p>');
                         return;
@@ -416,7 +416,7 @@ PROMPT;
             $(document).on('click', '.tc-delete-saved', function() {
                 var id = $(this).data('id');
                 if (!confirm('Delete?')) return;
-                wp.apiFetch({ path: '/aiseoclient/v1/clusters/' + id, method: 'DELETE' }).then(loadSaved);
+                wp.apiFetch({ path: '/sseo-ai/v1/clusters/' + id, method: 'DELETE' }).then(loadSaved);
             });
 
             // Generate
@@ -427,7 +427,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/clusters/generate',
+                    path: '/sseo-ai/v1/clusters/generate',
                     method: 'POST',
                     data: { topic: topic, depth: $('#tc-depth').val() }
                 }).then(function(data) {
@@ -449,7 +449,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Auditing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/clusters/audit',
+                    path: '/sseo-ai/v1/clusters/audit',
                     method: 'POST',
                     data: { topic: topic }
                 }).then(function(data) {
@@ -552,7 +552,7 @@ PROMPT;
             $('#tc-save').on('click', function() {
                 if (!currentCluster) return;
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/clusters/save',
+                    path: '/sseo-ai/v1/clusters/save',
                     method: 'POST',
                     data: { cluster: currentCluster }
                 }).then(function() {

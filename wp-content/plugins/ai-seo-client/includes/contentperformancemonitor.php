@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Performance Monitor
@@ -25,7 +25,7 @@ class ContentPerformanceMonitor
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('add_meta_boxes', [$this, 'addMetaBox']);
@@ -493,7 +493,7 @@ class ContentPerformanceMonitor
         global $wpdb;
         
         $results = $wpdb->get_results("
-            SELECT post_id, post_date, 
+            SELECT p.ID as post_id, p.post_date, 
                    (SELECT MIN(created_at) FROM {$wpdb->prefix}sseo_ai_rank_history 
                     WHERE post_id = p.ID AND position <= 10) as first_rank_date
             FROM {$wpdb->posts} p
@@ -514,7 +514,8 @@ class ContentPerformanceMonitor
             $totalDays += ($rankDate - $publishDate) / DAY_IN_SECONDS;
         }
         
-        $avgDays = round($totalDays / count($results));
+        $resultCount = count($results);
+        $avgDays = $resultCount > 0 ? round($totalDays / $resultCount) : 0;
         return (string)$avgDays;
     }
     

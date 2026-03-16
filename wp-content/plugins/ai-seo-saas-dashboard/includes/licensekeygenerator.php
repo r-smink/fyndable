@@ -282,6 +282,24 @@ class LicenseKeyGenerator
             $licenseKey
         ), ARRAY_A) ?: null;
     }
+
+    /**
+     * Mark license as used (for direct PHP activation)
+     */
+    public function markLicenseUsed(string $licenseKey): bool
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        
+        return $wpdb->update(
+            $table,
+            [
+                'status' => 'used',
+                'activated_at' => current_time('mysql'),
+            ],
+            ['license_key' => $licenseKey]
+        ) !== false;
+    }
     
     /**
      * Get all licenses with filtering

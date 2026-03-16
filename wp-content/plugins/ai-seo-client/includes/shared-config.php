@@ -25,8 +25,8 @@ if (!defined('AISEO_SAAS_API_NAMESPACE')) {
 }
 
 // License Key Format
-if (!defined('AISEO_LICENSE_KEY_PATTERN')) {
-    define('AISEO_LICENSE_KEY_PATTERN', '/^AISEO-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/');
+if (!defined('SSEO_AI_LICENSE_KEY_PATTERN')) {
+    define('SSEO_AI_LICENSE_KEY_PATTERN', '/^SSEO-AI-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/');
 }
 
 // Database Table Names (without prefix)

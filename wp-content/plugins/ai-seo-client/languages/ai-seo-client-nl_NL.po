@@ -1,0 +1,353 @@
+# Dutch translation for SSEO AI Client
+# Copyright (C) 2026
+# This file is distributed under the same license as the SSEO AI Client package.
+msgid ""
+msgstr ""
+"Project-Id-Version: SSEO AI Client 0.9.7\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-11 17:00+0100\n"
+"PO-Revision-Date: 2026-03-11 17:00+0100\n"
+"Last-Translator: \n"
+"Language-Team: Dutch\n"
+"Language: nl_NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Menu items
+msgid "SSEO AI"
+msgstr "SSEO AI"
+
+msgid "Statistics"
+msgstr "Statistieken"
+
+msgid "Content Calendar"
+msgstr "Contentkalender"
+
+msgid "Topic Cluster"
+msgstr "Onderwerpcluster"
+
+msgid "AI Tools"
+msgstr "AI Hulpmiddelen"
+
+msgid "Site Audit"
+msgstr "Site Audit"
+
+msgid "Integrations"
+msgstr "Integraties"
+
+msgid "Settings"
+msgstr "Instellingen"
+
+msgid "Connection"
+msgstr "Verbinding"
+
+# Connection page
+msgid "You are connected"
+msgstr "Je bent verbonden"
+
+msgid "to the"
+msgstr "met de"
+
+msgid "SEO AI Service"
+msgstr "SEO AI Service"
+
+msgid "Your connection e-mail:"
+msgstr "Jouw verbindings e-mail:"
+
+msgid "Your connection API Key:"
+msgstr "Jouw verbindings API sleutel:"
+
+msgid "License Key:"
+msgstr "Licentiesleutel:"
+
+msgid "License Tier:"
+msgstr "Licentie niveau:"
+
+msgid "Dashboard URL:"
+msgstr "Dashboard URL:"
+
+msgid "Disconnect"
+msgstr "Verbinding verbreken"
+
+msgid "Connect to SEO AI Service"
+msgstr "Verbind met SEO AI Service"
+
+msgid "Enter your license details to activate the plugin"
+msgstr "Voer je licentiegegevens in om de plugin te activeren"
+
+msgid "Dashboard URL"
+msgstr "Dashboard URL"
+
+msgid "License Key"
+msgstr "Licentiesleutel"
+
+msgid "Connect"
+msgstr "Verbinden"
+
+msgid "Activate License"
+msgstr "Activeer Licentie"
+
+# Content Calendar page
+msgid "Plan Your Content Strategy"
+msgstr "Plan je contentstrategie"
+
+msgid "Organize and schedule your content with AI-powered suggestions"
+msgstr "Organiseer en plan je content met AI-aangedreven suggesties"
+
+msgid "Editorial Calendar"
+msgstr "Redactionele kalender"
+
+msgid "Visual calendar view of your content pipeline"
+msgstr "Visuele kalenderweergave van je contentpijplijn"
+
+msgid "Content Ideas"
+msgstr "Content ideeën"
+
+msgid "AI-generated topic suggestions based on trends"
+msgstr "AI-gegenereerde onderwerpssuggesties op basis van trends"
+
+msgid "Publishing Schedule"
+msgstr "Publicatieschema"
+
+msgid "Optimize posting times for maximum engagement"
+msgstr "Optimaliseer posttijden voor maximale betrokkenheid"
+
+msgid "Deadline Reminders"
+msgstr "Deadline herinneringen"
+
+msgid "Never miss a publication deadline"
+msgstr "Mis nooit een publicatiedeadline"
+
+# Topic Cluster page
+msgid "Build Topic Authority"
+msgstr "Bouw onderwerpautoriteit"
+
+msgid "Create interconnected content clusters to dominate search rankings"
+msgstr "Creëer onderling verbonden contentclusters om zoekresultaten te domineren"
+
+msgid "Pillar Pages"
+msgstr "Pillar pagina's"
+
+msgid "Create comprehensive pillar content for core topics"
+msgstr "Creëer uitgebreide pillar content voor kernonderwerpen"
+
+msgid "Cluster Content"
+msgstr "Cluster content"
+
+msgid "Generate supporting articles linked to pillars"
+msgstr "Genereer ondersteunende artikelen gekoppeld aan pillars"
+
+msgid "Internal Linking"
+msgstr "Interne linking"
+
+msgid "AI-suggested internal link opportunities"
+msgstr "AI-gesuggereerde interne linkmogelijkheden"
+
+msgid "Cluster Performance"
+msgstr "Cluster prestaties"
+
+msgid "Track rankings and traffic for each cluster"
+msgstr "Volg rankings en verkeer voor elk cluster"
+
+# AI Tools page
+msgid "Available AI Tools"
+msgstr "Beschikbare AI hulpmiddelen"
+
+msgid "Content Writer"
+msgstr "Content schrijver"
+
+msgid "AI-powered content generation for blog posts and articles"
+msgstr "AI-aangedreven contentgeneratie voor blogposts en artikelen"
+
+msgid "Content Rewriter"
+msgstr "Content herschrijver"
+
+msgid "Rewrite and optimize existing content"
+msgstr "Herschrijf en optimaliseer bestaande content"
+
+msgid "Image Generator"
+msgstr "Afbeelding generator"
+
+msgid "Generate featured images and graphics"
+msgstr "Genereer uitgelichte afbeeldingen en graphics"
+
+msgid "Image Alt Generator"
+msgstr "Afbeelding Alt generator"
+
+msgid "Auto-generate SEO-friendly alt text for images"
+msgstr "Genereer automatisch SEO-vriendelijke alt-tekst voor afbeeldingen"
+
+msgid "FAQ Generator"
+msgstr "FAQ generator"
+
+msgid "Generate FAQ schema from content"
+msgstr "Genereer FAQ schema uit content"
+
+msgid "Video SEO"
+msgstr "Video SEO"
+
+msgid "Video transcript generation and optimization"
+msgstr "Video transcript generatie en optimalisatie"
+
+msgid "Content Repurposer"
+msgstr "Content hergebruiker"
+
+msgid "Repurpose content for different formats"
+msgstr "Hergebruik content voor verschillende formaten"
+
+msgid "Content Optimizer"
+msgstr "Content optimaliseerder"
+
+msgid "AI-powered content optimization suggestions"
+msgstr "AI-aangedreven content optimalisatiesuggesties"
+
+# Site Audit page
+msgid "Comprehensive SEO Analysis"
+msgstr "Uitgebreide SEO analyse"
+
+msgid "Identify and fix technical SEO issues across your entire site"
+msgstr "Identificeer en los technische SEO problemen op je hele site op"
+
+msgid "Technical SEO"
+msgstr "Technische SEO"
+
+msgid "Crawl errors, broken links, redirect chains"
+msgstr "Crawl fouten, gebroken links, redirect ketens"
+
+msgid "Page Speed"
+msgstr "Paginasnelheid"
+
+msgid "Core Web Vitals and performance metrics"
+msgstr "Core Web Vitals en prestatiemetingen"
+
+msgid "Mobile Usability"
+msgstr "Mobiele bruikbaarheid"
+
+msgid "Mobile-friendly testing and optimization"
+msgstr "Mobiel-vriendelijk testen en optimalisatie"
+
+msgid "Site Structure"
+msgstr "Site structuur"
+
+msgid "URL structure, sitemap, and navigation analysis"
+msgstr "URL structuur, sitemap en navigatie analyse"
+
+msgid "Security Check"
+msgstr "Beveiligingscheck"
+
+msgid "HTTPS, mixed content, and security headers"
+msgstr "HTTPS, gemengde content en beveiligingsheaders"
+
+msgid "Schema Markup"
+msgstr "Schema Markup"
+
+msgid "Structured data validation and suggestions"
+msgstr "Gestructureerde data validatie en suggesties"
+
+# Integrations page
+msgid "Connect Your Tools"
+msgstr "Verbind je tools"
+
+msgid "Integrate with popular SEO and marketing platforms"
+msgstr "Integreer met populaire SEO en marketing platforms"
+
+msgid "Google Analytics"
+msgstr "Google Analytics"
+
+msgid "Track traffic and conversion data"
+msgstr "Volg verkeer en conversiedata"
+
+msgid "Google Search Console"
+msgstr "Google Search Console"
+
+msgid "Monitor search performance and indexing"
+msgstr "Monitor zoekprestaties en indexering"
+
+msgid "SEMrush"
+msgstr "SEMrush"
+
+msgid "Keyword research and competitor analysis"
+msgstr "Zoekwoordonderzoek en concurrentieanalyse"
+
+msgid "Ahrefs"
+msgstr "Ahrefs"
+
+msgid "Backlink monitoring and site explorer"
+msgstr "Backlink monitoring en site verkenner"
+
+msgid "Email Marketing"
+msgstr "E-mail marketing"
+
+msgid "Mailchimp, ConvertKit, ActiveCampaign"
+msgstr "Mailchimp, ConvertKit, ActiveCampaign"
+
+msgid "Social Media"
+msgstr "Social media"
+
+msgid "Auto-share content to social platforms"
+msgstr "Deel content automatisch op social media platforms"
+
+# Settings page
+msgid "Plugin Settings"
+msgstr "Plugin instellingen"
+
+msgid "Settings saved successfully!"
+msgstr "Instellingen succesvol opgeslagen!"
+
+msgid "Brand Settings"
+msgstr "Merk instellingen"
+
+msgid "Brand Name"
+msgstr "Merknaam"
+
+msgid "Your company or brand name"
+msgstr "Jouw bedrijfs- of merknaam"
+
+msgid "Brand Voice & Tone"
+msgstr "Merkstem & toon"
+
+msgid "Describe your brand's voice (e.g., professional, friendly, authoritative)"
+msgstr "Beschrijf de stem van je merk (bijv. professioneel, vriendelijk, gezaghebbend)"
+
+msgid "Target Audience"
+msgstr "Doelgroep"
+
+msgid "Describe your target audience"
+msgstr "Beschrijf je doelgroep"
+
+msgid "Locations"
+msgstr "Locaties"
+
+msgid "Target locations (comma-separated)"
+msgstr "Doellocaties (komma gescheiden)"
+
+msgid "AI Prompt Settings"
+msgstr "AI Prompt instellingen"
+
+msgid "Custom instructions for AI content generation"
+msgstr "Aangepaste instructies voor AI contentgeneratie"
+
+msgid "Save Settings"
+msgstr "Instellingen opslaan"
+
+# Dashboard
+msgid "Dashboard loading..."
+msgstr "Dashboard laden..."
+
+# Error messages
+msgid "Security check failed. Please try again."
+msgstr "Beveiligingscontrole mislukt. Probeer het opnieuw."
+
+msgid "Insufficient permissions. You must be an administrator to activate licenses."
+msgstr "Onvoldoende rechten. Je moet een beheerder zijn om licenties te activeren."
+
+msgid "Missing license key or dashboard URL"
+msgstr "Ontbrekende licentiesleutel of dashboard URL"
+
+msgid "Invalid response from dashboard - no tenant key"
+msgstr "Ongeldig antwoord van dashboard - geen tenant sleutel"
+
+msgid "You do not have permission to access this page."
+msgstr "Je hebt geen toestemming om deze pagina te bekijken."

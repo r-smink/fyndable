@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: SSEO AI Client
- * Description: Client plugin for AI SEO SaaS - validates license and provides core SEO features
- * Version: 0.5-beta
- * Author: Rick Smink
+ * Plugin Name: SSEO AI
+ * Description: Advanced AI-powered SEO plugin with comprehensive optimization features
+ * Version: 1.1.4
+ * Author: SSEO AI
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: sseo-ai-client
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_CLIENT_VERSION', '0.5-beta');
+define('SSEO_AI_CLIENT_VERSION', '1.1.4');
 define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -35,15 +35,38 @@ spl_autoload_register(function ($class) {
     $file = $baseDir . str_replace('\\', '/', strtolower($relativeClass)) . '.php';
 
     if (file_exists($file)) {
-        require $file;
+        require_once $file;
     }
 });
 
+// Explicitly require core files to ensure they're loaded
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/settings.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/licensevalidator.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/dashboardapi.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/healthlogger.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/llmclient.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
+
 // Activation hook
 register_activation_hook(__FILE__, function () {
-    require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
     $client = new \SSEOAIClient\Client();
     $client->activate();
+});
+
+// Load text domain for translations
+add_action('init', function () {
+    // Generate MO files from PO files if needed
+    require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/translationhelper.php';
+    
+    $moFile = SSEO_AI_CLIENT_PLUGIN_DIR . 'languages/ai-seo-client-nl_NL.mo';
+    $poFile = SSEO_AI_CLIENT_PLUGIN_DIR . 'languages/ai-seo-client-nl_NL.po';
+    
+    // Generate MO file if it doesn't exist or PO file is newer
+    if (!file_exists($moFile) || (file_exists($poFile) && filemtime($poFile) > filemtime($moFile))) {
+        \SSEOAIClient\TranslationHelper::generateMoFile($poFile, $moFile);
+    }
+    
+    load_plugin_textdomain('ai-seo-client', false, dirname(plugin_basename(__FILE__)) . '/languages');
 });
 
 // Initialize plugin

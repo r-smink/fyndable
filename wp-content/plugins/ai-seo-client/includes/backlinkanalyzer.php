@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Backlink & Authority Analysis
@@ -26,7 +26,7 @@ class BacklinkAnalyzer
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_analyze_backlinks', [$this, 'ajaxAnalyzeBacklinks']);
         add_action('wp_ajax_sseo_ai_check_toxic_links', [$this, 'ajaxCheckToxicLinks']);

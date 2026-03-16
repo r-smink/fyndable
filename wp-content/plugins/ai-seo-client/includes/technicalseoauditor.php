@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Technical SEO Auditor
@@ -26,7 +26,7 @@ class TechnicalSEOAuditor
     
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         
         // Scheduled audits
@@ -57,12 +57,15 @@ class TechnicalSEOAuditor
         $lastAuditDate = get_option('sseo_ai_last_audit_date', '');
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Technical SEO Audit', 'ai-seo-client'); ?></h1>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Technical SEO Audit', 'ai-seo-client'); ?></h1>
+            </div>
             
-            <!-- Audit Overview -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
+            <div class="sseo-ai-content">
+                <!-- Audit Overview -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
                 
                 <?php if ($lastAuditDate): ?>
                 <p>
@@ -109,7 +112,7 @@ class TechnicalSEOAuditor
             </div>
             
             <!-- Crawlability Audit -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Crawlability Audit', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['crawlability'])): ?>
@@ -154,7 +157,7 @@ class TechnicalSEOAuditor
             </div>
             
             <!-- Crawl Budget Analysis -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Crawl Budget Analysis', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['crawl_budget'])): ?>
@@ -189,7 +192,7 @@ class TechnicalSEOAuditor
             </div>
             
             <!-- URL Structure Optimization -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('URL Structure Optimization', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['url_structure'])): ?>
@@ -217,7 +220,7 @@ class TechnicalSEOAuditor
             </div>
             
             <!-- Sitemap Health -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('XML Sitemap Health Check', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['sitemap'])): ?>
@@ -261,7 +264,7 @@ class TechnicalSEOAuditor
             </div>
             
             <!-- Robots.txt Optimization -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Robots.txt Optimization', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['robots_txt'])): ?>
@@ -292,7 +295,7 @@ class TechnicalSEOAuditor
             </div>
             
             <!-- Performance Analysis -->
-            <div class="card">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Server & CDN Performance', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['performance'])): ?>
@@ -323,6 +326,7 @@ class TechnicalSEOAuditor
                 <?php else: ?>
                 <p><?php esc_html_e('Run an audit to analyze performance.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
+            </div>
             </div>
         </div>
         
@@ -796,14 +800,18 @@ class TechnicalSEOAuditor
     
     private function calculateCrawlabilityScore(array $checks): int
     {
+        $checkCount = count($checks);
+        if ($checkCount === 0) return 0;
         $passed = count(array_filter($checks, fn($c) => $c['status'] === 'pass'));
-        return round(($passed / count($checks)) * 100);
+        return round(($passed / $checkCount) * 100);
     }
     
     private function calculatePerformanceScore(array $metrics): int
     {
+        $metricCount = count($metrics);
+        if ($metricCount === 0) return 0;
         $good = count(array_filter($metrics, fn($m) => $m['status'] === 'good'));
-        return round(($good / count($metrics)) * 100);
+        return round(($good / $metricCount) * 100);
     }
     
     private function calculateStructureScore(array $issues): int
