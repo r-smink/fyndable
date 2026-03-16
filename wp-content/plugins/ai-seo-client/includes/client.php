@@ -85,8 +85,8 @@ class Client
 
         // Add admin menu for license activation - use priority 5 to register before other features
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
-        // Temporarily disable to allow all feature pages to be accessible
-        // add_action('admin_menu', [$this, 'removeOldSubmenus'], 999);
+        // Clean up duplicate submenus after all features have registered
+        add_action('admin_menu', [$this, 'removeOldSubmenus'], 999);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
         // Handle license activation form
@@ -361,29 +361,51 @@ class Client
             __('Connection', 'ai-seo-client'),
             __('Connection', 'ai-seo-client'),
             'manage_options',
-            'ai-seo-client',
+            'ai-seo-client', // Same slug as main menu
             [$this, 'renderConnectionPage']
         );
         
-        // SaaS Dashboard - shows tenant stats from the SaaS
+        // Add Settings submenu
         add_submenu_page(
             'ai-seo-client',
-            __('SaaS Dashboard', 'ai-seo-client'),
-            __('SaaS Dashboard', 'ai-seo-client'),
+            __('Settings', 'ai-seo-client'),
+            __('Settings', 'ai-seo-client'),
             'manage_options',
-            'ai-seo-saas-dashboard',
-            [$this, 'renderSaasDashboard']
+            'ai-seo-settings',
+            [$this, 'renderSettingsPage']
         );
+        
+        // SaaS Dashboard removed - was causing fatal error, license activation is the primary function
     }
 
     /**
-     * Remove old submenu pages - DISABLED to allow all feature pages to work
-     * Feature classes register their own menus under ai-seo-client parent
+     * Remove ALL submenu pages to clean up the menu
+     * Only keep Connection and Settings submenu
      */
     public function removeOldSubmenus(): void
     {
-        // Disabled - let all feature classes register their menus
-        return;
+        global $submenu;
+        
+        if (!isset($submenu['ai-seo-client']) || !is_array($submenu['ai-seo-client'])) {
+            return;
+        }
+        
+        // List of allowed submenu slugs (Connection = ai-seo-client, Settings = ai-seo-settings)
+        $allowedSlugs = ['ai-seo-client', 'ai-seo-settings'];
+        
+        // Get all current submenu items
+        $itemsToRemove = [];
+        foreach ($submenu['ai-seo-client'] as $key => $item) {
+            $slug = $item[2] ?? '';
+            if (!in_array($slug, $allowedSlugs, true)) {
+                $itemsToRemove[] = $slug;
+            }
+        }
+        
+        // Remove each unwanted submenu using WordPress function (preserves permissions)
+        foreach ($itemsToRemove as $slug) {
+            remove_submenu_page('ai-seo-client', $slug);
+        }
     }
 
     /**
@@ -399,7 +421,7 @@ class Client
             'ai-seo-client-admin',
             SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin.css',
             [],
-            SSEO_AI_CLIENT_VERSION
+            SSEO_AI_CLIENT_VERSION . '.' . time() // Cache busting
         );
 
         wp_enqueue_script(
@@ -599,6 +621,18 @@ class Client
     public function renderContentCalendarPage(): void
     {
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
+            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
+            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Content Calendar', 'ai-seo-client'); ?></h1>
@@ -609,25 +643,25 @@ class Client
                     <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Organize and schedule your content with AI-powered suggestions', 'ai-seo-client'); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-calendar')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📅 <?php esc_html_e('Editorial Calendar', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Visual calendar view of your content pipeline', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-calendar')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🎯 <?php esc_html_e('Content Ideas', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-generated topic suggestions based on trends', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-calendar')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📊 <?php esc_html_e('Publishing Schedule', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Optimize posting times for maximum engagement', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-calendar')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔔 <?php esc_html_e('Deadline Reminders', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Never miss a publication deadline', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -641,6 +675,18 @@ class Client
     public function renderTopicClusterPage(): void
     {
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
+            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
+            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Topic Cluster', 'ai-seo-client'); ?></h1>
@@ -651,25 +697,25 @@ class Client
                     <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Create interconnected content clusters to dominate search rankings', 'ai-seo-client'); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-topic-clusters')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🎯 <?php esc_html_e('Pillar Pages', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Create comprehensive pillar content for core topics', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-topic-clusters')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔗 <?php esc_html_e('Cluster Content', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate supporting articles linked to pillars', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-internal-linking')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🕸️ <?php esc_html_e('Internal Linking', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-suggested internal link opportunities', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-topic-clusters')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📈 <?php esc_html_e('Cluster Performance', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Track rankings and traffic for each cluster', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -683,6 +729,18 @@ class Client
     public function renderAIToolsPage(): void
     {
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
+            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
+            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('AI Tools', 'ai-seo-client'); ?></h1>
@@ -693,45 +751,45 @@ class Client
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-writer')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🤖 <?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content generation for blog posts and articles', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-bulk')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>✍️ <?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Bulk generate meta titles and descriptions', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-image-generator')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🎨 <?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate featured images and graphics', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-image-generator')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🖼️ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Available in post editor sidebar', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-faq-schema')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>❓ <?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate FAQ schema from content', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-video-seo')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🎥 <?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Video transcript generation and optimization', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-assistant-brief')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔄 <?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-content-optimizer')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📊 <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
                     </div>
                 </div>
@@ -746,6 +804,18 @@ class Client
     public function renderSiteAuditPage(): void
     {
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
+            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
+            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Site Audit', 'ai-seo-client'); ?></h1>
@@ -756,35 +826,35 @@ class Client
                     <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Identify and fix technical SEO issues across your entire site', 'ai-seo-client'); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔍 <?php esc_html_e('Technical SEO', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Crawl errors, broken links, redirect chains', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-performance')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>⚡ <?php esc_html_e('Page Speed', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Core Web Vitals and performance metrics', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📱 <?php esc_html_e('Mobile Usability', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Mobile-friendly testing and optimization', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🏗️ <?php esc_html_e('Site Structure', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('URL structure, sitemap, and navigation analysis', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-technical-audit')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔒 <?php esc_html_e('Security Check', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('HTTPS, mixed content, and security headers', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-schema')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📋 <?php esc_html_e('Schema Markup', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Structured data validation and suggestions', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -798,6 +868,18 @@ class Client
     public function renderIntegrationsPage(): void
     {
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
+            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
+            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Integrations', 'ai-seo-client'); ?></h1>
@@ -808,35 +890,35 @@ class Client
                     <p style="margin-bottom: 30px; color: #646970;"><?php esc_html_e('Integrate with popular SEO and marketing platforms', 'ai-seo-client'); ?></p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📊 <?php esc_html_e('Google Analytics', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Track traffic and conversion data', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔎 <?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Monitor search performance and indexing', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📈 <?php esc_html_e('SEMrush', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Keyword research and competitor analysis', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>🔗 <?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Backlink monitoring and site explorer', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>📧 <?php esc_html_e('Email Marketing', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Mailchimp, ConvertKit, ActiveCampaign', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                         
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="ai-tool-card">
+                        <div class="ai-tool-card">
                             <h3>💬 <?php esc_html_e('Social Media', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Auto-share content to social platforms', 'ai-seo-client'); ?></p>
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -860,6 +942,22 @@ class Client
         $success = isset($_GET['settings-updated']) && $_GET['settings-updated'] === '1';
         
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 900px; margin: 0 auto; }
+            .sseo-ai-notice { padding: 16px 20px; border-radius: 6px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+            .sseo-ai-notice-success { background: #d1fae5; color: #10b981; border-left: 4px solid #10b981; }
+            .settings-section { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 2px solid #f3f4f6; }
+            .settings-section h2 { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 8px 0; }
+            .form-field { margin-bottom: 24px; }
+            .form-field label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+            .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
+            .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1); }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Settings', 'ai-seo-client'); ?></h1>
@@ -994,6 +1092,25 @@ class Client
         $maskedTenantKey = !empty($tenantKey) ? substr($tenantKey, 0, 8) . str_repeat('*', 20) . substr($tenantKey, -8) : '';
         
         ?>
+        <style>
+            /* Critical layout CSS */
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-connection-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 60px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); text-align: center; }
+            .sseo-ai-connection-card h2 { font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 20px 0; }
+            .sseo-ai-connection-card .highlight { background: linear-gradient(135deg, #3b82f6 0%, #FF4D00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .connection-details { text-align: left; margin-top: 40px; padding-top: 30px; border-top: 2px solid #f3f4f6; }
+            .detail-item { margin-bottom: 20px; }
+            .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 6px; }
+            .detail-item .detail-value { font-size: 16px; color: #111827; font-family: 'Courier New', monospace; background: #f9fafb; padding: 12px 16px; border-radius: 6px; border: 1px solid #e5e7eb; }
+            .connection-form { text-align: left; margin-top: 30px; }
+            .connection-form .form-field { margin-bottom: 20px; }
+            .connection-form label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+            .connection-form input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
+            .connection-form input:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1); }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Connection', 'ai-seo-client'); ?></h1>

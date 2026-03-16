@@ -24,37 +24,108 @@ class DashboardAPI
         $siteUrl = get_site_url();
         $siteName = get_bloginfo('name');
         
+        // Ensure HTTPS and normalize URL to prevent 301 redirects
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        
         $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
         
         error_log('SSEO AI: Attempting license activation');
         error_log('SSEO AI: API URL: ' . $apiUrl);
         error_log('SSEO AI: License Key: ' . substr($licenseKey, 0, 15) . '...');
 
-        $response = wp_remote_post(
-            $apiUrl,
-            [
-                'body' => [
+        // First test basic connectivity with a simple GET request
+        error_log('SSEO AI: Testing basic connectivity to ' . $dashboardUrl);
+        $testResponse = wp_remote_get($dashboardUrl, [
+            'timeout' => 15,
+            'sslverify' => false,
+        ]);
+        
+        if (is_wp_error($testResponse)) {
+            error_log('SSEO AI: WordPress HTTP API failed: ' . $testResponse->get_error_message());
+            error_log('SSEO AI: Attempting native curl fallback...');
+            
+            // Try native curl as fallback
+            $response = $this->curlPost($apiUrl, [
+                'license_key' => $licenseKey,
+                'site_url' => $siteUrl,
+                'site_name' => $siteName,
+            ]);
+            
+            if (is_wp_error($response)) {
+                error_log('SSEO AI: Native curl also failed: ' . $response->get_error_message());
+                return $response;
+            }
+        } else {
+            $testCode = wp_remote_retrieve_response_code($testResponse);
+            error_log('SSEO AI: Basic connectivity test passed, status: ' . $testCode);
+            
+            // Use WordPress HTTP API
+            $response = wp_remote_post(
+                $apiUrl,
+                [
+                    'body' => [
+                        'license_key' => $licenseKey,
+                        'site_url' => $siteUrl,
+                        'site_name' => $siteName,
+                    ],
+                    'timeout' => 60,
+                    'sslverify' => false,
+                    'redirection' => 0,
+                ]
+            );
+            
+            if (is_wp_error($response)) {
+                error_log('SSEO AI: wp_remote_post failed, trying curl fallback...');
+                $response = $this->curlPost($apiUrl, [
                     'license_key' => $licenseKey,
                     'site_url' => $siteUrl,
                     'site_name' => $siteName,
-                ],
-                'timeout' => 30,
-                'sslverify' => false, // Disable SSL verification for local testing
-            ]
-        );
-
-        if (is_wp_error($response)) {
-            $errorMsg = 'Connection error: ' . $response->get_error_message();
-            error_log('SSEO AI: ' . $errorMsg);
-            return new \WP_Error('connection_error', $errorMsg);
+                ]);
+            }
         }
 
-        $statusCode = wp_remote_retrieve_response_code($response);
-        $rawBody = wp_remote_retrieve_body($response);
-        $body = json_decode($rawBody, true);
+        // Handle 301/302 redirect manually to preserve POST data
+        if (!is_wp_error($response) && isset($response['headers']) && isset($response['response'])) {
+            // This is a WP_HTTP_Response object from wp_remote_post
+            $statusCode = wp_remote_retrieve_response_code($response);
+            if (in_array($statusCode, [301, 302, 307, 308])) {
+                $headers = wp_remote_retrieve_headers($response);
+                $location = $headers['location'] ?? '';
+                if ($location) {
+                    error_log('SSEO AI: Following redirect to: ' . $location);
+                    $response = wp_remote_post(
+                        $location,
+                        [
+                            'body' => [
+                                'license_key' => $licenseKey,
+                                'site_url' => $siteUrl,
+                                'site_name' => $siteName,
+                            ],
+                            'timeout' => 60,
+                            'sslverify' => false,
+                            'redirection' => 0,
+                        ]
+                    );
+                }
+            }
+            
+            if (is_wp_error($response)) {
+                return $response;
+            }
+            
+            $statusCode = wp_remote_retrieve_response_code($response);
+            $rawBody = wp_remote_retrieve_body($response);
+            $body = json_decode($rawBody, true);
+        } elseif (!is_wp_error($response)) {
+            // This is the direct result from curl (already decoded JSON)
+            $body = $response;
+            $statusCode = 200; // curl method already validates
+        } else {
+            return $response;
+        }
         
         error_log('SSEO AI: Response status: ' . $statusCode);
-        error_log('SSEO AI: Response body: ' . $rawBody);
+        error_log('SSEO AI: Response body: ' . json_encode($body));
 
         if ($statusCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
@@ -66,6 +137,75 @@ class DashboardAPI
         }
 
         error_log('SSEO AI: Activation successful');
+        return $body;
+    }
+
+    /**
+     * Normalize dashboard URL to prevent 301 redirects
+     */
+    private function normalizeDashboardUrl(string $url): string
+    {
+        // Force HTTPS
+        $url = str_replace('http://', 'https://', $url);
+        
+        // Remove www. if present (most modern sites redirect www to non-www)
+        $url = str_replace('https://www.', 'https://', $url);
+        
+        return $url;
+    }
+
+    /**
+     * Native curl POST request fallback when WordPress HTTP API fails
+     */
+    private function curlPost(string $url, array $data): array|\WP_Error
+    {
+        if (!function_exists('curl_init')) {
+            return new \WP_Error('curl_not_available', __('cURL extension not available', 'ai-seo-client'));
+        }
+
+        error_log('SSEO AI: Using native curl for POST to: ' . $url);
+
+        $ch = curl_init();
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($data),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_CONNECTTIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'User-Agent: WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+
+        if ($error) {
+            error_log('SSEO AI: cURL error: ' . $error);
+            return new \WP_Error('curl_error', 'cURL error: ' . $error);
+        }
+
+        error_log('SSEO AI: cURL response code: ' . $httpCode);
+        error_log('SSEO AI: cURL response body: ' . substr($response, 0, 500));
+
+        $body = json_decode($response, true);
+        
+        if ($httpCode !== 200 || empty($body['success'])) {
+            $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
+            error_log('SSEO AI: cURL activation failed: ' . $message);
+            return new \WP_Error('activation_failed', $message);
+        }
+
         return $body;
     }
 
@@ -83,6 +223,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -105,6 +246,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -149,6 +291,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -169,6 +312,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -217,6 +361,7 @@ class DashboardAPI
                 ]),
                 'timeout' => 60,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
@@ -263,6 +408,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => true,
+                'redirection' => 5,
             ]
         );
 
