@@ -347,10 +347,10 @@ class LicenseAdmin
                             <th scope="row"><label for="license_tier"><?php esc_html_e('License Tier', 'ai-seo-saas'); ?></label></th>
                             <td>
                                 <select name="license_tier" id="license_tier">
-                                    <option value="starter"><?php esc_html_e('Starter', 'ai-seo-saas'); ?></option>
-                                    <option value="professional" selected><?php esc_html_e('Professional', 'ai-seo-saas'); ?></option>
-                                    <option value="business"><?php esc_html_e('Business', 'ai-seo-saas'); ?></option>
-                                    <option value="agency"><?php esc_html_e('Agency', 'ai-seo-saas'); ?></option>
+                                    <option value="basic" selected><?php esc_html_e('Basic - €99/month', 'ai-seo-saas'); ?></option>
+                                    <option value="professional"><?php esc_html_e('Professional - €199/month', 'ai-seo-saas'); ?></option>
+                                    <option value="business"><?php esc_html_e('Business - €299/month', 'ai-seo-saas'); ?></option>
+                                    <option value="agency"><?php esc_html_e('Agency - €499/month', 'ai-seo-saas'); ?></option>
                                 </select>
                             </td>
                         </tr>
@@ -468,10 +468,10 @@ class LicenseAdmin
                     
                     <select name="tier">
                         <option value=""><?php esc_html_e('All Tiers', 'ai-seo-saas'); ?></option>
-                        <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php esc_html_e('Starter', 'ai-seo-saas'); ?></option>
-                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional', 'ai-seo-saas'); ?></option>
-                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business', 'ai-seo-saas'); ?></option>
-                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency', 'ai-seo-saas'); ?></option>
+                        <option value="basic" <?php selected($filters['tier'], 'basic'); ?>><?php esc_html_e('Basic - €99', 'ai-seo-saas'); ?></option>
+                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional - €199', 'ai-seo-saas'); ?></option>
+                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business - €299', 'ai-seo-saas'); ?></option>
+                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency - €499', 'ai-seo-saas'); ?></option>
                     </select>
                     
                     <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="Search...">

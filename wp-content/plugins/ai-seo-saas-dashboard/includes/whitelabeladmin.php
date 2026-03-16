@@ -854,13 +854,18 @@ class WhiteLabelAdmin
             $activeSubscriptions++;
             switch ($tenant['tier'] ?? 'basic') {
                 case 'agency':
-                    $totalRevenue += 99;
+                    $totalRevenue += 499;
+                    break;
+                case 'business':
+                    $totalRevenue += 299;
                     break;
                 case 'professional':
-                    $totalRevenue += 49;
+                    $totalRevenue += 199;
                     break;
+                case 'basic':
+                case 'starter':
                 default:
-                    $totalRevenue += 19;
+                    $totalRevenue += 99;
             }
         }
         ?>
@@ -1032,21 +1037,28 @@ class WhiteLabelAdmin
                     <tbody>
                         <tr>
                             <td><span class="badge badge-basic">Basic</span></td>
-                            <td><strong>€19/month</strong></td>
-                            <td>1,000 requests</td>
+                            <td><strong>€99/month</strong> <small>(excl. BTW)</small></td>
+                            <td>5,000 requests</td>
                             <td>60/min</td>
-                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'basic'))); ?></td>
+                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'basic' || ($t['tier'] ?? '') === 'starter'))); ?></td>
                         </tr>
                         <tr>
                             <td><span class="badge badge-professional">Professional</span></td>
-                            <td><strong>€49/month</strong></td>
-                            <td>5,000 requests</td>
+                            <td><strong>€199/month</strong> <small>(excl. BTW)</small></td>
+                            <td>15,000 requests</td>
                             <td>120/min</td>
                             <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'professional'))); ?></td>
                         </tr>
                         <tr>
+                            <td><span class="badge badge-business">Business</span></td>
+                            <td><strong>€299/month</strong> <small>(excl. BTW)</small></td>
+                            <td>30,000 requests</td>
+                            <td>200/min</td>
+                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'business'))); ?></td>
+                        </tr>
+                        <tr>
                             <td><span class="badge badge-agency">Agency</span></td>
-                            <td><strong>€99/month</strong></td>
+                            <td><strong>€499/month</strong> <small>(excl. BTW)</small></td>
                             <td>Unlimited</td>
                             <td>300/min</td>
                             <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'agency'))); ?></td>

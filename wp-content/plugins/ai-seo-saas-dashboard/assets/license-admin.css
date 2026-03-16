@@ -478,7 +478,8 @@
 /* SaaS License Admin Additional Styles */
 
 .sseo-ai-license-admin {
-    max-width: 1400px;
+    max-width: 100%;
+    padding: 50px !important;
 }
 
 .sseo-ai-license-admin .sseo-ai-stats-grid {
