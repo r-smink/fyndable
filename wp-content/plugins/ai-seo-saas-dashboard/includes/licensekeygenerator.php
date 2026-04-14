@@ -60,7 +60,7 @@ class LicenseKeyGenerator
         $result = $wpdb->insert($table, $data);
         
         if ($result === false) {
-            return new \WP_Error('db_error', __('Failed to generate license key', 'ai-seo-saas'));
+            return new \WP_Error('db_error', __('Failed to generate license key', 'sseo-ai-saas'));
         }
         
         return [
@@ -78,7 +78,7 @@ class LicenseKeyGenerator
     public function batchGenerateLicenses(int $count, array $options = []): array|\WP_Error
     {
         if ($count < 1 || $count > 100) {
-            return new \WP_Error('invalid_count', __('Count must be between 1 and 100', 'ai-seo-saas'));
+            return new \WP_Error('invalid_count', __('Count must be between 1 and 100', 'sseo-ai-saas'));
         }
         
         $licenses = [];
@@ -94,7 +94,7 @@ class LicenseKeyGenerator
         }
         
         if (empty($licenses)) {
-            return new \WP_Error('batch_failed', __('Failed to generate any licenses', 'ai-seo-saas'));
+            return new \WP_Error('batch_failed', __('Failed to generate any licenses', 'sseo-ai-saas'));
         }
         
         return [
@@ -123,16 +123,16 @@ class LicenseKeyGenerator
         // Get license
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         // Check status
         if ($license['status'] === 'revoked') {
-            return new \WP_Error('revoked', __('This license key has been revoked', 'ai-seo-saas'));
+            return new \WP_Error('revoked', __('This license key has been revoked', 'sseo-ai-saas'));
         }
         
         if ($license['status'] === 'expired') {
-            return new \WP_Error('expired', __('This license key has expired', 'ai-seo-saas'));
+            return new \WP_Error('expired', __('This license key has expired', 'sseo-ai-saas'));
         }
         
         // Check if already used and calculate expiration
@@ -156,6 +156,9 @@ class LicenseKeyGenerator
                 'tenant_key' => $existingTenant['tenant_key'],
                 'tier' => $existingTenant['tier'],
                 'expires_at' => $existingTenant['expires_at'],
+                'max_sites' => $existingTenant['max_sites'] ?? 1,
+                'rate_limit' => $existingTenant['rate_limit'] ?? 60,
+                'api_calls_limit' => $existingTenant['api_calls_limit'] ?? 1000,
             ];
         }
         
@@ -213,17 +216,17 @@ class LicenseKeyGenerator
     {
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         // Check if expired
         if (!empty($license['expires_at']) && strtotime($license['expires_at']) < time()) {
-            return new \WP_Error('expired', __('License key has expired', 'ai-seo-saas'));
+            return new \WP_Error('expired', __('License key has expired', 'sseo-ai-saas'));
         }
         
         // Check if revoked
         if ($license['status'] === 'revoked') {
-            return new \WP_Error('revoked', __('License key has been revoked', 'ai-seo-saas'));
+            return new \WP_Error('revoked', __('License key has been revoked', 'sseo-ai-saas'));
         }
         
         return [
@@ -249,7 +252,7 @@ class LicenseKeyGenerator
         
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         // Suspend associated tenant
@@ -393,7 +396,7 @@ class LicenseKeyGenerator
         
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         $allowed = ['assigned_to', 'notes', 'max_sites', 'rate_limit', 'api_calls_limit'];
@@ -406,7 +409,7 @@ class LicenseKeyGenerator
         }
         
         if (empty($update)) {
-            return new \WP_Error('no_data', __('No valid fields to update', 'ai-seo-saas'));
+            return new \WP_Error('no_data', __('No valid fields to update', 'sseo-ai-saas'));
         }
         
         return $wpdb->update($table, $update, ['id' => $license['id']]) !== false;

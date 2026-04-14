@@ -64,7 +64,7 @@ class LicenseValidator
                     'tenant_key' => $tenantKey,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false,
             ]
         );
 

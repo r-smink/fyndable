@@ -79,6 +79,14 @@ class Settings
     }
 
     /**
+     * Get AI temperature setting
+     */
+    public function temperature(): float
+    {
+        return (float)get_option('sseo_ai_client_temperature', 0.7);
+    }
+
+    /**
      * Alias for getAll() for backwards compatibility
      */
     public function all(): array

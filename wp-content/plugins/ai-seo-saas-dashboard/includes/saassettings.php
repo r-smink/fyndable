@@ -27,8 +27,8 @@ class SaaSSettings
     {
         add_submenu_page(
             'sseo-ai-licenses',
-            __('SaaS Settings', 'ai-seo-saas'),
-            __('Settings', 'ai-seo-saas'),
+            __('SaaS Settings', 'sseo-ai-saas'),
+            __('Settings', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-settings',
             [$this, 'renderSettingsPage']
@@ -36,8 +36,8 @@ class SaaSSettings
         
         add_submenu_page(
             'sseo-ai-licenses',
-            __('Cost Dashboard', 'ai-seo-saas'),
-            __('Cost Dashboard', 'ai-seo-saas'),
+            __('Cost Dashboard', 'sseo-ai-saas'),
+            __('Cost Dashboard', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-costs',
             [$this, 'renderCostDashboard']
@@ -170,25 +170,25 @@ class SaaSSettings
     {
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('SSEO AI SaaS Settings', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('SSEO AI SaaS Settings', 'sseo-ai-saas'); ?></h1>
             
             <form method="post" action="options.php">
                 <?php settings_fields('ai_seo_saas_settings'); ?>
                 
-                <h2><?php esc_html_e('API Credentials', 'ai-seo-saas'); ?></h2>
+                <h2><?php esc_html_e('API Credentials', 'sseo-ai-saas'); ?></h2>
                 <table class="form-table">
                     <tr>
-                        <th scope="row"><label for="openai_api_key"><?php esc_html_e('OpenAI API Key', 'ai-seo-saas'); ?></label></th>
+                        <th scope="row"><label for="openai_api_key"><?php esc_html_e('OpenAI API Key', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <input type="password" name="ai_seo_saas_openai_api_key" id="openai_api_key" 
                                    value="<?php echo esc_attr($this->getOpenAiApiKey()); ?>" class="regular-text">
                             <p class="description">
-                                <?php esc_html_e('Your OpenAI API key for AI content generation. Keep this secret!', 'ai-seo-saas'); ?>
+                                <?php esc_html_e('Your OpenAI API key for AI content generation. Keep this secret!', 'sseo-ai-saas'); ?>
                             </p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="openai_model"><?php esc_html_e('OpenAI Model', 'ai-seo-saas'); ?></label></th>
+                        <th scope="row"><label for="openai_model"><?php esc_html_e('OpenAI Model', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <select name="ai_seo_saas_openai_model" id="openai_model">
                                 <option value="gpt-4" <?php selected($this->getOpenAiModel(), 'gpt-4'); ?>>GPT-4 (Best quality, higher cost)</option>
@@ -198,17 +198,17 @@ class SaaSSettings
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="serp_api_key"><?php esc_html_e('SERP API Key', 'ai-seo-saas'); ?></label></th>
+                        <th scope="row"><label for="serp_api_key"><?php esc_html_e('SERP API Key', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <input type="password" name="ai_seo_saas_serp_api_key" id="serp_api_key" 
                                    value="<?php echo esc_attr($this->getSerpApiKey()); ?>" class="regular-text">
                             <p class="description">
-                                <?php esc_html_e('API key for SERP data (DataForSEO, SerpApi, etc.)', 'ai-seo-saas'); ?>
+                                <?php esc_html_e('API key for SERP data (DataForSEO, SerpApi, etc.)', 'sseo-ai-saas'); ?>
                             </p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="serp_api_provider"><?php esc_html_e('SERP Provider', 'ai-seo-saas'); ?></label></th>
+                        <th scope="row"><label for="serp_api_provider"><?php esc_html_e('SERP Provider', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <select name="ai_seo_saas_serp_api_provider" id="serp_api_provider">
                                 <option value="dataforseo" <?php selected($this->getSerpApiProvider(), 'dataforseo'); ?>>DataForSEO</option>
@@ -219,7 +219,7 @@ class SaaSSettings
                     </tr>
                 </table>
                 
-                <?php submit_button(__('Save Settings', 'ai-seo-saas')); ?>
+                <?php submit_button(__('Save Settings', 'sseo-ai-saas')); ?>
             </form>
         </div>
         <?php
@@ -236,56 +236,59 @@ class SaaSSettings
         $currentMonth = date('Y-m');
         $tableUsage = $wpdb->prefix . 'sseo_ai_tenant_usage';
         
-        $monthlyStats = $wpdb->get_row(
+        $monthlyStats = $wpdb->get_row($wpdb->prepare(
             "SELECT 
                 SUM(api_calls) as total_calls,
                 SUM(api_cost) as total_cost,
                 COUNT(DISTINCT tenant_id) as active_tenants
             FROM {$tableUsage} 
-            WHERE DATE_FORMAT(created_at, '%Y-%m') = '{$currentMonth}'"
-        );
+            WHERE period = %s",
+            $currentMonth
+        ));
         
         // Get top cost tenants
-        $topTenants = $wpdb->get_results(
+        $topTenants = $wpdb->get_results($wpdb->prepare(
             "SELECT 
                 t.tenant_key,
-                t.site_url,
-                t.license_tier,
+                t.domain,
+                t.tier,
                 SUM(u.api_calls) as total_calls,
                 SUM(u.api_cost) as total_cost
             FROM {$tableUsage} u
             JOIN {$wpdb->prefix}sseo_ai_tenants t ON u.tenant_id = t.id
-            WHERE DATE_FORMAT(u.created_at, '%Y-%m') = '{$currentMonth}'
+            WHERE u.period = %s
             GROUP BY t.id
             ORDER BY total_cost DESC
-            LIMIT 10"
-        );
+            LIMIT 10",
+            $currentMonth
+        ));
         
         // Get tier distribution
         $tierDistribution = $wpdb->get_results(
-            "SELECT license_tier, COUNT(*) as count, SUM(monthly_api_cost) as total_cost
-            FROM {$wpdb->prefix}sseo_ai_tenants
-            WHERE status = 'active'
-            GROUP BY license_tier"
+            "SELECT t.tier, COUNT(*) as count, COALESCE(SUM(u.api_cost), 0) as total_cost
+            FROM {$wpdb->prefix}sseo_ai_tenants t
+            LEFT JOIN {$tableUsage} u ON t.id = u.tenant_id AND u.period = '{$wpdb->_real_escape($currentMonth)}'
+            WHERE t.status = 'active'
+            GROUP BY t.tier"
         );
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Cost Dashboard', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?></h1>
             
             <div class="card" style="margin-bottom: 20px;">
-                <h2><?php echo esc_html(date('F Y')); ?> - <?php esc_html_e('Current Month', 'ai-seo-saas'); ?></h2>
+                <h2><?php echo esc_html(date('F Y')); ?> - <?php esc_html_e('Current Month', 'sseo-ai-saas'); ?></h2>
                 <div style="display: flex; gap: 30px; margin-top: 15px;">
                     <div>
                         <h3>$<?php echo number_format($monthlyStats->total_cost ?? 0, 2); ?></h3>
-                        <p><?php esc_html_e('Total API Costs', 'ai-seo-saas'); ?></p>
+                        <p><?php esc_html_e('Total API Costs', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
                         <h3><?php echo number_format($monthlyStats->total_calls ?? 0); ?></h3>
-                        <p><?php esc_html_e('Total API Calls', 'ai-seo-saas'); ?></p>
+                        <p><?php esc_html_e('Total API Calls', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
                         <h3><?php echo $monthlyStats->active_tenants ?? 0; ?></h3>
-                        <p><?php esc_html_e('Active Tenants', 'ai-seo-saas'); ?></p>
+                        <p><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
                         <h3>$<?php 
@@ -294,29 +297,29 @@ class SaaSSettings
                                 : 0;
                             echo number_format($avg, 2);
                         ?></h3>
-                        <p><?php esc_html_e('Avg Cost per Tenant', 'ai-seo-saas'); ?></p>
+                        <p><?php esc_html_e('Avg Cost per Tenant', 'sseo-ai-saas'); ?></p>
                     </div>
                 </div>
             </div>
             
             <div style="display: flex; gap: 20px;">
                 <div class="card" style="flex: 1;">
-                    <h3><?php esc_html_e('Top 10 Customers by Cost', 'ai-seo-saas'); ?></h3>
+                    <h3><?php esc_html_e('Top 10 Customers by Cost', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Site', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Tier', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('API Calls', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Cost', 'ai-seo-saas'); ?></th>
+                                <th><?php esc_html_e('Site', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Cost', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($topTenants as $tenant): ?>
                             <tr>
-                                <td><?php echo esc_html($tenant->site_url); ?></td>
-                                <td><span class="badge badge-<?php echo esc_attr($tenant->license_tier); ?>">
-                                    <?php echo esc_html(ucfirst($tenant->license_tier)); ?>
+                                <td><?php echo esc_html($tenant->domain); ?></td>
+                                <td><span class="badge badge-<?php echo esc_attr($tenant->tier); ?>">
+                                    <?php echo esc_html(ucfirst($tenant->tier)); ?>
                                 </span></td>
                                 <td><?php echo number_format($tenant->total_calls); ?></td>
                                 <td>$<?php echo number_format($tenant->total_cost, 2); ?></td>
@@ -327,19 +330,19 @@ class SaaSSettings
                 </div>
                 
                 <div class="card" style="width: 350px;">
-                    <h3><?php esc_html_e('Tier Distribution', 'ai-seo-saas'); ?></h3>
+                    <h3><?php esc_html_e('Tier Distribution', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Tier', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Tenants', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Cost', 'ai-seo-saas'); ?></th>
+                                <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Tenants', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Cost', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($tierDistribution as $tier): ?>
                             <tr>
-                                <td><?php echo esc_html(ucfirst($tier->license_tier)); ?></td>
+                                <td><?php echo esc_html(ucfirst($tier->tier)); ?></td>
                                 <td><?php echo $tier->count; ?></td>
                                 <td>$<?php echo number_format($tier->total_cost ?? 0, 2); ?></td>
                             </tr>
@@ -350,26 +353,33 @@ class SaaSSettings
             </div>
             
             <div class="card" style="margin-top: 20px;">
-                <h3><?php esc_html_e('API Cost Breakdown by Service', 'ai-seo-saas'); ?></h3>
+                <h3><?php esc_html_e('API Cost Breakdown by Service', 'sseo-ai-saas'); ?></h3>
                 <?php
-                $serviceBreakdown = $wpdb->get_results(
+                $serviceBreakdown = $wpdb->get_results($wpdb->prepare(
                     "SELECT 
-                        metric,
-                        SUM(count) as total_calls,
-                        SUM(cost) as total_cost
+                        'api_calls' as metric,
+                        SUM(api_calls) as total_calls,
+                        SUM(api_cost) as total_cost
                     FROM {$tableUsage}
-                    WHERE DATE_FORMAT(created_at, '%Y-%m') = '{$currentMonth}'
-                    GROUP BY metric
-                    ORDER BY total_cost DESC"
-                );
+                    WHERE period = %s
+                    UNION ALL
+                    SELECT 
+                        'serp_requests' as metric,
+                        SUM(serp_requests) as total_calls,
+                        0 as total_cost
+                    FROM {$tableUsage}
+                    WHERE period = %s",
+                    $currentMonth,
+                    $currentMonth
+                ));
                 ?>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e('Service', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Calls', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Cost', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('% of Total', 'ai-seo-saas'); ?></th>
+                            <th><?php esc_html_e('Service', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Calls', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Cost', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('% of Total', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>

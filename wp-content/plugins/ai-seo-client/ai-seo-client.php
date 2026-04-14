@@ -6,7 +6,7 @@
  * Author: SSEO AI
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain: sseo-ai-client
+ * Text Domain: ai-seo-client
  * Domain Path: /languages
  */
 

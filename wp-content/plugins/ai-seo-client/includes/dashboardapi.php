@@ -156,8 +156,8 @@ class DashboardAPI
         // Force HTTPS
         $url = str_replace('http://', 'https://', $url);
         
-        // Remove www. if present (most modern sites redirect www to non-www)
-        $url = str_replace('https://www.', 'https://', $url);
+        // Remove trailing slash
+        $url = rtrim($url, '/');
         
         return $url;
     }
@@ -230,7 +230,7 @@ class DashboardAPI
                     'tenant_key' => $tenantKey,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false,
                 'redirection' => 5,
             ]
         );
@@ -253,7 +253,7 @@ class DashboardAPI
                     'site_url' => $siteUrl,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false,
                 'redirection' => 5,
             ]
         );
@@ -298,7 +298,7 @@ class DashboardAPI
                     'cost' => $cost,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false,
                 'redirection' => 5,
             ]
         );
@@ -319,7 +319,7 @@ class DashboardAPI
                     'tenant_key' => $tenantKey,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false,
                 'redirection' => 5,
             ]
         );
@@ -368,7 +368,7 @@ class DashboardAPI
                     'temperature' => $temperature,
                 ]),
                 'timeout' => 60,
-                'sslverify' => true,
+                'sslverify' => false,
                 'redirection' => 5,
             ]
         );
@@ -415,7 +415,7 @@ class DashboardAPI
                     'X-Tenant-Key' => $tenantKey,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => false,
                 'redirection' => 5,
             ]
         );
@@ -541,7 +541,7 @@ class DashboardAPI
                 $tenantKey = $existingTenant['tenant_key'];
             } else {
                 // Create new tenant
-                $tenantKey = $tenants->createTenant([
+                $tenantResult = $tenants->createTenant([
                     'name' => $siteName,
                     'domain' => $domain,
                     'email' => get_option('admin_email'),
@@ -553,9 +553,11 @@ class DashboardAPI
                     'expires_at' => $license['expires_at'],
                 ]);
 
-                if (!$tenantKey) {
+                if (is_wp_error($tenantResult) || empty($tenantResult['tenant_key'])) {
                     return new \WP_Error('tenant_creation_failed', __('Failed to create tenant.', 'ai-seo-client'));
                 }
+
+                $tenantKey = $tenantResult['tenant_key'];
 
                 // Mark license as used
                 $licenseGenerator->markLicenseUsed($licenseKey);

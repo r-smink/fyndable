@@ -471,7 +471,7 @@ class Client
             'ai-seo-client-admin',
             SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin.css',
             [],
-            SSEO_AI_CLIENT_VERSION . '.' . time() // Cache busting
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/client-admin.css')
         );
 
         wp_enqueue_script(
