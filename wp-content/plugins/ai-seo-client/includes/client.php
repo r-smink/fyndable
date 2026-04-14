@@ -646,22 +646,14 @@ class Client
      */
     public function renderDashboardPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->seoDashboard) {
             $this->seoDashboard->renderPage();
         } else {
-            // Fallback if seoDashboard not initialized
-            ?>
-            <div class="wrap sseo-ai-modern">
-                <div class="sseo-ai-header">
-                    <h1><?php esc_html_e('Statistics', 'ai-seo-client'); ?></h1>
-                </div>
-                <div class="sseo-ai-content">
-                    <div class="sseo-ai-dashboard-card">
-                        <p><?php esc_html_e('Dashboard loading...', 'ai-seo-client'); ?></p>
-                    </div>
-                </div>
-            </div>
-            <?php
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -670,8 +662,14 @@ class Client
      */
     public function renderContentCalendarPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->contentCalendar) {
             $this->contentCalendar->renderCalendar();
+        } else {
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -680,8 +678,14 @@ class Client
      */
     public function renderTopicClusterPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->topicCluster) {
             $this->topicCluster->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -690,6 +694,10 @@ class Client
      */
     public function renderAIToolsPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         ?>
         <style>
             /* Critical layout CSS */
@@ -765,8 +773,14 @@ class Client
      */
     public function renderSiteAuditPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->technicalSEOAuditor) {
             $this->technicalSEOAuditor->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -775,8 +789,14 @@ class Client
      */
     public function renderRankTrackerPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->rankTracker) {
             $this->rankTracker->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -785,8 +805,14 @@ class Client
      */
     public function renderLinkManagerPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->smartInternalLinking) {
             $this->smartInternalLinking->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -795,8 +821,14 @@ class Client
      */
     public function renderIntegrationsPage(): void
     {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
         if ($this->externalIntegrations) {
             $this->externalIntegrations->renderSettings();
+        } else {
+            $this->renderFeatureNotAvailable();
         }
     }
 
@@ -1208,5 +1240,39 @@ class Client
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&deactivated=1'));
         exit;
+    }
+
+    /**
+     * Render notice when license is required but not active
+     */
+    private function renderLicenseRequiredNotice(): void
+    {
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('License Required', 'ai-seo-client'); ?></h1>
+            <div class="notice notice-error">
+                <p><?php esc_html_e('This feature requires an active license. Please activate your license key to continue.', 'ai-seo-client'); ?></p>
+                <p><a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="button button-primary">
+                    <?php esc_html_e('Go to License Activation', 'ai-seo-client'); ?></a></p>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render notice when feature is not available in current tier
+     */
+    private function renderFeatureNotAvailable(): void
+    {
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Feature Not Available', 'ai-seo-client'); ?></h1>
+            <div class="notice notice-warning">
+                <p><?php esc_html_e('This feature is not available in your current license tier. Please upgrade your license to access this feature.', 'ai-seo-client'); ?></p>
+                <p><a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="button button-primary">
+                    <?php esc_html_e('View License Details', 'ai-seo-client'); ?></a></p>
+            </div>
+        </div>
+        <?php
     }
 }
