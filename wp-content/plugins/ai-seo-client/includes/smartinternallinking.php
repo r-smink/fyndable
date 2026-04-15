@@ -582,7 +582,7 @@ class SmartInternalLinking
     /**
      * Calculate relevance between posts
      */
-    private function calculateRelevance(\WP_Post $post, array $keywords): int
+    private function calculateRelevance($post, array $keywords): int
     {
         $content = strtolower(strip_tags($post->post_content . ' ' . $post->post_title));
         $matches = 0;

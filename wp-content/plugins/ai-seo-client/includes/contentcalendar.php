@@ -76,30 +76,44 @@ class ContentCalendar
         $keywordOpportunities = $this->getKeywordOpportunities();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Content Calendar & Workflow', 'ai-seo-client'); ?></h1>
-            
-            <!-- Calendar Navigation -->
-            <div class="card" style="margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth - 1) . '&year=' . $currentYear); ?>" 
-                       class="button">
-                        ← <?php esc_html_e('Previous', 'ai-seo-client'); ?>
-                    </a>
-                    
-                    <h2 style="margin: 0;">
-                        <?php echo date('F Y', mktime(0, 0, 0, $currentMonth, 1, $currentYear)); ?>
-                    </h2>
-                    
-                    <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth + 1) . '&year=' . $currentYear); ?>" 
-                       class="button">
-                        <?php esc_html_e('Next', 'ai-seo-client'); ?> →
-                    </a>
-                </div>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Content Calendar & Workflow', 'ai-seo-client'); ?></h1>
             </div>
             
-            <!-- Visual Calendar -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-content">
+                <!-- Calendar Navigation -->
+                <div class="sseo-ai-dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth - 1) . '&year=' . $currentYear); ?>" 
+                           class="button">
+                            ← <?php esc_html_e('Previous', 'ai-seo-client'); ?>
+                        </a>
+                        
+                        <h2 style="margin: 0;">
+                            <?php echo date('F Y', mktime(0, 0, 0, $currentMonth, 1, $currentYear)); ?>
+                        </h2>
+                        
+                        <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth + 1) . '&year=' . $currentYear); ?>" 
+                           class="button">
+                            <?php esc_html_e('Next', 'ai-seo-client'); ?> →
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="sseo-two-columns">
+                    <!-- Visual Calendar -->
+                    <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Publishing Calendar', 'ai-seo-client'); ?></h2>
                 
                 <style>
@@ -187,11 +201,13 @@ class ContentCalendar
                         <?php esc_html_e('Optimize Publishing Schedule', 'ai-seo-client'); ?>
                     </button>
                 </div>
-            </div>
-            
-            <!-- Content Gap Analysis -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Content Gap Calendar', 'ai-seo-client'); ?></h2>
+                </div>
+                
+                <!-- Right Column -->
+                <div>
+                    <!-- Content Gap Analysis -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Content Gap Calendar', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($contentGaps)): ?>
                 <p><?php esc_html_e('Identified gaps in your content calendar:', 'ai-seo-client'); ?></p>
@@ -210,11 +226,11 @@ class ContentCalendar
                 <?php else: ?>
                 <p style="color: #00a32a;">✓ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
-            
-            <!-- Keyword Opportunity Timeline -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Keyword Opportunity Timeline', 'ai-seo-client'); ?></h2>
+                    </div>
+                    
+                    <!-- Keyword Opportunity Timeline -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Keyword Opportunity Timeline', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($keywordOpportunities)): ?>
                 <table class="wp-list-table widefat fixed striped">
@@ -251,11 +267,11 @@ class ContentCalendar
                 <?php else: ?>
                 <p><?php esc_html_e('No keyword opportunities identified yet.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
-            
-            <!-- Workflow Status -->
-            <div class="card">
-                <h2><?php esc_html_e('Content Workflow Status', 'ai-seo-client'); ?></h2>
+                    </div>
+                    
+                    <!-- Workflow Status -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Content Workflow Status', 'ai-seo-client'); ?></h2>
                 
                 <?php
                 $workflowStats = $this->getWorkflowStats();
@@ -323,6 +339,8 @@ class ContentCalendar
                 <?php else: ?>
                 <p><?php esc_html_e('No pending approvals.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
         

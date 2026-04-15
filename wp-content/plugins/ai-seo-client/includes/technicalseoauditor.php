@@ -57,6 +57,9 @@ class TechnicalSEOAuditor
         $lastAuditDate = get_option('sseo_ai_last_audit_date', '');
         
         ?>
+        <style>
+            .sseo-ai-dashboard-card + .sseo-ai-dashboard-card { margin-top: 30px; }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Technical SEO Audit', 'ai-seo-client'); ?></h1>

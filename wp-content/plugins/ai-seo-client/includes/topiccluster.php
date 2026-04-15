@@ -307,13 +307,24 @@ PROMPT;
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('Topic Clusters & Topical Authority', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Build topical authority with pillar-cluster content maps. Plan comprehensive content strategies that establish you as the go-to resource on any topic.', 'ai-seo-client'); ?></p>
-
-            <div style="max-width:1400px;margin-top:20px;">
-                <!-- Generator -->
-                <div class="postbox" style="padding:20px;">
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Topic Clusters & Topical Authority', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('Build topical authority with pillar-cluster content maps. Plan comprehensive content strategies that establish you as the go-to resource on any topic.', 'ai-seo-client'); ?></p>
+            </div>
+            
+            <div class="sseo-ai-content">
+                <div style="max-width:1400px;">
+                    <!-- Generator -->
+                    <div class="postbox" style="padding:20px;">
                     <h2 style="margin-top:0;"><?php esc_html_e('Generate Topic Cluster', 'ai-seo-client'); ?></h2>
                     <div style="display:flex;gap:10px;align-items:end;">
                         <div style="flex:1;">
@@ -380,10 +391,11 @@ PROMPT;
                     </div>
                 </div>
 
-                <!-- Saved Clusters -->
-                <div class="postbox" style="padding:15px;margin-top:30px;">
-                    <h3 style="margin-top:0;"><?php esc_html_e('Saved Cluster Maps', 'ai-seo-client'); ?></h3>
-                    <div id="tc-saved-list"></div>
+                    <!-- Saved Clusters -->
+                    <div class="postbox" style="padding:15px;margin-top:30px;">
+                        <h3 style="margin-top:0;"><?php esc_html_e('Saved Cluster Maps', 'ai-seo-client'); ?></h3>
+                        <div id="tc-saved-list"></div>
+                    </div>
                 </div>
             </div>
         </div>

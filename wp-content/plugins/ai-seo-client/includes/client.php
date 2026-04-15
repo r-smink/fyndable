@@ -366,7 +366,9 @@ class Client
         
         // Only show feature menus if license is valid
         if ($isLicenseValid) {
-            // 1. Dashboard / Statistics
+            // All tiers: Dashboard, Content Calendar, AI Tools, Link Manager, Integrations
+            
+            // 1. Dashboard / Statistics - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Dashboard', 'ai-seo-client'),
@@ -376,7 +378,7 @@ class Client
                 [$this, 'renderDashboardPage']
             );
             
-            // 2. Content Calendar
+            // 2. Content Calendar - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Content Calendar', 'ai-seo-client'),
@@ -386,17 +388,7 @@ class Client
                 [$this, 'renderContentCalendarPage']
             );
             
-            // 3. Topic Clusters
-            add_submenu_page(
-                'ai-seo-client',
-                __('Topic Clusters', 'ai-seo-client'),
-                __('🎯 Topic Clusters', 'ai-seo-client'),
-                'manage_options',
-                'ai-seo-topic-clusters',
-                [$this, 'renderTopicClusterPage']
-            );
-            
-            // 4. AI Tools
+            // 3. AI Tools - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('AI Tools', 'ai-seo-client'),
@@ -406,27 +398,7 @@ class Client
                 [$this, 'renderAIToolsPage']
             );
             
-            // 5. Site Audit
-            add_submenu_page(
-                'ai-seo-client',
-                __('Site Audit', 'ai-seo-client'),
-                __('🔍 Site Audit', 'ai-seo-client'),
-                'manage_options',
-                'ai-seo-site-audit',
-                [$this, 'renderSiteAuditPage']
-            );
-            
-            // 6. Rank Tracker
-            add_submenu_page(
-                'ai-seo-client',
-                __('Rank Tracker', 'ai-seo-client'),
-                __('📈 Rank Tracker', 'ai-seo-client'),
-                'manage_options',
-                'ai-seo-rank-tracker',
-                [$this, 'renderRankTrackerPage']
-            );
-            
-            // 7. Link Manager
+            // 4. Link Manager (Smart Internal Linking) - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Link Manager', 'ai-seo-client'),
@@ -436,15 +408,49 @@ class Client
                 [$this, 'renderLinkManagerPage']
             );
             
-            // 8. Integrations
+            // 5. Integrations - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Integrations', 'ai-seo-client'),
-                __('🔌 Integrations', 'ai-seo-client'),
+                __('� Integrations', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-integrations',
                 [$this, 'renderIntegrationsPage']
             );
+            
+            // Professional+ features: Topic Clusters, Site Audit, Rank Tracker
+            $professionalTiers = ['professional', 'business', 'agency', 'trial'];
+            if (in_array($tier, $professionalTiers)) {
+                // 6. Topic Clusters
+                add_submenu_page(
+                    'ai-seo-client',
+                    __('Topic Clusters', 'ai-seo-client'),
+                    __('🎯 Topic Clusters', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-topic-clusters',
+                    [$this, 'renderTopicClusterPage']
+                );
+                
+                // 7. Site Audit
+                add_submenu_page(
+                    'ai-seo-client',
+                    __('Site Audit', 'ai-seo-client'),
+                    __('� Site Audit', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-site-audit',
+                    [$this, 'renderSiteAuditPage']
+                );
+                
+                // 8. Rank Tracker
+                add_submenu_page(
+                    'ai-seo-client',
+                    __('Rank Tracker', 'ai-seo-client'),
+                    __('� Rank Tracker', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-rank-tracker',
+                    [$this, 'renderRankTrackerPage']
+                );
+            }
         }
         
         // Settings (always visible)
