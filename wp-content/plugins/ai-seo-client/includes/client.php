@@ -879,6 +879,33 @@ class Client
     }
 
     /**
+     * Get current rate limit status
+     */
+    private function getRateLimitStatus(): array
+    {
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        if (empty($tenantKey)) {
+            return ['calls' => 0, 'limit' => 0, 'remaining' => 0, 'reset_in' => 0, 'reset_in_minutes' => 0];
+        }
+        
+        $key = 'ai_seo_llm_calls_' . $tenantKey;
+        $calls = get_transient($key) ?: 0;
+        $limit = (int)get_option('sseo_ai_client_rate_limit', 60);
+        
+        // Get transient expiration time
+        $expires = get_option('_transient_timeout_' . $key);
+        $resetIn = $expires ? max(0, $expires - time()) : HOUR_IN_SECONDS;
+        
+        return [
+            'calls' => (int)$calls,
+            'limit' => $limit,
+            'remaining' => max(0, $limit - $calls),
+            'reset_in' => $resetIn,
+            'reset_in_minutes' => ceil($resetIn / 60),
+        ];
+    }
+
+    /**
      * Render settings page
      */
     public function renderSettingsPage(): void
@@ -889,6 +916,9 @@ class Client
         $targetedAudience = get_option('sseo_ai_targeted_audience', '');
         $brandName = get_option('sseo_ai_brand_name', '');
         $brandVoice = get_option('sseo_ai_brand_voice', '');
+        
+        // Get rate limit status
+        $rateLimitStatus = $this->getRateLimitStatus();
         
         // Check for success message
         $success = isset($_GET['settings-updated']) && $_GET['settings-updated'] === '1';
@@ -924,6 +954,33 @@ class Client
                         </div>
                     <?php endif; ?>
                     
+                    <?php if ($rateLimitStatus['limit'] > 0): ?>
+                    <div class="settings-section">
+                        <h2><?php esc_html_e('API Usage Status', 'ai-seo-client'); ?></h2>
+                        <p class="description"><?php esc_html_e('Current AI API call usage and limits', 'ai-seo-client'); ?></p>
+                        
+                        <div style="background:#f9f9f9;padding:20px;border-radius:8px;margin:20px 0;">
+                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center;">
+                                <div>
+                                    <div style="font-size:28px;font-weight:bold;color:#2271b1;"><?php echo esc_html($rateLimitStatus['calls']); ?></div>
+                                    <div style="color:#666;font-size:13px;"><?php esc_html_e('Calls Made', 'ai-seo-client'); ?></div>
+                                </div>
+                                <div>
+                                    <div style="font-size:28px;font-weight:bold;color:#00a32a;"><?php echo esc_html($rateLimitStatus['remaining']); ?></div>
+                                    <div style="color:#666;font-size:13px;"><?php esc_html_e('Remaining', 'ai-seo-client'); ?></div>
+                                </div>
+                                <div>
+                                    <div style="font-size:28px;font-weight:bold;color:#d63638;"><?php echo esc_html($rateLimitStatus['limit']); ?></div>
+                                    <div style="color:#666;font-size:13px;"><?php esc_html_e('Hourly Limit', 'ai-seo-client'); ?></div>
+                                </div>
+                            </div>
+                            <p style="text-align:center;margin:15px 0 0;color:#666;">
+                                <?php printf(esc_html__('Limit resets in %d minutes', 'ai-seo-client'), $rateLimitStatus['reset_in_minutes']); ?>
+                            </p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="sseo-ai-settings-form">
                         <input type="hidden" name="action" value="ai_seo_save_settings">
                         <?php wp_nonce_field('save_settings'); ?>
@@ -1037,6 +1094,7 @@ class Client
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $tier = get_option('sseo_ai_client_license_tier', 'free');
+        $licenseType = get_option('sseo_ai_client_license_type', 'paid');
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
         
         // Mask the keys for display
@@ -1097,6 +1155,16 @@ class Client
                             <div class="detail-item">
                                 <label><?php esc_html_e('License Tier:', 'ai-seo-client'); ?></label>
                                 <div class="detail-value"><?php echo esc_html(ucfirst($tier)); ?></div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label><?php esc_html_e('License Type:', 'ai-seo-client'); ?></label>
+                                <div class="detail-value">
+                                    <?php echo esc_html(ucfirst($licenseType)); ?>
+                                    <?php if ($licenseType === 'test'): ?>
+                                        <span style="color:#00a32a;font-weight:600;"> (<?php esc_html_e('Unlimited API calls', 'ai-seo-client'); ?>)</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             
                             <div class="detail-item">
@@ -1198,6 +1266,7 @@ class Client
         update_option(SSEO_AI_CLIENT_TENANT_OPTION, $result['tenant_key']);
         update_option('sseo_ai_client_license_status', 'active');
         update_option('sseo_ai_client_license_tier', $result['tier']);
+        update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
@@ -1242,6 +1311,7 @@ class Client
         update_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         update_option('sseo_ai_client_license_status', 'inactive');
         delete_option('sseo_ai_client_license_tier');
+        delete_option('sseo_ai_client_license_type');
         delete_option('sseo_ai_client_license_expires');
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&deactivated=1'));

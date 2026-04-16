@@ -126,6 +126,66 @@ class TruSEOSCORE
 
             <div id="aiseo-suggestions" style="margin-top:15px;"></div>
         </div>
+
+        <script>
+        jQuery(document).ready(function($) {
+            var postId = <?php echo $post->ID; ?>;
+
+            // Re-analyze Content button
+            $('#aiseo-analyze-content').on('click', function() {
+                var btn = $(this);
+                btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
+
+                wp.apiFetch({
+                    path: '/sseo-ai/v1/content-analyze/' + postId,
+                    method: 'GET'
+                }).then(function(data) {
+                    // Reload page to show updated analysis
+                    location.reload();
+                }).catch(function(err) {
+                    alert(err.message || '<?php echo esc_js(__('Analysis failed', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('Re-analyze Content', 'ai-seo-client')); ?>');
+                });
+            });
+
+            // AI Suggest Improvements button
+            $('#aiseo-suggest-improvements').on('click', function() {
+                var btn = $(this);
+                var focusKeyphrase = $('input[name="aiseo_focus_keyphrase"]').val();
+
+                if (!focusKeyphrase) {
+                    alert('<?php echo esc_js(__('Please enter a focus keyphrase first', 'ai-seo-client')); ?>');
+                    return;
+                }
+
+                btn.prop('disabled', true).text('<?php echo esc_js(__('Generating suggestions...', 'ai-seo-client')); ?>');
+                $('#aiseo-suggestions').html('<p><?php echo esc_js(__('Loading AI suggestions...', 'ai-seo-client')); ?></p>');
+
+                wp.apiFetch({
+                    path: '/sseo-ai/v1/content-suggest/' + postId,
+                    method: 'POST',
+                    data: { keyphrase: focusKeyphrase }
+                }).then(function(data) {
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        var html = '<div class="aiseo-suggestions-list" style="background:#f0f7ff;border-left:3px solid #2563eb;padding:10px 15px;margin:10px 0;border-radius:0 4px 4px 0;">';
+                        html += '<h4 style="margin-top:0;color:#2563eb;"><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul style="margin:0;">';
+                        data.suggestions.forEach(function(s) {
+                            html += '<li style="margin:5px 0;">' + s + '</li>';
+                        });
+                        html += '</ul></div>';
+                        $('#aiseo-suggestions').html(html);
+                    } else {
+                        $('#aiseo-suggestions').html('<p style="color:#00a32a;"><?php echo esc_js(__('No suggestions needed - your content looks great!', 'ai-seo-client')); ?></p>');
+                    }
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('AI Suggest Improvements', 'ai-seo-client')); ?>');
+                }).catch(function(err) {
+                    alert(err.message || '<?php echo esc_js(__('Failed to get suggestions', 'ai-seo-client')); ?>');
+                    $('#aiseo-suggestions').html('');
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('AI Suggest Improvements', 'ai-seo-client')); ?>');
+                });
+            });
+        });
+        </script>
         <?php
     }
 
@@ -484,6 +544,22 @@ class TruSEOSCORE
                 return current_user_can('edit_posts');
             },
         ]);
+
+        register_rest_route('sseo-ai/v1', '/content-analyze/(?P<id>\d+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restAnalyzePost'],
+            'permission_callback' => function () {
+                return current_user_can('edit_posts');
+            },
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/content-suggest/(?P<id>\d+)', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restSuggestImprovements'],
+            'permission_callback' => function () {
+                return current_user_can('edit_posts');
+            },
+        ]);
     }
 
     public function restAnalyze(\WP_REST_Request $request): array
@@ -507,6 +583,91 @@ class TruSEOSCORE
             'score' => $score,
             'analysis' => $analysis,
         ];
+    }
+
+    public function restAnalyzePost(\WP_REST_Request $request): array|\WP_Error
+    {
+        $postId = (int)$request->get_param('id');
+        $post = get_post($postId);
+
+        if (!$post) {
+            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+        $score = $this->calculateScore($post, $keyphrase);
+        $analysis = $this->getAnalysis($post, $keyphrase);
+
+        // Save the updated score
+        update_post_meta($postId, '_sseo_ai_score', $score);
+
+        return [
+            'score' => $score,
+            'analysis' => $analysis,
+            'post_id' => $postId,
+        ];
+    }
+
+    public function restSuggestImprovements(\WP_REST_Request $request): array|\WP_Error
+    {
+        $postId = (int)$request->get_param('id');
+        $post = get_post($postId);
+
+        if (!$post) {
+            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        $keyphrase = $request->get_param('keyphrase') ?: get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+        
+        if (empty($keyphrase)) {
+            return new \WP_Error('no_keyphrase', 'No focus keyphrase provided', ['status' => 400]);
+        }
+
+        $suggestions = $this->generateAISuggestions($post, $keyphrase);
+
+        return [
+            'suggestions' => $suggestions,
+            'post_id' => $postId,
+        ];
+    }
+
+    private function generateAISuggestions(\WP_Post $post, string $keyphrase): array
+    {
+        // Use existing analysis to generate specific suggestions
+        $analysis = $this->getAnalysis($post, $keyphrase);
+        $suggestions = [];
+
+        foreach ($analysis as $item) {
+            if ($item['status'] === 'fail') {
+                $suggestions[] = $item['message'];
+            }
+        }
+
+        // Add AI-powered content improvement suggestions
+        $wordCount = str_word_count(strip_tags($post->post_content));
+        if ($wordCount < 500) {
+            $suggestions[] = sprintf(
+                __('Consider expanding your content to at least 500 words. Currently at %d words.', 'ai-seo-client'),
+                $wordCount
+            );
+        }
+
+        $internalLinks = $this->countInternalLinks($post->post_content);
+        if ($internalLinks < 2) {
+            $suggestions[] = __('Add more internal links to related content on your site to improve topical authority.', 'ai-seo-client');
+        }
+
+        $seoTitle = get_post_meta($post->ID, '_sseo_ai_title', true);
+        if (empty($seoTitle)) {
+            $suggestions[] = __('Generate an SEO title that includes your focus keyphrase near the beginning.', 'ai-seo-client');
+        }
+
+        $seoDesc = get_post_meta($post->ID, '_sseo_ai_description', true);
+        if (empty($seoDesc)) {
+            $suggestions[] = __('Add a compelling meta description (150-160 characters) to improve CTR from search results.', 'ai-seo-client');
+        }
+
+        return $suggestions;
     }
 
     public function getPostScore(int $postId): ?int

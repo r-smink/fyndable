@@ -50,6 +50,7 @@ class TopicCluster
             'args' => [
                 'topic' => ['type' => 'string', 'required' => true],
                 'depth' => ['type' => 'string', 'default' => 'standard'],
+                'language' => ['type' => 'string', 'default' => 'en'],
             ],
         ]);
 
@@ -87,13 +88,28 @@ class TopicCluster
     /**
      * Generate a complete topic cluster / topical authority map.
      */
-    public function generateCluster(string $topic, string $depth = 'standard'): array|\WP_Error
+    public function generateCluster(string $topic, string $depth = 'standard', string $language = 'en'): array|\WP_Error
     {
         $subtopicCount = $depth === 'deep' ? '20-30' : '10-15';
         $supportingCount = $depth === 'deep' ? '3-5' : '2-3';
+        
+        // Language mapping for prompt
+        $languageNames = [
+            'en' => 'English',
+            'nl' => 'Dutch',
+            'de' => 'German',
+            'fr' => 'French',
+            'es' => 'Spanish',
+            'it' => 'Italian',
+            'pt' => 'Portuguese',
+            'pl' => 'Polish',
+        ];
+        $langName = $languageNames[$language] ?? 'English';
 
         $prompt = <<<PROMPT
 You are a topical authority expert (like MarketMuse). Generate a complete topic cluster map for building topical authority around: "{$topic}"
+
+IMPORTANT: ALL content must be in {$langName} language. Use the exact topic "{$topic}" as provided - do NOT translate it to English. Return all titles, descriptions, keywords, and strategy in {$langName}.
 
 Create a pillar-cluster content architecture. Return JSON only (no markdown):
 {{
@@ -156,7 +172,7 @@ Requirements:
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, null, 4000);
+        $result = $this->llm->call($prompt, null, 'seo_expert', 4000);
         if (is_wp_error($result)) {
             return $result;
         }
@@ -292,7 +308,8 @@ PROMPT;
     {
         return $this->generateCluster(
             sanitize_text_field($request->get_param('topic')),
-            sanitize_text_field($request->get_param('depth') ?: 'standard')
+            sanitize_text_field($request->get_param('depth') ?: 'standard'),
+            sanitize_text_field($request->get_param('language') ?: 'en')
         );
     }
 
@@ -330,6 +347,19 @@ PROMPT;
                         <div style="flex:1;">
                             <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Core Topic', 'ai-seo-client'); ?></label>
                             <input type="text" id="tc-topic" class="large-text" placeholder="<?php esc_attr_e('e.g. WordPress SEO, email marketing, project management', 'ai-seo-client'); ?>">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Language', 'ai-seo-client'); ?></label>
+                            <select id="tc-language" style="width:140px;">
+                                <option value="nl">Nederlands</option>
+                                <option value="en" selected>English</option>
+                                <option value="de">Deutsch</option>
+                                <option value="fr">Français</option>
+                                <option value="es">Español</option>
+                                <option value="it">Italiano</option>
+                                <option value="pt">Português</option>
+                                <option value="pl">Polski</option>
+                            </select>
                         </div>
                         <div>
                             <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Depth', 'ai-seo-client'); ?></label>
@@ -441,7 +471,7 @@ PROMPT;
                 wp.apiFetch({
                     path: '/sseo-ai/v1/clusters/generate',
                     method: 'POST',
-                    data: { topic: topic, depth: $('#tc-depth').val() }
+                    data: { topic: topic, depth: $('#tc-depth').val(), language: $('#tc-language').val() }
                 }).then(function(data) {
                     currentCluster = data;
                     renderCluster(data);

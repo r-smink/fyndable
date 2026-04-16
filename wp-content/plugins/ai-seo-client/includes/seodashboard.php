@@ -303,7 +303,7 @@ class SeoDashboard
                 btn.prop('disabled', true);
                 $('#seo-dash-spinner').addClass('is-active');
 
-                wp.apiFetch({ path: 'aiseoclient/v1/dashboard/overview' }).then(function(data) {
+                wp.apiFetch({ path: 'sseo-ai/v1/dashboard/overview' }).then(function(data) {
                     // Score
                     var color = getScoreColor(data.score);
                     $('#seo-score-num').text(data.score).css('color', color);

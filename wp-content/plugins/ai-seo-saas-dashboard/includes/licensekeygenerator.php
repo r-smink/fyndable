@@ -42,14 +42,20 @@ class LicenseKeyGenerator
         // Generate unique license key
         $licenseKey = $this->generateUniqueKey();
         
+        $licenseType = $options['type'] ?? 'paid';
+        
+        // Higher rate limits for trial/test licenses to allow proper testing
+        $defaultRateLimit = ($licenseType === 'trial' || $licenseType === 'test') ? 200 : 60;
+        $defaultApiLimit = ($licenseType === 'trial' || $licenseType === 'test') ? 5000 : 1000;
+        
         $data = [
             'license_key' => $licenseKey,
-            'license_type' => $options['type'] ?? 'paid',
+            'license_type' => $licenseType,
             'tier' => $options['tier'] ?? 'starter',
             'status' => 'active',
             'max_sites' => (int)($options['max_sites'] ?? 1),
-            'rate_limit' => (int)($options['rate_limit'] ?? 60),
-            'api_calls_limit' => (int)($options['api_calls_limit'] ?? 1000),
+            'rate_limit' => (int)($options['rate_limit'] ?? $defaultRateLimit),
+            'api_calls_limit' => (int)($options['api_calls_limit'] ?? $defaultApiLimit),
             'expires_days' => isset($options['expires_days']) ? (int)$options['expires_days'] : null,
             'created_by' => get_current_user_id(),
             'assigned_to' => !empty($options['assigned_to']) ? sanitize_text_field($options['assigned_to']) : null,

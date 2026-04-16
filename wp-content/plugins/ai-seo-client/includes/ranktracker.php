@@ -67,11 +67,14 @@ class RankTracker
         $sql2 = "CREATE TABLE IF NOT EXISTS {$this->tableName} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             keyword_id bigint(20) unsigned NOT NULL,
+            post_id bigint(20) unsigned DEFAULT 0,
             position int DEFAULT 0,
             url varchar(500) DEFAULT '',
             checked_at date NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY keyword_id_idx (keyword_id),
+            KEY post_id_idx (post_id),
             KEY checked_at_idx (checked_at),
             UNIQUE KEY keyword_date (keyword_id, checked_at)
         ) {$charset};";
@@ -79,6 +82,30 @@ class RankTracker
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql1);
         dbDelta($sql2);
+        
+        // Upgrade: Add post_id column if it doesn't exist (for existing installs)
+        $this->maybeUpgradeTable();
+    }
+    
+    /**
+     * Upgrade existing tables
+     */
+    private function maybeUpgradeTable(): void
+    {
+        global $wpdb;
+        
+        // Check if post_id column exists
+        $columnExists = $wpdb->get_results("SHOW COLUMNS FROM {$this->tableName} LIKE 'post_id'");
+        if (empty($columnExists)) {
+            $wpdb->query("ALTER TABLE {$this->tableName} ADD COLUMN post_id bigint(20) unsigned DEFAULT 0 AFTER keyword_id");
+            $wpdb->query("ALTER TABLE {$this->tableName} ADD KEY post_id_idx (post_id)");
+        }
+        
+        // Check if created_at column exists
+        $createdAtExists = $wpdb->get_results("SHOW COLUMNS FROM {$this->tableName} LIKE 'created_at'");
+        if (empty($createdAtExists)) {
+            $wpdb->query("ALTER TABLE {$this->tableName} ADD COLUMN created_at datetime DEFAULT CURRENT_TIMESTAMP");
+        }
     }
 
     public function addMenu(): void
@@ -267,6 +294,7 @@ class RankTracker
                 // Insert history record
                 $wpdb->replace($this->tableName, [
                     'keyword_id' => $kw['id'],
+                    'post_id' => $kw['post_id'] ?? 0,
                     'position' => $position,
                     'url' => $kw['url'],
                     'checked_at' => $today,
@@ -340,14 +368,26 @@ class RankTracker
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('Keyword Rank Tracker', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Track your keyword positions in Google search results. Positions are checked daily.', 'ai-seo-client'); ?></p>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Keyword Rank Tracker', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('Track your keyword positions in Google search results. Positions are checked daily.', 'ai-seo-client'); ?></p>
+            </div>
 
-            <div style="max-width:1100px;">
+            <div class="sseo-ai-content">
+                <div style="max-width:1100px;">
                 <!-- Add Keyword Form -->
-                <div class="postbox" style="padding:20px;">
-                    <h2 style="margin-top:0;"><?php esc_html_e('Add Keyword to Track', 'ai-seo-client'); ?></h2>
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Add Keyword to Track', 'ai-seo-client'); ?></h2>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
                         <div>
                             <label><strong><?php esc_html_e('Keyword', 'ai-seo-client'); ?></strong></label><br>
@@ -376,7 +416,7 @@ class RankTracker
                 </div>
 
                 <!-- Keywords Table -->
-                <div style="margin-top:20px;">
+                <div class="sseo-ai-dashboard-card">
                     <table class="wp-list-table widefat fixed striped" id="rank-table">
                         <thead>
                             <tr>
@@ -397,17 +437,18 @@ class RankTracker
                 </div>
 
                 <!-- History Chart (shown when clicking a keyword) -->
-                <div id="rank-history-panel" class="postbox" style="padding:20px; margin-top:20px; display:none;">
-                    <h2 style="margin-top:0;" id="rank-history-title"></h2>
+                <div id="rank-history-panel" class="sseo-ai-dashboard-card" style="display:none;">
+                    <h2 id="rank-history-title"></h2>
                     <div id="rank-history-chart" style="height:250px; position:relative;"></div>
                 </div>
+            </div>
             </div>
         </div>
 
         <script>
         jQuery(document).ready(function($) {
             function loadKeywords() {
-                wp.apiFetch({ path: 'aiseoclient/v1/ranks/keywords' }).then(function(res) {
+                wp.apiFetch({ path: 'sseo-ai/v1/ranks/keywords' }).then(function(res) {
                     var tbody = $('#rank-table-body');
                     tbody.empty();
 
@@ -466,7 +507,7 @@ class RankTracker
                 btn.prop('disabled', true);
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/ranks/add',
+                    path: 'sseo-ai/v1/ranks/add',
                     method: 'POST',
                     data: {
                         keyword: keyword,
@@ -488,7 +529,7 @@ class RankTracker
             $(document).on('click', '.rank-delete', function() {
                 if (!confirm('<?php echo esc_js(__('Remove this keyword?', 'ai-seo-client')); ?>')) return;
                 var id = $(this).data('id');
-                wp.apiFetch({ path: 'aiseoclient/v1/ranks/delete', method: 'POST', data: { id: id } }).then(loadKeywords);
+                wp.apiFetch({ path: 'sseo-ai/v1/ranks/delete', method: 'POST', data: { id: id } }).then(loadKeywords);
             });
 
             // Check all now
@@ -497,7 +538,7 @@ class RankTracker
                 btn.prop('disabled', true);
                 $('#rank-spinner').addClass('is-active');
 
-                wp.apiFetch({ path: 'aiseoclient/v1/ranks/check-now', method: 'POST' }).then(function(res) {
+                wp.apiFetch({ path: 'sseo-ai/v1/ranks/check-now', method: 'POST' }).then(function(res) {
                     loadKeywords();
                     btn.prop('disabled', false);
                     $('#rank-spinner').removeClass('is-active');
@@ -515,7 +556,7 @@ class RankTracker
                 var keyword = $(this).data('keyword');
                 $('#rank-history-title').text('<?php echo esc_js(__('Position History:', 'ai-seo-client')); ?> ' + keyword);
 
-                wp.apiFetch({ path: 'aiseoclient/v1/ranks/history/' + id }).then(function(res) {
+                wp.apiFetch({ path: 'sseo-ai/v1/ranks/history/' + id }).then(function(res) {
                     renderChart(res.history);
                     $('#rank-history-panel').show();
                 });

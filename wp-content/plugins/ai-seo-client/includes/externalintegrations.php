@@ -115,15 +115,29 @@ class ExternalIntegrations
         $notionDatabaseId = get_option('sseo_ai_notion_database_id', '');
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('External Integrations', 'ai-seo-client'); ?></h1>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('External Integrations', 'ai-seo-client'); ?></h1>
+            </div>
             
-            <form method="post" action="options.php">
-                <?php settings_fields('sseo_ai_integrations'); ?>
-                
-                <!-- Slack Integration -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Slack Integration', 'ai-seo-client'); ?></h2>
+            <div class="sseo-ai-content">
+                <form method="post" action="options.php">
+                    <?php settings_fields('sseo_ai_integrations'); ?>
+                    
+                    <div class="sseo-two-columns">
+                        <!-- Slack Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Slack Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -184,11 +198,11 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoTestSlack()">
                         <?php esc_html_e('Test Slack Connection', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Zapier / Make.com -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Zapier / Make.com Integration', 'ai-seo-client'); ?></h2>
+                        </div>
+                        
+                        <!-- Zapier / Make.com -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Zapier / Make.com Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -243,11 +257,14 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoAddCustomWebhook()">
                         <?php esc_html_e('Add Custom Webhook', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Email Reports -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Email Reports', 'ai-seo-client'); ?></h2>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div>
+                        <!-- Email Reports -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Email Reports', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -303,11 +320,11 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoSendTestReport()">
                         <?php esc_html_e('Send Test Report', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Google Drive Export -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Google Drive Export', 'ai-seo-client'); ?></h2>
+                        </div>
+                        
+                        <!-- Google Drive Export -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Google Drive Export', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -337,11 +354,11 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoExportToGDrive()">
                         <?php esc_html_e('Export Now', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Notion Integration -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
+                        </div>
+                        
+                        <!-- Notion Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -376,8 +393,13 @@ class ExternalIntegrations
                     </button>
                 </div>
                 
+                        </div>
+                    </div>
+                </div>
+                
                 <?php submit_button(__('Save Integration Settings', 'ai-seo-client')); ?>
             </form>
+            </div>
         </div>
         
         <script>
