@@ -444,8 +444,11 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         $apiKey = $imageApi['key'] ?? '';
         $model = $imageApi['model'] ?? 'dall-e-3';
         
+        // Debug logging
+        error_log('SSEO AI Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
+        
         if (empty($provider) || empty($apiKey)) {
-            error_log('SSEO AI Image: No API provider or key configured');
+            error_log('SSEO AI Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
             return null;
         }
         

@@ -349,6 +349,12 @@ class OpenGraph
      */
     public function addMetaBoxes(): void
     {
+        // Only load on post edit screens
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return;
+        }
+        
         $postTypes = get_post_types(['public' => true]);
         foreach ($postTypes as $postType) {
             add_meta_box(

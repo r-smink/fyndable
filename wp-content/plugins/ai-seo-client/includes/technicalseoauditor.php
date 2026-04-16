@@ -352,17 +352,21 @@ class TechnicalSEOAuditor
             button.disabled = true;
             button.textContent = '<?php esc_html_e('Running Audit...', 'ai-seo-client'); ?>';
             
-            jQuery.post(ajaxurl, {
-                action: 'sseo_ai_run_technical_audit',
-                nonce: '<?php echo wp_create_nonce('sseo_technical'); ?>'
-            }, function(response) {
+            wp.apiFetch({
+                path: '/sseo-ai/v1/technical/audit',
+                method: 'POST'
+            }).then(function(response) {
                 if (response.success) {
                     location.reload();
                 } else {
-                    alert(response.data.message || 'Error running audit');
+                    alert('<?php echo esc_js(__('Error running audit', 'ai-seo-client')); ?>');
                     button.disabled = false;
                     button.textContent = '<?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>';
                 }
+            }).catch(function(error) {
+                alert('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>'));
+                button.disabled = false;
+                button.textContent = '<?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>';
             });
         }
         </script>
@@ -774,18 +778,34 @@ class TechnicalSEOAuditor
             $sitemap = new \SimpleXMLElement($xml);
             $urls = [];
             
-            // Register namespace if present (Yoast SEO uses xmlns)
-            $namespaces = $sitemap->getDocNamespaces();
+            // Register ALL namespaces (including default namespace for RankMath)
+            $namespaces = $sitemap->getDocNamespaces(true);
+            $defaultNs = isset($namespaces['']) ? $namespaces[''] : null;
+            
             if (!empty($namespaces)) {
                 foreach ($namespaces as $prefix => $namespace) {
-                    $sitemap->registerXPathNamespace($prefix ?: 'sm', $namespace);
+                    // Register with a prefix even if it's the default namespace
+                    $sitemap->registerXPathNamespace($prefix ?: 'sitemap', $namespace);
                 }
             }
             
-            // Try to get URLs with namespace first, then without
-            if (!empty($namespaces)) {
-                $urlNodes = $sitemap->xpath('//sm:url');
-                foreach ($urlNodes as $urlNode) {
+            // Try XPath with namespace prefix
+            if ($defaultNs) {
+                $sitemap->registerXPathNamespace('sitemap', $defaultNs);
+                $urlNodes = $sitemap->xpath('//sitemap:url/sitemap:loc');
+                if ($urlNodes) {
+                    foreach ($urlNodes as $loc) {
+                        $url = (string)$loc;
+                        if (!empty($url)) {
+                            $urls[] = $url;
+                        }
+                    }
+                }
+            }
+            
+            // Fallback 1: Try without namespace
+            if (empty($urls)) {
+                foreach ($sitemap->url as $urlNode) {
                     $loc = (string)$urlNode->loc;
                     if (!empty($loc)) {
                         $urls[] = $loc;
@@ -793,12 +813,15 @@ class TechnicalSEOAuditor
                 }
             }
             
-            // Fallback: direct access if xpath didn't work or no namespaces
+            // Fallback 2: Direct XPath without namespace (some sitemaps)
             if (empty($urls)) {
-                foreach ($sitemap->url as $urlNode) {
-                    $loc = (string)$urlNode->loc;
-                    if (!empty($loc)) {
-                        $urls[] = $loc;
+                $locs = $sitemap->xpath('//url/loc');
+                if ($locs) {
+                    foreach ($locs as $loc) {
+                        $url = (string)$loc;
+                        if (!empty($url)) {
+                            $urls[] = $url;
+                        }
                     }
                 }
             }
@@ -1039,9 +1062,19 @@ class TechnicalSEOAuditor
     /**
      * REST: Run technical audit
      */
-    public function restRunAudit(): array
+    public function restRunAudit(\WP_REST_Request $request): \WP_REST_Response
     {
-        $audit = $this->runFullAudit();
-        return ['success' => true, 'audit' => $audit];
+        try {
+            $audit = $this->runFullAudit();
+            return new \WP_REST_Response([
+                'success' => true,
+                'audit' => $audit
+            ], 200);
+        } catch (\Exception $e) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

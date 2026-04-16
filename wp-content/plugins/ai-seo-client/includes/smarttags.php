@@ -20,6 +20,12 @@ class SmartTags
 
     public function addMetaBox(): void
     {
+        // Only load on post edit screens
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return;
+        }
+        
         add_meta_box(
             'aiseo_smart_tags',
             __('AI Smart Tags', 'ai-seo-client'),

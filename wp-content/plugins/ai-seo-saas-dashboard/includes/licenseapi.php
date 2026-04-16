@@ -309,6 +309,9 @@ class LicenseAPI
         }
 
         $limits = $this->tenants->checkTenantLimits($tenantKey);
+        
+        // Get SaaS settings for image API
+        $settings = new \SSEOAISaaS\SaaSSettings();
 
         return new \WP_REST_Response([
             'success' => true,
@@ -318,6 +321,11 @@ class LicenseAPI
             'limits' => $limits['checks'] ?? [],
             'rate_limit' => (int)$tenant['rate_limit'],
             'expires_at' => $tenant['expires_at'],
+            'image_api' => [
+                'provider' => $settings->getImageApiProvider(),
+                'key' => $settings->getImageApiKey(),
+                'model' => $settings->getImageApiModel(),
+            ],
         ], 200);
     }
 

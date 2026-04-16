@@ -638,7 +638,7 @@ class SmartInternalLinking
         }
         
         $keywordCount = count($keywords);
-        return $keywordCount > 0 ? min(100, ($matches / $keywordCount) * 100) : 0;
+        return $keywordCount > 0 ? (int)min(100, ($matches / $keywordCount) * 100) : 0;
     }
     
     /**

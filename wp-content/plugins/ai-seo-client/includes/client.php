@@ -90,6 +90,7 @@ class Client
         // Handle license activation form
         add_action('admin_post_ai_seo_activate_license', [$this, 'handleLicenseActivation']);
         add_action('admin_post_ai_seo_deactivate_license', [$this, 'handleLicenseDeactivation']);
+        add_action('admin_post_ai_seo_manual_validate', [$this, 'handleManualValidation']);
         
         // Handle settings save
         add_action('admin_post_ai_seo_save_settings', [$this, 'handleSettingsSave']);
@@ -917,10 +918,85 @@ class Client
                             <?php endif; ?>
                             
                             <p style="margin-top: 20px;">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-site-audit')); ?>" class="button button-primary">
+                                <button type="button" id="run-sitemap-check" class="button button-primary">
                                     <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
-                                </a>
+                                </button>
+                                <span class="spinner" style="float: none; margin-left: 10px;"></span>
                             </p>
+                            
+                            <div id="sitemap-check-results" style="margin-top: 30px;"></div>
+                            
+                            <script>
+                            jQuery(document).ready(function($) {
+                                $('#run-sitemap-check').on('click', function() {
+                                    var btn = $(this);
+                                    var spinner = btn.next('.spinner');
+                                    var results = $('#sitemap-check-results');
+                                    
+                                    btn.prop('disabled', true);
+                                    spinner.addClass('is-active');
+                                    results.html('<p><?php echo esc_js(__('Running sitemap health check...', 'ai-seo-client')); ?></p>');
+                                    
+                                    wp.apiFetch({
+                                        path: '/sseo-ai/v1/technical/audit',
+                                        method: 'POST'
+                                    }).then(function(response) {
+                                        if (response.success && response.audit && response.audit.sitemap) {
+                                            var sitemap = response.audit.sitemap;
+                                            var html = '<div class="sseo-ai-dashboard-card" style="background: white; padding: 30px; border-radius: 8px;">';
+                                            html += '<h3><?php echo esc_js(__('Sitemap Health Check Results', 'ai-seo-client')); ?></h3>';
+                                            
+                                            // Sitemap URL
+                                            html += '<p><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
+                                            
+                                            // Stats
+                                            html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
+                                            html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
+                                            html += '<div style="font-size: 32px; font-weight: bold; color: #2563eb;">' + (sitemap.total_urls || 0) + '</div>';
+                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
+                                            html += '</div>';
+                                            html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
+                                            html += '<div style="font-size: 32px; font-weight: bold; color: #00a32a;">' + (sitemap.valid_urls || 0) + '</div>';
+                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div>';
+                                            html += '</div>';
+                                            html += '<div style="background: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">';
+                                            html += '<div style="font-size: 32px; font-weight: bold; color: #d63638;">' + (sitemap.invalid_urls || 0) + '</div>';
+                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div>';
+                                            html += '</div>';
+                                            html += '</div>';
+                                            
+                                            // Issues
+                                            if (sitemap.issues && sitemap.issues.length > 0) {
+                                                html += '<h4 style="margin-top: 20px;"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
+                                                html += '<ul style="list-style: none; padding: 0;">';
+                                                sitemap.issues.forEach(function(issue) {
+                                                    html += '<li style="padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #dba617; border-radius: 4px;">';
+                                                    html += '<strong>' + issue.type + ':</strong> ' + issue.description;
+                                                    html += '</li>';
+                                                });
+                                                html += '</ul>';
+                                            } else {
+                                                html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
+                                                html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
+                                                html += '</div>';
+                                            }
+                                            
+                                            html += '</div>';
+                                            results.html(html);
+                                        } else {
+                                            results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><?php echo esc_js(__('Failed to run sitemap check. Please try again.', 'ai-seo-client')); ?></div>');
+                                        }
+                                        
+                                        btn.prop('disabled', false);
+                                        spinner.removeClass('is-active');
+                                    }).catch(function(error) {
+                                        results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>');
+                                        btn.prop('disabled', false);
+                                        spinner.removeClass('is-active');
+                                    });
+                                });
+                            });
+                            </script>
                         <?php else: ?>
                             <div class="sitemap-status error">
                                 <span style="font-size: 24px;">❌</span>
@@ -1200,6 +1276,31 @@ class Client
     }
 
     /**
+     * Handle manual license validation
+     */
+    public function handleManualValidation(): void
+    {
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'manual_validate_license')) {
+            wp_die(__('Security check failed', 'ai-seo-client'));
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Insufficient permissions', 'ai-seo-client'));
+        }
+        
+        // Clear validation cache and force re-validation
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $cacheKey = 'ai_seo_license_check_' . md5($licenseKey);
+        delete_transient($cacheKey);
+        
+        // Trigger validation
+        $this->licenseValidator->validateStoredLicense();
+        
+        wp_redirect(admin_url('admin.php?page=ai-seo-connection&validated=1'));
+        exit;
+    }
+    
+    /**
      * Render connection page (license details)
      */
     public function renderConnectionPage(): void
@@ -1287,13 +1388,31 @@ class Client
                             </div>
                         </div>
                         
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 30px;">
-                            <input type="hidden" name="action" value="ai_seo_deactivate_license">
-                            <?php wp_nonce_field('deactivate_license'); ?>
-                            <button type="submit" class="button button-secondary">
-                                <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
-                            </button>
-                        </form>
+                        <?php if (isset($_GET['validated'])): ?>
+                            <div style="background:#d1fae5;color:#10b981;padding:12px 16px;border-radius:6px;margin-top:20px;border-left:4px solid #10b981;">
+                                <strong>✓</strong> <?php esc_html_e('License validated successfully! Image API credentials refreshed.', 'ai-seo-client'); ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div style="margin-top: 30px; display: flex; gap: 12px;">
+                            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="flex: 1;">
+                                <input type="hidden" name="action" value="ai_seo_manual_validate">
+                                <?php wp_nonce_field('manual_validate_license'); ?>
+                                <button type="submit" class="button button-primary" style="width:100%;">
+                                    <?php esc_html_e('Validate License', 'ai-seo-client'); ?>
+                                </button>
+                            </form>
+                            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="flex: 1;">
+                                <input type="hidden" name="action" value="ai_seo_deactivate_license">
+                                <?php wp_nonce_field('deactivate_license'); ?>
+                                <button type="submit" class="button button-secondary" style="width:100%;">
+                                    <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
+                                </button>
+                            </form>
+                        </div>
+                        <p style="margin-top: 12px; font-size: 13px; color: #6b7280; text-align: center;">
+                            <?php esc_html_e('Click "Validate License" to refresh Image API credentials from dashboard', 'ai-seo-client'); ?>
+                        </p>
                     </div>
                 <?php else: ?>
                     <div class="sseo-ai-connection-card">

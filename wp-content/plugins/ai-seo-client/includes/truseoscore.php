@@ -23,14 +23,20 @@ class TruSEOSCORE
 
     public function addMetaBoxes(): void
     {
+        // Only load on actual post edit screens to improve performance
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return;
+        }
+        
         $screens = get_post_types(['public' => true]);
-        foreach ($screens as $screen) {
+        foreach ($screens as $screenType) {
             add_meta_box(
                 'aiseo_truseo',
                 __('AI SEO Score & Optimization', 'ai-seo-client'),
                 [$this, 'renderMetaBox'],
-                $screen,
-                'normal',
+                $screenType,
+                'side',
                 'high'
             );
         }
