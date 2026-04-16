@@ -492,6 +492,18 @@ class ContentPerformanceMonitor
     {
         global $wpdb;
         
+        // Check if rank_history table exists with post_id column
+        $tableName = $wpdb->prefix . 'sseo_ai_rank_history';
+        $tableExists = $wpdb->get_var("SHOW TABLES LIKE '{$tableName}'") === $tableName;
+        if (!$tableExists) {
+            return 'N/A';
+        }
+        
+        $columnExists = $wpdb->get_results("SHOW COLUMNS FROM {$tableName} LIKE 'post_id'");
+        if (empty($columnExists)) {
+            return 'N/A';
+        }
+        
         $results = $wpdb->get_results("
             SELECT p.ID as post_id, p.post_date, 
                    (SELECT MIN(created_at) FROM {$wpdb->prefix}sseo_ai_rank_history 
@@ -569,6 +581,18 @@ class ContentPerformanceMonitor
     private function getAvgPosition(int $postId): float
     {
         global $wpdb;
+        
+        // Check if rank_history table exists with post_id column
+        $tableName = $wpdb->prefix . 'sseo_ai_rank_history';
+        $tableExists = $wpdb->get_var("SHOW TABLES LIKE '{$tableName}'") === $tableName;
+        if (!$tableExists) {
+            return 0;
+        }
+        
+        $columnExists = $wpdb->get_results("SHOW COLUMNS FROM {$tableName} LIKE 'post_id'");
+        if (empty($columnExists)) {
+            return 0;
+        }
         
         $avgPos = $wpdb->get_var($wpdb->prepare("
             SELECT AVG(position)

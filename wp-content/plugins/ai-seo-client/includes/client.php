@@ -408,7 +408,17 @@ class Client
                 [$this, 'renderLinkManagerPage']
             );
             
-            // 5. Integrations - all tiers
+            // 5. Sitemaps - all tiers
+            add_submenu_page(
+                'ai-seo-client',
+                __('Sitemaps', 'ai-seo-client'),
+                __('🗺️ Sitemaps', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-sitemaps',
+                [$this, 'renderSitemapsPage']
+            );
+            
+            // 6. Integrations - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Integrations', 'ai-seo-client'),
@@ -836,6 +846,110 @@ class Client
         } else {
             $this->renderFeatureNotAvailable();
         }
+    }
+
+    /**
+     * Render Sitemaps page - shows sitemap status and health
+     */
+    public function renderSitemapsPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+
+        // Check sitemap status
+        $sitemapUrl = home_url('/sitemap.xml');
+        $sitemapIndexUrl = home_url('/sitemap_index.xml');
+        
+        $response = wp_remote_get($sitemapUrl, ['timeout' => 10]);
+        $sitemapExists = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
+        
+        $indexResponse = wp_remote_get($sitemapIndexUrl, ['timeout' => 10]);
+        $indexExists = !is_wp_error($indexResponse) && wp_remote_retrieve_response_code($indexResponse) === 200;
+        
+        ?>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sitemap-status { display: flex; align-items: center; gap: 15px; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+            .sitemap-status.ok { background: #d1fae5; border-left: 4px solid #00a32a; }
+            .sitemap-status.error { background: #fee2e2; border-left: 4px solid #d63638; }
+            .sitemap-url { font-family: monospace; background: #f3f4f6; padding: 10px 15px; border-radius: 6px; display: inline-block; margin: 5px 0; }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('XML Sitemaps', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div style="max-width: 900px;">
+                    
+                    <!-- Main Sitemap Status -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Sitemap Status', 'ai-seo-client'); ?></h2>
+                        
+                        <?php if ($sitemapExists || $indexExists): ?>
+                            <?php if ($indexExists): ?>
+                                <div class="sitemap-status ok">
+                                    <span style="font-size: 24px;">✅</span>
+                                    <div>
+                                        <strong><?php esc_html_e('Sitemap Index Found', 'ai-seo-client'); ?></strong>
+                                        <div class="sitemap-url">
+                                            <a href="<?php echo esc_url($sitemapIndexUrl); ?>" target="_blank"><?php echo esc_html($sitemapIndexUrl); ?></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($sitemapExists): ?>
+                                <div class="sitemap-status ok">
+                                    <span style="font-size: 24px;">✅</span>
+                                    <div>
+                                        <strong><?php esc_html_e('XML Sitemap Found', 'ai-seo-client'); ?></strong>
+                                        <div class="sitemap-url">
+                                            <a href="<?php echo esc_url($sitemapUrl); ?>" target="_blank"><?php echo esc_html($sitemapUrl); ?></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <p style="margin-top: 20px;">
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-site-audit')); ?>" class="button button-primary">
+                                    <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
+                                </a>
+                            </p>
+                        <?php else: ?>
+                            <div class="sitemap-status error">
+                                <span style="font-size: 24px;">❌</span>
+                                <div>
+                                    <strong><?php esc_html_e('No Sitemap Found', 'ai-seo-client'); ?></strong>
+                                    <p><?php esc_html_e('Neither sitemap.xml nor sitemap_index.xml could be found.', 'ai-seo-client'); ?></p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Extended Sitemaps Info -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Extended Sitemaps', 'ai-seo-client'); ?></h2>
+                        <p><?php esc_html_e('The plugin automatically generates the following sitemap types:', 'ai-seo-client'); ?></p>
+                        <ul style="list-style: disc; margin-left: 20px;">
+                            <li><strong><?php esc_html_e('Main Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap.xml</code></li>
+                            <li><strong><?php esc_html_e('RSS Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-rss.xml</code></li>
+                            <li><strong><?php esc_html_e('Video Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-videos.xml</code></li>
+                            <li><strong><?php esc_html_e('News Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-news.xml</code></li>
+                            <li><strong><?php esc_html_e('Image Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-images.xml</code></li>
+                            <li><strong><?php esc_html_e('Author Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-authors.xml</code></li>
+                        </ul>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <?php
     }
 
     /**
@@ -1275,6 +1389,11 @@ class Client
         if (!empty($result['white_label'])) {
             update_option('sseo_ai_white_label', $result['white_label']);
         }
+        
+        // Store image API credentials from SaaS dashboard
+        if (!empty($result['image_api'])) {
+            update_option('sseo_ai_client_image_api', $result['image_api']);
+        }
 
         // Set a transient to show success message on next page load
         set_transient('sseo_ai_activation_success', true, 30);
@@ -1313,6 +1432,7 @@ class Client
         delete_option('sseo_ai_client_license_tier');
         delete_option('sseo_ai_client_license_type');
         delete_option('sseo_ai_client_license_expires');
+        delete_option('sseo_ai_client_image_api');
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&deactivated=1'));
         exit;

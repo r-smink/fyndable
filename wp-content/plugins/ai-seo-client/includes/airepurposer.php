@@ -76,7 +76,7 @@ class AIRepurposer
                 btn.prop('disabled', true).text('<?php esc_html_e('Generating...', 'ai-seo-client'); ?>');
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/repurpose',
+                    path: 'sseo-ai/v1/repurpose',
                     method: 'POST',
                     data: {
                         post_id: postId,

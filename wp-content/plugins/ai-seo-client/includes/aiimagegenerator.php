@@ -438,14 +438,114 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
      */
     private function generateImageFromPrompt(string $prompt): ?string
     {
-        // This would integrate with DALL-E, Midjourney, Stable Diffusion, etc.
-        // Placeholder implementation
+        // Get image API credentials from SaaS dashboard (stored during license activation)
+        $imageApi = get_option('sseo_ai_client_image_api', []);
+        $provider = $imageApi['provider'] ?? '';
+        $apiKey = $imageApi['key'] ?? '';
+        $model = $imageApi['model'] ?? 'dall-e-3';
         
-        // Example: Use DALL-E API
-        // $response = wp_remote_post('https://api.openai.com/v1/images/generations', [...]);
+        if (empty($provider) || empty($apiKey)) {
+            error_log('SSEO AI Image: No API provider or key configured');
+            return null;
+        }
         
-        // For now, return placeholder
-        return null;
+        switch ($provider) {
+            case 'openai':
+                return $this->generateWithOpenAI($prompt, $apiKey, $model);
+            
+            case 'stability':
+                return $this->generateWithStabilityAI($prompt, $apiKey, $model);
+            
+            default:
+                error_log('SSEO AI Image: Unknown provider - ' . $provider);
+                return null;
+        }
+    }
+    
+    /**
+     * Generate image with OpenAI DALL-E
+     */
+    private function generateWithOpenAI(string $prompt, string $apiKey, string $model): ?string
+    {
+        $quality = strpos($model, 'hd') !== false ? 'hd' : 'standard';
+        
+        $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'model' => 'dall-e-3',
+                'prompt' => $prompt,
+                'n' => 1,
+                'size' => '1024x1024',
+                'quality' => $quality,
+            ]),
+            'timeout' => 60,
+        ]);
+        
+        if (is_wp_error($response)) {
+            error_log('SSEO AI Image: OpenAI API error - ' . $response->get_error_message());
+            return null;
+        }
+        
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        
+        if (!isset($body['data'][0]['url'])) {
+            error_log('SSEO AI Image: No image URL in OpenAI response - ' . print_r($body, true));
+            return null;
+        }
+        
+        return $body['data'][0]['url'];
+    }
+    
+    /**
+     * Generate image with Stability AI
+     */
+    private function generateWithStabilityAI(string $prompt, string $apiKey, string $model): ?string
+    {
+        $engine = 'stable-diffusion-xl-1024-v1-0';
+        
+        $response = wp_remote_post("https://api.stability.ai/v1/generation/{$engine}/text-to-image", [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'text_prompts' => [
+                    ['text' => $prompt, 'weight' => 1],
+                ],
+                'cfg_scale' => 7,
+                'height' => 1024,
+                'width' => 1024,
+                'samples' => 1,
+                'steps' => 30,
+            ]),
+            'timeout' => 60,
+        ]);
+        
+        if (is_wp_error($response)) {
+            error_log('SSEO AI Image: Stability AI API error - ' . $response->get_error_message());
+            return null;
+        }
+        
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        
+        if (!isset($body['artifacts'][0]['base64'])) {
+            error_log('SSEO AI Image: No image data in Stability AI response - ' . print_r($body, true));
+            return null;
+        }
+        
+        // Stability AI returns base64, we need to convert to temp file URL
+        $base64 = $body['artifacts'][0]['base64'];
+        $imageData = base64_decode($base64);
+        
+        // Save to temp file
+        $tempFile = wp_tempnam('sseo-ai-image-');
+        file_put_contents($tempFile, $imageData);
+        
+        return $tempFile; // Return temp file path instead of URL
     }
     
     /**

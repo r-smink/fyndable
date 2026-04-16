@@ -325,9 +325,9 @@ class GscDashboard
 
                 // Fetch overview + queries + pages in parallel
                 Promise.all([
-                    wp.apiFetch({path: 'aiseoclient/v1/gsc/overview?days=' + days}),
-                    wp.apiFetch({path: 'aiseoclient/v1/gsc/queries?days=' + days + '&limit=30'}),
-                    wp.apiFetch({path: 'aiseoclient/v1/gsc/pages?days=' + days + '&limit=30'})
+                    wp.apiFetch({path: 'sseo-ai/v1/gsc/overview?days=' + days}),
+                    wp.apiFetch({path: 'sseo-ai/v1/gsc/queries?days=' + days + '&limit=30'}),
+                    wp.apiFetch({path: 'sseo-ai/v1/gsc/pages?days=' + days + '&limit=30'})
                 ]).then(function(results) {
                     var overview = results[0];
                     var queries = results[1];

@@ -669,27 +669,69 @@ class ContentCalendar
     }
     
     /**
-     * Get keyword opportunities
+     * Get keyword opportunities from existing site data
      */
     private function getKeywordOpportunities(): array
     {
-        // This would analyze trending keywords and suggest publishing dates
-        // Placeholder implementation
+        global $wpdb;
+        $opportunities = [];
         
-        return [
-            [
-                'keyword' => 'summer seo tips',
-                'type' => 'Seasonal',
-                'suggested_date' => date('Y-m-d', strtotime('+7 days')),
-                'priority' => 'high',
-            ],
-            [
-                'keyword' => 'content marketing trends',
-                'type' => 'Trending',
-                'suggested_date' => date('Y-m-d', strtotime('+14 days')),
+        // Get top performing keywords from rank tracker if available
+        $rankTable = $wpdb->prefix . 'sseo_ai_tracked_keywords';
+        $historyTable = $wpdb->prefix . 'sseo_ai_rank_history';
+        $tableExists = $wpdb->get_var("SHOW TABLES LIKE '{$rankTable}'") === $rankTable;
+        
+        if ($tableExists) {
+            // Get keywords that improved in ranking recently (opportunity to create more content)
+            $improvingKeywords = $wpdb->get_results("
+                SELECT tk.keyword, tk.url, MIN(rh.position) as best_position,
+                       COUNT(rh.id) as check_count
+                FROM {$rankTable} tk
+                LEFT JOIN {$historyTable} rh ON tk.id = rh.keyword_id
+                WHERE rh.created_at > DATE_SUB(NOW(), INTERVAL 14 DAY)
+                GROUP BY tk.id
+                HAVING best_position <= 20 AND check_count >= 2
+                ORDER BY best_position ASC
+                LIMIT 5
+            ");
+            
+            foreach ($improvingKeywords as $kw) {
+                $opportunities[] = [
+                    'keyword' => $kw->keyword,
+                    'type' => 'Improving Rank',
+                    'suggested_date' => date('Y-m-d', strtotime('+7 days')),
+                    'priority' => $kw->best_position <= 10 ? 'high' : 'medium',
+                ];
+            }
+        }
+        
+        // Get content gaps - popular tags/categories with few posts
+        $popularTerms = $wpdb->get_results("
+            SELECT t.name, t.slug, COUNT(p.ID) as post_count,
+                   tt.taxonomy
+            FROM {$wpdb->terms} t
+            JOIN {$wpdb->term_taxonomy} tt ON t.term_id = tt.term_id
+            JOIN {$wpdb->term_relationships} tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
+            JOIN {$wpdb->posts} p ON tr.object_id = p.ID
+            WHERE p.post_status = 'publish'
+            AND p.post_type = 'post'
+            AND tt.taxonomy IN ('category', 'post_tag')
+            GROUP BY t.term_id
+            HAVING post_count >= 1 AND post_count <= 3
+            ORDER BY post_count ASC
+            LIMIT 5
+        ");
+        
+        foreach ($popularTerms as $term) {
+            $opportunities[] = [
+                'keyword' => $term->name,
+                'type' => 'Content Gap (' . ucfirst($term->taxonomy) . ')',
+                'suggested_date' => date('Y-m-d', strtotime('+'.rand(3,14).' days')),
                 'priority' => 'medium',
-            ],
-        ];
+            ];
+        }
+        
+        return $opportunities;
     }
     
     /**

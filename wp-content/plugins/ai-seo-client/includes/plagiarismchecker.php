@@ -367,7 +367,7 @@ Return JSON only (no markdown):
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/originality/check',
+                    path: 'sseo-ai/v1/originality/check',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(res) {

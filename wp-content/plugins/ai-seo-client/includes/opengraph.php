@@ -552,7 +552,7 @@ class OpenGraph
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/og/generate',
+                    path: 'sseo-ai/v1/og/generate',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(result) {

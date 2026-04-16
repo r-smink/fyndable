@@ -110,7 +110,7 @@ class LSIKeywords
                 btn.prop('disabled', true);
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/lsi-suggest',
+                    path: 'sseo-ai/v1/lsi-suggest',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {

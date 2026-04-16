@@ -215,7 +215,7 @@ class SEORevisions
                 }
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/restore-revision',
+                    path: 'sseo-ai/v1/restore-revision',
                     method: 'POST',
                     data: { revision_id: revId }
                 }).then(function() {

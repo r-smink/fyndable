@@ -72,7 +72,7 @@ class SmartTags
                 btn.prop('disabled', true).text('<?php esc_html_e('Analyzing...', 'ai-seo-client'); ?>');
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/generate-tags',
+                    path: 'sseo-ai/v1/generate-tags',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {

@@ -621,13 +621,33 @@ class TechnicalSEOAuditor
             $urls = [];
             $issues = [];
             
+            // Register namespace if present (sitemapindex usually has xmlns)
+            $namespaces = $sitemap->getDocNamespaces();
+            if (!empty($namespaces)) {
+                foreach ($namespaces as $prefix => $namespace) {
+                    $sitemap->registerXPathNamespace($prefix ?: 'sm', $namespace);
+                }
+            }
+            
             // Check if this is a sitemap index (contains sub-sitemaps)
-            $isSitemapIndex = isset($sitemap->sitemap) || strpos($xml, 'sitemapindex') !== false;
+            $isSitemapIndex = strpos($xml, 'sitemapindex') !== false || isset($sitemap->sitemap) || !empty($sitemap->xpath('//sm:sitemap'));
             
             if ($isSitemapIndex) {
                 // Parse sitemap index and fetch sub-sitemaps
-                foreach ($sitemap->sitemap as $subSitemap) {
+                // Try with namespace first
+                $subSitemaps = !empty($namespaces) ? $sitemap->xpath('//sm:sitemap') : [];
+                if (empty($subSitemaps)) {
+                    $subSitemaps = $sitemap->sitemap;
+                }
+                
+                $subCount = count($subSitemaps);
+                error_log('SSEO AI Sitemap: Found ' . $subCount . ' sub-sitemaps in index: ' . $sitemapUrl);
+                
+                foreach ($subSitemaps as $subSitemap) {
                     $subSitemapUrl = (string)$subSitemap->loc;
+                    if (empty($subSitemapUrl)) {
+                        continue;
+                    }
                     $subUrls = $this->parseSubSitemap($subSitemapUrl);
                     
                     if (is_array($subUrls)) {
@@ -640,10 +660,25 @@ class TechnicalSEOAuditor
                     }
                 }
             } else {
-                // Regular sitemap with URLs directly
-                foreach ($sitemap->url as $url) {
-                    $loc = (string)$url->loc;
-                    $urls[] = $loc;
+                // Regular sitemap with URLs directly - also handle namespaces
+                if (!empty($namespaces)) {
+                    $urlNodes = $sitemap->xpath('//sm:url');
+                    foreach ($urlNodes as $urlNode) {
+                        $loc = (string)$urlNode->loc;
+                        if (!empty($loc)) {
+                            $urls[] = $loc;
+                        }
+                    }
+                }
+                
+                // Fallback: direct access
+                if (empty($urls)) {
+                    foreach ($sitemap->url as $url) {
+                        $loc = (string)$url->loc;
+                        if (!empty($loc)) {
+                            $urls[] = $loc;
+                        }
+                    }
                 }
             }
             
@@ -671,12 +706,21 @@ class TechnicalSEOAuditor
                 AND post_type IN ('post', 'page')
             ");
             
-            if ($publishedPosts > $totalUrls) {
-                $issues[] = [
-                    'type' => 'Missing URLs',
-                    'description' => ($publishedPosts - $totalUrls) . ' published pages not in sitemap',
-                ];
+            // Check for missing pages (only warn if significant difference >20%)
+            if ($publishedPosts > 0 && $totalUrls > 0) {
+                $missingCount = $publishedPosts - $totalUrls;
+                $missingPercent = ($missingCount / $publishedPosts) * 100;
+                
+                // Only report as issue if more than 20% missing (accounts for excluded post types, taxonomies, etc.)
+                if ($missingPercent > 20) {
+                    $issues[] = [
+                        'type' => 'Missing URLs',
+                        'description' => sprintf('%d published posts/pages not in sitemap (%.1f%%)', $missingCount, $missingPercent),
+                    ];
+                }
             }
+            
+            error_log('SSEO AI Sitemap: Total URLs collected from sitemap: ' . $totalUrls . ' (issues: ' . $invalidUrls . ')');
             
             return [
                 'url' => $sitemapUrl,
@@ -709,21 +753,61 @@ class TechnicalSEOAuditor
         $response = wp_remote_get($url, ['timeout' => 30]);
         
         if (is_wp_error($response)) {
+            error_log('SSEO AI Sitemap: Failed to fetch sub-sitemap: ' . $url . ' - ' . $response->get_error_message());
+            return null;
+        }
+        
+        $responseCode = wp_remote_retrieve_response_code($response);
+        if ($responseCode !== 200) {
+            error_log('SSEO AI Sitemap: Sub-sitemap returned HTTP ' . $responseCode . ': ' . $url);
             return null;
         }
         
         $xml = wp_remote_retrieve_body($response);
         
+        if (empty($xml)) {
+            error_log('SSEO AI Sitemap: Empty response from sub-sitemap: ' . $url);
+            return null;
+        }
+        
         try {
             $sitemap = new \SimpleXMLElement($xml);
             $urls = [];
             
-            foreach ($sitemap->url as $urlNode) {
-                $urls[] = (string)$urlNode->loc;
+            // Register namespace if present (Yoast SEO uses xmlns)
+            $namespaces = $sitemap->getDocNamespaces();
+            if (!empty($namespaces)) {
+                foreach ($namespaces as $prefix => $namespace) {
+                    $sitemap->registerXPathNamespace($prefix ?: 'sm', $namespace);
+                }
             }
+            
+            // Try to get URLs with namespace first, then without
+            if (!empty($namespaces)) {
+                $urlNodes = $sitemap->xpath('//sm:url');
+                foreach ($urlNodes as $urlNode) {
+                    $loc = (string)$urlNode->loc;
+                    if (!empty($loc)) {
+                        $urls[] = $loc;
+                    }
+                }
+            }
+            
+            // Fallback: direct access if xpath didn't work or no namespaces
+            if (empty($urls)) {
+                foreach ($sitemap->url as $urlNode) {
+                    $loc = (string)$urlNode->loc;
+                    if (!empty($loc)) {
+                        $urls[] = $loc;
+                    }
+                }
+            }
+            
+            error_log('SSEO AI Sitemap: Parsed ' . count($urls) . ' URLs from sub-sitemap: ' . $url);
             
             return $urls;
         } catch (\Exception $e) {
+            error_log('SSEO AI Sitemap: Parse error for sub-sitemap ' . $url . ': ' . $e->getMessage());
             return null;
         }
     }

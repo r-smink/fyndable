@@ -54,6 +54,11 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_provider', ['default' => 'dataforseo']);
         
+        // Image Generation API settings
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_provider', ['default' => '']);
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_key');
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_model', ['default' => 'dall-e-3']);
+        
         // Usage limits per tier
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_api_calls', ['default' => 50]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_api_calls', ['default' => 200]);
@@ -111,6 +116,30 @@ class SaaSSettings
     public function getSerpApiProvider(): string
     {
         return get_option('ai_seo_saas_serp_api_provider', 'dataforseo');
+    }
+    
+    /**
+     * Get Image API provider
+     */
+    public function getImageApiProvider(): string
+    {
+        return get_option('ai_seo_saas_image_api_provider', '');
+    }
+    
+    /**
+     * Get Image API key
+     */
+    public function getImageApiKey(): string
+    {
+        return get_option('ai_seo_saas_image_api_key', '');
+    }
+    
+    /**
+     * Get Image API model
+     */
+    public function getImageApiModel(): string
+    {
+        return get_option('ai_seo_saas_image_api_model', 'dall-e-3');
     }
     
     /**
@@ -215,6 +244,48 @@ class SaaSSettings
                                 <option value="serpapi" <?php selected($this->getSerpApiProvider(), 'serpapi'); ?>>SerpApi</option>
                                 <option value="seranking" <?php selected($this->getSerpApiProvider(), 'seranking'); ?>>SE Ranking</option>
                             </select>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2><?php esc_html_e('AI Image Generation API', 'sseo-ai-saas'); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="image_api_provider"><?php esc_html_e('Image API Provider', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <select name="ai_seo_saas_image_api_provider" id="image_api_provider">
+                                <option value=""><?php esc_html_e('-- Disabled --', 'sseo-ai-saas'); ?></option>
+                                <option value="openai" <?php selected($this->getImageApiProvider(), 'openai'); ?>><?php esc_html_e('OpenAI DALL-E 3', 'sseo-ai-saas'); ?></option>
+                                <option value="stability" <?php selected($this->getImageApiProvider(), 'stability'); ?>><?php esc_html_e('Stability AI (Stable Diffusion)', 'sseo-ai-saas'); ?></option>
+                            </select>
+                            <p class="description">
+                                <?php esc_html_e('Choose AI image generation service for all tenants', 'sseo-ai-saas'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="image_api_key"><?php esc_html_e('Image API Key', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="ai_seo_saas_image_api_key" id="image_api_key" 
+                                   value="<?php echo esc_attr($this->getImageApiKey()); ?>" class="regular-text">
+                            <p class="description">
+                                <?php esc_html_e('Get your key:', 'sseo-ai-saas'); ?>
+                                <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI</a> | 
+                                <a href="https://platform.stability.ai/account/keys" target="_blank">Stability AI</a>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="image_api_model"><?php esc_html_e('Default Model', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <select name="ai_seo_saas_image_api_model" id="image_api_model">
+                                <option value="dall-e-3" <?php selected($this->getImageApiModel(), 'dall-e-3'); ?>><?php esc_html_e('DALL-E 3 Standard (1024x1024)', 'sseo-ai-saas'); ?></option>
+                                <option value="dall-e-3-hd" <?php selected($this->getImageApiModel(), 'dall-e-3-hd'); ?>><?php esc_html_e('DALL-E 3 HD (1024x1024)', 'sseo-ai-saas'); ?></option>
+                                <option value="stable-diffusion-xl" <?php selected($this->getImageApiModel(), 'stable-diffusion-xl'); ?>><?php esc_html_e('Stable Diffusion XL 1.0', 'sseo-ai-saas'); ?></option>
+                            </select>
+                            <p class="description">
+                                <?php esc_html_e('Costs: DALL-E 3 Standard ~$0.04/image, HD ~$0.08/image, SDXL ~$0.01/image', 'sseo-ai-saas'); ?>
+                            </p>
                         </td>
                     </tr>
                 </table>

@@ -30,6 +30,9 @@ class RankTracker
         // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
 
+        // Create/update tables on every load (ensures upgrades are applied)
+        $this->createTables();
+
         // Daily cron for rank checking
         if (!wp_next_scheduled('sseo_ai_rank_check_cron')) {
             wp_schedule_event(time(), 'daily', 'sseo_ai_rank_check_cron');

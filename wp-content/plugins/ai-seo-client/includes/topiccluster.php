@@ -83,6 +83,12 @@ class TopicCluster
             'callback' => [$this, 'restDeleteCluster'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
+
+        register_rest_route('sseo-ai/v1', '/clusters/(?P<id>\d+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetCluster'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
     }
 
     /**
@@ -303,6 +309,20 @@ PROMPT;
         return ['success' => true];
     }
 
+    public function restGetCluster(\WP_REST_Request $request): array|\WP_Error
+    {
+        $id = (int) $request->get_param('id');
+        $clusters = get_option('aiseo_topic_clusters', []);
+        
+        foreach ($clusters as $cluster) {
+            if (($cluster['id'] ?? 0) === $id) {
+                return $cluster;
+            }
+        }
+        
+        return new \WP_Error('not_found', 'Cluster not found', ['status' => 404]);
+    }
+
     // REST handlers
     public function restGenerateCluster(\WP_REST_Request $request): array|\WP_Error
     {
@@ -441,13 +461,16 @@ PROMPT;
                         $('#tc-saved-list').html('<p style="color:#999;"><?php echo esc_js(__('No saved clusters yet.', 'ai-seo-client')); ?></p>');
                         return;
                     }
-                    var html = '<table class="wp-list-table widefat striped" style="font-size:13px;"><thead><tr><th>Topic</th><th>Pages</th><th>Clusters</th><th>Date</th><th></th></tr></thead><tbody>';
+                    var html = '<table class="wp-list-table widefat striped" style="font-size:13px;"><thead><tr><th>Topic</th><th>Pages</th><th>Clusters</th><th>Date</th><th style="width:120px;"></th></tr></thead><tbody>';
                     list.forEach(function(c) {
                         html += '<tr><td><strong>' + (c.topic || '—') + '</strong></td>' +
                             '<td>' + (c.total_pages || '—') + '</td>' +
                             '<td>' + ((c.clusters||[]).length) + '</td>' +
                             '<td>' + (c.saved_at || c.generated_at || '—') + '</td>' +
-                            '<td><button class="button button-small tc-delete-saved" data-id="' + c.id + '">Delete</button></td></tr>';
+                            '<td>' +
+                            '<button class="button button-small tc-view-saved" data-id="' + c.id + '" style="margin-right:5px;">View</button>' +
+                            '<button class="button button-small tc-delete-saved" data-id="' + c.id + '">Delete</button>' +
+                            '</td></tr>';
                     });
                     html += '</tbody></table>';
                     $('#tc-saved-list').html(html);
@@ -459,6 +482,23 @@ PROMPT;
                 var id = $(this).data('id');
                 if (!confirm('Delete?')) return;
                 wp.apiFetch({ path: '/sseo-ai/v1/clusters/' + id, method: 'DELETE' }).then(loadSaved);
+            });
+
+            // View saved cluster
+            $(document).on('click', '.tc-view-saved', function() {
+                var id = $(this).data('id');
+                wp.apiFetch({ path: '/sseo-ai/v1/clusters/' + id }).then(function(data) {
+                    currentCluster = data;
+                    $('#tc-topic').val(data.topic || '');
+                    renderCluster(data);
+                    $('#tc-result').show();
+                    // Scroll to result
+                    $('html, body').animate({
+                        scrollTop: $('#tc-result').offset().top - 100
+                    }, 500);
+                }).catch(function(err) {
+                    alert(err.message || 'Failed to load cluster');
+                });
             });
 
             // Generate

@@ -184,10 +184,18 @@ class LicenseAPI
             ], 400);
         }
 
+        // Get SaaS settings instance
+        $settings = new \SSEOAISaaS\SaaSSettings();
+        
         return new \WP_REST_Response([
             'success' => true,
             'valid' => true,
             'license' => $result,
+            'image_api' => [
+                'provider' => $settings->getImageApiProvider(),
+                'key' => $settings->getImageApiKey(),
+                'model' => $settings->getImageApiModel(),
+            ],
         ], 200);
     }
 
@@ -231,6 +239,9 @@ class LicenseAPI
         // Get white-label settings to sync to client
         $whiteLabelData = $this->getWhiteLabelData($result['tenant_key']);
         
+        // Get SaaS settings for image API
+        $settings = new \SSEOAISaaS\SaaSSettings();
+        
         return new \WP_REST_Response([
             'success' => true,
             'activated' => true,
@@ -242,6 +253,11 @@ class LicenseAPI
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
+            'image_api' => [
+                'provider' => $settings->getImageApiProvider(),
+                'key' => $settings->getImageApiKey(),
+                'model' => $settings->getImageApiModel(),
+            ],
         ], 200);
     }
     
