@@ -81,6 +81,16 @@ class LicenseAdmin
             'sseo-ai-usage-reports',
             [$this, 'renderUsageReports']
         );
+
+        // License Features (hidden from menu, accessed via license edit)
+        add_submenu_page(
+            null, // Hidden from menu
+            __('License Features', 'sseo-ai-saas'),
+            __('License Features', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-license-features',
+            [$this, 'renderLicenseFeaturesPage']
+        );
     }
     
     /**
@@ -353,7 +363,9 @@ class LicenseAdmin
                                     <option value="professional"><?php esc_html_e('Professional - €199/month', 'sseo-ai-saas'); ?></option>
                                     <option value="business"><?php esc_html_e('Business - €299/month', 'sseo-ai-saas'); ?></option>
                                     <option value="agency"><?php esc_html_e('Agency - €499/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="dev"><?php esc_html_e('DEV - All Features (Internal Use Only)', 'sseo-ai-saas'); ?></option>
                                 </select>
+                                <p class="description"><?php esc_html_e('DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
@@ -407,6 +419,48 @@ class LicenseAdmin
                     
                     <?php submit_button(__('Generate License Keys', 'sseo-ai-saas'), 'primary', 'generate_license'); ?>
                 </form>
+                
+                <script>
+                jQuery(document).ready(function($) {
+                    var tierDefaults = <?php echo json_encode([
+                        'rate_limits' => [
+                            'free' => LicenseKeyGenerator::getDefaultRateLimit('free'),
+                            'starter' => LicenseKeyGenerator::getDefaultRateLimit('starter'),
+                            'trial' => LicenseKeyGenerator::getDefaultRateLimit('trial'),
+                            'professional' => LicenseKeyGenerator::getDefaultRateLimit('professional'),
+                            'business' => LicenseKeyGenerator::getDefaultRateLimit('business'),
+                            'agency' => LicenseKeyGenerator::getDefaultRateLimit('agency'),
+                            'dev' => LicenseKeyGenerator::getDefaultRateLimit('dev'),
+                        ],
+                        'api_limits' => [
+                            'free' => LicenseKeyGenerator::getDefaultApiLimit('free'),
+                            'starter' => LicenseKeyGenerator::getDefaultApiLimit('starter'),
+                            'trial' => LicenseKeyGenerator::getDefaultApiLimit('trial'),
+                            'professional' => LicenseKeyGenerator::getDefaultApiLimit('professional'),
+                            'business' => LicenseKeyGenerator::getDefaultApiLimit('business'),
+                            'agency' => LicenseKeyGenerator::getDefaultApiLimit('agency'),
+                            'dev' => LicenseKeyGenerator::getDefaultApiLimit('dev'),
+                        ],
+                        'max_sites' => [
+                            'free' => 1, 'starter' => 1, 'trial' => 3,
+                            'professional' => 5, 'business' => 15, 'agency' => 50, 'dev' => 100,
+                        ],
+                    ]); ?>;
+                    
+                    $('#license_tier').on('change', function() {
+                        var tier = $(this).val();
+                        if (tierDefaults.rate_limits[tier]) {
+                            $('#rate_limit').val(tierDefaults.rate_limits[tier]);
+                        }
+                        if (tierDefaults.api_limits[tier]) {
+                            $('#api_calls_limit').val(tierDefaults.api_limits[tier]);
+                        }
+                        if (tierDefaults.max_sites[tier]) {
+                            $('#max_sites').val(tierDefaults.max_sites[tier]);
+                        }
+                    }).trigger('change');
+                });
+                </script>
             </div>
         </div>
         <?php
@@ -516,6 +570,11 @@ class LicenseAdmin
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
                         <td>
                             <?php if (in_array($license['status'], ['active', 'used'], true)): ?>
+                                <a href="<?php echo admin_url('admin.php?page=sseo-ai-license-features&license=' . urlencode($license['license_key'])); ?>" 
+                                   class="button button-small" 
+                                   style="margin-right:5px;background:#f0f9ff;border-color:#0ea5e9;color:#0369a1;">
+                                    <?php esc_html_e('Manage Features', 'sseo-ai-saas'); ?>
+                                </a>
                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action'); ?>" 
                                    class="button button-small" 
                                    onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license? This will also suspend the associated tenant.', 'sseo-ai-saas'); ?>')">
@@ -666,5 +725,201 @@ class LicenseAdmin
         header('Content-Disposition: attachment; filename=licenses-' . date('Y-m-d') . '.csv');
         echo $csv;
         exit;
+    }
+
+    /**
+     * Render license features management page
+     */
+    public function renderLicenseFeaturesPage(): void
+    {
+        $licenseKey = sanitize_text_field($_GET['license'] ?? '');
+        if (empty($licenseKey)) {
+            wp_die(__('License key required', 'sseo-ai-saas'));
+        }
+
+        $license = $this->licenseGenerator->getLicense($licenseKey);
+        if (!$license) {
+            wp_die(__('License not found', 'sseo-ai-saas'));
+        }
+
+        $featureManager = new LicenseFeatureManager($this->tenants, $this->licenseGenerator);
+        $featureData = $featureManager->getFeatureToggleData($licenseKey);
+        
+        // Get tier features for reference
+        $tierFeatures = $featureManager->getFeaturesForTier($license['tier'] ?? 'starter');
+        
+        ?>
+        <div class="wrap sseo-ai-admin">
+            <h1><?php echo esc_html(sprintf(__('Manage Features for License: %s', 'sseo-ai-saas'), substr($licenseKey, 0, 20) . '...')); ?></h1>
+            
+            <div class="sseo-ai-notice info">
+                <p><strong><?php esc_html_e('Tier:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(ucfirst($license['tier'] ?? 'starter')); ?></p>
+                <p><?php esc_html_e('Features with default tier access are pre-enabled. You can override these to enable/disable individual features.', 'sseo-ai-saas'); ?></p>
+            </div>
+
+            <div id="feature-toggle-container">
+                <!-- Loaded via JavaScript -->
+                <p><?php esc_html_e('Loading features...', 'sseo-ai-saas'); ?></p>
+            </div>
+
+            <script>
+            jQuery(document).ready(function($) {
+                var licenseKey = <?php echo json_encode($licenseKey); ?>;
+                
+                // Load feature data
+                wp.apiFetch({
+                    path: 'ai-seo-saas/v1/license/features?license_key=' + encodeURIComponent(licenseKey),
+                    method: 'GET'
+                }).then(function(response) {
+                    if (response.success && response.data) {
+                        renderFeatureToggleUI(response.data);
+                    } else {
+                        $('#feature-toggle-container').html('<p><?php esc_html_e('Failed to load features', 'sseo-ai-saas'); ?></p>');
+                    }
+                }).catch(function(error) {
+                    $('#feature-toggle-container').html('<p><?php esc_html_e('Error loading features: ', 'sseo-ai-saas'); ?>' + (error.message || 'Unknown error') + '</p>');
+                });
+                
+                function renderFeatureToggleUI(data) {
+                    var html = '<div class="feature-categories">';
+                    
+                    Object.keys(data.categories).forEach(function(category) {
+                        html += '<div class="feature-category">' +
+                            '<h3 class="category-title">' + escapeHtml(category) + '</h3>' +
+                            '<table class="wp-list-table widefat striped">' +
+                            '<thead><tr>' +
+                            '<th style="width:40px;">Enable</th>' +
+                            '<th>Feature</th>' +
+                            '<th style="width:120px;">Default Tier</th>' +
+                            '<th style="width:100px;">Status</th>' +
+                            '</tr></thead><tbody>';
+                        
+                        Object.keys(data.categories[category]).forEach(function(featureKey) {
+                            var feature = data.categories[category][featureKey];
+                            var isChecked = feature.enabled ? 'checked' : '';
+                            var statusClass = feature.overridden ? 'overridden' : (feature.in_tier ? 'in-tier' : 'not-in-tier');
+                            var statusText = feature.overridden ? '<?php esc_html_e('Overridden', 'sseo-ai-saas'); ?>' : 
+                                            (feature.in_tier ? '<?php esc_html_e('From Tier', 'sseo-ai-saas'); ?>' : '<?php esc_html_e('Not Included', 'sseo-ai-saas'); ?>');
+                            
+                            html += '<tr>' +
+                                '<td style="text-align:center;">' +
+                                '<input type="checkbox" class="feature-toggle" ' +
+                                'data-feature="' + escapeHtml(featureKey) + '" ' + isChecked + '>' +
+                                '</td>' +
+                                '<td><strong>' + escapeHtml(feature.name) + '</strong></td>' +
+                                '<td><code>' + escapeHtml(ucfirst(feature.default_tier)) + '</code></td>' +
+                                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                                '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                    });
+                    
+                    html += '</div>' +
+                        '<div style="margin-top:20px;padding:15px;background:#f0f9ff;border-left:4px solid #0ea5e9;">' +
+                        '<p><strong><?php esc_html_e('Legend:', 'sseo-ai-saas'); ?></strong></p>' +
+                        '<ul>' +
+                        '<li><span class="status-badge from-tier"><?php esc_html_e('From Tier', 'sseo-ai-saas'); ?></span> - <?php esc_html_e('Enabled by default based on license tier', 'sseo-ai-saas'); ?></li>' +
+                        '<li><span class="status-badge overridden"><?php esc_html_e('Overridden', 'sseo-ai-saas'); ?></span> - <?php esc_html_e('Manually enabled/disabled by admin', 'sseo-ai-saas'); ?></li>' +
+                        '<li><span class="status-badge not-in-tier"><?php esc_html_e('Not Included', 'sseo-ai-saas'); ?></span> - <?php esc_html_e('Not in this tier, can be manually enabled', 'sseo-ai-saas'); ?></li>' +
+                        '</ul></div>' +
+                        '<div style="margin-top:20px;">' +
+                        '<button type="button" id="save-features" class="button button-primary"><?php esc_html_e('Save Feature Overrides', 'sseo-ai-saas'); ?></button>' +
+                        '<span id="save-status" style="margin-left:15px;display:none;"></span>' +
+                        '</div>';
+                    
+                    $('#feature-toggle-container').html(html);
+                    
+                    // Bind save button
+                    $('#save-features').on('click', function() {
+                        var features = {};
+                        $('.feature-toggle').each(function() {
+                            var key = $(this).data('feature');
+                            features[key] = $(this).is(':checked');
+                        });
+                        
+                        $('#save-features').prop('disabled', true).text('<?php esc_html_e('Saving...', 'sseo-ai-saas'); ?>');
+                        
+                        wp.apiFetch({
+                            path: 'ai-seo-saas/v1/license/features',
+                            method: 'POST',
+                            data: {
+                                license_key: licenseKey,
+                                features: features
+                            }
+                        }).then(function(response) {
+                            if (response.success) {
+                                $('#save-status').text('✓ <?php esc_html_e('Saved successfully!', 'sseo-ai-saas'); ?>').css('color', '#16a34a').show();
+                                setTimeout(function() { $('#save-status').fadeOut(); }, 3000);
+                            } else {
+                                $('#save-status').text('❌ ' + (response.message || '<?php esc_html_e('Save failed', 'sseo-ai-saas'); ?>')).css('color', '#dc2626').show();
+                            }
+                            $('#save-features').prop('disabled', false).text('<?php esc_html_e('Save Feature Overrides', 'sseo-ai-saas'); ?>');
+                        }).catch(function(error) {
+                            $('#save-status').text('❌ <?php esc_html_e('Error: ', 'sseo-ai-saas'); ?>' + (error.message || '<?php esc_html_e('Unknown error', 'sseo-ai-saas'); ?>')).css('color', '#dc2626').show();
+                            $('#save-features').prop('disabled', false).text('<?php esc_html_e('Save Feature Overrides', 'sseo-ai-saas'); ?>');
+                        });
+                    });
+                }
+                
+                function escapeHtml(text) {
+                    var div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+                
+                function ucfirst(str) {
+                    return str.charAt(0).toUpperCase() + str.slice(1);
+                }
+            });
+            </script>
+
+            <style>
+            .sseo-ai-admin .feature-category {
+                margin-bottom: 30px;
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 15px;
+            }
+            .sseo-ai-admin .category-title {
+                margin-top: 0;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #2271b1;
+                color: #1d2327;
+                font-size: 16px;
+            }
+            .sseo-ai-admin .status-badge {
+                display: inline-block;
+                padding: 3px 8px;
+                border-radius: 3px;
+                font-size: 11px;
+                font-weight: 500;
+            }
+            .sseo-ai-admin .status-badge.in-tier {
+                background: #d1fae5;
+                color: #065f46;
+            }
+            .sseo-ai-admin .status-badge.overridden {
+                background: #fef3c7;
+                color: #92400e;
+            }
+            .sseo-ai-admin .status-badge.not-in-tier {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+            .sseo-ai-notice {
+                padding: 12px 15px;
+                margin: 20px 0;
+                border-left: 4px solid #2271b1;
+                background: #f0f6fc;
+            }
+            .sseo-ai-notice.info {
+                border-left-color: #2271b1;
+            }
+            </style>
+        </div>
+        <?php
     }
 }

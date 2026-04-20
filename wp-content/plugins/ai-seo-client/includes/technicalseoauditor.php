@@ -58,10 +58,118 @@ class TechnicalSEOAuditor
         
         ?>
         <style>
-            .sseo-ai-dashboard-card + .sseo-ai-dashboard-card { margin-top: 30px; }
-            .sseo-ai-dashboard-card:first-of-type { margin-bottom: 30px; }
-            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            /* Remove WordPress #wpcontent padding */
+            #wpcontent { padding-left: 0 !important; }
+            
+            /* Dashboard Container */
+            .wrap.sseo-ai-modern { max-width: 1400px; }
+            
+            /* Header Styling */
+            .sseo-ai-header {
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+                color: #fff;
+                padding: 24px 30px;
+                margin: -20px -20px 30px -20px;
+                border-radius: 0;
+            }
+            .sseo-ai-header h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 600;
+                color: #fff;
+            }
+            
+            /* Content area */
+            .sseo-ai-content {
+                padding: 0 10px;
+            }
+            
+            /* Card Styling */
+            .sseo-ai-dashboard-card {
+                background: #fff;
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+                padding: 24px;
+                margin-bottom: 24px;
+            }
+            .sseo-ai-dashboard-card h2 {
+                margin: 0 0 20px 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: #1e293b;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #3b82f6;
+            }
+            .sseo-ai-dashboard-card h3 {
+                margin: 0 0 16px 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #334155;
+            }
+            
+            /* Spacing */
+            .sseo-ai-dashboard-card + .sseo-ai-dashboard-card { margin-top: 24px; }
+            
+            /* Grid Layouts */
+            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
             @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+            
+            .sseo-top-section { 
+                display: grid; 
+                grid-template-columns: 1fr 2fr; 
+                gap: 24px; 
+                margin-bottom: 24px; 
+                align-items: start;
+            }
+            @media (max-width: 1200px) { .sseo-top-section { grid-template-columns: 1fr; } }
+            
+            /* Score Cards */
+            .audit-scores-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+            @media (max-width: 768px) { .audit-scores-grid { grid-template-columns: repeat(2, 1fr); } }
+            
+            .score-card { 
+                text-align: center; 
+                padding: 24px 16px; 
+                background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
+                border-radius: 10px; 
+                border: 1px solid #cbd5e1;
+            }
+            .score-value { font-size: 40px; font-weight: 800; line-height: 1; }
+            .score-label { 
+                margin-top: 10px; 
+                font-size: 12px; 
+                font-weight: 600; 
+                color: #64748b; 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+            }
+            
+            /* Tables */
+            .sseo-ai-dashboard-card .wp-list-table {
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .sseo-ai-dashboard-card .wp-list-table th {
+                background: #f8fafc;
+                font-weight: 600;
+                color: #475569;
+                padding: 12px;
+            }
+            .sseo-ai-dashboard-card .wp-list-table td {
+                padding: 12px;
+                vertical-align: middle;
+            }
+            
+            /* Links */
+            .sseo-ai-dashboard-card a {
+                color: #2563eb;
+                text-decoration: none;
+            }
+            .sseo-ai-dashboard-card a:hover {
+                text-decoration: underline;
+            }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -69,53 +177,61 @@ class TechnicalSEOAuditor
             </div>
             
             <div class="sseo-ai-content">
-                <!-- Audit Overview -->
-                <div class="sseo-ai-dashboard-card" style="grid-column: 1 / -1;">
-                    <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
-                
-                <?php if ($lastAuditDate): ?>
-                <p>
-                    <strong><?php esc_html_e('Last Audit:', 'ai-seo-client'); ?></strong>
-                    <?php echo esc_html(human_time_diff(strtotime($lastAuditDate))); ?> ago
-                </p>
-                <?php endif; ?>
-                
-                <button type="button" class="button button-primary button-hero" onclick="sseoRunTechnicalAudit()">
-                    <?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>
-                </button>
-                
-                <?php if (!empty($lastAudit)): ?>
-                <div style="margin-top: 20px;">
-                    <h3><?php esc_html_e('Audit Score', 'ai-seo-client'); ?></h3>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['crawlability_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['crawlability_score'] ?? 0); ?>
+                <!-- Top Section: Overview + Scores side by side -->
+                <div class="sseo-top-section">
+                    <!-- Audit Overview -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
+                        
+                        <?php if ($lastAuditDate): ?>
+                        <p style="margin-bottom: 20px;">
+                            <strong><?php esc_html_e('Last Audit:', 'ai-seo-client'); ?></strong><br>
+                            <?php echo esc_html(human_time_diff(strtotime($lastAuditDate))); ?> ago
+                        </p>
+                        <?php endif; ?>
+                        
+                        <button type="button" class="button button-primary button-hero" onclick="sseoRunTechnicalAudit()" style="width: 100%;">
+                            <?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
+                    
+                    <!-- Audit Scores -->
+                    <?php if (!empty($lastAudit)): ?>
+                    <div class="sseo-ai-dashboard-card">
+                        <h3 style="margin: 0 0 25px 0; font-size: 18px; font-weight: 600; color: #1d2327;"><?php esc_html_e('Audit Scores', 'ai-seo-client'); ?></h3>
+                        <div class="audit-scores-grid">
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['crawlability_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['crawlability_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['performance_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['performance_score'] ?? 0); ?>
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['performance_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['performance_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('Performance', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('Performance', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['structure_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['structure_score'] ?? 0); ?>
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['structure_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['structure_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['sitemap_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['sitemap_score'] ?? 0); ?>
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['sitemap_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['sitemap_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('Sitemap Health', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('Sitemap Health', 'ai-seo-client'); ?></div>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <div class="sseo-ai-dashboard-card" style="display: flex; align-items: center; justify-content: center;">
+                        <p style="color: #64748b; font-style: italic;"><?php esc_html_e('Run an audit to see your scores', 'ai-seo-client'); ?></p>
+                    </div>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
-            </div>
             
             <div class="sseo-two-columns">
                 <!-- Left Column -->
@@ -456,6 +572,36 @@ class TechnicalSEOAuditor
         ];
         
         return $checks;
+    }
+    
+    /**
+     * Check if XML sitemap exists
+     */
+    private function checkSitemapExists(): bool
+    {
+        $sitemapUrls = [
+            home_url('/sitemap_index.xml'),
+            home_url('/sitemap.xml'),
+        ];
+        
+        foreach ($sitemapUrls as $url) {
+            $response = wp_remote_head($url, ['timeout' => 10]);
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check for redirect chains
+     */
+    private function checkRedirectChains(): array
+    {
+        // Placeholder - would check for redirect chains in practice
+        // For now, return empty array (no chains detected)
+        return [];
     }
     
     /**

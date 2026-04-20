@@ -2,6 +2,11 @@
 
 namespace SSEOAIClient;
 
+/**
+ * Google Search Console OAuth2 Handler
+ * 
+ * Manages OAuth2 authentication flow for Google Search Console API access.
+ */
 class GscOAuth
 {
     private Settings $settings;
@@ -9,6 +14,105 @@ class GscOAuth
     public function __construct(Settings $settings)
     {
         $this->settings = $settings;
+    }
+
+    /**
+     * Register REST routes for OAuth callback
+     */
+    public function register(): void
+    {
+        add_action('rest_api_init', [$this, 'registerRestRoutes']);
+    }
+
+    /**
+     * Register REST API endpoints
+     */
+    public function registerRestRoutes(): void
+    {
+        // OAuth callback endpoint
+        register_rest_route('sseo-ai/v1', '/gsc-callback', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restHandleCallback'],
+            'permission_callback' => '__return_true', // OAuth callback is public
+        ]);
+
+        // Disconnect endpoint
+        register_rest_route('sseo-ai/v1', '/gsc-disconnect', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restDisconnect'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
+        ]);
+
+        // Check connection status
+        register_rest_route('sseo-ai/v1', '/gsc-status', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetStatus'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
+        ]);
+    }
+
+    /**
+     * REST: Handle OAuth callback
+     */
+    public function restHandleCallback(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $code = $request->get_param('code');
+        $state = $request->get_param('state');
+        $error = $request->get_param('error');
+
+        // Verify nonce
+        if (!wp_verify_nonce($state, 'aiseo_gsc')) {
+            return new \WP_REST_Response(['error' => 'Invalid state parameter'], 403);
+        }
+
+        if ($error) {
+            return new \WP_REST_Response(['error' => sanitize_text_field($error)], 400);
+        }
+
+        if (!$code) {
+            return new \WP_REST_Response(['error' => 'Authorization code missing'], 400);
+        }
+
+        $result = $this->handleCallback(sanitize_text_field($code));
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response(['error' => $result->get_error_message()], 400);
+        }
+
+        // Redirect back to settings page with success
+        $redirectUrl = admin_url('admin.php?page=ai-seo-integrations&gsc_connected=1');
+        
+        wp_redirect($redirectUrl);
+        exit;
+    }
+
+    /**
+     * REST: Disconnect GSC
+     */
+    public function restDisconnect(\WP_REST_Request $request): array
+    {
+        delete_option('aiseoclient_gsc_tokens');
+        delete_option('sseo_ai_gsc_site_url');
+        
+        return ['success' => true, 'message' => __('Google Search Console disconnected.', 'ai-seo-client')];
+    }
+
+    /**
+     * REST: Get connection status
+     */
+    public function restGetStatus(\WP_REST_Request $request): array
+    {
+        $tokens = get_option('aiseoclient_gsc_tokens', []);
+        $clientId = $this->settings->get('gsc_client_id', '');
+        $clientSecret = $this->settings->get('gsc_client_secret', '');
+        $siteUrl = $this->settings->get('gsc_site_url', home_url());
+        
+        return [
+            'connected' => !empty($tokens['access_token']),
+            'has_credentials' => !empty($clientId) && !empty($clientSecret),
+            'site_url' => $siteUrl,
+            'auth_url' => $this->authUrl(),
+        ];
     }
 
     public function authUrl(): string
@@ -30,7 +134,7 @@ class GscOAuth
 
     public function callbackUrl(): string
     {
-        return rest_url('aiseoclient/v1/gsc-callback');
+        return rest_url('sseo-ai/v1/gsc-callback');
     }
 
     public function handleCallback(string $code): array|\WP_Error

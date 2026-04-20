@@ -13,11 +13,53 @@ class LicenseKeyGenerator
 {
     private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
     
+    /**
+     * Default rate limits (requests per hour) per tier
+     */
+    private const TIER_RATE_LIMITS = [
+        'free'         => 30,
+        'starter'      => 60,
+        'trial'        => 200,
+        'professional' => 200,
+        'business'     => 500,
+        'agency'       => 1000,
+        'dev'          => 10000,
+    ];
+    
+    /**
+     * Default API call limits (per month) per tier
+     */
+    private const TIER_API_LIMITS = [
+        'free'         => 500,
+        'starter'      => 1000,
+        'trial'        => 5000,
+        'professional' => 10000,
+        'business'     => 50000,
+        'agency'       => 200000,
+        'dev'          => 1000000,
+    ];
+    
     private TenantRepository $tenants;
     
     public function __construct(TenantRepository $tenants)
     {
         $this->tenants = $tenants;
+    }
+    
+    /**
+     * Get default rate limit for a tier
+     */
+    public static function getDefaultRateLimit(string $tier): int
+    {
+        return self::TIER_RATE_LIMITS[$tier] ?? 60;
+    }
+    
+    /**
+     * Get default API limit for a tier
+     */
+    public static function getDefaultApiLimit(string $tier): int
+    {
+        return self::TIER_API_LIMITS[$tier] ?? 1000;
     }
     
     /**
@@ -43,10 +85,11 @@ class LicenseKeyGenerator
         $licenseKey = $this->generateUniqueKey();
         
         $licenseType = $options['type'] ?? 'paid';
+        $tier = $options['tier'] ?? 'starter';
         
-        // Higher rate limits for trial/test licenses to allow proper testing
-        $defaultRateLimit = ($licenseType === 'trial' || $licenseType === 'test') ? 200 : 60;
-        $defaultApiLimit = ($licenseType === 'trial' || $licenseType === 'test') ? 5000 : 1000;
+        // Use tier-based defaults for rate limits
+        $defaultRateLimit = self::getDefaultRateLimit($tier);
+        $defaultApiLimit = self::getDefaultApiLimit($tier);
         
         $data = [
             'license_key' => $licenseKey,

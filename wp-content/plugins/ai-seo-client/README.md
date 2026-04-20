@@ -54,7 +54,7 @@
 | **WooCommerce SEO** | `woocommerceseo.php` | Product schema (price, availability, reviews), AI product description generator, product-specific meta optimization, category SEO settings. |
 | **Content Optimizer** | `contentoptimizer.php` | **MarketMuse/SurferSEO killer.** NLP topic model with 30-50 weighted terms per keyword. Real-time 0-100 content score. Term heatmap (covered/missing/low/overused). Structure scoring (word count, headings, images, paragraphs). AI suggestion engine for missing terms. SurferSEO-style editor page. |
 | **SERP Competitor Analysis** | `serpcompetitor.php` | **NeuronWriter competitor analysis.** Analyzes top-20 SERP results: competitor profiles, content type, word counts, strengths/weaknesses. Topic heatmap with coverage percentages. Winning patterns identification. Content gap finder. Compare your content vs competitors with competitive score. Deep AI gap analysis. |
-| **Topic Cluster Map** | `topiccluster.php` | **MarketMuse cluster analysis.** AI-generated pillar-cluster content architecture. Hub pages + supporting pages per subtopic. Internal linking strategy. Content calendar with weekly planning. Existing content audit against cluster map. Save/load multiple clusters. Topical authority score potential. |
+| **Topic Cluster Map** | `topiccluster.php` | **MarketMuse cluster analysis.** AI-generated pillar-cluster content architecture. Hub pages + supporting pages per subtopic. **One-click content generation** - generate AI content for any pillar/hub/supporting page directly from the cluster map. Internal linking strategy. Content calendar with weekly planning. Existing content audit against cluster map. Save/load multiple clusters. Topical authority score potential. |
 | **Personalized Keyword Difficulty** | `keyworddifficulty.php` | **MarketMuse personalized difficulty.** Unlike generic KD, analyzes difficulty relative to YOUR site: existing topical authority, content inventory, pillar page presence, internal linking strength. Batch analysis for up to 20 keywords. Recommendations based on your competitive position. |
 | **Content Brief Generator** | `contentbrief.php` | SEO content brief using SERP analysis + AI. Competitor headings, questions, entities, LSI keywords, outlines, difficulty estimation, content scoring against brief. |
 | **Keyword Explorer** | `keywordexplorer.php` | Keyword expansion via SERP title n-gram extraction. Jaccard similarity clustering. Stores expansions and clusters in wp_options. REST API for expand + cluster. |
@@ -96,13 +96,27 @@
 
 ## License Tiers
 
-| Tier | Includes |
-|------|----------|
-| **Free/Starter** | Core SEO (TruSEO, Sitemaps, OG, Canonical, Breadcrumbs, Dashboard, Hreflang, LSI, Permissions, PageSpeed, Readability Score, IndexNow) |
-| **Starter+** | + Link Assistant, Redirections, AI Image Alt, AI Content Rewriter |
-| **Professional** | + Schema, Local SEO, 404 Monitor, Rank Tracker, Reports, WooCommerce SEO, Content Optimizer, SERP Analysis, Topic Clusters, Keyword Difficulty, Content Brief, Keyword Explorer, GSC Dashboard |
-| **Business** | + AI Writer, AI Repurposer, Bulk Optimizer, Content Decay, Audit Service |
-| **Agency** | + SEO Revisions, Plagiarism Checker |
+| Tier | Includes | API Limit | For |
+|------|----------|-----------|-----|
+| **Free** | Core SEO features only | 100/month | Basic users |
+| **Starter** | Core + Link Assistant, Redirect Manager, Image Alt Generator, Content Rewriter | 500/month | Small sites |
+| **Professional** | Starter + Schema, Rank Tracker, Topic Clusters, Content Optimizer, GSC Dashboard, SERP Analysis | 2,000/month | SEO professionals |
+| **Business** | Professional + AI Content Writer, Bulk Optimizer, Content Decay Monitor, Repurposer | 10,000/month | Content teams |
+| **Agency** | Business + SEO Revisions, Plagiarism Checker, White Label | Unlimited | Marketing agencies |
+| **Trial** | All Professional features for 14 days | 2,000/month | Evaluation |
+| **DEV** | **ALL 50+ features + unlimited API** | **Unlimited** | **Internal development/testing only** |
+
+### Feature Availability Quick Reference
+
+| Feature Category | Free | Starter | Pro | Business | Agency | **DEV** |
+|-----------------|:----:|:-------:|:---:|:--------:|:------:|:------:|
+| **Core SEO** (TruSEO, Sitemaps, OG, Schema, etc.) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Content Tools** (Rewriter, Alt Generator) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Advanced SEO** (Rank Tracker, GSC, Clusters) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **AI Generation** (Writer, Repurposer, Bulk) | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Agency Tools** (Revisions, Plagiarism, White Label) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+
+> ⚠️ **DEV tier** is for internal development/testing only. Never distribute to clients. Set via SaaS dashboard or database: `sseo_ai_client_license_tier = 'dev'`
 
 ---
 
@@ -133,7 +147,9 @@ All endpoints use namespace `aiseoclient/v1`.
 - `POST /clusters/audit` — Audit existing content coverage
 - `POST /clusters/save` — Save cluster map
 - `GET /clusters/list` — List saved clusters
+- `GET /clusters/{id}` — Get single cluster by ID
 - `DELETE /clusters/{id}` — Delete cluster
+- `POST /clusters/generate-content` — **NEW** Generate AI content for cluster page and create WordPress draft
 
 ### Content Generation & Rewriting
 - `POST /write-article` — Generate full AI article
@@ -177,19 +193,28 @@ All endpoints use namespace `aiseoclient/v1`.
 
 ## Admin Pages
 
-| Menu Item | Slug | Module |
-|-----------|------|--------|
-| AI SEO → License | `ai-seo-client` | License activation/management |
-| AI SEO → Dashboard | `ai-seo-dashboard` | Site-wide SEO health overview |
-| AI SEO → Content Optimizer | `ai-seo-optimizer` | NLP content scoring editor |
-| AI SEO → SERP Analysis | `ai-seo-serp-analysis` | Competitor analysis + heatmap |
-| AI SEO → Topic Clusters | `ai-seo-topic-clusters` | Topical authority mapping |
-| AI SEO → Rank Tracker | `ai-seo-ranks` | Keyword position tracking |
-| AI SEO → Content Writer | `ai-seo-assistant-writer` | AI article generation |
-| AI SEO → Content Brief | `ai-seo-assistant-brief` | SEO brief generator |
-| AI SEO → Search Console | `ai-seo-gsc` | GSC performance dashboard |
-| AI SEO → Bulk Optimizer | `ai-seo-bulk` | Bulk meta generation |
-| AI SEO → SEO Reports | `ai-seo-reports` | CSV/PDF export |
+| Menu Item | Slug | Module | Min Tier | Icon |
+|-----------|------|--------|----------|------|
+| 🔗 Connection | `ai-seo-client` | License activation | Free | 🔗 |
+| 📊 Dashboard | `ai-seo-dashboard` | SEO health overview | Free | 📊 |
+| 📅 Content Calendar | `ai-seo-content-calendar` | Editorial calendar | Free | 📅 |
+| 🤖 AI Tools | `ai-seo-ai-tools` | AI tools overview | Free | 🤖 |
+| 🔗 Link Manager | `ai-seo-link-manager` | Smart Internal Linking | Free | 🔗 |
+| 🗺️ Sitemaps | `ai-seo-sitemaps` | XML sitemap management | Free | 🗺️ |
+| 🔌 Integrations | `ai-seo-integrations` | External services | Free | 🔌 |
+| 🎯 Topic Clusters | `ai-seo-topic-clusters` | Topical authority mapping | **Professional** | 🎯 |
+| 🔍 Site Audit | `ai-seo-site-audit` | Technical SEO audit | **Professional** | 🔍 |
+| 📈 Rank Tracker | `ai-seo-rank-tracker` | SERP position tracking | **Professional** | 📈 |
+| 📊 Search Console | `ai-seo-gsc` | GSC integration | **Professional** | 📊 |
+| ⚙️ Settings | `ai-seo-settings` | Plugin configuration | Free | ⚙️ |
+
+### Tier-Restricted Menu Behavior
+
+When a user tries to access a feature not included in their tier:
+1. They see a **beautiful gradient upgrade page** instead of an error
+2. The page shows what features they'll get by upgrading
+3. A clear CTA button redirects to the license/upgrade page
+4. Their current tier is displayed at the bottom
 
 ---
 

@@ -1,6 +1,29 @@
 /* SEO AI Client — Modern Admin Design System */
 
 /* ================================================
+   0. WP CONTENT PADDING FIX
+   ================================================ */
+/* Remove WordPress default #wpcontent padding on SSEO AI pages */
+/* Note: WordPress generates body classes with underscores and 'page_' prefix */
+body.toplevel_page_ai-seo-client #wpcontent,
+body.ai-seo-client_page_ai-seo-dashboard #wpcontent,
+body.ai-seo-client_page_ai-seo-content-calendar #wpcontent,
+body.ai-seo-client_page_ai-seo-ai-tools #wpcontent,
+body.ai-seo-client_page_ai-seo-link-manager #wpcontent,
+body.ai-seo-client_page_ai-seo-sitemaps #wpcontent,
+body.ai-seo-client_page_ai-seo-integrations #wpcontent,
+body.ai-seo-client_page_ai-seo-settings #wpcontent,
+body.ai-seo-client_page_ai-seo-gsc #wpcontent,
+body.ai-seo-client_page_ai-seo-topic-clusters #wpcontent,
+body.ai-seo-client_page_ai-seo-site-audit #wpcontent,
+body.ai-seo-client_page_ai-seo-rank-tracker #wpcontent,
+/* Additional selectors for alternative page slugs */
+body[class*="ai-seo"] #wpcontent,
+body[class*="aiseo"] #wpcontent {
+    padding-left: 0 !important;
+}
+
+/* ================================================
    1. VARIABLES & BASE
    ================================================ */
 :root {

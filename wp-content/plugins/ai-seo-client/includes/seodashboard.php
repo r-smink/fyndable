@@ -38,18 +38,32 @@ class SeoDashboard
      */
     public function getOverview(): array
     {
+        // Check cache first (5 minute transient)
+        $cacheKey = 'sseo_dashboard_overview_' . get_current_blog_id();
+        $cached = get_transient($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+
         $postTypes = get_post_types(['public' => true]);
         unset($postTypes['attachment']);
 
-        $posts = get_posts([
+        // Use WP_Query for better performance with meta queries
+        $query = new \WP_Query([
             'post_type' => array_values($postTypes),
             'post_status' => 'publish',
-            'posts_per_page' => 500,
+            'posts_per_page' => 100, // Reduced from 500 for performance
             'orderby' => 'date',
             'order' => 'DESC',
+            'fields' => 'ids', // Only get IDs for performance
+            'no_found_rows' => true, // Skip pagination calculation
+            'update_post_meta_cache' => true, // Prime meta cache
+            'update_post_term_cache' => false, // Don't need terms
         ]);
 
-        $total = count($posts);
+        $postIds = $query->posts;
+        $total = count($postIds);
+
         if ($total === 0) {
             return [
                 'score' => 0,
@@ -59,6 +73,9 @@ class SeoDashboard
                 'breakdown' => [],
             ];
         }
+
+        // Batch fetch all post meta in one query (much faster!)
+        update_meta_cache('post', $postIds);
 
         // Counters
         $withTitle = 0;
@@ -72,11 +89,46 @@ class SeoDashboard
         $issuesList = [];
         $quickWins = [];
 
-        foreach ($posts as $post) {
-            $postId = $post->ID;
+        // Get thumbnail IDs in one query
+        $thumbnailMap = [];
+        if (!empty($postIds)) {
+            global $wpdb;
+            $postIdsStr = implode(',', array_map('intval', $postIds));
+            $thumbnails = $wpdb->get_results(
+                "SELECT post_id, meta_value as thumb_id FROM {$wpdb->postmeta} 
+                 WHERE post_id IN ({$postIdsStr}) AND meta_key = '_thumbnail_id'",
+                OBJECT_K
+            );
+            foreach ($thumbnails as $pid => $row) {
+                $thumbnailMap[$pid] = $row->thumb_id;
+            }
+        }
+
+        // Get all attachment alt texts in one query
+        $altTexts = [];
+        if (!empty($thumbnailMap)) {
+            global $wpdb;
+            $thumbIds = array_map('intval', array_unique($thumbnailMap));
+            $thumbIdsStr = implode(',', $thumbIds);
+            $alts = $wpdb->get_results(
+                "SELECT post_id, meta_value as alt FROM {$wpdb->postmeta} 
+                 WHERE post_id IN ({$thumbIdsStr}) AND meta_key = '_wp_attachment_image_alt' AND meta_value != ''",
+                OBJECT_K
+            );
+            foreach ($alts as $tid => $row) {
+                $altTexts[$tid] = true;
+            }
+        }
+
+        foreach ($postIds as $postId) {
+            // Get post object (lightweight since we used 'fields' => 'ids')
+            $post = get_post($postId);
+            if (!$post) continue;
+
             $content = $post->post_content;
             $wordCount = str_word_count(wp_strip_all_tags($content));
 
+            // Now meta is cached, these are fast
             $seoTitle = get_post_meta($postId, '_sseo_ai_title', true);
             $seoDesc = get_post_meta($postId, '_sseo_ai_description', true);
             $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
@@ -88,7 +140,7 @@ class SeoDashboard
             if ($ogTitle) $withOg++;
             if ($wordCount < 300) $thinContent++;
 
-            // Check internal links
+            // Check internal links (cached in content)
             $hasInternalLink = false;
             if (preg_match_all('/<a[^>]+href=["\']([^"\']+)["\']/i', $content, $matches)) {
                 $home = parse_url(home_url(), PHP_URL_HOST);
@@ -102,19 +154,17 @@ class SeoDashboard
             }
             if ($hasInternalLink) $withInternalLinks++;
 
-            // Check featured image alt
-            $thumbId = get_post_thumbnail_id($postId);
-            if ($thumbId) {
-                $alt = get_post_meta($thumbId, '_wp_attachment_image_alt', true);
-                if ($alt) $withAlt++;
+            // Check featured image alt (from pre-fetched data)
+            if (isset($thumbnailMap[$postId]) && isset($altTexts[$thumbnailMap[$postId]])) {
+                $withAlt++;
             }
 
-            // Collect specific issues for quick wins
-            if (!$seoTitle && !$seoDesc && $wordCount >= 300) {
+            // Collect specific issues for quick wins (limit to 20 max)
+            if (!$seoTitle && !$seoDesc && $wordCount >= 300 && count($quickWins) < 20) {
                 $quickWins[] = [
                     'post_id' => $postId,
                     'title' => $post->post_title,
-                    'edit_url' => get_edit_post_link($postId, ''),
+                    'edit_url' => admin_url('post.php?post=' . $postId . '&action=edit'), // Direct URL, faster than get_edit_post_link()
                     'reason' => __('Good content but missing SEO meta — easy to fix with AI', 'ai-seo-client'),
                 ];
             }
@@ -207,13 +257,18 @@ class SeoDashboard
             ['label' => __('Content Length', 'ai-seo-client'), 'done' => $total - $thinContent, 'total' => $total, 'pct' => round($scores['content_length'])],
         ];
 
-        return [
+        $result = [
             'score' => $overallScore,
             'total_posts' => $total,
             'issues' => $issues,
             'quick_wins' => array_slice($quickWins, 0, 10),
             'breakdown' => $breakdown,
         ];
+
+        // Cache for 5 minutes (300 seconds)
+        set_transient($cacheKey, $result, 300);
+
+        return $result;
     }
 
     /**

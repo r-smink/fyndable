@@ -86,6 +86,11 @@ class ExternalIntegrations
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_folder_id');
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_auto_export', ['default' => false]);
         
+        // Google Search Console OAuth (using sseo_ai_client_ prefix for Settings class compatibility)
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_id');
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_secret');
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_site_url');
+        
         // Notion
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_api_key');
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_database_id');
@@ -99,6 +104,9 @@ class ExternalIntegrations
         $slackWebhook = get_option('sseo_ai_slack_webhook_url', '');
         $slackChannel = get_option('sseo_ai_slack_channel', '#seo');
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) {
+            $slackNotifications = [];
+        }
         
         $zapierWebhook = get_option('sseo_ai_zapier_webhook_url', '');
         $makeWebhook = get_option('sseo_ai_make_webhook_url', '');
@@ -110,6 +118,12 @@ class ExternalIntegrations
         
         $gdriveFolderId = get_option('sseo_ai_gdrive_folder_id', '');
         $gdriveAutoExport = get_option('sseo_ai_gdrive_auto_export', false);
+        
+        // GSC settings
+        $gscClientId = get_option('sseo_ai_client_gsc_client_id', '');
+        $gscClientSecret = get_option('sseo_ai_client_gsc_client_secret', '');
+        $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
+        $gscConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']);
         
         $notionApiKey = get_option('sseo_ai_notion_api_key', '');
         $notionDatabaseId = get_option('sseo_ai_notion_database_id', '');
@@ -356,6 +370,74 @@ class ExternalIntegrations
                     </button>
                         </div>
                         
+                        <!-- Google Search Console OAuth -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h2>
+                            <p class="description">
+                                <?php esc_html_e('Connect to Google Search Console to view performance data directly in WordPress.', 'ai-seo-client'); ?>
+                            </p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="gsc_client_id"><?php esc_html_e('OAuth Client ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="gsc_client_id" name="sseo_ai_client_gsc_client_id" 
+                                       value="<?php echo esc_attr($gscClientId); ?>" class="regular-text"
+                                       placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
+                                <p class="description">
+                                    <?php esc_html_e('From Google Cloud Console → APIs & Services → Credentials', 'ai-seo-client'); ?>
+                                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank"><?php esc_html_e('Get credentials', 'ai-seo-client'); ?></a>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="gsc_client_secret"><?php esc_html_e('OAuth Client Secret', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="password" id="gsc_client_secret" name="sseo_ai_client_gsc_client_secret" 
+                                       value="<?php echo esc_attr($gscClientSecret); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="gsc_site_url"><?php esc_html_e('Site URL', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="url" id="gsc_site_url" name="sseo_ai_client_gsc_site_url" 
+                                       value="<?php echo esc_attr($gscSiteUrl); ?>" class="regular-text">
+                                <p class="description">
+                                    <?php esc_html_e('The exact URL as registered in Google Search Console (usually your site URL)', 'ai-seo-client'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
+                        <?php if ($gscConnected): ?>
+                            <span class="notice notice-success inline" style="margin: 0; padding: 5px 10px;">
+                                ✓ <?php esc_html_e('Connected to Google Search Console', 'ai-seo-client'); ?>
+                            </span>
+                            <button type="button" class="button" onclick="sseoDisconnectGSC()">
+                                <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
+                            </button>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="button button-primary">
+                                <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
+                            </a>
+                        <?php elseif ($gscClientId && $gscClientSecret): ?>
+                            <button type="button" class="button button-primary" onclick="sseoConnectGSC()">
+                                <?php esc_html_e('Connect to Google Search Console', 'ai-seo-client'); ?>
+                            </button>
+                        <?php else: ?>
+                            <p class="description">
+                                <?php esc_html_e('Enter your OAuth credentials above and save to enable connection.', 'ai-seo-client'); ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                        </div>
+                        
                         <!-- Notion Integration -->
                         <div class="sseo-ai-dashboard-card">
                             <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
@@ -475,6 +557,64 @@ class ExternalIntegrations
                 } else {
                     alert(response.data.message || 'Error syncing to Notion');
                 }
+            });
+        }
+        
+        // Google Search Console OAuth
+        function sseoConnectGSC() {
+            // First save the form to store credentials
+            const form = document.querySelector('form[action="options.php"]');
+            const formData = new FormData(form);
+            
+            // Get the auth URL via REST API
+            wp.apiFetch({ path: '/sseo-ai/v1/gsc-status' }).then(function(status) {
+                if (status.auth_url) {
+                    // Open OAuth popup
+                    const width = 500;
+                    const height = 600;
+                    const left = (screen.width / 2) - (width / 2);
+                    const top = (screen.height / 2) - (height / 2);
+                    
+                    const popup = window.open(
+                        status.auth_url,
+                        'gsc_oauth',
+                        'width=' + width + ',height=' + height + ',left=' + left + ',top=' + top + ',scrollbars=yes'
+                    );
+                    
+                    // Poll for completion
+                    const checkInterval = setInterval(function() {
+                        if (popup.closed) {
+                            clearInterval(checkInterval);
+                            // Check if connected
+                            wp.apiFetch({ path: '/sseo-ai/v1/gsc-status' }).then(function(newStatus) {
+                                if (newStatus.connected) {
+                                    alert('<?php esc_html_e('Successfully connected to Google Search Console!', 'ai-seo-client'); ?>');
+                                    location.reload();
+                                }
+                            });
+                        }
+                    }, 1000);
+                } else {
+                    alert('<?php esc_html_e('Please enter your Client ID and Client Secret first, then save the settings.', 'ai-seo-client'); ?>');
+                }
+            }).catch(function(err) {
+                alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to get auth URL', 'ai-seo-client'); ?>'));
+            });
+        }
+        
+        function sseoDisconnectGSC() {
+            if (!confirm('<?php esc_html_e('Are you sure you want to disconnect Google Search Console?', 'ai-seo-client'); ?>')) {
+                return;
+            }
+            
+            wp.apiFetch({
+                path: '/sseo-ai/v1/gsc-disconnect',
+                method: 'POST'
+            }).then(function(response) {
+                alert('<?php esc_html_e('Disconnected from Google Search Console.', 'ai-seo-client'); ?>');
+                location.reload();
+            }).catch(function(err) {
+                alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to disconnect', 'ai-seo-client'); ?>'));
             });
         }
         </script>

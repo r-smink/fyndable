@@ -218,7 +218,7 @@ class Client
         $this->aiImageGenerator->register();
         
         // Starter+ features
-        if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial'])) {
+        if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial', 'dev'])) {
             $this->linkAssistant = new LinkAssistant($this->settings);
             $this->linkAssistant->register();
             
@@ -233,7 +233,7 @@ class Client
         }
         
         // Professional+ features
-        if (in_array($tier, ['professional', 'business', 'agency', 'trial'])) {
+        if (in_array($tier, ['professional', 'business', 'agency', 'trial', 'dev'])) {
             $this->schemaMarkup = new SchemaMarkup($this->settings);
             $this->schemaMarkup->register();
             
@@ -270,6 +270,10 @@ class Client
             $this->keywordExplorer = new KeywordExplorer($this->settings, $this->dashboardAPI, $this->llmClient);
             $this->keywordExplorer->register();
             
+            // Google Search Console OAuth & Dashboard
+            $gscOAuth = new GscOAuth($this->settings);
+            $gscOAuth->register();
+            
             $gscClient = new GscClient($this->settings);
             $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
             $this->gscDashboard->register();
@@ -300,7 +304,7 @@ class Client
         }
         
         // Business+ features
-        if (in_array($tier, ['business', 'agency'])) {
+        if (in_array($tier, ['business', 'agency', 'dev'])) {
             $this->contentWriter = new ContentWriter($this->llmClient, $this->settings);
             $this->contentWriter->register();
             
@@ -318,8 +322,8 @@ class Client
             $this->auditService = new AuditService();
         }
         
-        // Agency only features
-        if ($tier === 'agency') {
+        // Agency-only features (DEV includes these)
+        if (in_array($tier, ['agency', 'dev'])) {
             $this->seoRevisions = new SeoRevisions();
             $this->seoRevisions->register();
             
@@ -423,14 +427,14 @@ class Client
             add_submenu_page(
                 'ai-seo-client',
                 __('Integrations', 'ai-seo-client'),
-                __('� Integrations', 'ai-seo-client'),
+                __('🔌 Integrations', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-integrations',
                 [$this, 'renderIntegrationsPage']
             );
             
             // Professional+ features: Topic Clusters, Site Audit, Rank Tracker
-            $professionalTiers = ['professional', 'business', 'agency', 'trial'];
+            $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
             if (in_array($tier, $professionalTiers)) {
                 // 6. Topic Clusters
                 add_submenu_page(
@@ -446,7 +450,7 @@ class Client
                 add_submenu_page(
                     'ai-seo-client',
                     __('Site Audit', 'ai-seo-client'),
-                    __('� Site Audit', 'ai-seo-client'),
+                    __('🔍 Site Audit', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-site-audit',
                     [$this, 'renderSiteAuditPage']
@@ -456,10 +460,20 @@ class Client
                 add_submenu_page(
                     'ai-seo-client',
                     __('Rank Tracker', 'ai-seo-client'),
-                    __('� Rank Tracker', 'ai-seo-client'),
+                    __('📈 Rank Tracker', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-rank-tracker',
                     [$this, 'renderRankTrackerPage']
+                );
+                
+                // 9. Search Console (GSC) - Professional+
+                add_submenu_page(
+                    'ai-seo-client',
+                    __('Search Console', 'ai-seo-client'),
+                    __('📊 Search Console', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-gsc',
+                    [$this, 'renderGscDashboardPage']
                 );
             }
         }
@@ -509,6 +523,11 @@ class Client
             'whiteLabel' => $whiteLabel,
         ]);
         
+        // Always add padding fix for #wpcontent
+        wp_add_inline_style('ai-seo-client-admin', '
+            #wpcontent { padding-left: 0 !important; }
+        ');
+
         // Apply white-label CSS variables
         if (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color'])) {
             $primaryColor = $whiteLabel['primary_color'] ?? '#2563eb';
@@ -812,6 +831,22 @@ class Client
         }
         if ($this->rankTracker) {
             $this->rankTracker->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Google Search Console Dashboard page
+     */
+    public function renderGscDashboardPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->gscDashboard) {
+            $this->gscDashboard->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }
@@ -1280,23 +1315,39 @@ class Client
      */
     public function handleManualValidation(): void
     {
+        // Debug logging
+        error_log('SSEO AI Manual Validation: Handler called');
+        error_log('SSEO AI Manual Validation: POST data = ' . print_r($_POST, true));
+        error_log('SSEO AI Manual Validation: User ID = ' . get_current_user_id());
+        error_log('SSEO AI Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        
         if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'manual_validate_license')) {
-            wp_die(__('Security check failed', 'ai-seo-client'));
+            error_log('SSEO AI Manual Validation: Nonce verification failed');
+            wp_die(__('Security check failed. Please refresh the page and try again.', 'ai-seo-client'));
         }
+        
+        error_log('SSEO AI Manual Validation: Nonce verified successfully');
 
-        if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'ai-seo-client'));
+        if (!current_user_can('manage_options') && !current_user_can('activate_plugins')) {
+            error_log('SSEO AI Manual Validation: User lacks required capability');
+            wp_die(__('You need administrator permissions to validate the license.', 'ai-seo-client'));
         }
+        
+        error_log('SSEO AI Manual Validation: Permission check passed');
         
         // Clear validation cache and force re-validation
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $cacheKey = 'ai_seo_license_check_' . md5($licenseKey);
         delete_transient($cacheKey);
         
+        error_log('SSEO AI Manual Validation: Running validation...');
+        
         // Trigger validation
         $this->licenseValidator->validateStoredLicense();
         
-        wp_redirect(admin_url('admin.php?page=ai-seo-connection&validated=1'));
+        error_log('SSEO AI Manual Validation: Validation complete, redirecting...');
+        
+        wp_redirect(admin_url('admin.php?page=ai-seo-client&validated=1'));
         exit;
     }
     
@@ -1579,13 +1630,184 @@ class Client
      */
     private function renderFeatureNotAvailable(): void
     {
+        $currentTier = $this->licenseValidator->getLicenseTier();
+        $upgradeTiers = [
+            'free' => 'Starter',
+            'starter' => 'Professional',
+            'professional' => 'Business',
+            'business' => 'Agency',
+        ];
+        $nextTier = $upgradeTiers[$currentTier] ?? 'Professional';
+        
+        // Feature benefits by tier
+        $tierBenefits = [
+            'Starter' => [
+                'Link Assistant - AI internal linking',
+                'Redirect Manager',
+                'Image Alt Generator',
+                'Content Rewriter',
+                '500 API calls/month',
+            ],
+            'Professional' => [
+                'Rank Tracker - Daily SERP positions',
+                'Schema Markup - 10+ structured data types',
+                'Topic Clusters - AI content strategy',
+                'Content Optimizer - NLP scoring',
+                'Google Search Console integration',
+                'SERP Competitor Analysis',
+                '2,000 API calls/month',
+            ],
+            'Business' => [
+                'AI Content Writer - Full article generation',
+                'Content Repurposer',
+                'Bulk AI Optimizer',
+                'Content Decay Monitor',
+                '10,000 API calls/month',
+            ],
+            'Agency' => [
+                'SEO Revisions - Track all changes',
+                'Plagiarism Checker',
+                'White Label - Custom branding',
+                'Unlimited API calls',
+                'Priority support',
+            ],
+        ];
+        $benefits = $tierBenefits[$nextTier] ?? $tierBenefits['Professional'];
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Feature Not Available', 'ai-seo-client'); ?></h1>
-            <div class="notice notice-warning">
-                <p><?php esc_html_e('This feature is not available in your current license tier. Please upgrade your license to access this feature.', 'ai-seo-client'); ?></p>
-                <p><a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="button button-primary">
-                    <?php esc_html_e('View License Details', 'ai-seo-client'); ?></a></p>
+        <style>
+            .sseo-upgrade-wrap { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-upgrade-header { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); 
+                color: #fff; 
+                padding: 60px 40px; 
+                margin: -10px -20px 0 -20px;
+                text-align: center;
+            }
+            .sseo-upgrade-header h1 { 
+                font-size: 42px; 
+                font-weight: 800; 
+                color: #fff; 
+                margin: 0 0 20px 0;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .sseo-upgrade-header p { 
+                font-size: 20px; 
+                opacity: 0.95;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            .sseo-upgrade-content { 
+                padding: 40px; 
+                background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); 
+                min-height: calc(100vh - 300px);
+            }
+            .sseo-upgrade-card { 
+                background: #fff; 
+                border-radius: 16px; 
+                padding: 40px; 
+                box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+                max-width: 800px;
+                margin: 0 auto;
+                text-align: center;
+            }
+            .sseo-upgrade-card h2 {
+                font-size: 28px;
+                color: #1e293b;
+                margin: 0 0 30px 0;
+            }
+            .sseo-tier-badge {
+                display: inline-block;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #fff;
+                padding: 12px 30px;
+                border-radius: 50px;
+                font-size: 18px;
+                font-weight: 700;
+                margin-bottom: 30px;
+                box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+            }
+            .sseo-benefits-list {
+                text-align: left;
+                max-width: 500px;
+                margin: 0 auto 40px;
+                list-style: none;
+                padding: 0;
+            }
+            .sseo-benefits-list li {
+                padding: 15px 0;
+                border-bottom: 1px solid #f1f5f9;
+                font-size: 16px;
+                color: #475569;
+                display: flex;
+                align-items: center;
+            }
+            .sseo-benefits-list li:last-child {
+                border-bottom: none;
+            }
+            .sseo-benefits-list li:before {
+                content: "✓";
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: #fff;
+                border-radius: 50%;
+                margin-right: 15px;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+            .sseo-upgrade-cta {
+                display: inline-block;
+                background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+                color: #fff;
+                padding: 18px 50px;
+                border-radius: 50px;
+                font-size: 18px;
+                font-weight: 700;
+                text-decoration: none;
+                box-shadow: 0 10px 20px rgba(238, 90, 90, 0.3);
+                transition: all 0.2s ease;
+            }
+            .sseo-upgrade-cta:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 15px 30px rgba(238, 90, 90, 0.4);
+                color: #fff;
+            }
+            .sseo-current-tier {
+                margin-top: 30px;
+                padding: 20px;
+                background: #f8fafc;
+                border-radius: 12px;
+                font-size: 15px;
+                color: #64748b;
+            }
+            .sseo-current-tier strong {
+                color: #334155;
+            }
+        </style>
+        <div class="wrap sseo-upgrade-wrap">
+            <div class="sseo-upgrade-header">
+                <h1>🚀 <?php esc_html_e('Unlock More SEO Power', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('This feature is available with a higher tier. Upgrade to unlock advanced capabilities and grow your traffic faster.', 'ai-seo-client'); ?></p>
+            </div>
+            <div class="sseo-upgrade-content">
+                <div class="sseo-upgrade-card">
+                    <div class="sseo-tier-badge"><?php echo esc_html($nextTier); ?> <?php esc_html_e('Plan', 'ai-seo-client'); ?></div>
+                    <h2><?php esc_html_e('What you\'ll get with an upgrade:', 'ai-seo-client'); ?></h2>
+                    <ul class="sseo-benefits-list">
+                        <?php foreach ($benefits as $benefit): ?>
+                        <li><?php echo esc_html($benefit); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="sseo-upgrade-cta">
+                        <?php esc_html_e('Upgrade Now →', 'ai-seo-client'); ?>
+                    </a>
+                    <div class="sseo-current-tier">
+                        <?php printf(esc_html__('Your current plan: %s', 'ai-seo-client'), '<strong>' . esc_html(ucfirst($currentTier)) . '</strong>'); ?>
+                    </div>
+                </div>
             </div>
         </div>
         <?php
