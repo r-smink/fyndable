@@ -30,13 +30,19 @@ class GscClient
 
     /**
      * Get the site URL for GSC queries (uses current site or configured site)
+     * Supports both URL properties (https://example.com/) and domain properties (sc-domain:example.com)
      */
     private function getSiteUrl(): string
     {
         // Try to get configured site first
         $configuredSite = $this->settings->get('gsc_site_url', '');
         if ($configuredSite) {
-            return $configuredSite;
+            // Domain property format — return as-is
+            if (str_starts_with($configuredSite, 'sc-domain:')) {
+                return $configuredSite;
+            }
+            // URL property — ensure trailing slash (GSC requires it)
+            return rtrim($configuredSite, '/') . '/';
         }
         // Fallback to current site with protocol
         $siteUrl = home_url();
@@ -44,7 +50,8 @@ class GscClient
         if (!str_starts_with($siteUrl, 'http')) {
             $siteUrl = 'https://' . $siteUrl;
         }
-        return $siteUrl;
+        // Ensure trailing slash for URL property format
+        return rtrim($siteUrl, '/') . '/';
     }
 
     /**

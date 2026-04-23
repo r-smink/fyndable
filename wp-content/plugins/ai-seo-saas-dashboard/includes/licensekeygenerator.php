@@ -194,8 +194,9 @@ class LicenseKeyGenerator
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
         
         if ($existingTenant) {
-            // Re-activation - update last active
+            // Re-activation - restore to active and update last active
             $this->tenants->updateTenant($existingTenant['tenant_key'], [
+                'status' => 'active',
                 'last_active' => current_time('mysql'),
             ]);
             

@@ -437,6 +437,78 @@ class DashboardAPI
     }
 
     /**
+     * Generic API request to dashboard proxy endpoints (e.g. serp/search, serp/query)
+     * Used by ContentBrief, ContentOptimizer, SerpCompetitor, KeywordExplorer
+     *
+     * @param string $endpoint The API endpoint path (e.g. 'serp/search')
+     * @param array  $params   Request parameters
+     * @return array|\WP_Error
+     */
+    public function request(string $endpoint, array $params = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        // Map client-side endpoint names to SaaS dashboard REST routes
+        $endpointMap = [
+            'serp/search'  => '/serp/query',
+            'serp/query'   => '/serp/query',
+        ];
+
+        $route = $endpointMap[$endpoint] ?? '/' . ltrim($endpoint, '/');
+        $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1' . $route;
+
+        $response = wp_remote_post($apiUrl, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'X-License-Key' => $licenseKey,
+                'X-Tenant-Key' => $tenantKey,
+            ],
+            'body' => json_encode($params),
+            'timeout' => 60,
+            'sslverify' => false,
+            'redirection' => 5,
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_Error('connection_error', __('Could not connect to API service.', 'ai-seo-client'));
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode === 429) {
+            return new \WP_Error('usage_exceeded', $body['message'] ?? __('Usage limit exceeded', 'ai-seo-client'));
+        }
+
+        if ($statusCode !== 200 || empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'request_failed',
+                $body['message'] ?? __('API request failed', 'ai-seo-client')
+            );
+        }
+
+        return $body;
+    }
+
+    /**
+     * Alias for request() — used by CompetitorResearch, InternationalSeo
+     *
+     * @param string $endpoint The API endpoint path (e.g. '/serp/competitor-keywords')
+     * @param array  $params   Request parameters
+     * @return array|\WP_Error
+     */
+    public function makeRequest(string $endpoint, array $params = []): array|\WP_Error
+    {
+        return $this->request(ltrim($endpoint, '/'), $params);
+    }
+
+    /**
      * Check if the dashboard URL points to the same WordPress installation
      * This helps avoid HTTP loopback issues on shared hosting
      */

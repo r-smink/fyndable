@@ -406,8 +406,10 @@ class LicenseAPI
             ], 403);
         }
 
-        // Suspend tenant (soft delete)
-        $this->tenants->suspendTenant($tenantKey, 'License deactivated by client');
+        // Set tenant to inactive (not suspended — suspended is only for revoked licenses)
+        $this->tenants->updateTenant($tenantKey, [
+            'status' => 'inactive',
+        ]);
 
         return new \WP_REST_Response([
             'success' => true,

@@ -89,7 +89,17 @@ class ExternalIntegrations
         // Google Search Console OAuth (using sseo_ai_client_ prefix for Settings class compatibility)
         register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_id');
         register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_secret');
-        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_site_url');
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_site_url', [
+            'sanitize_callback' => function ($value) {
+                $value = trim($value);
+                // Allow sc-domain: format (domain properties)
+                if (str_starts_with($value, 'sc-domain:')) {
+                    return sanitize_text_field($value);
+                }
+                // URL properties — sanitize as URL
+                return esc_url_raw($value);
+            },
+        ]);
         
         // Notion
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_api_key');
@@ -111,10 +121,16 @@ class ExternalIntegrations
         $zapierWebhook = get_option('sseo_ai_zapier_webhook_url', '');
         $makeWebhook = get_option('sseo_ai_make_webhook_url', '');
         $customWebhooks = get_option('sseo_ai_custom_webhooks', []);
+        if (!is_array($customWebhooks)) {
+            $customWebhooks = [];
+        }
         
         $reportEmail = get_option('sseo_ai_report_email', get_option('admin_email'));
         $reportFrequency = get_option('sseo_ai_report_frequency', 'weekly');
         $emailNotifications = get_option('sseo_ai_email_notifications', []);
+        if (!is_array($emailNotifications)) {
+            $emailNotifications = [];
+        }
         
         $gdriveFolderId = get_option('sseo_ai_gdrive_folder_id', '');
         $gdriveAutoExport = get_option('sseo_ai_gdrive_auto_export', false);
@@ -406,10 +422,13 @@ class ExternalIntegrations
                                 <label for="gsc_site_url"><?php esc_html_e('Site URL', 'ai-seo-client'); ?></label>
                             </th>
                             <td>
-                                <input type="url" id="gsc_site_url" name="sseo_ai_client_gsc_site_url" 
-                                       value="<?php echo esc_attr($gscSiteUrl); ?>" class="regular-text">
+                                <input type="text" id="gsc_site_url" name="sseo_ai_client_gsc_site_url" 
+                                       value="<?php echo esc_attr($gscSiteUrl); ?>" class="regular-text"
+                                       placeholder="sc-domain:<?php echo esc_attr(parse_url(home_url(), PHP_URL_HOST)); ?>">
                                 <p class="description">
-                                    <?php esc_html_e('The exact URL as registered in Google Search Console (usually your site URL)', 'ai-seo-client'); ?>
+                                    <?php esc_html_e('Exact property as registered in Google Search Console.', 'ai-seo-client'); ?><br>
+                                    <?php esc_html_e('Domain property: sc-domain:example.com', 'ai-seo-client'); ?><br>
+                                    <?php esc_html_e('URL property: https://example.com/', 'ai-seo-client'); ?>
                                 </p>
                             </td>
                         </tr>
@@ -677,6 +696,7 @@ class ExternalIntegrations
         
         // Custom webhooks
         $customWebhooks = get_option('sseo_ai_custom_webhooks', []);
+        if (!is_array($customWebhooks)) { $customWebhooks = []; }
         foreach ($customWebhooks as $webhook) {
             if ($webhook['event'] === 'all' || $webhook['event'] === $event) {
                 wp_remote_post($webhook['url'], [
@@ -693,6 +713,7 @@ class ExternalIntegrations
     public function notifyRankChange(string $keyword, int $oldRank, int $newRank): void
     {
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         
         if (in_array('rank_change', $slackNotifications)) {
             $change = $newRank - $oldRank;
@@ -749,6 +770,7 @@ class ExternalIntegrations
         }
         
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         
         if (in_array('content_published', $slackNotifications)) {
             $message = sprintf(
@@ -789,6 +811,7 @@ class ExternalIntegrations
     public function notifySeoScoreChange(int $postId, int $oldScore, int $newScore): void
     {
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         
         if (in_array('seo_score', $slackNotifications)) {
             $post = get_post($postId);
@@ -844,6 +867,7 @@ class ExternalIntegrations
         
         // Send to Slack if enabled
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         if (in_array('daily_report', $slackNotifications)) {
             $this->sendSlackNotification(':bar_chart: Daily SEO Report', [
                 [

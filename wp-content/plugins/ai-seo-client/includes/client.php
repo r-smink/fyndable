@@ -71,6 +71,9 @@ class Client
     private ?VideoSEO $videoSEO = null;
     private ?FAQSchema $faqSchema = null;
     private ?AIImageGenerator $aiImageGenerator = null;
+    private ?Ideas $ideas = null;
+    private ?CreatedPosts $createdPosts = null;
+    private ?Keywords $keywords = null;
 
     public function init(): void
     {
@@ -118,6 +121,12 @@ class Client
         $dashAPI = new DashboardAPI($settings);
         $rt = new RankTracker($settings, $dashAPI);
         $rt->createTables();
+
+        // Create ideas table
+        Ideas::createTable();
+
+        // Create keywords table
+        Keywords::createTable();
     }
 
     /**
@@ -216,6 +225,18 @@ class Client
         // AI Image Generator - available to all tiers
         $this->aiImageGenerator = new AIImageGenerator($this->settings, $this->llmClient);
         $this->aiImageGenerator->register();
+
+        // Ideas Management - available to all tiers
+        $this->ideas = new Ideas($this->settings, $this->llmClient);
+        $this->ideas->register();
+
+        // Created Posts - available to all tiers
+        $this->createdPosts = new CreatedPosts($this->settings);
+        $this->createdPosts->register();
+
+        // Keywords Management - available to all tiers
+        $this->keywords = new Keywords($this->settings, $this->llmClient, $this->dashboardAPI);
+        $this->keywords->register();
         
         // Starter+ features
         if (in_array($tier, ['starter', 'professional', 'business', 'agency', 'trial', 'dev'])) {
@@ -402,8 +423,38 @@ class Client
                 'ai-seo-ai-tools',
                 [$this, 'renderAIToolsPage']
             );
+
+            // 4. Ideas - all tiers
+            add_submenu_page(
+                'ai-seo-client',
+                __('Ideas', 'ai-seo-client'),
+                __('💡 Ideas', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-ideas',
+                [$this, 'renderIdeasPage']
+            );
+
+            // 5. SEO AI Created Posts - all tiers
+            add_submenu_page(
+                'ai-seo-client',
+                __('Created Posts', 'ai-seo-client'),
+                __('📝 Created Posts', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-created-posts',
+                [$this, 'renderCreatedPostsPage']
+            );
+
+            // 6. Keywords - all tiers
+            add_submenu_page(
+                'ai-seo-client',
+                __('Keywords', 'ai-seo-client'),
+                __('🎯 Keywords', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-keywords',
+                [$this, 'renderKeywordsPage']
+            );
             
-            // 4. Link Manager (Smart Internal Linking) - all tiers
+            // 7. Link Manager (Smart Internal Linking) - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Link Manager', 'ai-seo-client'),
@@ -413,7 +464,7 @@ class Client
                 [$this, 'renderLinkManagerPage']
             );
             
-            // 5. Sitemaps - all tiers
+            // 8. Sitemaps - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Sitemaps', 'ai-seo-client'),
@@ -423,7 +474,7 @@ class Client
                 [$this, 'renderSitemapsPage']
             );
             
-            // 6. Integrations - all tiers
+            // 9. Integrations - all tiers
             add_submenu_page(
                 'ai-seo-client',
                 __('Integrations', 'ai-seo-client'),
@@ -436,7 +487,7 @@ class Client
             // Professional+ features: Topic Clusters, Site Audit, Rank Tracker
             $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
             if (in_array($tier, $professionalTiers)) {
-                // 6. Topic Clusters
+                // 10. Topic Clusters
                 add_submenu_page(
                     'ai-seo-client',
                     __('Topic Clusters', 'ai-seo-client'),
@@ -446,7 +497,7 @@ class Client
                     [$this, 'renderTopicClusterPage']
                 );
                 
-                // 7. Site Audit
+                // 11. Site Audit
                 add_submenu_page(
                     'ai-seo-client',
                     __('Site Audit', 'ai-seo-client'),
@@ -456,7 +507,7 @@ class Client
                     [$this, 'renderSiteAuditPage']
                 );
                 
-                // 8. Rank Tracker
+                // 12. Rank Tracker
                 add_submenu_page(
                     'ai-seo-client',
                     __('Rank Tracker', 'ai-seo-client'),
@@ -466,7 +517,7 @@ class Client
                     [$this, 'renderRankTrackerPage']
                 );
                 
-                // 9. Search Console (GSC) - Professional+
+                // 13. Search Console (GSC) - Professional+
                 add_submenu_page(
                     'ai-seo-client',
                     __('Search Console', 'ai-seo-client'),
@@ -802,6 +853,54 @@ class Client
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Render Ideas page - delegates to Ideas class
+     */
+    public function renderIdeasPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->ideas) {
+            $this->ideas->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Created Posts page - delegates to CreatedPosts class
+     */
+    public function renderCreatedPostsPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->createdPosts) {
+            $this->createdPosts->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Keywords page - delegates to Keywords class
+     */
+    public function renderKeywordsPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->keywords) {
+            $this->keywords->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
     }
 
     /**

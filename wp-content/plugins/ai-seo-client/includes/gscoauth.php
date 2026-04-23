@@ -60,10 +60,12 @@ class GscOAuth
         $state = $request->get_param('state');
         $error = $request->get_param('error');
 
-        // Verify nonce
-        if (!wp_verify_nonce($state, 'aiseo_gsc')) {
+        // Verify state token (stored in transient during auth URL generation)
+        $storedState = get_transient('aiseo_gsc_oauth_state');
+        if (empty($state) || empty($storedState) || !hash_equals($storedState, $state)) {
             return new \WP_REST_Response(['error' => 'Invalid state parameter'], 403);
         }
+        delete_transient('aiseo_gsc_oauth_state');
 
         if ($error) {
             return new \WP_REST_Response(['error' => sanitize_text_field($error)], 400);
@@ -120,7 +122,8 @@ class GscOAuth
         $clientId = $this->settings->get('gsc_client_id', '');
         $redirect = $this->callbackUrl();
         $scope = 'https://www.googleapis.com/auth/webmasters.readonly';
-        $state = wp_create_nonce('aiseo_gsc');
+        $state = wp_generate_password(40, false);
+        set_transient('aiseo_gsc_oauth_state', $state, 10 * MINUTE_IN_SECONDS);
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
             'client_id' => $clientId,
             'redirect_uri' => $redirect,
