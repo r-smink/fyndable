@@ -27,7 +27,7 @@ class RedirectionManager
     {
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
-        $sql = "CREATE TABLE IF NOT EXISTS {$this->tableName} (
+        $sql = "CREATE TABLE {$this->tableName} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             source_url varchar(500) NOT NULL,
             target_url varchar(500) NOT NULL,

@@ -87,6 +87,16 @@ class Settings
     }
 
     /**
+     * Get SSL verification setting for API calls
+     * Defaults to true for production security
+     */
+    public function sslVerify(): bool
+    {
+        $value = get_option('sseo_ai_client_ssl_verify', '1');
+        return $value !== '0' && $value !== false && $value !== 0;
+    }
+
+    /**
      * Alias for getAll() for backwards compatibility
      */
     public function all(): array

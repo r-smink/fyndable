@@ -57,7 +57,7 @@ class ContentDecay
         $table_name = $wpdb->prefix . self::DECAY_TABLE;
         $trend_table = $wpdb->prefix . self::TREND_TABLE;
         
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        $sql = "CREATE TABLE $table_name (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             post_id bigint(20) unsigned NOT NULL,
             keyword varchar(255) NOT NULL,
@@ -80,7 +80,7 @@ class ContentDecay
             KEY detected_at (detected_at)
         ) $charset_collate;";
         
-        $sql2 = "CREATE TABLE IF NOT EXISTS $trend_table (
+        $sql2 = "CREATE TABLE $trend_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             post_id bigint(20) unsigned NOT NULL,
             keyword varchar(255) NOT NULL,
@@ -883,14 +883,15 @@ class ContentDecay
         $table = $wpdb->prefix . self::DECAY_TABLE;
         
         $stats = [
-            'critical' => $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'critical' AND status = 'active'"),
-            'high' => $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'high' AND status = 'active'"),
-            'medium' => $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'medium' AND status = 'active'"),
-            'low' => $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'low' AND status = 'active'"),
+            'critical' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'critical' AND status = 'active'"),
+            'high' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'high' AND status = 'active'"),
+            'medium' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'medium' AND status = 'active'"),
+            'low' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE severity = 'low' AND status = 'active'"),
             'total_traffic_loss' => $wpdb->get_var("SELECT AVG(traffic_change) FROM $table WHERE status = 'active'"),
         ];
         
-        $stats['total_traffic_loss'] = round(abs($stats['total_traffic_loss']), 1);
+        $trafficLoss = $stats['total_traffic_loss'];
+        $stats['total_traffic_loss'] = $trafficLoss !== null ? round(abs((float) $trafficLoss), 1) : 0;
         
         return $stats;
     }

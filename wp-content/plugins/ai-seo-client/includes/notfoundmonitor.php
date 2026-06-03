@@ -25,7 +25,7 @@ class NotFoundMonitor
     {
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
-        $sql = "CREATE TABLE IF NOT EXISTS {$this->tableName} (
+        $sql = "CREATE TABLE {$this->tableName} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             url varchar(500) NOT NULL,
             referrer varchar(500) DEFAULT NULL,

@@ -445,10 +445,10 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         $model = $imageApi['model'] ?? 'dall-e-3';
         
         // Debug logging
-        error_log('SSEO AI Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
         
         if (empty($provider) || empty($apiKey)) {
-            error_log('SSEO AI Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
             return null;
         }
         
@@ -460,7 +460,7 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
                 return $this->generateWithStabilityAI($prompt, $apiKey, $model);
             
             default:
-                error_log('SSEO AI Image: Unknown provider - ' . $provider);
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: Unknown provider - ' . $provider);
                 return null;
         }
     }
@@ -488,14 +488,14 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         ]);
         
         if (is_wp_error($response)) {
-            error_log('SSEO AI Image: OpenAI API error - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: OpenAI API error - ' . $response->get_error_message());
             return null;
         }
         
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (!isset($body['data'][0]['url'])) {
-            error_log('SSEO AI Image: No image URL in OpenAI response - ' . print_r($body, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: No image URL in OpenAI response - ' . print_r($body, true));
             return null;
         }
         
@@ -529,14 +529,14 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         ]);
         
         if (is_wp_error($response)) {
-            error_log('SSEO AI Image: Stability AI API error - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: Stability AI API error - ' . $response->get_error_message());
             return null;
         }
         
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (!isset($body['artifacts'][0]['base64'])) {
-            error_log('SSEO AI Image: No image data in Stability AI response - ' . print_r($body, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: No image data in Stability AI response - ' . print_r($body, true));
             return null;
         }
         

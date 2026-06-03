@@ -74,6 +74,7 @@ class Client
     private ?Ideas $ideas = null;
     private ?CreatedPosts $createdPosts = null;
     private ?Keywords $keywords = null;
+    private ?ABTesting $abTesting = null;
 
     public function init(): void
     {
@@ -127,6 +128,10 @@ class Client
 
         // Create keywords table
         Keywords::createTable();
+
+        // Create A/B testing tables
+        $abTesting = new ABTesting($settings);
+        $abTesting->createTables();
     }
 
     /**
@@ -322,6 +327,10 @@ class Client
             // Advanced Backlinks
             $this->advancedBacklinks = new AdvancedBacklinks($this->settings, $this->llmClient);
             $this->advancedBacklinks->register();
+            
+            // A/B Testing
+            $this->abTesting = new ABTesting($this->settings);
+            $this->abTesting->register();
         }
         
         // Business+ features
@@ -525,6 +534,16 @@ class Client
                     'manage_options',
                     'ai-seo-gsc',
                     [$this, 'renderGscDashboardPage']
+                );
+                
+                // 14. A/B Testing - Professional+
+                add_submenu_page(
+                    'ai-seo-client',
+                    __('A/B Testing', 'ai-seo-client'),
+                    __('🧪 A/B Testing', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-ab-testing',
+                    [$this, 'renderABTestingPage']
                 );
             }
         }
@@ -952,6 +971,22 @@ class Client
     }
 
     /**
+     * Render A/B Testing page - delegates to ABTesting class
+     */
+    public function renderABTestingPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->abTesting) {
+            $this->abTesting->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
      * Render Link Manager page - delegates to SmartInternalLinking class
      */
     public function renderLinkManagerPage(): void
@@ -1240,6 +1275,7 @@ class Client
         $targetedAudience = get_option('sseo_ai_targeted_audience', '');
         $brandName = get_option('sseo_ai_brand_name', '');
         $brandVoice = get_option('sseo_ai_brand_voice', '');
+        $sslVerify = $this->settings->sslVerify();
         
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -1372,6 +1408,19 @@ class Client
                             </div>
                         </div>
                         
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
+                            
+                            <div class="form-field">
+                                <label for="ssl_verify">
+                                    <input type="checkbox" name="ssl_verify" id="ssl_verify" value="1" <?php checked($sslVerify, true); ?>>
+                                    <?php esc_html_e('Verify SSL certificates for API calls', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('Disable only for development environments with self-signed certificates. Disabling on production is a security risk.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        
                         <div class="settings-actions">
                             <button type="submit" class="button button-primary button-large">
                                 <?php esc_html_e('Save Settings', 'ai-seo-client'); ?>
@@ -1403,6 +1452,7 @@ class Client
         update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
+        update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
 
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
@@ -1415,36 +1465,36 @@ class Client
     public function handleManualValidation(): void
     {
         // Debug logging
-        error_log('SSEO AI Manual Validation: Handler called');
-        error_log('SSEO AI Manual Validation: POST data = ' . print_r($_POST, true));
-        error_log('SSEO AI Manual Validation: User ID = ' . get_current_user_id());
-        error_log('SSEO AI Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: POST data = ' . print_r($_POST, true));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: User ID = ' . get_current_user_id());
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
         
         if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'manual_validate_license')) {
-            error_log('SSEO AI Manual Validation: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Nonce verification failed');
             wp_die(__('Security check failed. Please refresh the page and try again.', 'ai-seo-client'));
         }
         
-        error_log('SSEO AI Manual Validation: Nonce verified successfully');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Nonce verified successfully');
 
         if (!current_user_can('manage_options') && !current_user_can('activate_plugins')) {
-            error_log('SSEO AI Manual Validation: User lacks required capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: User lacks required capability');
             wp_die(__('You need administrator permissions to validate the license.', 'ai-seo-client'));
         }
         
-        error_log('SSEO AI Manual Validation: Permission check passed');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Permission check passed');
         
         // Clear validation cache and force re-validation
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $cacheKey = 'ai_seo_license_check_' . md5($licenseKey);
         delete_transient($cacheKey);
         
-        error_log('SSEO AI Manual Validation: Running validation...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Running validation...');
         
         // Trigger validation
         $this->licenseValidator->validateStoredLicense();
         
-        error_log('SSEO AI Manual Validation: Validation complete, redirecting...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Validation complete, redirecting...');
         
         wp_redirect(admin_url('admin.php?page=ai-seo-client&validated=1'));
         exit;
@@ -1603,17 +1653,17 @@ class Client
      */
     public function handleLicenseActivation(): void
     {
-        error_log('SSEO AI: License activation handler called');
-        error_log('SSEO AI: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
-        error_log('SSEO AI: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: License activation handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
         
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'activate_license')) {
-            error_log('SSEO AI: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Nonce verification failed');
             wp_die(__('Security check failed. Please try again.', 'ai-seo-client'));
         }
 
         if (!current_user_can('manage_options')) {
-            error_log('SSEO AI: User lacks manage_options capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: User lacks manage_options capability');
             wp_die(__('Insufficient permissions. You must be an administrator to activate licenses.', 'ai-seo-client'));
         }
 
@@ -1633,13 +1683,13 @@ class Client
 
         if (is_wp_error($result)) {
             $errorMsg = $result->get_error_message();
-            error_log('SSEO AI License Activation Failed: ' . $errorMsg);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI License Activation Failed: ' . $errorMsg);
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode($errorMsg)));
             exit;
         }
 
         if (empty($result['tenant_key'])) {
-            error_log('SSEO AI License Activation: No tenant_key in response');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI License Activation: No tenant_key in response');
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Invalid response from dashboard - no tenant key')));
             exit;
         }
