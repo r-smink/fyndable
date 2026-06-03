@@ -62,7 +62,7 @@ class SmartInternalLinking
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
@@ -81,29 +81,29 @@ class SmartInternalLinking
                     <h2><?php esc_html_e('Internal Linking Overview', 'ai-seo-client'); ?></h2>
             
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #2271b1;">
+                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #2271b1; line-height: 1.2;">
                         <?php echo esc_html(number_format($linkStats['total_pages'])); ?>
                     </div>
-                    <div><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 4px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #d63638;">
+                <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #d63638; line-height: 1.2;">
                         <?php echo esc_html(number_format($linkStats['orphan_pages'])); ?>
                     </div>
-                    <div><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #00a32a;">
+                <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #00a32a; line-height: 1.2;">
                         <?php echo esc_html(number_format($linkStats['avg_internal_links'])); ?>
                     </div>
-                    <div><?php esc_html_e('Avg Internal Links', 'ai-seo-client'); ?></div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Avg Internal Links', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #856404;">
+                <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #856404; line-height: 1.2;">
                         <?php echo esc_html(number_format($linkStats['opportunities'])); ?>
                     </div>
-                    <div><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></div>
                 </div>
             </div>
                 </div>

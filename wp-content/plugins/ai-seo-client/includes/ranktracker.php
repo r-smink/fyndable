@@ -48,7 +48,7 @@ class RankTracker
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
 
-        $sql1 = "CREATE TABLE IF NOT EXISTS {$this->keywordsTable} (
+        $sql1 = "CREATE TABLE {$this->keywordsTable} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             keyword varchar(255) NOT NULL,
             url varchar(500) DEFAULT '',
@@ -67,7 +67,7 @@ class RankTracker
             KEY post_id_idx (post_id)
         ) {$charset};";
 
-        $sql2 = "CREATE TABLE IF NOT EXISTS {$this->tableName} (
+        $sql2 = "CREATE TABLE {$this->tableName} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             keyword_id bigint(20) unsigned NOT NULL,
             post_id bigint(20) unsigned DEFAULT 0,
@@ -373,7 +373,7 @@ class RankTracker
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
@@ -455,12 +455,14 @@ class RankTracker
                     var tbody = $('#rank-table-body');
                     tbody.empty();
 
-                    if (!res.keywords.length) {
+                    var keywords = (res && res.keywords) ? res.keywords : [];
+
+                    if (!keywords.length) {
                         tbody.append('<tr><td colspan="8" style="text-align:center;color:#999;"><?php echo esc_js(__('No keywords tracked yet. Add one above!', 'ai-seo-client')); ?></td></tr>');
                         return;
                     }
 
-                    res.keywords.forEach(function(kw) {
+                    keywords.forEach(function(kw) {
                         var pos = kw.current_position || '—';
                         var prev = kw.previous_position || 0;
                         var curr = kw.current_position || 0;
@@ -496,6 +498,11 @@ class RankTracker
                             '</tr>'
                         );
                     });
+                }).catch(function(error) {
+                    var tbody = $('#rank-table-body');
+                    tbody.empty();
+                    tbody.append('<tr><td colspan="8" style="text-align:center;color:#d63638;"><?php echo esc_js(__('Failed to load keywords. Please refresh the page.', 'ai-seo-client')); ?></td></tr>');
+                    console.error('Rank tracker loadKeywords error:', error);
                 });
             }
 

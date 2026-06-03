@@ -23,6 +23,7 @@ class Ideas
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
+        self::createTable();
     }
 
     public function registerRestRoutes(): void
@@ -348,10 +349,14 @@ PROMPT;
             $countParams[] = $like;
         }
 
-        $total = $wpdb->get_var($wpdb->prepare($countSql, $countParams));
+        if (!empty($countParams)) {
+            $total = $wpdb->get_var($wpdb->prepare($countSql, $countParams));
+        } else {
+            $total = $wpdb->get_var($countSql);
+        }
 
         return [
-            'ideas' => $ideas,
+            'ideas' => $ideas ?: [],
             'total' => (int) $total,
             'limit' => $limit,
             'offset' => $offset,
@@ -676,7 +681,7 @@ PROMPT;
         $table = $wpdb->prefix . 'sseo_ai_ideas';
         $charset = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (
+        $sql = "CREATE TABLE {$table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             title varchar(255) NOT NULL,
             description text,
@@ -998,11 +1003,11 @@ PROMPT;
                 wp.apiFetch({
                     path: 'sseo-ai/v1/ideas/generate',
                     method: 'POST',
-                    data: { topic, count, language }
+                    data: { topic, count: parseInt(count), language }
                 }).then(function(response) {
                     $('#modal-generate-ideas').hide();
+                    $('#generate-topic').val('');
                     loadIdeas();
-                    alert(response.count + ' <?php echo esc_js(__('ideas generated', 'ai-seo-client')); ?>');
                 }).catch(function(error) {
                     alert(error.message || '<?php echo esc_js(__('Failed to generate ideas', 'ai-seo-client')); ?>');
                 }).finally(function() {

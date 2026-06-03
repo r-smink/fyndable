@@ -316,25 +316,25 @@ class CreatedPosts
 
         return [
             'edit_status' => [
-                'completed' => (int) ($editStats['completed'] ?? 0),
-                'pending' => (int) ($editStats['pending'] ?? 0),
-                'failed' => (int) ($editStats['failed'] ?? 0),
+                'completed' => (int) (isset($editStats['completed']) ? $editStats['completed']->count : 0),
+                'pending' => (int) (isset($editStats['pending']) ? $editStats['pending']->count : 0),
+                'failed' => (int) (isset($editStats['failed']) ? $editStats['failed']->count : 0),
             ],
             'review_status' => [
-                'yes' => (int) ($reviewStats['yes'] ?? 0),
-                'no' => (int) ($reviewStats['no'] ?? 0),
-                'needs_attention' => (int) ($reviewStats['needs_attention'] ?? 0),
-                'reviewing' => (int) ($reviewStats['reviewing'] ?? 0),
-                'failed' => (int) ($reviewStats['failed'] ?? 0),
+                'yes' => (int) (isset($reviewStats['yes']) ? $reviewStats['yes']->count : 0),
+                'no' => (int) (isset($reviewStats['no']) ? $reviewStats['no']->count : 0),
+                'needs_attention' => (int) (isset($reviewStats['needs_attention']) ? $reviewStats['needs_attention']->count : 0),
+                'reviewing' => (int) (isset($reviewStats['reviewing']) ? $reviewStats['reviewing']->count : 0),
+                'failed' => (int) (isset($reviewStats['failed']) ? $reviewStats['failed']->count : 0),
             ],
             'post_status' => [
-                'published' => (int) ($postStats['publish']->count ?? 0),
-                'drafts' => (int) ($postStats['draft']->count ?? 0),
-                'future' => (int) ($postStats['future']->count ?? 0),
-                'private' => (int) ($postStats['private']->count ?? 0),
-                'total' => array_sum(array_map(fn($s) => $s->count, (array) $postStats)),
+                'published' => (int) (isset($postStats['publish']) ? $postStats['publish']->count : 0),
+                'drafts' => (int) (isset($postStats['draft']) ? $postStats['draft']->count : 0),
+                'future' => (int) (isset($postStats['future']) ? $postStats['future']->count : 0),
+                'private' => (int) (isset($postStats['private']) ? $postStats['private']->count : 0),
+                'total' => is_array($postStats) ? array_sum(array_map(fn($s) => (int) $s->count, $postStats)) : 0,
             ],
-            'languages' => $languageStats,
+            'languages' => $languageStats ?: [],
         ];
     }
 
@@ -920,8 +920,9 @@ class CreatedPosts
                     orderby: currentSort,
                     order: currentOrder,
                     search: $('#filter-search').val(),
-                    cluster_id: $('#filter-cluster').val(),
                 };
+                const clusterId = $('#filter-cluster').val();
+                if (clusterId) params.cluster_id = clusterId;
 
                 // Add active filters
                 $('.status-pill.active').each(function() {
@@ -950,19 +951,26 @@ class CreatedPosts
                     path: 'sseo-ai/v1/created-posts/stats',
                     method: 'GET'
                 }).then(function(stats) {
-                    $('#count-completed').text(stats.edit_status.completed);
-                    $('#count-pending').text(stats.edit_status.pending);
-                    $('#count-failed').text(stats.edit_status.failed);
-                    $('#count-review-yes').text(stats.review_status.yes);
-                    $('#count-review-no').text(stats.review_status.no);
-                    $('#count-review-attention').text(stats.review_status.needs_attention);
-                    $('#count-reviewing').text(stats.review_status.reviewing);
-                    $('#count-review-failed').text(stats.review_status.failed);
-                    $('#count-published').text(stats.post_status.published);
-                    $('#count-drafts').text(stats.post_status.drafts);
-                    $('#count-future').text(stats.post_status.future);
-                    $('#count-private').text(stats.post_status.private);
-                    $('#count-lang-all').text(stats.post_status.total);
+                    if (!stats) return;
+                    var es = stats.edit_status || {};
+                    var rs = stats.review_status || {};
+                    var ps = stats.post_status || {};
+                    $('#count-completed').text(es.completed || 0);
+                    $('#count-pending').text(es.pending || 0);
+                    $('#count-failed').text(es.failed || 0);
+                    $('#count-all').text((es.completed || 0) + (es.pending || 0) + (es.failed || 0));
+                    $('#count-review-yes').text(rs.yes || 0);
+                    $('#count-review-no').text(rs.no || 0);
+                    $('#count-review-attention').text(rs.needs_attention || 0);
+                    $('#count-reviewing').text(rs.reviewing || 0);
+                    $('#count-review-failed').text(rs.failed || 0);
+                    $('#count-published').text(ps.published || 0);
+                    $('#count-drafts').text(ps.drafts || 0);
+                    $('#count-future').text(ps.future || 0);
+                    $('#count-private').text(ps.private || 0);
+                    $('#count-lang-all').text(ps.total || 0);
+                }).catch(function(error) {
+                    console.error('Failed to load stats:', error);
                 });
             }
 

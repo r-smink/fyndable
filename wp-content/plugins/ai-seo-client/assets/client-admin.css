@@ -77,7 +77,7 @@ body[class*="aiseo"] #wpfooter {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     color: #fff;
     padding: 30px 40px;
-    margin: -10px -20px 0 -20px;
+    margin: 0;
     border-radius: 0;
 }
 

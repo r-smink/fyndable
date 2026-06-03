@@ -837,7 +837,7 @@ PROMPT;
         $table = $wpdb->prefix . 'sseo_ai_keywords';
         $charset = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (
+        $sql = "CREATE TABLE {$table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             keyword varchar(255) NOT NULL,
             cluster_id bigint(20) unsigned,
@@ -1180,10 +1180,13 @@ PROMPT;
                 btn.find('.spinner').show();
                 btn.prop('disabled', true);
 
+                const addData = { keyword };
+                if (clusterId) addData.cluster_id = parseInt(clusterId);
+
                 wp.apiFetch({
                     path: 'sseo-ai/v1/keywords/add',
                     method: 'POST',
-                    data: { keyword, cluster_id: clusterId }
+                    data: addData
                 }).then(function(response) {
                     $('#modal-add-keyword').hide();
                     $('#add-keyword-input').val('');
