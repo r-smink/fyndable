@@ -1,6 +1,6 @@
 # AI SEO Client — WordPress Plugin
 
-> All-in-one AI-powered SEO plugin that combines the best of RankMath/Yoast/AIOSEO **and** MarketMuse/NeuronWriter/SurferSEO — directly inside WordPress.
+> All-in-one AI-powered SEO plugin that combines the best of RankMath/Yoast/AIOSEO **and** MarketMuse/NeuronWriter/SurferSEO/Frase — directly inside WordPress. **60+ modules. Version 1.2.0.**
 
 ## Installation
 
@@ -59,6 +59,17 @@
 | **Content Brief Generator** | `contentbrief.php` | SEO content brief using SERP analysis + AI. Competitor headings, questions, entities, LSI keywords, outlines, difficulty estimation, content scoring against brief. |
 | **Keyword Explorer** | `keywordexplorer.php` | Keyword expansion via SERP title n-gram extraction. Jaccard similarity clustering. Stores expansions and clusters in wp_options. REST API for expand + cluster. |
 | **GSC Dashboard** | `gscdashboard.php` | Google Search Console performance data in WordPress admin. Clicks, impressions, CTR, average position. Top queries and top pages tables. Period selection (7/28/90 days). |
+| **FAQ Schema Generator** | `faqschema.php` | AI-generated FAQ structured data from content. Auto-extracts Q&A pairs. JSON-LD output. Per-post FAQ editor with AI suggestions. |
+| **Video SEO** | `videoseo.php` | VideoObject schema markup, AI-generated video transcripts, video sitemap integration, thumbnail optimization, video rich snippet support. |
+| **AI Image Generator** | `aiimagegenerator.php` | DALL-E / Midjourney proxy via SaaS Dashboard. Generate featured images from prompts. Auto-alt text generation. Save to media library. |
+| **E-E-A-T Validator** | `eeatvalidator.php` | AI-powered Experience, Expertise, Authoritativeness, Trustworthiness analysis. Checks author bios, citations, outbound links, factual claims. Improvement suggestions. |
+| **Content Performance Monitor** | `contentperformancemonitor.php` | Track content metrics over time: word count, readability, SEO score trends. Identifies underperforming pages. Benchmark against competitors. |
+| **Backlink Analyzer** | `backlinkanalyzer.php` | Backlink profile analysis: total links, referring domains, anchor text distribution, toxic link detection. Integration with external backlink APIs. |
+| **SERP Feature Tracker** | `serpfeaturetracker.php` | Track featured snippets, People Also Ask, knowledge panels, image packs, video carousels. Alert when you win/lose SERP features. |
+| **International SEO** | `internationalseo.php` | Advanced hreflang management, geo-targeting settings, multilingual sitemaps, currency/price localization for WooCommerce. |
+| **Technical SEO Auditor** | `technicalseoauditor.php` | Comprehensive technical audit: crawlability, indexability, Core Web Vitals, mobile-friendliness, structured data validation, broken links, redirect chains. |
+| **Competitor Research** | `competitorresearch.php` | Deep competitor domain analysis: traffic estimates, top keywords, content gaps, backlink comparison. AI-powered strategic recommendations. |
+| **A/B Testing** | `abtesting.php` | **Differentiator.** Test title/content/meta variants per post. Cookie-based traffic split. 4 goal types: page_view, click, form_submit, time_on_page. Real-time stats dashboard. Auto-winner detection. |
 
 ### Business+ Features
 
@@ -68,6 +79,8 @@
 | **AI Content Repurposer** | `airepurposer.php` | Transform existing content into new formats: blog → social posts, article → email newsletter, long-form → summary, text → FAQ, content → video script. |
 | **Bulk AI Optimizer** | `bulkactions.php` | Bulk generate meta titles, descriptions, OG tags for hundreds of posts. SEO status column in post list. Scan for missing meta data. Progress tracking with batch processing. |
 | **Content Decay Monitor** | `contentdecay.php` | Detects declining content via Google Search Console data. Tracks impression/click trends. Alerts when pages lose rankings. Suggests refresh strategies. |
+| **Advanced Backlinks** | `advancedbacklinks.php` | Deep backlink monitoring: new/lost links, anchor text changes, domain authority trends. Automated outreach email templates. Competitor backlink gap analysis. |
+| **Content Performance Monitor** | `contentperformancemonitor.php` | Long-term content metrics tracking. Benchmark against historical performance. Automated underperformance alerts. |
 | **Audit Service** | `auditservice.php` | Comprehensive content audit with quality scoring, thin content detection, duplicate content finder, and optimization recommendations. |
 
 ### Agency Features
@@ -76,6 +89,7 @@
 |--------|------|-------------|
 | **SEO Revisions** | `seorevisions.php` | Track all SEO meta changes over time. Compare revisions, restore previous versions. Audit trail for multi-user environments. |
 | **AI Plagiarism Checker** | `plagiarismchecker.php` | AI-powered originality analysis. Heuristic checks (sentence patterns, vocabulary diversity, perplexity) combined with LLM deep analysis. Originality score 0-100. Flags AI-generated content. |
+| **White Label** | `whitelabel.php` | Rebrand the plugin with your agency logo, colors, and name. Client-facing reports without SSEO AI branding. Custom domain for SaaS dashboard. |
 
 ### Infrastructure / Support Modules
 
@@ -110,10 +124,10 @@
 
 | Feature Category | Free | Starter | Pro | Business | Agency | **DEV** |
 |-----------------|:----:|:-------:|:---:|:--------:|:------:|:------:|
-| **Core SEO** (TruSEO, Sitemaps, OG, Schema, etc.) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Content Tools** (Rewriter, Alt Generator) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Advanced SEO** (Rank Tracker, GSC, Clusters) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **AI Generation** (Writer, Repurposer, Bulk) | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Core SEO** (TruSEO, Sitemaps, OG, Keywords, Ideas, etc.) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Content Tools** (Rewriter, Alt Generator, Link Assistant) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Advanced SEO** (Rank Tracker, GSC, Clusters, A/B Testing, Schema, etc.) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **AI Generation** (Writer, Repurposer, Bulk, Image Gen) | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | **Agency Tools** (Revisions, Plagiarism, White Label) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 
 > ⚠️ **DEV tier** is for internal development/testing only. Never distribute to clients. Set via SaaS dashboard or database: `sseo_ai_client_license_tier = 'dev'`
@@ -122,7 +136,7 @@
 
 ## REST API Endpoints
 
-All endpoints use namespace `aiseoclient/v1`.
+All endpoints use namespace `sseo-ai/v1`.
 
 ### On-Page SEO
 - `POST /truseo/analyze` — Analyze content SEO
@@ -189,6 +203,14 @@ All endpoints use namespace `aiseoclient/v1`.
 - `GET /ranks/history/{id}` — Get position history
 - `POST /ranks/check-now` — Force rank check
 
+### A/B Testing
+- `GET /ab-tests` — List all tests
+- `POST /ab-tests` — Create new test with variants
+- `DELETE /ab-tests/{id}` — Delete test and all data
+- `POST /ab-tests/{id}/end` — End an active test
+- `GET /ab-tests/{id}/stats` — Get test statistics and conversion rates
+- `POST /ab-tests/conversion` — Record a conversion (public endpoint)
+
 ---
 
 ## Admin Pages
@@ -199,13 +221,17 @@ All endpoints use namespace `aiseoclient/v1`.
 | 📊 Dashboard | `ai-seo-dashboard` | SEO health overview | Free | 📊 |
 | 📅 Content Calendar | `ai-seo-content-calendar` | Editorial calendar | Free | 📅 |
 | 🤖 AI Tools | `ai-seo-ai-tools` | AI tools overview | Free | 🤖 |
-| 🔗 Link Manager | `ai-seo-link-manager` | Smart Internal Linking | Free | 🔗 |
+| � Ideas | `ai-seo-ideas` | AI content ideas | Free | 💡 |
+| 📝 Created Posts | `ai-seo-created-posts` | Generated content overview | Free | 📝 |
+| 🎯 Keywords | `ai-seo-keywords` | Keyword database & clusters | Free | 🎯 |
+| �� Link Manager | `ai-seo-link-manager` | Smart Internal Linking | Free | 🔗 |
 | 🗺️ Sitemaps | `ai-seo-sitemaps` | XML sitemap management | Free | 🗺️ |
 | 🔌 Integrations | `ai-seo-integrations` | External services | Free | 🔌 |
 | 🎯 Topic Clusters | `ai-seo-topic-clusters` | Topical authority mapping | **Professional** | 🎯 |
 | 🔍 Site Audit | `ai-seo-site-audit` | Technical SEO audit | **Professional** | 🔍 |
 | 📈 Rank Tracker | `ai-seo-rank-tracker` | SERP position tracking | **Professional** | 📈 |
 | 📊 Search Console | `ai-seo-gsc` | GSC integration | **Professional** | 📊 |
+| 🧪 A/B Testing | `ai-seo-ab-testing` | Content split testing | **Professional** | 🧪 |
 | ⚙️ Settings | `ai-seo-settings` | Plugin configuration | Free | ⚙️ |
 
 ### Tier-Restricted Menu Behavior
@@ -220,45 +246,56 @@ When a user tries to access a feature not included in their tier:
 
 ## Competitive Advantage
 
-| Feature | RankMath | Yoast | AIOSEO | WPSEO AI | MarketMuse | NeuronWriter | SurferSEO | **SSEO AI Client** |
-|---------|---------|-------|--------|----------|-----------|-------------|-----------|-------------------|
-| On-page SEO Score | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ |
-| NLP Content Score | — | — | — | Partial | ✅ | ✅ | ✅ | ✅ |
-| Topic Model | — | — | — | — | ✅ | ✅ | ✅ | ✅ |
-| SERP Competitor Analysis | — | — | — | — | ✅ | ✅ | ✅ | ✅ |
-| Topic Cluster Maps | — | — | — | — | ✅ | ✅ | — | ✅ |
-| Personalized KD | — | — | — | — | ✅ | — | — | ✅ |
-| AI Content Writing | — | Partial | Partial | ✅ | — | ✅ | — | ✅ |
-| AI Content Repurposing | — | — | — | ✅ | — | — | — | ✅ |
-| Schema Markup | ✅ | ✅ | ✅ | — | — | — | — | ✅ |
-| WooCommerce SEO | ✅ | ✅ | ✅ | — | — | — | — | ✅ |
-| Rank Tracking | ✅ | — | — | — | — | — | ✅ | ✅ |
-| Redirections | ✅ | — | ✅ | — | — | — | — | ✅ |
-| 404 Monitor | ✅ | — | — | — | — | — | — | ✅ |
-| Plagiarism Check | — | — | — | — | — | — | — | ✅ |
-| SEO Revisions | — | — | — | — | — | — | — | ✅ |
-| Content Decay Alert | — | — | — | — | ✅ | — | — | ✅ |
-| Local SEO | ✅ | ✅ | ✅ | — | — | — | — | ✅ |
-| Bulk Optimizer | — | — | — | ✅ | — | — | — | ✅ |
-| Readability Score (NL) | — | ✅ | — | — | — | — | — | ✅ |
-| AI Content Rewriter | — | — | — | ✅ | — | — | — | ✅ |
-| IndexNow Integration | ✅ | — | — | — | — | — | — | ✅ |
-| GSC Dashboard | ✅ | — | — | — | — | — | — | ✅ |
-| Hreflang / Multilang | ✅ | ✅ | — | — | — | — | — | ✅ |
-| Video/News Sitemaps | ✅ | ✅ | ✅ | — | — | — | — | ✅ |
-| SaaS License Gating | — | — | — | — | — | — | — | ✅ |
+| Feature | RankMath | Yoast | AIOSEO | WPSEO AI | MarketMuse | NeuronWriter | SurferSEO | Frase | **SSEO AI Client** |
+|---------|---------|-------|--------|----------|-----------|-------------|-----------|-------|-------------------|
+| **On-page SEO Score** | ✅ | ✅ | ✅ | ✅ | — | — | — | — | ✅ |
+| **NLP Content Score** | — | — | — | Partial | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Topic Model / Content Briefs** | — | — | — | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **SERP Competitor Analysis** | — | — | — | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Topic Cluster Maps** | — | — | — | — | ✅ | ✅ | — | — | ✅ |
+| **Personalized Keyword Difficulty** | — | — | — | — | ✅ | — | — | — | ✅ |
+| **AI Content Writing** | — | Partial | Partial | ✅ | — | ✅ | — | ✅ | ✅ |
+| **AI Content Repurposing** | — | — | — | ✅ | — | — | — | — | ✅ |
+| **AI Image Generator** | — | — | — | — | — | — | — | — | ✅ |
+| **FAQ Schema Generator** | — | — | — | — | — | — | — | — | ✅ |
+| **Video SEO / Transcripts** | — | — | — | — | — | — | — | — | ✅ |
+| **E-E-A-T Validator** | — | — | — | — | — | — | — | — | ✅ |
+| **Content Performance Monitor** | — | — | — | — | — | — | — | — | ✅ |
+| **Schema Markup (JSON-LD)** | ✅ | ✅ | ✅ | — | — | — | — | — | ✅ |
+| **WooCommerce SEO** | ✅ | ✅ | ✅ | — | — | — | — | — | ✅ |
+| **Rank Tracking** | ✅ | — | — | — | — | — | ✅ | — | ✅ |
+| **Redirections (301/302)** | ✅ | — | ✅ | — | — | — | — | — | ✅ |
+| **404 Monitor** | ✅ | — | — | — | — | — | — | — | ✅ |
+| **Smart Internal Linking** | ✅ | — | — | — | — | — | — | — | ✅ |
+| **Backlink Analyzer** | ✅ | — | — | — | — | — | — | — | ✅ |
+| **Plagiarism Check** | — | — | — | — | — | — | — | — | ✅ |
+| **SEO Revisions** | — | — | — | — | — | — | — | — | ✅ |
+| **Content Decay Alert** | — | — | — | — | ✅ | — | — | — | ✅ |
+| **Local SEO** | ✅ | ✅ | ✅ | — | — | — | — | — | ✅ |
+| **Bulk Optimizer** | — | — | — | ✅ | — | — | — | — | ✅ |
+| **Readability Score (NL)** | — | ✅ | — | — | — | — | — | — | ✅ |
+| **AI Content Rewriter** | — | — | — | ✅ | — | — | — | — | ✅ |
+| **IndexNow Integration** | ✅ | — | — | — | — | — | — | — | ✅ |
+| **GSC Dashboard** | ✅ | — | — | — | — | — | — | — | ✅ |
+| **SERP Feature Tracker** | — | — | — | — | — | — | — | — | ✅ |
+| **Technical SEO Auditor** | — | — | — | — | — | — | — | — | ✅ |
+| **Competitor Research** | — | — | — | — | — | — | — | — | ✅ |
+| **A/B Testing (Split Testing)** | — | — | — | — | — | — | — | — | ✅ |
+| **Hreflang / Multilang** | ✅ | ✅ | — | — | — | — | — | — | ✅ |
+| **Video/News Sitemaps** | ✅ | ✅ | ✅ | — | — | — | — | — | ✅ |
+| **SaaS License Gating** | — | — | — | — | — | — | — | — | ✅ |
 
 ---
 
 ## Technical Notes
 
-- **Namespace:** `AISEOClient`
-- **Autoloader:** `strtolower(className)` → `includes/{filename}.php`
-- **REST namespace:** `aiseoclient/v1`
-- **Meta prefix:** `_aiseo_`
-- **Option prefix:** `ai_seo_client_`
-- **Cron hooks:** `ai_seo_client_license_check`, `aiseo_rank_check_cron`
-- **Dependencies:** `wp-api-fetch` for admin JS
+- **Namespace:** `SSEOAIClient`
+- **Autoloader:** PSR-4 style → `includes/{filename}.php`
+- **REST namespace:** `sseo-ai/v1`
+- **Option prefix:** `sseo_ai_client_`
+- **Cron hooks:** `sseo_ai_rank_check_cron`
+- **Dependencies:** `wp-api-fetch`, `jquery` for admin JS
+- **Current Version:** 1.2.0
 
 ## Requirements
 
