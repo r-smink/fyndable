@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Readability Score
@@ -30,7 +30,7 @@ class ReadabilityScore
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/readability/analyze', [
+        register_rest_route('sseo-ai/v1', '/readability/analyze', [
             'methods' => 'POST',
             'callback' => [$this, 'restAnalyze'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -40,7 +40,7 @@ class ReadabilityScore
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/readability/suggest', [
+        register_rest_route('sseo-ai/v1', '/readability/suggest', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggest'],
             'permission_callback' => fn() => current_user_can('edit_posts'),

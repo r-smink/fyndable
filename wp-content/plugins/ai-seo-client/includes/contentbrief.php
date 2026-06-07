@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Brief Generator
@@ -25,7 +25,7 @@ class ContentBrief
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
     }
 
     public function addMenu(): void
@@ -42,7 +42,7 @@ class ContentBrief
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/content-brief', [
+        register_rest_route('sseo-ai/v1', '/content-brief', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateBrief'],
             'permission_callback' => function () {
@@ -54,7 +54,7 @@ class ContentBrief
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/content-brief/score', [
+        register_rest_route('sseo-ai/v1', '/content-brief/score', [
             'methods' => 'POST',
             'callback' => [$this, 'restScoreContent'],
             'permission_callback' => function () {
@@ -724,7 +724,7 @@ PROMPT;
                 $('#aiseo-brief-result').hide();
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/content-brief',
+                    path: 'sseo-ai/v1/content-brief',
                     method: 'POST',
                     data: { keyword: keyword }
                 }).then(function(brief) {
@@ -797,7 +797,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Scoring...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/content-brief/score',
+                    path: 'sseo-ai/v1/content-brief/score',
                     method: 'POST',
                     data: { keyword: keyword, content: content, brief_id: briefId }
                 }).then(function(result) {

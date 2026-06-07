@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * AI Plagiarism / Originality Checker
@@ -29,7 +29,7 @@ class PlagiarismChecker
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/originality/check', [
+        register_rest_route('sseo-ai/v1', '/originality/check', [
             'methods' => 'POST',
             'callback' => [$this, 'restCheckOriginality'],
             'permission_callback' => function () {
@@ -94,8 +94,8 @@ class PlagiarismChecker
 
         // Save score to post meta
         if ($postId) {
-            update_post_meta($postId, '_aiseo_originality_score', $combinedScore);
-            update_post_meta($postId, '_aiseo_originality_checked', current_time('mysql'));
+            update_post_meta($postId, '_sseo_ai_originality_score', $combinedScore);
+            update_post_meta($postId, '_sseo_ai_originality_checked', current_time('mysql'));
         }
 
         return [
@@ -330,8 +330,8 @@ Return JSON only (no markdown):
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $score = get_post_meta($post->ID, '_aiseo_originality_score', true);
-        $checked = get_post_meta($post->ID, '_aiseo_originality_checked', true);
+        $score = get_post_meta($post->ID, '_sseo_ai_originality_score', true);
+        $checked = get_post_meta($post->ID, '_sseo_ai_originality_checked', true);
         ?>
         <div id="aiseo-originality-box">
             <?php if ($score !== ''): ?>
@@ -367,7 +367,7 @@ Return JSON only (no markdown):
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/originality/check',
+                    path: 'sseo-ai/v1/originality/check',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(res) {

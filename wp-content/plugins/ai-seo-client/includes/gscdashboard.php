@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Google Search Console Dashboard
@@ -25,7 +25,7 @@ class GscDashboard
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
     }
 
     public function addMenu(): void
@@ -42,7 +42,7 @@ class GscDashboard
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/gsc/overview', [
+        register_rest_route('sseo-ai/v1', '/gsc/overview', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetOverview'],
             'permission_callback' => fn() => current_user_can('manage_options'),
@@ -51,7 +51,7 @@ class GscDashboard
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/gsc/queries', [
+        register_rest_route('sseo-ai/v1', '/gsc/queries', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetTopQueries'],
             'permission_callback' => fn() => current_user_can('manage_options'),
@@ -61,7 +61,7 @@ class GscDashboard
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/gsc/pages', [
+        register_rest_route('sseo-ai/v1', '/gsc/pages', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetTopPages'],
             'permission_callback' => fn() => current_user_can('manage_options'),
@@ -229,9 +229,22 @@ class GscDashboard
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO → Settings to enable.', 'ai-seo-client'); ?></p>
+        <style>
+            #wpcontent { padding-left: 0 !important; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO → Settings to enable.', 'ai-seo-client'); ?></p>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
 
             <div id="aiseo-gsc-app" style="max-width: 1400px;">
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -307,6 +320,8 @@ class GscDashboard
                     </div>
                 </div>
             </div>
+                </div>
+            </div>
         </div>
 
         <script>
@@ -325,9 +340,9 @@ class GscDashboard
 
                 // Fetch overview + queries + pages in parallel
                 Promise.all([
-                    wp.apiFetch({path: 'aiseoclient/v1/gsc/overview?days=' + days}),
-                    wp.apiFetch({path: 'aiseoclient/v1/gsc/queries?days=' + days + '&limit=30'}),
-                    wp.apiFetch({path: 'aiseoclient/v1/gsc/pages?days=' + days + '&limit=30'})
+                    wp.apiFetch({path: 'sseo-ai/v1/gsc/overview?days=' + days}),
+                    wp.apiFetch({path: 'sseo-ai/v1/gsc/queries?days=' + days + '&limit=30'}),
+                    wp.apiFetch({path: 'sseo-ai/v1/gsc/pages?days=' + days + '&limit=30'})
                 ]).then(function(results) {
                     var overview = results[0];
                     var queries = results[1];

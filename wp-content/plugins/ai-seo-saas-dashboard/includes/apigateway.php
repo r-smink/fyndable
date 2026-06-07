@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * API Gateway / Proxy
@@ -79,7 +79,7 @@ class ApiGateway
         }
         
         // Validate tenant exists and matches license
-        $tenant = $this->tenants->getByTenantKey($tenantKey);
+        $tenant = $this->tenants->getTenant($tenantKey);
         if (!$tenant || $tenant['license_key'] !== $licenseKey) {
             return false;
         }
@@ -102,19 +102,19 @@ class ApiGateway
      */
     private function isOverLimit(array $tenant): bool
     {
-        $tier = $tenant['license_tier'];
-        $apiLimit = $this->settings->getApiLimitForTier($tier);
+        $tier = $tenant['tier'];
+        $apiLimit = (int)$tenant['api_calls_limit'] ?: $this->settings->getApiLimitForTier($tier);
         $costLimit = $this->settings->getCostLimitForTier($tier);
         
         // Get current month's usage
         global $wpdb;
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
-        $currentMonth = date('Y-m');
+        $tableUsage = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $currentMonth = current_time('Y-m');
         
         $usage = $wpdb->get_row($wpdb->prepare(
-            "SELECT SUM(api_calls) as calls, SUM(api_cost) as cost 
+            "SELECT api_calls as calls, api_cost as cost 
              FROM {$tableUsage} 
-             WHERE tenant_id = %d AND DATE_FORMAT(created_at, '%Y-%m') = %s",
+             WHERE tenant_id = %d AND period = %s",
             $tenant['id'],
             $currentMonth
         ));
@@ -136,7 +136,7 @@ class ApiGateway
     public function handleAiRequest(\WP_REST_Request $request): \WP_REST_Response
     {
         $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
-        $tenant = $this->tenants->getByTenantKey($tenantKey);
+        $tenant = $this->tenants->getTenant($tenantKey);
         
         // Get OpenAI credentials
         $apiKey = $this->settings->getOpenAiApiKey();
@@ -146,7 +146,7 @@ class ApiGateway
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'ai_not_configured',
-                'message' => __('AI service is not configured', 'ai-seo-saas')
+                'message' => __('AI service is not configured', 'sseo-ai-saas')
             ], 503);
         }
         
@@ -203,7 +203,7 @@ class ApiGateway
     public function handleSerpRequest(\WP_REST_Request $request): \WP_REST_Response
     {
         $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
-        $tenant = $this->tenants->getByTenantKey($tenantKey);
+        $tenant = $this->tenants->getTenant($tenantKey);
         
         // Get SERP credentials
         $apiKey = $this->settings->getSerpApiKey();
@@ -213,7 +213,7 @@ class ApiGateway
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'serp_not_configured',
-                'message' => __('SERP service is not configured', 'ai-seo-saas')
+                'message' => __('SERP service is not configured', 'sseo-ai-saas')
             ], 503);
         }
         
@@ -251,26 +251,24 @@ class ApiGateway
     public function getUsageStatus(\WP_REST_Request $request): \WP_REST_Response
     {
         $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
-        $tenant = $this->tenants->getByTenantKey($tenantKey);
+        $tenant = $this->tenants->getTenant($tenantKey);
         
-        $tier = $tenant['license_tier'];
-        $apiLimit = $this->settings->getApiLimitForTier($tier);
+        $tier = $tenant['tier'];
+        $apiLimit = (int)$tenant['api_calls_limit'] ?: $this->settings->getApiLimitForTier($tier);
         $costLimit = $this->settings->getCostLimitForTier($tier);
         
         global $wpdb;
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
-        $currentMonth = date('Y-m');
+        $tableUsage = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $currentMonth = current_time('Y-m');
         
         $usage = $wpdb->get_row($wpdb->prepare(
             "SELECT 
-                SUM(api_calls) as calls,
-                SUM(api_cost) as cost,
-                SUM(CASE WHEN metric = 'ai_generation' THEN api_calls ELSE 0 END) as ai_calls,
-                SUM(CASE WHEN metric = 'ai_generation' THEN api_cost ELSE 0 END) as ai_cost,
-                SUM(CASE WHEN metric = 'serp_query' THEN api_calls ELSE 0 END) as serp_calls,
-                SUM(CASE WHEN metric = 'serp_query' THEN api_cost ELSE 0 END) as serp_cost
+                api_calls as calls,
+                api_cost as cost,
+                serp_requests as serp_calls,
+                content_generated
              FROM {$tableUsage} 
-             WHERE tenant_id = %d AND DATE_FORMAT(created_at, '%Y-%m') = %s",
+             WHERE tenant_id = %d AND period = %s",
             $tenant['id'],
             $currentMonth
         ));
@@ -285,10 +283,8 @@ class ApiGateway
             'usage' => [
                 'api_calls' => (int)($usage->calls ?? 0),
                 'api_cost' => (float)($usage->cost ?? 0),
-                'ai_calls' => (int)($usage->ai_calls ?? 0),
-                'ai_cost' => (float)($usage->ai_cost ?? 0),
                 'serp_calls' => (int)($usage->serp_calls ?? 0),
-                'serp_cost' => (float)($usage->serp_cost ?? 0),
+                'content_generated' => (int)($usage->content_generated ?? 0),
             ],
             'remaining' => [
                 'api_calls' => max(0, $apiLimit - (int)($usage->calls ?? 0)),
@@ -316,18 +312,43 @@ class ApiGateway
     private function trackUsage(int $tenantId, string $metric, int $count, float $cost): void
     {
         global $wpdb;
-        $tableUsage = $wpdb->prefix . AISEO_TABLE_TENANT_USAGE;
+        $tableUsage = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $period = current_time('Y-m');
         
-        $wpdb->insert($tableUsage, [
-            'tenant_id' => $tenantId,
-            'metric' => $metric,
-            'api_calls' => $count,
-            'api_cost' => $cost,
-            'created_at' => current_time('mysql'),
-        ]);
+        // Upsert: update existing period row or insert new one
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$tableUsage} WHERE tenant_id = %d AND period = %s",
+            $tenantId,
+            $period
+        ));
         
-        // Update tenant's monthly cost
-        $this->tenants->updateMonthlyCost($tenantId, $cost);
+        if ($existing) {
+            // Determine which column to increment based on metric
+            $column = 'api_calls';
+            if ($metric === 'serp_query') {
+                $column = 'serp_requests';
+            } elseif ($metric === 'content_generated') {
+                $column = 'content_generated';
+            }
+            
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$tableUsage} SET {$column} = {$column} + %d, api_cost = api_cost + %f WHERE id = %d",
+                $count,
+                $cost,
+                $existing
+            ));
+        } else {
+            $data = [
+                'tenant_id' => $tenantId,
+                'period' => $period,
+                'api_calls' => ($metric === 'ai_generation') ? $count : 0,
+                'api_cost' => $cost,
+                'serp_requests' => ($metric === 'serp_query') ? $count : 0,
+                'content_generated' => ($metric === 'content_generated') ? $count : 0,
+                'keywords_tracked' => 0,
+            ];
+            $wpdb->insert($tableUsage, $data);
+        }
     }
 
     /**
@@ -341,7 +362,7 @@ class ApiGateway
             case 'serpapi':
                 return $this->fetchSerpApi($apiKey, $keyword, $location);
             default:
-                return new \WP_Error('unknown_provider', __('Unknown SERP provider', 'ai-seo-saas'));
+                return new \WP_Error('unknown_provider', __('Unknown SERP provider', 'sseo-ai-saas'));
         }
     }
 

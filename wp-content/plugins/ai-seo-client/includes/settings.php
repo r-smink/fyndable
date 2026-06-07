@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Settings Manager
@@ -9,14 +9,15 @@ namespace AISEOClient;
  */
 class Settings
 {
-    private const OPTION_GROUP = 'ai_seo_client_settings';
+    public const OPTION_KEY = 'sseo_ai_client_settings';
+    private const OPTION_GROUP = 'sseo_ai_client_settings';
 
     /**
      * Get a setting value
      */
     public function get(string $key, $default = null)
     {
-        $value = get_option("ai_seo_client_{$key}", $default);
+        $value = get_option("sseo_ai_client_{$key}", $default);
         return $value;
     }
 
@@ -25,7 +26,7 @@ class Settings
      */
     public function set(string $key, $value): bool
     {
-        return update_option("ai_seo_client_{$key}", $value);
+        return update_option("sseo_ai_client_{$key}", $value);
     }
 
     /**
@@ -33,7 +34,7 @@ class Settings
      */
     public function delete(string $key): bool
     {
-        return delete_option("ai_seo_client_{$key}");
+        return delete_option("sseo_ai_client_{$key}");
     }
 
     /**
@@ -41,7 +42,7 @@ class Settings
      */
     public function getDashboardUrl(): string
     {
-        return get_option('ai_seo_client_dashboard_url', '');
+        return get_option('sseo_ai_client_dashboard_url', '');
     }
 
     /**
@@ -49,7 +50,7 @@ class Settings
      */
     public function getMaskedLicense(): string
     {
-        $key = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
+        $key = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         if (empty($key)) {
             return '';
         }
@@ -64,17 +65,43 @@ class Settings
         global $wpdb;
         
         $results = $wpdb->get_results(
-            "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'ai_seo_client_%'",
+            "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'sseo_ai_client_%'",
             ARRAY_A
         );
 
         $settings = [];
         foreach ($results as $row) {
-            $key = str_replace('ai_seo_client_', '', $row['option_name']);
+            $key = str_replace('sseo_ai_client_', '', $row['option_name']);
             $settings[$key] = maybe_unserialize($row['option_value']);
         }
 
         return $settings;
+    }
+
+    /**
+     * Get AI temperature setting
+     */
+    public function temperature(): float
+    {
+        return (float)get_option('sseo_ai_client_temperature', 0.7);
+    }
+
+    /**
+     * Get SSL verification setting for API calls
+     * Defaults to true for production security
+     */
+    public function sslVerify(): bool
+    {
+        $value = get_option('sseo_ai_client_ssl_verify', '1');
+        return $value !== '0' && $value !== false && $value !== 0;
+    }
+
+    /**
+     * Alias for getAll() for backwards compatibility
+     */
+    public function all(): array
+    {
+        return $this->getAll();
     }
 
     /**
@@ -84,6 +111,6 @@ class Settings
     {
         global $wpdb;
         
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'ai_seo_client_%'");
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'sseo_ai_client_%'");
     }
 }

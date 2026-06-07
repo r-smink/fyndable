@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * IndexNow Integration
@@ -36,7 +36,7 @@ class IndexNow
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/indexnow/submit', [
+        register_rest_route('sseo-ai/v1', '/indexnow/submit', [
             'methods' => 'POST',
             'callback' => [$this, 'restSubmitUrls'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -45,7 +45,7 @@ class IndexNow
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/indexnow/status', [
+        register_rest_route('sseo-ai/v1', '/indexnow/status', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetStatus'],
             'permission_callback' => fn() => current_user_can('edit_posts'),

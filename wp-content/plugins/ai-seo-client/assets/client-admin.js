@@ -34,20 +34,28 @@
             }, 3000);
         }
 
-        // Validate license key format
-        $('#license_key').on('blur', function() {
+        // Validate license key format (non-blocking)
+        $('#license_key').on('input', function() {
             const key = $(this).val().trim();
-            const pattern = /^AISEO-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/;
+            const pattern = /^SSEO-AI-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/i;
             
-            if (key && !pattern.test(key)) {
+            // Remove previous error messages
+            $(this).next('.error-message').remove();
+            
+            if (key && key.length > 5 && !pattern.test(key)) {
                 $(this).addClass('error');
-                if (!$(this).next('.description').length) {
-                    $(this).after('<p class="description error-message" style="color: #d63638;">Invalid license key format. Expected format: AISEO-XXXX-XXXX-XXXX-XXXX</p>');
+                if (!$(this).next('.error-message').length) {
+                    $(this).after('<p class="description error-message" style="color: #d63638;">⚠️ Expected format: SSEO-AI-XXXX-XXXX-XXXX (case-insensitive)</p>');
                 }
             } else {
                 $(this).removeClass('error');
-                $(this).next('.error-message').remove();
             }
+        });
+        
+        // Clear error on focus
+        $('#license_key').on('focus', function() {
+            $(this).removeClass('error');
+            $(this).next('.error-message').remove();
         });
     });
 })(jQuery);

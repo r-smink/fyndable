@@ -15,57 +15,57 @@ if (!defined('ABSPATH')) {
 }
 
 // API Version (must match between plugins)
-if (!defined('AISEO_SAAS_API_VERSION')) {
-    define('AISEO_SAAS_API_VERSION', 'v1');
+if (!defined('SSEO_AI_SAAS_API_VERSION')) {
+    define('SSEO_AI_SAAS_API_VERSION', 'v1');
 }
 
 // API Namespace
-if (!defined('AISEO_SAAS_API_NAMESPACE')) {
-    define('AISEO_SAAS_API_NAMESPACE', 'ai-seo-saas/' . AISEO_SAAS_API_VERSION);
+if (!defined('SSEO_AI_SAAS_API_NAMESPACE')) {
+    define('SSEO_AI_SAAS_API_NAMESPACE', 'ai-seo-saas/' . SSEO_AI_SAAS_API_VERSION);
 }
 
 // License Key Format
-if (!defined('AISEO_LICENSE_KEY_PATTERN')) {
-    define('AISEO_LICENSE_KEY_PATTERN', '/^AISEO-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/');
+if (!defined('SSEO_AI_LICENSE_KEY_PATTERN')) {
+    define('SSEO_AI_LICENSE_KEY_PATTERN', '/^SSEO-AI-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/');
 }
 
 // Database Table Names (without prefix)
-if (!defined('AISEO_TABLE_TENANTS')) {
-    define('AISEO_TABLE_TENANTS', 'aiseo_tenants');
+if (!defined('SSEO_AI_TABLE_TENANTS')) {
+    define('SSEO_AI_TABLE_TENANTS', 'sseo_ai_tenants');
 }
-if (!defined('AISEO_TABLE_TENANT_SETTINGS')) {
-    define('AISEO_TABLE_TENANT_SETTINGS', 'aiseo_tenant_settings');
+if (!defined('SSEO_AI_TABLE_TENANT_SETTINGS')) {
+    define('SSEO_AI_TABLE_TENANT_SETTINGS', 'sseo_ai_tenant_settings');
 }
-if (!defined('AISEO_TABLE_TENANT_USAGE')) {
-    define('AISEO_TABLE_TENANT_USAGE', 'aiseo_tenant_usage');
+if (!defined('SSEO_AI_TABLE_TENANT_USAGE')) {
+    define('SSEO_AI_TABLE_TENANT_USAGE', 'sseo_ai_tenant_usage');
 }
-if (!defined('AISEO_TABLE_LICENSE_KEYS')) {
-    define('AISEO_TABLE_LICENSE_KEYS', 'aiseo_license_keys');
+if (!defined('SSEO_AI_TABLE_LICENSE_KEYS')) {
+    define('SSEO_AI_TABLE_LICENSE_KEYS', 'sseo_ai_license_keys');
 }
 
 // License Types
-if (!defined('AISEO_LICENSE_TYPES')) {
-    define('AISEO_LICENSE_TYPES', ['test', 'free', 'trial', 'paid', 'lifetime']);
+if (!defined('SSEO_AI_LICENSE_TYPES')) {
+    define('SSEO_AI_LICENSE_TYPES', ['test', 'free', 'trial', 'paid', 'lifetime']);
 }
 
 // License Tiers
-if (!defined('AISEO_LICENSE_TIERS')) {
-    define('AISEO_LICENSE_TIERS', ['free', 'trial', 'starter', 'professional', 'business', 'agency']);
+if (!defined('SSEO_AI_LICENSE_TIERS')) {
+    define('SSEO_AI_LICENSE_TIERS', ['free', 'trial', 'starter', 'professional', 'business', 'agency']);
 }
 
 // Tenant Status
-if (!defined('AISEO_TENANT_STATUS')) {
-    define('AISEO_TENANT_STATUS', ['active', 'suspended', 'cancelled']);
+if (!defined('SSEO_AI_TENANT_STATUS')) {
+    define('SSEO_AI_TENANT_STATUS', ['active', 'suspended', 'cancelled']);
 }
 
 // License Status
-if (!defined('AISEO_LICENSE_STATUS')) {
-    define('AISEO_LICENSE_STATUS', ['active', 'used', 'revoked', 'expired']);
+if (!defined('SSEO_AI_LICENSE_STATUS')) {
+    define('SSEO_AI_LICENSE_STATUS', ['active', 'used', 'revoked', 'expired']);
 }
 
 // Usage Metrics
-if (!defined('AISEO_USAGE_METRICS')) {
-    define('AISEO_USAGE_METRICS', [
+if (!defined('SSEO_AI_USAGE_METRICS')) {
+    define('SSEO_AI_USAGE_METRICS', [
         'api_calls',
         'api_cost',
         'serp_requests',

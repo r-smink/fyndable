@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class RedirectionManager
 {
@@ -11,7 +11,7 @@ class RedirectionManager
     {
         global $wpdb;
         $this->settings = $settings;
-        $this->tableName = $wpdb->prefix . 'aiseo_redirects';
+        $this->tableName = $wpdb->prefix . 'sseo_ai_redirects';
     }
 
     public function register(): void
@@ -27,7 +27,7 @@ class RedirectionManager
     {
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
-        $sql = "CREATE TABLE IF NOT EXISTS {$this->tableName} (
+        $sql = "CREATE TABLE {$this->tableName} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             source_url varchar(500) NOT NULL,
             target_url varchar(500) NOT NULL,
@@ -254,7 +254,7 @@ class RedirectionManager
         }
 
         // Store for later use in post_updated
-        update_post_meta($postarr['ID'], '_aiseo_old_slug', $oldPost->post_name);
+        update_post_meta($postarr['ID'], '_sseo_ai_old_slug', $oldPost->post_name);
 
         return $data;
     }

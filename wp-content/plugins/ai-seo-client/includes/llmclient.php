@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * LLM Client - Proxied through SaaS Dashboard
@@ -31,9 +31,9 @@ class LlmClient
      */
     public function isAvailable(): bool
     {
-        $licenseKey = get_option(AISEO_CLIENT_LICENSE_OPTION, '');
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('ai_seo_client_dashboard_url', '');
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
         
         return !empty($licenseKey) && !empty($tenantKey) && !empty($dashboardUrl);
     }
@@ -81,16 +81,63 @@ class LlmClient
      */
     private function checkRateLimit(): bool
     {
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
+        // Bypass rate limit for test licenses
+        $licenseType = get_option('sseo_ai_client_license_type', '');
+        if ($licenseType === 'test') {
+            return true;
+        }
+        
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         if (empty($tenantKey)) {
             return false;
         }
         
         $key = self::RATE_LIMIT_KEY . $tenantKey;
         $calls = get_transient($key) ?: 0;
-        $limit = (int)get_option('ai_seo_client_rate_limit', 60); // per hour
+        $limit = (int)get_option('sseo_ai_client_rate_limit', 60); // per hour
         
         return $calls < $limit;
+    }
+    
+    /**
+     * Get current rate limit status
+     */
+    public function getRateLimitStatus(): array
+    {
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        if (empty($tenantKey)) {
+            return ['calls' => 0, 'limit' => 0, 'remaining' => 0, 'reset_in' => 0];
+        }
+        
+        $key = self::RATE_LIMIT_KEY . $tenantKey;
+        $calls = get_transient($key) ?: 0;
+        $limit = (int)get_option('sseo_ai_client_rate_limit', 60);
+        
+        // Get transient expiration time
+        $expires = get_option('_transient_timeout_' . $key);
+        $resetIn = $expires ? max(0, $expires - time()) : HOUR_IN_SECONDS;
+        
+        return [
+            'calls' => (int)$calls,
+            'limit' => $limit,
+            'remaining' => max(0, $limit - $calls),
+            'reset_in' => $resetIn,
+            'reset_in_minutes' => ceil($resetIn / 60),
+        ];
+    }
+    
+    /**
+     * Reset rate limit counter (for admin use)
+     */
+    public function resetRateLimit(): bool
+    {
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        if (empty($tenantKey)) {
+            return false;
+        }
+        
+        $key = self::RATE_LIMIT_KEY . $tenantKey;
+        return delete_transient($key);
     }
 
     /**
@@ -98,7 +145,7 @@ class LlmClient
      */
     private function incrementRateLimit(): void
     {
-        $tenantKey = get_option(AISEO_CLIENT_TENANT_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         if (empty($tenantKey)) {
             return;
         }
@@ -129,7 +176,17 @@ class LlmClient
         }
 
         if (!$this->checkRateLimit()) {
-            return new \WP_Error('rate_limited', __('API rate limit reached. Try again later.', 'ai-seo-client'));
+            $status = $this->getRateLimitStatus();
+            $minutes = $status['reset_in_minutes'] ?? 60;
+            return new \WP_Error(
+                'rate_limited', 
+                sprintf(
+                    __('API rate limit reached (%d/%d calls). Limit resets in %d minutes.', 'ai-seo-client'),
+                    $status['calls'],
+                    $status['limit'],
+                    $minutes
+                )
+            );
         }
 
         // Check usage before making request
@@ -199,6 +256,28 @@ class LlmClient
             'usage' => $response['usage'] ?? [],
             'provider' => 'openai',
         ];
+    }
+
+    /**
+     * Generate text using AI (compatibility wrapper for call method)
+     * 
+     * @param string $prompt The prompt to send
+     * @param array $options Options like max_tokens, model, etc.
+     * @return string|\WP_Error Generated text or error
+     */
+    public function generateText(string $prompt, array $options = [])
+    {
+        $model = $options['model'] ?? null;
+        $maxTokens = $options['max_tokens'] ?? 2000;
+        $systemRole = $options['system_role'] ?? null;
+        
+        $result = $this->call($prompt, $model, $systemRole, $maxTokens);
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        return $result['text'] ?? '';
     }
 
     /**

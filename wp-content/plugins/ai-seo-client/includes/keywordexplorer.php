@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Keyword Explorer
@@ -29,7 +29,7 @@ class KeywordExplorer
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/keywords/expand', [
+        register_rest_route('sseo-ai/v1', '/keywords/expand', [
             'methods' => 'POST',
             'callback' => [$this, 'restExpand'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -38,7 +38,7 @@ class KeywordExplorer
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/keywords/cluster', [
+        register_rest_route('sseo-ai/v1', '/keywords/cluster', [
             'methods' => 'POST',
             'callback' => [$this, 'restCluster'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -193,7 +193,8 @@ class KeywordExplorer
         }
         $ia = array_intersect($a, $b);
         $ua = array_unique(array_merge($a, $b));
-        return count($ia) / count($ua);
+        $uaCount = count($ua);
+        return $uaCount > 0 ? count($ia) / $uaCount : 0;
     }
 
     // REST handlers

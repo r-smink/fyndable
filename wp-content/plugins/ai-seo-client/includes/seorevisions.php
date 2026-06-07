@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class SEORevisions
 {
@@ -9,7 +9,7 @@ class SEORevisions
     public function __construct()
     {
         global $wpdb;
-        $this->tableName = $wpdb->prefix . 'aiseo_revisions';
+        $this->tableName = $wpdb->prefix . 'sseo_ai_revisions';
     }
 
     public function register(): void
@@ -23,7 +23,7 @@ class SEORevisions
     {
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
-        $sql = "CREATE TABLE IF NOT EXISTS {$this->tableName} (
+        $sql = "CREATE TABLE {$this->tableName} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             post_id bigint(20) unsigned NOT NULL,
             user_id bigint(20) unsigned NOT NULL,
@@ -49,10 +49,10 @@ class SEORevisions
         }
 
         // Check if SEO data changed
-        $oldTitle = get_post_meta($postId, '_aiseo_title', true);
-        $oldDesc = get_post_meta($postId, '_aiseo_description', true);
-        $oldFocus = get_post_meta($postId, '_aiseo_focus_keyphrase', true);
-        $oldScore = get_post_meta($postId, '_aiseo_score', true);
+        $oldTitle = get_post_meta($postId, '_sseo_ai_title', true);
+        $oldDesc = get_post_meta($postId, '_sseo_ai_description', true);
+        $oldFocus = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+        $oldScore = get_post_meta($postId, '_sseo_ai_score', true);
 
         $data = [
             'title' => $oldTitle,
@@ -123,13 +123,13 @@ class SEORevisions
         $postId = $revision['post_id'];
 
         if (!empty($data['title'])) {
-            update_post_meta($postId, '_aiseo_title', $data['title']);
+            update_post_meta($postId, '_sseo_ai_title', $data['title']);
         }
         if (!empty($data['description'])) {
-            update_post_meta($postId, '_aiseo_description', $data['description']);
+            update_post_meta($postId, '_sseo_ai_description', $data['description']);
         }
         if (!empty($data['focus_keyphrase'])) {
-            update_post_meta($postId, '_aiseo_focus_keyphrase', $data['focus_keyphrase']);
+            update_post_meta($postId, '_sseo_ai_focus_keyphrase', $data['focus_keyphrase']);
         }
 
         return true;
@@ -158,7 +158,7 @@ class SEORevisions
     public function addMetaBox(): void
     {
         add_meta_box(
-            'aiseo_revisions',
+            'sseo_ai_revisions',
             __('SEO Revisions', 'ai-seo-client'),
             [$this, 'renderMetaBox'],
             ['post', 'page', 'product'],
@@ -215,7 +215,7 @@ class SEORevisions
                 }
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/restore-revision',
+                    path: 'sseo-ai/v1/restore-revision',
                     method: 'POST',
                     data: { revision_id: revId }
                 }).then(function() {
@@ -229,7 +229,7 @@ class SEORevisions
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/restore-revision', [
+        register_rest_route('sseo-ai/v1', '/restore-revision', [
             'methods' => 'POST',
             'callback' => [$this, 'restRestoreRevision'],
             'permission_callback' => function () {

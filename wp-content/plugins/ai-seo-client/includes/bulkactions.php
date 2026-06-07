@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Bulk AI Actions
@@ -23,7 +23,7 @@ class BulkActions
 
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_filter('manage_posts_columns', [$this, 'addSeoColumn']);
         add_action('manage_posts_custom_column', [$this, 'renderSeoColumn'], 10, 2);
@@ -45,7 +45,7 @@ class BulkActions
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/bulk/scan', [
+        register_rest_route('sseo-ai/v1', '/bulk/scan', [
             'methods' => 'GET',
             'callback' => [$this, 'restScanPosts'],
             'permission_callback' => function () {
@@ -53,7 +53,7 @@ class BulkActions
             },
         ]);
 
-        register_rest_route('aiseoclient/v1', '/bulk/generate-meta', [
+        register_rest_route('sseo-ai/v1', '/bulk/generate-meta', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateMeta'],
             'permission_callback' => function () {
@@ -65,7 +65,7 @@ class BulkActions
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/bulk/generate-batch', [
+        register_rest_route('sseo-ai/v1', '/bulk/generate-batch', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateBatch'],
             'permission_callback' => function () {
@@ -105,11 +105,11 @@ class BulkActions
         ];
 
         foreach ($posts as $post) {
-            $seoTitle = get_post_meta($post->ID, '_aiseo_title', true);
-            $seoDesc = get_post_meta($post->ID, '_aiseo_description', true);
-            $ogTitle = get_post_meta($post->ID, '_aiseo_og_title', true);
-            $ogDesc = get_post_meta($post->ID, '_aiseo_og_description', true);
-            $keyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+            $seoTitle = get_post_meta($post->ID, '_sseo_ai_title', true);
+            $seoDesc = get_post_meta($post->ID, '_sseo_ai_description', true);
+            $ogTitle = get_post_meta($post->ID, '_sseo_ai_og_title', true);
+            $ogDesc = get_post_meta($post->ID, '_sseo_ai_og_description', true);
+            $keyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
             $wordCount = str_word_count(wp_strip_all_tags($post->post_content));
 
             $issues = [];
@@ -213,7 +213,7 @@ class BulkActions
     {
         $content = wp_strip_all_tags($post->post_content);
         $title = $post->post_title;
-        $keyphrase = get_post_meta($post->ID, '_aiseo_focus_keyphrase', true);
+        $keyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
         $contentExcerpt = mb_substr($content, 0, 800);
 
         $fieldList = implode(', ', $fields);
@@ -261,23 +261,23 @@ Return ONLY the JSON.";
         // Save to post meta
         $saved = [];
         if (!empty($data['seo_title']) && in_array('seo_title', $fields)) {
-            update_post_meta($post->ID, '_aiseo_title', sanitize_text_field($data['seo_title']));
+            update_post_meta($post->ID, '_sseo_ai_title', sanitize_text_field($data['seo_title']));
             $saved['seo_title'] = $data['seo_title'];
         }
         if (!empty($data['seo_description']) && in_array('seo_description', $fields)) {
-            update_post_meta($post->ID, '_aiseo_description', sanitize_text_field($data['seo_description']));
+            update_post_meta($post->ID, '_sseo_ai_description', sanitize_text_field($data['seo_description']));
             $saved['seo_description'] = $data['seo_description'];
         }
         if (!empty($data['og_title']) && in_array('og_title', $fields)) {
-            update_post_meta($post->ID, '_aiseo_og_title', sanitize_text_field($data['og_title']));
+            update_post_meta($post->ID, '_sseo_ai_og_title', sanitize_text_field($data['og_title']));
             $saved['og_title'] = $data['og_title'];
         }
         if (!empty($data['og_description']) && in_array('og_description', $fields)) {
-            update_post_meta($post->ID, '_aiseo_og_description', sanitize_text_field($data['og_description']));
+            update_post_meta($post->ID, '_sseo_ai_og_description', sanitize_text_field($data['og_description']));
             $saved['og_description'] = $data['og_description'];
         }
         if (!empty($data['focus_keyphrase']) && in_array('focus_keyphrase', $fields)) {
-            update_post_meta($post->ID, '_aiseo_focus_keyphrase', sanitize_text_field($data['focus_keyphrase']));
+            update_post_meta($post->ID, '_sseo_ai_focus_keyphrase', sanitize_text_field($data['focus_keyphrase']));
             $saved['focus_keyphrase'] = $data['focus_keyphrase'];
         }
 
@@ -305,9 +305,9 @@ Return ONLY the JSON.";
             return;
         }
 
-        $seoTitle = get_post_meta($postId, '_aiseo_title', true);
-        $seoDesc = get_post_meta($postId, '_aiseo_description', true);
-        $keyphrase = get_post_meta($postId, '_aiseo_focus_keyphrase', true);
+        $seoTitle = get_post_meta($postId, '_sseo_ai_title', true);
+        $seoDesc = get_post_meta($postId, '_sseo_ai_description', true);
+        $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
 
         $score = 0;
         if ($seoTitle) $score++;
@@ -470,7 +470,7 @@ Return ONLY the JSON.";
                 btn.prop('disabled', true);
                 $('#bulk-spinner').addClass('is-active');
 
-                wp.apiFetch({ path: 'aiseoclient/v1/bulk/scan' }).then(function(res) {
+                wp.apiFetch({ path: 'sseo-ai/v1/bulk/scan' }).then(function(res) {
                     allPosts = res.posts;
                     var s = res.summary;
                     $('#bulk-total').text(s.total);
@@ -520,7 +520,7 @@ Return ONLY the JSON.";
 
                 btn.prop('disabled', true).text('...');
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/bulk/generate-meta',
+                    path: 'sseo-ai/v1/bulk/generate-meta',
                     method: 'POST',
                     data: { post_id: postId, fields: fields }
                 }).then(function(res) {
@@ -547,7 +547,7 @@ Return ONLY the JSON.";
                 $('#bulk-progress-text').text(done + ' / ' + total + ' <?php echo esc_js(__('processed', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/bulk/generate-batch',
+                    path: 'sseo-ai/v1/bulk/generate-batch',
                     method: 'POST',
                     data: { post_ids: ids, fields: fields }
                 }).then(function(res) {

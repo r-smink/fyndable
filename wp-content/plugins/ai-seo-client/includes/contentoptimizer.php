@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Content Optimizer — NLP Content Score + Topic Model
@@ -32,7 +32,7 @@ class ContentOptimizer
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('admin_menu', [$this, 'addMenu']);
+        // Menu registration moved to Client class
     }
 
     public function addMenu(): void
@@ -49,7 +49,7 @@ class ContentOptimizer
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/optimizer/topic-model', [
+        register_rest_route('sseo-ai/v1', '/optimizer/topic-model', [
             'methods' => 'POST',
             'callback' => [$this, 'restGetTopicModel'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -59,7 +59,7 @@ class ContentOptimizer
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/optimizer/score', [
+        register_rest_route('sseo-ai/v1', '/optimizer/score', [
             'methods' => 'POST',
             'callback' => [$this, 'restScoreContent'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -70,7 +70,7 @@ class ContentOptimizer
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/optimizer/suggest-terms', [
+        register_rest_route('sseo-ai/v1', '/optimizer/suggest-terms', [
             'methods' => 'POST',
             'callback' => [$this, 'restSuggestTermInsertions'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -568,7 +568,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/optimizer/topic-model',
+                    path: '/sseo-ai/v1/optimizer/topic-model',
                     method: 'POST',
                     data: { keyword: kw }
                 }).then(function(model) {
@@ -615,7 +615,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Scoring...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/optimizer/score',
+                    path: '/sseo-ai/v1/optimizer/score',
                     method: 'POST',
                     data: { keyword: kw, content: content, title: title }
                 }).then(function(result) {
@@ -663,7 +663,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: '/aiseoclient/v1/optimizer/suggest-terms',
+                    path: '/sseo-ai/v1/optimizer/suggest-terms',
                     method: 'POST',
                     data: { keyword: $('#opt-keyword').val(), content: $('#opt-content').val(), missing_terms: missing.slice(0, 10) }
                 }).then(function(res) {

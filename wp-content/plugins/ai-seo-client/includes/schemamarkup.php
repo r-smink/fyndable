@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 class SchemaMarkup
 {
@@ -35,8 +35,8 @@ class SchemaMarkup
 
     public function renderMetaBox(\WP_Post $post): void
     {
-        $schemaType = get_post_meta($post->ID, '_aiseo_schema_type', true) ?: 'Article';
-        $customSchema = get_post_meta($post->ID, '_aiseo_custom_schema', true);
+        $schemaType = get_post_meta($post->ID, '_sseo_ai_schema_type', true) ?: 'Article';
+        $customSchema = get_post_meta($post->ID, '_sseo_ai_custom_schema', true);
         wp_nonce_field('aiseo_schema_save', 'aiseo_schema_nonce');
         ?>
         <p>
@@ -82,12 +82,12 @@ class SchemaMarkup
         }
 
         if (isset($_POST['aiseo_schema_type'])) {
-            update_post_meta($postId, '_aiseo_schema_type', sanitize_text_field($_POST['aiseo_schema_type']));
+            update_post_meta($postId, '_sseo_ai_schema_type', sanitize_text_field($_POST['aiseo_schema_type']));
         }
         if (isset($_POST['aiseo_custom_schema'])) {
             $custom = sanitize_textarea_field($_POST['aiseo_custom_schema']);
             if ($this->isValidJson($custom)) {
-                update_post_meta($postId, '_aiseo_custom_schema', $custom);
+                update_post_meta($postId, '_sseo_ai_custom_schema', $custom);
             }
         }
     }
@@ -111,13 +111,13 @@ class SchemaMarkup
         if (is_singular()) {
             $post = get_queried_object();
             if ($post instanceof \WP_Post) {
-                $custom = get_post_meta($post->ID, '_aiseo_custom_schema', true);
+                $custom = get_post_meta($post->ID, '_sseo_ai_custom_schema', true);
                 if ($custom && $this->isValidJson($custom)) {
                     echo "<script type=\"application/ld+json\">{$custom}</script>\n";
                     return; // Custom overrides everything
                 }
 
-                $schemaType = get_post_meta($post->ID, '_aiseo_schema_type', true) ?: $this->detectSchemaType($post);
+                $schemaType = get_post_meta($post->ID, '_sseo_ai_schema_type', true) ?: $this->detectSchemaType($post);
                 $schema = $this->generateSchema($post, $schemaType);
                 if ($schema) {
                     $schemas[] = $schema;
@@ -455,13 +455,13 @@ class SchemaMarkup
 
     private function getHeadline(\WP_Post $post): string
     {
-        $title = get_post_meta($post->ID, '_aiseo_title', true);
+        $title = get_post_meta($post->ID, '_sseo_ai_title', true);
         return $title ?: get_the_title($post);
     }
 
     private function getDescription(\WP_Post $post): string
     {
-        $desc = get_post_meta($post->ID, '_aiseo_description', true);
+        $desc = get_post_meta($post->ID, '_sseo_ai_description', true);
         if ($desc) {
             return $desc;
         }

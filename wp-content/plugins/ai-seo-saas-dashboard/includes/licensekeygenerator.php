@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOSaaS;
+namespace SSEOAISaaS;
 
 /**
  * Self-Hosted License Key Generator
@@ -11,13 +11,55 @@ namespace AISEOSaaS;
  */
 class LicenseKeyGenerator
 {
-    private const LICENSE_KEYS_TABLE = 'aiseo_license_keys';
+    private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
+    
+    /**
+     * Default rate limits (requests per hour) per tier
+     */
+    private const TIER_RATE_LIMITS = [
+        'free'         => 30,
+        'starter'      => 60,
+        'trial'        => 200,
+        'professional' => 200,
+        'business'     => 500,
+        'agency'       => 1000,
+        'dev'          => 10000,
+    ];
+    
+    /**
+     * Default API call limits (per month) per tier
+     */
+    private const TIER_API_LIMITS = [
+        'free'         => 500,
+        'starter'      => 1000,
+        'trial'        => 5000,
+        'professional' => 10000,
+        'business'     => 50000,
+        'agency'       => 200000,
+        'dev'          => 1000000,
+    ];
     
     private TenantRepository $tenants;
     
     public function __construct(TenantRepository $tenants)
     {
         $this->tenants = $tenants;
+    }
+    
+    /**
+     * Get default rate limit for a tier
+     */
+    public static function getDefaultRateLimit(string $tier): int
+    {
+        return self::TIER_RATE_LIMITS[$tier] ?? 60;
+    }
+    
+    /**
+     * Get default API limit for a tier
+     */
+    public static function getDefaultApiLimit(string $tier): int
+    {
+        return self::TIER_API_LIMITS[$tier] ?? 1000;
     }
     
     /**
@@ -42,14 +84,21 @@ class LicenseKeyGenerator
         // Generate unique license key
         $licenseKey = $this->generateUniqueKey();
         
+        $licenseType = $options['type'] ?? 'paid';
+        $tier = $options['tier'] ?? 'starter';
+        
+        // Use tier-based defaults for rate limits
+        $defaultRateLimit = self::getDefaultRateLimit($tier);
+        $defaultApiLimit = self::getDefaultApiLimit($tier);
+        
         $data = [
             'license_key' => $licenseKey,
-            'license_type' => $options['type'] ?? 'paid',
+            'license_type' => $licenseType,
             'tier' => $options['tier'] ?? 'starter',
             'status' => 'active',
             'max_sites' => (int)($options['max_sites'] ?? 1),
-            'rate_limit' => (int)($options['rate_limit'] ?? 60),
-            'api_calls_limit' => (int)($options['api_calls_limit'] ?? 1000),
+            'rate_limit' => (int)($options['rate_limit'] ?? $defaultRateLimit),
+            'api_calls_limit' => (int)($options['api_calls_limit'] ?? $defaultApiLimit),
             'expires_days' => isset($options['expires_days']) ? (int)$options['expires_days'] : null,
             'created_by' => get_current_user_id(),
             'assigned_to' => !empty($options['assigned_to']) ? sanitize_text_field($options['assigned_to']) : null,
@@ -60,7 +109,7 @@ class LicenseKeyGenerator
         $result = $wpdb->insert($table, $data);
         
         if ($result === false) {
-            return new \WP_Error('db_error', __('Failed to generate license key', 'ai-seo-saas'));
+            return new \WP_Error('db_error', __('Failed to generate license key', 'sseo-ai-saas'));
         }
         
         return [
@@ -78,7 +127,7 @@ class LicenseKeyGenerator
     public function batchGenerateLicenses(int $count, array $options = []): array|\WP_Error
     {
         if ($count < 1 || $count > 100) {
-            return new \WP_Error('invalid_count', __('Count must be between 1 and 100', 'ai-seo-saas'));
+            return new \WP_Error('invalid_count', __('Count must be between 1 and 100', 'sseo-ai-saas'));
         }
         
         $licenses = [];
@@ -94,7 +143,7 @@ class LicenseKeyGenerator
         }
         
         if (empty($licenses)) {
-            return new \WP_Error('batch_failed', __('Failed to generate any licenses', 'ai-seo-saas'));
+            return new \WP_Error('batch_failed', __('Failed to generate any licenses', 'sseo-ai-saas'));
         }
         
         return [
@@ -123,16 +172,16 @@ class LicenseKeyGenerator
         // Get license
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         // Check status
         if ($license['status'] === 'revoked') {
-            return new \WP_Error('revoked', __('This license key has been revoked', 'ai-seo-saas'));
+            return new \WP_Error('revoked', __('This license key has been revoked', 'sseo-ai-saas'));
         }
         
         if ($license['status'] === 'expired') {
-            return new \WP_Error('expired', __('This license key has expired', 'ai-seo-saas'));
+            return new \WP_Error('expired', __('This license key has expired', 'sseo-ai-saas'));
         }
         
         // Check if already used and calculate expiration
@@ -145,8 +194,9 @@ class LicenseKeyGenerator
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
         
         if ($existingTenant) {
-            // Re-activation - update last active
+            // Re-activation - restore to active and update last active
             $this->tenants->updateTenant($existingTenant['tenant_key'], [
+                'status' => 'active',
                 'last_active' => current_time('mysql'),
             ]);
             
@@ -156,6 +206,9 @@ class LicenseKeyGenerator
                 'tenant_key' => $existingTenant['tenant_key'],
                 'tier' => $existingTenant['tier'],
                 'expires_at' => $existingTenant['expires_at'],
+                'max_sites' => $existingTenant['max_sites'] ?? 1,
+                'rate_limit' => $existingTenant['rate_limit'] ?? 60,
+                'api_calls_limit' => $existingTenant['api_calls_limit'] ?? 1000,
             ];
         }
         
@@ -213,17 +266,17 @@ class LicenseKeyGenerator
     {
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         // Check if expired
         if (!empty($license['expires_at']) && strtotime($license['expires_at']) < time()) {
-            return new \WP_Error('expired', __('License key has expired', 'ai-seo-saas'));
+            return new \WP_Error('expired', __('License key has expired', 'sseo-ai-saas'));
         }
         
         // Check if revoked
         if ($license['status'] === 'revoked') {
-            return new \WP_Error('revoked', __('License key has been revoked', 'ai-seo-saas'));
+            return new \WP_Error('revoked', __('License key has been revoked', 'sseo-ai-saas'));
         }
         
         return [
@@ -249,7 +302,7 @@ class LicenseKeyGenerator
         
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         // Suspend associated tenant
@@ -281,6 +334,24 @@ class LicenseKeyGenerator
             "SELECT * FROM $table WHERE license_key = %s",
             $licenseKey
         ), ARRAY_A) ?: null;
+    }
+
+    /**
+     * Mark license as used (for direct PHP activation)
+     */
+    public function markLicenseUsed(string $licenseKey): bool
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        
+        return $wpdb->update(
+            $table,
+            [
+                'status' => 'used',
+                'activated_at' => current_time('mysql'),
+            ],
+            ['license_key' => $licenseKey]
+        ) !== false;
     }
     
     /**
@@ -375,7 +446,7 @@ class LicenseKeyGenerator
         
         $license = $this->getLicense($licenseKey);
         if (!$license) {
-            return new \WP_Error('invalid_key', __('License key not found', 'ai-seo-saas'));
+            return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
         $allowed = ['assigned_to', 'notes', 'max_sites', 'rate_limit', 'api_calls_limit'];
@@ -388,7 +459,7 @@ class LicenseKeyGenerator
         }
         
         if (empty($update)) {
-            return new \WP_Error('no_data', __('No valid fields to update', 'ai-seo-saas'));
+            return new \WP_Error('no_data', __('No valid fields to update', 'sseo-ai-saas'));
         }
         
         return $wpdb->update($table, $update, ['id' => $license['id']]) !== false;
@@ -464,12 +535,12 @@ class LicenseKeyGenerator
         
         $attempts = 0;
         do {
-            // Format: AISEO-XXXX-XXXX-XXXX-XXXX
+            // Format: SSEO-AI-XXXX-XXXX-XXXX
             $parts = [];
-            for ($i = 0; $i < 4; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 $parts[] = strtoupper(bin2hex(random_bytes(4)));
             }
-            $key = 'AISEO-' . implode('-', $parts);
+            $key = 'SSEO-AI-' . implode('-', $parts);
             
             // Check uniqueness
             $exists = $wpdb->get_var($wpdb->prepare(

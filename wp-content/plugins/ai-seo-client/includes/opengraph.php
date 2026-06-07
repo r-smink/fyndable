@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * Open Graph & Social Meta Tags
@@ -40,13 +40,13 @@ class OpenGraph
             'og_fallback_description',
         ];
         foreach ($fields as $field) {
-            register_setting('ai_seo_client_settings', 'aiseo_' . $field, ['sanitize_callback' => 'sanitize_text_field']);
+            register_setting('sseo_ai_client_settings', 'aiseo_' . $field, ['sanitize_callback' => 'sanitize_text_field']);
         }
     }
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/og/generate', [
+        register_rest_route('sseo-ai/v1', '/og/generate', [
             'methods' => 'POST',
             'callback' => [$this, 'restGenerateOG'],
             'permission_callback' => function () {
@@ -166,16 +166,16 @@ class OpenGraph
         $postId = $post->ID;
 
         // Per-post overrides (from meta box)
-        $ogTitle = get_post_meta($postId, '_aiseo_og_title', true);
-        $ogDesc = get_post_meta($postId, '_aiseo_og_description', true);
-        $ogImage = get_post_meta($postId, '_aiseo_og_image', true);
-        $twitterTitle = get_post_meta($postId, '_aiseo_twitter_title', true);
-        $twitterDesc = get_post_meta($postId, '_aiseo_twitter_description', true);
-        $twitterImage = get_post_meta($postId, '_aiseo_twitter_image', true);
+        $ogTitle = get_post_meta($postId, '_sseo_ai_og_title', true);
+        $ogDesc = get_post_meta($postId, '_sseo_ai_og_description', true);
+        $ogImage = get_post_meta($postId, '_sseo_ai_og_image', true);
+        $twitterTitle = get_post_meta($postId, '_sseo_ai_twitter_title', true);
+        $twitterDesc = get_post_meta($postId, '_sseo_ai_twitter_description', true);
+        $twitterImage = get_post_meta($postId, '_sseo_ai_twitter_image', true);
 
         // Fallback to SEO meta
-        $seoTitle = get_post_meta($postId, '_aiseo_title', true);
-        $seoDesc = get_post_meta($postId, '_aiseo_description', true);
+        $seoTitle = get_post_meta($postId, '_sseo_ai_title', true);
+        $seoDesc = get_post_meta($postId, '_sseo_ai_description', true);
 
         // Final fallback to post data
         $title = $ogTitle ?: $seoTitle ?: get_the_title($postId);
@@ -349,6 +349,12 @@ class OpenGraph
      */
     public function addMetaBoxes(): void
     {
+        // Only load on post edit screens
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return;
+        }
+        
         $postTypes = get_post_types(['public' => true]);
         foreach ($postTypes as $postType) {
             add_meta_box(
@@ -367,12 +373,12 @@ class OpenGraph
      */
     public function renderMetaBox(\WP_Post $post): void
     {
-        $ogTitle = get_post_meta($post->ID, '_aiseo_og_title', true);
-        $ogDesc = get_post_meta($post->ID, '_aiseo_og_description', true);
-        $ogImage = get_post_meta($post->ID, '_aiseo_og_image', true);
-        $twitterTitle = get_post_meta($post->ID, '_aiseo_twitter_title', true);
-        $twitterDesc = get_post_meta($post->ID, '_aiseo_twitter_description', true);
-        $twitterImage = get_post_meta($post->ID, '_aiseo_twitter_image', true);
+        $ogTitle = get_post_meta($post->ID, '_sseo_ai_og_title', true);
+        $ogDesc = get_post_meta($post->ID, '_sseo_ai_og_description', true);
+        $ogImage = get_post_meta($post->ID, '_sseo_ai_og_image', true);
+        $twitterTitle = get_post_meta($post->ID, '_sseo_ai_twitter_title', true);
+        $twitterDesc = get_post_meta($post->ID, '_sseo_ai_twitter_description', true);
+        $twitterImage = get_post_meta($post->ID, '_sseo_ai_twitter_image', true);
 
         wp_nonce_field('aiseo_og_save', 'aiseo_og_nonce');
         ?>
@@ -552,7 +558,7 @@ class OpenGraph
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/og/generate',
+                    path: 'sseo-ai/v1/og/generate',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(result) {
@@ -595,12 +601,12 @@ class OpenGraph
         }
 
         $fields = [
-            '_aiseo_og_title' => 'aiseo_og_title',
-            '_aiseo_og_description' => 'aiseo_og_description',
-            '_aiseo_og_image' => 'aiseo_og_image',
-            '_aiseo_twitter_title' => 'aiseo_twitter_title',
-            '_aiseo_twitter_description' => 'aiseo_twitter_description',
-            '_aiseo_twitter_image' => 'aiseo_twitter_image',
+            '_sseo_ai_og_title' => 'aiseo_og_title',
+            '_sseo_ai_og_description' => 'aiseo_og_description',
+            '_sseo_ai_og_image' => 'aiseo_og_image',
+            '_sseo_ai_twitter_title' => 'aiseo_twitter_title',
+            '_sseo_ai_twitter_description' => 'aiseo_twitter_description',
+            '_sseo_ai_twitter_image' => 'aiseo_twitter_image',
         ];
 
         foreach ($fields as $metaKey => $postKey) {
@@ -631,7 +637,7 @@ class OpenGraph
 
         $content = wp_strip_all_tags($post->post_content);
         $title = $post->post_title;
-        $keyword = get_post_meta($postId, '_aiseo_focus_keyphrase', true);
+        $keyword = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
 
         $prompt = "Generate optimized social media meta tags for this article.
 

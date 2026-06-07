@@ -1,6 +1,6 @@
 <?php
 
-namespace AISEOClient;
+namespace SSEOAIClient;
 
 /**
  * AI Content Rewriter / Optimizer
@@ -32,7 +32,7 @@ class ContentRewriter
 
     public function registerRestRoutes(): void
     {
-        register_rest_route('aiseoclient/v1', '/rewrite', [
+        register_rest_route('sseo-ai/v1', '/rewrite', [
             'methods' => 'POST',
             'callback' => [$this, 'restRewrite'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
@@ -45,7 +45,7 @@ class ContentRewriter
             ],
         ]);
 
-        register_rest_route('aiseoclient/v1', '/rewrite/section', [
+        register_rest_route('sseo-ai/v1', '/rewrite/section', [
             'methods' => 'POST',
             'callback' => [$this, 'restRewriteSection'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
