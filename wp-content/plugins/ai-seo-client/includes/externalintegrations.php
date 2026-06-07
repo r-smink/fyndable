@@ -86,6 +86,21 @@ class ExternalIntegrations
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_folder_id');
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_auto_export', ['default' => false]);
         
+        // Google Search Console OAuth (using sseo_ai_client_ prefix for Settings class compatibility)
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_id');
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_secret');
+        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_site_url', [
+            'sanitize_callback' => function ($value) {
+                $value = trim($value);
+                // Allow sc-domain: format (domain properties)
+                if (str_starts_with($value, 'sc-domain:')) {
+                    return sanitize_text_field($value);
+                }
+                // URL properties — sanitize as URL
+                return esc_url_raw($value);
+            },
+        ]);
+        
         // Notion
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_api_key');
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_database_id');
@@ -99,31 +114,60 @@ class ExternalIntegrations
         $slackWebhook = get_option('sseo_ai_slack_webhook_url', '');
         $slackChannel = get_option('sseo_ai_slack_channel', '#seo');
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) {
+            $slackNotifications = [];
+        }
         
         $zapierWebhook = get_option('sseo_ai_zapier_webhook_url', '');
         $makeWebhook = get_option('sseo_ai_make_webhook_url', '');
         $customWebhooks = get_option('sseo_ai_custom_webhooks', []);
+        if (!is_array($customWebhooks)) {
+            $customWebhooks = [];
+        }
         
         $reportEmail = get_option('sseo_ai_report_email', get_option('admin_email'));
         $reportFrequency = get_option('sseo_ai_report_frequency', 'weekly');
         $emailNotifications = get_option('sseo_ai_email_notifications', []);
+        if (!is_array($emailNotifications)) {
+            $emailNotifications = [];
+        }
         
         $gdriveFolderId = get_option('sseo_ai_gdrive_folder_id', '');
         $gdriveAutoExport = get_option('sseo_ai_gdrive_auto_export', false);
+        
+        // GSC settings
+        $gscClientId = get_option('sseo_ai_client_gsc_client_id', '');
+        $gscClientSecret = get_option('sseo_ai_client_gsc_client_secret', '');
+        $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
+        $gscConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']);
         
         $notionApiKey = get_option('sseo_ai_notion_api_key', '');
         $notionDatabaseId = get_option('sseo_ai_notion_database_id', '');
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('External Integrations', 'ai-seo-client'); ?></h1>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('External Integrations', 'ai-seo-client'); ?></h1>
+            </div>
             
-            <form method="post" action="options.php">
-                <?php settings_fields('sseo_ai_integrations'); ?>
-                
-                <!-- Slack Integration -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Slack Integration', 'ai-seo-client'); ?></h2>
+            <div class="sseo-ai-content">
+                <form method="post" action="options.php">
+                    <?php settings_fields('sseo_ai_integrations'); ?>
+                    
+                    <div class="sseo-two-columns">
+                        <!-- Slack Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Slack Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -184,11 +228,11 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoTestSlack()">
                         <?php esc_html_e('Test Slack Connection', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Zapier / Make.com -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Zapier / Make.com Integration', 'ai-seo-client'); ?></h2>
+                        </div>
+                        
+                        <!-- Zapier / Make.com -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Zapier / Make.com Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -243,11 +287,14 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoAddCustomWebhook()">
                         <?php esc_html_e('Add Custom Webhook', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Email Reports -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Email Reports', 'ai-seo-client'); ?></h2>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div>
+                        <!-- Email Reports -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Email Reports', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -303,11 +350,11 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoSendTestReport()">
                         <?php esc_html_e('Send Test Report', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Google Drive Export -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Google Drive Export', 'ai-seo-client'); ?></h2>
+                        </div>
+                        
+                        <!-- Google Drive Export -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Google Drive Export', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -337,11 +384,82 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoExportToGDrive()">
                         <?php esc_html_e('Export Now', 'ai-seo-client'); ?>
                     </button>
-                </div>
-                
-                <!-- Notion Integration -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
+                        </div>
+                        
+                        <!-- Google Search Console OAuth -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h2>
+                            <p class="description">
+                                <?php esc_html_e('Connect to Google Search Console to view performance data directly in WordPress.', 'ai-seo-client'); ?>
+                            </p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="gsc_client_id"><?php esc_html_e('OAuth Client ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="gsc_client_id" name="sseo_ai_client_gsc_client_id" 
+                                       value="<?php echo esc_attr($gscClientId); ?>" class="regular-text"
+                                       placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
+                                <p class="description">
+                                    <?php esc_html_e('From Google Cloud Console → APIs & Services → Credentials', 'ai-seo-client'); ?>
+                                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank"><?php esc_html_e('Get credentials', 'ai-seo-client'); ?></a>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="gsc_client_secret"><?php esc_html_e('OAuth Client Secret', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="password" id="gsc_client_secret" name="sseo_ai_client_gsc_client_secret" 
+                                       value="<?php echo esc_attr($gscClientSecret); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="gsc_site_url"><?php esc_html_e('Site URL', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="gsc_site_url" name="sseo_ai_client_gsc_site_url" 
+                                       value="<?php echo esc_attr($gscSiteUrl); ?>" class="regular-text"
+                                       placeholder="sc-domain:<?php echo esc_attr(parse_url(home_url(), PHP_URL_HOST)); ?>">
+                                <p class="description">
+                                    <?php esc_html_e('Exact property as registered in Google Search Console.', 'ai-seo-client'); ?><br>
+                                    <?php esc_html_e('Domain property: sc-domain:example.com', 'ai-seo-client'); ?><br>
+                                    <?php esc_html_e('URL property: https://example.com/', 'ai-seo-client'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
+                        <?php if ($gscConnected): ?>
+                            <span class="notice notice-success inline" style="margin: 0; padding: 5px 10px;">
+                                ✓ <?php esc_html_e('Connected to Google Search Console', 'ai-seo-client'); ?>
+                            </span>
+                            <button type="button" class="button" onclick="sseoDisconnectGSC()">
+                                <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
+                            </button>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="button button-primary">
+                                <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
+                            </a>
+                        <?php elseif ($gscClientId && $gscClientSecret): ?>
+                            <button type="button" class="button button-primary" onclick="sseoConnectGSC()">
+                                <?php esc_html_e('Connect to Google Search Console', 'ai-seo-client'); ?>
+                            </button>
+                        <?php else: ?>
+                            <p class="description">
+                                <?php esc_html_e('Enter your OAuth credentials above and save to enable connection.', 'ai-seo-client'); ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                        </div>
+                        
+                        <!-- Notion Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -376,8 +494,13 @@ class ExternalIntegrations
                     </button>
                 </div>
                 
+                        </div>
+                    </div>
+                </div>
+                
                 <?php submit_button(__('Save Integration Settings', 'ai-seo-client')); ?>
             </form>
+            </div>
         </div>
         
         <script>
@@ -455,6 +578,64 @@ class ExternalIntegrations
                 }
             });
         }
+        
+        // Google Search Console OAuth
+        function sseoConnectGSC() {
+            // First save the form to store credentials
+            const form = document.querySelector('form[action="options.php"]');
+            const formData = new FormData(form);
+            
+            // Get the auth URL via REST API
+            wp.apiFetch({ path: '/sseo-ai/v1/gsc-status' }).then(function(status) {
+                if (status.auth_url) {
+                    // Open OAuth popup
+                    const width = 500;
+                    const height = 600;
+                    const left = (screen.width / 2) - (width / 2);
+                    const top = (screen.height / 2) - (height / 2);
+                    
+                    const popup = window.open(
+                        status.auth_url,
+                        'gsc_oauth',
+                        'width=' + width + ',height=' + height + ',left=' + left + ',top=' + top + ',scrollbars=yes'
+                    );
+                    
+                    // Poll for completion
+                    const checkInterval = setInterval(function() {
+                        if (popup.closed) {
+                            clearInterval(checkInterval);
+                            // Check if connected
+                            wp.apiFetch({ path: '/sseo-ai/v1/gsc-status' }).then(function(newStatus) {
+                                if (newStatus.connected) {
+                                    alert('<?php esc_html_e('Successfully connected to Google Search Console!', 'ai-seo-client'); ?>');
+                                    location.reload();
+                                }
+                            });
+                        }
+                    }, 1000);
+                } else {
+                    alert('<?php esc_html_e('Please enter your Client ID and Client Secret first, then save the settings.', 'ai-seo-client'); ?>');
+                }
+            }).catch(function(err) {
+                alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to get auth URL', 'ai-seo-client'); ?>'));
+            });
+        }
+        
+        function sseoDisconnectGSC() {
+            if (!confirm('<?php esc_html_e('Are you sure you want to disconnect Google Search Console?', 'ai-seo-client'); ?>')) {
+                return;
+            }
+            
+            wp.apiFetch({
+                path: '/sseo-ai/v1/gsc-disconnect',
+                method: 'POST'
+            }).then(function(response) {
+                alert('<?php esc_html_e('Disconnected from Google Search Console.', 'ai-seo-client'); ?>');
+                location.reload();
+            }).catch(function(err) {
+                alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to disconnect', 'ai-seo-client'); ?>'));
+            });
+        }
         </script>
         <?php
     }
@@ -515,6 +696,7 @@ class ExternalIntegrations
         
         // Custom webhooks
         $customWebhooks = get_option('sseo_ai_custom_webhooks', []);
+        if (!is_array($customWebhooks)) { $customWebhooks = []; }
         foreach ($customWebhooks as $webhook) {
             if ($webhook['event'] === 'all' || $webhook['event'] === $event) {
                 wp_remote_post($webhook['url'], [
@@ -531,6 +713,7 @@ class ExternalIntegrations
     public function notifyRankChange(string $keyword, int $oldRank, int $newRank): void
     {
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         
         if (in_array('rank_change', $slackNotifications)) {
             $change = $newRank - $oldRank;
@@ -587,6 +770,7 @@ class ExternalIntegrations
         }
         
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         
         if (in_array('content_published', $slackNotifications)) {
             $message = sprintf(
@@ -627,6 +811,7 @@ class ExternalIntegrations
     public function notifySeoScoreChange(int $postId, int $oldScore, int $newScore): void
     {
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         
         if (in_array('seo_score', $slackNotifications)) {
             $post = get_post($postId);
@@ -682,6 +867,7 @@ class ExternalIntegrations
         
         // Send to Slack if enabled
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
+        if (!is_array($slackNotifications)) { $slackNotifications = []; }
         if (in_array('daily_report', $slackNotifications)) {
             $this->sendSlackNotification(':bar_chart: Daily SEO Report', [
                 [

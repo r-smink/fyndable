@@ -79,9 +79,12 @@ class PaymentProcessor
     private function getTierPricing(string $tier): array|\WP_Error
     {
         $pricing = [
-            'basic' => ['amount' => 19.00, 'interval' => 'month'],
+            'free' => ['amount' => 0.00, 'interval' => 'month'],
+            'trial' => ['amount' => 0.00, 'interval' => 'month'],
+            'starter' => ['amount' => 19.00, 'interval' => 'month'],
             'professional' => ['amount' => 49.00, 'interval' => 'month'],
-            'agency' => ['amount' => 99.00, 'interval' => 'month'],
+            'business' => ['amount' => 99.00, 'interval' => 'month'],
+            'agency' => ['amount' => 199.00, 'interval' => 'month'],
         ];
         
         if (!isset($pricing[$tier])) {

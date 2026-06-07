@@ -28,8 +28,8 @@ class LicenseAdmin
     {
         // Main License Management menu
         add_menu_page(
-            __('License Management', 'ai-seo-saas'),
-            __('Licenses', 'ai-seo-saas'),
+            __('License Management', 'sseo-ai-saas'),
+            __('Licenses', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-licenses',
             [$this, 'renderLicenseDashboard'],
@@ -39,8 +39,8 @@ class LicenseAdmin
         
         add_submenu_page(
             'sseo-ai-licenses',
-            __('License Dashboard', 'ai-seo-saas'),
-            __('Dashboard', 'ai-seo-saas'),
+            __('License Dashboard', 'sseo-ai-saas'),
+            __('Dashboard', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-licenses',
             [$this, 'renderLicenseDashboard']
@@ -48,8 +48,8 @@ class LicenseAdmin
         
         add_submenu_page(
             'sseo-ai-licenses',
-            __('Generate License Keys', 'ai-seo-saas'),
-            __('Generate Keys', 'ai-seo-saas'),
+            __('Generate License Keys', 'sseo-ai-saas'),
+            __('Generate Keys', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-generate-licenses',
             [$this, 'renderGeneratePage']
@@ -57,8 +57,8 @@ class LicenseAdmin
         
         add_submenu_page(
             'sseo-ai-licenses',
-            __('View All Licenses', 'ai-seo-saas'),
-            __('All Licenses', 'ai-seo-saas'),
+            __('View All Licenses', 'sseo-ai-saas'),
+            __('All Licenses', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-view-licenses',
             [$this, 'renderAllLicenses']
@@ -66,8 +66,8 @@ class LicenseAdmin
         
         add_submenu_page(
             'sseo-ai-licenses',
-            __('Tenants', 'ai-seo-saas'),
-            __('Tenants', 'ai-seo-saas'),
+            __('Tenants', 'sseo-ai-saas'),
+            __('Tenants', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-tenants',
             [$this, 'renderTenantsPage']
@@ -75,11 +75,21 @@ class LicenseAdmin
         
         add_submenu_page(
             'sseo-ai-licenses',
-            __('Usage Reports', 'ai-seo-saas'),
-            __('Usage Reports', 'ai-seo-saas'),
+            __('Usage Reports', 'sseo-ai-saas'),
+            __('Usage Reports', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-usage-reports',
             [$this, 'renderUsageReports']
+        );
+
+        // License Features (hidden from menu, accessed via license edit)
+        add_submenu_page(
+            null, // Hidden from menu
+            __('License Features', 'sseo-ai-saas'),
+            __('License Features', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-license-features',
+            [$this, 'renderLicenseFeaturesPage']
         );
     }
     
@@ -118,40 +128,40 @@ class LicenseAdmin
         $recentTenants = $this->tenants->getTenants([], 10, 0);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('License Management Dashboard', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('License Management Dashboard', 'sseo-ai-saas'); ?></h1>
             
             <!-- Stats Cards -->
             <div class="sseo-ai-stats-grid">
                 <div class="stat-card">
                     <div class="stat-value"><?php echo number_format($stats['total']); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Total Licenses', 'ai-seo-saas'); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Total Licenses', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value"><?php echo number_format($stats['created_today']); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Created Today', 'ai-seo-saas'); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Created Today', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value"><?php echo number_format($stats['created_this_month']); ?></div>
-                    <div class="stat-label"><?php esc_html_e('This Month', 'ai-seo-saas'); ?></div>
+                    <div class="stat-label"><?php esc_html_e('This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value"><?php echo number_format(count($recentTenants)); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Active Tenants', 'ai-seo-saas'); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></div>
                 </div>
             </div>
             
             <!-- Quick Actions -->
             <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Quick Actions', 'ai-seo-saas'); ?></h2>
+                <h2><?php esc_html_e('Quick Actions', 'sseo-ai-saas'); ?></h2>
                 <div class="quick-actions">
                     <a href="<?php echo admin_url('admin.php?page=sseo-ai-generate-licenses'); ?>" class="button button-primary button-hero">
-                        <?php esc_html_e('Generate License Keys', 'ai-seo-saas'); ?>
+                        <?php esc_html_e('Generate License Keys', 'sseo-ai-saas'); ?>
                     </a>
                     <a href="<?php echo admin_url('admin.php?page=sseo-ai-view-licenses'); ?>" class="button button-secondary button-hero">
-                        <?php esc_html_e('View All Licenses', 'ai-seo-saas'); ?>
+                        <?php esc_html_e('View All Licenses', 'sseo-ai-saas'); ?>
                     </a>
                     <a href="<?php echo admin_url('admin.php?page=sseo-ai-tenants'); ?>" class="button button-secondary button-hero">
-                        <?php esc_html_e('Manage Tenants', 'ai-seo-saas'); ?>
+                        <?php esc_html_e('Manage Tenants', 'sseo-ai-saas'); ?>
                     </a>
                 </div>
             </div>
@@ -159,12 +169,12 @@ class LicenseAdmin
             <!-- Stats by Type -->
             <div class="sseo-ai-grid-2">
                 <div class="sseo-ai-card">
-                    <h3><?php esc_html_e('Licenses by Status', 'ai-seo-saas'); ?></h3>
+                    <h3><?php esc_html_e('Licenses by Status', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat striped">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Status', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Count', 'ai-seo-saas'); ?></th>
+                                <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Count', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -179,12 +189,12 @@ class LicenseAdmin
                 </div>
                 
                 <div class="sseo-ai-card">
-                    <h3><?php esc_html_e('Licenses by Type', 'ai-seo-saas'); ?></h3>
+                    <h3><?php esc_html_e('Licenses by Type', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat striped">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Type', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Count', 'ai-seo-saas'); ?></th>
+                                <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Count', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -201,16 +211,16 @@ class LicenseAdmin
             
             <!-- Recent Licenses -->
             <div class="sseo-ai-card">
-                <h3><?php esc_html_e('Recent Licenses', 'ai-seo-saas'); ?></h3>
+                <h3><?php esc_html_e('Recent Licenses', 'sseo-ai-saas'); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e('License Key', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Type', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Tier', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Status', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Assigned To', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Created', 'ai-seo-saas'); ?></th>
+                            <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Assigned To', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -266,7 +276,7 @@ class LicenseAdmin
         }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Generate License Keys', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('Generate License Keys', 'sseo-ai-saas'); ?></h1>
             
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
@@ -277,24 +287,24 @@ class LicenseAdmin
                     <p><?php 
                         if (isset($generated['generated'])) {
                             printf(
-                                esc_html__('Successfully generated %1$d license keys. %2$d failed.', 'ai-seo-saas'),
+                                esc_html__('Successfully generated %1$d license keys. %2$d failed.', 'sseo-ai-saas'),
                                 $generated['generated'],
                                 $generated['failed']
                             );
                         } else {
-                            esc_html_e('License key generated successfully!', 'ai-seo-saas');
+                            esc_html_e('License key generated successfully!', 'sseo-ai-saas');
                         }
                     ?></p>
                 </div>
                 
                 <div class="sseo-ai-card generated-licenses">
-                    <h3><?php esc_html_e('Generated License Keys', 'ai-seo-saas'); ?></h3>
+                    <h3><?php esc_html_e('Generated License Keys', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat striped">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('License Key', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Type', 'ai-seo-saas'); ?></th>
-                                <th><?php esc_html_e('Tier', 'ai-seo-saas'); ?></th>
+                                <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -311,100 +321,146 @@ class LicenseAdmin
                         </tbody>
                     </table>
                     <button type="button" class="button" onclick="sseoAiCopyAllLicenses()">
-                        <?php esc_html_e('Copy All to Clipboard', 'ai-seo-saas'); ?>
+                        <?php esc_html_e('Copy All to Clipboard', 'sseo-ai-saas'); ?>
                     </button>
                 </div>
             <?php endif; ?>
             
             <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Generate New License Keys', 'ai-seo-saas'); ?></h2>
+                <h2><?php esc_html_e('Generate New License Keys', 'sseo-ai-saas'); ?></h2>
                 <form method="post">
                     <?php wp_nonce_field('generate_license'); ?>
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><label for="license_count"><?php esc_html_e('Number of Licenses', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="license_count"><?php esc_html_e('Number of Licenses', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="number" name="license_count" id="license_count" value="1" min="1" max="100" class="small-text">
-                                <p class="description"><?php esc_html_e('Generate up to 100 licenses at once', 'ai-seo-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Generate up to 100 licenses at once', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="license_type"><?php esc_html_e('License Type', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="license_type"><?php esc_html_e('License Type', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <select name="license_type" id="license_type">
-                                    <option value="test"><?php esc_html_e('Test (Internal Testing)', 'ai-seo-saas'); ?></option>
-                                    <option value="free"><?php esc_html_e('Free (Complimentary)', 'ai-seo-saas'); ?></option>
-                                    <option value="trial"><?php esc_html_e('Trial (Time-limited)', 'ai-seo-saas'); ?></option>
-                                    <option value="paid" selected><?php esc_html_e('Paid (Standard)', 'ai-seo-saas'); ?></option>
-                                    <option value="lifetime"><?php esc_html_e('Lifetime (Never Expires)', 'ai-seo-saas'); ?></option>
+                                    <option value="test"><?php esc_html_e('Test (Internal Testing)', 'sseo-ai-saas'); ?></option>
+                                    <option value="free"><?php esc_html_e('Free (Complimentary)', 'sseo-ai-saas'); ?></option>
+                                    <option value="trial"><?php esc_html_e('Trial (Time-limited)', 'sseo-ai-saas'); ?></option>
+                                    <option value="paid" selected><?php esc_html_e('Paid (Standard)', 'sseo-ai-saas'); ?></option>
+                                    <option value="lifetime"><?php esc_html_e('Lifetime (Never Expires)', 'sseo-ai-saas'); ?></option>
                                 </select>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="license_tier"><?php esc_html_e('License Tier', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="license_tier"><?php esc_html_e('License Tier', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <select name="license_tier" id="license_tier">
-                                    <option value="basic" selected><?php esc_html_e('Basic - €99/month', 'ai-seo-saas'); ?></option>
-                                    <option value="professional"><?php esc_html_e('Professional - €199/month', 'ai-seo-saas'); ?></option>
-                                    <option value="business"><?php esc_html_e('Business - €299/month', 'ai-seo-saas'); ?></option>
-                                    <option value="agency"><?php esc_html_e('Agency - €499/month', 'ai-seo-saas'); ?></option>
+                                    <option value="free"><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
+                                    <option value="trial"><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
+                                    <option value="starter" selected><?php esc_html_e('Starter - €99/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="professional"><?php esc_html_e('Professional - €199/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="business"><?php esc_html_e('Business - €299/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="agency"><?php esc_html_e('Agency - €499/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="dev"><?php esc_html_e('DEV - All Features (Internal Use Only)', 'sseo-ai-saas'); ?></option>
                                 </select>
+                                <p class="description"><?php esc_html_e('DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="max_sites"><?php esc_html_e('Max Sites', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="max_sites"><?php esc_html_e('Max Sites', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="number" name="max_sites" id="max_sites" value="1" min="1" max="100" class="small-text">
-                                <p class="description"><?php esc_html_e('Number of sites allowed per license', 'ai-seo-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Number of sites allowed per license', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="rate_limit"><?php esc_html_e('Rate Limit (per hour)', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="rate_limit"><?php esc_html_e('Rate Limit (per hour)', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="number" name="rate_limit" id="rate_limit" value="60" min="10" max="10000" class="small-text">
-                                <p class="description"><?php esc_html_e('Maximum API calls per hour', 'ai-seo-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Maximum API calls per hour', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="api_calls_limit"><?php esc_html_e('Monthly API Limit', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="api_calls_limit"><?php esc_html_e('Monthly API Limit', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="number" name="api_calls_limit" id="api_calls_limit" value="1000" min="100" max="1000000" class="small-text">
-                                <p class="description"><?php esc_html_e('Maximum API calls per month', 'ai-seo-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Maximum API calls per month', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="expires_days"><?php esc_html_e('Expires After (days)', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="expires_days"><?php esc_html_e('Expires After (days)', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="number" name="expires_days" id="expires_days" value="" min="1" class="small-text" placeholder="Never">
-                                <p class="description"><?php esc_html_e('Leave empty for no expiration (from activation date)', 'ai-seo-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Leave empty for no expiration (from activation date)', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="assigned_to"><?php esc_html_e('Assign To (Email)', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="assigned_to"><?php esc_html_e('Assign To (Email)', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="email" name="assigned_to" id="assigned_to" class="regular-text" placeholder="customer@example.com">
-                                <p class="description"><?php esc_html_e('Optional: Pre-assign to a customer email', 'ai-seo-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Optional: Pre-assign to a customer email', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         
                         <tr>
-                            <th scope="row"><label for="notes"><?php esc_html_e('Notes', 'ai-seo-saas'); ?></label></th>
+                            <th scope="row"><label for="notes"><?php esc_html_e('Notes', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <textarea name="notes" id="notes" rows="3" class="large-text" placeholder="Internal notes about this license..."></textarea>
                             </td>
                         </tr>
                     </table>
                     
-                    <?php submit_button(__('Generate License Keys', 'ai-seo-saas'), 'primary', 'generate_license'); ?>
+                    <?php submit_button(__('Generate License Keys', 'sseo-ai-saas'), 'primary', 'generate_license'); ?>
                 </form>
+                
+                <script>
+                jQuery(document).ready(function($) {
+                    var tierDefaults = <?php echo json_encode([
+                        'rate_limits' => [
+                            'free' => LicenseKeyGenerator::getDefaultRateLimit('free'),
+                            'starter' => LicenseKeyGenerator::getDefaultRateLimit('starter'),
+                            'trial' => LicenseKeyGenerator::getDefaultRateLimit('trial'),
+                            'professional' => LicenseKeyGenerator::getDefaultRateLimit('professional'),
+                            'business' => LicenseKeyGenerator::getDefaultRateLimit('business'),
+                            'agency' => LicenseKeyGenerator::getDefaultRateLimit('agency'),
+                            'dev' => LicenseKeyGenerator::getDefaultRateLimit('dev'),
+                        ],
+                        'api_limits' => [
+                            'free' => LicenseKeyGenerator::getDefaultApiLimit('free'),
+                            'starter' => LicenseKeyGenerator::getDefaultApiLimit('starter'),
+                            'trial' => LicenseKeyGenerator::getDefaultApiLimit('trial'),
+                            'professional' => LicenseKeyGenerator::getDefaultApiLimit('professional'),
+                            'business' => LicenseKeyGenerator::getDefaultApiLimit('business'),
+                            'agency' => LicenseKeyGenerator::getDefaultApiLimit('agency'),
+                            'dev' => LicenseKeyGenerator::getDefaultApiLimit('dev'),
+                        ],
+                        'max_sites' => [
+                            'free' => 1, 'starter' => 1, 'trial' => 3,
+                            'professional' => 5, 'business' => 15, 'agency' => 50, 'dev' => 100,
+                        ],
+                    ]); ?>;
+                    
+                    $('#license_tier').on('change', function() {
+                        var tier = $(this).val();
+                        if (tierDefaults.rate_limits[tier]) {
+                            $('#rate_limit').val(tierDefaults.rate_limits[tier]);
+                        }
+                        if (tierDefaults.api_limits[tier]) {
+                            $('#api_calls_limit').val(tierDefaults.api_limits[tier]);
+                        }
+                        if (tierDefaults.max_sites[tier]) {
+                            $('#max_sites').val(tierDefaults.max_sites[tier]);
+                        }
+                    }).trigger('change');
+                });
+                </script>
             </div>
         </div>
         <?php
@@ -421,7 +477,7 @@ class LicenseAdmin
             
             if ($_GET['action'] === 'revoke') {
                 $this->licenseGenerator->revokeLicense($licenseKey, sanitize_text_field($_GET['reason'] ?? 'Revoked by admin'));
-                echo '<div class="notice notice-success"><p>' . esc_html__('License revoked successfully.', 'ai-seo-saas') . '</p></div>';
+                echo '<div class="notice notice-success"><p>' . esc_html__('License revoked successfully.', 'sseo-ai-saas') . '</p></div>';
             }
         }
         
@@ -442,7 +498,7 @@ class LicenseAdmin
         $totalPages = ceil($total / $perPage);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('All License Keys', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('All License Keys', 'sseo-ai-saas'); ?></h1>
             
             <!-- Filters -->
             <div class="tablenav top">
@@ -450,38 +506,40 @@ class LicenseAdmin
                     <input type="hidden" name="page" value="sseo-ai-view-licenses">
                     
                     <select name="status">
-                        <option value=""><?php esc_html_e('All Statuses', 'ai-seo-saas'); ?></option>
-                        <option value="active" <?php selected($filters['status'], 'active'); ?>><?php esc_html_e('Active', 'ai-seo-saas'); ?></option>
-                        <option value="used" <?php selected($filters['status'], 'used'); ?>><?php esc_html_e('Used', 'ai-seo-saas'); ?></option>
-                        <option value="revoked" <?php selected($filters['status'], 'revoked'); ?>><?php esc_html_e('Revoked', 'ai-seo-saas'); ?></option>
-                        <option value="expired" <?php selected($filters['status'], 'expired'); ?>><?php esc_html_e('Expired', 'ai-seo-saas'); ?></option>
+                        <option value=""><?php esc_html_e('All Statuses', 'sseo-ai-saas'); ?></option>
+                        <option value="active" <?php selected($filters['status'], 'active'); ?>><?php esc_html_e('Active', 'sseo-ai-saas'); ?></option>
+                        <option value="used" <?php selected($filters['status'], 'used'); ?>><?php esc_html_e('Used', 'sseo-ai-saas'); ?></option>
+                        <option value="revoked" <?php selected($filters['status'], 'revoked'); ?>><?php esc_html_e('Revoked', 'sseo-ai-saas'); ?></option>
+                        <option value="expired" <?php selected($filters['status'], 'expired'); ?>><?php esc_html_e('Expired', 'sseo-ai-saas'); ?></option>
                     </select>
                     
                     <select name="type">
-                        <option value=""><?php esc_html_e('All Types', 'ai-seo-saas'); ?></option>
-                        <option value="test" <?php selected($filters['type'], 'test'); ?>><?php esc_html_e('Test', 'ai-seo-saas'); ?></option>
-                        <option value="free" <?php selected($filters['type'], 'free'); ?>><?php esc_html_e('Free', 'ai-seo-saas'); ?></option>
-                        <option value="trial" <?php selected($filters['type'], 'trial'); ?>><?php esc_html_e('Trial', 'ai-seo-saas'); ?></option>
-                        <option value="paid" <?php selected($filters['type'], 'paid'); ?>><?php esc_html_e('Paid', 'ai-seo-saas'); ?></option>
-                        <option value="lifetime" <?php selected($filters['type'], 'lifetime'); ?>><?php esc_html_e('Lifetime', 'ai-seo-saas'); ?></option>
+                        <option value=""><?php esc_html_e('All Types', 'sseo-ai-saas'); ?></option>
+                        <option value="test" <?php selected($filters['type'], 'test'); ?>><?php esc_html_e('Test', 'sseo-ai-saas'); ?></option>
+                        <option value="free" <?php selected($filters['type'], 'free'); ?>><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
+                        <option value="trial" <?php selected($filters['type'], 'trial'); ?>><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
+                        <option value="paid" <?php selected($filters['type'], 'paid'); ?>><?php esc_html_e('Paid', 'sseo-ai-saas'); ?></option>
+                        <option value="lifetime" <?php selected($filters['type'], 'lifetime'); ?>><?php esc_html_e('Lifetime', 'sseo-ai-saas'); ?></option>
                     </select>
                     
                     <select name="tier">
-                        <option value=""><?php esc_html_e('All Tiers', 'ai-seo-saas'); ?></option>
-                        <option value="basic" <?php selected($filters['tier'], 'basic'); ?>><?php esc_html_e('Basic - €99', 'ai-seo-saas'); ?></option>
-                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional - €199', 'ai-seo-saas'); ?></option>
-                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business - €299', 'ai-seo-saas'); ?></option>
-                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency - €499', 'ai-seo-saas'); ?></option>
+                        <option value=""><?php esc_html_e('All Tiers', 'sseo-ai-saas'); ?></option>
+                        <option value="free" <?php selected($filters['tier'], 'free'); ?>><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
+                        <option value="trial" <?php selected($filters['tier'], 'trial'); ?>><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
+                        <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php esc_html_e('Starter - €99', 'sseo-ai-saas'); ?></option>
+                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional - €199', 'sseo-ai-saas'); ?></option>
+                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business - €299', 'sseo-ai-saas'); ?></option>
+                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency - €499', 'sseo-ai-saas'); ?></option>
                     </select>
                     
                     <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="Search...">
                     
-                    <?php submit_button(__('Filter', 'ai-seo-saas'), '', '', false); ?>
+                    <?php submit_button(__('Filter', 'sseo-ai-saas'), '', '', false); ?>
                 </form>
                 
                 <div class="alignright">
                     <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button">
-                        <?php esc_html_e('Export CSV', 'ai-seo-saas'); ?>
+                        <?php esc_html_e('Export CSV', 'sseo-ai-saas'); ?>
                     </a>
                 </div>
             </div>
@@ -490,14 +548,14 @@ class LicenseAdmin
             <table class="wp-list-table widefat striped">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('License Key', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Type', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Tier', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Status', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Assigned To', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Created', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Expires', 'ai-seo-saas'); ?></th>
-                        <th><?php esc_html_e('Actions', 'ai-seo-saas'); ?></th>
+                        <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Assigned To', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Expires', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -509,13 +567,18 @@ class LicenseAdmin
                         <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
                         <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>
-                        <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'ai-seo-saas') . '</em>'; ?></td>
+                        <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
                         <td>
                             <?php if (in_array($license['status'], ['active', 'used'], true)): ?>
+                                <a href="<?php echo admin_url('admin.php?page=sseo-ai-license-features&license=' . urlencode($license['license_key'])); ?>" 
+                                   class="button button-small" 
+                                   style="margin-right:5px;background:#f0f9ff;border-color:#0ea5e9;color:#0369a1;">
+                                    <?php esc_html_e('Manage Features', 'sseo-ai-saas'); ?>
+                                </a>
                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action'); ?>" 
                                    class="button button-small" 
-                                   onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license? This will also suspend the associated tenant.', 'ai-seo-saas'); ?>')">
-                                    <?php esc_html_e('Revoke', 'ai-seo-saas'); ?>
+                                   onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license? This will also suspend the associated tenant.', 'sseo-ai-saas'); ?>')">
+                                    <?php esc_html_e('Revoke', 'sseo-ai-saas'); ?>
                                 </a>
                             <?php endif; ?>
                         </td>
@@ -529,7 +592,7 @@ class LicenseAdmin
             <div class="tablenav bottom">
                 <div class="tablenav-pages">
                     <span class="displaying-num">
-                        <?php printf(esc_html__('%s items', 'ai-seo-saas'), number_format($total)); ?>
+                        <?php printf(esc_html__('%s items', 'sseo-ai-saas'), number_format($total)); ?>
                     </span>
                     <span class="pagination-links">
                         <?php
@@ -558,20 +621,20 @@ class LicenseAdmin
         $tenants = $this->tenants->getTenants([], 50, 0);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Tenant Management', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('Tenant Management', 'sseo-ai-saas'); ?></h1>
             
             <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Active Tenants', 'ai-seo-saas'); ?></h2>
+                <h2><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></h2>
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e('Tenant Key', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Name', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Domain', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Tier', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Status', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Created', 'ai-seo-saas'); ?></th>
-                            <th><?php esc_html_e('Last Active', 'ai-seo-saas'); ?></th>
+                            <th><?php esc_html_e('Tenant Key', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Name', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Domain', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -583,7 +646,7 @@ class LicenseAdmin
                             <td><?php echo esc_html(ucfirst($tenant['tier'])); ?></td>
                             <td><span class="badge badge-<?php echo esc_attr($tenant['status']); ?>"><?php echo esc_html(ucfirst($tenant['status'])); ?></span></td>
                             <td><?php echo esc_html(human_time_diff(strtotime($tenant['created_at']), current_time('timestamp')) . ' ago'); ?></td>
-                            <td><?php echo $tenant['last_active'] ? esc_html(human_time_diff(strtotime($tenant['last_active']), current_time('timestamp')) . ' ago') : '<em>' . esc_html__('Never', 'ai-seo-saas') . '</em>'; ?></td>
+                            <td><?php echo $tenant['last_active'] ? esc_html(human_time_diff(strtotime($tenant['last_active']), current_time('timestamp')) . ' ago') : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -601,7 +664,7 @@ class LicenseAdmin
         $tenants = $this->tenants->getTenants(['status' => 'active'], 100, 0);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Usage Reports', 'ai-seo-saas'); ?></h1>
+            <h1><?php esc_html_e('Usage Reports', 'sseo-ai-saas'); ?></h1>
             
             <div class="sseo-ai-grid-3">
                 <?php foreach ($tenants as $tenant): 
@@ -614,21 +677,21 @@ class LicenseAdmin
                     
                     <div class="usage-stats">
                         <div class="usage-stat">
-                            <span class="usage-label"><?php esc_html_e('API Calls', 'ai-seo-saas'); ?></span>
+                            <span class="usage-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></span>
                             <span class="usage-value <?php echo $limits['checks']['api_calls']['exceeded'] ? 'exceeded' : ''; ?>">
                                 <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($limits['checks']['api_calls']['limit']); ?>
                             </span>
                         </div>
                         
                         <div class="usage-stat">
-                            <span class="usage-label"><?php esc_html_e('Est. Cost', 'ai-seo-saas'); ?></span>
+                            <span class="usage-label"><?php esc_html_e('Est. Cost', 'sseo-ai-saas'); ?></span>
                             <span class="usage-value">
                                 $<?php echo number_format($usage['api_cost'] ?? 0, 2); ?>
                             </span>
                         </div>
                         
                         <div class="usage-stat">
-                            <span class="usage-label"><?php esc_html_e('Content Generated', 'ai-seo-saas'); ?></span>
+                            <span class="usage-label"><?php esc_html_e('Content Generated', 'sseo-ai-saas'); ?></span>
                             <span class="usage-value">
                                 <?php echo number_format($usage['content_generated'] ?? 0); ?>
                             </span>
@@ -653,7 +716,7 @@ class LicenseAdmin
         }
         
         if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'export_licenses')) {
-            wp_die(__('Security check failed', 'ai-seo-saas'));
+            wp_die(__('Security check failed', 'sseo-ai-saas'));
         }
         
         $csv = $this->licenseGenerator->exportLicenses();
@@ -662,5 +725,201 @@ class LicenseAdmin
         header('Content-Disposition: attachment; filename=licenses-' . date('Y-m-d') . '.csv');
         echo $csv;
         exit;
+    }
+
+    /**
+     * Render license features management page
+     */
+    public function renderLicenseFeaturesPage(): void
+    {
+        $licenseKey = sanitize_text_field($_GET['license'] ?? '');
+        if (empty($licenseKey)) {
+            wp_die(__('License key required', 'sseo-ai-saas'));
+        }
+
+        $license = $this->licenseGenerator->getLicense($licenseKey);
+        if (!$license) {
+            wp_die(__('License not found', 'sseo-ai-saas'));
+        }
+
+        $featureManager = new LicenseFeatureManager($this->tenants, $this->licenseGenerator);
+        $featureData = $featureManager->getFeatureToggleData($licenseKey);
+        
+        // Get tier features for reference
+        $tierFeatures = $featureManager->getFeaturesForTier($license['tier'] ?? 'starter');
+        
+        ?>
+        <div class="wrap sseo-ai-admin">
+            <h1><?php echo esc_html(sprintf(__('Manage Features for License: %s', 'sseo-ai-saas'), substr($licenseKey, 0, 20) . '...')); ?></h1>
+            
+            <div class="sseo-ai-notice info">
+                <p><strong><?php esc_html_e('Tier:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(ucfirst($license['tier'] ?? 'starter')); ?></p>
+                <p><?php esc_html_e('Features with default tier access are pre-enabled. You can override these to enable/disable individual features.', 'sseo-ai-saas'); ?></p>
+            </div>
+
+            <div id="feature-toggle-container">
+                <!-- Loaded via JavaScript -->
+                <p><?php esc_html_e('Loading features...', 'sseo-ai-saas'); ?></p>
+            </div>
+
+            <script>
+            jQuery(document).ready(function($) {
+                var licenseKey = <?php echo json_encode($licenseKey); ?>;
+                
+                // Load feature data
+                wp.apiFetch({
+                    path: 'ai-seo-saas/v1/license/features?license_key=' + encodeURIComponent(licenseKey),
+                    method: 'GET'
+                }).then(function(response) {
+                    if (response.success && response.data) {
+                        renderFeatureToggleUI(response.data);
+                    } else {
+                        $('#feature-toggle-container').html('<p><?php esc_html_e('Failed to load features', 'sseo-ai-saas'); ?></p>');
+                    }
+                }).catch(function(error) {
+                    $('#feature-toggle-container').html('<p><?php esc_html_e('Error loading features: ', 'sseo-ai-saas'); ?>' + (error.message || 'Unknown error') + '</p>');
+                });
+                
+                function renderFeatureToggleUI(data) {
+                    var html = '<div class="feature-categories">';
+                    
+                    Object.keys(data.categories).forEach(function(category) {
+                        html += '<div class="feature-category">' +
+                            '<h3 class="category-title">' + escapeHtml(category) + '</h3>' +
+                            '<table class="wp-list-table widefat striped">' +
+                            '<thead><tr>' +
+                            '<th style="width:40px;">Enable</th>' +
+                            '<th>Feature</th>' +
+                            '<th style="width:120px;">Default Tier</th>' +
+                            '<th style="width:100px;">Status</th>' +
+                            '</tr></thead><tbody>';
+                        
+                        Object.keys(data.categories[category]).forEach(function(featureKey) {
+                            var feature = data.categories[category][featureKey];
+                            var isChecked = feature.enabled ? 'checked' : '';
+                            var statusClass = feature.overridden ? 'overridden' : (feature.in_tier ? 'in-tier' : 'not-in-tier');
+                            var statusText = feature.overridden ? '<?php esc_html_e('Overridden', 'sseo-ai-saas'); ?>' : 
+                                            (feature.in_tier ? '<?php esc_html_e('From Tier', 'sseo-ai-saas'); ?>' : '<?php esc_html_e('Not Included', 'sseo-ai-saas'); ?>');
+                            
+                            html += '<tr>' +
+                                '<td style="text-align:center;">' +
+                                '<input type="checkbox" class="feature-toggle" ' +
+                                'data-feature="' + escapeHtml(featureKey) + '" ' + isChecked + '>' +
+                                '</td>' +
+                                '<td><strong>' + escapeHtml(feature.name) + '</strong></td>' +
+                                '<td><code>' + escapeHtml(ucfirst(feature.default_tier)) + '</code></td>' +
+                                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                                '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                    });
+                    
+                    html += '</div>' +
+                        '<div style="margin-top:20px;padding:15px;background:#f0f9ff;border-left:4px solid #0ea5e9;">' +
+                        '<p><strong><?php esc_html_e('Legend:', 'sseo-ai-saas'); ?></strong></p>' +
+                        '<ul>' +
+                        '<li><span class="status-badge from-tier"><?php esc_html_e('From Tier', 'sseo-ai-saas'); ?></span> - <?php esc_html_e('Enabled by default based on license tier', 'sseo-ai-saas'); ?></li>' +
+                        '<li><span class="status-badge overridden"><?php esc_html_e('Overridden', 'sseo-ai-saas'); ?></span> - <?php esc_html_e('Manually enabled/disabled by admin', 'sseo-ai-saas'); ?></li>' +
+                        '<li><span class="status-badge not-in-tier"><?php esc_html_e('Not Included', 'sseo-ai-saas'); ?></span> - <?php esc_html_e('Not in this tier, can be manually enabled', 'sseo-ai-saas'); ?></li>' +
+                        '</ul></div>' +
+                        '<div style="margin-top:20px;">' +
+                        '<button type="button" id="save-features" class="button button-primary"><?php esc_html_e('Save Feature Overrides', 'sseo-ai-saas'); ?></button>' +
+                        '<span id="save-status" style="margin-left:15px;display:none;"></span>' +
+                        '</div>';
+                    
+                    $('#feature-toggle-container').html(html);
+                    
+                    // Bind save button
+                    $('#save-features').on('click', function() {
+                        var features = {};
+                        $('.feature-toggle').each(function() {
+                            var key = $(this).data('feature');
+                            features[key] = $(this).is(':checked');
+                        });
+                        
+                        $('#save-features').prop('disabled', true).text('<?php esc_html_e('Saving...', 'sseo-ai-saas'); ?>');
+                        
+                        wp.apiFetch({
+                            path: 'ai-seo-saas/v1/license/features',
+                            method: 'POST',
+                            data: {
+                                license_key: licenseKey,
+                                features: features
+                            }
+                        }).then(function(response) {
+                            if (response.success) {
+                                $('#save-status').text('✓ <?php esc_html_e('Saved successfully!', 'sseo-ai-saas'); ?>').css('color', '#16a34a').show();
+                                setTimeout(function() { $('#save-status').fadeOut(); }, 3000);
+                            } else {
+                                $('#save-status').text('❌ ' + (response.message || '<?php esc_html_e('Save failed', 'sseo-ai-saas'); ?>')).css('color', '#dc2626').show();
+                            }
+                            $('#save-features').prop('disabled', false).text('<?php esc_html_e('Save Feature Overrides', 'sseo-ai-saas'); ?>');
+                        }).catch(function(error) {
+                            $('#save-status').text('❌ <?php esc_html_e('Error: ', 'sseo-ai-saas'); ?>' + (error.message || '<?php esc_html_e('Unknown error', 'sseo-ai-saas'); ?>')).css('color', '#dc2626').show();
+                            $('#save-features').prop('disabled', false).text('<?php esc_html_e('Save Feature Overrides', 'sseo-ai-saas'); ?>');
+                        });
+                    });
+                }
+                
+                function escapeHtml(text) {
+                    var div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+                
+                function ucfirst(str) {
+                    return str.charAt(0).toUpperCase() + str.slice(1);
+                }
+            });
+            </script>
+
+            <style>
+            .sseo-ai-admin .feature-category {
+                margin-bottom: 30px;
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 15px;
+            }
+            .sseo-ai-admin .category-title {
+                margin-top: 0;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #2271b1;
+                color: #1d2327;
+                font-size: 16px;
+            }
+            .sseo-ai-admin .status-badge {
+                display: inline-block;
+                padding: 3px 8px;
+                border-radius: 3px;
+                font-size: 11px;
+                font-weight: 500;
+            }
+            .sseo-ai-admin .status-badge.in-tier {
+                background: #d1fae5;
+                color: #065f46;
+            }
+            .sseo-ai-admin .status-badge.overridden {
+                background: #fef3c7;
+                color: #92400e;
+            }
+            .sseo-ai-admin .status-badge.not-in-tier {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+            .sseo-ai-notice {
+                padding: 12px 15px;
+                margin: 20px 0;
+                border-left: 4px solid #2271b1;
+                background: #f0f6fc;
+            }
+            .sseo-ai-notice.info {
+                border-left-color: #2271b1;
+            }
+            </style>
+        </div>
+        <?php
     }
 }

@@ -64,7 +64,7 @@ class LicenseValidator
                     'tenant_key' => $tenantKey,
                 ],
                 'timeout' => 30,
-                'sslverify' => true,
+                'sslverify' => $this->settings->sslVerify(),
             ]
         );
 
@@ -83,11 +83,25 @@ class LicenseValidator
         // Update local options with latest data
         update_option('sseo_ai_client_license_status', 'active');
         update_option('sseo_ai_client_license_tier', $body['tier'] ?? 'free');
+        update_option('sseo_ai_client_license_type', $body['type'] ?? 'paid');
         if (!empty($body['expires_at'])) {
             update_option('sseo_ai_client_license_expires', $body['expires_at']);
         }
         if (!empty($body['rate_limit'])) {
             update_option('sseo_ai_client_rate_limit', $body['rate_limit']);
+        }
+        if (!empty($body['api_calls_limit'])) {
+            update_option('sseo_ai_client_api_limit', $body['api_calls_limit']);
+        }
+        
+        // Store image API credentials from SaaS dashboard
+        if (!empty($body['image_api'])) {
+            update_option('sseo_ai_client_image_api', $body['image_api']);
+        }
+        
+        // Store enabled features from SaaS dashboard (feature overrides)
+        if (!empty($body['features']) && is_array($body['features'])) {
+            update_option('sseo_ai_client_enabled_features', $body['features']);
         }
     }
 
@@ -98,6 +112,19 @@ class LicenseValidator
     {
         $tier = $this->getLicenseTier();
         
+        // DEV tier has ALL features (for development/testing)
+        if ($tier === 'dev') {
+            return true;
+        }
+        
+        // Check if features are overridden from SaaS dashboard
+        $enabledFeatures = get_option('sseo_ai_client_enabled_features', null);
+        if ($enabledFeatures !== null && is_array($enabledFeatures)) {
+            // Use SaaS-provided feature list
+            return in_array($feature, $enabledFeatures);
+        }
+        
+        // Fallback to tier-based features
         $features = [
             'free' => ['content_analysis', 'meta_optimization'],
             'starter' => ['content_analysis', 'meta_optimization'],
@@ -111,11 +138,45 @@ class LicenseValidator
     }
 
     /**
-     * Get API rate limit
+     * Default rate limits per tier (requests per hour)
+     */
+    private const TIER_RATE_LIMITS = [
+        'free'         => 30,
+        'starter'      => 60,
+        'trial'        => 200,
+        'professional' => 200,
+        'business'     => 500,
+        'agency'       => 1000,
+        'dev'          => PHP_INT_MAX,
+    ];
+    
+    /**
+     * Default API call limits per tier (per month)
+     */
+    private const TIER_API_LIMITS = [
+        'free'         => 500,
+        'starter'      => 1000,
+        'trial'        => 5000,
+        'professional' => 10000,
+        'business'     => 50000,
+        'agency'       => 200000,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
+     * Get API rate limit (requests per hour)
      */
     public function getRateLimit(): int
     {
-        return (int)get_option('sseo_ai_client_rate_limit', 60);
+        $tier = $this->getLicenseTier();
+        
+        // DEV tier has no rate limiting
+        if ($tier === 'dev') {
+            return PHP_INT_MAX;
+        }
+        
+        $tierDefault = self::TIER_RATE_LIMITS[$tier] ?? 60;
+        return (int)get_option('sseo_ai_client_rate_limit', $tierDefault);
     }
 
     /**
@@ -123,7 +184,23 @@ class LicenseValidator
      */
     public function getApiLimit(): int
     {
-        return (int)get_option('sseo_ai_client_api_limit', 1000);
+        $tier = $this->getLicenseTier();
+        
+        // DEV tier has unlimited API calls
+        if ($tier === 'dev') {
+            return PHP_INT_MAX;
+        }
+        
+        $tierDefault = self::TIER_API_LIMITS[$tier] ?? 1000;
+        return (int)get_option('sseo_ai_client_api_limit', $tierDefault);
+    }
+
+    /**
+     * Check if this is a DEV tier (unlimited testing)
+     */
+    public function isDev(): bool
+    {
+        return $this->getLicenseTier() === 'dev';
     }
 
     /**

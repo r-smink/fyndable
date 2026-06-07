@@ -161,6 +161,34 @@ class LicenseAPI
                 ],
             ],
         ]);
+
+        // Admin: Get license features
+        register_rest_route($this->namespace, '/license/features', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getLicenseFeatures'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string'],
+            ],
+        ]);
+
+        // Admin: Update license features
+        register_rest_route($this->namespace, '/license/features', [
+            'methods' => 'POST',
+            'callback' => [$this, 'updateLicenseFeatures'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string'],
+                'features' => ['required' => true, 'type' => 'array'],
+            ],
+        ]);
+
+        // Admin: Get all available features
+        register_rest_route($this->namespace, '/features/all', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getAllFeatures'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
     }
 
     /**
@@ -184,10 +212,18 @@ class LicenseAPI
             ], 400);
         }
 
+        // Get SaaS settings instance
+        $settings = new \SSEOAISaaS\SaaSSettings();
+        
         return new \WP_REST_Response([
             'success' => true,
             'valid' => true,
             'license' => $result,
+            'image_api' => [
+                'provider' => $settings->getImageApiProvider(),
+                'key' => $settings->getImageApiKey(),
+                'model' => $settings->getImageApiModel(),
+            ],
         ], 200);
     }
 
@@ -231,6 +267,9 @@ class LicenseAPI
         // Get white-label settings to sync to client
         $whiteLabelData = $this->getWhiteLabelData($result['tenant_key']);
         
+        // Get SaaS settings for image API
+        $settings = new \SSEOAISaaS\SaaSSettings();
+        
         return new \WP_REST_Response([
             'success' => true,
             'activated' => true,
@@ -242,6 +281,11 @@ class LicenseAPI
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
+            'image_api' => [
+                'provider' => $settings->getImageApiProvider(),
+                'key' => $settings->getImageApiKey(),
+                'model' => $settings->getImageApiModel(),
+            ],
         ], 200);
     }
     
@@ -293,6 +337,9 @@ class LicenseAPI
         }
 
         $limits = $this->tenants->checkTenantLimits($tenantKey);
+        
+        // Get SaaS settings for image API
+        $settings = new \SSEOAISaaS\SaaSSettings();
 
         return new \WP_REST_Response([
             'success' => true,
@@ -300,8 +347,14 @@ class LicenseAPI
             'tier' => $tenant['tier'],
             'status' => $tenant['status'],
             'limits' => $limits['checks'] ?? [],
-            'rate_limit' => (int)$tenant['rate_limit'],
+            'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
+            'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
             'expires_at' => $tenant['expires_at'],
+            'image_api' => [
+                'provider' => $settings->getImageApiProvider(),
+                'key' => $settings->getImageApiKey(),
+                'model' => $settings->getImageApiModel(),
+            ],
         ], 200);
     }
 
@@ -353,8 +406,10 @@ class LicenseAPI
             ], 403);
         }
 
-        // Suspend tenant (soft delete)
-        $this->tenants->suspendTenant($tenantKey, 'License deactivated by client');
+        // Set tenant to inactive (not suspended — suspended is only for revoked licenses)
+        $this->tenants->updateTenant($tenantKey, [
+            'status' => 'inactive',
+        ]);
 
         return new \WP_REST_Response([
             'success' => true,
@@ -384,6 +439,10 @@ class LicenseAPI
         $usage = $this->tenants->getTenantUsage($tenantKey, $currentPeriod);
         $limits = $this->tenants->checkTenantLimits($tenantKey);
 
+        // Get effective features for this license/tenant
+        $featureManager = $this->getFeatureManager();
+        $effectiveFeatures = $featureManager->getEffectiveFeatures($licenseKey, $tenantKey);
+
         return new \WP_REST_Response([
             'success' => true,
             'tenant' => [
@@ -411,6 +470,105 @@ class LicenseAPI
             ],
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'limits' => $limits['checks'] ?? [],
+            'features' => array_keys($effectiveFeatures), // Include enabled features
         ], 200);
+    }
+
+    /**
+     * Get license features (admin endpoint)
+     */
+    public function getLicenseFeatures(\WP_REST_Request $request): \WP_REST_Response
+    {
+        // Admin only
+        if (!current_user_can('manage_options')) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'unauthorized',
+                'message' => 'Admin access required',
+            ], 403);
+        }
+
+        $licenseKey = $request->get_param('license_key');
+        $featureManager = $this->getFeatureManager();
+
+        $data = $featureManager->getFeatureToggleData($licenseKey);
+        
+        return new \WP_REST_Response([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    }
+
+    /**
+     * Update license features (admin endpoint)
+     */
+    public function updateLicenseFeatures(\WP_REST_Request $request): \WP_REST_Response
+    {
+        // Admin only
+        if (!current_user_can('manage_options')) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'unauthorized',
+                'message' => 'Admin access required',
+            ], 403);
+        }
+
+        $licenseKey = $request->get_param('license_key');
+        $features = $request->get_param('features');
+
+        if (!is_array($features)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_features',
+                'message' => 'Features must be an array',
+            ], 400);
+        }
+
+        $featureManager = $this->getFeatureManager();
+        $success = $featureManager->updateLicenseFeatures($licenseKey, $features);
+
+        if ($success) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'Features updated successfully',
+            ], 200);
+        } else {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'update_failed',
+                'message' => 'Failed to update features',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all available features (admin endpoint)
+     */
+    public function getAllFeatures(\WP_REST_Request $request): \WP_REST_Response
+    {
+        // Admin only
+        if (!current_user_can('manage_options')) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'unauthorized',
+                'message' => 'Admin access required',
+            ], 403);
+        }
+
+        $featureManager = $this->getFeatureManager();
+        $features = $featureManager->getAllFeatures();
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'features' => $features,
+        ], 200);
+    }
+
+    /**
+     * Get feature manager instance
+     */
+    private function getFeatureManager(): LicenseFeatureManager
+    {
+        return new LicenseFeatureManager($this->tenants, $this->licenseGenerator);
     }
 }

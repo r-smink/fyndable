@@ -724,7 +724,7 @@ PROMPT;
                 $('#aiseo-brief-result').hide();
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/content-brief',
+                    path: 'sseo-ai/v1/content-brief',
                     method: 'POST',
                     data: { keyword: keyword }
                 }).then(function(brief) {
@@ -797,7 +797,7 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Scoring...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/content-brief/score',
+                    path: 'sseo-ai/v1/content-brief/score',
                     method: 'POST',
                     data: { keyword: keyword, content: content, brief_id: briefId }
                 }).then(function(result) {

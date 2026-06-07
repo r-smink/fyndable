@@ -44,6 +44,8 @@ class TenantRepository
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             expires_at datetime DEFAULT NULL,
             last_active datetime DEFAULT NULL,
+            payment_status varchar(20) DEFAULT NULL,
+            last_payment_at datetime DEFAULT NULL,
             metadata longtext DEFAULT NULL,
             PRIMARY KEY (id),
             UNIQUE KEY tenant_key (tenant_key),
@@ -155,7 +157,7 @@ class TenantRepository
         
         // Validate required fields
         if (empty($data['name']) || empty($data['email'])) {
-            return new \WP_Error('missing_fields', __('Name and email are required', 'ai-seo-saas'));
+            return new \WP_Error('missing_fields', __('Name and email are required', 'sseo-ai-saas'));
         }
         
         // Check for duplicate tenant key
@@ -165,7 +167,7 @@ class TenantRepository
         ));
         
         if ($existing) {
-            return new \WP_Error('duplicate_key', __('Tenant key already exists', 'ai-seo-saas'));
+            return new \WP_Error('duplicate_key', __('Tenant key already exists', 'sseo-ai-saas'));
         }
         
         $result = $wpdb->insert($table, [
@@ -184,7 +186,7 @@ class TenantRepository
         ]);
         
         if ($result === false) {
-            return new \WP_Error('db_error', __('Failed to create tenant', 'ai-seo-saas'));
+            return new \WP_Error('db_error', __('Failed to create tenant', 'sseo-ai-saas'));
         }
         
         $tenantId = $wpdb->insert_id;
@@ -249,7 +251,8 @@ class TenantRepository
         $table = $wpdb->prefix . self::TENANTS_TABLE;
         
         $allowedFields = ['name', 'domain', 'email', 'status', 'tier', 'max_sites', 
-                         'rate_limit', 'api_calls_limit', 'expires_at', 'license_key'];
+                         'rate_limit', 'api_calls_limit', 'expires_at', 'license_key',
+                         'payment_status', 'last_payment_at', 'last_active'];
         
         $update = [];
         foreach ($allowedFields as $field) {
@@ -263,7 +266,7 @@ class TenantRepository
         }
         
         if (empty($update)) {
-            return new \WP_Error('no_data', __('No data to update', 'ai-seo-saas'));
+            return new \WP_Error('no_data', __('No data to update', 'sseo-ai-saas'));
         }
         
         $result = $wpdb->update(
@@ -453,33 +456,30 @@ class TenantRepository
         ));
         
         if ($existing) {
-            // Update existing record
-            $update = [];
-            switch ($metric) {
-                case 'api_calls':
-                    $update['api_calls'] = "api_calls + $count";
-                    break;
-                case 'api_cost':
-                    $update['api_cost'] = "api_cost + $cost";
-                    break;
-                case 'serp_requests':
-                    $update['serp_requests'] = "serp_requests + $count";
-                    break;
-                case 'content_generated':
-                    $update['content_generated'] = "content_generated + $count";
-                    break;
-                case 'keywords_tracked':
-                    $update['keywords_tracked'] = "keywords_tracked + $count";
-                    break;
-            }
+            // Update existing record using prepared statements
+            $column = match ($metric) {
+                'api_calls' => 'api_calls',
+                'api_cost' => 'api_cost',
+                'serp_requests' => 'serp_requests',
+                'content_generated' => 'content_generated',
+                'keywords_tracked' => 'keywords_tracked',
+                default => null,
+            };
             
-            if (!empty($update)) {
-                $setClause = [];
-                foreach ($update as $col => $expr) {
-                    $setClause[] = "$col = $expr";
+            if ($column) {
+                if ($column === 'api_cost') {
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE {$usageTable} SET {$column} = {$column} + %f WHERE id = %d",
+                        $cost,
+                        (int)$existing
+                    ));
+                } else {
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE {$usageTable} SET {$column} = {$column} + %d WHERE id = %d",
+                        $count,
+                        (int)$existing
+                    ));
                 }
-                $wpdb->query("UPDATE $usageTable SET " . implode(', ', $setClause) . 
-                    " WHERE id = " . (int)$existing);
             }
         } else {
             // Create new record
@@ -555,21 +555,44 @@ class TenantRepository
     }
     
     /**
-     * Update tenant's monthly API cost
+     * Update tenant's monthly API cost in usage table
      */
     public function updateMonthlyCost(int $tenantId, float $cost): void
     {
         global $wpdb;
-        $table = $wpdb->prefix . 'sseo_ai_tenants';
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $period = current_time('Y-m');
         
-        $wpdb->query($wpdb->prepare(
-            "UPDATE {$table} 
-             SET monthly_api_cost = monthly_api_cost + %f,
-                 updated_at = NOW()
-             WHERE id = %d",
-            $cost,
-            $tenantId
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$usageTable} WHERE tenant_id = %d AND period = %s",
+            $tenantId,
+            $period
         ));
+        
+        if ($existing) {
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$usageTable} SET api_cost = api_cost + %f WHERE id = %d",
+                $cost,
+                $existing
+            ));
+        } else {
+            $wpdb->insert($usageTable, [
+                'tenant_id' => $tenantId,
+                'period' => $period,
+                'api_calls' => 0,
+                'api_cost' => $cost,
+                'serp_requests' => 0,
+                'content_generated' => 0,
+                'keywords_tracked' => 0,
+            ]);
+        }
+        
+        // Update last_active on the tenant
+        $wpdb->update(
+            $wpdb->prefix . self::TENANTS_TABLE,
+            ['last_active' => current_time('mysql')],
+            ['id' => $tenantId]
+        );
     }
 
     /**

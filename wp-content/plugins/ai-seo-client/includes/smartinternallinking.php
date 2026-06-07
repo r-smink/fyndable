@@ -29,6 +29,7 @@ class SmartInternalLinking
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_get_link_suggestions', [$this, 'ajaxGetLinkSuggestions']);
         add_action('wp_ajax_sseo_ai_detect_orphans', [$this, 'ajaxDetectOrphans']);
+        add_action('wp_ajax_sseo_ai_generate_opportunities', [$this, 'ajaxGenerateOpportunities']);
         
         // Scheduled orphan detection
         if (!wp_next_scheduled('sseo_ai_detect_orphans')) {
@@ -59,49 +60,62 @@ class SmartInternalLinking
         $linkStats = $this->getLinkingStats();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Smart Internal Linking', 'ai-seo-client'); ?></h1>
-            
-            <!-- Linking Statistics -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Internal Linking Overview', 'ai-seo-client'); ?></h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #2271b1;">
-                            <?php echo esc_html(number_format($linkStats['total_pages'])); ?>
-                        </div>
-                        <div><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #d63638;">
-                            <?php echo esc_html(number_format($linkStats['orphan_pages'])); ?>
-                        </div>
-                        <div><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #00a32a;">
-                            <?php echo esc_html(number_format($linkStats['avg_internal_links'])); ?>
-                        </div>
-                        <div><?php esc_html_e('Avg Internal Links', 'ai-seo-client'); ?></div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #856404;">
-                            <?php echo esc_html(number_format($linkStats['opportunities'])); ?>
-                        </div>
-                        <div><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></div>
-                    </div>
-                </div>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Smart Internal Linking', 'ai-seo-client'); ?></h1>
             </div>
             
-            <!-- Orphan Pages Detection -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('Pages with no internal links pointing to them.', 'ai-seo-client'); ?></p>
+            <div class="sseo-ai-content">
+                <!-- Linking Statistics -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Internal Linking Overview', 'ai-seo-client'); ?></h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
+                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #2271b1; line-height: 1.2;">
+                        <?php echo esc_html(number_format($linkStats['total_pages'])); ?>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #d63638; line-height: 1.2;">
+                        <?php echo esc_html(number_format($linkStats['orphan_pages'])); ?>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #00a32a; line-height: 1.2;">
+                        <?php echo esc_html(number_format($linkStats['avg_internal_links'])); ?>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Avg Internal Links', 'ai-seo-client'); ?></div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 8px;">
+                    <div style="font-size: 36px; font-weight: bold; color: #856404; line-height: 1.2;">
+                        <?php echo esc_html(number_format($linkStats['opportunities'])); ?>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></div>
+                </div>
+            </div>
+                </div>
                 
-                <button type="button" class="button button-primary" onclick="sseoDetectOrphans()" style="margin-bottom: 15px;">
-                    <?php esc_html_e('Scan for Orphan Pages', 'ai-seo-client'); ?>
-                </button>
+                <!-- Orphan Pages Detection -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></h2>
+            <p><?php esc_html_e('Pages with no internal links pointing to them.', 'ai-seo-client'); ?></p>
+            
+            <button type="button" class="button button-primary" onclick="sseoDetectOrphans()" style="margin-bottom: 15px;">
+                <?php esc_html_e('Scan for Orphan Pages', 'ai-seo-client'); ?>
+            </button>
                 
                 <?php if (!empty($orphanPages)): ?>
                 <table class="wp-list-table widefat fixed striped">
@@ -149,66 +163,60 @@ class SmartInternalLinking
             </div>
             
             <!-- Link Opportunities -->
-            <div class="card">
-                <h2><?php esc_html_e('Top Link Opportunities', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('AI-ranked opportunities to add internal links.', 'ai-seo-client'); ?></p>
+            <div class="sseo-ai-dashboard-card">
+                <h2><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></h2>
+                <p><?php esc_html_e('AI-ranked opportunities to add internal links. Click "Generate" to create suggestions.', 'ai-seo-client'); ?></p>
                 
-                <?php if (!empty($linkOpportunities)): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('From Page', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('To Page', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Suggested Anchor', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Relevance Score', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('SEO Impact', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($linkOpportunities as $opp): ?>
-                        <tr>
-                            <td>
-                                <a href="<?php echo get_edit_post_link($opp['from_id']); ?>">
-                                    <?php echo esc_html($this->truncate($opp['from_title'], 40)); ?>
-                                </a>
-                            </td>
-                            <td>
-                                <a href="<?php echo get_edit_post_link($opp['to_id']); ?>">
-                                    <?php echo esc_html($this->truncate($opp['to_title'], 40)); ?>
-                                </a>
-                            </td>
-                            <td>
-                                <code><?php echo esc_html($opp['anchor_text']); ?></code>
-                                <button type="button" class="button button-small" 
-                                        onclick="sseoShowAnchorVariants(<?php echo $opp['from_id']; ?>, <?php echo $opp['to_id']; ?>)">
-                                    <?php esc_html_e('Variants', 'ai-seo-client'); ?>
-                                </button>
-                            </td>
-                            <td>
-                                <span style="color: <?php echo $this->getScoreColor($opp['relevance_score']); ?>;">
-                                    <?php echo esc_html($opp['relevance_score']); ?>%
-                                </span>
-                            </td>
-                            <td>
-                                <span style="color: <?php echo $this->getImpactColor($opp['seo_impact']); ?>;">
-                                    <?php echo esc_html(ucfirst($opp['seo_impact'])); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <button type="button" class="button button-small button-primary" 
-                                        onclick="sseoAddLink(<?php echo $opp['from_id']; ?>, <?php echo $opp['to_id']; ?>, '<?php echo esc_js($opp['anchor_text']); ?>')">
-                                    <?php esc_html_e('Add Link', 'ai-seo-client'); ?>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('No link opportunities found. Try creating more content!', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
+                <button type="button" class="button button-primary" onclick="sseoGenerateOpportunities()" style="margin-bottom: 15px;">
+                    <?php esc_html_e('Generate Link Opportunities', 'ai-seo-client'); ?>
+                </button>
+                
+                <div id="link-opportunities-container">
+                    <?php if (!empty($linkOpportunities)): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('From Page', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('To Page', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Suggested Anchor', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Relevance', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Impact', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($linkOpportunities as $opp): ?>
+                            <tr>
+                                <td><?php echo esc_html($this->truncate($opp['from_title'], 30)); ?></td>
+                                <td><?php echo esc_html($this->truncate($opp['to_title'], 30)); ?></td>
+                                <td><code><?php echo esc_html($opp['anchor_text']); ?></code></td>
+                                <td>
+                                    <span style="color: <?php echo $this->getScoreColor($opp['relevance_score']); ?>;">
+                                        <?php echo esc_html($opp['relevance_score']); ?>%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="color: <?php echo $this->getImpactColor($opp['seo_impact']); ?>;">
+                                        <?php echo esc_html(ucfirst($opp['seo_impact'])); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="button button-small" 
+                                            onclick="sseoAddLink(<?php echo $opp['from_id']; ?>, <?php echo $opp['to_id']; ?>, '<?php echo esc_js($opp['anchor_text']); ?>')">
+                                        <?php esc_html_e('Add Link', 'ai-seo-client'); ?>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php else: ?>
+                    <p><?php esc_html_e('Click "Generate Link Opportunities" to find internal linking opportunities.', 'ai-seo-client'); ?></p>
+                    <?php endif; ?>
+                </div>
             </div>
+        </div>
+        </div>
         </div>
         
         <script>
@@ -296,6 +304,42 @@ class SmartInternalLinking
                     location.reload();
                 } else {
                     alert(response.data.message || 'Error adding link');
+                }
+            });
+        }
+        
+        function sseoGenerateOpportunities() {
+            const button = event.target;
+            const container = document.getElementById('link-opportunities-container');
+            button.disabled = true;
+            button.textContent = '<?php echo esc_js(__('Generating... (this may take a minute)', 'ai-seo-client')); ?>';
+            container.innerHTML = '<p><?php echo esc_js(__('Analyzing content and generating AI suggestions...', 'ai-seo-client')); ?></p>';
+            
+            jQuery.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'sseo_ai_generate_opportunities',
+                    nonce: '<?php echo wp_create_nonce('sseo_linking'); ?>'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response && response.success) {
+                        location.reload();
+                    } else {
+                        var msg = (response && response.data && response.data.message) ? response.data.message : '<?php echo esc_js(__('Error generating opportunities', 'ai-seo-client')); ?>';
+                        alert(msg);
+                        button.disabled = false;
+                        button.textContent = '<?php echo esc_js(__('Generate Link Opportunities', 'ai-seo-client')); ?>';
+                        container.innerHTML = '<p style="color:#d63638;"><?php echo esc_js(__('Error generating opportunities. Please try again.', 'ai-seo-client')); ?></p>';
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', status, error);
+                    alert('<?php echo esc_js(__('Request failed. Please try again.', 'ai-seo-client')); ?> (Status: ' + status + ')');
+                    button.disabled = false;
+                    button.textContent = '<?php echo esc_js(__('Generate Link Opportunities', 'ai-seo-client')); ?>';
+                    container.innerHTML = '<p style="color:#d63638;"><?php echo esc_js(__('Error generating opportunities. Please try again.', 'ai-seo-client')); ?></p>';
                 }
             });
         }
@@ -582,7 +626,7 @@ class SmartInternalLinking
     /**
      * Calculate relevance between posts
      */
-    private function calculateRelevance(\WP_Post $post, array $keywords): int
+    private function calculateRelevance($post, array $keywords): int
     {
         $content = strtolower(strip_tags($post->post_content . ' ' . $post->post_title));
         $matches = 0;
@@ -594,17 +638,27 @@ class SmartInternalLinking
         }
         
         $keywordCount = count($keywords);
-        return $keywordCount > 0 ? min(100, ($matches / $keywordCount) * 100) : 0;
+        return $keywordCount > 0 ? (int)min(100, ($matches / $keywordCount) * 100) : 0;
     }
     
     /**
-     * Get link opportunities
+     * Get cached link opportunities (fast - for page load)
      */
     public function getLinkOpportunities(): array
+    {
+        return get_option('sseo_ai_link_opportunities', []);
+    }
+    
+    /**
+     * Generate link opportunities with AI (slow - for AJAX only)
+     */
+    public function generateLinkOpportunities(): array|\WP_Error
     {
         global $wpdb;
         
         $opportunities = [];
+        $aiCallCount = 0;
+        $maxAiCalls = 10; // Limit AI calls to prevent timeouts
         
         $posts = $wpdb->get_results("
             SELECT ID, post_title, post_content
@@ -612,7 +666,7 @@ class SmartInternalLinking
             WHERE post_status = 'publish'
             AND post_type IN ('post', 'page')
             ORDER BY post_date DESC
-            LIMIT 50
+            LIMIT 30
         ");
         
         foreach ($posts as $fromPost) {
@@ -632,7 +686,14 @@ class SmartInternalLinking
                 $relevance = $this->calculateRelevance($toPost, $fromKeywords);
                 
                 if ($relevance >= 40) {
-                    $anchorText = $this->generateAnchorText($fromPost, $toPost);
+                    // Use simple anchor text for performance, AI only for top matches
+                    if ($relevance >= 70 && $aiCallCount < $maxAiCalls) {
+                        $anchorText = $this->generateAnchorText($fromPost, $toPost);
+                        $aiCallCount++;
+                    } else {
+                        $anchorText = $this->generateSimpleAnchorText($toPost->post_title);
+                    }
+                    
                     $seoImpact = $this->calculateSEOImpact($relevance);
                     
                     $opportunities[] = [
@@ -655,9 +716,20 @@ class SmartInternalLinking
     }
     
     /**
+     * Generate simple anchor text without AI (for performance)
+     */
+    private function generateSimpleAnchorText(string $title): string
+    {
+        // Use title words, limit to 2-4 words
+        $words = explode(' ', trim($title));
+        $wordCount = min(4, max(2, count($words) / 2));
+        return implode(' ', array_slice($words, 0, $wordCount));
+    }
+    
+    /**
      * Generate anchor text
      */
-    private function generateAnchorText(\WP_Post $fromPost, \WP_Post $toPost): string
+    private function generateAnchorText($fromPost, $toPost): string
     {
         // Use AI to generate contextual anchor text
         $prompt = "Generate a natural anchor text for linking from this context:
@@ -757,23 +829,26 @@ Provide only the anchor text (2-5 words), no explanation.";
         $orphanPages = count($this->getOrphanPages());
         $opportunities = count($this->getLinkOpportunities());
         
-        // Calculate average internal links
-        $posts = $wpdb->get_results("
+        // Calculate average internal links (sample last 100 posts for performance)
+        $samplePosts = $wpdb->get_results("
             SELECT post_content
             FROM {$wpdb->posts}
             WHERE post_status = 'publish'
             AND post_type IN ('post', 'page')
+            ORDER BY post_date DESC
+            LIMIT 100
         ");
         
         $totalLinks = 0;
         $siteUrl = home_url();
         
-        foreach ($posts as $post) {
+        foreach ($samplePosts as $post) {
             $linkCount = substr_count($post->post_content, '<a href="' . $siteUrl);
             $totalLinks += $linkCount;
         }
         
-        $avgLinks = count($posts) > 0 ? round($totalLinks / count($posts), 1) : 0;
+        $sampleSize = count($samplePosts);
+        $avgLinks = $sampleSize > 0 ? round($totalLinks / $sampleSize, 1) : 0;
         
         return [
             'total_pages' => (int)$totalPages,
@@ -848,6 +923,27 @@ Provide only the anchor text (2-5 words), no explanation.";
         $orphans = $this->detectOrphanPages();
         
         wp_send_json_success(['orphans' => $orphans]);
+    }
+    
+    public function ajaxGenerateOpportunities(): void
+    {
+        check_ajax_referer('sseo_linking', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+        
+        // Generate and cache opportunities
+        $opportunities = $this->generateLinkOpportunities();
+        
+        if (is_wp_error($opportunities)) {
+            wp_send_json_error(['message' => $opportunities->get_error_message()]);
+        }
+        
+        // Cache the results
+        update_option('sseo_ai_link_opportunities', $opportunities, false);
+        
+        wp_send_json_success(['count' => count($opportunities)]);
     }
     
     /**

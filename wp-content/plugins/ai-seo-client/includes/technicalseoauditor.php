@@ -57,63 +57,188 @@ class TechnicalSEOAuditor
         $lastAuditDate = get_option('sseo_ai_last_audit_date', '');
         
         ?>
+        <style>
+            /* Remove WordPress #wpcontent padding */
+            #wpcontent { padding-left: 0 !important; }
+            
+            /* Dashboard Container */
+            .wrap.sseo-ai-modern { max-width: 1400px; }
+            
+            /* Header Styling */
+            .sseo-ai-header {
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+                color: #fff;
+                padding: 24px 30px;
+                margin: -20px -20px 30px -20px;
+                border-radius: 0;
+            }
+            .sseo-ai-header h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 600;
+                color: #fff;
+            }
+            
+            /* Content area */
+            .sseo-ai-content {
+                padding: 0 10px;
+            }
+            
+            /* Card Styling */
+            .sseo-ai-dashboard-card {
+                background: #fff;
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+                padding: 24px;
+                margin-bottom: 24px;
+            }
+            .sseo-ai-dashboard-card h2 {
+                margin: 0 0 20px 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: #1e293b;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #3b82f6;
+            }
+            .sseo-ai-dashboard-card h3 {
+                margin: 0 0 16px 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #334155;
+            }
+            
+            /* Spacing */
+            .sseo-ai-dashboard-card + .sseo-ai-dashboard-card { margin-top: 24px; }
+            
+            /* Grid Layouts */
+            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+            
+            .sseo-top-section { 
+                display: grid; 
+                grid-template-columns: 1fr 2fr; 
+                gap: 24px; 
+                margin-bottom: 24px; 
+                align-items: start;
+            }
+            @media (max-width: 1200px) { .sseo-top-section { grid-template-columns: 1fr; } }
+            
+            /* Score Cards */
+            .audit-scores-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+            @media (max-width: 768px) { .audit-scores-grid { grid-template-columns: repeat(2, 1fr); } }
+            
+            .score-card { 
+                text-align: center; 
+                padding: 24px 16px; 
+                background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
+                border-radius: 10px; 
+                border: 1px solid #cbd5e1;
+            }
+            .score-value { font-size: 40px; font-weight: 800; line-height: 1; }
+            .score-label { 
+                margin-top: 10px; 
+                font-size: 12px; 
+                font-weight: 600; 
+                color: #64748b; 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+            }
+            
+            /* Tables */
+            .sseo-ai-dashboard-card .wp-list-table {
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .sseo-ai-dashboard-card .wp-list-table th {
+                background: #f8fafc;
+                font-weight: 600;
+                color: #475569;
+                padding: 12px;
+            }
+            .sseo-ai-dashboard-card .wp-list-table td {
+                padding: 12px;
+                vertical-align: middle;
+            }
+            
+            /* Links */
+            .sseo-ai-dashboard-card a {
+                color: #2563eb;
+                text-decoration: none;
+            }
+            .sseo-ai-dashboard-card a:hover {
+                text-decoration: underline;
+            }
+        </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Technical SEO Audit', 'ai-seo-client'); ?></h1>
             </div>
             
             <div class="sseo-ai-content">
-                <!-- Audit Overview -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
-                
-                <?php if ($lastAuditDate): ?>
-                <p>
-                    <strong><?php esc_html_e('Last Audit:', 'ai-seo-client'); ?></strong>
-                    <?php echo esc_html(human_time_diff(strtotime($lastAuditDate))); ?> ago
-                </p>
-                <?php endif; ?>
-                
-                <button type="button" class="button button-primary button-hero" onclick="sseoRunTechnicalAudit()">
-                    <?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>
-                </button>
-                
-                <?php if (!empty($lastAudit)): ?>
-                <div style="margin-top: 20px;">
-                    <h3><?php esc_html_e('Audit Score', 'ai-seo-client'); ?></h3>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['crawlability_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['crawlability_score'] ?? 0); ?>
+                <!-- Top Section: Overview + Scores side by side -->
+                <div class="sseo-top-section">
+                    <!-- Audit Overview -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
+                        
+                        <?php if ($lastAuditDate): ?>
+                        <p style="margin-bottom: 20px;">
+                            <strong><?php esc_html_e('Last Audit:', 'ai-seo-client'); ?></strong><br>
+                            <?php echo esc_html(human_time_diff(strtotime($lastAuditDate))); ?> ago
+                        </p>
+                        <?php endif; ?>
+                        
+                        <button type="button" class="button button-primary button-hero" onclick="sseoRunTechnicalAudit()" style="width: 100%;">
+                            <?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
+                    
+                    <!-- Audit Scores -->
+                    <?php if (!empty($lastAudit)): ?>
+                    <div class="sseo-ai-dashboard-card">
+                        <h3 style="margin: 0 0 25px 0; font-size: 18px; font-weight: 600; color: #1d2327;"><?php esc_html_e('Audit Scores', 'ai-seo-client'); ?></h3>
+                        <div class="audit-scores-grid">
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['crawlability_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['crawlability_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['performance_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['performance_score'] ?? 0); ?>
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['performance_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['performance_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('Performance', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('Performance', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['structure_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['structure_score'] ?? 0); ?>
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['structure_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['structure_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                            <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($lastAudit['sitemap_score'] ?? 0); ?>;">
-                                <?php echo esc_html($lastAudit['sitemap_score'] ?? 0); ?>
+                            <div class="score-card">
+                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['sitemap_score'] ?? 0); ?>">
+                                    <?php echo esc_html($lastAudit['sitemap_score'] ?? 0); ?>
+                                </div>
+                                <div class="score-label"><?php esc_html_e('Sitemap Health', 'ai-seo-client'); ?></div>
                             </div>
-                            <div><?php esc_html_e('Sitemap Health', 'ai-seo-client'); ?></div>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <div class="sseo-ai-dashboard-card" style="display: flex; align-items: center; justify-content: center;">
+                        <p style="color: #64748b; font-style: italic;"><?php esc_html_e('Run an audit to see your scores', 'ai-seo-client'); ?></p>
+                    </div>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
-            </div>
             
-            <!-- Crawlability Audit -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Crawlability Audit', 'ai-seo-client'); ?></h2>
+            <div class="sseo-two-columns">
+                <!-- Left Column -->
+                <div>
+                    <!-- Crawlability Audit -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Crawlability Audit', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['crawlability'])): ?>
                 <table class="wp-list-table widefat fixed striped">
@@ -189,11 +314,14 @@ class TechnicalSEOAuditor
                 <?php else: ?>
                 <p><?php esc_html_e('Run an audit to analyze crawl budget.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
-            
-            <!-- URL Structure Optimization -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('URL Structure Optimization', 'ai-seo-client'); ?></h2>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div>
+                    <!-- URL Structure Optimization -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('URL Structure Optimization', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['url_structure'])): ?>
                 <table class="wp-list-table widefat fixed striped">
@@ -217,11 +345,11 @@ class TechnicalSEOAuditor
                 <?php else: ?>
                 <p><?php esc_html_e('Run an audit to check URL structure.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
-            
-            <!-- Sitemap Health -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('XML Sitemap Health Check', 'ai-seo-client'); ?></h2>
+                    </div>
+                    
+                    <!-- Sitemap Health -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('XML Sitemap Health Check', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['sitemap'])): ?>
                 <div style="margin-bottom: 15px;">
@@ -261,11 +389,11 @@ class TechnicalSEOAuditor
                 <?php else: ?>
                 <p><?php esc_html_e('Run an audit to check sitemap health.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
-            
-            <!-- Robots.txt Optimization -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Robots.txt Optimization', 'ai-seo-client'); ?></h2>
+                    </div>
+                    
+                    <!-- Robots.txt Optimization -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Robots.txt Optimization', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['robots_txt'])): ?>
                 <div style="margin-bottom: 15px;">
@@ -286,17 +414,14 @@ class TechnicalSEOAuditor
                 </ul>
                 <?php endif; ?>
                 
-                <a href="<?php echo admin_url('admin.php?page=ai-seo-robots-txt'); ?>" class="button">
-                    <?php esc_html_e('Edit Robots.txt', 'ai-seo-client'); ?>
-                </a>
                 <?php else: ?>
                 <p><?php esc_html_e('Run an audit to check robots.txt.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
-            
-            <!-- Performance Analysis -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Server & CDN Performance', 'ai-seo-client'); ?></h2>
+                    </div>
+                    
+                    <!-- Performance Analysis -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Server & CDN Performance', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($lastAudit['performance'])): ?>
                 <table class="wp-list-table widefat fixed striped">
@@ -326,6 +451,8 @@ class TechnicalSEOAuditor
                 <?php else: ?>
                 <p><?php esc_html_e('Run an audit to analyze performance.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
+                    </div>
+                </div>
             </div>
             </div>
         </div>
@@ -341,17 +468,21 @@ class TechnicalSEOAuditor
             button.disabled = true;
             button.textContent = '<?php esc_html_e('Running Audit...', 'ai-seo-client'); ?>';
             
-            jQuery.post(ajaxurl, {
-                action: 'sseo_ai_run_technical_audit',
-                nonce: '<?php echo wp_create_nonce('sseo_technical'); ?>'
-            }, function(response) {
+            wp.apiFetch({
+                path: '/sseo-ai/v1/technical/audit',
+                method: 'POST'
+            }).then(function(response) {
                 if (response.success) {
                     location.reload();
                 } else {
-                    alert(response.data.message || 'Error running audit');
+                    alert('<?php echo esc_js(__('Error running audit', 'ai-seo-client')); ?>');
                     button.disabled = false;
                     button.textContent = '<?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>';
                 }
+            }).catch(function(error) {
+                alert('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>'));
+                button.disabled = false;
+                button.textContent = '<?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>';
             });
         }
         </script>
@@ -401,28 +532,25 @@ class TechnicalSEOAuditor
             'name' => 'Robots.txt Accessible',
             'status' => $robotsExists ? 'pass' : 'fail',
             'details' => $robotsExists ? 'Robots.txt is accessible' : 'Robots.txt not found',
-            'fix_url' => admin_url('admin.php?page=ai-seo-robots-txt'),
+            'fix_url' => '', // No dedicated robots.txt page yet
         ];
         
         // Check XML sitemap
-        $sitemapUrl = home_url('/sitemap.xml');
-        $sitemapResponse = wp_remote_get($sitemapUrl);
-        $sitemapExists = !is_wp_error($sitemapResponse) && wp_remote_retrieve_response_code($sitemapResponse) === 200;
-        
+        $sitemapExists = $this->checkSitemapExists();
         $checks[] = [
             'name' => 'XML Sitemap Accessible',
             'status' => $sitemapExists ? 'pass' : 'fail',
             'details' => $sitemapExists ? 'XML sitemap is accessible' : 'XML sitemap not found',
-            'fix_url' => admin_url('admin.php?page=ai-seo-sitemaps'),
+            'fix_url' => '', // No dedicated sitemap page yet - configure via Settings
         ];
         
         // Check for redirect chains
-        $redirectChains = $this->findRedirectChains();
+        $redirectChains = $this->checkRedirectChains();
         $checks[] = [
             'name' => 'Redirect Chains',
             'status' => count($redirectChains) === 0 ? 'pass' : 'warning',
             'details' => count($redirectChains) . ' redirect chains found',
-            'fix_url' => admin_url('admin.php?page=ai-seo-redirects'),
+            'fix_url' => '', // No dedicated redirects page yet
         ];
         
         // Check for orphaned pages
@@ -444,6 +572,36 @@ class TechnicalSEOAuditor
         ];
         
         return $checks;
+    }
+    
+    /**
+     * Check if XML sitemap exists
+     */
+    private function checkSitemapExists(): bool
+    {
+        $sitemapUrls = [
+            home_url('/sitemap_index.xml'),
+            home_url('/sitemap.xml'),
+        ];
+        
+        foreach ($sitemapUrls as $url) {
+            $response = wp_remote_head($url, ['timeout' => 10]);
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check for redirect chains
+     */
+    private function checkRedirectChains(): array
+    {
+        // Placeholder - would check for redirect chains in practice
+        // For now, return empty array (no chains detected)
+        return [];
     }
     
     /**
@@ -575,12 +733,27 @@ class TechnicalSEOAuditor
      */
     private function auditSitemap(): array
     {
-        $sitemapUrl = home_url('/sitemap.xml');
-        $response = wp_remote_get($sitemapUrl, ['timeout' => 30]);
+        // Try sitemap_index.xml first (Yoast SEO style), then sitemap.xml
+        $sitemapUrls = [
+            home_url('/sitemap_index.xml'),
+            home_url('/sitemap.xml'),
+        ];
         
-        if (is_wp_error($response)) {
+        $sitemapUrl = null;
+        $response = null;
+        
+        foreach ($sitemapUrls as $url) {
+            $resp = wp_remote_get($url, ['timeout' => 30]);
+            if (!is_wp_error($resp) && wp_remote_retrieve_response_code($resp) === 200) {
+                $sitemapUrl = $url;
+                $response = $resp;
+                break;
+            }
+        }
+        
+        if (!$response || is_wp_error($response)) {
             return [
-                'url' => $sitemapUrl,
+                'url' => $sitemapUrls[0],
                 'exists' => false,
                 'total_urls' => 0,
                 'valid_urls' => 0,
@@ -598,11 +771,70 @@ class TechnicalSEOAuditor
             $urls = [];
             $issues = [];
             
-            foreach ($sitemap->url as $url) {
-                $loc = (string)$url->loc;
-                $urls[] = $loc;
+            // Register namespace if present (sitemapindex usually has xmlns)
+            $namespaces = $sitemap->getDocNamespaces();
+            if (!empty($namespaces)) {
+                foreach ($namespaces as $prefix => $namespace) {
+                    $sitemap->registerXPathNamespace($prefix ?: 'sm', $namespace);
+                }
+            }
+            
+            // Check if this is a sitemap index (contains sub-sitemaps)
+            $isSitemapIndex = strpos($xml, 'sitemapindex') !== false || isset($sitemap->sitemap) || !empty($sitemap->xpath('//sm:sitemap'));
+            
+            if ($isSitemapIndex) {
+                // Parse sitemap index and fetch sub-sitemaps
+                // Try with namespace first
+                $subSitemaps = !empty($namespaces) ? $sitemap->xpath('//sm:sitemap') : [];
+                if (empty($subSitemaps)) {
+                    $subSitemaps = $sitemap->sitemap;
+                }
                 
-                // Validate each URL
+                $subCount = count($subSitemaps);
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Found ' . $subCount . ' sub-sitemaps in index: ' . $sitemapUrl);
+                
+                foreach ($subSitemaps as $subSitemap) {
+                    $subSitemapUrl = (string)$subSitemap->loc;
+                    if (empty($subSitemapUrl)) {
+                        continue;
+                    }
+                    $subUrls = $this->parseSubSitemap($subSitemapUrl);
+                    
+                    if (is_array($subUrls)) {
+                        $urls = array_merge($urls, $subUrls);
+                    } else {
+                        $issues[] = [
+                            'type' => 'Sub-sitemap Error',
+                            'description' => "Could not parse sub-sitemap: {$subSitemapUrl}",
+                        ];
+                    }
+                }
+            } else {
+                // Regular sitemap with URLs directly - also handle namespaces
+                if (!empty($namespaces)) {
+                    $urlNodes = $sitemap->xpath('//sm:url');
+                    foreach ($urlNodes as $urlNode) {
+                        $loc = (string)$urlNode->loc;
+                        if (!empty($loc)) {
+                            $urls[] = $loc;
+                        }
+                    }
+                }
+                
+                // Fallback: direct access
+                if (empty($urls)) {
+                    foreach ($sitemap->url as $url) {
+                        $loc = (string)$url->loc;
+                        if (!empty($loc)) {
+                            $urls[] = $loc;
+                        }
+                    }
+                }
+            }
+            
+            // Validate a sample of URLs (not all, for performance)
+            $sampleUrls = array_slice($urls, 0, 10);
+            foreach ($sampleUrls as $loc) {
                 $urlResponse = wp_remote_head($loc, ['timeout' => 5]);
                 if (is_wp_error($urlResponse)) {
                     $issues[] = [
@@ -624,12 +856,21 @@ class TechnicalSEOAuditor
                 AND post_type IN ('post', 'page')
             ");
             
-            if ($publishedPosts > $totalUrls) {
-                $issues[] = [
-                    'type' => 'Missing URLs',
-                    'description' => ($publishedPosts - $totalUrls) . ' published pages not in sitemap',
-                ];
+            // Check for missing pages (only warn if significant difference >20%)
+            if ($publishedPosts > 0 && $totalUrls > 0) {
+                $missingCount = $publishedPosts - $totalUrls;
+                $missingPercent = ($missingCount / $publishedPosts) * 100;
+                
+                // Only report as issue if more than 20% missing (accounts for excluded post types, taxonomies, etc.)
+                if ($missingPercent > 20) {
+                    $issues[] = [
+                        'type' => 'Missing URLs',
+                        'description' => sprintf('%d published posts/pages not in sitemap (%.1f%%)', $missingCount, $missingPercent),
+                    ];
+                }
             }
+            
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Total URLs collected from sitemap: ' . $totalUrls . ' (issues: ' . $invalidUrls . ')');
             
             return [
                 'url' => $sitemapUrl,
@@ -648,9 +889,95 @@ class TechnicalSEOAuditor
                 'valid_urls' => 0,
                 'invalid_urls' => 0,
                 'issues' => [
-                    ['type' => 'Parse Error', 'description' => 'Invalid XML format'],
+                    ['type' => 'Parse Error', 'description' => 'Could not parse sitemap XML: ' . $e->getMessage()],
                 ],
             ];
+        }
+    }
+    
+    /**
+     * Parse sub-sitemap and return URLs
+     */
+    private function parseSubSitemap(string $url): ?array
+    {
+        $response = wp_remote_get($url, ['timeout' => 30]);
+        
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Failed to fetch sub-sitemap: ' . $url . ' - ' . $response->get_error_message());
+            return null;
+        }
+        
+        $responseCode = wp_remote_retrieve_response_code($response);
+        if ($responseCode !== 200) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Sub-sitemap returned HTTP ' . $responseCode . ': ' . $url);
+            return null;
+        }
+        
+        $xml = wp_remote_retrieve_body($response);
+        
+        if (empty($xml)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Empty response from sub-sitemap: ' . $url);
+            return null;
+        }
+        
+        try {
+            $sitemap = new \SimpleXMLElement($xml);
+            $urls = [];
+            
+            // Register ALL namespaces (including default namespace for RankMath)
+            $namespaces = $sitemap->getDocNamespaces(true);
+            $defaultNs = isset($namespaces['']) ? $namespaces[''] : null;
+            
+            if (!empty($namespaces)) {
+                foreach ($namespaces as $prefix => $namespace) {
+                    // Register with a prefix even if it's the default namespace
+                    $sitemap->registerXPathNamespace($prefix ?: 'sitemap', $namespace);
+                }
+            }
+            
+            // Try XPath with namespace prefix
+            if ($defaultNs) {
+                $sitemap->registerXPathNamespace('sitemap', $defaultNs);
+                $urlNodes = $sitemap->xpath('//sitemap:url/sitemap:loc');
+                if ($urlNodes) {
+                    foreach ($urlNodes as $loc) {
+                        $url = (string)$loc;
+                        if (!empty($url)) {
+                            $urls[] = $url;
+                        }
+                    }
+                }
+            }
+            
+            // Fallback 1: Try without namespace
+            if (empty($urls)) {
+                foreach ($sitemap->url as $urlNode) {
+                    $loc = (string)$urlNode->loc;
+                    if (!empty($loc)) {
+                        $urls[] = $loc;
+                    }
+                }
+            }
+            
+            // Fallback 2: Direct XPath without namespace (some sitemaps)
+            if (empty($urls)) {
+                $locs = $sitemap->xpath('//url/loc');
+                if ($locs) {
+                    foreach ($locs as $loc) {
+                        $url = (string)$loc;
+                        if (!empty($url)) {
+                            $urls[] = $url;
+                        }
+                    }
+                }
+            }
+            
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Parsed ' . count($urls) . ' URLs from sub-sitemap: ' . $url);
+            
+            return $urls;
+        } catch (\Exception $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Parse error for sub-sitemap ' . $url . ': ' . $e->getMessage());
+            return null;
         }
     }
     
@@ -881,9 +1208,19 @@ class TechnicalSEOAuditor
     /**
      * REST: Run technical audit
      */
-    public function restRunAudit(): array
+    public function restRunAudit(\WP_REST_Request $request): \WP_REST_Response
     {
-        $audit = $this->runFullAudit();
-        return ['success' => true, 'audit' => $audit];
+        try {
+            $audit = $this->runFullAudit();
+            return new \WP_REST_Response([
+                'success' => true,
+                'audit' => $audit
+            ], 200);
+        } catch (\Exception $e) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

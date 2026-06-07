@@ -94,7 +94,7 @@ class RolePermissions
     private function getRequiredCapForPage(string $page): ?string
     {
         $map = [
-            'ai-seo-client' => 'aiseo_manage_settings',
+            'ai-seo-client' => 'manage_options', // Connection page - all admins can access
             'ai-seo-assistant-dashboard' => 'aiseo_view_dashboard',
             'ai-seo-assistant-snapshots' => 'aiseo_view_serp',
             'ai-seo-assistant-redirects' => 'aiseo_manage_redirects',

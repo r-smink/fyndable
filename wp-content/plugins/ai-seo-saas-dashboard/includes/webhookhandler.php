@@ -238,16 +238,21 @@ class WebhookHandler
         if ($tenantKey) {
             // Update status based on subscription state
             $tenantStatus = 'active';
+            $paymentStatus = 'active';
             if ($status === 'past_due') {
-                $tenantStatus = 'past_due';
+                $tenantStatus = 'active';
+                $paymentStatus = 'past_due';
             } elseif ($status === 'unpaid') {
-                $tenantStatus = 'unpaid';
+                $tenantStatus = 'suspended';
+                $paymentStatus = 'unpaid';
             } elseif ($status === 'canceled') {
                 $tenantStatus = 'cancelled';
+                $paymentStatus = 'cancelled';
             }
 
             $this->tenants->updateTenant($tenantKey, [
                 'status' => $tenantStatus,
+                'payment_status' => $paymentStatus,
             ]);
 
             do_action('sseo_ai_saas_subscription_updated', $tenantKey, $subscription, 'stripe');

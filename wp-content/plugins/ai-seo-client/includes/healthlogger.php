@@ -4,7 +4,7 @@ namespace SSEOAIClient;
 
 class HealthLogger
 {
-    private const OPTION = 'aiseoclient_health_log';
+    private const OPTION = 'sseo_ai_client_health_log';
     private const LIMIT = 20;
     private ?AlertNotifier $notifier = null;
 

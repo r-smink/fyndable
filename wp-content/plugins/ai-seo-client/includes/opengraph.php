@@ -349,6 +349,12 @@ class OpenGraph
      */
     public function addMetaBoxes(): void
     {
+        // Only load on post edit screens
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return;
+        }
+        
         $postTypes = get_post_types(['public' => true]);
         foreach ($postTypes as $postType) {
             add_meta_box(
@@ -552,7 +558,7 @@ class OpenGraph
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/og/generate',
+                    path: 'sseo-ai/v1/og/generate',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(result) {

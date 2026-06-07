@@ -470,7 +470,7 @@ Return ONLY the JSON.";
                 btn.prop('disabled', true);
                 $('#bulk-spinner').addClass('is-active');
 
-                wp.apiFetch({ path: 'aiseoclient/v1/bulk/scan' }).then(function(res) {
+                wp.apiFetch({ path: 'sseo-ai/v1/bulk/scan' }).then(function(res) {
                     allPosts = res.posts;
                     var s = res.summary;
                     $('#bulk-total').text(s.total);
@@ -520,7 +520,7 @@ Return ONLY the JSON.";
 
                 btn.prop('disabled', true).text('...');
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/bulk/generate-meta',
+                    path: 'sseo-ai/v1/bulk/generate-meta',
                     method: 'POST',
                     data: { post_id: postId, fields: fields }
                 }).then(function(res) {
@@ -547,7 +547,7 @@ Return ONLY the JSON.";
                 $('#bulk-progress-text').text(done + ' / ' + total + ' <?php echo esc_js(__('processed', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/bulk/generate-batch',
+                    path: 'sseo-ai/v1/bulk/generate-batch',
                     method: 'POST',
                     data: { post_ids: ids, fields: fields }
                 }).then(function(res) {

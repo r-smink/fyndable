@@ -23,14 +23,20 @@ class LSIKeywords
 
     public function addMetaBoxes(): void
     {
+        // Only load on post edit screens
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return;
+        }
+        
         $screens = get_post_types(['public' => true]);
-        foreach ($screens as $screen) {
+        foreach ($screens as $screenType) {
             add_meta_box(
                 'aiseo_lsi',
                 __('LSI Keywords & Synonyms', 'ai-seo-client'),
                 [$this, 'renderMetaBox'],
-                $screen,
-                'normal',
+                $screenType,
+                'side',
                 'default'
             );
         }
@@ -110,7 +116,7 @@ class LSIKeywords
                 btn.prop('disabled', true);
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/lsi-suggest',
+                    path: 'sseo-ai/v1/lsi-suggest',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {

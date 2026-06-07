@@ -86,7 +86,7 @@ class ImageAltGenerator
                 btn.prop('disabled', true).text('<?php esc_html_e('Analyzing...', 'ai-seo-client'); ?>');
                 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/generate-alt',
+                    path: 'sseo-ai/v1/generate-alt',
                     method: 'POST',
                     data: { attachment_id: attachmentId }
                 }).then(function(response) {

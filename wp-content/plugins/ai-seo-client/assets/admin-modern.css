@@ -3,6 +3,21 @@
  * Modern, clean interface with improved UX
  */
 
+/* Fix WordPress default #wpcontent padding on SSEO AI pages */
+body.toplevel_page_aiseo-client #wpcontent,
+body.sseo-ai_page_aiseo-dashboard #wpcontent,
+body.sseo-ai_page_aiseo-content-calendar #wpcontent,
+body.sseo-ai_page_aiseo-ai-tools #wpcontent,
+body.sseo-ai_page_aiseo-link-manager #wpcontent,
+body.sseo-ai_page_aiseo-sitemaps #wpcontent,
+body.sseo-ai_page_aiseo-integrations #wpcontent,
+body.sseo-ai_page_aiseo-settings #wpcontent,
+body.sseo-ai_page_aiseo-gsc-dashboard #wpcontent,
+body.sseo-ai_page_aiseo-topic-cluster #wpcontent,
+body.sseo-ai_page_aiseo-seo-audit #wpcontent {
+    padding-left: 0 !important;
+}
+
 /* Main Container */
 .aiseo-wrapper {
     max-width: 1400px;

@@ -627,7 +627,7 @@ Requirements:
                 $('#writer-result').hide();
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/write-article',
+                    path: 'sseo-ai/v1/write-article',
                     method: 'POST',
                     data: {
                         keyword: keyword,

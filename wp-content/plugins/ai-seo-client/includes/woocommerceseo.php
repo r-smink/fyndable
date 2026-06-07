@@ -283,7 +283,7 @@ class WooCommerceSeo
                 var resultDiv = $('#aiseo-woo-result');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/woo/generate-description',
+                    path: 'sseo-ai/v1/woo/generate-description',
                     method: 'POST',
                     data: { product_id: productId, type: type }
                 }).then(function(res) {
@@ -319,7 +319,7 @@ class WooCommerceSeo
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
-                    path: 'aiseoclient/v1/woo/generate-meta',
+                    path: 'sseo-ai/v1/woo/generate-meta',
                     method: 'POST',
                     data: { product_id: productId }
                 }).then(function(res) {
