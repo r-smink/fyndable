@@ -71,10 +71,12 @@ class Client
     private ?VideoSEO $videoSEO = null;
     private ?FAQSchema $faqSchema = null;
     private ?AIImageGenerator $aiImageGenerator = null;
+    private ?SimpleContentGenerator $simpleContentGenerator = null;
     private ?Ideas $ideas = null;
     private ?CreatedPosts $createdPosts = null;
     private ?Keywords $keywords = null;
     private ?ABTesting $abTesting = null;
+    private ?SEODataDashboard $seoDataDashboard = null;
 
     public function init(): void
     {
@@ -132,6 +134,9 @@ class Client
         // Create A/B testing tables
         $abTesting = new ABTesting($settings);
         $abTesting->createTables();
+
+        // Create LLM tracking table
+        LLMTracker::createTable();
     }
 
     /**
@@ -230,6 +235,14 @@ class Client
         // AI Image Generator - available to all tiers
         $this->aiImageGenerator = new AIImageGenerator($this->settings, $this->llmClient);
         $this->aiImageGenerator->register();
+
+        // Simple Content Generator - available to all tiers
+        $this->simpleContentGenerator = new SimpleContentGenerator($this->llmClient);
+        $this->simpleContentGenerator->register();
+
+        // SEO Data Dashboard - available to all tiers
+        $this->seoDataDashboard = new SEODataDashboard($this->settings);
+        $this->seoDataDashboard->register();
 
         // Ideas Management - available to all tiers
         $this->ideas = new Ideas($this->settings, $this->llmClient);
@@ -376,7 +389,7 @@ class Client
         
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('SSEO AI', 'ai-seo-client');
+        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('Fynable', 'ai-seo-client');
         
         // Main menu
         add_menu_page(
@@ -492,6 +505,26 @@ class Client
                 'ai-seo-integrations',
                 [$this, 'renderIntegrationsPage']
             );
+
+            // 9b. SEO Data Dashboard (SE Ranking / Ahrefs) - all tiers
+            add_submenu_page(
+                'ai-seo-client',
+                __('SEO Data Dashboard', 'ai-seo-client'),
+                __('📈 SEO Data', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-data-dashboard',
+                [$this, 'renderSEODataDashboardPage']
+            );
+
+            // 9c. LLM Tracker - all tiers
+            add_submenu_page(
+                'ai-seo-client',
+                __('LLM Tracker', 'ai-seo-client'),
+                __('🧠 LLM Tracker', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-llm-tracker',
+                [$this, 'renderLLMTrackerPage']
+            );
             
             // Professional+ features: Topic Clusters, Site Audit, Rank Tracker
             $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
@@ -598,6 +631,59 @@ class Client
             #wpcontent { padding-left: 0 !important; }
         ');
 
+        // Global AI generation loader overlay
+        wp_add_inline_style('ai-seo-client-admin', '
+            #sseo-ai-loader-overlay {
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center;
+                flex-direction: column; backdrop-filter: blur(4px);
+            }
+            #sseo-ai-loader-overlay.active { display: flex !important; }
+            #sseo-ai-loader-overlay .sseo-loader-spinner {
+                width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
+                border-top-color: #fff; border-radius: 50%; animation: sseo-spin 1s linear infinite;
+            }
+            #sseo-ai-loader-overlay .sseo-loader-text {
+                color: #fff; margin-top: 20px; font-size: 16px; font-weight: 500;
+                text-align: center; max-width: 300px; line-height: 1.5;
+            }
+            @keyframes sseo-spin { to { transform: rotate(360deg); } }
+        ');
+
+        wp_add_inline_script('ai-seo-client-admin', '
+            (function($) {
+                if (document.getElementById("sseo-ai-loader-overlay")) return;
+                var overlay = document.createElement("div");
+                overlay.id = "sseo-ai-loader-overlay";
+                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + '<?php echo esc_js(__('AI is generating... Please wait.', 'ai-seo-client')); ?>' + "</div>";
+                document.body.appendChild(overlay);
+
+                var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
+                var sseoHideLoader = function() { $("#sseo-ai-loader-overlay").removeClass("active"); };
+
+                $(document).ajaxSend(function(e, xhr, settings) {
+                    if (settings.data && (settings.data.indexOf("sseo_ai_") !== -1 || settings.data.indexOf("action=ai_seo") !== -1)) {
+                        sseoShowLoader();
+                    }
+                });
+                $(document).ajaxComplete(function() {
+                    sseoHideLoader();
+                });
+
+                // Intercept wp.apiFetch for Gutenberg sidebar AI calls
+                if (typeof wp !== "undefined" && wp.apiFetch) {
+                    var originalFetch = wp.apiFetch;
+                    wp.apiFetch = function(options) {
+                        if (options && options.path && (options.path.indexOf("sseo-ai/v1") !== -1)) {
+                            sseoShowLoader();
+                            return originalFetch(options).finally(sseoHideLoader);
+                        }
+                        return originalFetch(options);
+                    };
+                }
+            })(jQuery);
+        ', 'after');
+
         // Apply white-label CSS variables
         if (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color'])) {
             $primaryColor = $whiteLabel['primary_color'] ?? '#2563eb';
@@ -632,7 +718,7 @@ class Client
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
         ?>
         <div class="wrap ai-seo-client">
-            <h1><?php esc_html_e('SSEO AI License Activation', 'ai-seo-client'); ?></h1>
+            <h1><?php esc_html_e('Fynable License Activation', 'ai-seo-client'); ?></h1>
 
             <?php
             // Show activation success message
@@ -722,7 +808,7 @@ class Client
                                     <input type="text" name="license_key" id="license_key" 
                                            value="<?php echo esc_attr($licenseKey); ?>" 
                                            class="regular-text" 
-                                           placeholder="SSEO-AI-XXXX-XXXX-XXXX-XXXX" required>
+                                           placeholder="FYNABLE-XXXX-XXXX-XXXX-XXXX" required>
                                 </td>
                             </tr>
                         </table>
@@ -1013,6 +1099,22 @@ class Client
         }
         if ($this->externalIntegrations) {
             $this->externalIntegrations->renderSettings();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render SEO Data Dashboard page - SE Ranking & Ahrefs
+     */
+    public function renderSEODataDashboardPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->seoDataDashboard) {
+            $this->seoDataDashboard->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }
@@ -1465,36 +1567,36 @@ class Client
     public function handleManualValidation(): void
     {
         // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: POST data = ' . print_r($_POST, true));
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: User ID = ' . get_current_user_id());
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: POST data = ' . print_r($_POST, true));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: User ID = ' . get_current_user_id());
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
         
         if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'manual_validate_license')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Nonce verification failed');
             wp_die(__('Security check failed. Please refresh the page and try again.', 'ai-seo-client'));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Nonce verified successfully');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Nonce verified successfully');
 
         if (!current_user_can('manage_options') && !current_user_can('activate_plugins')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: User lacks required capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: User lacks required capability');
             wp_die(__('You need administrator permissions to validate the license.', 'ai-seo-client'));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Permission check passed');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Permission check passed');
         
         // Clear validation cache and force re-validation
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $cacheKey = 'ai_seo_license_check_' . md5($licenseKey);
         delete_transient($cacheKey);
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Running validation...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Running validation...');
         
         // Trigger validation
         $this->licenseValidator->validateStoredLicense();
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Manual Validation: Validation complete, redirecting...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Validation complete, redirecting...');
         
         wp_redirect(admin_url('admin.php?page=ai-seo-client&validated=1'));
         exit;
@@ -1634,7 +1736,7 @@ class Client
                             <div class="form-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
                                 <input type="text" name="license_key" id="license_key" 
-                                       placeholder="SSEO-AI-XXXX-XXXX-XXXX" required>
+                                       placeholder="FYNABLE-XXXX-XXXX-XXXX" required>
                             </div>
                             
                             <button type="submit" class="button button-primary">
@@ -1653,17 +1755,17 @@ class Client
      */
     public function handleLicenseActivation(): void
     {
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: License activation handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: License activation handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
         
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'activate_license')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Nonce verification failed');
             wp_die(__('Security check failed. Please try again.', 'ai-seo-client'));
         }
 
         if (!current_user_can('manage_options')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: User lacks manage_options capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: User lacks manage_options capability');
             wp_die(__('Insufficient permissions. You must be an administrator to activate licenses.', 'ai-seo-client'));
         }
 
@@ -1683,13 +1785,13 @@ class Client
 
         if (is_wp_error($result)) {
             $errorMsg = $result->get_error_message();
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI License Activation Failed: ' . $errorMsg);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable License Activation Failed: ' . $errorMsg);
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode($errorMsg)));
             exit;
         }
 
         if (empty($result['tenant_key'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI License Activation: No tenant_key in response');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable License Activation: No tenant_key in response');
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Invalid response from dashboard - no tenant key')));
             exit;
         }
@@ -1956,6 +2058,128 @@ class Client
                     <div class="sseo-current-tier">
                         <?php printf(esc_html__('Your current plan: %s', 'ai-seo-client'), '<strong>' . esc_html(ucfirst($currentTier)) . '</strong>'); ?>
                     </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render LLM Tracker page
+     */
+    public function renderLLMTrackerPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+
+        $page = max(1, (int)($_GET['llm_page'] ?? 1));
+        $perPage = 50;
+        $offset = ($page - 1) * $perPage;
+        $logs = LLMTracker::getLogs($perPage, $offset);
+        $total = LLMTracker::getTotalCount();
+        $stats = LLMTracker::getStats('24h');
+        $pages = (int)ceil($total / $perPage);
+        ?>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .llm-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
+            .llm-stat-card { background: #f8fafc; border-radius: 8px; padding: 15px; text-align: center; border: 1px solid #e2e8f0; }
+            .llm-stat-value { font-size: 22px; font-weight: 700; color: #2563eb; }
+            .llm-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+            .llm-log-table { width: 100%; border-collapse: collapse; }
+            .llm-log-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
+            .llm-log-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            .llm-log-table tr:hover { background: #f8fafc; }
+            .llm-status-success { color: #00a32a; font-weight: 600; }
+            .llm-status-error { color: #d63638; font-weight: 600; }
+            .llm-prompt-preview { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .llm-pagination { margin-top: 20px; }
+            .llm-pagination a, .llm-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
+            .llm-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
+            .llm-pagination a:hover { background: #2563eb; color: #fff; }
+            .llm-pagination span.current { background: #2563eb; color: #fff; }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('LLM Tracker', 'ai-seo-client'); ?></h1>
+            </div>
+            <div class="sseo-ai-content">
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('24h Statistics', 'ai-seo-client'); ?></h2>
+                    <div class="llm-stat-grid">
+                        <div class="llm-stat-card">
+                            <div class="llm-stat-value"><?php echo esc_html($stats['total']); ?></div>
+                            <div class="llm-stat-label"><?php esc_html_e('Total Calls', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="llm-stat-value llm-status-success"><?php echo esc_html($stats['success']); ?></div>
+                            <div class="llm-stat-label"><?php esc_html_e('Success', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="llm-stat-value llm-status-error"><?php echo esc_html($stats['failed']); ?></div>
+                            <div class="llm-stat-label"><?php esc_html_e('Failed', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="llm-stat-value"><?php echo esc_html($stats['avg_duration_ms']); ?>ms</div>
+                            <div class="llm-stat-label"><?php esc_html_e('Avg Duration', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div class="llm-stat-card">
+                            <div class="llm-stat-value">$<?php echo esc_html($stats['total_cost']); ?></div>
+                            <div class="llm-stat-label"><?php esc_html_e('Est. Cost', 'ai-seo-client'); ?></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Recent Logs', 'ai-seo-client'); ?> (<?php echo number_format($total); ?>)</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="llm-log-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('ID', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Time', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Endpoint', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Model', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Tokens', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Duration', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Context', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($logs as $log): ?>
+                                <tr>
+                                    <td><?php echo esc_html($log['id']); ?></td>
+                                    <td><?php echo esc_html($log['timestamp']); ?></td>
+                                    <td><?php echo esc_html($log['endpoint'] ?? ''); ?></td>
+                                    <td><?php echo esc_html($log['model'] ?? ''); ?></td>
+                                    <td class="llm-status-<?php echo esc_attr($log['status']); ?>"><?php echo esc_html($log['status']); ?></td>
+                                    <td><?php echo esc_html(($log['tokens_input'] ?? 0) + ($log['tokens_output'] ?? 0)); ?></td>
+                                    <td><?php echo esc_html($log['duration_ms'] ?? 0); ?>ms</td>
+                                    <td class="llm-prompt-preview" title="<?php echo esc_attr($log['context'] ?? ''); ?>"><?php echo esc_html($log['context'] ?? ''); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php if ($pages > 1): ?>
+                    <div class="llm-pagination">
+                        <?php for ($i = 1; $i <= $pages; $i++): ?>
+                            <?php if ($i === $page): ?>
+                                <span class="current"><?php echo $i; ?></span>
+                            <?php else: ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-llm-tracker&llm_page=' . $i)); ?>"><?php echo $i; ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

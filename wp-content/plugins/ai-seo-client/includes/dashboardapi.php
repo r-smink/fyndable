@@ -35,30 +35,30 @@ class DashboardAPI
         // Ensure HTTPS and normalize URL to prevent 301 redirects
         $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Attempting license activation');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Dashboard URL: ' . $dashboardUrl);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: License Key: ' . substr($licenseKey, 0, 15) . '...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Attempting license activation');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Dashboard URL: ' . $dashboardUrl);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: License Key: ' . substr($licenseKey, 0, 15) . '...');
 
         // Check if SaaS Dashboard plugin is active on this same WordPress installation
         // This avoids HTTP loopback issues on shared hosting
         if ($this->isSameSiteActivation($dashboardUrl)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Detected same-site installation, using direct PHP activation');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Detected same-site installation, using direct PHP activation');
             return $this->activateLicenseDirectly($licenseKey, $siteUrl, $siteName);
         }
 
         $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: API URL: ' . $apiUrl);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: API URL: ' . $apiUrl);
 
         // First test basic connectivity with a simple GET request
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Testing basic connectivity to ' . $dashboardUrl);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Testing basic connectivity to ' . $dashboardUrl);
         $testResponse = wp_remote_get($dashboardUrl, [
             'timeout' => 15,
             'sslverify' => $this->getSslVerify(),
         ]);
         
         if (is_wp_error($testResponse)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: WordPress HTTP API failed: ' . $testResponse->get_error_message());
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Attempting native curl fallback...');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: WordPress HTTP API failed: ' . $testResponse->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Attempting native curl fallback...');
             
             // Try native curl as fallback
             $response = $this->curlPost($apiUrl, [
@@ -68,12 +68,12 @@ class DashboardAPI
             ]);
             
             if (is_wp_error($response)) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Native curl also failed: ' . $response->get_error_message());
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Native curl also failed: ' . $response->get_error_message());
                 return $response;
             }
         } else {
             $testCode = wp_remote_retrieve_response_code($testResponse);
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Basic connectivity test passed, status: ' . $testCode);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Basic connectivity test passed, status: ' . $testCode);
             
             // Use WordPress HTTP API
             $response = wp_remote_post(
@@ -91,7 +91,7 @@ class DashboardAPI
             );
             
             if (is_wp_error($response)) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: wp_remote_post failed, trying curl fallback...');
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: wp_remote_post failed, trying curl fallback...');
                 $response = $this->curlPost($apiUrl, [
                     'license_key' => $licenseKey,
                     'site_url' => $siteUrl,
@@ -108,7 +108,7 @@ class DashboardAPI
                 $headers = wp_remote_retrieve_headers($response);
                 $location = $headers['location'] ?? '';
                 if ($location) {
-                    if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Following redirect to: ' . $location);
+                    if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Following redirect to: ' . $location);
                     $response = wp_remote_post(
                         $location,
                         [
@@ -140,19 +140,19 @@ class DashboardAPI
             return $response;
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Response status: ' . $statusCode);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Response body: ' . json_encode($body));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Response status: ' . $statusCode);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Response body: ' . json_encode($body));
 
         if ($statusCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Activation failed: ' . $message);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Activation failed: ' . $message);
             if (!empty($body['error'])) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Error code: ' . $body['error']);
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Error code: ' . $body['error']);
             }
             return new \WP_Error('activation_failed', $message);
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Activation successful');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Activation successful');
         return $body;
     }
 
@@ -179,7 +179,7 @@ class DashboardAPI
             return new \WP_Error('curl_not_available', __('cURL extension not available', 'ai-seo-client'));
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Using native curl for POST to: ' . $url);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Using native curl for POST to: ' . $url);
 
         $ch = curl_init();
         
@@ -208,18 +208,18 @@ class DashboardAPI
         curl_close($ch);
 
         if ($error) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: cURL error: ' . $error);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL error: ' . $error);
             return new \WP_Error('curl_error', 'cURL error: ' . $error);
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: cURL response code: ' . $httpCode);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: cURL response body: ' . substr($response, 0, 500));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL response code: ' . $httpCode);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL response body: ' . substr($response, 0, 500));
 
         $body = json_decode($response, true);
         
         if ($httpCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: cURL activation failed: ' . $message);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL activation failed: ' . $message);
             return new \WP_Error('activation_failed', $message);
         }
 
@@ -533,7 +533,7 @@ class DashboardAPI
         
         $urlsMatch = strcasecmp($currentSiteNorm, $dashboardSiteNorm) === 0;
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Same-site check - Current: ' . $currentSiteNorm . ', Dashboard: ' . $dashboardSiteNorm . ', Match: ' . ($urlsMatch ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Same-site check - Current: ' . $currentSiteNorm . ', Dashboard: ' . $dashboardSiteNorm . ', Match: ' . ($urlsMatch ? 'yes' : 'no'));
         
         if (!$urlsMatch) {
             return false;
@@ -546,14 +546,14 @@ class DashboardAPI
                          class_exists('\\SSEOAISaaS\\LicenseAPI') ||
                          defined('SSEO_AI_SAAS_VERSION');
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: SaaS Dashboard available: ' . ($saasAvailable ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: SaaS Dashboard available: ' . ($saasAvailable ? 'yes' : 'no'));
         
         // If URLs match but SaaS not loaded, try to load it
         if (!$saasAvailable && $urlsMatch) {
             // Check if the SaaS plugin file exists
             $saasPluginFile = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/ai-seo-saas-dashboard.php';
             if (file_exists($saasPluginFile) && is_plugin_active('ai-seo-saas-dashboard/ai-seo-saas-dashboard.php')) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: SaaS plugin exists and is active, attempting to load classes');
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: SaaS plugin exists and is active, attempting to load classes');
                 // Include the necessary files
                 $saasDir = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/includes/';
                 if (file_exists($saasDir . 'tenantrepository.php')) {
@@ -563,7 +563,7 @@ class DashboardAPI
                     require_once $saasDir . 'licensekeygenerator.php';
                 }
                 $saasAvailable = class_exists('\\SSEOAISaaS\\TenantRepository');
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: After manual load, SaaS available: ' . ($saasAvailable ? 'yes' : 'no'));
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: After manual load, SaaS available: ' . ($saasAvailable ? 'yes' : 'no'));
             }
         }
         
@@ -647,7 +647,7 @@ class DashboardAPI
             // Get white-label settings
             $whiteLabel = get_option('sseo_ai_saas_white_label', []);
 
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Direct activation successful, tenant_key: ' . $tenantKey);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Direct activation successful, tenant_key: ' . $tenantKey);
 
             return [
                 'success' => true,
@@ -660,7 +660,7 @@ class DashboardAPI
             ];
 
         } catch (\Exception $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI: Direct activation error: ' . $e->getMessage());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Direct activation error: ' . $e->getMessage());
             return new \WP_Error('activation_error', $e->getMessage());
         }
     }

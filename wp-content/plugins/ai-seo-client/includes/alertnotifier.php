@@ -43,7 +43,7 @@ class AlertNotifier
 
         return wp_mail(
             $this->adminEmail,
-            __('SSEO AI Alert', 'ai-seo-client'),
+            __('Fynable Alert', 'ai-seo-client'),
             $message
         );
     }

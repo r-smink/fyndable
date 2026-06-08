@@ -104,6 +104,12 @@ class ExternalIntegrations
         // Notion
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_api_key');
         register_setting('sseo_ai_integrations', 'sseo_ai_notion_database_id');
+
+        // SE Ranking
+        register_setting('sseo_ai_integrations', 'sseo_ai_seranking_api_key');
+
+        // Ahrefs
+        register_setting('sseo_ai_integrations', 'sseo_ai_ahrefs_api_key');
     }
     
     /**
@@ -143,6 +149,12 @@ class ExternalIntegrations
         
         $notionApiKey = get_option('sseo_ai_notion_api_key', '');
         $notionDatabaseId = get_option('sseo_ai_notion_database_id', '');
+
+        // SE Ranking
+        $seRankingApiKey = get_option('sseo_ai_seranking_api_key', '');
+
+        // Ahrefs
+        $ahrefsApiKey = get_option('sseo_ai_ahrefs_api_key', '');
         
         ?>
         <style>
@@ -493,6 +505,56 @@ class ExternalIntegrations
                         <?php esc_html_e('Sync to Notion', 'ai-seo-client'); ?>
                     </button>
                 </div>
+
+                        <!-- SE Ranking Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></h2>
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="seranking_api_key"><?php esc_html_e('SE Ranking API Key', 'ai-seo-client'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="password" id="seranking_api_key" name="sseo_ai_seranking_api_key"
+                                               value="<?php echo esc_attr($seRankingApiKey); ?>" class="regular-text">
+                                        <p class="description">
+                                            <?php esc_html_e('Get your API key from SE Ranking > API.', 'ai-seo-client'); ?>
+                                            <a href="https://seranking.com/api.html" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <?php if ($seRankingApiKey): ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-data-dashboard')); ?>" class="button button-primary">
+                                    <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Ahrefs Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></h2>
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="ahrefs_api_key"><?php esc_html_e('Ahrefs API Key', 'ai-seo-client'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="password" id="ahrefs_api_key" name="sseo_ai_ahrefs_api_key"
+                                               value="<?php echo esc_attr($ahrefsApiKey); ?>" class="regular-text">
+                                        <p class="description">
+                                            <?php esc_html_e('Get your API key from Ahrefs APIv3 dashboard.', 'ai-seo-client'); ?>
+                                            <a href="https://ahrefs.com/api/" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <?php if ($ahrefsApiKey): ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-data-dashboard')); ?>" class="button button-primary">
+                                    <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
                 
                         </div>
                     </div>
@@ -654,7 +716,7 @@ class ExternalIntegrations
         
         $payload = [
             'channel' => $channel,
-            'username' => 'SSEO AI Bot',
+            'username' => 'Fynable Bot',
             'icon_emoji' => ':chart_with_upwards_trend:',
             'text' => $message,
         ];
@@ -1088,7 +1150,7 @@ class ExternalIntegrations
     public function restTestSlack(): array
     {
         $success = $this->sendSlackNotification(
-            ':wave: Test message from SSEO AI',
+            ':wave: Test message from Fynable',
             [[
                 'color' => 'good',
                 'text' => 'Your Slack integration is working correctly!',

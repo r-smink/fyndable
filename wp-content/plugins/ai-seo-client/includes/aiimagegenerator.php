@@ -279,6 +279,23 @@ class AIImageGenerator
                 </button>
             </div>
             
+            <!-- Image Prompt Context -->
+            <div style="padding-top: 15px; border-top: 1px solid #ddd;">
+                <label>
+                    <strong><?php esc_html_e('Image Context / Prompt:', 'ai-seo-client'); ?></strong>
+                </label>
+                <textarea id="image-context-<?php echo $post->ID; ?>" rows="3" style="width: 100%; margin-top: 5px;" placeholder="<?php esc_attr_e('Describe what the image should show. Leave empty to auto-generate from content.', 'ai-seo-client'); ?>"></textarea>
+            </div>
+
+            <!-- Word Count for Prompt Detail -->
+            <div style="padding-top: 10px;">
+                <label>
+                    <strong><?php esc_html_e('Prompt Word Count:', 'ai-seo-client'); ?></strong>
+                </label>
+                <input type="number" id="image-word-count-<?php echo $post->ID; ?>" value="100" min="20" max="500" style="width: 100%; margin-top: 5px;">
+                <p class="description" style="font-size: 11px; color: #666; margin: 3px 0 0;"><?php esc_html_e('Target length of the generated image prompt', 'ai-seo-client'); ?></p>
+            </div>
+
             <!-- Image Style -->
             <div style="padding-top: 15px; border-top: 1px solid #ddd;">
                 <label>
@@ -297,6 +314,8 @@ class AIImageGenerator
         <script>
         function sseoGenerateFeatured(postId) {
             const style = jQuery('#image-style-' + postId).val();
+            const context = jQuery('#image-context-' + postId).val();
+            const wordCount = jQuery('#image-word-count-' + postId).val();
             
             if (!confirm('<?php esc_html_e('Generate AI featured image?', 'ai-seo-client'); ?>')) {
                 return;
@@ -306,6 +325,8 @@ class AIImageGenerator
                 action: 'sseo_ai_generate_featured_image',
                 post_id: postId,
                 style: style,
+                context: context,
+                word_count: wordCount,
                 nonce: '<?php echo wp_create_nonce('sseo_images'); ?>'
             }, function(response) {
                 if (response.success) {
@@ -323,6 +344,8 @@ class AIImageGenerator
         
         function sseoGenerateSocialImages(postId) {
             const style = jQuery('#image-style-' + postId).val();
+            const context = jQuery('#image-context-' + postId).val();
+            const wordCount = jQuery('#image-word-count-' + postId).val();
             
             if (!confirm('<?php esc_html_e('Generate social media images?', 'ai-seo-client'); ?>')) {
                 return;
@@ -332,6 +355,8 @@ class AIImageGenerator
                 action: 'sseo_ai_generate_social_images',
                 post_id: postId,
                 style: style,
+                context: context,
+                word_count: wordCount,
                 nonce: '<?php echo wp_create_nonce('sseo_images'); ?>'
             }, function(response) {
                 if (response.success) {
@@ -349,12 +374,12 @@ class AIImageGenerator
     /**
      * Generate featured image
      */
-    public function generateFeaturedImage(int $postId, string $style = 'photorealistic'): ?int
+    public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100): ?int
     {
         $post = get_post($postId);
         
         // Generate image prompt from content
-        $prompt = $this->generateImagePrompt($post, $style);
+        $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
         
         // Generate image using AI (DALL-E, Midjourney, Stable Diffusion, etc.)
         $imageUrl = $this->generateImageFromPrompt($prompt);
@@ -376,13 +401,13 @@ class AIImageGenerator
     /**
      * Generate social images
      */
-    public function generateSocialImages(int $postId, string $style = 'photorealistic'): array
+    public function generateSocialImages(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100): array
     {
         $post = get_post($postId);
         $images = [];
         
         // Generate Open Graph image (1200x630)
-        $ogPrompt = $this->generateImagePrompt($post, $style, '1200x630');
+        $ogPrompt = $this->generateImagePrompt($post, $style, '1200x630', $context, $wordCount);
         $ogUrl = $this->generateImageFromPrompt($ogPrompt);
         
         if ($ogUrl) {
@@ -394,7 +419,7 @@ class AIImageGenerator
         }
         
         // Generate Twitter Card image (1200x600)
-        $twitterPrompt = $this->generateImagePrompt($post, $style, '1200x600');
+        $twitterPrompt = $this->generateImagePrompt($post, $style, '1200x600', $context, $wordCount);
         $twitterUrl = $this->generateImageFromPrompt($twitterPrompt);
         
         if ($twitterUrl) {
@@ -411,23 +436,39 @@ class AIImageGenerator
     /**
      * Generate image prompt from post content
      */
-    private function generateImagePrompt(\WP_Post $post, string $style, string $size = '1024x1024'): string
+    private function generateImagePrompt(\WP_Post $post, string $style, string $size = '1024x1024', string $context = '', int $wordCount = 100): string
     {
-        $content = wp_strip_all_tags($post->post_content);
-        $excerpt = substr($content, 0, 500);
-        
-        $aiPrompt = "Generate a detailed image prompt for creating a {$style} image about:
+        if (!empty($context)) {
+            $aiPrompt = "Generate a detailed image prompt for creating a {$style} image.
+
+User context: {$context}
+Target prompt length: approximately {$wordCount} words.
+
+Create a concise, descriptive prompt that captures the essence. Focus on visual elements, mood, and composition.";
+        } else {
+            $content = wp_strip_all_tags($post->post_content);
+            $excerpt = substr($content, 0, 500);
+            
+            $aiPrompt = "Generate a detailed image prompt for creating a {$style} image about:
 
 Title: {$post->post_title}
 Content: {$excerpt}
 
-Create a concise, descriptive prompt (max 100 words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
+Create a concise, descriptive prompt (max {$wordCount} words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
+        }
         
-        $imagePrompt = $this->llm->generateText($aiPrompt, ['max_tokens' => 150]);
+        $imagePrompt = $this->llm->generateText($aiPrompt, [
+            'max_tokens' => max(150, (int)($wordCount * 2)),
+            'track_extra' => [
+                'endpoint' => 'image.prompt',
+                'post_id' => $post->ID,
+                'context' => substr($context, 0, 100) ?: 'auto',
+            ],
+        ]);
         
         if (is_wp_error($imagePrompt)) {
             // Fallback to simple prompt
-            return "{$post->post_title}, {$style} style, high quality, professional";
+            return (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
         }
         
         return trim($imagePrompt) . ", {$style} style, {$size}, high quality";
@@ -445,10 +486,10 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         $model = $imageApi['model'] ?? 'dall-e-3';
         
         // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
         
         if (empty($provider) || empty($apiKey)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
             return null;
         }
         
@@ -460,7 +501,7 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
                 return $this->generateWithStabilityAI($prompt, $apiKey, $model);
             
             default:
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: Unknown provider - ' . $provider);
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: Unknown provider - ' . $provider);
                 return null;
         }
     }
@@ -488,14 +529,14 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         ]);
         
         if (is_wp_error($response)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: OpenAI API error - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: OpenAI API error - ' . $response->get_error_message());
             return null;
         }
         
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (!isset($body['data'][0]['url'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: No image URL in OpenAI response - ' . print_r($body, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: No image URL in OpenAI response - ' . print_r($body, true));
             return null;
         }
         
@@ -529,14 +570,14 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         ]);
         
         if (is_wp_error($response)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: Stability AI API error - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: Stability AI API error - ' . $response->get_error_message());
             return null;
         }
         
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (!isset($body['artifacts'][0]['base64'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Image: No image data in Stability AI response - ' . print_r($body, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: No image data in Stability AI response - ' . print_r($body, true));
             return null;
         }
         
@@ -646,12 +687,14 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         
         $postId = (int)($_POST['post_id'] ?? 0);
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
+        $context = sanitize_text_field($_POST['context'] ?? '');
+        $wordCount = (int)($_POST['word_count'] ?? 100);
         
         if (!$postId) {
             wp_send_json_error(['message' => 'Post ID required']);
         }
         
-        $attachmentId = $this->generateFeaturedImage($postId, $style);
+        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount);
         
         if (!$attachmentId) {
             wp_send_json_error(['message' => 'Failed to generate image']);
@@ -672,12 +715,14 @@ Create a concise, descriptive prompt (max 100 words) that captures the essence o
         
         $postId = (int)($_POST['post_id'] ?? 0);
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
+        $context = sanitize_text_field($_POST['context'] ?? '');
+        $wordCount = (int)($_POST['word_count'] ?? 100);
         
         if (!$postId) {
             wp_send_json_error(['message' => 'Post ID required']);
         }
         
-        $images = $this->generateSocialImages($postId, $style);
+        $images = $this->generateSocialImages($postId, $style, $context, $wordCount);
         
         if (empty($images)) {
             wp_send_json_error(['message' => 'Failed to generate social images']);

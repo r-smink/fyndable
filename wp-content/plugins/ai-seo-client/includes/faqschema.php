@@ -183,13 +183,36 @@ class FAQSchema
                     <?php esc_html_e('Automatically detect and extract FAQ patterns from your content', 'ai-seo-client'); ?>
                 </p>
             </div>
-            
+
+            <!-- AI Generation Controls -->
+            <div style="margin-bottom: 15px; padding: 15px; background: #f0f6fc; border-radius: 4px;">
+                <h4 style="margin-top: 0;"><?php esc_html_e('AI Generate FAQs', 'ai-seo-client'); ?></h4>
+                <div style="margin-bottom: 10px;">
+                    <label><strong><?php esc_html_e('Number of FAQs:', 'ai-seo-client'); ?></strong></label><br>
+                    <select id="sseo-faq-count" style="width: 100%; margin-top: 5px;">
+                        <?php for ($i = 1; $i <= 10; $i++): ?>
+                            <option value="<?php echo $i; ?>" <?php selected($i, 5); ?>><?php echo $i; ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label><strong><?php esc_html_e('Context / Instructions for AI:', 'ai-seo-client'); ?></strong></label><br>
+                    <textarea id="sseo-faq-context" rows="3" style="width: 100%; margin-top: 5px;" placeholder="<?php esc_attr_e('e.g. Focus on pricing questions, target audience is beginners...', 'ai-seo-client'); ?>"></textarea>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label>
+                        <input type="checkbox" id="sseo-faq-insert-content" value="1" checked>
+                        <?php esc_html_e('Auto-insert FAQs into post content', 'ai-seo-client'); ?>
+                    </label>
+                </div>
+                <button type="button" class="button button-primary" onclick="sseoGenerateFAQs(<?php echo $post->ID; ?>)">
+                    <?php esc_html_e('AI Generate FAQs', 'ai-seo-client'); ?>
+                </button>
+            </div>
+
             <div style="margin-bottom: 15px;">
                 <button type="button" class="button" onclick="sseoExtractFAQs(<?php echo $post->ID; ?>)">
                     <?php esc_html_e('Extract FAQs from Content', 'ai-seo-client'); ?>
-                </button>
-                <button type="button" class="button button-primary" onclick="sseoGenerateFAQs(<?php echo $post->ID; ?>)">
-                    <?php esc_html_e('AI Generate FAQs', 'ai-seo-client'); ?>
                 </button>
             </div>
             
@@ -283,6 +306,10 @@ class FAQSchema
         }
         
         function sseoGenerateFAQs(postId) {
+            var count = document.getElementById('sseo-faq-count').value;
+            var context = document.getElementById('sseo-faq-context').value;
+            var insertContent = document.getElementById('sseo-faq-insert-content').checked ? 1 : 0;
+
             if (!confirm('<?php esc_html_e('Generate FAQs using AI? This will add new FAQ items.', 'ai-seo-client'); ?>')) {
                 return;
             }
@@ -290,6 +317,9 @@ class FAQSchema
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_generate_faqs',
                 post_id: postId,
+                count: count,
+                context: context,
+                insert_content: insertContent,
                 nonce: '<?php echo wp_create_nonce('sseo_faq'); ?>'
             }, function(response) {
                 if (response.success) {
@@ -447,17 +477,19 @@ class FAQSchema
     /**
      * Generate FAQs using AI
      */
-    public function generateFAQs(int $postId): array
+    public function generateFAQs(int $postId, int $count = 5, string $context = ''): array
     {
         $post = get_post($postId);
         $content = wp_strip_all_tags($post->post_content);
-        $excerpt = substr($content, 0, 1000);
-        
-        $prompt = "Based on this content, generate 5-10 frequently asked questions and answers:
+        $excerpt = substr($content, 0, 1500);
+
+        $contextPrompt = $context ? "Additional context / instructions: {$context}\n" : "";
+
+        $prompt = "Based on this content, generate {$count} frequently asked questions and answers:
 
 Title: {$post->post_title}
 Content excerpt: {$excerpt}
-
+{$contextPrompt}
 Generate questions that readers would commonly ask about this topic. Format as JSON:
 [
   {\"question\": \"...\", \"answer\": \"...\"},
@@ -466,7 +498,14 @@ Generate questions that readers would commonly ask about this topic. Format as J
 
 Make answers concise (2-3 sentences) and informative.";
         
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 1000]);
+        $response = $this->llm->generateText($prompt, [
+            'max_tokens' => max(500, $count * 150),
+            'track_extra' => [
+                'endpoint' => 'faq.generate',
+                'post_id' => $postId,
+                'context' => 'count:' . $count . ' ' . substr($context, 0, 100),
+            ],
+        ]);
         
         if (is_wp_error($response)) {
             return [];
@@ -480,7 +519,7 @@ Make answers concise (2-3 sentences) and informative.";
             return [];
         }
         
-        return array_slice($faqs, 0, 10);
+        return array_slice($faqs, 0, $count);
     }
     
     /**
@@ -660,12 +699,15 @@ Make answers concise (2-3 sentences) and informative.";
         }
         
         $postId = (int)($_POST['post_id'] ?? 0);
+        $count = (int)($_POST['count'] ?? 5);
+        $context = sanitize_text_field($_POST['context'] ?? '');
+        $insertContent = !empty($_POST['insert_content']);
         
         if (!$postId) {
             wp_send_json_error(['message' => 'Post ID required']);
         }
         
-        $faqs = $this->generateFAQs($postId);
+        $faqs = $this->generateFAQs($postId, $count, $context);
         
         if (empty($faqs)) {
             wp_send_json_error(['message' => 'Failed to generate FAQs']);
@@ -676,8 +718,25 @@ Make answers concise (2-3 sentences) and informative.";
         $allFAQs = array_merge($existingFAQs, $faqs);
         
         update_post_meta($postId, '_sseo_ai_faqs', $allFAQs);
+
+        // Optionally insert into post content
+        if ($insertContent) {
+            $post = get_post($postId);
+            if ($post) {
+                $faqHtml = "\n\n<h2>" . __('Frequently Asked Questions', 'ai-seo-client') . "</h2>\n";
+                foreach ($faqs as $faq) {
+                    $faqHtml .= "<h3>" . esc_html($faq['question']) . "</h3>\n";
+                    $faqHtml .= "<p>" . esc_html($faq['answer']) . "</p>\n";
+                }
+                $newContent = $post->post_content . $faqHtml;
+                wp_update_post([
+                    'ID' => $postId,
+                    'post_content' => $newContent,
+                ]);
+            }
+        }
         
-        wp_send_json_success(['faqs' => $allFAQs]);
+        wp_send_json_success(['faqs' => $allFAQs, 'inserted' => $insertContent]);
     }
     
     /**

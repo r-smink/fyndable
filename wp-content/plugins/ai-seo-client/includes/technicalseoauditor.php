@@ -791,7 +791,7 @@ class TechnicalSEOAuditor
                 }
                 
                 $subCount = count($subSitemaps);
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Found ' . $subCount . ' sub-sitemaps in index: ' . $sitemapUrl);
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Found ' . $subCount . ' sub-sitemaps in index: ' . $sitemapUrl);
                 
                 foreach ($subSitemaps as $subSitemap) {
                     $subSitemapUrl = (string)$subSitemap->loc;
@@ -870,7 +870,7 @@ class TechnicalSEOAuditor
                 }
             }
             
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Total URLs collected from sitemap: ' . $totalUrls . ' (issues: ' . $invalidUrls . ')');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Total URLs collected from sitemap: ' . $totalUrls . ' (issues: ' . $invalidUrls . ')');
             
             return [
                 'url' => $sitemapUrl,
@@ -903,20 +903,20 @@ class TechnicalSEOAuditor
         $response = wp_remote_get($url, ['timeout' => 30]);
         
         if (is_wp_error($response)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Failed to fetch sub-sitemap: ' . $url . ' - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Failed to fetch sub-sitemap: ' . $url . ' - ' . $response->get_error_message());
             return null;
         }
         
         $responseCode = wp_remote_retrieve_response_code($response);
         if ($responseCode !== 200) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Sub-sitemap returned HTTP ' . $responseCode . ': ' . $url);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Sub-sitemap returned HTTP ' . $responseCode . ': ' . $url);
             return null;
         }
         
         $xml = wp_remote_retrieve_body($response);
         
         if (empty($xml)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Empty response from sub-sitemap: ' . $url);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Empty response from sub-sitemap: ' . $url);
             return null;
         }
         
@@ -972,11 +972,11 @@ class TechnicalSEOAuditor
                 }
             }
             
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Parsed ' . count($urls) . ' URLs from sub-sitemap: ' . $url);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Parsed ' . count($urls) . ' URLs from sub-sitemap: ' . $url);
             
             return $urls;
         } catch (\Exception $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('SSEO AI Sitemap: Parse error for sub-sitemap ' . $url . ': ' . $e->getMessage());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Sitemap: Parse error for sub-sitemap ' . $url . ': ' . $e->getMessage());
             return null;
         }
     }

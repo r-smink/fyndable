@@ -163,13 +163,15 @@ class LlmClient
      * @param string|null $model Model to use (gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-5)
      * @param string|null $systemRole System role override
      * @param int|null $maxTokens Max tokens
+     * @param array $trackExtra Extra tracking data (endpoint, post_id, context)
      * @return array|\WP_Error ['text' => string, 'model' => string, 'usage' => array]
      */
     public function call(
         string $prompt, 
         ?string $model = null, 
         ?string $systemRole = null, 
-        ?int $maxTokens = null
+        ?int $maxTokens = null,
+        array $trackExtra = []
     ) {
         if (!$this->isAvailable()) {
             return new \WP_Error('not_licensed', __('AI features require an active license', 'ai-seo-client'));
@@ -228,6 +230,8 @@ class LlmClient
         }
         $messages[] = ['role' => 'user', 'content' => $prompt];
 
+        $startTime = microtime(true);
+
         // Make request through dashboard proxy
         $response = $this->dashboardAPI->aiGenerate(
             $messages,
@@ -236,7 +240,22 @@ class LlmClient
             $this->settings->temperature()
         );
 
+        $durationMs = (int)((microtime(true) - $startTime) * 1000);
+
         if (is_wp_error($response)) {
+            // Log error
+            LLMTracker::log([
+                'prompt' => $prompt,
+                'response' => '',
+                'model' => $requestedModel,
+                'endpoint' => $trackExtra['endpoint'] ?? 'llm.call',
+                'status' => 'error',
+                'error_message' => $response->get_error_message(),
+                'duration_ms' => $durationMs,
+                'post_id' => $trackExtra['post_id'] ?? 0,
+                'context' => $trackExtra['context'] ?? '',
+            ]);
+
             // Check if it's a usage limit error from dashboard
             if ($response->get_error_code() === 'usage_exceeded') {
                 return new \WP_Error(
@@ -250,12 +269,30 @@ class LlmClient
         // Increment local rate limit
         $this->incrementRateLimit();
 
-        return [
+        $result = [
             'text' => $response['content'] ?? '',
             'model' => $response['model'] ?? $requestedModel,
             'usage' => $response['usage'] ?? [],
             'provider' => 'openai',
         ];
+
+        // Log success
+        $usage = $result['usage'] ?? [];
+        LLMTracker::log([
+            'prompt' => $prompt,
+            'response' => $result['text'],
+            'model' => $result['model'],
+            'tokens_input' => $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0,
+            'tokens_output' => $usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0,
+            'cost' => $usage['cost'] ?? 0,
+            'endpoint' => $trackExtra['endpoint'] ?? 'llm.call',
+            'status' => 'success',
+            'duration_ms' => $durationMs,
+            'post_id' => $trackExtra['post_id'] ?? 0,
+            'context' => $trackExtra['context'] ?? '',
+        ]);
+
+        return $result;
     }
 
     /**
@@ -270,8 +307,9 @@ class LlmClient
         $model = $options['model'] ?? null;
         $maxTokens = $options['max_tokens'] ?? 2000;
         $systemRole = $options['system_role'] ?? null;
+        $trackExtra = $options['track_extra'] ?? [];
         
-        $result = $this->call($prompt, $model, $systemRole, $maxTokens);
+        $result = $this->call($prompt, $model, $systemRole, $maxTokens, $trackExtra);
         
         if (is_wp_error($result)) {
             return $result;
