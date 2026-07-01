@@ -477,7 +477,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
     /**
      * Generate image from prompt using AI
      */
-    private function generateImageFromPrompt(string $prompt): ?string
+    public function generateImageFromPrompt(string $prompt): ?string
     {
         // Get image API credentials from SaaS dashboard (stored during license activation)
         $imageApi = get_option('sseo_ai_client_image_api', []);

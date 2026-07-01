@@ -45,6 +45,7 @@
 		const [promptId, setPromptId] = useState(prompts[0]?.id || '');
 		const [noteIds, setNoteIds] = useState([]);
 		const [afterText, setAfterText] = useState('');
+		const [extraContext, setExtraContext] = useState('');
 
 		const toggleNote = (id) => {
 			setNoteIds((prev) => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -92,7 +93,7 @@
 				const res = await apiFetch({
 					path: '/sseo-ai/v1/editor-action',
 					method: 'POST',
-					data: { action, topic, preset, tone, content, selection: selectionText, prompt_id: promptId, notes: noteIds }
+					data: { action, topic, preset, tone, content, selection: selectionText, prompt_id: promptId, notes: noteIds, extra_context: extraContext }
 				});
 				const text = res?.text || '';
 				setOutput(text);
@@ -119,6 +120,7 @@
 					<PanelBody title="Prompt" initialOpen={true}>
 						<SelectControl label="Preset" value={preset} onChange={setPreset} options={(presets.length ? presets : [preset]).map((p) => ({ label: p.slice(0, 80), value: p }))} disabled={action==='image'} />
 						<TextControl label="Toon" value={tone} onChange={setTone} placeholder="Deskundig, helder" disabled={action==='image'} />
+					<TextareaControl label="Extra context / instructies" value={extraContext} onChange={setExtraContext} placeholder="Specifieke richtlijnen voor de AI..." rows={3} disabled={action==='image'} />
 						{prompts.length > 0 && action!=='image' && (
 							<SelectControl label="Prompt template" value={promptId} onChange={setPromptId} options={[{ label: 'Geen', value: '' }, ...prompts.map(p => ({ label: p.title, value: String(p.id) }))]} />
 						)}

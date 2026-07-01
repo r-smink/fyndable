@@ -41,6 +41,7 @@ class SimpleContentGenerator
     public function renderMetaBox(\WP_Post $post): void
     {
         wp_nonce_field('sseo_simple_content_save', 'sseo_simple_content_nonce');
+        $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
         ?>
         <div class="sseo-simple-content-box" style="padding: 10px;">
             <p class="description" style="margin-bottom: 10px;">
@@ -63,7 +64,7 @@ class SimpleContentGenerator
             <div style="display: flex; gap: 15px; margin-bottom: 12px;">
                 <div style="flex: 1;">
                     <label><strong><?php esc_html_e('Word Count:', 'ai-seo-client'); ?></strong></label>
-                    <input type="number" id="sseo-simple-wordcount" value="500" min="100" max="3000" step="50" style="width: 100%; margin-top: 5px;">
+                    <input type="number" id="sseo-simple-wordcount" value="<?php echo esc_attr($defaultWordCount); ?>" min="100" max="3000" step="50" style="width: 100%; margin-top: 5px;">
                 </div>
                 <div style="flex: 1;">
                     <label><strong><?php esc_html_e('Tone:', 'ai-seo-client'); ?></strong></label>

@@ -527,6 +527,7 @@ Requirements:
     public function renderPage(): void
     {
         $tones = ['professional', 'casual', 'academic', 'conversational', 'authoritative', 'friendly', 'technical'];
+        $defaultWordCount = (int) $this->settings->get('default_word_count', 1500);
         ?>
         <div class="wrap aiseo-modern">
             <h1><?php esc_html_e('AI Content Writer', 'ai-seo-client'); ?></h1>
@@ -558,8 +559,8 @@ Requirements:
                         <tr>
                             <th><label for="writer-words"><?php esc_html_e('Target Word Count', 'ai-seo-client'); ?></label></th>
                             <td>
-                                <input type="range" id="writer-words" min="500" max="5000" step="100" value="1500" style="width:300px;">
-                                <span id="writer-words-display">1500</span> <?php esc_html_e('words', 'ai-seo-client'); ?>
+                                <input type="range" id="writer-words" min="500" max="5000" step="100" value="<?php echo esc_attr($defaultWordCount); ?>" style="width:300px;">
+                                <span id="writer-words-display"><?php echo esc_html($defaultWordCount); ?></span> <?php esc_html_e('words', 'ai-seo-client'); ?>
                             </td>
                         </tr>
                         <tr>

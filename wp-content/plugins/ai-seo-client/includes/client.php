@@ -77,6 +77,8 @@ class Client
     private ?Keywords $keywords = null;
     private ?ABTesting $abTesting = null;
     private ?SEODataDashboard $seoDataDashboard = null;
+    private ?EditorAssistant $editorAssistant = null;
+    private ?SocialSharing $socialSharing = null;
 
     public function init(): void
     {
@@ -239,6 +241,14 @@ class Client
         // Simple Content Generator - available to all tiers
         $this->simpleContentGenerator = new SimpleContentGenerator($this->llmClient);
         $this->simpleContentGenerator->register();
+
+        // Editor Assistant (Gutenberg sidebar) - available to all tiers
+        $this->editorAssistant = new EditorAssistant($this->llmClient);
+        $this->editorAssistant->register();
+
+        // Social Sharing - available to all tiers
+        $this->socialSharing = new SocialSharing($this->settings);
+        $this->socialSharing->register();
 
         // SEO Data Dashboard - available to all tiers
         $this->seoDataDashboard = new SEODataDashboard($this->settings);
@@ -1378,6 +1388,7 @@ class Client
         $brandName = get_option('sseo_ai_brand_name', '');
         $brandVoice = get_option('sseo_ai_brand_voice', '');
         $sslVerify = $this->settings->sslVerify();
+        $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
         
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -1501,10 +1512,17 @@ class Client
                         <div class="settings-section">
                             <h2><?php esc_html_e('AI Prompt Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Custom instructions for AI content generation', 'ai-seo-client'); ?></p>
-                            
+
+                            <div class="form-field">
+                                <label for="default_word_count"><?php esc_html_e('Default Word Count', 'ai-seo-client'); ?></label>
+                                <input type="number" name="default_word_count" id="default_word_count" min="100" max="5000" step="50"
+                                       value="<?php echo esc_attr($defaultWordCount); ?>">
+                                <p class="field-description"><?php esc_html_e('Default number of words for AI-generated content (used when no specific count is set)', 'ai-seo-client'); ?></p>
+                            </div>
+
                             <div class="form-field">
                                 <label for="prompt_settings"><?php esc_html_e('Custom Prompt Instructions', 'ai-seo-client'); ?></label>
-                                <textarea name="prompt_settings" id="prompt_settings" rows="6" 
+                                <textarea name="prompt_settings" id="prompt_settings" rows="6"
                                           placeholder="e.g., Always include actionable tips, use bullet points for readability, focus on practical examples..."><?php echo esc_textarea($promptSettings); ?></textarea>
                                 <p class="field-description"><?php esc_html_e('Additional instructions that will be included in all AI prompts', 'ai-seo-client'); ?></p>
                             </div>
@@ -1553,6 +1571,7 @@ class Client
         update_option('sseo_ai_brand_voice', sanitize_text_field($_POST['brand_voice'] ?? ''));
         update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
+        update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
 
