@@ -125,6 +125,7 @@ class SimpleContentGenerator
             btn.prop('disabled', true);
             spinner.addClass('is-active');
             jQuery('#sseo-simple-preview').hide();
+            if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_generate_simple_content',
@@ -137,6 +138,7 @@ class SimpleContentGenerator
             }, function(response) {
                 spinner.removeClass('is-active');
                 btn.prop('disabled', false);
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
 
                 if (response.success && response.data.content) {
                     sseoGeneratedContent = response.data.content;
@@ -148,6 +150,7 @@ class SimpleContentGenerator
             }).fail(function() {
                 spinner.removeClass('is-active');
                 btn.prop('disabled', false);
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 alert('<?php echo esc_js(__('Request failed. Please try again.', 'ai-seo-client')); ?>');
             });
         }

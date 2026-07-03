@@ -701,6 +701,7 @@ PROMPT;
                 if (!topic) return;
                 var btn = $(this);
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
                     path: '/sseo-ai/v1/clusters/generate',
@@ -714,6 +715,8 @@ PROMPT;
                 }).catch(function(err) {
                     alert(err.message || 'Failed');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                }).finally(function() {
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
 
@@ -723,6 +726,7 @@ PROMPT;
                 if (!topic) return;
                 var btn = $(this);
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Auditing...', 'ai-seo-client')); ?>');
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
                     path: '/sseo-ai/v1/clusters/audit',
@@ -757,20 +761,23 @@ PROMPT;
                 }).catch(function(err) {
                     alert(err.message || 'Failed');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Audit Existing Content', 'ai-seo-client')); ?>');
+                }).finally(function() {
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
 
             // Generate content for cluster item
             function generateClusterContent(title, keyword, wordCount, contentType, buttonElement) {
-                var context = currentCluster ? 'Part of "' + (currentCluster.topic || '') + '" topic cluster. Related pages: ' + 
-                    ((currentCluster.clusters||[]).map(function(c) { 
+                var context = currentCluster ? 'Part of "' + (currentCluster.topic || '') + '" topic cluster. Related pages: ' +
+                    ((currentCluster.clusters||[]).map(function(c) {
                         return (c.hub_page?.title||'') + ', ' + (c.supporting_pages||[]).map(function(s){return s.title;}).join(', ');
                     }).join(', ').substring(0, 500)) : '';
-                
+
                 var btn = $(buttonElement);
                 var originalText = btn.text();
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
-                
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
+
                 wp.apiFetch({
                     path: '/sseo-ai/v1/clusters/generate-content',
                     method: 'POST',
@@ -790,6 +797,8 @@ PROMPT;
                 }).catch(function(err) {
                     alert('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (err.message || '<?php echo esc_js(__('Failed to generate content', 'ai-seo-client')); ?>'));
                     btn.prop('disabled', false).text(originalText);
+                }).finally(function() {
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             }
 
@@ -1034,42 +1043,44 @@ PROMPT;
                 $('.tc-page-checkbox:checked').each(function() {
                     selectedIds.push($(this).data('page-id'));
                 });
-                
+
                 if (selectedIds.length === 0) {
                     alert('<?php echo esc_js(__('Please select at least one page to generate.', 'ai-seo-client')); ?>');
                     return;
                 }
-                
+
                 if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages? This may take several minutes.', 'ai-seo-client')); ?>')) {
                     return;
                 }
-                
+
                 // Show progress
                 $('#tc-bulk-progress').show();
                 $('#tc-bulk-results').hide().html('');
                 $('#tc-bulk-generate').prop('disabled', true);
-                
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
+
                 var completed = 0;
                 var failed = 0;
                 var total = selectedIds.length;
                 var results = [];
-                
+
                 function updateProgress() {
                     var percent = Math.round((completed + failed) / total * 100);
                     $('#tc-progress-bar').css('width', percent + '%').text(percent + '%');
                     $('#tc-progress-text').text(completed + ' <?php echo esc_js(__('completed', 'ai-seo-client')); ?>, ' + failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>, ' + (total - completed - failed) + ' <?php echo esc_js(__('remaining', 'ai-seo-client')); ?>');
                 }
-                
+
                 function log(message) {
                     var time = new Date().toLocaleTimeString();
                     $('#tc-progress-log').prepend('[' + time + '] ' + message + '\n');
                 }
-                
+
                 function processNext(index) {
                     if (index >= selectedIds.length) {
                         // All done
                         $('#tc-bulk-generate').prop('disabled', false);
                         $('#tc-progress-text').text('<?php echo esc_js(__('Complete!', 'ai-seo-client')); ?> ' + completed + ' <?php echo esc_js(__('pages generated', 'ai-seo-client')); ?>');
+                        if (typeof sseoHideLoader === 'function') sseoHideLoader();
                         
                         // Show results
                         var resultsHtml = '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:20px;">' +

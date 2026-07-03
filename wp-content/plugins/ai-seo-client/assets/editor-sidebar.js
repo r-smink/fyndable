@@ -83,6 +83,7 @@
 			setOutput('');
 			setImageUrl('');
 			setAfterText('');
+			if (typeof window.sseoShowLoader === 'function') window.sseoShowLoader();
 
 			try {
 				if (action === 'image') {
@@ -107,6 +108,7 @@
 				setError('Kon geen resultaat ophalen.');
 			} finally {
 				setBusy(false);
+				if (typeof window.sseoHideLoader === 'function') window.sseoHideLoader();
 			}
 		};
 

@@ -626,6 +626,7 @@ Requirements:
                 spinner.addClass('is-active');
                 status.show().text('<?php echo esc_js(__('Analyzing keyword and generating article... This may take 1-2 minutes.', 'ai-seo-client')); ?>');
                 $('#writer-result').hide();
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
                     path: 'sseo-ai/v1/write-article',
@@ -657,6 +658,8 @@ Requirements:
                     btn.prop('disabled', false);
                     spinner.removeClass('is-active');
                     status.hide();
+                }).finally(function() {
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
         });

@@ -670,6 +670,8 @@ class Client
 
                 var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
                 var sseoHideLoader = function() { $("#sseo-ai-loader-overlay").removeClass("active"); };
+                window.sseoShowLoader = sseoShowLoader;
+                window.sseoHideLoader = sseoHideLoader;
 
                 $(document).ajaxSend(function(e, xhr, settings) {
                     if (settings.data && (settings.data.indexOf("sseo_ai_") !== -1 || settings.data.indexOf("action=ai_seo") !== -1)) {
@@ -680,16 +682,29 @@ class Client
                     sseoHideLoader();
                 });
 
-                // Intercept wp.apiFetch for Gutenberg sidebar AI calls
+                // Intercept wp.apiFetch for all AI calls
                 if (typeof wp !== "undefined" && wp.apiFetch) {
                     var originalFetch = wp.apiFetch;
-                    wp.apiFetch = function(options) {
-                        if (options && options.path && (options.path.indexOf("sseo-ai/v1") !== -1)) {
+                    var sseoWrappedFetch = function(options) {
+                        if (options && options.path && (options.path.indexOf("sseo-ai/v1") !== -1 || options.path.indexOf("/sseo-ai/v1") !== -1)) {
                             sseoShowLoader();
-                            return originalFetch(options).finally(sseoHideLoader);
+                            var result = originalFetch(options);
+                            if (result && typeof result.then === "function") {
+                                result.then(function() { sseoHideLoader(); }, function() { sseoHideLoader(); });
+                            } else {
+                                sseoHideLoader();
+                            }
+                            return result;
                         }
                         return originalFetch(options);
                     };
+                    // Preserve all original properties (middleware, nonce, etc.)
+                    for (var key in originalFetch) {
+                        if (originalFetch.hasOwnProperty(key)) {
+                            sseoWrappedFetch[key] = originalFetch[key];
+                        }
+                    }
+                    wp.apiFetch = sseoWrappedFetch;
                 }
             })(jQuery);
         ', 'after');

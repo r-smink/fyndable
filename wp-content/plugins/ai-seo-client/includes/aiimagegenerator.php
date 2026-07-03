@@ -316,11 +316,12 @@ class AIImageGenerator
             const style = jQuery('#image-style-' + postId).val();
             const context = jQuery('#image-context-' + postId).val();
             const wordCount = jQuery('#image-word-count-' + postId).val();
-            
+
             if (!confirm('<?php esc_html_e('Generate AI featured image?', 'ai-seo-client'); ?>')) {
                 return;
             }
-            
+
+            if (typeof sseoShowLoader === 'function') sseoShowLoader();
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_generate_featured_image',
                 post_id: postId,
@@ -329,28 +330,33 @@ class AIImageGenerator
                 word_count: wordCount,
                 nonce: '<?php echo wp_create_nonce('sseo_images'); ?>'
             }, function(response) {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 if (response.success) {
                     alert('<?php esc_html_e('Featured image generated!', 'ai-seo-client'); ?>');
                     location.reload();
                 } else {
                     alert(response.data.message || 'Error generating image');
                 }
+            }).fail(function() {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                alert('<?php esc_html_e('Request failed. Please try again.', 'ai-seo-client'); ?>');
             });
         }
-        
+
         function sseoRegenerateFeatured(postId) {
             sseoGenerateFeatured(postId);
         }
-        
+
         function sseoGenerateSocialImages(postId) {
             const style = jQuery('#image-style-' + postId).val();
             const context = jQuery('#image-context-' + postId).val();
             const wordCount = jQuery('#image-word-count-' + postId).val();
-            
+
             if (!confirm('<?php esc_html_e('Generate social media images?', 'ai-seo-client'); ?>')) {
                 return;
             }
-            
+
+            if (typeof sseoShowLoader === 'function') sseoShowLoader();
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_generate_social_images',
                 post_id: postId,
@@ -359,12 +365,16 @@ class AIImageGenerator
                 word_count: wordCount,
                 nonce: '<?php echo wp_create_nonce('sseo_images'); ?>'
             }, function(response) {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 if (response.success) {
                     alert('<?php esc_html_e('Social images generated!', 'ai-seo-client'); ?>');
                     location.reload();
                 } else {
                     alert(response.data.message || 'Error generating images');
                 }
+            }).fail(function() {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                alert('<?php esc_html_e('Request failed. Please try again.', 'ai-seo-client'); ?>');
             });
         }
         </script>

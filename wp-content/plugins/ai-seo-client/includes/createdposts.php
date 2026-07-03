@@ -879,6 +879,7 @@ class CreatedPosts
                 const btn = $(this);
                 btn.find('.spinner').show();
                 btn.prop('disabled', true);
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 const promises = [];
 
@@ -909,6 +910,7 @@ class CreatedPosts
                 }).finally(function() {
                     btn.find('.spinner').hide();
                     btn.prop('disabled', false);
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
 

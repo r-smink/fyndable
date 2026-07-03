@@ -999,6 +999,7 @@ PROMPT;
                 const btn = $(this);
                 btn.find('.spinner').show();
                 btn.prop('disabled', true);
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
                     path: 'sseo-ai/v1/ideas/generate',
@@ -1013,6 +1014,7 @@ PROMPT;
                 }).finally(function() {
                     btn.find('.spinner').hide();
                     btn.prop('disabled', false);
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
 
@@ -1139,9 +1141,10 @@ PROMPT;
                     const row = $(this).closest('.idea-row');
                     const id = row.data('id');
                     const btn = $(this);
-                    
+
                     btn.prop('disabled', true);
-                    
+                    if (typeof sseoShowLoader === 'function') sseoShowLoader();
+
                     wp.apiFetch({
                         path: 'sseo-ai/v1/ideas/' + id + '/convert',
                         method: 'POST',
@@ -1155,6 +1158,7 @@ PROMPT;
                         alert(error.message || '<?php echo esc_js(__('Failed to create draft', 'ai-seo-client')); ?>');
                     }).finally(function() {
                         btn.prop('disabled', false);
+                        if (typeof sseoHideLoader === 'function') sseoHideLoader();
                     });
                 });
 
@@ -1181,6 +1185,7 @@ PROMPT;
                 const btn = $(this);
                 btn.find('.spinner').show();
                 btn.prop('disabled', true);
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
                     path: 'sseo-ai/v1/ideas/' + id + '/schedule',
@@ -1194,6 +1199,7 @@ PROMPT;
                 }).finally(function() {
                     btn.find('.spinner').hide();
                     btn.prop('disabled', false);
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
 
