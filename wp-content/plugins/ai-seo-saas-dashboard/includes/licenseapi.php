@@ -189,6 +189,54 @@ class LicenseAPI
             'callback' => [$this, 'getAllFeatures'],
             'permission_callback' => function() { return current_user_can('manage_options'); },
         ]);
+
+        // Google OAuth proxy: get client ID (for GIS init in browser)
+        register_rest_route($this->namespace, '/google/oauth-config', [
+            'methods' => 'POST',
+            'callback' => [$this, 'getGoogleOAuthConfig'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // Google OAuth proxy: exchange auth code for tokens (secret stays server-side)
+        register_rest_route($this->namespace, '/google/exchange', [
+            'methods' => 'POST',
+            'callback' => [$this, 'exchangeGoogleCode'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'code' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // Google Ads: get developer token (for authenticated tenants)
+        register_rest_route($this->namespace, '/google/ads-dev-token', [
+            'methods' => 'POST',
+            'callback' => [$this, 'getGoogleAdsDevToken'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // Google API usage reporting (client reports its Google API calls)
+        register_rest_route($this->namespace, '/google/report-usage', [
+            'methods' => 'POST',
+            'callback' => [$this, 'reportGoogleUsage'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'service' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'calls' => ['required' => false, 'type' => 'integer', 'default' => 1],
+                'cost' => ['required' => false, 'type' => 'number', 'default' => 0],
+            ],
+        ]);
     }
 
     /**
@@ -570,5 +618,155 @@ class LicenseAPI
     private function getFeatureManager(): LicenseFeatureManager
     {
         return new LicenseFeatureManager($this->tenants, $this->licenseGenerator);
+    }
+
+    /**
+     * Validate tenant credentials from request
+     */
+    private function validateTenant(\WP_REST_Request $request): array|\WP_Error
+    {
+        $licenseKey = $request->get_param('license_key');
+        $tenantKey = $request->get_param('tenant_key');
+
+        if (empty($licenseKey) || empty($tenantKey)) {
+            return new \WP_Error('missing_credentials', 'License key and tenant key are required');
+        }
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_Error('invalid_credentials', 'Invalid license or tenant credentials');
+        }
+
+        if ($tenant['status'] !== 'active') {
+            return new \WP_Error('inactive_tenant', 'Tenant is not active');
+        }
+
+        return $tenant;
+    }
+
+    /**
+     * REST: Get Google OAuth config (client ID only — secret stays server-side)
+     */
+    public function getGoogleOAuthConfig(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+
+        $settings = new SaaSSettings();
+        $clientId = $settings->getGoogleClientId();
+
+        if (empty($clientId)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google OAuth is not configured on the SaaS dashboard'], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'client_id' => $clientId,
+            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
+        ], 200);
+    }
+
+    /**
+     * REST: Exchange Google auth code for tokens (server-side, secret never exposed)
+     */
+    public function exchangeGoogleCode(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+
+        // Track OAuth exchange call
+        $this->tenants->trackGoogleApiUsage($request->get_param('tenant_key'), 'oauth');
+
+        $code = $request->get_param('code');
+        if (empty($code)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'missing_code', 'message' => 'Authorization code is required'], 400);
+        }
+
+        $settings = new SaaSSettings();
+        $clientId = $settings->getGoogleClientId();
+        $clientSecret = $settings->getGoogleClientSecret();
+
+        if (empty($clientId) || empty($clientSecret)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google OAuth is not configured on the SaaS dashboard'], 400);
+        }
+
+        $response = wp_remote_post('https://oauth2.googleapis.com/token', [
+            'timeout' => 15,
+            'body' => [
+                'code' => $code,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'redirect_uri' => 'postmessage',
+                'grant_type' => 'authorization_code',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'exchange_failed', 'message' => $response->get_error_message()], 500);
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 || !is_array($body)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'exchange_failed', 'message' => 'Token exchange failed', 'details' => $body], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'tokens' => $body,
+        ], 200);
+    }
+
+    /**
+     * REST: Get Google Ads developer token (for authenticated tenants only)
+     */
+    public function getGoogleAdsDevToken(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+
+        $settings = new SaaSSettings();
+        $devToken = $settings->getGoogleAdsDevToken();
+
+        if (empty($devToken)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google Ads developer token is not configured'], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'dev_token' => $devToken,
+        ], 200);
+    }
+
+    /**
+     * REST: Report Google API usage from client plugin
+     * Clients report their Google API calls (gsc, ga4, ads) for cost tracking.
+     */
+    public function reportGoogleUsage(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+
+        $service = $request->get_param('service');
+        $calls = (int)$request->get_param('calls');
+        $cost = (float)$request->get_param('cost');
+
+        $validServices = ['gsc', 'ga4', 'ads', 'oauth'];
+        if (!in_array($service, $validServices, true)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'invalid_service', 'message' => 'Service must be one of: gsc, ga4, ads, oauth'], 400);
+        }
+
+        $this->tenants->trackGoogleApiUsage($request->get_param('tenant_key'), $service, $calls, $cost);
+
+        return new \WP_REST_Response(['success' => true], 200);
     }
 }

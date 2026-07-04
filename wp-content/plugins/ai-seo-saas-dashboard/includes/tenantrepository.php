@@ -14,6 +14,7 @@ class TenantRepository
     private const TENANT_SETTINGS_TABLE = 'sseo_ai_tenant_settings';
     private const TENANT_USAGE_TABLE = 'sseo_ai_tenant_usage';
     private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
+    private const GOOGLE_API_USAGE_TABLE = 'sseo_ai_google_api_usage';
     
     private ?string $currentTenantId = null;
     
@@ -116,6 +117,23 @@ class TenantRepository
         dbDelta($sql2);
         dbDelta($sql3);
         dbDelta($sql4);
+
+        // Google API usage tracking (per-tenant, per-service, per-month)
+        $sql5 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::GOOGLE_API_USAGE_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tenant_id bigint(20) unsigned NOT NULL,
+            period varchar(7) NOT NULL COMMENT 'YYYY-MM format',
+            service varchar(20) NOT NULL COMMENT 'gsc, ga4, ads, oauth',
+            api_calls int(11) NOT NULL DEFAULT 0,
+            api_cost decimal(10,4) NOT NULL DEFAULT 0.0000,
+            last_updated datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY tenant_period_service (tenant_id, period, service),
+            KEY tenant_id (tenant_id),
+            KEY period (period),
+            KEY service (service)
+        ) $charsetCollate;";
+        dbDelta($sql5);
     }
     
     /**
@@ -285,9 +303,16 @@ class TenantRepository
      */
     public function suspendTenant(string $tenantKey, string $reason = ''): bool
     {
-        return $this->updateTenant($tenantKey, [
+        $result = $this->updateTenant($tenantKey, [
             'status' => 'suspended'
         ]);
+
+        if ($result && $reason) {
+            $this->setTenantSetting($tenantKey, 'suspend_reason', $reason);
+            $this->setTenantSetting($tenantKey, 'suspended_at', current_time('mysql'));
+        }
+
+        return $result;
     }
     
     /**
@@ -694,5 +719,126 @@ class TenantRepository
     private function generateTenantKey(): string
     {
         return 'tn_' . bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Track Google API usage for a tenant
+     */
+    public function trackGoogleApiUsage(string $tenantKey, string $service, int $calls = 1, float $cost = 0): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+
+        $tenant = $this->getTenant($tenantKey);
+        if (!$tenant) return;
+
+        $period = current_time('Y-m');
+
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$table} WHERE tenant_id = %d AND period = %s AND service = %s",
+            $tenant['id'], $period, $service
+        ));
+
+        if ($existing) {
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$table} SET api_calls = api_calls + %d, api_cost = api_cost + %f WHERE id = %d",
+                $calls, $cost, (int)$existing
+            ));
+        } else {
+            $wpdb->insert($table, [
+                'tenant_id' => $tenant['id'],
+                'period' => $period,
+                'service' => $service,
+                'api_calls' => $calls,
+                'api_cost' => $cost,
+            ]);
+        }
+    }
+
+    /**
+     * Get Google API usage for a tenant in a period
+     */
+    public function getGoogleApiUsage(string $tenantKey, string $period = null): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+
+        $tenant = $this->getTenant($tenantKey);
+        if (!$tenant) return [];
+
+        if ($period === null) $period = current_time('Y-m');
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$table} WHERE tenant_id = %d AND period = %s ORDER BY service",
+            $tenant['id'], $period
+        ), ARRAY_A);
+    }
+
+    /**
+     * Get Google API usage for all tenants in a period (for admin overview)
+     */
+    public function getAllGoogleApiUsage(string $period = null): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($period === null) $period = current_time('Y-m');
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT 
+                t.tenant_key, t.name, t.domain, t.tier, t.status,
+                g.service, g.api_calls, g.api_cost
+            FROM {$table} g
+            JOIN {$tenantsTable} t ON g.tenant_id = t.id
+            WHERE g.period = %s
+            ORDER BY g.api_cost DESC, g.api_calls DESC",
+            $period
+        ), ARRAY_A);
+    }
+
+    /**
+     * Get Google API usage summary aggregated by service for a period
+     */
+    public function getGoogleApiUsageSummary(string $period = null): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+
+        if ($period === null) $period = current_time('Y-m');
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT 
+                service,
+                SUM(api_calls) as total_calls,
+                SUM(api_cost) as total_cost,
+                COUNT(DISTINCT tenant_id) as active_tenants
+            FROM {$table}
+            WHERE period = %s
+            GROUP BY service
+            ORDER BY total_cost DESC",
+            $period
+        ), ARRAY_A);
+    }
+
+    /**
+     * Get Google API usage history for a tenant (multiple months)
+     */
+    public function getGoogleApiUsageHistory(string $tenantKey, int $months = 6): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+
+        $tenant = $this->getTenant($tenantKey);
+        if (!$tenant) return [];
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT period, service, api_calls, api_cost
+            FROM {$table}
+            WHERE tenant_id = %d
+            ORDER BY period DESC, service
+            LIMIT %d",
+            $tenant['id'], $months * 4
+        ), ARRAY_A);
     }
 }

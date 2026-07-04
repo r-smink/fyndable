@@ -58,63 +58,12 @@ class TechnicalSEOAuditor
         
         ?>
         <style>
-            /* Remove WordPress #wpcontent padding */
-            #wpcontent { padding-left: 0 !important; }
-            
-            /* Dashboard Container */
-            .wrap.sseo-ai-modern { max-width: 1400px; }
-            
-            /* Header Styling */
-            .sseo-ai-header {
-                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-                color: #fff;
-                padding: 24px 30px;
-                margin: -20px -20px 30px -20px;
-                border-radius: 0;
-            }
-            .sseo-ai-header h1 {
-                margin: 0;
-                font-size: 24px;
-                font-weight: 600;
-                color: #fff;
-            }
-            
-            /* Content area */
-            .sseo-ai-content {
-                padding: 0 10px;
-            }
-            
-            /* Card Styling */
-            .sseo-ai-dashboard-card {
-                background: #fff;
-                border-radius: 12px;
-                border: 1px solid #e2e8f0;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-                padding: 24px;
-                margin-bottom: 24px;
-            }
-            .sseo-ai-dashboard-card h2 {
-                margin: 0 0 20px 0;
-                font-size: 18px;
-                font-weight: 600;
-                color: #1e293b;
-                padding-bottom: 12px;
-                border-bottom: 2px solid #3b82f6;
-            }
-            .sseo-ai-dashboard-card h3 {
-                margin: 0 0 16px 0;
-                font-size: 16px;
-                font-weight: 600;
-                color: #334155;
-            }
-            
-            /* Spacing */
-            .sseo-ai-dashboard-card + .sseo-ai-dashboard-card { margin-top: 24px; }
-            
+            /* Page-specific styles — base layout uses shared client-admin.css */
+
             /* Grid Layouts */
             .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
             @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
-            
+
             .sseo-top-section { 
                 display: grid; 
                 grid-template-columns: 1fr 2fr; 
@@ -143,32 +92,6 @@ class TechnicalSEOAuditor
                 color: #64748b; 
                 text-transform: uppercase; 
                 letter-spacing: 0.5px; 
-            }
-            
-            /* Tables */
-            .sseo-ai-dashboard-card .wp-list-table {
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
-                overflow: hidden;
-            }
-            .sseo-ai-dashboard-card .wp-list-table th {
-                background: #f8fafc;
-                font-weight: 600;
-                color: #475569;
-                padding: 12px;
-            }
-            .sseo-ai-dashboard-card .wp-list-table td {
-                padding: 12px;
-                vertical-align: middle;
-            }
-            
-            /* Links */
-            .sseo-ai-dashboard-card a {
-                color: #2563eb;
-                text-decoration: none;
-            }
-            .sseo-ai-dashboard-card a:hover {
-                text-decoration: underline;
             }
         </style>
         <div class="wrap sseo-ai-modern">

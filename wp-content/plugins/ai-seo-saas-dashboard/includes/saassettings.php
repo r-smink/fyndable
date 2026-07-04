@@ -42,6 +42,15 @@ class SaaSSettings
             'sseo-ai-costs',
             [$this, 'renderCostDashboard']
         );
+
+        add_submenu_page(
+            'sseo-ai-licenses',
+            __('Google API Costs', 'sseo-ai-saas'),
+            __('Google API Costs', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-google-costs',
+            [$this, 'renderGoogleCostDashboard']
+        );
     }
     
     /**
@@ -84,6 +93,11 @@ class SaaSSettings
         
         // Mollie settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_api_key');
+
+        // Google OAuth credentials (central, used by all client sites)
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_id');
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_secret');
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_ads_dev_token');
     }
     
     /**
@@ -140,6 +154,30 @@ class SaaSSettings
     public function getImageApiModel(): string
     {
         return get_option('ai_seo_saas_image_api_model', 'dall-e-3');
+    }
+
+    /**
+     * Get Google OAuth Client ID
+     */
+    public function getGoogleClientId(): string
+    {
+        return get_option('ai_seo_saas_google_client_id', '');
+    }
+
+    /**
+     * Get Google OAuth Client Secret
+     */
+    public function getGoogleClientSecret(): string
+    {
+        return get_option('ai_seo_saas_google_client_secret', '');
+    }
+
+    /**
+     * Get Google Ads Developer Token
+     */
+    public function getGoogleAdsDevToken(): string
+    {
+        return get_option('ai_seo_saas_google_ads_dev_token', '');
     }
     
     /**
@@ -285,6 +323,40 @@ class SaaSSettings
                             </select>
                             <p class="description">
                                 <?php esc_html_e('Costs: DALL-E 3 Standard ~$0.04/image, HD ~$0.08/image, SDXL ~$0.01/image', 'sseo-ai-saas'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2><?php esc_html_e('Google OAuth Credentials', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Central Google Cloud OAuth app used by all client sites. Customers never see these credentials — they just click "Connect with Google".', 'sseo-ai-saas'); ?></p>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="google_client_id"><?php esc_html_e('Google OAuth Client ID', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="text" name="ai_seo_saas_google_client_id" id="google_client_id"
+                                   value="<?php echo esc_attr($this->getGoogleClientId()); ?>" class="regular-text"
+                                   placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
+                            <p class="description">
+                                <?php esc_html_e('From Google Cloud Console → APIs & Services → Credentials', 'sseo-ai-saas'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="google_client_secret"><?php esc_html_e('Google OAuth Client Secret', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="ai_seo_saas_google_client_secret" id="google_client_secret"
+                                   value="<?php echo esc_attr($this->getGoogleClientSecret()); ?>" class="regular-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="google_ads_dev_token"><?php esc_html_e('Google Ads Developer Token', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="ai_seo_saas_google_ads_dev_token" id="google_ads_dev_token"
+                                   value="<?php echo esc_attr($this->getGoogleAdsDevToken()); ?>" class="regular-text"
+                                   placeholder="Developer token from Google Ads API Center">
+                            <p class="description">
+                                <?php esc_html_e('Required for Google Ads API. Apply at Google Ads → Tools → API Center.', 'sseo-ai-saas'); ?>
                             </p>
                         </td>
                     </tr>
@@ -468,6 +540,247 @@ class SaaSSettings
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Google API Costs dashboard
+     */
+    public function renderGoogleCostDashboard(): void
+    {
+        $tenants = new TenantRepository();
+
+        $selectedMonth = isset($_GET['month']) ? sanitize_text_field($_GET['month']) : current_time('Y-m');
+
+        $summary = $tenants->getGoogleApiUsageSummary($selectedMonth);
+        $allUsage = $tenants->getAllGoogleApiUsage($selectedMonth);
+
+        $serviceLabels = [
+            'gsc' => 'Search Console',
+            'ga4' => 'Analytics 4',
+            'ads' => 'Google Ads',
+            'oauth' => 'OAuth Exchange',
+        ];
+
+        $totalCost = 0;
+        $totalCalls = 0;
+        $activeTenants = [];
+        foreach ($summary as $row) {
+            $totalCost += (float)$row['total_cost'];
+            $totalCalls += (int)$row['total_calls'];
+            $activeTenants[] = $row['active_tenants'];
+        }
+        $uniqueTenants = count(array_unique($activeTenants));
+
+        $perTenant = [];
+        foreach ($allUsage as $row) {
+            $key = $row['tenant_key'];
+            if (!isset($perTenant[$key])) {
+                $perTenant[$key] = [
+                    'name' => $row['name'],
+                    'domain' => $row['domain'],
+                    'tier' => $row['tier'],
+                    'status' => $row['status'],
+                    'services' => [],
+                    'total_cost' => 0,
+                    'total_calls' => 0,
+                ];
+            }
+            $perTenant[$key]['services'][$row['service']] = [
+                'calls' => (int)$row['api_calls'],
+                'cost' => (float)$row['api_cost'],
+            ];
+            $perTenant[$key]['total_cost'] += (float)$row['api_cost'];
+            $perTenant[$key]['total_calls'] += (int)$row['api_calls'];
+        }
+
+        uasort($perTenant, fn($a, $b) => $b['total_cost'] <=> $a['total_cost']);
+
+        $availableMonths = [];
+        $currentMonth = current_time('Y-m');
+        $base = strtotime(date('Y-m-01'));
+        for ($i = 0; $i < 12; $i++) {
+            $m = date('Y-m', strtotime("-{$i} months", $base));
+            $availableMonths[] = $m;
+            if ($m === $currentMonth) break;
+        }
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Google API Costs per Klant', 'sseo-ai-saas'); ?></h1>
+
+            <form method="get" action="" style="margin-bottom: 15px;">
+                <input type="hidden" name="page" value="sseo-ai-google-costs">
+                <label for="month"><?php esc_html_e('Maand:', 'sseo-ai-saas'); ?></label>
+                <select name="month" id="month" onchange="this.form.submit()">
+                    <?php foreach ($availableMonths as $m): ?>
+                        <option value="<?php echo esc_attr($m); ?>" <?php selected($selectedMonth, $m); ?>>
+                            <?php echo esc_html(date_i18n('F Y', strtotime($m . '-01'))); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+
+            <div class="card" style="margin-bottom: 20px;">
+                <h2><?php echo esc_html(date_i18n('F Y', strtotime($selectedMonth . '-01'))); ?></h2>
+                <div style="display: flex; gap: 30px; margin-top: 15px;">
+                    <div>
+                        <h3>$<?php echo number_format($totalCost, 4); ?></h3>
+                        <p><?php esc_html_e('Totale Google API Kosten', 'sseo-ai-saas'); ?></p>
+                    </div>
+                    <div>
+                        <h3><?php echo number_format($totalCalls); ?></h3>
+                        <p><?php esc_html_e('Totale API Calls', 'sseo-ai-saas'); ?></p>
+                    </div>
+                    <div>
+                        <h3><?php echo $uniqueTenants; ?></h3>
+                        <p><?php esc_html_e('Actieve Klanten', 'sseo-ai-saas'); ?></p>
+                    </div>
+                    <div>
+                        <h3>$<?php echo $uniqueTenants > 0 ? number_format($totalCost / $uniqueTenants, 4) : '0.0000'; ?></h3>
+                        <p><?php esc_html_e('Gemiddeld per Klant', 'sseo-ai-saas'); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px;">
+                <div class="card" style="flex: 1;">
+                    <h3><?php esc_html_e('Kosten per Klant', 'sseo-ai-saas'); ?></h3>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Klant', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Domein', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('GSC', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('GA4', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Ads', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('OAuth', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Totaal Calls', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Totaal Kosten', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($perTenant)): ?>
+                                <tr>
+                                    <td colspan="9"><?php esc_html_e('Geen Google API activiteit in deze maand.', 'sseo-ai-saas'); ?></td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($perTenant as $key => $t): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($t['name']); ?></td>
+                                        <td><?php echo esc_html($t['domain'] ?? '-'); ?></td>
+                                        <td><span class="badge badge-<?php echo esc_attr($t['tier']); ?>"><?php echo esc_html(ucfirst($t['tier'])); ?></span></td>
+                                        <td>
+                                            <?php if (isset($t['services']['gsc'])): ?>
+                                                <?php echo number_format($t['services']['gsc']['calls']); ?> calls<br>
+                                                <small>$<?php echo number_format($t['services']['gsc']['cost'], 4); ?></small>
+                                            <?php else: ?>–<?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (isset($t['services']['ga4'])): ?>
+                                                <?php echo number_format($t['services']['ga4']['calls']); ?> calls<br>
+                                                <small>$<?php echo number_format($t['services']['ga4']['cost'], 4); ?></small>
+                                            <?php else: ?>–<?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (isset($t['services']['ads'])): ?>
+                                                <?php echo number_format($t['services']['ads']['calls']); ?> calls<br>
+                                                <small>$<?php echo number_format($t['services']['ads']['cost'], 4); ?></small>
+                                            <?php else: ?>–<?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (isset($t['services']['oauth'])): ?>
+                                                <?php echo number_format($t['services']['oauth']['calls']); ?> calls<br>
+                                                <small>$<?php echo number_format($t['services']['oauth']['cost'], 4); ?></small>
+                                            <?php else: ?>–<?php endif; ?>
+                                        </td>
+                                        <td><strong><?php echo number_format($t['total_calls']); ?></strong></td>
+                                        <td><strong>$<?php echo number_format($t['total_cost'], 4); ?></strong></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                        <?php if (!empty($perTenant)): ?>
+                            <tfoot>
+                                <tr style="background: #f0f0f1; font-weight: bold;">
+                                    <td colspan="3"><?php esc_html_e('Totaal', 'sseo-ai-saas'); ?></td>
+                                    <td>
+                                        <?php
+                                        $gscCalls = $gscCost = 0;
+                                        foreach ($perTenant as $t) {
+                                            $gscCalls += $t['services']['gsc']['calls'] ?? 0;
+                                            $gscCost += $t['services']['gsc']['cost'] ?? 0;
+                                        }
+                                        echo number_format($gscCalls) . ' calls<br><small>$' . number_format($gscCost, 4) . '</small>';
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $ga4Calls = $ga4Cost = 0;
+                                        foreach ($perTenant as $t) {
+                                            $ga4Calls += $t['services']['ga4']['calls'] ?? 0;
+                                            $ga4Cost += $t['services']['ga4']['cost'] ?? 0;
+                                        }
+                                        echo number_format($ga4Calls) . ' calls<br><small>$' . number_format($ga4Cost, 4) . '</small>';
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $adsCalls = $adsCost = 0;
+                                        foreach ($perTenant as $t) {
+                                            $adsCalls += $t['services']['ads']['calls'] ?? 0;
+                                            $adsCost += $t['services']['ads']['cost'] ?? 0;
+                                        }
+                                        echo number_format($adsCalls) . ' calls<br><small>$' . number_format($adsCost, 4) . '</small>';
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $oauthCalls = $oauthCost = 0;
+                                        foreach ($perTenant as $t) {
+                                            $oauthCalls += $t['services']['oauth']['calls'] ?? 0;
+                                            $oauthCost += $t['services']['oauth']['cost'] ?? 0;
+                                        }
+                                        echo number_format($oauthCalls) . ' calls<br><small>$' . number_format($oauthCost, 4) . '</small>';
+                                        ?>
+                                    </td>
+                                    <td><strong><?php echo number_format($totalCalls); ?></strong></td>
+                                    <td><strong>$<?php echo number_format($totalCost, 4); ?></strong></td>
+                                </tr>
+                            </tfoot>
+                        <?php endif; ?>
+                    </table>
+                </div>
+
+                <div class="card" style="width: 320px;">
+                    <h3><?php esc_html_e('Kosten per Service', 'sseo-ai-saas'); ?></h3>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Service', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Calls', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Klanten', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Kosten', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($summary)): ?>
+                                <tr><td colspan="4"><?php esc_html_e('Geen data.', 'sseo-ai-saas'); ?></td></tr>
+                            <?php else: ?>
+                                <?php foreach ($summary as $row): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($serviceLabels[$row['service']] ?? $row['service']); ?></td>
+                                        <td><?php echo number_format($row['total_calls']); ?></td>
+                                        <td><?php echo $row['active_tenants']; ?></td>
+                                        <td>$<?php echo number_format($row['total_cost'], 4); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <?php

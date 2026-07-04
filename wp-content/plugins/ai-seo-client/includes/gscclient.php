@@ -12,11 +12,13 @@ class GscClient
 {
     private Settings $settings;
     private GscOAuth $oauth;
+    private DashboardAPI $dashboardAPI;
 
     public function __construct(Settings $settings)
     {
         $this->settings = $settings;
         $this->oauth = new GscOAuth($settings);
+        $this->dashboardAPI = new DashboardAPI($settings);
     }
 
     /**
@@ -108,6 +110,8 @@ class GscClient
             $errorMsg = $body['error']['message'] ?? __('GSC API error', 'ai-seo-client');
             return new \WP_Error('gsc_api', $errorMsg, ['code' => $code]);
         }
+
+        $this->dashboardAPI->reportGoogleUsage('gsc');
 
         return $body;
     }

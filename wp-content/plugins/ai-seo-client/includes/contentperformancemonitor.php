@@ -17,10 +17,12 @@ namespace SSEOAIClient;
 class ContentPerformanceMonitor
 {
     private Settings $settings;
+    private ?GA4Client $ga4Client = null;
     
     public function __construct(Settings $settings)
     {
         $this->settings = $settings;
+        $this->ga4Client = new GA4Client($settings);
     }
     
     public function register(): void
@@ -452,24 +454,23 @@ class ContentPerformanceMonitor
     }
     
     /**
-     * Get GA4 data
+     * Get GA4 data via real GA4Client
      */
     private function getGA4Data(string $type, int $days = 30): array
     {
-        $measurementId = get_option('sseo_ai_ga4_measurement_id', '');
-        $propertyId = get_option('sseo_ai_ga4_property_id', '');
-        
-        if (empty($measurementId) || empty($propertyId)) {
+        if (!$this->ga4Client || !$this->ga4Client->isConnected()) {
             return [];
         }
-        
-        // This would use Google Analytics Data API
-        // Placeholder implementation
-        
+
+        $overview = $this->ga4Client->getOverview($days);
+        if (is_wp_error($overview)) {
+            return [];
+        }
+
         return [
-            'total_traffic' => 0,
+            'total_traffic' => $overview['sessions'] ?? 0,
             'traffic_change' => 0,
-            'conversions' => 0,
+            'conversions' => $overview['conversions'] ?? 0,
             'conversion_change' => 0,
         ];
     }
@@ -532,14 +533,20 @@ class ContentPerformanceMonitor
     }
     
     /**
-     * Get top performing content
+     * Get top performing content via GA4 API
      */
     private function getTopPerformingContent(int $limit = 10): array
     {
-        // This would query GA4 for top pages
-        // Placeholder implementation
-        
-        return [];
+        if (!$this->ga4Client || !$this->ga4Client->isConnected()) {
+            return [];
+        }
+
+        $result = $this->ga4Client->getTopPages(30, $limit);
+        if (is_wp_error($result)) {
+            return [];
+        }
+
+        return $result['pages'] ?? [];
     }
     
     /**
@@ -561,17 +568,32 @@ class ContentPerformanceMonitor
     }
     
     /**
-     * Get GA4 data for specific URL
+     * Get GA4 data for specific URL via GA4 API
      */
     private function getGA4DataForUrl(string $url, int $days): array
     {
-        // This would use GA4 API to get data for specific URL
-        // Placeholder implementation
-        
+        if (!$this->ga4Client || !$this->ga4Client->isConnected()) {
+            return [
+                'pageviews' => 0,
+                'pageviews_change' => 0,
+                'conversions' => 0,
+            ];
+        }
+
+        $path = wp_parse_url($url, PHP_URL_PATH) ?: '/';
+        $result = $this->ga4Client->getPageData($path, $days);
+        if (is_wp_error($result)) {
+            return [
+                'pageviews' => 0,
+                'pageviews_change' => 0,
+                'conversions' => 0,
+            ];
+        }
+
         return [
-            'pageviews' => 0,
+            'pageviews' => $result['page_views'] ?? 0,
             'pageviews_change' => 0,
-            'conversions' => 0,
+            'conversions' => $result['conversions'] ?? 0,
         ];
     }
     

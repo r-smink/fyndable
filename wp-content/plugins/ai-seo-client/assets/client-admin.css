@@ -247,6 +247,10 @@ body[class*="aiseo"] #wpfooter {
     margin: 0 0 10px 0;
 }
 
+/* Two-column grid layout (used by multiple pages) */
+.sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+@media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+
 /* ================================================
    5. AI TOOL CARDS
    ================================================ */

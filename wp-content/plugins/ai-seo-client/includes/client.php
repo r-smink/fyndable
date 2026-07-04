@@ -79,6 +79,7 @@ class Client
     private ?SEODataDashboard $seoDataDashboard = null;
     private ?EditorAssistant $editorAssistant = null;
     private ?SocialSharing $socialSharing = null;
+    private ?GoogleDataDashboard $googleDataDashboard = null;
 
     public function init(): void
     {
@@ -326,6 +327,10 @@ class Client
             $gscClient = new GscClient($this->settings);
             $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
             $this->gscDashboard->register();
+
+            // Google Data Dashboard (GSC + GA4 + Google Ads unified)
+            $this->googleDataDashboard = new GoogleDataDashboard($this->settings);
+            $this->googleDataDashboard->register();
             
             // SERP Feature Tracker
             $this->serpFeatureTracker = new SerpFeatureTracker($this->settings, $this->llmClient);
@@ -577,6 +582,16 @@ class Client
                     'manage_options',
                     'ai-seo-gsc',
                     [$this, 'renderGscDashboardPage']
+                );
+
+                // 13b. Google Data Dashboard (GSC + GA4 + Ads) - Professional+
+                add_submenu_page(
+                    'ai-seo-client',
+                    __('Google Data', 'ai-seo-client'),
+                    __('📈 Google Data', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-google-data',
+                    [$this, 'renderGoogleDataPage']
                 );
                 
                 // 14. A/B Testing - Professional+
@@ -1076,6 +1091,22 @@ class Client
         }
         if ($this->gscDashboard) {
             $this->gscDashboard->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Google Data Dashboard page (GSC + GA4 + Google Ads)
+     */
+    public function renderGoogleDataPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->googleDataDashboard) {
+            $this->googleDataDashboard->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }

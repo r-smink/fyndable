@@ -316,6 +316,38 @@ class DashboardAPI
     }
 
     /**
+     * Report Google API usage to SaaS dashboard for cost tracking
+     */
+    public function reportGoogleUsage(string $service, int $calls = 1, float $cost = 0): bool
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return false;
+        }
+
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/google/report-usage',
+            [
+                'body' => [
+                    'license_key' => $licenseKey,
+                    'tenant_key' => $tenantKey,
+                    'service' => $service,
+                    'calls' => $calls,
+                    'cost' => $cost,
+                ],
+                'timeout' => 10,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 5,
+            ]
+        );
+
+        return !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
+    }
+
+    /**
      * Check tenant status with dashboard
      */
     public function checkTenantStatus(string $tenantKey, string $licenseKey, string $dashboardUrl): array|\WP_Error

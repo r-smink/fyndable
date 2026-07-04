@@ -381,6 +381,10 @@ class WhiteLabelAdmin
         // Get white-label status
         $tenantWhiteLabel = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
         $whiteLabelEnabled = $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
+
+        // Get suspend info if applicable
+        $suspendReason = $this->tenants->getTenantSetting($tenantKey, 'suspend_reason', '');
+        $suspendedAt = $this->tenants->getTenantSetting($tenantKey, 'suspended_at', '');
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php printf(esc_html__('Client Details: %s', 'sseo-ai-saas'), esc_html($tenant['name'])); ?></h1>
@@ -415,6 +419,14 @@ class WhiteLabelAdmin
                             <span style="color: #00a32a;">● <?php esc_html_e('Active', 'sseo-ai-saas'); ?></span>
                         <?php else: ?>
                             <span style="color: #d63638;">● <?php echo esc_html(ucfirst($tenant['status'])); ?></span>
+                            <?php if ($suspendReason): ?>
+                                <div style="margin-top: 6px; padding: 8px 10px; background: #fff; border-left: 4px solid #d63638; font-size: 13px;">
+                                    <strong><?php esc_html_e('Reden:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($suspendReason); ?>
+                                    <?php if ($suspendedAt): ?>
+                                        <br><small style="color: #666;"><?php esc_html_e('Geschorst op:', 'sseo-ai-saas'); ?> <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($suspendedAt))); ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                     <div>

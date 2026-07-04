@@ -27,6 +27,9 @@ class ExternalIntegrations
         // Menu registration moved to Client class
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
+
+        // AJAX handler for saving Google config
+        add_action('wp_ajax_sseo_ai_save_google_config', [$this, 'ajaxSaveGoogleConfig']);
         
         // Hooks for automatic notifications
         add_action('sseo_ai_rank_change', [$this, 'notifyRankChange'], 10, 3);
@@ -86,17 +89,13 @@ class ExternalIntegrations
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_folder_id');
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_auto_export', ['default' => false]);
         
-        // Google Search Console OAuth (using sseo_ai_client_ prefix for Settings class compatibility)
-        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_id');
-        register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_client_secret');
+        // Google Search Console site URL (still per-customer)
         register_setting('sseo_ai_integrations', 'sseo_ai_client_gsc_site_url', [
             'sanitize_callback' => function ($value) {
                 $value = trim($value);
-                // Allow sc-domain: format (domain properties)
                 if (str_starts_with($value, 'sc-domain:')) {
                     return sanitize_text_field($value);
                 }
-                // URL properties — sanitize as URL
                 return esc_url_raw($value);
             },
         ]);
@@ -110,6 +109,12 @@ class ExternalIntegrations
 
         // Ahrefs
         register_setting('sseo_ai_integrations', 'sseo_ai_ahrefs_api_key');
+
+        // Google Analytics 4
+        register_setting('sseo_ai_integrations', 'sseo_ai_ga4_property_id');
+
+        // Google Ads
+        register_setting('sseo_ai_integrations', 'sseo_ai_google_ads_customer_id');
     }
     
     /**
@@ -142,10 +147,9 @@ class ExternalIntegrations
         $gdriveAutoExport = get_option('sseo_ai_gdrive_auto_export', false);
         
         // GSC settings
-        $gscClientId = get_option('sseo_ai_client_gsc_client_id', '');
-        $gscClientSecret = get_option('sseo_ai_client_gsc_client_secret', '');
-        $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
         $gscConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']);
+        $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
+        $gscClientId = ''; // Central OAuth — no per-customer credentials
         
         $notionApiKey = get_option('sseo_ai_notion_api_key', '');
         $notionDatabaseId = get_option('sseo_ai_notion_database_id', '');
@@ -155,6 +159,14 @@ class ExternalIntegrations
 
         // Ahrefs
         $ahrefsApiKey = get_option('sseo_ai_ahrefs_api_key', '');
+
+        // Google Analytics 4
+        $ga4PropertyId = get_option('sseo_ai_ga4_property_id', '');
+        $ga4Connected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']) && !empty($ga4PropertyId);
+
+        // Google Ads
+        $adsCustomerId = get_option('sseo_ai_google_ads_customer_id', '');
+        $adsConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']) && !empty($adsCustomerId);
         
         ?>
         <style>
@@ -398,37 +410,14 @@ class ExternalIntegrations
                     </button>
                         </div>
                         
-                        <!-- Google Search Console OAuth -->
+                        <!-- Google Services (Search Console + Analytics 4 + Google Ads) -->
                         <div class="sseo-ai-dashboard-card">
-                            <h2><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h2>
+                            <h2><?php esc_html_e('Google Services (Search Console, Analytics 4 & Google Ads)', 'ai-seo-client'); ?></h2>
                             <p class="description">
-                                <?php esc_html_e('Connect to Google Search Console to view performance data directly in WordPress.', 'ai-seo-client'); ?>
+                                <?php esc_html_e('Connect your Google account once to access Search Console, Google Analytics 4, and Google Ads data. A single login grants access to all three services.', 'ai-seo-client'); ?>
                             </p>
                     
                     <table class="form-table">
-                        <tr>
-                            <th scope="row">
-                                <label for="gsc_client_id"><?php esc_html_e('OAuth Client ID', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <input type="text" id="gsc_client_id" name="sseo_ai_client_gsc_client_id" 
-                                       value="<?php echo esc_attr($gscClientId); ?>" class="regular-text"
-                                       placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
-                                <p class="description">
-                                    <?php esc_html_e('From Google Cloud Console → APIs & Services → Credentials', 'ai-seo-client'); ?>
-                                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank"><?php esc_html_e('Get credentials', 'ai-seo-client'); ?></a>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">
-                                <label for="gsc_client_secret"><?php esc_html_e('OAuth Client Secret', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <input type="password" id="gsc_client_secret" name="sseo_ai_client_gsc_client_secret" 
-                                       value="<?php echo esc_attr($gscClientSecret); ?>" class="regular-text">
-                            </td>
-                        </tr>
                         <tr>
                             <th scope="row">
                                 <label for="gsc_site_url"><?php esc_html_e('Site URL', 'ai-seo-client'); ?></label>
@@ -449,24 +438,71 @@ class ExternalIntegrations
                     <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
                         <?php if ($gscConnected): ?>
                             <span class="notice notice-success inline" style="margin: 0; padding: 5px 10px;">
-                                ✓ <?php esc_html_e('Connected to Google Search Console', 'ai-seo-client'); ?>
+                                ✓ <?php esc_html_e('Connected to Google', 'ai-seo-client'); ?>
                             </span>
                             <button type="button" class="button" onclick="sseoDisconnectGSC()">
                                 <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
                             </button>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="button button-primary">
-                                <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="button">
+                                <?php esc_html_e('Search Console Dashboard', 'ai-seo-client'); ?>
                             </a>
-                        <?php elseif ($gscClientId && $gscClientSecret): ?>
-                            <button type="button" class="button button-primary" onclick="sseoConnectGSC()">
-                                <?php esc_html_e('Connect to Google Search Console', 'ai-seo-client'); ?>
-                            </button>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-google-data')); ?>" class="button button-primary">
+                                <?php esc_html_e('Google Data Dashboard', 'ai-seo-client'); ?>
+                            </a>
                         <?php else: ?>
-                            <p class="description">
-                                <?php esc_html_e('Enter your OAuth credentials above and save to enable connection.', 'ai-seo-client'); ?>
-                            </p>
+                            <button type="button" class="button button-primary" id="sseo-google-connect-btn" onclick="sseoConnectGoogle()">
+                                <?php esc_html_e('Connect with Google', 'ai-seo-client'); ?>
+                            </button>
                         <?php endif; ?>
                     </div>
+
+                    <?php if ($gscConnected): ?>
+                    <hr style="margin: 25px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+                    <h3 style="margin-top: 20px;"><?php esc_html_e('Google Analytics 4', 'ai-seo-client'); ?></h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="ga4_property_id"><?php esc_html_e('GA4 Property ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="ga4_property_id" name="sseo_ai_ga4_property_id"
+                                       value="<?php echo esc_attr($ga4PropertyId); ?>" class="regular-text"
+                                       placeholder="123456789">
+                                <p class="description">
+                                    <?php esc_html_e('Numeric property ID from GA4 (Admin → Property Settings).', 'ai-seo-client'); ?>
+                                    <?php if ($ga4Connected): ?>
+                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GA4 Connected', 'ai-seo-client'); ?></span>
+                                    <?php elseif ($ga4PropertyId): ?>
+                                        <span style="color: #dba617;"><?php esc_html_e('Property ID set — verify connection on Google Data Dashboard', 'ai-seo-client'); ?></span>
+                                    <?php else: ?>
+                                        <span style="color: #6b7280;"><?php esc_html_e('Set property ID to enable GA4 data', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 20px;"><?php esc_html_e('Google Ads', 'ai-seo-client'); ?></h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="google_ads_customer_id"><?php esc_html_e('Customer ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="google_ads_customer_id" name="sseo_ai_google_ads_customer_id"
+                                       value="<?php echo esc_attr($adsCustomerId); ?>" class="regular-text"
+                                       placeholder="123-456-7890">
+                                <p class="description">
+                                    <?php esc_html_e('Your Google Ads customer ID (10 digits with dashes).', 'ai-seo-client'); ?>
+                                    <?php if ($adsConnected): ?>
+                                        <span style="color: #00a32a;">✓ <?php esc_html_e('Google Ads Connected', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php endif; ?>
                         </div>
                         
                         <!-- Notion Integration -->
@@ -641,58 +677,78 @@ class ExternalIntegrations
             });
         }
         
-        // Google Search Console OAuth
-        function sseoConnectGSC() {
-            // First save the form to store credentials
-            const form = document.querySelector('form[action="options.php"]');
-            const formData = new FormData(form);
+        // Google Identity Services (GIS) — central OAuth flow
+        let sseoGoogleTokenClient = null;
+
+        function sseoConnectGoogle() {
+            const btn = document.getElementById('sseo-google-connect-btn');
+            if (btn) btn.prop ? btn.prop('disabled', true) : (btn.disabled = true);
             
-            // Get the auth URL via REST API
-            wp.apiFetch({ path: '/sseo-ai/v1/gsc-status' }).then(function(status) {
-                if (status.auth_url) {
-                    // Open OAuth popup
-                    const width = 500;
-                    const height = 600;
-                    const left = (screen.width / 2) - (width / 2);
-                    const top = (screen.height / 2) - (height / 2);
-                    
-                    const popup = window.open(
-                        status.auth_url,
-                        'gsc_oauth',
-                        'width=' + width + ',height=' + height + ',left=' + left + ',top=' + top + ',scrollbars=yes'
-                    );
-                    
-                    // Poll for completion
-                    const checkInterval = setInterval(function() {
-                        if (popup.closed) {
-                            clearInterval(checkInterval);
-                            // Check if connected
-                            wp.apiFetch({ path: '/sseo-ai/v1/gsc-status' }).then(function(newStatus) {
-                                if (newStatus.connected) {
-                                    alert('<?php esc_html_e('Successfully connected to Google Search Console!', 'ai-seo-client'); ?>');
-                                    location.reload();
-                                }
-                            });
-                        }
-                    }, 1000);
+            // Fetch status to get the central client ID
+            wp.apiFetch({ path: '/sseo-ai/v1/google-status' }).then(function(status) {
+                if (!status.client_id) {
+                    alert('<?php esc_html_e('Google OAuth is not yet configured. Please contact Fyndable support.', 'ai-seo-client'); ?>');
+                    if (btn) btn.disabled = false;
+                    return;
+                }
+
+                // Load GIS library if not already loaded
+                if (!window.google || !google.accounts || !google.accounts.oauth2) {
+                    const script = document.createElement('script');
+                    script.src = 'https://accounts.google.com/gsi/client';
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = function() { sseoInitGoogleTokenClient(status.client_id, btn); };
+                    document.head.appendChild(script);
                 } else {
-                    alert('<?php esc_html_e('Please enter your Client ID and Client Secret first, then save the settings.', 'ai-seo-client'); ?>');
+                    sseoInitGoogleTokenClient(status.client_id, btn);
                 }
             }).catch(function(err) {
-                alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to get auth URL', 'ai-seo-client'); ?>'));
+                alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to get Google status', 'ai-seo-client'); ?>'));
+                if (btn) btn.disabled = false;
+            });
+        }
+
+        function sseoInitGoogleTokenClient(clientId, btn) {
+            sseoGoogleTokenClient = google.accounts.oauth2.initCodeClient({
+                client_id: clientId,
+                scope: 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
+                ux_mode: 'popup',
+                callback: function(response) {
+                    sseoExchangeGoogleCode(response.code, btn);
+                },
+                error_callback: function(error) {
+                    alert('<?php esc_html_e('Google login failed:', 'ai-seo-client'); ?> ' + (error.message || error.type || 'Unknown error'));
+                    if (btn) btn.disabled = false;
+                }
+            });
+            sseoGoogleTokenClient.requestCode();
+        }
+
+        function sseoExchangeGoogleCode(code, btn) {
+            wp.apiFetch({
+                path: '/sseo-ai/v1/google-exchange',
+                method: 'POST',
+                data: { code: code }
+            }).then(function(response) {
+                alert('<?php esc_html_e('Successfully connected to Google!', 'ai-seo-client'); ?>');
+                location.reload();
+            }).catch(function(err) {
+                alert('<?php esc_html_e('Error connecting:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Token exchange failed', 'ai-seo-client'); ?>'));
+                if (btn) btn.disabled = false;
             });
         }
         
         function sseoDisconnectGSC() {
-            if (!confirm('<?php esc_html_e('Are you sure you want to disconnect Google Search Console?', 'ai-seo-client'); ?>')) {
+            if (!confirm('<?php esc_html_e('Are you sure you want to disconnect your Google account? This will remove access to Search Console, Analytics 4, and Google Ads.', 'ai-seo-client'); ?>')) {
                 return;
             }
             
             wp.apiFetch({
-                path: '/sseo-ai/v1/gsc-disconnect',
+                path: '/sseo-ai/v1/google-disconnect',
                 method: 'POST'
             }).then(function(response) {
-                alert('<?php esc_html_e('Disconnected from Google Search Console.', 'ai-seo-client'); ?>');
+                alert('<?php esc_html_e('Disconnected from Google.', 'ai-seo-client'); ?>');
                 location.reload();
             }).catch(function(err) {
                 alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to disconnect', 'ai-seo-client'); ?>'));
@@ -1190,5 +1246,25 @@ class ExternalIntegrations
         }
         
         return new \WP_Error('notion_error', 'Failed to sync to Notion');
+    }
+
+    /**
+     * AJAX: Save Google configuration (GA4 property ID, Ads customer ID, dev token)
+     */
+    public function ajaxSaveGoogleConfig(): void
+    {
+        check_ajax_referer('sseo_google_config', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Insufficient permissions.', 'ai-seo-client')]);
+        }
+
+        $ga4PropertyId = sanitize_text_field($_POST['ga4_property_id'] ?? '');
+        $adsCustomerId = sanitize_text_field($_POST['ads_customer_id'] ?? '');
+
+        update_option('sseo_ai_ga4_property_id', $ga4PropertyId);
+        update_option('sseo_ai_google_ads_customer_id', $adsCustomerId);
+
+        wp_send_json_success(['message' => __('Google configuration saved.', 'ai-seo-client')]);
     }
 }
