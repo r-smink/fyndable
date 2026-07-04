@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: SSEO AI SaaS Dashboard
- * Description: Multi-tenant license and tenant management dashboard for SSEO AI SaaS
+ * Plugin Name: Fyndable SmartSEO Dashboard
+ * Description: Multi-tenant license and tenant management dashboard for Fyndable SmartSEO
  * Version: 1.2.0
- * Author: SSEO AI
+ * Author: Fyndable
  * Text Domain: sseo-ai-saas
  * Domain Path: /languages
  */
