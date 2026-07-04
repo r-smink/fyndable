@@ -15,7 +15,7 @@ class SmartTags
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('save_post', [$this, 'autoGenerateTags'], 10, 2);
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
     }
 
     public function addMetaBox(): void

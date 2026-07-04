@@ -33,7 +33,7 @@ class ContentDecay
         // Menu registration moved to Client class
         add_action('aiseoclient_decay_check', [$this, 'runDecayCheck']);
         add_action('admin_notices', [$this, 'showDecayAlerts']);
-        add_action('add_meta_boxes', [$this, 'addDecayMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         
         // Cron voor dagelijkse decay check
         if (!wp_next_scheduled('aiseoclient_decay_check')) {

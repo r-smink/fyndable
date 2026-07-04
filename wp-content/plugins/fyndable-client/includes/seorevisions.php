@@ -16,7 +16,7 @@ class SEORevisions
     {
         add_action('admin_init', [$this, 'maybeCreateTable']);
         add_action('save_post', [$this, 'trackRevision'], 10, 2);
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
     }
 
     public function maybeCreateTable(): void

@@ -30,7 +30,7 @@ class ContentPerformanceMonitor
         // Menu registration moved to Client class
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveMetaBox'], 10, 2);
         
         // Track performance changes

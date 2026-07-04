@@ -80,6 +80,7 @@ class Client
     private ?EditorAssistant $editorAssistant = null;
     private ?SocialSharing $socialSharing = null;
     private ?GoogleDataDashboard $googleDataDashboard = null;
+    private ?PostMetaBox $postMetaBox = null;
 
     public function init(): void
     {
@@ -392,6 +393,130 @@ class Client
             $this->whiteLabelManager = new WhiteLabelManager($this->settings);
             $this->whiteLabelManager->register();
         }
+
+        // Unified Post Meta Box with tabs — replaces individual meta boxes
+        $this->initPostMetaBox();
+    }
+
+    /**
+     * Initialize the unified grouped accordion post meta box.
+     * Collects all feature render methods into grouped accordion sections.
+     */
+    private function initPostMetaBox(): void
+    {
+        $this->postMetaBox = new PostMetaBox();
+
+        // Define groups
+        $this->postMetaBox->addGroup('content', __('Content & Keywords', 'ai-seo-client'), '&#9998;');
+        $this->postMetaBox->addGroup('technical', __('Technical SEO', 'ai-seo-client'), '&#9881;');
+        $this->postMetaBox->addGroup('social', __('Social & Schema', 'ai-seo-client'), '&#128241;');
+        $this->postMetaBox->addGroup('ai', __('AI Tools', 'ai-seo-client'), '&#129302;');
+        $this->postMetaBox->addGroup('advanced', __('Advanced', 'ai-seo-client'), '&#9881;');
+
+        // Content & Keywords group
+        $this->postMetaBox->addPanel('content', 'truSEO', __('SEO Score', 'ai-seo-client'), [$this->truSEO, 'renderMetaBox']);
+
+        if ($this->lsiKeywords) {
+            $this->postMetaBox->addPanel('content', 'lsi', __('Keywords', 'ai-seo-client'), [$this->lsiKeywords, 'renderMetaBox']);
+        }
+
+        if ($this->smartTags) {
+            $this->postMetaBox->addPanel('content', 'smarttags', __('Smart Tags', 'ai-seo-client'), [$this->smartTags, 'renderMetaBox']);
+        }
+
+        if ($this->smartInternalLinking) {
+            $this->postMetaBox->addPanel('content', 'internallinks', __('Internal Links', 'ai-seo-client'), [$this->smartInternalLinking, 'renderLinkSuggestionsMetaBox']);
+        }
+
+        if ($this->eeatValidator) {
+            $this->postMetaBox->addPanel('content', 'eeat', __('E-E-A-T', 'ai-seo-client'), [$this->eeatValidator, 'renderMetaBox']);
+        }
+
+        if ($this->contentPerformanceMonitor) {
+            $this->postMetaBox->addPanel('content', 'performance', __('Performance', 'ai-seo-client'), [$this->contentPerformanceMonitor, 'renderMetaBox']);
+        }
+
+        if ($this->contentCalendar) {
+            $this->postMetaBox->addPanel('content', 'workflow', __('Workflow', 'ai-seo-client'), [$this->contentCalendar, 'renderWorkflowMetaBox']);
+        }
+
+        // Technical SEO group
+        if ($this->canonicalUrl) {
+            $this->postMetaBox->addPanel('technical', 'canonical', __('Canonical URL', 'ai-seo-client'), [$this->canonicalUrl, 'renderMetaBox']);
+        }
+
+        if ($this->hreflang) {
+            $this->postMetaBox->addPanel('technical', 'hreflang', __('Hreflang', 'ai-seo-client'), [$this->hreflang, 'renderMetaBox']);
+        }
+
+        if ($this->internationalSEO) {
+            $this->postMetaBox->addPanel('technical', 'international', __('International', 'ai-seo-client'), [$this->internationalSEO, 'renderMetaBox']);
+        }
+
+        if ($this->serpFeatureTracker) {
+            $this->postMetaBox->addPanel('technical', 'serp', __('SERP Features', 'ai-seo-client'), [$this->serpFeatureTracker, 'renderMetaBox']);
+        }
+
+        if ($this->contentDecay) {
+            $this->postMetaBox->addPanel('technical', 'decay', __('Position Trends', 'ai-seo-client'), [$this->contentDecay, 'renderDecayMetaBox']);
+        }
+
+        if ($this->seoRevisions) {
+            $this->postMetaBox->addPanel('technical', 'revisions', __('SEO Revisions', 'ai-seo-client'), [$this->seoRevisions, 'renderMetaBox']);
+        }
+
+        // Social & Schema group
+        if ($this->openGraph) {
+            $this->postMetaBox->addPanel('social', 'opengraph', __('Social Preview', 'ai-seo-client'), [$this->openGraph, 'renderMetaBox']);
+        }
+
+        if ($this->socialSharing) {
+            $this->postMetaBox->addPanel('social', 'social', __('Social Sharing', 'ai-seo-client'), [$this->socialSharing, 'renderMetaBox']);
+        }
+
+        if ($this->schemaMarkup) {
+            $this->postMetaBox->addPanel('social', 'schema', __('Schema', 'ai-seo-client'), [$this->schemaMarkup, 'renderMetaBox']);
+        }
+
+        if ($this->faqSchema) {
+            $this->postMetaBox->addPanel('social', 'faqschema', __('FAQ Schema', 'ai-seo-client'), [$this->faqSchema, 'renderMetaBox']);
+        }
+
+        if ($this->videoSEO) {
+            $this->postMetaBox->addPanel('social', 'videoseo', __('Video SEO', 'ai-seo-client'), [$this->videoSEO, 'renderMetaBox']);
+        }
+
+        if ($this->localSEO) {
+            $this->postMetaBox->addPanel('social', 'local', __('Local SEO', 'ai-seo-client'), [$this->localSEO, 'renderMetaBox']);
+        }
+
+        if ($this->wooSeo) {
+            $this->postMetaBox->addPanel('social', 'woo', __('WooCommerce', 'ai-seo-client'), [$this->wooSeo, 'renderMetaBox']);
+        }
+
+        // AI Tools group
+        if ($this->simpleContentGenerator) {
+            $this->postMetaBox->addPanel('ai', 'contentgen', __('AI Content', 'ai-seo-client'), [$this->simpleContentGenerator, 'renderMetaBox']);
+        }
+
+        if ($this->aiImageGenerator) {
+            $this->postMetaBox->addPanel('ai', 'imagegen', __('AI Image', 'ai-seo-client'), [$this->aiImageGenerator, 'renderMetaBox']);
+        }
+
+        if ($this->aiRepurposer) {
+            $this->postMetaBox->addPanel('ai', 'repurpose', __('AI Repurpose', 'ai-seo-client'), [$this->aiRepurposer, 'renderMetaBox']);
+        }
+
+        if ($this->plagiarismChecker) {
+            $this->postMetaBox->addPanel('ai', 'plagiarism', __('Originality', 'ai-seo-client'), [$this->plagiarismChecker, 'renderMetaBox']);
+        }
+
+        // Advanced group (attachment context for alt text)
+        if ($this->imageAltGenerator) {
+            $this->postMetaBox->addPanel('advanced', 'alttext', __('Alt Text', 'ai-seo-client'), [$this->imageAltGenerator, 'renderMetaBox'], 'attachment');
+        }
+
+        $this->postMetaBox->register();
     }
 
     /**

@@ -19,7 +19,7 @@ class SimpleContentGenerator
 
     public function register(): void
     {
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('wp_ajax_sseo_ai_generate_simple_content', [$this, 'ajaxGenerateContent']);
     }
 

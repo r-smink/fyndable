@@ -34,8 +34,7 @@ class ContentCalendar
         add_action('wp_ajax_sseo_ai_assign_content', [$this, 'ajaxAssignContent']);
         add_action('wp_ajax_sseo_ai_approve_content', [$this, 'ajaxApproveContent']);
         
-        // Add workflow meta box
-        add_action('add_meta_boxes', [$this, 'addWorkflowMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveWorkflowMetaBox'], 10, 2);
     }
     

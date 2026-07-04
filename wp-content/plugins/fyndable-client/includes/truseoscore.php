@@ -15,7 +15,7 @@ class TruSEOSCORE
 
     public function register(): void
     {
-        add_action('add_meta_boxes', [$this, 'addMetaBoxes']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveSeoMeta'], 10, 2);
         add_action('enqueue_block_editor_assets', [$this, 'enqueueAssets']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);

@@ -24,7 +24,7 @@ class PlagiarismChecker
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
     }
 
     public function registerRestRoutes(): void

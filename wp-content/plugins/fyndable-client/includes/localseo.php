@@ -15,7 +15,7 @@ class LocalSEO
     {
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('wp_head', [$this, 'outputLocalSchema'], 5);
-        add_action('add_meta_boxes', [$this, 'addMetaBoxes']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveLocalMeta'], 10, 2);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
     }

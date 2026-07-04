@@ -19,7 +19,7 @@ class SocialSharing
 
     public function register(): void
     {
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('wp_head', [$this, 'injectOpenGraphTags'], 1);
         add_filter('the_content', [$this, 'addShareButtons'], 999);
     }

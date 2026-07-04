@@ -24,7 +24,7 @@ class CanonicalUrl
         remove_action('wp_head', 'rel_canonical');
 
         add_action('wp_head', [$this, 'outputCanonical'], 1);
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveMeta'], 10, 2);
     }
 

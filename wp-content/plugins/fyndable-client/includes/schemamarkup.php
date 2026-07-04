@@ -14,7 +14,7 @@ class SchemaMarkup
     public function register(): void
     {
         add_action('wp_head', [$this, 'outputSchema'], 1);
-        add_action('add_meta_boxes', [$this, 'addMetaBoxes']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveSchemaMeta'], 10, 2);
     }
 

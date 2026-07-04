@@ -46,6 +46,7 @@ require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/dashboardapi.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/healthlogger.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/llmclient.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/postmetabox.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function () {

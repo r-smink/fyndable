@@ -18,7 +18,7 @@ class ImageAltGenerator
     public function register(): void
     {
         add_filter('wp_generate_attachment_metadata', [$this, 'autoGenerateAltOnUpload'], 10, 2);
-        add_action('add_meta_boxes', [$this, 'addMetaBoxes']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('attachment_submitbox_misc_actions', [$this, 'renderAttachmentMeta']);
         add_action('edit_attachment', [$this, 'saveAttachmentAlt']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);

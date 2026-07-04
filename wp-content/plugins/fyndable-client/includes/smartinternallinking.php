@@ -25,7 +25,7 @@ class SmartInternalLinking
     public function register(): void
     {
         // Menu registration moved to Client class
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_get_link_suggestions', [$this, 'ajaxGetLinkSuggestions']);
         add_action('wp_ajax_sseo_ai_detect_orphans', [$this, 'ajaxDetectOrphans']);

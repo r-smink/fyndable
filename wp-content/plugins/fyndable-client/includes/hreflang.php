@@ -21,7 +21,7 @@ class Hreflang
     public function register(): void
     {
         add_action('wp_head', [$this, 'outputHreflangTags'], 2);
-        add_action('add_meta_boxes', [$this, 'addMetaBox']);
+        // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveMeta'], 10, 2);
         add_action('admin_init', [$this, 'registerSettings']);
     }
