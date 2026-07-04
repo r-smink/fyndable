@@ -237,6 +237,17 @@ class LicenseAPI
                 'cost' => ['required' => false, 'type' => 'number', 'default' => 0],
             ],
         ]);
+
+        // Google OAuth start page — renders HTML with GIS popup (only SaaS domain needed in Google Console)
+        register_rest_route($this->namespace, '/google/oauth-start', [
+            'methods' => 'GET',
+            'callback' => [$this, 'googleOAuthStart'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
     }
 
     /**
@@ -768,5 +779,178 @@ class LicenseAPI
         $this->tenants->trackGoogleApiUsage($request->get_param('tenant_key'), $service, $calls, $cost);
 
         return new \WP_REST_Response(['success' => true], 200);
+    }
+
+    /**
+     * REST: Render Google OAuth start page (GIS popup runs on SaaS domain)
+     * This page loads GIS, gets the auth code, exchanges it server-side,
+     * and sends tokens back to the client site via postMessage.
+     */
+    public function googleOAuthStart(\WP_REST_Request $request): void
+    {
+        $licenseKey = $request->get_param('license_key');
+        $tenantKey = $request->get_param('tenant_key');
+
+        // Validate tenant
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+        }
+        if ($tenant['status'] !== 'active') {
+            wp_die(__('Tenant is not active.', 'sseo-ai-saas'), 403);
+        }
+
+        $settings = new SaaSSettings();
+        $clientId = $settings->getGoogleClientId();
+        if (empty($clientId)) {
+            wp_die(__('Google OAuth is not configured on the SaaS dashboard.', 'sseo-ai-saas'), 500);
+        }
+
+        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
+        $exchangeUrl = rest_url($this->namespace . '/google/exchange');
+
+        header('Content-Type: text/html; charset=utf-8');
+        ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connect Google — Fyndable</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
+        .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; max-width: 420px; }
+        .logo { font-size: 24px; font-weight: 700; color: #2563eb; margin-bottom: 8px; }
+        .status { color: #555; margin: 16px 0; }
+        .error { color: #d63638; }
+        .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px 0; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn { display: inline-block; background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #1d4ed8; }
+        .btn:disabled { background: #93a3bf; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">Fyndable</div>
+        <div id="status-area">
+            <p class="status">Click the button below to connect your Google account.</p>
+            <button class="btn" id="google-connect-btn" onclick="sseoStartGoogleAuth()">Connect Google Account</button>
+        </div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        (function() {
+            var CLIENT_ID = <?php echo wp_json_encode($clientId); ?>;
+            var SCOPES = <?php echo wp_json_encode($scopes); ?>;
+            var EXCHANGE_URL = <?php echo wp_json_encode($exchangeUrl); ?>;
+            var LICENSE_KEY = <?php echo wp_json_encode($licenseKey); ?>;
+            var TENANT_KEY = <?php echo wp_json_encode($tenantKey); ?>;
+
+            var statusArea = document.getElementById('status-area');
+
+            function setStatus(msg, isError) {
+                statusArea.innerHTML = '<p class="status' + (isError ? ' error' : '') + '">' + msg + '</p>';
+            }
+
+            function closePopup() {
+                setTimeout(function() { window.close(); }, 1500);
+            }
+
+            var tokenClient = null;
+
+            function initGIS() {
+                if (!window.google || !google.accounts || !google.accounts.oauth2) {
+                    setTimeout(initGIS, 100);
+                    return;
+                }
+
+                tokenClient = google.accounts.oauth2.initCodeClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    ux_mode: 'popup',
+                    callback: function(response) {
+                            setStatus('Exchanging authorization code...');
+
+                            fetch(EXCHANGE_URL, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    license_key: LICENSE_KEY,
+                                    tenant_key: TENANT_KEY,
+                                    code: response.code
+                                })
+                            }).then(function(r) { return r.json(); }).then(function(data) {
+                                if (data.success && data.tokens) {
+                                    // Send tokens to opener window
+                                    if (window.opener) {
+                                        window.opener.postMessage({
+                                            type: 'fyndable_google_tokens',
+                                            tokens: data.tokens,
+                                            success: true
+                                        }, '*');
+                                    }
+                                    setStatus('Successfully connected! Closing...');
+                                    closePopup();
+                                } else {
+                                    var msg = data.message || 'Token exchange failed';
+                                    if (window.opener) {
+                                        window.opener.postMessage({
+                                            type: 'fyndable_google_tokens',
+                                            success: false,
+                                            error: msg
+                                        }, '*');
+                                    }
+                                    setStatus(msg, true);
+                                    closePopup();
+                                }
+                            }).catch(function(err) {
+                                var msg = err.message || 'Network error during exchange';
+                                if (window.opener) {
+                                    window.opener.postMessage({
+                                        type: 'fyndable_google_tokens',
+                                        success: false,
+                                        error: msg
+                                    }, '*');
+                                }
+                                setStatus(msg, true);
+                                closePopup();
+                            });
+                        },
+                        error_callback: function(error) {
+                            var msg = error.message || error.type || 'Google login failed';
+                            if (window.opener) {
+                                window.opener.postMessage({
+                                    type: 'fyndable_google_tokens',
+                                    success: false,
+                                    error: msg
+                                }, '*');
+                            }
+                            setStatus(msg, true);
+                            closePopup();
+                        }
+                });
+            }
+
+            window.sseoStartGoogleAuth = function() {
+                var btn = document.getElementById('google-connect-btn');
+                if (btn) btn.disabled = true;
+                setStatus('Connecting to Google...');
+                if (tokenClient) {
+                    tokenClient.requestCode();
+                } else {
+                    setStatus('Google library still loading, please wait...', true);
+                    if (btn) btn.disabled = false;
+                }
+            }
+
+            window.addEventListener('load', initGIS);
+        })();
+    </script>
+</body>
+</html>
+        <?php
+        exit;
     }
 }

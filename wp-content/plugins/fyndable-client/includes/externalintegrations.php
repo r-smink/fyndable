@@ -677,31 +677,36 @@ class ExternalIntegrations
             });
         }
         
-        // Google Identity Services (GIS) — central OAuth flow
-        let sseoGoogleTokenClient = null;
+        // Google OAuth — SaaS dashboard proxy flow (only fyndable.ai needs to be in Google's authorised origins)
+        let sseoGooglePopup = null;
 
         function sseoConnectGoogle() {
             const btn = document.getElementById('sseo-google-connect-btn');
             if (btn) btn.prop ? btn.prop('disabled', true) : (btn.disabled = true);
-            
-            // Fetch status to get the central client ID
+
+            // Get SaaS dashboard URL and credentials
             wp.apiFetch({ path: '/sseo-ai/v1/google-status' }).then(function(status) {
-                if (!status.client_id) {
+                if (!status.has_credentials) {
                     alert('<?php esc_html_e('Google OAuth is not yet configured. Please contact Fyndable support.', 'ai-seo-client'); ?>');
                     if (btn) btn.disabled = false;
                     return;
                 }
 
-                // Load GIS library if not already loaded
-                if (!window.google || !google.accounts || !google.accounts.oauth2) {
-                    const script = document.createElement('script');
-                    script.src = 'https://accounts.google.com/gsi/client';
-                    script.async = true;
-                    script.defer = true;
-                    script.onload = function() { sseoInitGoogleTokenClient(status.client_id, btn); };
-                    document.head.appendChild(script);
-                } else {
-                    sseoInitGoogleTokenClient(status.client_id, btn);
+                // Open popup to SaaS dashboard OAuth start page
+                var dashboardUrl = '<?php echo esc_js(get_option("sseo_ai_client_dashboard_url", "")); ?>';
+                var licenseKey = '<?php echo esc_js(get_option(SSEO_AI_CLIENT_LICENSE_OPTION, "")); ?>';
+                var tenantKey = '<?php echo esc_js(get_option(SSEO_AI_CLIENT_TENANT_OPTION, "")); ?>';
+
+                var oauthUrl = dashboardUrl.replace(/\/+$/, '') +
+                    '/wp-json/ai-seo-saas/v1/google/oauth-start' +
+                    '?license_key=' + encodeURIComponent(licenseKey) +
+                    '&tenant_key=' + encodeURIComponent(tenantKey);
+
+                sseoGooglePopup = window.open(oauthUrl, 'fyndable_google_oauth', 'width=520,height=680,scrollbars=yes,resizable=yes');
+
+                if (!sseoGooglePopup) {
+                    alert('<?php esc_html_e('Popup blocked. Please allow popups for this site to connect Google.', 'ai-seo-client'); ?>');
+                    if (btn) btn.disabled = false;
                 }
             }).catch(function(err) {
                 alert('<?php esc_html_e('Error:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Failed to get Google status', 'ai-seo-client'); ?>'));
@@ -709,35 +714,30 @@ class ExternalIntegrations
             });
         }
 
-        function sseoInitGoogleTokenClient(clientId, btn) {
-            sseoGoogleTokenClient = google.accounts.oauth2.initCodeClient({
-                client_id: clientId,
-                scope: 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
-                ux_mode: 'popup',
-                callback: function(response) {
-                    sseoExchangeGoogleCode(response.code, btn);
-                },
-                error_callback: function(error) {
-                    alert('<?php esc_html_e('Google login failed:', 'ai-seo-client'); ?> ' + (error.message || error.type || 'Unknown error'));
-                    if (btn) btn.disabled = false;
-                }
-            });
-            sseoGoogleTokenClient.requestCode();
-        }
+        // Listen for tokens from SaaS dashboard popup
+        window.addEventListener('message', function(event) {
+            if (event.data.type !== 'fyndable_google_tokens') return;
 
-        function sseoExchangeGoogleCode(code, btn) {
-            wp.apiFetch({
-                path: '/sseo-ai/v1/google-exchange',
-                method: 'POST',
-                data: { code: code }
-            }).then(function(response) {
-                alert('<?php esc_html_e('Successfully connected to Google!', 'ai-seo-client'); ?>');
-                location.reload();
-            }).catch(function(err) {
-                alert('<?php esc_html_e('Error connecting:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Token exchange failed', 'ai-seo-client'); ?>'));
+            var btn = document.getElementById('sseo-google-connect-btn');
+
+            if (event.data.success && event.data.tokens) {
+                // Store tokens via REST endpoint
+                wp.apiFetch({
+                    path: '/sseo-ai/v1/google/store-tokens',
+                    method: 'POST',
+                    data: { tokens: event.data.tokens }
+                }).then(function(response) {
+                    alert('<?php esc_html_e('Successfully connected to Google!', 'ai-seo-client'); ?>');
+                    location.reload();
+                }).catch(function(err) {
+                    alert('<?php esc_html_e('Error storing tokens:', 'ai-seo-client'); ?> ' + (err.message || '<?php esc_html_e('Unknown error', 'ai-seo-client'); ?>'));
+                    if (btn) btn.disabled = false;
+                });
+            } else {
+                alert('<?php esc_html_e('Google connection failed:', 'ai-seo-client'); ?> ' + (event.data.error || '<?php esc_html_e('Unknown error', 'ai-seo-client'); ?>'));
                 if (btn) btn.disabled = false;
-            });
-        }
+            }
+        });
         
         function sseoDisconnectGSC() {
             if (!confirm('<?php esc_html_e('Are you sure you want to disconnect your Google account? This will remove access to Search Console, Analytics 4, and Google Ads.', 'ai-seo-client'); ?>')) {

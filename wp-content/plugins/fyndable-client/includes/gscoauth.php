@@ -79,6 +79,13 @@ class GscOAuth
             'callback' => [$this, 'restHandleCallback'],
             'permission_callback' => '__return_true',
         ]);
+
+        // Store tokens received from SaaS dashboard (postMessage flow)
+        register_rest_route('sseo-ai/v1', '/google/store-tokens', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restStoreTokens'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
+        ]);
     }
 
     /**
@@ -98,6 +105,21 @@ class GscOAuth
         if (is_wp_error($result)) {
             return new \WP_REST_Response(['error' => $result->get_error_message()], 400);
         }
+
+        return ['success' => true, 'message' => 'Google account connected successfully.'];
+    }
+
+    /**
+     * REST: Store tokens received from SaaS dashboard (postMessage flow)
+     */
+    public function restStoreTokens(\WP_REST_Request $request): \WP_REST_Response|array
+    {
+        $tokens = $request->get_param('tokens');
+        if (!is_array($tokens) || empty($tokens['access_token'])) {
+            return new \WP_REST_Response(['error' => 'Invalid token data'], 400);
+        }
+
+        update_option('aiseoclient_gsc_tokens', $tokens, false);
 
         return ['success' => true, 'message' => 'Google account connected successfully.'];
     }

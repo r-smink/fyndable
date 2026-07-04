@@ -680,7 +680,7 @@ class Client
                 if (document.getElementById("sseo-ai-loader-overlay")) return;
                 var overlay = document.createElement("div");
                 overlay.id = "sseo-ai-loader-overlay";
-                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + '<?php echo esc_js(__('AI is generating... Please wait.', 'ai-seo-client')); ?>' + "</div>";
+                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + ' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . ' + "</div>";
                 document.body.appendChild(overlay);
 
                 var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
