@@ -1839,7 +1839,7 @@ class Client
                         <div class="connection-status">
                             <h2>
                                 <?php esc_html_e('You are connected', 'ai-seo-client'); ?><br>
-                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php esc_html_e('SEO AI Service', 'ai-seo-client'); ?></span>
+                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php esc_html_e('Fyndable Smart SEO', 'ai-seo-client'); ?></span>
                             </h2>
                         </div>
                         
@@ -1909,7 +1909,7 @@ class Client
                 <?php else: ?>
                     <div class="sseo-ai-connection-card">
                         <div class="connection-status">
-                            <h2><?php esc_html_e('Connect to SEO AI Service', 'ai-seo-client'); ?></h2>
+                            <h2><?php esc_html_e('Connect to Fyndable Smart SEO', 'ai-seo-client'); ?></h2>
                             <p><?php esc_html_e('Enter your license details to activate the plugin', 'ai-seo-client'); ?></p>
                         </div>
                         

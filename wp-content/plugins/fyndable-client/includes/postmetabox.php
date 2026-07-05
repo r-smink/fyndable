@@ -214,7 +214,7 @@ class PostMetaBox
 .fyndable-seo-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 18px;
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
     color: #fff;
 }
 .fyndable-seo-logo { font-size: 15px; letter-spacing: 0.3px; opacity: 0.95; }
@@ -290,7 +290,8 @@ CSS;
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
 
-        // Accordion group toggle
+        // Accordion group toggle (exclusive — opening one closes others)
+        var container = document.querySelector('.fyndable-seo-container');
         var groupHeaders = document.querySelectorAll('.fyndable-seo-group-header');
         groupHeaders.forEach(function(header) {
             header.addEventListener('click', function(e) {
@@ -299,10 +300,18 @@ CSS;
                 if (!group) return;
                 var body = group.querySelector('.fyndable-seo-group-body');
                 var isOpen = group.classList.contains('open');
-                if (isOpen) {
-                    group.classList.remove('open');
-                    if (body) body.style.display = 'none';
-                } else {
+
+                // Close all groups
+                if (container) {
+                    container.querySelectorAll('.fyndable-seo-group').forEach(function(g) {
+                        g.classList.remove('open');
+                        var b = g.querySelector('.fyndable-seo-group-body');
+                        if (b) b.style.display = 'none';
+                    });
+                }
+
+                // Open clicked group if it was closed
+                if (!isOpen) {
                     group.classList.add('open');
                     if (body) body.style.display = '';
                 }

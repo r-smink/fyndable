@@ -51,7 +51,7 @@ msgid "to the"
 msgstr "met de"
 
 msgid "SEO AI Service"
-msgstr "SEO AI Service"
+msgstr "Fyndable Smart SEO"
 
 msgid "Your connection e-mail:"
 msgstr "Jouw verbindings e-mail:"
@@ -72,7 +72,7 @@ msgid "Disconnect"
 msgstr "Verbinding verbreken"
 
 msgid "Connect to SEO AI Service"
-msgstr "Verbind met SEO AI Service"
+msgstr "Verbind met Fyndable Smart SEO"
 
 msgid "Enter your license details to activate the plugin"
 msgstr "Voer je licentiegegevens in om de plugin te activeren"
