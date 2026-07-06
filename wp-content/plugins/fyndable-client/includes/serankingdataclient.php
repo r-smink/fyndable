@@ -194,6 +194,23 @@ class SERankingDataClient
         ]);
     }
 
+    /**
+     * Compare keyword rankings between two domains (keyword overlap / gap).
+     * diff: 'common' = both rank, 'missing' = primary ranks but compare doesn't,
+     *       'extra' = compare ranks but primary doesn't.
+     */
+    public function getKeywordComparison(string $primaryDomain, string $compareDomain, string $source = 'us', string $type = 'organic', string $diff = 'common', int $limit = 50): array|\WP_Error
+    {
+        return $this->get('domain/keywords/comparison', [
+            'source' => $source,
+            'domain' => $primaryDomain,
+            'compare_domain' => $compareDomain,
+            'type' => $type,
+            'diff' => $diff,
+            'limit' => $limit,
+        ]);
+    }
+
     // ---------------------------------------------------------------------
     // Keyword Research
     // ---------------------------------------------------------------------
@@ -269,13 +286,76 @@ class SERankingDataClient
     // ---------------------------------------------------------------------
 
     /**
+     * Cached map of common source codes to SE Ranking SERP location_ids.
+     * These are country-level location IDs returned by the /serp/classic/locations endpoint.
+     */
+    private const SOURCE_LOCATION_MAP = [
+        'us' => 2840,
+        'uk' => 2826,
+        'gb' => 2826,
+        'nl' => 2740,
+        'de' => 2756,
+        'fr' => 2750,
+        'be' => 2710,
+        'es' => 2764,
+        'it' => 2774,
+        'au' => 2674,
+        'ca' => 2700,
+        'br' => 2670,
+    ];
+
+    /**
+     * Search SE Ranking SERP locations by country code.
+     * Returns an array of location objects with id, name, etc.
+     */
+    public function getSerpLocations(string $countryCode, string $q = ''): array|\WP_Error
+    {
+        $params = ['country_code' => strtoupper($countryCode)];
+        if ($q !== '') {
+            $params['q'] = $q;
+        }
+        return $this->get('serp/classic/locations', $params, true);
+    }
+
+    /**
+     * Resolve a source country code to a numeric SERP location_id.
+     * Uses a static map first, then falls back to the API locations endpoint.
+     */
+    public function resolveLocationId(string $source): int|\WP_Error
+    {
+        $source = strtolower($source);
+        if (isset(self::SOURCE_LOCATION_MAP[$source])) {
+            return self::SOURCE_LOCATION_MAP[$source];
+        }
+
+        $locations = $this->getSerpLocations($source);
+        if (is_wp_error($locations)) {
+            return $locations;
+        }
+
+        $locs = is_array($locations) ? $locations : [];
+        foreach ($locs as $loc) {
+            if (isset($loc['id']) && (int) $loc['id'] > 0) {
+                return (int) $loc['id'];
+            }
+        }
+
+        return new \WP_Error('seranking_location', sprintf(__('No SERP location found for source "%s".', 'ai-seo-client'), $source));
+    }
+
+    /**
      * Add a classic SERP task for a keyword. Returns a task id to poll.
      */
     public function addSerpTask(string $keyword, string $source = 'us'): array|\WP_Error
     {
+        $locationId = $this->resolveLocationId($source);
+        if (is_wp_error($locationId)) {
+            return $locationId;
+        }
+
         return $this->post('serp/classic/tasks', [], [
             'query' => $keyword,
-            'source' => $source,
+            'location_id' => $locationId,
         ], false);
     }
 
@@ -285,5 +365,66 @@ class SERankingDataClient
     public function getSerpTask(string $taskId): array|\WP_Error
     {
         return $this->get('serp/classic/tasks', ['id' => $taskId], false);
+    }
+
+    // ---------------------------------------------------------------------
+    // AI Search Visibility
+    // ---------------------------------------------------------------------
+
+    /**
+     * Get aggregated AI search overview (all engines) — current snapshot.
+     */
+    public function getAiSearchOverviewAggregated(string $target, string $source = 'us', ?string $brand = null, string $scope = 'base_domain'): array|\WP_Error
+    {
+        $params = [
+            'target' => $target,
+            'source' => $source,
+            'scope' => $scope,
+        ];
+        if ($brand !== null && $brand !== '') {
+            $params['brand'] = $brand;
+        }
+        return $this->get('ai-search/overview/aggregated/current', $params);
+    }
+
+    /**
+     * Get AI search overview for a single engine — current snapshot.
+     */
+    public function getAiSearchOverviewByEngine(string $target, string $engine, string $source = 'us', ?string $brand = null, string $scope = 'base_domain'): array|\WP_Error
+    {
+        $params = [
+            'target' => $target,
+            'source' => $source,
+            'engine' => $engine,
+            'scope' => $scope,
+        ];
+        if ($brand !== null && $brand !== '') {
+            $params['brand'] = $brand;
+        }
+        return $this->get('ai-search/overview/by-engine/current', $params);
+    }
+
+    /**
+     * Discover the brand name associated with a target domain.
+     */
+    public function discoverBrand(string $target, string $source = 'us'): array|\WP_Error
+    {
+        return $this->get('ai-search/discover-brand', [
+            'target' => $target,
+            'source' => $source,
+        ]);
+    }
+
+    /**
+     * Get prompts by target — where a domain/URL appears in LLM responses.
+     */
+    public function getPromptsByTarget(string $target, string $source = 'us', string $engine = 'ai-overview', int $limit = 50): array|\WP_Error
+    {
+        return $this->get('ai-search/prompts-by-target', [
+            'target' => $target,
+            'source' => $source,
+            'engine' => $engine,
+            'limit' => $limit,
+        ]);
     }
 }

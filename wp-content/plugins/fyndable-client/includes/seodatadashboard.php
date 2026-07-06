@@ -117,6 +117,12 @@ class SEODataDashboard
             'callback' => [$this, 'restGetSerp'],
             'permission_callback' => fn() => current_user_can('manage_options'),
         ]);
+
+        register_rest_route('sseo-ai/v1', '/seo-data/ai-search', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetAiSearch'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
+        ]);
     }
 
     // ---------------------------------------------------------------------
@@ -179,7 +185,7 @@ class SEODataDashboard
     }
 
     /**
-     * Competitors: competitor domains + keyword gap (their keywords we miss).
+     * Competitors: competitor domains + optional keyword gap comparison.
      */
     public function restGetCompetitors(\WP_REST_Request $request): array
     {
@@ -189,14 +195,23 @@ class SEODataDashboard
 
         $domain = $this->resolveDomain($request);
         $source = $this->resolveSource($request);
+        $compareDomain = sanitize_text_field((string) $request->get_param('compare_domain'));
 
         $competitors = $this->seData->getDomainCompetitors($domain, $source, 'organic');
 
-        return [
+        $result = [
             'domain' => $domain,
             'source' => $source,
             'competitors' => is_wp_error($competitors) ? ['error' => $competitors->get_error_message()] : $competitors,
         ];
+
+        if ($compareDomain !== '') {
+            $gap = $this->seData->getKeywordComparison($domain, $compareDomain, $source, 'organic', 'missing', 50);
+            $result['compare_domain'] = $compareDomain;
+            $result['keyword_gap'] = is_wp_error($gap) ? ['error' => $gap->get_error_message()] : $gap;
+        }
+
+        return $result;
     }
 
     /**
@@ -229,6 +244,50 @@ class SEODataDashboard
             return ['error' => $task->get_error_message()];
         }
         return ['task' => $task];
+    }
+
+    /**
+     * AI Search: aggregated + per-engine overview, brand discovery, prompts.
+     */
+    public function restGetAiSearch(\WP_REST_Request $request): array
+    {
+        if (!$this->seData || !$this->seData->isConfigured()) {
+            return ['error' => __('SE Ranking API key not configured.', 'ai-seo-client')];
+        }
+
+        $domain = $this->resolveDomain($request);
+        $source = $this->resolveSource($request);
+        $engine = sanitize_text_field((string) $request->get_param('engine'));
+        if ($engine === '') {
+            $engine = 'ai-overview';
+        }
+
+        $engines = ['ai-overview', 'chatgpt', 'perplexity', 'gemini', 'ai-mode'];
+
+        $aggregated = $this->seData->getAiSearchOverviewAggregated($domain, $source);
+        $brand = $this->seData->discoverBrand($domain, $source);
+        $brandName = '';
+        if (!is_wp_error($brand) && isset($brand['brand'])) {
+            $brandName = (string) $brand['brand'];
+        }
+
+        $perEngine = [];
+        foreach ($engines as $eng) {
+            $perEngine[$eng] = $this->seData->getAiSearchOverviewByEngine($domain, $eng, $source, $brandName !== '' ? $brandName : null);
+        }
+
+        $prompts = $this->seData->getPromptsByTarget($domain, $source, $engine, 25);
+
+        return [
+            'domain' => $domain,
+            'source' => $source,
+            'brand' => $brandName,
+            'aggregated' => is_wp_error($aggregated) ? ['error' => $aggregated->get_error_message()] : $aggregated,
+            'per_engine' => array_map(function ($r) {
+                return is_wp_error($r) ? ['error' => $r->get_error_message()] : $r;
+            }, $perEngine),
+            'prompts' => is_wp_error($prompts) ? ['error' => $prompts->get_error_message()] : $prompts,
+        ];
     }
 
     public function renderPage(): void
@@ -326,6 +385,7 @@ class SEODataDashboard
                         <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'keywords')"><?php esc_html_e('Keyword Research', 'ai-seo-client'); ?></button>
                         <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'serp')"><?php esc_html_e('SERP', 'ai-seo-client'); ?></button>
                         <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'competitors')"><?php esc_html_e('Competitors', 'ai-seo-client'); ?></button>
+                        <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'aisearch')"><?php esc_html_e('AI Search', 'ai-seo-client'); ?></button>
                         <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'overview')"><?php esc_html_e('Projects / Ahrefs', 'ai-seo-client'); ?></button>
                     </div>
 
@@ -340,6 +400,9 @@ class SEODataDashboard
                     </div>
                     <div id="panel-competitors" class="seo-data-panel">
                         <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load competitors.', 'ai-seo-client'); ?></p>
+                    </div>
+                    <div id="panel-aisearch" class="seo-data-panel">
+                        <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load AI search visibility.', 'ai-seo-client'); ?></p>
                     </div>
                     <div id="panel-overview" class="seo-data-panel">
                         <div id="panel-overview-summary"></div>
@@ -398,6 +461,7 @@ class SEODataDashboard
             else if (tab === 'keywords') sseoLoadKeywords();
             else if (tab === 'serp') sseoLoadSerp();
             else if (tab === 'competitors') sseoLoadCompetitors();
+            else if (tab === 'aisearch') sseoLoadAiSearch();
             else if (tab === 'overview') { sseoLoadOverview(); sseoLoadSERanking(); sseoLoadAhrefs(); }
         }
 
@@ -488,27 +552,149 @@ class SEODataDashboard
             var inp = sseoInputs();
             var c = document.getElementById('panel-competitors');
             sseoLoad('panel-competitors');
-            wp.apiFetch({ path: '/sseo-ai/v1/seo-data/competitors?domain=' + encodeURIComponent(inp.domain) + '&source=' + encodeURIComponent(inp.source) }).then(function(data) {
+            var compareDomain = (document.getElementById('seo-input-compare-domain') || {}).value || '';
+            var path = '/sseo-ai/v1/seo-data/competitors?domain=' + encodeURIComponent(inp.domain) + '&source=' + encodeURIComponent(inp.source);
+            if (compareDomain) path += '&compare_domain=' + encodeURIComponent(compareDomain.trim());
+            wp.apiFetch({ path: path }).then(function(data) {
                 if (data.error) { c.innerHTML = sseoErr(data.error); return; }
-                var comps = Array.isArray(data.competitors) ? data.competitors : [];
-                if (data.competitors && data.competitors.error) { c.innerHTML = sseoErr(data.competitors.error); return; }
-                if (!comps.length) { c.innerHTML = '<p class="seo-loading">' + SSEO_STR.noData + '</p>'; return; }
                 var html = '<h3><?php echo esc_js(__('Organic Competitors for', 'ai-seo-client')); ?> ' + sseoEsc(data.domain) + '</h3>';
-                html += '<table class="seo-data-table"><thead><tr>' +
-                    '<th><?php echo esc_js(__('Competitor', 'ai-seo-client')); ?></th>' +
-                    '<th><?php echo esc_js(__('Common Keywords', 'ai-seo-client')); ?></th>' +
-                    '<th><?php echo esc_js(__('Keyword Gap (missing)', 'ai-seo-client')); ?></th>' +
-                    '<th><?php echo esc_js(__('Total Keywords', 'ai-seo-client')); ?></th>' +
-                    '<th><?php echo esc_js(__('Est. Traffic', 'ai-seo-client')); ?></th>' +
-                    '</tr></thead><tbody>';
-                comps.forEach(function(comp) {
-                    html += '<tr><td>' + sseoEsc(comp.domain) + '</td>' +
-                        '<td>' + sseoNum(comp.common_keywords) + '</td>' +
-                        '<td class="seo-diff-neg">' + sseoNum(comp.missing_keywords) + '</td>' +
-                        '<td>' + sseoNum(comp.total_keywords) + '</td>' +
-                        '<td>' + sseoNum(comp.traffic_sum) + '</td></tr>';
+
+                // Compare domain input
+                html += '<div class="seo-search-bar" style="margin-bottom:15px;"><div class="seo-search-field"><label for="seo-input-compare-domain"><?php echo esc_js(__('Compare with domain (optional)', 'ai-seo-client')); ?></label><input type="text" id="seo-input-compare-domain" placeholder="<?php echo esc_attr(__('e.g. competitor.com', 'ai-seo-client')); ?>" value="' + sseoEsc(compareDomain) + '"></div><button type="button" onclick="sseoLoadCompetitors()"><?php echo esc_js(__('Compare', 'ai-seo-client')); ?></button></div>';
+
+                var comps = Array.isArray(data.competitors) ? data.competitors : [];
+                if (data.competitors && data.competitors.error) {
+                    html += sseoErr(data.competitors.error);
+                } else if (!comps.length) {
+                    html += '<p class="seo-loading">' + SSEO_STR.noData + '</p>';
+                } else {
+                    html += '<table class="seo-data-table"><thead><tr>' +
+                        '<th><?php echo esc_js(__('Competitor', 'ai-seo-client')); ?></th>' +
+                        '<th><?php echo esc_js(__('Relevance', 'ai-seo-client')); ?></th>' +
+                        '<th><?php echo esc_js(__('Common Keywords', 'ai-seo-client')); ?></th>' +
+                        '<th><?php echo esc_js(__('Keyword Gap', 'ai-seo-client')); ?></th>' +
+                        '<th><?php echo esc_js(__('Total Keywords', 'ai-seo-client')); ?></th>' +
+                        '<th><?php echo esc_js(__('Est. Traffic', 'ai-seo-client')); ?></th>' +
+                        '<th><?php echo esc_js(__('Traffic Value', 'ai-seo-client')); ?></th>' +
+                        '</tr></thead><tbody>';
+                    comps.forEach(function(comp) {
+                        html += '<tr>' +
+                            '<td><strong>' + sseoEsc(comp.domain) + '</strong></td>' +
+                            '<td>' + sseoNum(comp.domain_relevance) + '%</td>' +
+                            '<td>' + sseoNum(comp.common_keywords) + '</td>' +
+                            '<td class="seo-diff-neg">' + sseoNum(comp.missing_keywords) + '</td>' +
+                            '<td>' + sseoNum(comp.total_keywords) + '</td>' +
+                            '<td>' + sseoNum(comp.traffic_sum) + '</td>' +
+                            '<td>$' + sseoNum(comp.price_sum) + '</td></tr>';
+                    });
+                    html += '</tbody></table>';
+                }
+
+                // Keyword gap comparison
+                if (data.keyword_gap) {
+                    html += '<div class="seo-data-section"><h3><?php echo esc_js(__('Keyword Gap: keywords you rank for but', 'ai-seo-client')); ?> ' + sseoEsc(data.compare_domain) + ' <?php echo esc_js(__('does not', 'ai-seo-client')); ?></h3>';
+                    if (data.keyword_gap.error) {
+                        html += sseoErr(data.keyword_gap.error);
+                    } else {
+                        var gapRows = (data.keyword_gap.keywords) ? data.keyword_gap.keywords : (Array.isArray(data.keyword_gap) ? data.keyword_gap : []);
+                        if (gapRows.length) {
+                            html += '<table class="seo-data-table"><thead><tr><th><?php echo esc_js(__('Keyword', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Position', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Volume', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Traffic', 'ai-seo-client')); ?></th></tr></thead><tbody>';
+                            gapRows.forEach(function(k) {
+                                html += '<tr><td>' + sseoEsc(k.keyword) + '</td>' +
+                                    '<td>#' + sseoEsc(k.position) + '</td>' +
+                                    '<td>' + sseoNum(k.volume) + '</td>' +
+                                    '<td>' + sseoNum(k.traffic) + '</td></tr>';
+                            });
+                            html += '</tbody></table>';
+                        } else {
+                            html += '<p class="seo-loading">' + SSEO_STR.noData + '</p>';
+                        }
+                    }
+                    html += '</div>';
+                }
+
+                c.innerHTML = html;
+            }).catch(function(err) { c.innerHTML = sseoErr(err.message || 'Error'); });
+        }
+
+        function sseoAiSummaryCard(label, val, change) {
+            var cls = '';
+            var arrow = '';
+            if (change !== null && change !== undefined && change !== '') {
+                var n = parseFloat(change);
+                if (!isNaN(n)) {
+                    if (n > 0) { cls = 'seo-diff-pos'; arrow = ' (&#9650; ' + n + '%)'; }
+                    else if (n < 0) { cls = 'seo-diff-neg'; arrow = ' (&#9660; ' + n + '%)'; }
+                }
+            }
+            return '<div class="seo-stat-card"><div class="seo-stat-value ' + cls + '">' + sseoNum(val) + arrow + '</div><div class="seo-stat-label">' + sseoEsc(label) + '</div></div>';
+        }
+
+        function sseoLoadAiSearch() {
+            var inp = sseoInputs();
+            var c = document.getElementById('panel-aisearch');
+            sseoLoad('panel-aisearch');
+            wp.apiFetch({ path: '/sseo-ai/v1/seo-data/ai-search?domain=' + encodeURIComponent(inp.domain) + '&source=' + encodeURIComponent(inp.source) }).then(function(data) {
+                if (data.error) { c.innerHTML = sseoErr(data.error); return; }
+                var html = '<h3 style="color:#111827;">' + sseoEsc(data.domain) + ' <span style="color:#94a3b8;font-size:12px;">(' + sseoEsc(data.source) + ')</span></h3>';
+                if (data.brand) {
+                    html += '<p style="color:#64748b;font-size:13px;margin-bottom:15px;"><?php echo esc_js(__("Detected brand:", "ai-seo-client")); ?> <strong>' + sseoEsc(data.brand) + '</strong></p>';
+                }
+
+                // Aggregated overview
+                if (data.aggregated && !data.aggregated.error) {
+                    var s = data.aggregated.summary || {};
+                    html += '<div class="seo-data-section"><h3><?php echo esc_js(__("Aggregated AI Search Visibility", "ai-seo-client")); ?></h3><div class="seo-stat-grid">';
+                    if (s.brand_presence) html += sseoAiSummaryCard('<?php echo esc_js(__("Brand Presence", "ai-seo-client")); ?>', s.brand_presence.current, s.brand_presence.change_percent);
+                    if (s.link_presence) html += sseoAiSummaryCard('<?php echo esc_js(__("Link Presence", "ai-seo-client")); ?>', s.link_presence.current, s.link_presence.change_percent);
+                    if (s.ai_opportunity_traffic) html += sseoAiSummaryCard('<?php echo esc_js(__("AI Opportunity Traffic", "ai-seo-client")); ?>', s.ai_opportunity_traffic.current, s.ai_opportunity_traffic.change_percent);
+                    if (s.average_position) html += sseoAiSummaryCard('<?php echo esc_js(__("Avg Position", "ai-seo-client")); ?>', s.average_position.current, s.average_position.change_percent);
+                    html += '</div></div>';
+                } else if (data.aggregated && data.aggregated.error) {
+                    html += sseoErr(data.aggregated.error);
+                }
+
+                // Per-engine breakdown
+                var engines = ['ai-overview', 'chatgpt', 'perplexity', 'gemini', 'ai-mode'];
+                var engineLabels = { 'ai-overview': 'Google AI Overview', 'chatgpt': 'ChatGPT', 'perplexity': 'Perplexity', 'gemini': 'Gemini', 'ai-mode': 'Google AI Mode' };
+                html += '<div class="seo-data-section"><h3><?php echo esc_js(__("Per-Engine Breakdown", "ai-seo-client")); ?></h3>';
+                html += '<table class="seo-data-table"><thead><tr><th><?php echo esc_js(__("Engine", "ai-seo-client")); ?></th><th><?php echo esc_js(__("Brand Presence", "ai-seo-client")); ?></th><th><?php echo esc_js(__("Link Presence", "ai-seo-client")); ?></th><th><?php echo esc_js(__("AI Traffic", "ai-seo-client")); ?></th><th><?php echo esc_js(__("Avg Position", "ai-seo-client")); ?></th></tr></thead><tbody>';
+                engines.forEach(function(eng) {
+                    var ed = data.per_engine && data.per_engine[eng];
+                    if (!ed || ed.error) {
+                        html += '<tr><td>' + sseoEsc(engineLabels[eng] || eng) + '</td><td colspan="4" style="color:#94a3b8;">' + (ed && ed.error ? sseoEsc(ed.error) : SSEO_STR.noData) + '</td></tr>';
+                        return;
+                    }
+                    var es = ed.summary || {};
+                    html += '<tr><td><strong>' + sseoEsc(engineLabels[eng] || eng) + '</strong></td>' +
+                        '<td>' + sseoNum(es.brand_presence ? es.brand_presence.current : null) + '</td>' +
+                        '<td>' + sseoNum(es.link_presence ? es.link_presence.current : null) + '</td>' +
+                        '<td>' + sseoNum(es.ai_opportunity_traffic ? es.ai_opportunity_traffic.current : null) + '</td>' +
+                        '<td>' + sseoNum(es.average_position ? es.average_position.current : null) + '</td></tr>';
                 });
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
+
+                // Prompts
+                html += '<div class="seo-data-section"><h3><?php echo esc_js(__("Sample Prompts (AI Overview)", "ai-seo-client")); ?></h3>';
+                var prompts = data.prompts;
+                if (prompts && prompts.error) {
+                    html += sseoErr(prompts.error);
+                } else {
+                    var pRows = (prompts && prompts.prompts) ? prompts.prompts : (Array.isArray(prompts) ? prompts : []);
+                    if (pRows.length) {
+                        html += '<table class="seo-data-table"><thead><tr><th><?php echo esc_js(__("Prompt", "ai-seo-client")); ?></th><th><?php echo esc_js(__("Position", "ai-seo-client")); ?></th></tr></thead><tbody>';
+                        pRows.forEach(function(p) {
+                            var promptText = p.prompt || p.query || p.text || '';
+                            var pos = p.position || p.pos || '';
+                            html += '<tr><td style="max-width:500px;">' + sseoEsc(promptText) + '</td><td>' + (pos ? '#' + sseoEsc(pos) : '&mdash;') + '</td></tr>';
+                        });
+                        html += '</tbody></table>';
+                    } else {
+                        html += '<p class="seo-loading">' + SSEO_STR.noData + '</p>';
+                    }
+                }
+                html += '</div>';
+
                 c.innerHTML = html;
             }).catch(function(err) { c.innerHTML = sseoErr(err.message || 'Error'); });
         }
