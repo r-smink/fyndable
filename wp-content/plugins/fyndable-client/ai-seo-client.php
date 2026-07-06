@@ -48,6 +48,10 @@ require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/llmclient.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/client.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/postmetabox.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/fyndabledashboard.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/serankingclient.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/serankingdataclient.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/ahrefsclient.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/seodatadashboard.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function () {
