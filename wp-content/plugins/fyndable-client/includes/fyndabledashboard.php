@@ -251,7 +251,7 @@ class FyndableDashboard
                     // Handle this by modifying the _wp_http_referer to include fyndable_shell
                     document.addEventListener("DOMContentLoaded", function() {
                         document.querySelectorAll("form").forEach(function(form) {
-                            var formAction = form.getAttribute('action') || '';
+                            var formAction = form.getAttribute("action") || "";
                             if (formAction.indexOf("options.php") !== -1) {
                                 // Update the _wp_http_referer to include fyndable_shell
                                 var referrer = form.querySelector("input[name=_wp_http_referer]");
