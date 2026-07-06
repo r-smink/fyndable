@@ -10,7 +10,7 @@ namespace SSEOAIClient;
  */
 class Client
 {
-    private LicenseValidator $licenseValidator;
+    public LicenseValidator $licenseValidator;
     private DashboardAPI $dashboardAPI;
     private Settings $settings;
     private ?LlmClient $llmClient = null;
@@ -81,6 +81,8 @@ class Client
     private ?SocialSharing $socialSharing = null;
     private ?GoogleDataDashboard $googleDataDashboard = null;
     private ?PostMetaBox $postMetaBox = null;
+    private ?FyndableDashboard $fyndableDashboard = null;
+    private ?BrandVisibilityTracker $brandVisibility = null;
 
     public function init(): void
     {
@@ -141,6 +143,9 @@ class Client
 
         // Create LLM tracking table
         LLMTracker::createTable();
+
+        // Create brand visibility table
+        BrandVisibilityTracker::createTable();
     }
 
     /**
@@ -255,6 +260,10 @@ class Client
         // SEO Data Dashboard - available to all tiers
         $this->seoDataDashboard = new SEODataDashboard($this->settings);
         $this->seoDataDashboard->register();
+
+        // Brand & AI Search Visibility - available to all tiers
+        $this->brandVisibility = new BrandVisibilityTracker($this->llmClient, $this->settings);
+        add_action('rest_api_init', [$this->brandVisibility, 'registerRestRoutes']);
 
         // Ideas Management - available to all tiers
         $this->ideas = new Ideas($this->settings, $this->llmClient);
@@ -529,22 +538,26 @@ class Client
         
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('Fynable', 'ai-seo-client');
-        
-        // Main menu
+        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('Fyndable', 'ai-seo-client');
+
+        // Initialize Fyndable Dashboard shell
+        $this->fyndableDashboard = new FyndableDashboard($this);
+        $this->fyndableDashboard->register();
+
+        // Main menu — renders the full-page Fyndable dashboard shell
         add_menu_page(
             $menuName,
             $menuName,
             'manage_options',
-            'ai-seo-client',
-            [$this, 'renderConnectionPage'],
+            'fyndable-dashboard',
+            [$this, 'renderFyndableDashboard'],
             'dashicons-chart-line',
             30
         );
 
-        // Connection (first submenu replaces main menu text)
+        // Connection page (separate slug so it can load in iframe)
         add_submenu_page(
-            'ai-seo-client',
+            'fyndable-dashboard',
             __('Connection', 'ai-seo-client'),
             __('🔗 Connection', 'ai-seo-client'),
             'manage_options',
@@ -558,27 +571,27 @@ class Client
             
             // 1. Dashboard / Statistics - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Dashboard', 'ai-seo-client'),
                 __('📊 Dashboard', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-dashboard',
                 [$this, 'renderDashboardPage']
             );
-            
+
             // 2. Content Calendar - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Content Calendar', 'ai-seo-client'),
                 __('📅 Content Calendar', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-content-calendar',
                 [$this, 'renderContentCalendarPage']
             );
-            
+
             // 3. AI Tools - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('AI Tools', 'ai-seo-client'),
                 __('🤖 AI Tools', 'ai-seo-client'),
                 'manage_options',
@@ -588,7 +601,7 @@ class Client
 
             // 4. Ideas - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Ideas', 'ai-seo-client'),
                 __('💡 Ideas', 'ai-seo-client'),
                 'manage_options',
@@ -598,7 +611,7 @@ class Client
 
             // 5. SEO AI Created Posts - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Created Posts', 'ai-seo-client'),
                 __('📝 Created Posts', 'ai-seo-client'),
                 'manage_options',
@@ -608,37 +621,37 @@ class Client
 
             // 6. Keywords - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Keywords', 'ai-seo-client'),
                 __('🎯 Keywords', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-keywords',
                 [$this, 'renderKeywordsPage']
             );
-            
+
             // 7. Link Manager (Smart Internal Linking) - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Link Manager', 'ai-seo-client'),
                 __('🔗 Link Manager', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-link-manager',
                 [$this, 'renderLinkManagerPage']
             );
-            
+
             // 8. Sitemaps - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Sitemaps', 'ai-seo-client'),
                 __('🗺️ Sitemaps', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-sitemaps',
                 [$this, 'renderSitemapsPage']
             );
-            
+
             // 9. Integrations - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Integrations', 'ai-seo-client'),
                 __('🔌 Integrations', 'ai-seo-client'),
                 'manage_options',
@@ -648,7 +661,7 @@ class Client
 
             // 9b. SEO Data Dashboard (SE Ranking / Ahrefs) - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('SEO Data Dashboard', 'ai-seo-client'),
                 __('📈 SEO Data', 'ai-seo-client'),
                 'manage_options',
@@ -656,52 +669,52 @@ class Client
                 [$this, 'renderSEODataDashboardPage']
             );
 
-            // 9c. LLM Tracker - all tiers
+            // 9c. Brand & AI Search Visibility - all tiers
             add_submenu_page(
-                'ai-seo-client',
-                __('LLM Tracker', 'ai-seo-client'),
-                __('🧠 LLM Tracker', 'ai-seo-client'),
+                'fyndable-dashboard',
+                __('AI Search Visibility', 'ai-seo-client'),
+                __('👁️ AI Search Visibility', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-llm-tracker',
-                [$this, 'renderLLMTrackerPage']
+                [$this, 'renderBrandVisibilityPage']
             );
-            
+
             // Professional+ features: Topic Clusters, Site Audit, Rank Tracker
             $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
             if (in_array($tier, $professionalTiers)) {
                 // 10. Topic Clusters
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Topic Clusters', 'ai-seo-client'),
                     __('🎯 Topic Clusters', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-topic-clusters',
                     [$this, 'renderTopicClusterPage']
                 );
-                
+
                 // 11. Site Audit
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Site Audit', 'ai-seo-client'),
                     __('🔍 Site Audit', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-site-audit',
                     [$this, 'renderSiteAuditPage']
                 );
-                
+
                 // 12. Rank Tracker
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Rank Tracker', 'ai-seo-client'),
                     __('📈 Rank Tracker', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-rank-tracker',
                     [$this, 'renderRankTrackerPage']
                 );
-                
+
                 // 13. Search Console (GSC) - Professional+
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Search Console', 'ai-seo-client'),
                     __('📊 Search Console', 'ai-seo-client'),
                     'manage_options',
@@ -711,17 +724,17 @@ class Client
 
                 // 13b. Google Data Dashboard (GSC + GA4 + Ads) - Professional+
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Google Data', 'ai-seo-client'),
                     __('📈 Google Data', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-google-data',
                     [$this, 'renderGoogleDataPage']
                 );
-                
+
                 // 14. A/B Testing - Professional+
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('A/B Testing', 'ai-seo-client'),
                     __('🧪 A/B Testing', 'ai-seo-client'),
                     'manage_options',
@@ -730,16 +743,47 @@ class Client
                 );
             }
         }
-        
+
         // Settings (always visible)
         add_submenu_page(
-            'ai-seo-client',
+            'fyndable-dashboard',
             __('Settings', 'ai-seo-client'),
             __('⚙️ Settings', 'ai-seo-client'),
             'manage_options',
             'ai-seo-settings',
             [$this, 'renderSettingsPage']
         );
+
+        // Remove all submenu items from WP admin menu (pages stay accessible via URL for iframe)
+        add_action('admin_head', [$this, 'hideSubmenuItems']);
+    }
+
+    /**
+     * Hide all Fyndable submenu items from the WordPress admin menu via CSS.
+     * Pages remain registered and accessible via direct URL (needed for iframe).
+     */
+    public function hideSubmenuItems(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen) {
+            return;
+        }
+
+        // Only hide on non-Fyndable pages and the shell page itself
+        if (strpos($screen->id, 'ai-seo') === false && $screen->id !== 'toplevel_page_fyndable-dashboard') {
+            return;
+        }
+
+        echo '<style>
+            #toplevel_page_fyndable-dashboard .wp-submenu,
+            #toplevel_page_fyndable-dashboard .wp-submenu-wrap,
+            #toplevel_page_fyndable-dashboard.wp-has-submenu .wp-submenu {
+                display: none !important;
+            }
+            #toplevel_page_fyndable-dashboard .wp-menu-arrow {
+                display: none !important;
+            }
+        </style>';
     }
 
     /**
@@ -747,7 +791,7 @@ class Client
      */
     public function enqueueAssets(string $hook): void
     {
-        if (strpos($hook, 'ai-seo') === false) {
+        if (strpos($hook, 'ai-seo') === false && strpos($hook, 'fyndable') === false) {
             return;
         }
 
@@ -805,7 +849,7 @@ class Client
                 if (document.getElementById("sseo-ai-loader-overlay")) return;
                 var overlay = document.createElement("div");
                 overlay.id = "sseo-ai-loader-overlay";
-                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + ' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . ' + "</div>";
+                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + \'' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . '\' + "</div>";
                 document.body.appendChild(overlay);
 
                 var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
@@ -984,6 +1028,16 @@ class Client
             <?php endif; ?>
         </div>
         <?php
+    }
+
+    /**
+     * Render the full-page Fyndable dashboard shell
+     */
+    public function renderFyndableDashboard(): void
+    {
+        if ($this->fyndableDashboard) {
+            $this->fyndableDashboard->render();
+        }
     }
 
     /**
