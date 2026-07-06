@@ -264,6 +264,11 @@ class Client
         // Brand & AI Search Visibility - available to all tiers
         $this->brandVisibility = new BrandVisibilityTracker($this->llmClient, $this->settings);
         add_action('rest_api_init', [$this->brandVisibility, 'registerRestRoutes']);
+        // Ensure the table exists for installations upgraded without reactivation
+        if (get_option('sseo_ai_brand_visibility_db') !== '1') {
+            BrandVisibilityTracker::createTable();
+            update_option('sseo_ai_brand_visibility_db', '1');
+        }
 
         // Ideas Management - available to all tiers
         $this->ideas = new Ideas($this->settings, $this->llmClient);
@@ -2309,124 +2314,381 @@ class Client
     }
 
     /**
-     * Render LLM Tracker page
+     * Render Brand & AI Search Visibility page
      */
-    public function renderLLMTrackerPage(): void
+    public function renderBrandVisibilityPage(): void
     {
         if (!$this->licenseValidator->isLicenseValid()) {
             $this->renderLicenseRequiredNotice();
             return;
         }
 
-        $page = max(1, (int)($_GET['llm_page'] ?? 1));
-        $perPage = 50;
+        $bvConfig = $this->brandVisibility->getSettings();
+        $period = sanitize_text_field($_GET['period'] ?? '30d');
+        $stats = $this->brandVisibility->getStats($period);
+        $lastScan = $this->brandVisibility->getLastScanDate();
+
+        $page = max(1, (int)($_GET['bv_page'] ?? 1));
+        $perPage = 25;
         $offset = ($page - 1) * $perPage;
-        $logs = LLMTracker::getLogs($perPage, $offset);
-        $total = LLMTracker::getTotalCount();
-        $stats = LLMTracker::getStats('24h');
+        $platformFilter = sanitize_text_field($_GET['bv_platform'] ?? '');
+        $filterType = sanitize_text_field($_GET['bv_filter'] ?? '');
+        $mentions = $this->brandVisibility->getMentions($perPage, $offset, $platformFilter, $filterType);
+        $total = $this->brandVisibility->getTotalCount($platformFilter, $filterType);
         $pages = (int)ceil($total / $perPage);
+
+        $platformNames = [
+            'chatgpt' => 'ChatGPT',
+            'perplexity' => 'Perplexity',
+            'gemini' => 'Google Gemini',
+        ];
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-header p { color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .llm-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
-            .llm-stat-card { background: #f8fafc; border-radius: 8px; padding: 15px; text-align: center; border: 1px solid #e2e8f0; }
-            .llm-stat-value { font-size: 22px; font-weight: 700; color: #2563eb; }
-            .llm-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
-            .llm-log-table { width: 100%; border-collapse: collapse; }
-            .llm-log-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
-            .llm-log-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-            .llm-log-table tr:hover { background: #f8fafc; }
-            .llm-status-success { color: #00a32a; font-weight: 600; }
-            .llm-status-error { color: #d63638; font-weight: 600; }
-            .llm-prompt-preview { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .llm-pagination { margin-top: 20px; }
-            .llm-pagination a, .llm-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
-            .llm-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
-            .llm-pagination a:hover { background: #2563eb; color: #fff; }
-            .llm-pagination span.current { background: #2563eb; color: #fff; }
+            .bv-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; margin-bottom: 20px; }
+            .bv-stat-card { background: #f8fafc; border-radius: 8px; padding: 18px; text-align: center; border: 1px solid #e2e8f0; }
+            .bv-stat-value { font-size: 28px; font-weight: 700; color: #2563eb; }
+            .bv-stat-value.score { color: #16a34a; }
+            .bv-stat-value.positive { color: #16a34a; }
+            .bv-stat-value.negative { color: #dc2626; }
+            .bv-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+            .bv-table { width: 100%; border-collapse: collapse; }
+            .bv-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
+            .bv-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            .bv-table tr:hover { background: #f8fafc; }
+            .bv-badge-yes { background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+            .bv-badge-no { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+            .bv-badge-error { background: #fef3c7; color: #92400e; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+            .bv-sentiment-positive { color: #16a34a; font-weight: 600; }
+            .bv-sentiment-neutral { color: #64748b; font-weight: 600; }
+            .bv-sentiment-negative { color: #dc2626; font-weight: 600; }
+            .bv-platform-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+            .bv-platform-chatgpt { background: #e0e7ff; color: #3730a3; }
+            .bv-platform-perplexity { background: #fce7f3; color: #9d174d; }
+            .bv-platform-gemini { background: #dbeafe; color: #1e40af; }
+            .bv-excerpt { max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
+            .bv-pagination { margin-top: 20px; }
+            .bv-pagination a, .bv-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
+            .bv-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
+            .bv-pagination a:hover { background: #2563eb; color: #fff; }
+            .bv-pagination span.current { background: #2563eb; color: #fff; }
+            .bv-settings-form table { width: 100%; }
+            .bv-settings-form th { text-align: left; padding: 8px 10px; width: 200px; vertical-align: top; }
+            .bv-settings-form td { padding: 8px 10px; }
+            .bv-settings-form input[type=text], .bv-settings-form textarea { width: 100%; max-width: 500px; }
+            .bv-settings-form textarea { height: 80px; }
+            .bv-filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+            .bv-filter-bar select { padding: 5px 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
+            .bv-period-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+            .bv-period-tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; text-decoration: none; background: #e2e8f0; color: #334155; }
+            .bv-period-tab.active { background: #2563eb; color: #fff; }
+            .bv-competitor-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+            .bv-competitor-name { min-width: 120px; font-size: 13px; font-weight: 500; }
+            .bv-competitor-bar-bg { flex: 1; background: #e2e8f0; border-radius: 4px; height: 20px; overflow: hidden; }
+            .bv-competitor-bar-fill { height: 100%; border-radius: 4px; background: #3b82f6; transition: width 0.3s; }
+            .bv-competitor-count { min-width: 30px; text-align: right; font-size: 13px; font-weight: 600; }
+            .bv-scan-btn { background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+            .bv-scan-btn:hover { background: #1d4ed8; }
+            .bv-scan-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+            .bv-empty { text-align: center; padding: 40px; color: #94a3b8; }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
-                <h1><?php esc_html_e('LLM Tracker', 'ai-seo-client'); ?></h1>
+                <h1><?php esc_html_e('Brand & AI Search Visibility', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('Track how often and in what context your brand is mentioned by AI-powered search engines and chatbots.', 'ai-seo-client'); ?></p>
             </div>
             <div class="sseo-ai-content">
+
+                <!-- Settings Card -->
                 <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('24h Statistics', 'ai-seo-client'); ?></h2>
-                    <div class="llm-stat-grid">
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value"><?php echo esc_html($stats['total']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Total Calls', 'ai-seo-client'); ?></div>
+                    <h2><?php esc_html_e('Configuration', 'ai-seo-client'); ?></h2>
+                    <form class="bv-settings-form" id="bv-settings-form">
+                        <table>
+                            <tr>
+                                <th><label for="bv-brand-name"><?php esc_html_e('Brand Name', 'ai-seo-client'); ?></label></th>
+                                <td><input type="text" id="bv-brand-name" value="<?php echo esc_attr($bvConfig['brand_name']); ?>" placeholder="<?php esc_attr_e('e.g. Acme Corp', 'ai-seo-client'); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-category"><?php esc_html_e('Category / Industry', 'ai-seo-client'); ?></label></th>
+                                <td><input type="text" id="bv-category" value="<?php echo esc_attr($bvConfig['category']); ?>" placeholder="<?php esc_attr_e('e.g. SEO tools, CRM software', 'ai-seo-client'); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-products"><?php esc_html_e('Product Names (one per line)', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-products" placeholder="Product A&#10;Product B"><?php echo esc_textarea($bvConfig['product_names']); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-competitors"><?php esc_html_e('Competitors (one per line)', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-competitors" placeholder="Competitor A&#10;Competitor B"><?php echo esc_textarea($bvConfig['competitors']); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-queries"><?php esc_html_e('Search Queries (use {category} placeholder)', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-queries" placeholder="What are the best {category}?&#10;Which {category} would you recommend?"><?php echo esc_textarea($bvConfig['queries']); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label><?php esc_html_e('AI Platforms to Track', 'ai-seo-client'); ?></label></th>
+                                <td>
+                                    <?php foreach ($platformNames as $key => $label): ?>
+                                    <label style="margin-right: 20px;">
+                                        <input type="checkbox" class="bv-platform-checkbox" value="<?php echo esc_attr($key); ?>" <?php echo in_array($key, $bvConfig['platforms']) ? 'checked' : ''; ?>>
+                                        <?php echo esc_html($label); ?>
+                                    </label>
+                                    <?php endforeach; ?>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 15px;">
+                            <button type="button" class="button button-primary" id="bv-save-settings"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+                            <button type="button" class="bv-scan-btn" id="bv-run-scan" style="margin-left: 10px;">
+                                <?php esc_html_e('Run Scan Now', 'ai-seo-client'); ?>
+                            </button>
+                            <?php if ($lastScan): ?>
+                            <span style="margin-left: 15px; font-size: 13px; color: #64748b;">
+                                <?php esc_html_e('Last scan:', 'ai-seo-client'); ?> <?php echo esc_html($lastScan); ?>
+                            </span>
+                            <?php endif; ?>
+                        </p>
+                    </form>
+                </div>
+
+                <?php if ($stats['total_scans'] > 0): ?>
+                <!-- Stats Card -->
+                <div class="sseo-ai-dashboard-card">
+                    <div class="bv-period-tabs">
+                        <?php foreach (['7d' => '7 days', '30d' => '30 days', '90d' => '90 days'] as $pkey => $plabel): ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-llm-tracker&period=' . $pkey)); ?>" class="bv-period-tab <?php echo $period === $pkey ? 'active' : ''; ?>"><?php echo esc_html($plabel); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                    <h2><?php esc_html_e('Visibility Overview', 'ai-seo-client'); ?></h2>
+                    <div class="bv-stat-grid">
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value score"><?php echo esc_html($stats['visibility_score']); ?>%</div>
+                            <div class="bv-stat-label"><?php esc_html_e('Visibility Score', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value llm-status-success"><?php echo esc_html($stats['success']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Success', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value"><?php echo esc_html($stats['brand_mentions']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Brand Mentions', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value llm-status-error"><?php echo esc_html($stats['failed']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Failed', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value"><?php echo esc_html($stats['total_scans']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Total Scans', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value"><?php echo esc_html($stats['avg_duration_ms']); ?>ms</div>
-                            <div class="llm-stat-label"><?php esc_html_e('Avg Duration', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value"><?php echo $stats['avg_position'] > 0 ? esc_html('#' . $stats['avg_position']) : '&mdash;'; ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value">$<?php echo esc_html($stats['total_cost']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Est. Cost', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value positive"><?php echo esc_html($stats['sentiment']['positive']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Positive', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value negative"><?php echo esc_html($stats['sentiment']['negative']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Negative', 'ai-seo-client'); ?></div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Platform Breakdown -->
+                <?php if (!empty($stats['platform_stats'])): ?>
                 <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Recent Logs', 'ai-seo-client'); ?> (<?php echo number_format($total); ?>)</h2>
+                    <h2><?php esc_html_e('Platform Breakdown', 'ai-seo-client'); ?></h2>
+                    <table class="bv-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Platform', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Total Scans', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Brand Mentions', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Visibility %', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($stats['platform_stats'] as $ps): ?>
+                            <tr>
+                                <td><span class="bv-platform-tag bv-platform-<?php echo esc_attr($ps['platform']); ?>"><?php echo esc_html($platformNames[$ps['platform']] ?? $ps['platform']); ?></span></td>
+                                <td><?php echo esc_html($ps['total']); ?></td>
+                                <td><?php echo esc_html($ps['mentions']); ?></td>
+                                <td><?php echo $ps['total'] > 0 ? esc_html(round(($ps['mentions'] / $ps['total']) * 100, 1) . '%') : '&mdash;'; ?></td>
+                                <td><?php echo $ps['avg_position'] ? esc_html('#' . round($ps['avg_position'], 1)) : '&mdash;'; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+
+                <!-- Competitor Comparison -->
+                <?php if (!empty($stats['top_competitors'])): ?>
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Competitor Mentions', 'ai-seo-client'); ?></h2>
+                    <?php
+                    $maxComp = max($stats['top_competitors']);
+                    if ($maxComp <= 0) { $maxComp = 1; }
+                    foreach ($stats['top_competitors'] as $compName => $compCount):
+                        $widthPct = round(($compCount / $maxComp) * 100);
+                    ?>
+                    <div class="bv-competitor-bar">
+                        <div class="bv-competitor-name"><?php echo esc_html($compName); ?></div>
+                        <div class="bv-competitor-bar-bg">
+                            <div class="bv-competitor-bar-fill" style="width: <?php echo esc_attr($widthPct); ?>%"></div>
+                        </div>
+                        <div class="bv-competitor-count"><?php echo esc_html($compCount); ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <?php endif; ?>
+
+                <!-- Mentions Table -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Mention Details', 'ai-seo-client'); ?> (<?php echo number_format($total); ?>)</h2>
+                    <?php if (empty($mentions)): ?>
+                    <div class="bv-empty">
+                        <p><?php esc_html_e('No scan data yet. Configure your brand settings above and run a scan to see results.', 'ai-seo-client'); ?></p>
+                    </div>
+                    <?php else: ?>
+                    <div class="bv-filter-bar">
+                        <form method="get" action="">
+                            <input type="hidden" name="page" value="ai-seo-llm-tracker">
+                            <select name="bv_platform">
+                                <option value=""><?php esc_html_e('All Platforms', 'ai-seo-client'); ?></option>
+                                <?php foreach ($platformNames as $key => $label): ?>
+                                <option value="<?php echo esc_attr($key); ?>" <?php echo $platformFilter === $key ? 'selected' : ''; ?>><?php echo esc_html($label); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <select name="bv_filter">
+                                <option value=""><?php esc_html_e('All Results', 'ai-seo-client'); ?></option>
+                                <option value="mentioned" <?php echo $filterType === 'mentioned' ? 'selected' : ''; ?>><?php esc_html_e('Brand Mentioned', 'ai-seo-client'); ?></option>
+                                <option value="not_mentioned" <?php echo $filterType === 'not_mentioned' ? 'selected' : ''; ?>><?php esc_html_e('Not Mentioned', 'ai-seo-client'); ?></option>
+                                <option value="errors" <?php echo $filterType === 'errors' ? 'selected' : ''; ?>><?php esc_html_e('Errors', 'ai-seo-client'); ?></option>
+                            </select>
+                            <button type="submit" class="button button-small"><?php esc_html_e('Filter', 'ai-seo-client'); ?></button>
+                        </form>
+                    </div>
                     <div style="overflow-x: auto;">
-                        <table class="llm-log-table">
+                        <table class="bv-table">
                             <thead>
                                 <tr>
-                                    <th><?php esc_html_e('ID', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Time', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Endpoint', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Model', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Tokens', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Duration', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Context', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Date', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Platform', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Mentioned', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Position', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Sentiment', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Competitors', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Excerpt', 'ai-seo-client'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($logs as $log): ?>
+                                <?php foreach ($mentions as $m): ?>
                                 <tr>
-                                    <td><?php echo esc_html($log['id']); ?></td>
-                                    <td><?php echo esc_html($log['timestamp']); ?></td>
-                                    <td><?php echo esc_html($log['endpoint'] ?? ''); ?></td>
-                                    <td><?php echo esc_html($log['model'] ?? ''); ?></td>
-                                    <td class="llm-status-<?php echo esc_attr($log['status']); ?>"><?php echo esc_html($log['status']); ?></td>
-                                    <td><?php echo esc_html(($log['tokens_input'] ?? 0) + ($log['tokens_output'] ?? 0)); ?></td>
-                                    <td><?php echo esc_html($log['duration_ms'] ?? 0); ?>ms</td>
-                                    <td class="llm-prompt-preview" title="<?php echo esc_attr($log['context'] ?? ''); ?>"><?php echo esc_html($log['context'] ?? ''); ?></td>
+                                    <td><?php echo esc_html($m['scan_date']); ?></td>
+                                    <td><span class="bv-platform-tag bv-platform-<?php echo esc_attr($m['platform']); ?>"><?php echo esc_html($platformNames[$m['platform']] ?? $m['platform']); ?></span></td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?php echo esc_attr($m['query_text']); ?>"><?php echo esc_html($m['query_text']); ?></td>
+                                    <td>
+                                        <?php if ($m['status'] === 'error'): ?>
+                                        <span class="bv-badge-error"><?php esc_html_e('Error', 'ai-seo-client'); ?></span>
+                                        <?php elseif ($m['brand_mentioned']): ?>
+                                        <span class="bv-badge-yes"><?php esc_html_e('Yes', 'ai-seo-client'); ?></span>
+                                        <?php else: ?>
+                                        <span class="bv-badge-no"><?php esc_html_e('No', 'ai-seo-client'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $m['mention_position'] > 0 ? esc_html('#' . $m['mention_position']) : '&mdash;'; ?></td>
+                                    <td class="bv-sentiment-<?php echo esc_attr($m['sentiment']); ?>"><?php echo esc_html(ucfirst($m['sentiment'])); ?></td>
+                                    <td style="max-width: 150px; font-size: 12px;"><?php echo esc_html($m['competitors_mentioned'] ?: '—'); ?></td>
+                                    <td class="bv-excerpt" title="<?php echo esc_attr($m['mention_excerpt']); ?>"><?php echo esc_html($m['mention_excerpt'] ?? ''); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                     <?php if ($pages > 1): ?>
-                    <div class="llm-pagination">
-                        <?php for ($i = 1; $i <= $pages; $i++): ?>
+                    <div class="bv-pagination">
+                        <?php
+                        $baseUrl = admin_url('admin.php?page=ai-seo-llm-tracker');
+                        if ($period) { $baseUrl .= '&period=' . $period; }
+                        if ($platformFilter) { $baseUrl .= '&bv_platform=' . $platformFilter; }
+                        if ($filterType) { $baseUrl .= '&bv_filter=' . $filterType; }
+                        for ($i = 1; $i <= $pages; $i++):
+                        ?>
                             <?php if ($i === $page): ?>
-                                <span class="current"><?php echo $i; ?></span>
+                            <span class="current"><?php echo $i; ?></span>
                             <?php else: ?>
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-llm-tracker&llm_page=' . $i)); ?>"><?php echo $i; ?></a>
+                            <a href="<?php echo esc_url($baseUrl . '&bv_page=' . $i); ?>"><?php echo $i; ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
                     </div>
                     <?php endif; ?>
+                    <?php endif; ?>
                 </div>
+
             </div>
         </div>
+        <script>
+        (function() {
+            var btn = document.getElementById('bv-run-scan');
+            var saveBtn = document.getElementById('bv-save-settings');
+            if (!btn) { return; }
+
+            btn.addEventListener('click', function() {
+                btn.disabled = true;
+                btn.textContent = '<?php echo esc_js(__('Scanning...', 'ai-seo-client')); ?>';
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/brand-visibility/scan',
+                    method: 'POST'
+                }).then(function(res) {
+                    btn.disabled = false;
+                    btn.textContent = '<?php echo esc_js(__('Run Scan Now', 'ai-seo-client')); ?>';
+                    if (res.success) {
+                        alert('<?php echo esc_js(__('Scan complete!', 'ai-seo-client')); ?> ' + res.scanned + ' <?php echo esc_js(__('queries processed.', 'ai-seo-client')); ?>');
+                        location.reload();
+                    } else {
+                        alert('<?php echo esc_js(__('Scan completed with issues.', 'ai-seo-client')); ?>');
+                    }
+                }).catch(function(err) {
+                    btn.disabled = false;
+                    btn.textContent = '<?php echo esc_js(__('Run Scan Now', 'ai-seo-client')); ?>';
+                    alert('<?php echo esc_js(__('Scan failed:', 'ai-seo-client')); ?> ' + (err.message || 'Unknown error'));
+                });
+            });
+
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    var platforms = [];
+                    document.querySelectorAll('.bv-platform-checkbox:checked').forEach(function(cb) {
+                        platforms.push(cb.value);
+                    });
+
+                    wp.apiFetch({
+                        path: 'sseo-ai/v1/brand-visibility/settings',
+                        method: 'POST',
+                        data: {
+                            brand_name: document.getElementById('bv-brand-name').value,
+                            category: document.getElementById('bv-category').value,
+                            product_names: document.getElementById('bv-products').value,
+                            competitors: document.getElementById('bv-competitors').value,
+                            queries: document.getElementById('bv-queries').value,
+                            platforms: platforms
+                        }
+                    }).then(function() {
+                        saveBtn.textContent = '<?php echo esc_js(__('Saved!', 'ai-seo-client')); ?>';
+                        setTimeout(function() {
+                            saveBtn.textContent = '<?php echo esc_js(__('Save Settings', 'ai-seo-client')); ?>';
+                        }, 2000);
+                    }).catch(function(err) {
+                        alert('<?php echo esc_js(__('Failed to save:', 'ai-seo-client')); ?> ' + (err.message || 'Unknown error'));
+                    });
+                });
+            }
+        })();
+        </script>
         <?php
     }
 }
