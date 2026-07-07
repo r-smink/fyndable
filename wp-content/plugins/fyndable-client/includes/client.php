@@ -789,16 +789,6 @@ class Client
      */
     public function hideSubmenuItems(): void
     {
-        $screen = get_current_screen();
-        if (!$screen) {
-            return;
-        }
-
-        // Only hide on non-Fyndable pages and the shell page itself
-        if (strpos($screen->id, 'ai-seo') === false && $screen->id !== 'toplevel_page_fyndable-dashboard') {
-            return;
-        }
-
         echo '<style>
             #toplevel_page_fyndable-dashboard .wp-submenu,
             #toplevel_page_fyndable-dashboard .wp-submenu-wrap,
@@ -806,6 +796,11 @@ class Client
                 display: none !important;
             }
             #toplevel_page_fyndable-dashboard .wp-menu-arrow {
+                display: none !important;
+            }
+            #toplevel_page_fyndable-dashboard:hover .wp-submenu,
+            #toplevel_page_fyndable-dashboard:hover .wp-submenu-wrap,
+            #toplevel_page_fyndable-dashboard.wp-has-submenu:hover .wp-submenu {
                 display: none !important;
             }
         </style>';
