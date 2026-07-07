@@ -35,6 +35,7 @@ class SitemapGenerator
     public function addRewriteRules(): void
     {
         add_rewrite_rule('^sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
+        add_rewrite_rule('^sitemap_index\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap-([a-z0-9-]+)\.xml$', 'index.php?aiseo_sitemap=$matches[1]', 'top');
         add_rewrite_rule('^sitemap-tax-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=tax-$matches[1]', 'top');
     }
@@ -70,7 +71,8 @@ class SitemapGenerator
     {
         $sitemaps = $this->getSitemapList();
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?xml-stylesheet type="text/xsl" href="' . plugins_url('assets/sitemap.xsl', $this->pluginDir . 'ai-seo-assistant.php') . '"?>' . "\n";
+        $xslUrl = SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl';
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . esc_url($xslUrl) . '"?>' . "\n";
         $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
         foreach ($sitemaps as $map) {
@@ -114,8 +116,9 @@ class SitemapGenerator
         }
         $posts = get_posts($args);
 
+        $xslUrl = SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl';
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?xml-stylesheet type="text/xsl" href="' . plugins_url('assets/sitemap.xsl', $this->pluginDir . 'ai-seo-assistant.php') . '"?>' . "\n";
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . esc_url($xslUrl) . '"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">' . "\n";
 
         foreach ($posts as $post) {
@@ -273,7 +276,9 @@ class SitemapGenerator
 
     public function generateTaxonomySitemap(string $taxonomy): string
     {
+        $xslUrl = SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl';
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . esc_url($xslUrl) . '"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
         $terms = get_terms([
@@ -365,8 +370,8 @@ class SitemapGenerator
 
     public function renderSettings(): void
     {
-        $enabledPostTypes = get_option('sseo_sitemap_post_types', []);
-        $enabledTaxonomies = get_option('sseo_sitemap_taxonomies', []);
+        $enabledPostTypes = (array) get_option('sseo_sitemap_post_types', []);
+        $enabledTaxonomies = (array) get_option('sseo_sitemap_taxonomies', []);
         $excludeIds = get_option('sseo_sitemap_exclude_ids', '');
         $pingEngines = get_option('sseo_sitemap_ping_engines', true);
 

@@ -1571,6 +1571,7 @@ class Client
                         <h2><?php esc_html_e('Extended Sitemaps', 'ai-seo-client'); ?></h2>
                         <p><?php esc_html_e('The plugin automatically generates the following sitemap types:', 'ai-seo-client'); ?></p>
                         <ul style="list-style: disc; margin-left: 20px;">
+                            <li><strong><?php esc_html_e('Sitemap Index:', 'ai-seo-client'); ?></strong> <code>sitemap_index.xml</code> <?php esc_html_e('(main entry point)', 'ai-seo-client'); ?></li>
                             <li><strong><?php esc_html_e('Main Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap.xml</code></li>
                             <li><strong><?php esc_html_e('RSS Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-rss.xml</code></li>
                             <li><strong><?php esc_html_e('Video Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-videos.xml</code></li>
