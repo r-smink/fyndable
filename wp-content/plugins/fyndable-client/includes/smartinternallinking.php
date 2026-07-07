@@ -30,6 +30,7 @@ class SmartInternalLinking
         add_action('wp_ajax_sseo_ai_get_link_suggestions', [$this, 'ajaxGetLinkSuggestions']);
         add_action('wp_ajax_sseo_ai_detect_orphans', [$this, 'ajaxDetectOrphans']);
         add_action('wp_ajax_sseo_ai_generate_opportunities', [$this, 'ajaxGenerateOpportunities']);
+        add_action('wp_ajax_sseo_ai_add_internal_link', [$this, 'ajaxAddInternalLink']);
         
         // Scheduled orphan detection
         if (!wp_next_scheduled('sseo_ai_detect_orphans')) {
@@ -414,7 +415,7 @@ class SmartInternalLinking
                         Relevance: <?php echo esc_html($suggestion['relevance']); ?>%
                     </div>
                     <button type="button" class="button button-small" style="margin-top: 5px;"
-                            onclick="sseoInsertLink(<?php echo $suggestion['id']; ?>, '<?php echo esc_js($suggestion['anchor']); ?>')">
+                            onclick="sseoInsertLink('<?php echo esc_js(get_permalink($suggestion['id'])); ?>', '<?php echo esc_js($suggestion['anchor']); ?>')">
                         <?php esc_html_e('Insert Link', 'ai-seo-client'); ?>
                     </button>
                 </li>
@@ -430,8 +431,7 @@ class SmartInternalLinking
         </div>
         
         <script>
-        function sseoInsertLink(postId, anchorText) {
-            const url = '<?php echo home_url('?p='); ?>' + postId;
+        function sseoInsertLink(url, anchorText) {
             const link = '<a href="' + url + '">' + anchorText + '</a>';
             
             // Insert into editor
@@ -944,6 +944,57 @@ Provide only the anchor text (2-5 words), no explanation.";
         update_option('sseo_ai_link_opportunities', $opportunities, false);
         
         wp_send_json_success(['count' => count($opportunities)]);
+    }
+
+    public function ajaxAddInternalLink(): void
+    {
+        check_ajax_referer('sseo_linking', 'nonce');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $fromId = (int) ($_POST['from_id'] ?? 0);
+        $toId = (int) ($_POST['to_id'] ?? 0);
+        $anchorText = sanitize_text_field($_POST['anchor_text'] ?? '');
+
+        if (!$fromId || !$toId || !$anchorText) {
+            wp_send_json_error(['message' => 'Missing parameters']);
+        }
+
+        $fromPost = get_post($fromId);
+        if (!$fromPost) {
+            wp_send_json_error(['message' => 'Source post not found']);
+        }
+
+        $toUrl = get_permalink($toId);
+        if (!$toUrl) {
+            wp_send_json_error(['message' => 'Target post not found']);
+        }
+
+        $link = '<a href="' . esc_url($toUrl) . '">' . esc_html($anchorText) . '</a>';
+        $content = $fromPost->post_content;
+
+        // Try to insert the link near the first occurrence of the anchor text
+        $pos = stripos($content, $anchorText);
+        if ($pos !== false) {
+            $content = substr($content, 0, $pos) . $link . substr($content, $pos + strlen($anchorText));
+        } else {
+            // Append at end of first paragraph
+            $firstParaEnd = strpos($content, '</p>');
+            if ($firstParaEnd !== false) {
+                $content = substr($content, 0, $firstParaEnd + 4) . "\n\n" . $link . substr($content, $firstParaEnd + 4);
+            } else {
+                $content .= "\n\n" . $link;
+            }
+        }
+
+        wp_update_post([
+            'ID' => $fromId,
+            'post_content' => $content,
+        ]);
+
+        wp_send_json_success(['message' => 'Link added successfully']);
     }
     
     /**

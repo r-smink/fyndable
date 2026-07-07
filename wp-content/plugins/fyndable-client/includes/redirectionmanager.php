@@ -21,6 +21,10 @@ class RedirectionManager
         add_action('template_redirect', [$this, 'handle404Redirect'], 1);
         add_filter('wp_insert_post_data', [$this, 'trackSlugChange'], 10, 2);
         add_action('post_updated', [$this, 'autoCreateRedirectOnSlugChange'], 10, 3);
+        add_action('admin_post_sseo_ai_redirect_add', [$this, 'handleAddRedirect']);
+        add_action('admin_post_sseo_ai_redirect_delete', [$this, 'handleDeleteRedirect']);
+        add_action('admin_post_sseo_ai_redirect_toggle', [$this, 'handleToggleRedirect']);
+        add_action('admin_post_sseo_ai_redirect_import', [$this, 'handleImportRedirects']);
     }
 
     public function maybeCreateTable(): void
@@ -324,5 +328,209 @@ class RedirectionManager
         }
 
         return ['imported' => $imported, 'errors' => $errors];
+    }
+
+    public function handleAddRedirect(): void
+    {
+        check_admin_referer('sseo_ai_redirect_add');
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+        $source = esc_url_raw($_POST['source_url'] ?? '');
+        $target = esc_url_raw($_POST['target_url'] ?? '');
+        $type = (int) ($_POST['redirect_type'] ?? 301);
+        $regex = isset($_POST['regex']);
+        if ($source && $target) {
+            $this->add($source, $target, $type, $regex);
+        }
+        wp_redirect(admin_url('admin.php?page=ai-seo-redirects&added=1'));
+        exit;
+    }
+
+    public function handleDeleteRedirect(): void
+    {
+        check_admin_referer('sseo_ai_redirect_delete_' . ($_POST['id'] ?? 0));
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id) {
+            $this->delete($id);
+        }
+        wp_redirect(admin_url('admin.php?page=ai-seo-redirects&deleted=1'));
+        exit;
+    }
+
+    public function handleToggleRedirect(): void
+    {
+        check_admin_referer('sseo_ai_redirect_toggle_' . ($_POST['id'] ?? 0));
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        $enabled = (int) ($_POST['enabled'] ?? 0);
+        if ($id) {
+            $this->update($id, ['enabled' => $enabled ? 0 : 1]);
+        }
+        wp_redirect(admin_url('admin.php?page=ai-seo-redirects'));
+        exit;
+    }
+
+    public function handleImportRedirects(): void
+    {
+        check_admin_referer('sseo_ai_redirect_import');
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+        if (!empty($_FILES['csv_file']['tmp_name'])) {
+            $content = file_get_contents($_FILES['csv_file']['tmp_name']);
+            $result = $this->import($content);
+            wp_redirect(admin_url('admin.php?page=ai-seo-redirects&imported=' . $result['imported']));
+            exit;
+        }
+        wp_redirect(admin_url('admin.php?page=ai-seo-redirects&error=1'));
+        exit;
+    }
+
+    public function renderAdminPage(): void
+    {
+        $stats = $this->getStats();
+        $search = sanitize_text_field($_GET['s'] ?? '');
+        $redirects = $this->getAll($search ? ['search' => $search] : []);
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Redirect Manager', 'ai-seo-client'); ?></h1>
+
+            <?php if (isset($_GET['added'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Redirect added.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['deleted'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Redirect deleted.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['imported'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html(sprintf(__('%d redirects imported.', 'ai-seo-client'), (int)$_GET['imported'])); ?></p></div>
+            <?php endif; ?>
+
+            <!-- Stats -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:20px 0;">
+                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:bold;color:#2271b1;"><?php echo esc_html($stats['total']); ?></div>
+                    <div><?php esc_html_e('Total Redirects', 'ai-seo-client'); ?></div>
+                </div>
+                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:bold;color:#00a32a;"><?php echo esc_html($stats['active']); ?></div>
+                    <div><?php esc_html_e('Active', 'ai-seo-client'); ?></div>
+                </div>
+                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:bold;color:#d63638;"><?php echo esc_html($stats['total_hits']); ?></div>
+                    <div><?php esc_html_e('Total Hits', 'ai-seo-client'); ?></div>
+                </div>
+            </div>
+
+            <!-- Add new redirect -->
+            <h2><?php esc_html_e('Add New Redirect', 'ai-seo-client'); ?></h2>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <?php wp_nonce_field('sseo_ai_redirect_add'); ?>
+                <input type="hidden" name="action" value="sseo_ai_redirect_add">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="source_url"><?php esc_html_e('Source URL', 'ai-seo-client'); ?></label></th>
+                        <td><input type="text" name="source_url" id="source_url" class="regular-text" placeholder="/old-page or /category/old-post"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="target_url"><?php esc_html_e('Target URL', 'ai-seo-client'); ?></label></th>
+                        <td><input type="text" name="target_url" id="target_url" class="regular-text" placeholder="/new-page or https://example.com/page"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="redirect_type"><?php esc_html_e('Redirect Type', 'ai-seo-client'); ?></label></th>
+                        <td>
+                            <select name="redirect_type" id="redirect_type">
+                                <option value="301">301 - Permanent</option>
+                                <option value="302">302 - Temporary</option>
+                                <option value="307">307 - Temporary (HTTP 1.1)</option>
+                                <option value="410">410 - Gone</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Regex', 'ai-seo-client'); ?></th>
+                        <td><label><input type="checkbox" name="regex" value="1"> <?php esc_html_e('Use regular expression for source URL', 'ai-seo-client'); ?></label></td>
+                    </tr>
+                </table>
+                <?php submit_button(__('Add Redirect', 'ai-seo-client')); ?>
+            </form>
+
+            <!-- Import / Export -->
+            <h2><?php esc_html_e('Import / Export', 'ai-seo-client'); ?></h2>
+            <div style="display:flex;gap:20px;align-items:start;">
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" style="flex:1;">
+                    <?php wp_nonce_field('sseo_ai_redirect_import'); ?>
+                    <input type="hidden" name="action" value="sseo_ai_redirect_import">
+                    <input type="file" name="csv_file" accept=".csv">
+                    <?php submit_button(__('Import CSV', 'ai-seo-client'), 'secondary', 'submit', false); ?>
+                </form>
+                <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_redirect_export')); ?>" class="button button-secondary"><?php esc_html_e('Export CSV', 'ai-seo-client'); ?></a>
+            </div>
+
+            <!-- Redirects list -->
+            <h2><?php esc_html_e('Existing Redirects', 'ai-seo-client'); ?></h2>
+            <form method="get" style="margin-bottom:15px;">
+                <input type="hidden" name="page" value="ai-seo-redirects">
+                <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Search redirects...', 'ai-seo-client'); ?>">
+                <button type="submit" class="button"><?php esc_html_e('Search', 'ai-seo-client'); ?></button>
+            </form>
+
+            <?php if (empty($redirects)): ?>
+                <p><?php esc_html_e('No redirects found.', 'ai-seo-client'); ?></p>
+            <?php else: ?>
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Source URL', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Hits', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Last Accessed', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($redirects as $r): ?>
+                            <tr>
+                                <td><code><?php echo esc_html($r['source_url']); ?></code><?php if ($r['regex']) echo ' <span class="dashicons dashicons-search" title="Regex"></span>'; ?></td>
+                                <td><code><?php echo esc_html($r['target_url']); ?></code></td>
+                                <td><?php echo esc_html($r['redirect_type']); ?></td>
+                                <td><?php echo esc_html(number_format($r['hits'])); ?></td>
+                                <td><?php echo $r['last_accessed'] ? esc_html($r['last_accessed']) : '&mdash;'; ?></td>
+                                <td>
+                                    <?php if ($r['enabled']): ?>
+                                        <span style="color:#00a32a;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
+                                    <?php else: ?>
+                                        <span style="color:#999;"><?php esc_html_e('Disabled', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+                                        <?php wp_nonce_field('sseo_ai_redirect_toggle_' . $r['id']); ?>
+                                        <input type="hidden" name="action" value="sseo_ai_redirect_toggle">
+                                        <input type="hidden" name="id" value="<?php echo esc_attr($r['id']); ?>">
+                                        <input type="hidden" name="enabled" value="<?php echo esc_attr($r['enabled']); ?>">
+                                        <button type="submit" class="button button-small"><?php echo $r['enabled'] ? __('Disable', 'ai-seo-client') : __('Enable', 'ai-seo-client'); ?></button>
+                                    </form>
+                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php esc_attr_e('Delete this redirect?', 'ai-seo-client'); ?>')">
+                                        <?php wp_nonce_field('sseo_ai_redirect_delete_' . $r['id']); ?>
+                                        <input type="hidden" name="action" value="sseo_ai_redirect_delete">
+                                        <input type="hidden" name="id" value="<?php echo esc_attr($r['id']); ?>">
+                                        <button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'ai-seo-client'); ?></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        <?php
     }
 }

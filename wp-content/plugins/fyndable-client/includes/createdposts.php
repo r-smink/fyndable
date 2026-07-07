@@ -179,8 +179,8 @@ class CreatedPosts
         $dateQuery = [];
         if ($dateFrom || $dateTo) {
             $dateQuery = [
-                'after' => $dateFrom ?: false,
-                'before' => $dateTo ? $dateTo . ' 23:59:59' : false,
+                'after' => $dateFrom ?: '1970-01-01',
+                'before' => $dateTo ? $dateTo . ' 23:59:59' : current_time('mysql'),
                 'inclusive' => true,
             ];
         }
@@ -274,21 +274,27 @@ class CreatedPosts
     {
         global $wpdb;
 
-        // Count by edit status
+        // Count by edit status (join posts to exclude revisions)
         $editStats = $wpdb->get_results(
-            "SELECT meta_value as status, COUNT(*) as count 
-             FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_edit_status' 
-             GROUP BY meta_value",
+            "SELECT pm.meta_value as status, COUNT(*) as count 
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_edit_status' 
+             AND p.post_type = 'post'
+             AND p.post_status IN ('publish', 'future', 'draft', 'private', 'pending')
+             GROUP BY pm.meta_value",
             OBJECT_K
         );
 
-        // Count by review status
+        // Count by review status (join posts to exclude revisions)
         $reviewStats = $wpdb->get_results(
-            "SELECT meta_value as status, COUNT(*) as count 
-             FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_review_status' 
-             GROUP BY meta_value",
+            "SELECT pm.meta_value as status, COUNT(*) as count 
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_review_status' 
+             AND p.post_type = 'post'
+             AND p.post_status IN ('publish', 'future', 'draft', 'private', 'pending')
+             GROUP BY pm.meta_value",
             OBJECT_K
         );
 
@@ -305,12 +311,15 @@ class CreatedPosts
             OBJECT_K
         );
 
-        // Count by language
+        // Count by language (join posts to exclude revisions)
         $languageStats = $wpdb->get_results(
-            "SELECT meta_value as language, COUNT(*) as count 
-             FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_language' 
-             GROUP BY meta_value",
+            "SELECT pm.meta_value as language, COUNT(*) as count 
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_language' 
+             AND p.post_type = 'post'
+             AND p.post_status IN ('publish', 'future', 'draft', 'private', 'pending')
+             GROUP BY pm.meta_value",
             OBJECT_K
         );
 

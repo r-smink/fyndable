@@ -297,12 +297,19 @@ PROMPT;
         }
 
         $text = $result['text'] ?? '';
-        $text = preg_replace('/```json?\s*/', '', $text);
-        $text = preg_replace('/```\s*/', '', $text);
+        $text = preg_replace('/^```(?:json)?\s*\n?/i', '', trim($text));
+        $text = preg_replace('/\n?```\s*$/', '', $text);
+
+        // Try to extract JSON if there's extra text around it
+        $jsonStart = strpos($text, '{');
+        $jsonEnd = strrpos($text, '}');
+        if ($jsonStart !== false && $jsonEnd !== false && $jsonEnd > $jsonStart) {
+            $text = substr($text, $jsonStart, $jsonEnd - $jsonStart + 1);
+        }
 
         $data = json_decode(trim($text), true);
         if (!$data || !isset($data['pillar_page'])) {
-            return new \WP_Error('parse_error', __('Failed to generate topic cluster', 'ai-seo-client'));
+            return new \WP_Error('parse_error', __('Failed to generate topic cluster. LLM response was not valid JSON.', 'ai-seo-client') . ' Response: ' . substr($result['text'] ?? '', 0, 500));
         }
 
         $data['topic'] = $topic;

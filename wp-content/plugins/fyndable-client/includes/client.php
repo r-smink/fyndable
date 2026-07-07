@@ -644,6 +644,16 @@ class Client
                 [$this, 'renderLinkManagerPage']
             );
 
+            // 7b. Link Genius (Auto Internal Linking) - starter+
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Link Genius', 'ai-seo-client'),
+                __('✨ Link Genius', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-link-genius',
+                [$this, 'renderLinkGeniusPage']
+            );
+
             // 8. Sitemaps - all tiers
             add_submenu_page(
                 'fyndable-dashboard',
@@ -652,6 +662,16 @@ class Client
                 'manage_options',
                 'ai-seo-sitemaps',
                 [$this, 'renderSitemapsPage']
+            );
+
+            // 8b. Redirect Manager - starter+
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Redirect Manager', 'ai-seo-client'),
+                __('↩️ Redirect Manager', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-redirects',
+                [$this, 'renderRedirectManagerPage']
             );
 
             // 9. Integrations - all tiers
@@ -1329,6 +1349,38 @@ class Client
     }
 
     /**
+     * Render Redirect Manager page - delegates to RedirectionManager class
+     */
+    public function renderRedirectManagerPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->redirectManager) {
+            $this->redirectManager->renderAdminPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Link Genius page - delegates to LinkAssistant class
+     */
+    public function renderLinkGeniusPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->linkAssistant) {
+            $this->linkAssistant->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
      * Render Integrations page - delegates to ExternalIntegrations class
      */
     public function renderIntegrationsPage(): void
@@ -1531,6 +1583,13 @@ class Client
                             <li><strong><?php esc_html_e('Image Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-images.xml</code></li>
                             <li><strong><?php esc_html_e('Author Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-authors.xml</code></li>
                         </ul>
+                    </div>
+
+                    <!-- Sitemap Settings -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Sitemap Settings', 'ai-seo-client'); ?></h2>
+                        <p><?php esc_html_e('Choose which post types and taxonomies to include in your sitemap.', 'ai-seo-client'); ?></p>
+                        <?php $this->sitemapGenerator->renderSettings(); ?>
                     </div>
                     
                 </div>
