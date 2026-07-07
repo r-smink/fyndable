@@ -22,6 +22,7 @@ class SitemapGenerator
         add_action('delete_post', [$this, 'onPostDelete']);
         add_action('aiseoclient_generate_sitemap', [$this, 'generateAll']);
         add_action('admin_init', [$this, 'registerSettings']);
+        $this->disableWordPressSitemap();
     }
 
     public function registerSettings(): void
@@ -36,8 +37,13 @@ class SitemapGenerator
     {
         add_rewrite_rule('^sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap_index\.xml$', 'index.php?aiseo_sitemap=main', 'top');
-        add_rewrite_rule('^sitemap-([a-z0-9-]+)\.xml$', 'index.php?aiseo_sitemap=$matches[1]', 'top');
+        add_rewrite_rule('^sitemap-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=$matches[1]', 'top');
         add_rewrite_rule('^sitemap-tax-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=tax-$matches[1]', 'top');
+    }
+
+    public function disableWordPressSitemap(): void
+    {
+        add_filter('wp_sitemaps_enabled', '__return_false');
     }
 
     public function addQueryVars(array $vars): array
@@ -97,7 +103,7 @@ class SitemapGenerator
 
     public function generatePostTypeSitemap(string $postType, int $page = 1): string
     {
-        $perPage = 1000;
+        $perPage = 50000;
         $offset = ($page - 1) * $perPage;
 
         $excluded = $this->getExcludedIds();
@@ -212,21 +218,10 @@ class SitemapGenerator
             if ($published === 0) {
                 continue;
             }
-            $pages = (int)ceil($published / 1000);
-
-            if ($pages <= 1) {
-                $sitemaps[] = [
-                    'url' => home_url("/sitemap-{$postType}.xml"),
-                    'lastmod' => current_time('c'),
-                ];
-            } else {
-                for ($i = 1; $i <= $pages; $i++) {
-                    $sitemaps[] = [
-                        'url' => home_url("/sitemap-{$postType}-{$i}.xml"),
-                        'lastmod' => current_time('c'),
-                    ];
-                }
-            }
+            $sitemaps[] = [
+                'url' => home_url("/sitemap-{$postType}.xml"),
+                'lastmod' => current_time('c'),
+            ];
         }
 
         // Taxonomy sitemaps
