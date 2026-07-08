@@ -22,7 +22,6 @@ class SitemapGenerator
         add_action('delete_post', [$this, 'onPostDelete']);
         add_action('aiseoclient_generate_sitemap', [$this, 'generateAll']);
         add_action('admin_init', [$this, 'registerSettings']);
-        $this->disableWordPressSitemap();
     }
 
     public function registerSettings(): void
@@ -37,6 +36,7 @@ class SitemapGenerator
     {
         add_rewrite_rule('^sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap_index\.xml$', 'index.php?aiseo_sitemap=main', 'top');
+        add_rewrite_rule('^wp-sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=$matches[1]', 'top');
         add_rewrite_rule('^sitemap-tax-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=tax-$matches[1]', 'top');
     }

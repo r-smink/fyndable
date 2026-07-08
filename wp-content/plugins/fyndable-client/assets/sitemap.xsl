@@ -34,7 +34,7 @@
 					}
 
 					#description {
-						background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+						background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 						padding: 40px 40px 30px;
 						color: #fff;
 					}
@@ -93,7 +93,7 @@
 						width: 100%;
 					}
 					th {
-						background-color: #1a1a2e;
+						background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 						color: #fff;
 						text-align: left;
 						padding: 14px 15px;
