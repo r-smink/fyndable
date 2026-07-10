@@ -111,14 +111,9 @@ class FyndableDashboard
                     'icon' => '&#128200;',
                 ];
                 $this->menuItems[] = [
-                    'slug' => 'ai-seo-gsc',
-                    'label' => __('Search Console', 'ai-seo-client'),
-                    'icon' => '&#128202;',
-                ];
-                $this->menuItems[] = [
                     'slug' => 'ai-seo-google-data',
                     'label' => __('Google Data', 'ai-seo-client'),
-                    'icon' => '&#128200;',
+                    'icon' => '&#128202;',
                 ];
                 $this->menuItems[] = [
                     'slug' => 'ai-seo-ab-testing',
@@ -234,6 +229,12 @@ class FyndableDashboard
                         .sseo-ai-dashboard-card {\
                             margin: 20px 0px !important;\
                         }\
+                        html, body {\
+                            overflow-x: hidden !important;\
+                        }\
+                        *, *::before, *::after {\
+                            box-sizing: border-box;\
+                        }\
                     ";
                     document.head.appendChild(style);
 
@@ -301,6 +302,12 @@ class FyndableDashboard
                     }
                     .sseo-ai-dashboard-card {
                         margin: 20px 0px !important;
+                    }
+                    html, body {
+                        overflow-x: hidden !important;
+                    }
+                    *, *::before, *::after {
+                        box-sizing: border-box;
                     }
                 </style>';
             }

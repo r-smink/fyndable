@@ -1446,15 +1446,9 @@ class Client
             return;
         }
 
-        // Check sitemap status
+        // Sitemap URLs for reference
         $sitemapUrl = home_url('/sitemap.xml');
         $sitemapIndexUrl = home_url('/sitemap_index.xml');
-        
-        $response = wp_remote_get($sitemapUrl, ['timeout' => 10]);
-        $sitemapExists = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
-        
-        $indexResponse = wp_remote_get($sitemapIndexUrl, ['timeout' => 10]);
-        $indexExists = !is_wp_error($indexResponse) && wp_remote_retrieve_response_code($indexResponse) === 200;
         
         ?>
         <style>
@@ -1466,6 +1460,7 @@ class Client
             .sitemap-status { display: flex; align-items: center; gap: 15px; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
             .sitemap-status.ok { background: #d1fae5; border-left: 4px solid #00a32a; }
             .sitemap-status.error { background: #fee2e2; border-left: 4px solid #d63638; }
+            .sitemap-status.warning { background: #fff3cd; border-left: 4px solid #dba617; }
             .sitemap-url { font-family: monospace; background: #f3f4f6; padding: 10px 15px; border-radius: 6px; display: inline-block; margin: 5px 0; }
         </style>
         <div class="wrap sseo-ai-modern">
@@ -1478,121 +1473,133 @@ class Client
                     <!-- Main Sitemap Status -->
                     <div class="sseo-ai-dashboard-card">
                         <h2><?php esc_html_e('Sitemap Status', 'ai-seo-client'); ?></h2>
+                        <div id="sitemap-status-content">
+                            <p><?php esc_html_e('Loading sitemap status...', 'ai-seo-client'); ?></p>
+                        </div>
                         
-                        <?php if ($sitemapExists || $indexExists): ?>
-                            <?php if ($indexExists): ?>
-                                <div class="sitemap-status ok">
-                                    <span style="font-size: 24px;">✅</span>
-                                    <div>
-                                        <strong><?php esc_html_e('Sitemap Index Found', 'ai-seo-client'); ?></strong>
-                                        <div class="sitemap-url">
-                                            <a href="<?php echo esc_url($sitemapIndexUrl); ?>" target="_blank"><?php echo esc_html($sitemapIndexUrl); ?></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
+                        <p style="margin-top: 20px;">
+                            <button type="button" id="run-sitemap-check" class="button button-primary">
+                                <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
+                            </button>
+                            <span class="spinner" style="float: none; margin-left: 10px;"></span>
+                        </p>
+                        
+                        <div id="sitemap-check-results" style="margin-top: 30px;"></div>
+                        
+                        <script>
+                        jQuery(document).ready(function($) {
+                            function loadSitemapStatus() {
+                                var container = $('#sitemap-status-content');
+                                container.html('<p><?php echo esc_js(__('Loading sitemap status...', 'ai-seo-client')); ?></p>');
+                                
+                                wp.apiFetch({
+                                    path: '/sseo-ai/v1/sitemap/status',
+                                    method: 'GET'
+                                }).then(function(data) {
+                                    var html = '';
+                                    if (data.index_exists) {
+                                        html += '<div class="sitemap-status ok">';
+                                        html += '<span style="font-size: 24px;">✅</span>';
+                                        html += '<div>';
+                                        html += '<strong><?php echo esc_js(__('Sitemap Index Found', 'ai-seo-client')); ?></strong>';
+                                        html += '<div class="sitemap-url"><a href="' + data.sitemap_index_url + '" target="_blank">' + data.sitemap_index_url + '</a></div>';
+                                        html += '</div></div>';
+                                    }
+                                    if (data.sitemap_exists) {
+                                        html += '<div class="sitemap-status ok">';
+                                        html += '<span style="font-size: 24px;">✅</span>';
+                                        html += '<div>';
+                                        html += '<strong><?php echo esc_js(__('XML Sitemap Found', 'ai-seo-client')); ?></strong>';
+                                        html += '<div class="sitemap-url"><a href="' + data.sitemap_url + '" target="_blank">' + data.sitemap_url + '</a></div>';
+                                        html += '<p style="margin: 5px 0 0; font-size: 12px; color: #666;"><?php echo esc_js(__('Sitemap size:', 'ai-seo-client')); ?> ' + (data.sitemap_size || 0) + ' bytes</p>';
+                                        html += '</div></div>';
+                                    }
+                                    if (!data.sitemap_exists && !data.index_exists) {
+                                        html += '<div class="sitemap-status error">';
+                                        html += '<span style="font-size: 24px;">❌</span>';
+                                        html += '<div>';
+                                        html += '<strong><?php echo esc_js(__('No Sitemap Found', 'ai-seo-client')); ?></strong>';
+                                        html += '<p><?php echo esc_js(__('Neither sitemap.xml nor sitemap_index.xml could be found.', 'ai-seo-client')); ?></p>';
+                                        html += '<p style="margin-top: 10px;"><a href="<?php echo esc_js(admin_url('admin.php?page=ai-seo-sitemap-settings')); ?>" class="button button-secondary"><?php echo esc_js(__('Open Sitemap Settings', 'ai-seo-client')); ?></a></p>';
+                                        html += '</div></div>';
+                                    }
+                                    container.html(html);
+                                }).catch(function(error) {
+                                    container.html('<div class="sitemap-status error"><span style="font-size: 24px;">❌</span><div><strong><?php echo esc_js(__('Error loading sitemap status', 'ai-seo-client')); ?></strong><p>' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</p></div></div>');
+                                });
+                            }
                             
-                            <?php if ($sitemapExists): ?>
-                                <div class="sitemap-status ok">
-                                    <span style="font-size: 24px;">✅</span>
-                                    <div>
-                                        <strong><?php esc_html_e('XML Sitemap Found', 'ai-seo-client'); ?></strong>
-                                        <div class="sitemap-url">
-                                            <a href="<?php echo esc_url($sitemapUrl); ?>" target="_blank"><?php echo esc_html($sitemapUrl); ?></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
+                            loadSitemapStatus();
                             
-                            <p style="margin-top: 20px;">
-                                <button type="button" id="run-sitemap-check" class="button button-primary">
-                                    <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
-                                </button>
-                                <span class="spinner" style="float: none; margin-left: 10px;"></span>
-                            </p>
-                            
-                            <div id="sitemap-check-results" style="margin-top: 30px;"></div>
-                            
-                            <script>
-                            jQuery(document).ready(function($) {
-                                $('#run-sitemap-check').on('click', function() {
-                                    var btn = $(this);
-                                    var spinner = btn.next('.spinner');
-                                    var results = $('#sitemap-check-results');
-                                    
-                                    btn.prop('disabled', true);
-                                    spinner.addClass('is-active');
-                                    results.html('<p><?php echo esc_js(__('Running sitemap health check...', 'ai-seo-client')); ?></p>');
-                                    
-                                    wp.apiFetch({
-                                        path: '/sseo-ai/v1/technical/audit',
-                                        method: 'POST'
-                                    }).then(function(response) {
-                                        if (response.success && response.audit && response.audit.sitemap) {
-                                            var sitemap = response.audit.sitemap;
-                                            var html = '<div class="sseo-ai-dashboard-card" style="background: white; padding: 30px; border-radius: 8px;">';
-                                            html += '<h3><?php echo esc_js(__('Sitemap Health Check Results', 'ai-seo-client')); ?></h3>';
-                                            
-                                            // Sitemap URL
-                                            html += '<p><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
-                                            
-                                            // Stats
-                                            html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
-                                            html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
-                                            html += '<div style="font-size: 32px; font-weight: bold; color: #2563eb;">' + (sitemap.total_urls || 0) + '</div>';
-                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
-                                            html += '</div>';
-                                            html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
-                                            html += '<div style="font-size: 32px; font-weight: bold; color: #00a32a;">' + (sitemap.valid_urls || 0) + '</div>';
-                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div>';
-                                            html += '</div>';
-                                            html += '<div style="background: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">';
-                                            html += '<div style="font-size: 32px; font-weight: bold; color: #d63638;">' + (sitemap.invalid_urls || 0) + '</div>';
-                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div>';
-                                            html += '</div>';
-                                            html += '</div>';
-                                            
-                                            // Issues
-                                            if (sitemap.issues && sitemap.issues.length > 0) {
-                                                html += '<h4 style="margin-top: 20px;"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
-                                                html += '<ul style="list-style: none; padding: 0;">';
-                                                sitemap.issues.forEach(function(issue) {
-                                                    html += '<li style="padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #dba617; border-radius: 4px;">';
-                                                    html += '<strong>' + issue.type + ':</strong> ' + issue.description;
-                                                    html += '</li>';
-                                                });
-                                                html += '</ul>';
-                                            } else {
-                                                html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
-                                                html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
-                                                html += '</div>';
-                                            }
-                                            
-                                            html += '</div>';
-                                            results.html(html);
+                            $('#run-sitemap-check').on('click', function() {
+                                var btn = $(this);
+                                var spinner = btn.next('.spinner');
+                                var results = $('#sitemap-check-results');
+                                
+                                btn.prop('disabled', true);
+                                spinner.addClass('is-active');
+                                results.html('<p><?php echo esc_js(__('Running sitemap health check...', 'ai-seo-client')); ?></p>');
+                                
+                                wp.apiFetch({
+                                    path: '/sseo-ai/v1/technical/audit',
+                                    method: 'POST'
+                                }).then(function(response) {
+                                    if (response.success && response.audit && response.audit.sitemap) {
+                                        var sitemap = response.audit.sitemap;
+                                        var html = '<div class="sseo-ai-dashboard-card" style="background: white; padding: 30px; border-radius: 8px;">';
+                                        html += '<h3><?php echo esc_js(__('Sitemap Health Check Results', 'ai-seo-client')); ?></h3>';
+                                        
+                                        // Sitemap URL
+                                        html += '<p><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
+                                        
+                                        // Stats
+                                        html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
+                                        html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #2563eb;">' + (sitemap.total_urls || 0) + '</div>';
+                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
+                                        html += '</div>';
+                                        html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #00a32a;">' + (sitemap.valid_urls || 0) + '</div>';
+                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div>';
+                                        html += '</div>';
+                                        html += '<div style="background: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #d63638;">' + (sitemap.invalid_urls || 0) + '</div>';
+                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div>';
+                                        html += '</div>';
+                                        html += '</div>';
+                                        
+                                        // Issues
+                                        if (sitemap.issues && sitemap.issues.length > 0) {
+                                            html += '<h4 style="margin-top: 20px;"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
+                                            html += '<ul style="list-style: none; padding: 0;">';
+                                            sitemap.issues.forEach(function(issue) {
+                                                html += '<li style="padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #dba617; border-radius: 4px;">';
+                                                html += '<strong>' + issue.type + ':</strong> ' + issue.description;
+                                                html += '</li>';
+                                            });
+                                            html += '</ul>';
                                         } else {
-                                            results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><?php echo esc_js(__('Failed to run sitemap check. Please try again.', 'ai-seo-client')); ?></div>');
+                                            html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
+                                            html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
+                                            html += '</div>';
                                         }
                                         
-                                        btn.prop('disabled', false);
-                                        spinner.removeClass('is-active');
-                                    }).catch(function(error) {
-                                        results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>');
-                                        btn.prop('disabled', false);
-                                        spinner.removeClass('is-active');
-                                    });
+                                        html += '</div>';
+                                        results.html(html);
+                                    } else {
+                                        results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><?php echo esc_js(__('Failed to run sitemap check. Please try again.', 'ai-seo-client')); ?></div>');
+                                    }
+                                    
+                                    btn.prop('disabled', false);
+                                    spinner.removeClass('is-active');
+                                }).catch(function(error) {
+                                    results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>';
+                                    btn.prop('disabled', false);
+                                    spinner.removeClass('is-active');
                                 });
                             });
-                            </script>
-                        <?php else: ?>
-                            <div class="sitemap-status error">
-                                <span style="font-size: 24px;">❌</span>
-                                <div>
-                                    <strong><?php esc_html_e('No Sitemap Found', 'ai-seo-client'); ?></strong>
-                                    <p><?php esc_html_e('Neither sitemap.xml nor sitemap_index.xml could be found.', 'ai-seo-client'); ?></p>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+                        });
+                        </script>
                     </div>
                     
                     <!-- Extended Sitemaps Info -->

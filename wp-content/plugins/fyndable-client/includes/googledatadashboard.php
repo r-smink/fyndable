@@ -206,7 +206,10 @@ class GoogleDataDashboard
             }
         }
 
-        set_transient($cacheKey, $overview, 30 * MINUTE_IN_SECONDS);
+        // Cache successful results only; don't cache auth errors so reconnections are reflected immediately.
+        if (empty($overview['errors'])) {
+            set_transient($cacheKey, $overview, 30 * MINUTE_IN_SECONDS);
+        }
         return $overview;
     }
 
@@ -433,6 +436,89 @@ class GoogleDataDashboard
                         <?php endif; ?>
                     </div>
                 </div>
+
+                <!-- Search Console -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Search Console', 'ai-seo-client'); ?></h2>
+                    <?php if ($gscConnected): ?>
+                        <div id="gsc-data-app">
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                                <select id="gsc-data-period" class="regular-text">
+                                    <option value="7"><?php esc_html_e('Last 7 days', 'ai-seo-client'); ?></option>
+                                    <option value="28" selected><?php esc_html_e('Last 28 days', 'ai-seo-client'); ?></option>
+                                    <option value="90"><?php esc_html_e('Last 3 months', 'ai-seo-client'); ?></option>
+                                </select>
+                                <button type="button" class="button button-primary" id="gsc-data-refresh">
+                                    <?php esc_html_e('Load Data', 'ai-seo-client'); ?>
+                                </button>
+                                <span class="spinner" id="gsc-data-spinner" style="float:none; margin-top: 0;"></span>
+                            </div>
+
+                            <div id="gsc-data-error" class="notice notice-error" style="display:none;"><p></p></div>
+
+                            <div class="google-stat-grid" id="gsc-data-totals" style="gap: 20px; margin-bottom: 35px;">
+                                <div class="google-stat-card">
+                                    <div class="google-stat-value" id="gsc-data-clicks">-</div>
+                                    <div class="google-stat-label"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></div>
+                                </div>
+                                <div class="google-stat-card">
+                                    <div class="google-stat-value" id="gsc-data-impressions">-</div>
+                                    <div class="google-stat-label"><?php esc_html_e('Impressions', 'ai-seo-client'); ?></div>
+                                </div>
+                                <div class="google-stat-card">
+                                    <div class="google-stat-value" id="gsc-data-ctr">-</div>
+                                    <div class="google-stat-label"><?php esc_html_e('Avg CTR', 'ai-seo-client'); ?></div>
+                                </div>
+                                <div class="google-stat-card">
+                                    <div class="google-stat-value" id="gsc-data-position">-</div>
+                                    <div class="google-stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+                                <div class="postbox" style="padding: 20px;">
+                                    <h3><?php esc_html_e('Top Queries', 'ai-seo-client'); ?></h3>
+                                    <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
+                                        <thead>
+                                            <tr>
+                                                <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
+                                                <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
+                                                <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
+                                                <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
+                                                <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gsc-data-queries-body">
+                                            <tr><td colspan="5"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="postbox" style="padding: 20px;">
+                                    <h3><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h3>
+                                    <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
+                                        <thead>
+                                            <tr>
+                                                <th><?php esc_html_e('Page', 'ai-seo-client'); ?></th>
+                                                <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
+                                                <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
+                                                <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
+                                                <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gsc-data-pages-body">
+                                            <tr><td colspan="5"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <p style="color: #64748b; text-align: center; padding: 40px;">
+                            <?php esc_html_e('Google Search Console is not connected. Connect your Google account via Integrations.', 'ai-seo-client'); ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
                 <?php endif; ?>
 
                 </div>
@@ -504,6 +590,64 @@ class GoogleDataDashboard
                 }).catch(function(err) {
                     $('#overview-stats').html('<div style="text-align:center;color:#d63638;">' + (err.message || 'Failed to load') + '</div>');
                 });
+            }
+
+            function loadGscData() {
+                var days = parseInt($('#gsc-data-period').val());
+                var btn = $('#gsc-data-refresh');
+                var spinner = $('#gsc-data-spinner');
+                btn.prop('disabled', true);
+                spinner.addClass('is-active');
+                $('#gsc-data-error').hide();
+
+                Promise.all([
+                    wp.apiFetch({ path: 'sseo-ai/v1/gsc/overview?days=' + days }),
+                    wp.apiFetch({ path: 'sseo-ai/v1/gsc/queries?days=' + days + '&limit=30' }),
+                    wp.apiFetch({ path: 'sseo-ai/v1/gsc/pages?days=' + days + '&limit=30' })
+                ]).then(function(results) {
+                    var overview = results[0];
+                    var queries = results[1];
+                    var pages = results[2];
+
+                    if (!overview.connected) {
+                        $('#gsc-data-error p').text(overview.error || '<?php echo esc_js(__('Not connected to Google Search Console.', 'ai-seo-client')); ?>');
+                        $('#gsc-data-error').show();
+                        btn.prop('disabled', false);
+                        spinner.removeClass('is-active');
+                        return;
+                    }
+
+                    var t = overview.totals;
+                    $('#gsc-data-clicks').text(formatNum(t.clicks));
+                    $('#gsc-data-impressions').text(formatNum(t.impressions));
+                    $('#gsc-data-ctr').text(t.avg_ctr + '%');
+                    $('#gsc-data-position').text(t.avg_position);
+
+                    var qHtml = '';
+                    (queries.queries || []).forEach(function(q) {
+                        qHtml += '<tr><td>' + $('<span>').text(q.query).html() + '</td><td>' + formatNum(q.clicks) + '</td><td>' + formatNum(q.impressions) + '</td><td>' + q.ctr + '%</td><td>' + q.position + '</td></tr>';
+                    });
+                    $('#gsc-data-queries-body').html(qHtml || '<tr><td colspan="5"><?php echo esc_js(__('No data available.', 'ai-seo-client')); ?></td></tr>');
+
+                    var pHtml = '';
+                    (pages.pages || []).forEach(function(p) {
+                        pHtml += '<tr><td title="' + $('<span>').text(p.url).html() + '">' + $('<span>').text(p.path || '/').html() + '</td><td>' + formatNum(p.clicks) + '</td><td>' + formatNum(p.impressions) + '</td><td>' + p.ctr + '%</td><td>' + p.position + '</td></tr>';
+                    });
+                    $('#gsc-data-pages-body').html(pHtml || '<tr><td colspan="5"><?php echo esc_js(__('No data available.', 'ai-seo-client')); ?></td></tr>');
+
+                    btn.prop('disabled', false);
+                    spinner.removeClass('is-active');
+                }).catch(function(err) {
+                    $('#gsc-data-error p').text(err.message || '<?php echo esc_js(__('Error loading data.', 'ai-seo-client')); ?>');
+                    $('#gsc-data-error').show();
+                    btn.prop('disabled', false);
+                    spinner.removeClass('is-active');
+                });
+            }
+
+            $('#gsc-data-refresh').on('click', loadGscData);
+            if ($('#gsc-data-app').length) {
+                loadGscData();
             }
 
             function loadGA4Data() {

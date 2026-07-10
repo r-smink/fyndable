@@ -22,13 +22,63 @@ class SitemapGenerator
         add_action('delete_post', [$this, 'onPostDelete']);
         add_action('aiseoclient_generate_sitemap', [$this, 'generateAll']);
         add_action('admin_init', [$this, 'registerSettings']);
+        add_action('rest_api_init', [$this, 'registerRestRoutes']);
         $this->disableWordPressSitemap();
+    }
+
+    public function registerRestRoutes(): void
+    {
+        register_rest_route('sseo-ai/v1', '/sitemap/status', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetStatus'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+    }
+
+    public function restGetStatus(): array
+    {
+        $sitemapUrl = home_url('/sitemap.xml');
+        $sitemapIndexUrl = home_url('/sitemap_index.xml');
+
+        $response = wp_remote_get($sitemapUrl, ['timeout' => 5]);
+        $sitemapExists = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
+        $sitemapSize = !is_wp_error($response) ? strlen(wp_remote_retrieve_body($response) ?: '') : 0;
+
+        $indexResponse = wp_remote_get($sitemapIndexUrl, ['timeout' => 5]);
+        $indexExists = !is_wp_error($indexResponse) && wp_remote_retrieve_response_code($indexResponse) === 200;
+
+        return [
+            'sitemap_url' => $sitemapUrl,
+            'sitemap_index_url' => $sitemapIndexUrl,
+            'sitemap_exists' => $sitemapExists,
+            'index_exists' => $indexExists,
+            'sitemap_size' => $sitemapSize,
+            'rewrite_rules_flushed' => (bool) get_option('sseo_rewrite_rules_flushed'),
+        ];
     }
 
     public function registerSettings(): void
     {
-        register_setting('sseo_sitemap_settings', 'sseo_sitemap_post_types', ['type' => 'array', 'default' => null]);
-        register_setting('sseo_sitemap_settings', 'sseo_sitemap_taxonomies', ['type' => 'array', 'default' => null]);
+        register_setting('sseo_sitemap_settings', 'sseo_sitemap_post_types', [
+            'type' => 'array',
+            'default' => null,
+            'sanitize_callback' => function ($value) {
+                if (!is_array($value)) {
+                    return [];
+                }
+                return array_values(array_filter(array_map('sanitize_text_field', $value)));
+            },
+        ]);
+        register_setting('sseo_sitemap_settings', 'sseo_sitemap_taxonomies', [
+            'type' => 'array',
+            'default' => null,
+            'sanitize_callback' => function ($value) {
+                if (!is_array($value)) {
+                    return [];
+                }
+                return array_values(array_filter(array_map('sanitize_text_field', $value)));
+            },
+        ]);
         register_setting('sseo_sitemap_settings', 'sseo_sitemap_exclude_ids', ['type' => 'string', 'default' => '']);
         register_setting('sseo_sitemap_settings', 'sseo_sitemap_ping_engines', ['type' => 'boolean', 'default' => true]);
     }
@@ -296,6 +346,10 @@ class SitemapGenerator
 
     public function generateTaxonomySitemap(string $taxonomy): string
     {
+        if (!in_array($taxonomy, $this->getEnabledTaxonomies())) {
+            return '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>';
+        }
+
         $xslUrl = SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl';
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<?xml-stylesheet type="text/xsl" href="' . esc_url($xslUrl) . '"?>' . "\n";
@@ -412,6 +466,7 @@ class SitemapGenerator
 
                 <h2><?php esc_html_e('Post Types in Sitemap', 'ai-seo-client'); ?></h2>
                 <p><?php esc_html_e('Select which post types to include in the sitemap.', 'ai-seo-client'); ?></p>
+                <input type="hidden" name="sseo_sitemap_post_types[]" value="">
                 <table class="form-table">
                     <?php foreach ($allPostTypes as $pt): ?>
                         <?php if (in_array($pt->name, $internalTypes)) continue; ?>
@@ -427,6 +482,7 @@ class SitemapGenerator
 
                 <h2><?php esc_html_e('Taxonomies in Sitemap', 'ai-seo-client'); ?></h2>
                 <p><?php esc_html_e('Select which taxonomies to include as separate sitemaps.', 'ai-seo-client'); ?></p>
+                <input type="hidden" name="sseo_sitemap_taxonomies[]" value="">
                 <table class="form-table">
                     <?php foreach ($allTaxonomies as $tax): ?>
                         <tr>

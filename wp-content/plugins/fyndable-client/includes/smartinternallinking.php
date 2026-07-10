@@ -31,6 +31,7 @@ class SmartInternalLinking
         add_action('wp_ajax_sseo_ai_detect_orphans', [$this, 'ajaxDetectOrphans']);
         add_action('wp_ajax_sseo_ai_generate_opportunities', [$this, 'ajaxGenerateOpportunities']);
         add_action('wp_ajax_sseo_ai_add_internal_link', [$this, 'ajaxAddInternalLink']);
+        add_action('wp_ajax_sseo_ai_fix_orphan', [$this, 'ajaxFixOrphan']);
         
         // Scheduled orphan detection
         if (!wp_next_scheduled('sseo_ai_detect_orphans')) {
@@ -432,21 +433,28 @@ class SmartInternalLinking
         
         <script>
         function sseoInsertLink(url, anchorText) {
+            if (!url || !anchorText) {
+                alert('<?php echo esc_js(__('Invalid link data.', 'ai-seo-client')); ?>');
+                return;
+            }
+
             const link = '<a href="' + url + '">' + anchorText + '</a>';
-            
+
             // Insert into editor
             if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor')) {
-                // Gutenberg
+                // Gutenberg: update raw content by replacing the first occurrence of the anchor text
                 const content = wp.data.select('core/editor').getEditedPostContent();
+                const regex = new RegExp('\\b' + anchorText.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&') + '\\b', 'i');
+                const newContent = content.replace(regex, link);
                 wp.data.dispatch('core/editor').editPost({
-                    content: content + ' ' + link
+                    content: newContent !== content ? newContent : content + ' ' + link
                 });
             } else if (typeof tinymce !== 'undefined') {
                 // Classic editor
                 tinymce.activeEditor.insertContent(link);
             }
-            
-            alert('<?php esc_html_e('Link inserted!', 'ai-seo-client'); ?>');
+
+            alert('<?php echo esc_js(__('Link inserted!', 'ai-seo-client')); ?>');
         }
         
         function sseoRefreshSuggestions(postId) {
@@ -995,6 +1003,77 @@ Provide only the anchor text (2-5 words), no explanation.";
         ]);
 
         wp_send_json_success(['message' => 'Link added successfully']);
+    }
+
+    public function ajaxFixOrphan(): void
+    {
+        check_ajax_referer('sseo_linking', 'nonce');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $pageId = (int) ($_POST['page_id'] ?? 0);
+        if (!$pageId) {
+            wp_send_json_error(['message' => 'Page ID required']);
+        }
+
+        $orphanPost = get_post($pageId);
+        if (!$orphanPost || $orphanPost->post_status !== 'publish') {
+            wp_send_json_error(['message' => 'Orphan page not found']);
+        }
+
+        $sources = $this->findSuggestedSources((object)[
+            'ID' => $orphanPost->ID,
+            'post_title' => $orphanPost->post_title,
+            'post_content' => $orphanPost->post_content,
+        ]);
+
+        if (empty($sources)) {
+            wp_send_json_error(['message' => 'No suitable source pages found']);
+        }
+
+        $orphanUrl = get_permalink($orphanPost->ID);
+        if (!$orphanUrl) {
+            wp_send_json_error(['message' => 'Could not generate page URL']);
+        }
+
+        // Use the most relevant source page
+        $sourceId = (int) $sources[0]['id'];
+        $sourcePost = get_post($sourceId);
+        if (!$sourcePost || $sourcePost->post_status !== 'publish') {
+            wp_send_json_error(['message' => 'Source page not found']);
+        }
+
+        // Build anchor text from orphan title or focus keyphrase
+        $anchorText = sanitize_text_field($orphanPost->post_title);
+        $focusKeyphrase = get_post_meta($orphanPost->ID, '_sseo_ai_focus_keyphrase', true);
+        if ($focusKeyphrase && stripos($sourcePost->post_content, $focusKeyphrase) !== false) {
+            $anchorText = sanitize_text_field($focusKeyphrase);
+        }
+
+        $link = '<a href="' . esc_url($orphanUrl) . '">' . esc_html($anchorText) . '</a>';
+        $content = $sourcePost->post_content;
+
+        // Insert at first paragraph end or append
+        $pos = stripos($content, $anchorText);
+        if ($pos !== false) {
+            $content = substr($content, 0, $pos) . $link . substr($content, $pos + strlen($anchorText));
+        } else {
+            $firstParaEnd = strpos($content, '</p>');
+            if ($firstParaEnd !== false) {
+                $content = substr($content, 0, $firstParaEnd + 4) . "\n\n" . $link . substr($content, $firstParaEnd + 4);
+            } else {
+                $content .= "\n\n" . $link;
+            }
+        }
+
+        wp_update_post([
+            'ID' => $sourceId,
+            'post_content' => $content,
+        ]);
+
+        wp_send_json_success(['message' => 'Internal link added from ' . esc_html($sourcePost->post_title)]);
     }
     
     /**

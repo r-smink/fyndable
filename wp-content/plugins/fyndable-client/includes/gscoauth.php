@@ -318,6 +318,7 @@ class GscOAuth
             return new \WP_Error('gsc_token', __('Invalid token response', 'ai-seo-client'));
         }
 
+        $tokens['created'] = time();
         update_option('aiseoclient_gsc_tokens', $tokens, false);
         return $tokens;
     }
@@ -350,6 +351,7 @@ class GscOAuth
         $body = json_decode(wp_remote_retrieve_body($resp), true);
         if (!is_array($body)) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
         $body['refresh_token'] = $refresh;
+        $body['created'] = time();
         update_option('aiseoclient_gsc_tokens', $body, false);
         return $body;
     }
@@ -357,13 +359,25 @@ class GscOAuth
     public function getAccessToken(): string
     {
         $tokens = get_option('aiseoclient_gsc_tokens', []);
-        if (!empty($tokens['access_token']) && isset($tokens['expires_in'])) {
-            return $tokens['access_token'];
+        $accessToken = $tokens['access_token'] ?? '';
+        $refreshToken = $tokens['refresh_token'] ?? '';
+        $expiresIn = $tokens['expires_in'] ?? 0;
+        $created = $tokens['created'] ?? 0;
+
+        // Use existing token if it is still valid (with 60s safety margin).
+        if ($accessToken && $created && $expiresIn && ($created + $expiresIn - 60) > time()) {
+            return $accessToken;
         }
-        $ref = $this->refresh();
-        if (is_wp_error($ref)) {
-            return '';
+
+        // Refresh proactively if we have a refresh token.
+        if ($refreshToken) {
+            $ref = $this->refresh();
+            if (!is_wp_error($ref)) {
+                return $ref['access_token'] ?? '';
+            }
         }
-        return $ref['access_token'] ?? '';
+
+        // Fallback to existing token if refresh is not possible.
+        return $accessToken;
     }
 }

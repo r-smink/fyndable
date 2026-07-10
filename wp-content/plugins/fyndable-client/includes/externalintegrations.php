@@ -30,17 +30,24 @@ class ExternalIntegrations
 
         // AJAX handler for saving Google config
         add_action('wp_ajax_sseo_ai_save_google_config', [$this, 'ajaxSaveGoogleConfig']);
-        
+
+        // Google Tag Manager front-end snippets
+        add_action('wp_head', [$this, 'renderGtmHeadScript'], 1);
+        add_action('wp_body_open', [$this, 'renderGtmBodyScript'], 1);
+
+        // Direct GA4 tracking snippet (alternative to GA4 via GTM)
+        add_action('wp_head', [$this, 'renderGa4TrackingScript'], 2);
+
         // Hooks for automatic notifications
         add_action('sseo_ai_rank_change', [$this, 'notifyRankChange'], 10, 3);
         add_action('sseo_ai_content_published', [$this, 'notifyContentPublished'], 10, 1);
         add_action('sseo_ai_seo_score_change', [$this, 'notifySeoScoreChange'], 10, 3);
-        
+
         // Scheduled reports
         add_action('sseo_ai_daily_report', [$this, 'sendDailyReport']);
         add_action('sseo_ai_weekly_report', [$this, 'sendWeeklyReport']);
         add_action('sseo_ai_monthly_report', [$this, 'sendMonthlyReport']);
-        
+
         // Schedule cron jobs
         if (!wp_next_scheduled('sseo_ai_daily_report')) {
             wp_schedule_event(strtotime('tomorrow 9:00'), 'daily', 'sseo_ai_daily_report');
@@ -113,6 +120,22 @@ class ExternalIntegrations
         // Google Analytics 4
         register_setting('sseo_ai_integrations', 'sseo_ai_ga4_property_id');
 
+        // Google Analytics 4 measurement ID (for direct gtag.js tracking)
+        register_setting('sseo_ai_integrations', 'sseo_ai_ga4_measurement_id', [
+            'sanitize_callback' => function ($value) {
+                $value = sanitize_text_field($value ?? '');
+                return preg_match('/^G-[A-Z0-9]{7,}$/i', $value) ? strtoupper($value) : '';
+            },
+        ]);
+
+        // Google Tag Manager
+        register_setting('sseo_ai_integrations', 'sseo_ai_gtm_id', [
+            'sanitize_callback' => function ($value) {
+                $value = sanitize_text_field($value ?? '');
+                return preg_match('/^GTM-[A-Z0-9]{4,}$/i', $value) ? strtoupper($value) : '';
+            },
+        ]);
+
         // Google Ads
         register_setting('sseo_ai_integrations', 'sseo_ai_google_ads_customer_id');
     }
@@ -163,6 +186,10 @@ class ExternalIntegrations
         // Google Analytics 4
         $ga4PropertyId = get_option('sseo_ai_ga4_property_id', '');
         $ga4Connected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']) && !empty($ga4PropertyId);
+        $ga4MeasurementId = get_option('sseo_ai_ga4_measurement_id', '');
+
+        // Google Tag Manager
+        $gtmId = get_option('sseo_ai_gtm_id', '');
 
         // Google Ads
         $adsCustomerId = get_option('sseo_ai_google_ads_customer_id', '');
@@ -252,6 +279,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoTestSlack()">
                         <?php esc_html_e('Test Slack Connection', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Zapier / Make.com -->
@@ -311,6 +341,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoAddCustomWebhook()">
                         <?php esc_html_e('Add Custom Webhook', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                     </div>
                     
@@ -374,6 +407,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoSendTestReport()">
                         <?php esc_html_e('Send Test Report', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Google Drive Export -->
@@ -408,6 +444,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoExportToGDrive()">
                         <?php esc_html_e('Export Now', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Google Services (Search Console + Analytics 4 + Google Ads) -->
@@ -483,6 +522,46 @@ class ExternalIntegrations
                         </tr>
                     </table>
 
+                    <h3 style="margin-top: 20px;"><?php esc_html_e('Google Tag Manager', 'ai-seo-client'); ?></h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="gtm_id"><?php esc_html_e('GTM Container ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="gtm_id" name="sseo_ai_gtm_id"
+                                       value="<?php echo esc_attr($gtmId); ?>" class="regular-text"
+                                       placeholder="GTM-XXXXXXX">
+                                <p class="description">
+                                    <?php esc_html_e('Your GTM container ID. The snippet will be added to wp_head and after the opening body tag.', 'ai-seo-client'); ?>
+                                    <?php if ($gtmId): ?>
+                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GTM snippet active', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 20px;"><?php esc_html_e('Google Analytics 4 Tracking', 'ai-seo-client'); ?></h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="ga4_measurement_id"><?php esc_html_e('GA4 Measurement ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="ga4_measurement_id" name="sseo_ai_ga4_measurement_id"
+                                       value="<?php echo esc_attr($ga4MeasurementId); ?>" class="regular-text"
+                                       placeholder="G-XXXXXXXXXX">
+                                <p class="description">
+                                    <?php esc_html_e('Direct GA4 tracking snippet (gtag.js). Only use this if you do NOT track GA4 via the GTM container above, otherwise you will count visitors twice.', 'ai-seo-client'); ?>
+                                    <?php if ($ga4MeasurementId): ?>
+                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GA4 gtag snippet active', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
                     <h3 style="margin-top: 20px;"><?php esc_html_e('Google Ads', 'ai-seo-client'); ?></h3>
                     <table class="form-table">
                         <tr>
@@ -503,6 +582,10 @@ class ExternalIntegrations
                         </tr>
                     </table>
                     <?php endif; ?>
+
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Notion Integration -->
@@ -540,6 +623,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoSyncToNotion()">
                         <?php esc_html_e('Sync to Notion', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                 </div>
 
                         <!-- SE Ranking Integration -->
@@ -565,6 +651,9 @@ class ExternalIntegrations
                                     <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
                                 </a>
                             <?php endif; ?>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
 
                         <!-- Ahrefs Integration -->
@@ -590,13 +679,14 @@ class ExternalIntegrations
                                     <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
                                 </a>
                             <?php endif; ?>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                 
                         </div>
                     </div>
                 </div>
-                
-                <?php submit_button(__('Save Integration Settings', 'ai-seo-client')); ?>
             </form>
             </div>
         </div>
@@ -1170,6 +1260,59 @@ class ExternalIntegrations
         return $csv;
     }
     
+    /**
+     * Render Google Tag Manager head script (wp_head)
+     */
+    public function renderGtmHeadScript(): void
+    {
+        $gtmId = get_option('sseo_ai_gtm_id', '');
+        if (!$gtmId) {
+            return;
+        }
+        echo "<!-- Google Tag Manager -->\n";
+        echo "<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\n";
+        echo "new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\n";
+        echo "j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=\n";
+        echo "'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n";
+        echo "})(window,document,'script','dataLayer','" . esc_js($gtmId) . "');</script>\n";
+        echo "<!-- End Google Tag Manager -->\n";
+    }
+
+    /**
+     * Render Google Tag Manager noscript iframe (wp_body_open)
+     */
+    public function renderGtmBodyScript(): void
+    {
+        $gtmId = get_option('sseo_ai_gtm_id', '');
+        if (!$gtmId) {
+            return;
+        }
+        echo "<!-- Google Tag Manager (noscript) -->\n";
+        echo "<noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id=" . esc_attr($gtmId) . "\"\n";
+        echo "height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript>\n";
+        echo "<!-- End Google Tag Manager (noscript) -->\n";
+    }
+
+    /**
+     * Render direct GA4 gtag.js snippet (wp_head)
+     */
+    public function renderGa4TrackingScript(): void
+    {
+        $measurementId = get_option('sseo_ai_ga4_measurement_id', '');
+        if (!$measurementId) {
+            return;
+        }
+        echo "<!-- Google tag (gtag.js) -->\n";
+        echo "<script async src=\"https://www.googletagmanager.com/gtag/js?id=" . esc_attr($measurementId) . "\"></script>\n";
+        echo "<script>\n";
+        echo "  window.dataLayer = window.dataLayer || [];\n";
+        echo "  function gtag(){dataLayer.push(arguments);}\n";
+        echo "  gtag('js', new Date());\n";
+        echo "  gtag('config', '" . esc_js($measurementId) . "');\n";
+        echo "</script>\n";
+        echo "<!-- End Google tag (gtag.js) -->\n";
+    }
+
     /**
      * Register REST API routes
      */
