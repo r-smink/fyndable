@@ -1087,6 +1087,46 @@ PROMPT;
             </div>
         </div>
 
+        <!-- Clusters Modal -->
+        <div class="sseo-modal" id="modal-clusters" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Keyword Clusters', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <?php if (empty($clusters)): ?>
+                        <p><?php esc_html_e('No clusters found. Generate clusters from the Topic Clusters page.', 'ai-seo-client'); ?></p>
+                    <?php else: ?>
+                        <table class="keywords-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Cluster', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($clusters as $cluster): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($cluster->name); ?></td>
+                                        <td>
+                                            <button type="button" class="sseo-btn-secondary btn-filter-cluster" data-id="<?php echo esc_attr($cluster->id); ?>">
+                                                <?php esc_html_e('Show keywords', 'ai-seo-client'); ?>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>
+                </div>
+            </div>
+        </div>
+
         <!-- Keyword Explorer Modal -->
         <div class="sseo-modal modal-large" id="modal-explorer" style="display: none;">
             <div class="sseo-modal-overlay"></div>
@@ -1159,6 +1199,20 @@ PROMPT;
             // Explorer button
             $('#btn-keywords-explorer').on('click', function() {
                 $('#modal-explorer').show();
+            });
+
+            // Clusters button
+            $('#btn-clusters').on('click', function() {
+                $('#modal-clusters').show();
+            });
+
+            // Filter cluster from clusters modal
+            $(document).on('click', '.btn-filter-cluster', function() {
+                const clusterId = $(this).data('id');
+                $('#filter-cluster').val(clusterId);
+                currentPage = 1;
+                $('#modal-clusters').hide();
+                loadKeywords();
             });
 
             // Close modals
@@ -1368,7 +1422,7 @@ PROMPT;
                             <td class="col-cluster">
                                 ${kw.cluster_name ? `<span class="cluster-badge">${escapeHtml(kw.cluster_name)}</span>` : `<button class="btn-set-cluster" data-id="${kw.id}">+ <?php echo esc_js(__('set cluster', 'ai-seo-client')); ?></button>`}
                             </td>
-                            <td class="col-volume">${kw.search_volume.toLocaleString()}</td>
+                            <td class="col-volume">${(kw.search_volume || 0).toLocaleString()}</td>
                             <td class="col-difficulty">
                                 <span class="difficulty-badge ${difficultyClass}">${kw.difficulty}</span>
                             </td>
@@ -1484,7 +1538,7 @@ PROMPT;
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     month: 'short',
                     day: 'numeric'
                 });

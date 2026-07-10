@@ -22,12 +22,13 @@ class SitemapGenerator
         add_action('delete_post', [$this, 'onPostDelete']);
         add_action('aiseoclient_generate_sitemap', [$this, 'generateAll']);
         add_action('admin_init', [$this, 'registerSettings']);
+        $this->disableWordPressSitemap();
     }
 
     public function registerSettings(): void
     {
-        register_setting('sseo_sitemap_settings', 'sseo_sitemap_post_types', ['type' => 'array', 'default' => []]);
-        register_setting('sseo_sitemap_settings', 'sseo_sitemap_taxonomies', ['type' => 'array', 'default' => []]);
+        register_setting('sseo_sitemap_settings', 'sseo_sitemap_post_types', ['type' => 'array', 'default' => null]);
+        register_setting('sseo_sitemap_settings', 'sseo_sitemap_taxonomies', ['type' => 'array', 'default' => null]);
         register_setting('sseo_sitemap_settings', 'sseo_sitemap_exclude_ids', ['type' => 'string', 'default' => '']);
         register_setting('sseo_sitemap_settings', 'sseo_sitemap_ping_engines', ['type' => 'boolean', 'default' => true]);
     }
@@ -56,7 +57,10 @@ class SitemapGenerator
     {
         $type = get_query_var('aiseo_sitemap');
         if (!$type) {
-            return;
+            $type = $this->detectSitemapRequest();
+            if (!$type) {
+                return;
+            }
         }
 
         header('Content-Type: application/xml; charset=UTF-8');
@@ -71,6 +75,27 @@ class SitemapGenerator
             echo $this->generateType($type);
         }
         exit;
+    }
+
+    /**
+     * Fallback detection for sitemap URLs when rewrite rules are not flushed.
+     */
+    private function detectSitemapRequest(): string
+    {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        $path = parse_url($requestUri, PHP_URL_PATH) ?: '';
+        $path = trim($path, '/');
+
+        if ($path === 'sitemap.xml' || $path === 'sitemap_index.xml' || $path === 'wp-sitemap.xml') {
+            return 'main';
+        }
+        if (preg_match('/^sitemap-tax-([a-z0-9_-]+)\.xml$/', $path, $matches)) {
+            return 'tax-' . $matches[1];
+        }
+        if (preg_match('/^sitemap-([a-z0-9_-]+)\.xml$/', $path, $matches)) {
+            return $matches[1];
+        }
+        return '';
     }
 
     public function generateIndex(): string
@@ -241,8 +266,8 @@ class SitemapGenerator
 
     private function getEnabledPostTypes(): array
     {
-        $saved = get_option('sseo_sitemap_post_types', []);
-        if (!empty($saved)) {
+        $saved = get_option('sseo_sitemap_post_types', null);
+        if (is_array($saved)) {
             return $saved;
         }
         // Default: all public post types except internal ones
@@ -252,8 +277,8 @@ class SitemapGenerator
 
     private function getEnabledTaxonomies(): array
     {
-        $saved = get_option('sseo_sitemap_taxonomies', []);
-        if (!empty($saved)) {
+        $saved = get_option('sseo_sitemap_taxonomies', null);
+        if (is_array($saved)) {
             return $saved;
         }
         // Default: category and post_tag
@@ -365,8 +390,14 @@ class SitemapGenerator
 
     public function renderSettings(): void
     {
-        $enabledPostTypes = (array) get_option('sseo_sitemap_post_types', []);
-        $enabledTaxonomies = (array) get_option('sseo_sitemap_taxonomies', []);
+        $rawPostTypes = get_option('sseo_sitemap_post_types', null);
+        $enabledPostTypes = is_array($rawPostTypes) ? $rawPostTypes : [];
+        $postTypeDefaultsActive = ($rawPostTypes === null);
+
+        $rawTaxonomies = get_option('sseo_sitemap_taxonomies', null);
+        $enabledTaxonomies = is_array($rawTaxonomies) ? $rawTaxonomies : [];
+        $taxonomyDefaultsActive = ($rawTaxonomies === null);
+
         $excludeIds = get_option('sseo_sitemap_exclude_ids', '');
         $pingEngines = get_option('sseo_sitemap_ping_engines', true);
 
@@ -387,7 +418,7 @@ class SitemapGenerator
                         <tr>
                             <th scope="row"><label for="pt-<?php echo esc_attr($pt->name); ?>"><?php echo esc_html($pt->label); ?></label></th>
                             <td>
-                                <input type="checkbox" name="sseo_sitemap_post_types[]" id="pt-<?php echo esc_attr($pt->name); ?>" value="<?php echo esc_attr($pt->name); ?>" <?php checked(in_array($pt->name, $enabledPostTypes) || empty($enabledPostTypes)); ?>>
+                                <input type="checkbox" name="sseo_sitemap_post_types[]" id="pt-<?php echo esc_attr($pt->name); ?>" value="<?php echo esc_attr($pt->name); ?>" <?php checked(in_array($pt->name, $enabledPostTypes) || ($postTypeDefaultsActive && !in_array($pt->name, ['attachment', 'aiseo_note', 'aiseo_prompt', 'aiseo_calendar']))); ?>>
                                 <code><?php echo esc_html($pt->name); ?></code>
                             </td>
                         </tr>
@@ -401,7 +432,7 @@ class SitemapGenerator
                         <tr>
                             <th scope="row"><label for="tax-<?php echo esc_attr($tax->name); ?>"><?php echo esc_html($tax->label); ?></label></th>
                             <td>
-                                <input type="checkbox" name="sseo_sitemap_taxonomies[]" id="tax-<?php echo esc_attr($tax->name); ?>" value="<?php echo esc_attr($tax->name); ?>" <?php checked(in_array($tax->name, $enabledTaxonomies) || empty($enabledTaxonomies)); ?>>
+                                <input type="checkbox" name="sseo_sitemap_taxonomies[]" id="tax-<?php echo esc_attr($tax->name); ?>" value="<?php echo esc_attr($tax->name); ?>" <?php checked(in_array($tax->name, $enabledTaxonomies) || ($taxonomyDefaultsActive && in_array($tax->name, ['category', 'post_tag']))); ?>>
                                 <code><?php echo esc_html($tax->name); ?></code>
                             </td>
                         </tr>

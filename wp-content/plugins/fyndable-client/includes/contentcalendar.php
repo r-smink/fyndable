@@ -345,11 +345,11 @@ class ContentCalendar
         
         <script>
         function sseoEditContent(postId) {
-            window.location.href = '<?php echo admin_url('post.php?action=edit&post='); ?>' + postId;
+            window.open('<?php echo admin_url('post.php?action=edit&post='); ?>' + postId, '_blank');
         }
         
         function sseoScheduleContent() {
-            window.location.href = '<?php echo admin_url('post-new.php'); ?>';
+            window.open('<?php echo admin_url('post-new.php'); ?>', '_blank');
         }
         
         function sseoOptimizeSchedule() {
@@ -371,11 +371,15 @@ class ContentCalendar
         }
         
         function sseoFillGap(date) {
-            window.location.href = '<?php echo admin_url('post-new.php?suggested_date='); ?>' + date;
+            window.open('<?php echo admin_url('post-new.php?suggested_date='); ?>' + date, '_blank');
+        }
+
+        function sseoCreatePageFromOpportunity(keyword, date) {
+            window.open('<?php echo admin_url('post-new.php?post_type=page&keyword='); ?>' + encodeURIComponent(keyword) + '&suggested_date=' + date, '_blank');
         }
         
         function sseoCreateFromOpportunity(keyword, date) {
-            window.location.href = '<?php echo admin_url('post-new.php?keyword='); ?>' + encodeURIComponent(keyword) + '&suggested_date=' + date;
+            window.open('<?php echo admin_url('post-new.php?keyword='); ?>' + encodeURIComponent(keyword) + '&suggested_date=' + date, '_blank');
         }
         
         function sseoApproveContent(postId) {

@@ -948,6 +948,7 @@ class CreatedPosts
                     path: 'sseo-ai/v1/created-posts?' + $.param(params),
                     method: 'GET'
                 }).then(function(response) {
+                    console.log('Created posts response:', response);
                     renderPosts(response.posts);
                     renderPagination(response.total_pages, response.page);
                     $('#total-posts-count').text(response.total);
@@ -1086,7 +1087,7 @@ class CreatedPosts
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
@@ -1096,7 +1097,7 @@ class CreatedPosts
             function formatDateTime(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     month: 'short',
                     day: 'numeric',
                     hour: '2-digit',

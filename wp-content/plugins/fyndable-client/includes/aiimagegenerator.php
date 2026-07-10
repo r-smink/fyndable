@@ -529,7 +529,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
                 'Content-Type' => 'application/json',
             ],
             'body' => wp_json_encode([
-                'model' => 'dall-e-3',
+                'model' => $model,
                 'prompt' => $prompt,
                 'n' => 1,
                 'size' => '1024x1024',

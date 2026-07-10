@@ -53,11 +53,6 @@ class FyndableDashboard
                 'icon' => '&#128197;',
             ];
             $this->menuItems[] = [
-                'slug' => 'ai-seo-ai-tools',
-                'label' => __('AI Tools', 'ai-seo-client'),
-                'icon' => '&#129302;',
-            ];
-            $this->menuItems[] = [
                 'slug' => 'ai-seo-ideas',
                 'label' => __('Ideas', 'ai-seo-client'),
                 'icon' => '&#128161;',
@@ -83,9 +78,9 @@ class FyndableDashboard
                 'icon' => '&#128506;',
             ];
             $this->menuItems[] = [
-                'slug' => 'ai-seo-integrations',
-                'label' => __('Integrations', 'ai-seo-client'),
-                'icon' => '&#128268;',
+                'slug' => 'ai-seo-bulk',
+                'label' => __('Bulk Optimizer', 'ai-seo-client'),
+                'icon' => '&#9989;',
             ];
             $this->menuItems[] = [
                 'slug' => 'ai-seo-data-dashboard',
@@ -131,6 +126,20 @@ class FyndableDashboard
                     'icon' => '&#129514;',
                 ];
             }
+        }
+
+        // Utility items at the bottom of the sidebar
+        if ($isLicenseValid) {
+            $this->menuItems[] = [
+                'slug' => 'ai-seo-ai-tools',
+                'label' => __('AI Tools', 'ai-seo-client'),
+                'icon' => '&#129302;',
+            ];
+            $this->menuItems[] = [
+                'slug' => 'ai-seo-integrations',
+                'label' => __('Integrations', 'ai-seo-client'),
+                'icon' => '&#128268;',
+            ];
         }
 
         $this->menuItems[] = [

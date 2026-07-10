@@ -146,6 +146,9 @@ class Client
 
         // Create brand visibility table
         BrandVisibilityTracker::createTable();
+
+        // Ensure sitemap rewrite rules are registered immediately
+        flush_rewrite_rules();
     }
 
     /**
@@ -662,6 +665,16 @@ class Client
                 'manage_options',
                 'ai-seo-sitemaps',
                 [$this, 'renderSitemapsPage']
+            );
+
+            // 8c. Bulk Optimizer - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Bulk Optimizer', 'ai-seo-client'),
+                __('✅ Bulk Optimizer', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-bulk',
+                [$this, 'renderBulkOptimizerPage']
             );
 
             // 8b. Redirect Manager - starter+
@@ -1242,6 +1255,22 @@ class Client
         }
         if ($this->keywords) {
             $this->keywords->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Bulk Optimizer page - delegates to BulkActions class
+     */
+    public function renderBulkOptimizerPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->bulkActions) {
+            $this->bulkActions->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }

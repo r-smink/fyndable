@@ -1221,7 +1221,7 @@ PROMPT;
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'

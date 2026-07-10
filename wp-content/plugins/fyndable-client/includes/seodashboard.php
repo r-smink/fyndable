@@ -88,6 +88,14 @@ class SeoDashboard
 
         $issuesList = [];
         $quickWins = [];
+        $affected = [
+            'missing_title' => [],
+            'missing_description' => [],
+            'missing_keyphrase' => [],
+            'missing_og' => [],
+            'missing_links' => [],
+            'thin_content' => [],
+        ];
 
         // Get thumbnail IDs in one query
         $thumbnailMap = [];
@@ -134,11 +142,30 @@ class SeoDashboard
             $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
             $ogTitle = get_post_meta($postId, '_sseo_ai_og_title', true);
 
-            if ($seoTitle) $withTitle++;
-            if ($seoDesc) $withDesc++;
-            if ($keyphrase) $withKeyphrase++;
-            if ($ogTitle) $withOg++;
-            if ($wordCount < 300) $thinContent++;
+            if ($seoTitle) {
+                $withTitle++;
+            } else {
+                $affected['missing_title'][] = ['id' => $postId, 'title' => $post->post_title, 'url' => admin_url('post.php?post=' . $postId . '&action=edit')];
+            }
+            if ($seoDesc) {
+                $withDesc++;
+            } else {
+                $affected['missing_description'][] = ['id' => $postId, 'title' => $post->post_title, 'url' => admin_url('post.php?post=' . $postId . '&action=edit')];
+            }
+            if ($keyphrase) {
+                $withKeyphrase++;
+            } else {
+                $affected['missing_keyphrase'][] = ['id' => $postId, 'title' => $post->post_title, 'url' => admin_url('post.php?post=' . $postId . '&action=edit')];
+            }
+            if ($ogTitle) {
+                $withOg++;
+            } else {
+                $affected['missing_og'][] = ['id' => $postId, 'title' => $post->post_title, 'url' => admin_url('post.php?post=' . $postId . '&action=edit')];
+            }
+            if ($wordCount < 300) {
+                $thinContent++;
+                $affected['thin_content'][] = ['id' => $postId, 'title' => $post->post_title, 'url' => admin_url('post.php?post=' . $postId . '&action=edit')];
+            }
 
             // Check internal links (cached in content)
             $hasInternalLink = false;
@@ -152,7 +179,11 @@ class SeoDashboard
                     }
                 }
             }
-            if ($hasInternalLink) $withInternalLinks++;
+            if ($hasInternalLink) {
+                $withInternalLinks++;
+            } else {
+                $affected['missing_links'][] = ['id' => $postId, 'title' => $post->post_title, 'url' => admin_url('post.php?post=' . $postId . '&action=edit')];
+            }
 
             // Check featured image alt (from pre-fetched data)
             if (isset($thumbnailMap[$postId]) && isset($altTexts[$thumbnailMap[$postId]])) {
@@ -160,12 +191,18 @@ class SeoDashboard
             }
 
             // Collect specific issues for quick wins (limit to 20 max)
-            if (!$seoTitle && !$seoDesc && $wordCount >= 300 && count($quickWins) < 20) {
+            if ($wordCount >= 300 && count($quickWins) < 20 && (!$seoTitle || !$seoDesc)) {
+                $reasonParts = [];
+                if (!$seoTitle) $reasonParts[] = __('missing title', 'ai-seo-client');
+                if (!$seoDesc) $reasonParts[] = __('missing description', 'ai-seo-client');
                 $quickWins[] = [
                     'post_id' => $postId,
                     'title' => $post->post_title,
-                    'edit_url' => admin_url('post.php?post=' . $postId . '&action=edit'), // Direct URL, faster than get_edit_post_link()
-                    'reason' => __('Good content but missing SEO meta — easy to fix with AI', 'ai-seo-client'),
+                    'edit_url' => admin_url('post.php?post=' . $postId . '&action=edit'),
+                    'reason' => sprintf(
+                        __('Good content but %s — easy to fix with AI', 'ai-seo-client'),
+                        implode(' ' . __('and', 'ai-seo-client') . ' ', $reasonParts)
+                    ),
                 ];
             }
         }
@@ -204,6 +241,8 @@ class SeoDashboard
                 'label' => sprintf(__('%d posts missing SEO title', 'ai-seo-client'), $missingTitles),
                 'count' => $missingTitles,
                 'action' => 'bulk_title',
+                'key' => 'missing_title',
+                'affected' => array_slice($affected['missing_title'], 0, 50),
             ];
         }
         if ($missingDescs > 0) {
@@ -212,6 +251,8 @@ class SeoDashboard
                 'label' => sprintf(__('%d posts missing meta description', 'ai-seo-client'), $missingDescs),
                 'count' => $missingDescs,
                 'action' => 'bulk_desc',
+                'key' => 'missing_description',
+                'affected' => array_slice($affected['missing_description'], 0, 50),
             ];
         }
         if ($missingKw > 0) {
@@ -220,6 +261,8 @@ class SeoDashboard
                 'label' => sprintf(__('%d posts missing focus keyphrase', 'ai-seo-client'), $missingKw),
                 'count' => $missingKw,
                 'action' => 'bulk_keyphrase',
+                'key' => 'missing_keyphrase',
+                'affected' => array_slice($affected['missing_keyphrase'], 0, 50),
             ];
         }
         if ($missingOg > 0) {
@@ -228,6 +271,8 @@ class SeoDashboard
                 'label' => sprintf(__('%d posts missing Open Graph tags', 'ai-seo-client'), $missingOg),
                 'count' => $missingOg,
                 'action' => 'bulk_og',
+                'key' => 'missing_og',
+                'affected' => array_slice($affected['missing_og'], 0, 50),
             ];
         }
         if ($missingLinks > 0) {
@@ -236,6 +281,8 @@ class SeoDashboard
                 'label' => sprintf(__('%d posts have no internal links', 'ai-seo-client'), $missingLinks),
                 'count' => $missingLinks,
                 'action' => 'link_assistant',
+                'key' => 'missing_links',
+                'affected' => array_slice($affected['missing_links'], 0, 50),
             ];
         }
         if ($thinContent > 0) {
@@ -244,6 +291,8 @@ class SeoDashboard
                 'label' => sprintf(__('%d posts have thin content (<300 words)', 'ai-seo-client'), $thinContent),
                 'count' => $thinContent,
                 'action' => 'content_writer',
+                'key' => 'thin_content',
+                'affected' => array_slice($affected['thin_content'], 0, 50),
             ];
         }
 
@@ -339,6 +388,18 @@ class SeoDashboard
             </div>
         </div>
 
+        <!-- Issue detail modal -->
+        <div id="seo-issue-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100000;justify-content:center;align-items:center;">
+            <div style="background:#fff;border-radius:8px;width:90%;max-width:700px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+                <div style="padding:18px 20px;border-bottom:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="margin:0;font-size:16px;" id="seo-issue-modal-title"></h3>
+                    <button type="button" id="seo-issue-modal-close" style="background:none;border:none;font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+                </div>
+                <div style="padding:20px;overflow-y:auto;flex:1;" id="seo-issue-modal-body"></div>
+                <div style="padding:15px 20px;border-top:1px solid #e0e0e0;text-align:right;color:#666;font-size:12px;" id="seo-issue-modal-footer"></div>
+            </div>
+        </div>
+
         <script>
         jQuery(document).ready(function($) {
             function getScoreColor(score) {
@@ -353,64 +414,112 @@ class SeoDashboard
                 return '<?php echo esc_js(__('Poor', 'ai-seo-client')); ?>';
             }
 
+            function renderDashboard(data) {
+                // Score
+                var color = getScoreColor(data.score);
+                $('#seo-score-num').text(data.score).css('color', color);
+                $('#seo-score-circle').attr('stroke', color).attr('stroke-dasharray', data.score + ', 100');
+                $('#seo-score-label').text(getScoreLabel(data.score));
+                $('#seo-score-posts').text(data.total_posts + ' <?php echo esc_js(__('posts analyzed', 'ai-seo-client')); ?>');
+
+                // Breakdown bars
+                var bHtml = '';
+                data.breakdown.forEach(function(b) {
+                    var bColor = getScoreColor(b.pct);
+                    bHtml += '<div style="margin-bottom:12px;">' +
+                        '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+                        '<span style="font-weight:500;">' + b.label + '</span>' +
+                        '<span style="color:#666;">' + b.done + '/' + b.total + ' (' + b.pct + '%)</span>' +
+                        '</div>' +
+                        '<div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">' +
+                        '<div style="background:' + bColor + ';height:100%;width:' + b.pct + '%;transition:width 0.5s;border-radius:4px;"></div>' +
+                        '</div></div>';
+                });
+                $('#seo-breakdown').html(bHtml);
+
+                // Issues
+                var iHtml = '';
+                if (data.issues.length === 0) {
+                    iHtml = '<p style="color:#00a32a;font-weight:600;"><?php echo esc_js(__('No issues found!', 'ai-seo-client')); ?></p>';
+                } else {
+                    data.issues.forEach(function(issue, index) {
+                        var iColor = issue.type === 'critical' ? '#d63638' : (issue.type === 'warning' ? '#dba617' : '#2271b1');
+                        var icon = issue.type === 'critical' ? '●' : (issue.type === 'warning' ? '▲' : 'ℹ');
+                        iHtml += '<div class="seo-issue-row" data-index="' + index + '" style="padding:8px 12px;margin-bottom:6px;border-left:3px solid ' + iColor + ';background:#f9f9f9;border-radius:0 4px 4px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.15s;">' +
+                            '<span><span style="color:' + iColor + ';">' + icon + '</span> ' + issue.label + '</span>' +
+                            '<span style="font-size:12px;color:#666;"><?php echo esc_js(__('View', 'ai-seo-client')); ?> &rarr;</span>' +
+                            '</div>';
+                    });
+                }
+                $('#seo-issues').html(iHtml);
+
+                // Quick wins
+                var qHtml = '';
+                if (data.quick_wins.length === 0) {
+                    qHtml = '<p style="color:#666;"><?php echo esc_js(__('No quick wins available.', 'ai-seo-client')); ?></p>';
+                } else {
+                    data.quick_wins.forEach(function(qw) {
+                        qHtml += '<div style="padding:6px 0;border-bottom:1px solid #eee;">' +
+                            '<a href="' + qw.edit_url + '" target="_blank" style="text-decoration:none;">' + $('<span>').text(qw.title).html() + '</a>' +
+                            '<div style="font-size:12px;color:#999;">' + qw.reason + '</div>' +
+                            '</div>';
+                    });
+                }
+                $('#seo-quickwins').html(qHtml);
+
+                $('#seo-dash-main').show();
+            }
+
+            function openIssueModal(issue) {
+                var title = issue.label || '<?php echo esc_js(__('Issue Details', 'ai-seo-client')); ?>';
+                $('#seo-issue-modal-title').text(title);
+                var body = '<p><?php echo esc_js(__('Showing up to 50 affected posts/pages:', 'ai-seo-client')); ?></p><ul style="margin:0;padding-left:18px;">';
+                if (issue.affected && issue.affected.length) {
+                    issue.affected.forEach(function(item) {
+                        body += '<li style="margin-bottom:8px;"><a href="' + item.url + '" target="_blank">' + $('<span>').text(item.title).html() + '</a></li>';
+                    });
+                } else {
+                    body += '<li><?php echo esc_js(__('No specific items recorded.', 'ai-seo-client')); ?></li>';
+                }
+                body += '</ul>';
+                $('#seo-issue-modal-body').html(body);
+                $('#seo-issue-modal-footer').text((issue.count || issue.affected.length || 0) + ' <?php echo esc_js(__('total affected', 'ai-seo-client')); ?>');
+                $('#seo-issue-modal').css('display', 'flex');
+            }
+
+            $('#seo-issues').on('click', '.seo-issue-row', function() {
+                var index = $(this).data('index');
+                var data = window.sseoDashLastData;
+                if (data && data.issues && data.issues[index]) {
+                    openIssueModal(data.issues[index]);
+                }
+            });
+
+            $('#seo-issue-modal-close, #seo-issue-modal').on('click', function(e) {
+                if (e.target.id === 'seo-issue-modal' || e.target.id === 'seo-issue-modal-close') {
+                    $('#seo-issue-modal').hide();
+                }
+            });
+
+            // Load cached analysis on page load
+            var cached = localStorage.getItem('sseo_dashboard_overview');
+            if (cached) {
+                try {
+                    var cachedData = JSON.parse(cached);
+                    window.sseoDashLastData = cachedData;
+                    renderDashboard(cachedData);
+                } catch (e) {}
+            }
+
             $('#seo-dash-scan').on('click', function() {
                 var btn = $(this);
                 btn.prop('disabled', true);
                 $('#seo-dash-spinner').addClass('is-active');
 
                 wp.apiFetch({ path: 'sseo-ai/v1/dashboard/overview' }).then(function(data) {
-                    // Score
-                    var color = getScoreColor(data.score);
-                    $('#seo-score-num').text(data.score).css('color', color);
-                    $('#seo-score-circle').attr('stroke', color).attr('stroke-dasharray', data.score + ', 100');
-                    $('#seo-score-label').text(getScoreLabel(data.score));
-                    $('#seo-score-posts').text(data.total_posts + ' <?php echo esc_js(__('posts analyzed', 'ai-seo-client')); ?>');
-
-                    // Breakdown bars
-                    var bHtml = '';
-                    data.breakdown.forEach(function(b) {
-                        var bColor = getScoreColor(b.pct);
-                        bHtml += '<div style="margin-bottom:12px;">' +
-                            '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-                            '<span style="font-weight:500;">' + b.label + '</span>' +
-                            '<span style="color:#666;">' + b.done + '/' + b.total + ' (' + b.pct + '%)</span>' +
-                            '</div>' +
-                            '<div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">' +
-                            '<div style="background:' + bColor + ';height:100%;width:' + b.pct + '%;transition:width 0.5s;border-radius:4px;"></div>' +
-                            '</div></div>';
-                    });
-                    $('#seo-breakdown').html(bHtml);
-
-                    // Issues
-                    var iHtml = '';
-                    if (data.issues.length === 0) {
-                        iHtml = '<p style="color:#00a32a;font-weight:600;"><?php echo esc_js(__('No issues found!', 'ai-seo-client')); ?></p>';
-                    } else {
-                        data.issues.forEach(function(issue) {
-                            var iColor = issue.type === 'critical' ? '#d63638' : (issue.type === 'warning' ? '#dba617' : '#2271b1');
-                            var icon = issue.type === 'critical' ? '●' : (issue.type === 'warning' ? '▲' : 'ℹ');
-                            iHtml += '<div style="padding:8px 12px;margin-bottom:6px;border-left:3px solid ' + iColor + ';background:#f9f9f9;border-radius:0 4px 4px 0;display:flex;justify-content:space-between;align-items:center;">' +
-                                '<span><span style="color:' + iColor + ';">' + icon + '</span> ' + issue.label + '</span>' +
-                                '</div>';
-                        });
-                    }
-                    $('#seo-issues').html(iHtml);
-
-                    // Quick wins
-                    var qHtml = '';
-                    if (data.quick_wins.length === 0) {
-                        qHtml = '<p style="color:#666;"><?php echo esc_js(__('No quick wins available.', 'ai-seo-client')); ?></p>';
-                    } else {
-                        data.quick_wins.forEach(function(qw) {
-                            qHtml += '<div style="padding:6px 0;border-bottom:1px solid #eee;">' +
-                                '<a href="' + qw.edit_url + '" target="_blank" style="text-decoration:none;">' + $('<span>').text(qw.title).html() + '</a>' +
-                                '<div style="font-size:12px;color:#999;">' + qw.reason + '</div>' +
-                                '</div>';
-                        });
-                    }
-                    $('#seo-quickwins').html(qHtml);
-
-                    $('#seo-dash-main').show();
+                    window.sseoDashLastData = data;
+                    localStorage.setItem('sseo_dashboard_overview', JSON.stringify(data));
+                    renderDashboard(data);
                     btn.prop('disabled', false);
                     $('#seo-dash-spinner').removeClass('is-active');
                 }).catch(function(err) {
