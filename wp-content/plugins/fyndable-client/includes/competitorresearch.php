@@ -40,7 +40,7 @@ class CompetitorResearch
             'ai-seo-client',
             __('Competitor Research', 'ai-seo-client'),
             __('Competitor Research', 'ai-seo-client'),
-            'manage_options',
+            'edit_posts',
             'ai-seo-competitor-research',
             [$this, 'renderDashboard']
         );
@@ -920,7 +920,7 @@ Respond in JSON format:
             'methods' => 'POST',
             'callback' => [$this, 'restAnalyzeCompetitor'],
             'permission_callback' => function() {
-                return current_user_can('manage_options');
+                return current_user_can('edit_posts');
             },
         ]);
     }
@@ -932,7 +932,7 @@ Respond in JSON format:
     {
         check_ajax_referer('sseo_competitor', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('edit_posts')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
         
@@ -954,7 +954,7 @@ Respond in JSON format:
     {
         check_ajax_referer('sseo_competitor', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('edit_posts')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
         
