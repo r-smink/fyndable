@@ -26,7 +26,7 @@ class LicenseAdmin
      */
     public function register(): void
     {
-        // Main License Management menu
+        // License Management — registered as hidden parent (shell is top-level)
         add_menu_page(
             __('License Management', 'sseo-ai-saas'),
             __('Licenses', 'sseo-ai-saas'),
@@ -36,6 +36,10 @@ class LicenseAdmin
             'dashicons-admin-network',
             30
         );
+        // Hide from WP admin menu (shell provides navigation)
+        add_action('admin_head', function () {
+            echo '<style>#toplevel_page_sseo-ai-licenses { display: none !important; }</style>';
+        });
         
         add_submenu_page(
             'sseo-ai-licenses',

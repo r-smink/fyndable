@@ -22,6 +22,7 @@ class Dashboard
     private WebhookHandler $webhookHandler;
     private SupportTickets $supportTickets;
     private SupportAdmin $supportAdmin;
+    private SaaSDashboardShell $dashboardShell;
 
     public function __construct()
     {
@@ -45,8 +46,13 @@ class Dashboard
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->supportTickets = new SupportTickets($this->tenants);
         $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);
+        $this->dashboardShell = new SaaSDashboardShell($this->pluginFile);
 
-        // Register admin menu
+        // Register dashboard shell (top-level menu)
+        add_action('admin_menu', [$this, 'registerShellMenu']);
+        add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
+
+        // Register admin menu (existing submenus under sseo-ai-licenses)
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
@@ -73,4 +79,20 @@ class Dashboard
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
     }
-}
+
+    /**
+     * Register the SaaS dashboard shell as the main top-level menu.
+     * The existing license menu becomes a hidden submenu (accessed via iframe).
+     */
+    public function registerShellMenu(): void
+    {
+        add_menu_page(
+            __('Fyndable SaaS', 'sseo-ai-saas'),
+            __('Fyndable SaaS', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-shell',
+            [$this->dashboardShell, 'render'],
+            'dashicons-analytics',
+            3
+        );
+    }

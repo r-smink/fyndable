@@ -78,9 +78,18 @@ class SaaSSettings
         // Cost limits per tier (in USD)
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_cost_limit', ['default' => 5]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_cost_limit', ['default' => 20]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_cost_limit', ['default' => 50]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_cost_limit', ['default' => 100]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_cost_limit', ['default' => 500]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_cost_limit', ['default' => 2000]);
+
+        // Monthly subscription price per tier (in EUR)
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_price', ['default' => 0]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_price', ['default' => 29]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_price', ['default' => 0]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_price', ['default' => 79]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_price', ['default' => 199]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_price', ['default' => 499]);
         
         // Billing settings - Payment providers
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_payment_provider', ['default' => 'stripe']);
@@ -238,6 +247,49 @@ class SaaSSettings
         ];
         return $defaults[$tier] ?? 10;
     }
+
+    /**
+     * Get monthly subscription price for tier (EUR)
+     */
+    public function getPriceForTier(string $tier): float
+    {
+        $optionName = "ai_seo_saas_{$tier}_price";
+        return (float)get_option($optionName, $this->getDefaultPrice($tier));
+    }
+
+    /**
+     * Default monthly prices (EUR)
+     */
+    private function getDefaultPrice(string $tier): float
+    {
+        $defaults = [
+            'free' => 0,
+            'starter' => 29,
+            'trial' => 0,
+            'professional' => 79,
+            'business' => 199,
+            'agency' => 499,
+        ];
+        return $defaults[$tier] ?? 0;
+    }
+
+    /**
+     * Get all tier definitions with current settings.
+     */
+    public function getAllTiers(): array
+    {
+        $tiers = ['free', 'starter', 'trial', 'professional', 'business', 'agency'];
+        $result = [];
+        foreach ($tiers as $tier) {
+            $result[$tier] = [
+                'name' => ucfirst($tier),
+                'price' => $this->getPriceForTier($tier),
+                'api_calls' => $this->getApiLimitForTier($tier),
+                'cost_limit' => $this->getCostLimitForTier($tier),
+            ];
+        }
+        return $result;
+    }
     
     /**
      * Render settings page
@@ -245,7 +297,7 @@ class SaaSSettings
     public function renderSettingsPage(): void
     {
         ?>
-        <div class="wrap">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('SSEO AI SaaS Settings', 'sseo-ai-saas'); ?></h1>
             
             <form method="post" action="options.php">
@@ -388,6 +440,64 @@ class SaaSSettings
                 
                 <?php submit_button(__('Save Settings', 'sseo-ai-saas')); ?>
             </form>
+
+            <form method="post" action="options.php">
+                <?php settings_fields('ai_seo_saas_limits'); ?>
+
+                <h2><?php esc_html_e('Tier Pricing & Limits', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Set the monthly subscription price (EUR), API call limit and cost cap (USD) for each tier.', 'sseo-ai-saas'); ?></p>
+
+                <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Cost Cap (USD)', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $tiers = [
+                            'free' => __('Free', 'sseo-ai-saas'),
+                            'starter' => __('Starter', 'sseo-ai-saas'),
+                            'trial' => __('Trial', 'sseo-ai-saas'),
+                            'professional' => __('Professional', 'sseo-ai-saas'),
+                            'business' => __('Business', 'sseo-ai-saas'),
+                            'agency' => __('Agency', 'sseo-ai-saas'),
+                        ];
+                        foreach ($tiers as $tier => $label):
+                            $price = $this->getPriceForTier($tier);
+                            $calls = $this->getApiLimitForTier($tier);
+                            $cost = $this->getCostLimitForTier($tier);
+                        ?>
+                        <tr>
+                            <td><strong><?php echo esc_html($label); ?></strong></td>
+                            <td>
+                                <input type="number" step="0.01" min="0"
+                                       name="ai_seo_saas_<?php echo esc_attr($tier); ?>_price"
+                                       value="<?php echo esc_attr(number_format($price, 2, '.', '')); ?>"
+                                       style="width: 120px;">
+                            </td>
+                            <td>
+                                <input type="number" step="1" min="0"
+                                       name="ai_seo_saas_<?php echo esc_attr($tier); ?>_api_calls"
+                                       value="<?php echo esc_attr($calls); ?>"
+                                       style="width: 120px;">
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" min="0"
+                                       name="ai_seo_saas_<?php echo esc_attr($tier); ?>_cost_limit"
+                                       value="<?php echo esc_attr(number_format($cost, 2, '.', '')); ?>"
+                                       style="width: 120px;">
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+
+                <?php submit_button(__('Save Tier Settings', 'sseo-ai-saas')); ?>
+            </form>
         </div>
         <?php
     }
@@ -439,7 +549,7 @@ class SaaSSettings
             GROUP BY t.tier"
         );
         ?>
-        <div class="wrap">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?></h1>
             
             <div class="card" style="margin-bottom: 20px;">
@@ -631,7 +741,7 @@ class SaaSSettings
             if ($m === $currentMonth) break;
         }
         ?>
-        <div class="wrap">
+        <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Google API Costs per Klant', 'sseo-ai-saas'); ?></h1>
 
             <form method="get" action="" style="margin-bottom: 15px;">
