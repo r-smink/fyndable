@@ -210,12 +210,12 @@ class Supportickets
             .sseo-form-field input:focus,
             .sseo-form-field textarea:focus,
             .sseo-form-field select:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255,77,0,.1); }
-            .sseo-ticket-list { list-style: none; margin: 0; padding: 0; }
-            .sseo-ticket-item { border-bottom: 1px solid #e5e7eb; padding: 18px 0; }
-            .sseo-ticket-item:last-child { border-bottom: none; }
+            .sseo-ticket-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+            .sseo-ticket-item { border: 2px solid #e5e7eb; border-radius: 10px; padding: 20px 24px; transition: all .2s ease; cursor: pointer; }
+            .sseo-ticket-item:hover { border-color: #FF4D00; box-shadow: 0 4px 12px rgba(255,77,0,.1); transform: translateY(-1px); }
             .sseo-ticket-item a { text-decoration: none; color: #111827; }
             .sseo-ticket-item a:hover { color: #FF4D00; }
-            .sseo-ticket-meta { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+            .sseo-ticket-meta { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
             .sseo-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
             .sseo-badge.status-open { background: #dbeafe; color: #1e40af; }
             .sseo-badge.status-reaction { background: #fef3c7; color: #92400e; }
@@ -223,6 +223,10 @@ class Supportickets
             .sseo-badge.priority-high { background: #fee2e2; color: #991b1b; }
             .sseo-badge.priority-middle { background: #fef3c7; color: #92400e; }
             .sseo-badge.priority-low { background: #f3f4f6; color: #374151; }
+            .sseo-file-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+            .sseo-file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; transition: all .2s ease; cursor: pointer; }
+            .sseo-file-drop:hover { border-color: #FF4D00; background: #fff5f0; }
+            .sseo-file-drop input[type="file"] { width: 100%; }
             @media (max-width: 900px) { .sseo-support-grid { grid-template-columns: 1fr; } }
         </style>
 
@@ -289,7 +293,10 @@ class Supportickets
                     </div>
                     <div class="sseo-form-field">
                         <label for="ticket_screenshots"><?php esc_html_e('Screenshots', 'ai-seo-client'); ?></label>
-                        <input type="file" name="ticket_screenshots[]" id="ticket_screenshots" multiple accept="image/*">
+                        <div class="sseo-file-drop">
+                            <input type="file" name="ticket_screenshots[]" id="ticket_screenshots" multiple accept="image/*">
+                            <p class="sseo-file-hint"><?php esc_html_e('You can select multiple files. Hold Ctrl/Cmd to select more than one.', 'ai-seo-client'); ?></p>
+                        </div>
                     </div>
                     <?php submit_button(__('Submit ticket', 'ai-seo-client'), 'primary', 'create_support_ticket'); ?>
                 </form>
@@ -321,14 +328,28 @@ class Supportickets
         ?>
         <style>
             .sseo-ticket-detail { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-reply-list { margin: 20px 0; }
-            .sseo-reply { padding: 18px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
-            .sseo-reply.staff { background: #f0f6fc; }
-            .sseo-reply.customer { background: #fff; }
-            .sseo-reply-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; }
+            .sseo-reply-list { margin: 20px 0; display: flex; flex-direction: column; gap: 16px; }
+            .sseo-reply { padding: 20px; border-radius: 10px; border: 2px solid #e5e7eb; }
+            .sseo-reply.staff { background: #f0f6fc; border-color: #bfdbfe; }
+            .sseo-reply.customer { background: #fff; border-color: #e5e7eb; }
+            .sseo-reply-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 600; align-items: center; }
+            .sseo-reply-header .sseo-reply-author { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+            .sseo-reply-header .sseo-reply-author .sseo-reply-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+            .sseo-reply.staff .sseo-reply-avatar { background: #1e40af; }
+            .sseo-reply.customer .sseo-reply-avatar { background: #FF4D00; }
+            .sseo-reply-message { color: #374151; line-height: 1.6; font-size: 14px; }
             .sseo-screenshots { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
             .sseo-screenshots a { display: inline-block; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
             .sseo-screenshots img { max-width: 150px; max-height: 150px; display: block; }
+            .sseo-reply-form { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 10px; padding: 24px; margin-top: 20px; }
+            .sseo-reply-form h3 { margin: 0 0 16px 0; font-size: 16px; font-weight: 700; color: #111827; }
+            .sseo-reply-form .sseo-form-field { margin-bottom: 16px; }
+            .sseo-reply-form textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical; min-height: 100px; }
+            .sseo-reply-form textarea:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255,77,0,.1); }
+            .sseo-file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; transition: all .2s ease; cursor: pointer; }
+            .sseo-file-drop:hover { border-color: #FF4D00; background: #fff5f0; }
+            .sseo-file-drop input[type="file"] { width: 100%; }
+            .sseo-file-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
         </style>
 
         <?php if (isset($_GET['created'])): ?>
@@ -382,10 +403,13 @@ class Supportickets
                     <?php foreach ($ticket['replies'] as $reply): ?>
                         <div class="sseo-reply <?php echo $reply['is_staff'] ? 'staff' : 'customer'; ?>">
                             <div class="sseo-reply-header">
-                                <span><?php echo $reply['is_staff'] ? esc_html($reply['author_name'] ?: __('Support', 'ai-seo-client')) : esc_html(__('You', 'ai-seo-client')); ?></span>
-                                <small style="color: #6b7280;"><?php echo esc_html($reply['created_at']); ?></small>
+                                <span class="sseo-reply-author">
+                                    <span class="sseo-reply-avatar"><?php echo $reply['is_staff'] ? esc_html(mb_substr($reply['author_name'] ?: 'S', 0, 1)) : esc_html__('U', 'ai-seo-client'); ?></span>
+                                    <?php echo $reply['is_staff'] ? esc_html($reply['author_name'] ?: __('Support', 'ai-seo-client')) : esc_html(__('You', 'ai-seo-client')); ?>
+                                </span>
+                                <small style="color: #6b7280; font-weight: 400;"><?php echo esc_html($reply['created_at']); ?></small>
                             </div>
-                            <p><?php echo nl2br(esc_html($reply['message'])); ?></p>
+                            <div class="sseo-reply-message"><?php echo nl2br(esc_html($reply['message'])); ?></div>
                             <?php if (!empty($reply['screenshots'])): ?>
                                 <div class="sseo-screenshots">
                                     <?php foreach ($reply['screenshots'] as $url): ?>
@@ -401,20 +425,25 @@ class Supportickets
             <?php endif; ?>
 
             <?php if ($ticket['status'] !== 'closed'): ?>
-                <h3><?php esc_html_e('Add reply', 'ai-seo-client'); ?></h3>
-                <form method="post" enctype="multipart/form-data">
-                    <?php wp_nonce_field('add_support_reply', 'support_reply_nonce'); ?>
-                    <input type="hidden" name="ticket_id" value="<?php echo (int)$ticket['id']; ?>">
-                    <div class="sseo-form-field">
-                        <label for="reply_message"><?php esc_html_e('Message', 'ai-seo-client'); ?></label>
-                        <textarea name="reply_message" id="reply_message" rows="5" required></textarea>
-                    </div>
-                    <div class="sseo-form-field">
-                        <label for="reply_screenshots"><?php esc_html_e('Screenshots', 'ai-seo-client'); ?></label>
-                        <input type="file" name="reply_screenshots[]" id="reply_screenshots" multiple accept="image/*">
-                    </div>
-                    <?php submit_button(__('Send reply', 'ai-seo-client'), 'primary', 'add_support_reply'); ?>
-                </form>
+                <div class="sseo-reply-form">
+                    <h3><?php esc_html_e('Add reply', 'ai-seo-client'); ?></h3>
+                    <form method="post" enctype="multipart/form-data">
+                        <?php wp_nonce_field('add_support_reply', 'support_reply_nonce'); ?>
+                        <input type="hidden" name="ticket_id" value="<?php echo (int)$ticket['id']; ?>">
+                        <div class="sseo-form-field">
+                            <label for="reply_message"><?php esc_html_e('Message', 'ai-seo-client'); ?></label>
+                            <textarea name="reply_message" id="reply_message" rows="5" required placeholder="<?php esc_attr_e('Type your reply here...', 'ai-seo-client'); ?>"></textarea>
+                        </div>
+                        <div class="sseo-form-field">
+                            <label for="reply_screenshots"><?php esc_html_e('Screenshots', 'ai-seo-client'); ?></label>
+                            <div class="sseo-file-drop">
+                                <input type="file" name="reply_screenshots[]" id="reply_screenshots" multiple accept="image/*">
+                                <p class="sseo-file-hint"><?php esc_html_e('You can select multiple files. Hold Ctrl/Cmd to select more than one.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        <?php submit_button(__('Send reply', 'ai-seo-client'), 'primary', 'add_support_reply'); ?>
+                    </form>
+                </div>
             <?php else: ?>
                 <p><em><?php esc_html_e('This ticket is closed. Create a new ticket if you need further help.', 'ai-seo-client'); ?></em></p>
             <?php endif; ?>
