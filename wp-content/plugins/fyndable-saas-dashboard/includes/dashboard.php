@@ -96,3 +96,4 @@ class Dashboard
             3
         );
     }
+}
