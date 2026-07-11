@@ -83,6 +83,7 @@ class Client
     private ?PostMetaBox $postMetaBox = null;
     private ?FyndableDashboard $fyndableDashboard = null;
     private ?BrandVisibilityTracker $brandVisibility = null;
+    private ?Supportickets $supportTickets = null;
 
     public function init(): void
     {
@@ -91,6 +92,7 @@ class Client
         $this->dashboardAPI = new DashboardAPI($this->settings);
         $this->healthLogger = new HealthLogger();
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
+        $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
 
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
@@ -705,6 +707,16 @@ class Client
                 'manage_options',
                 'ai-seo-integrations',
                 [$this, 'renderIntegrationsPage']
+            );
+
+            // 9c. Support - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Support', 'ai-seo-client'),
+                __('💬 Support', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-support',
+                [$this, 'renderSupportPage']
             );
 
             // 9b. SEO Data Dashboard (SE Ranking / Ahrefs) - all tiers
@@ -1968,6 +1980,19 @@ class Client
         exit;
     }
     
+    /**
+     * Render support tickets page
+     */
+    public function renderSupportPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+
+        $this->supportTickets->renderPage();
+    }
+
     /**
      * Render connection page (license details)
      */

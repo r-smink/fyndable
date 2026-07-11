@@ -98,6 +98,7 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_id');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_secret');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_ads_dev_token');
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_support_email');
     }
     
     /**
@@ -170,6 +171,14 @@ class SaaSSettings
     public function getGoogleClientSecret(): string
     {
         return get_option('ai_seo_saas_google_client_secret', '');
+    }
+
+    /**
+     * Get support email address
+     */
+    public function getSupportEmail(): string
+    {
+        return get_option('ai_seo_saas_support_email', get_option('admin_email'));
     }
 
     /**
@@ -357,6 +366,21 @@ class SaaSSettings
                                    placeholder="Developer token from Google Ads API Center">
                             <p class="description">
                                 <?php esc_html_e('Required for Google Ads API. Apply at Google Ads → Tools → API Center.', 'sseo-ai-saas'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2><?php esc_html_e('Support Notifications', 'sseo-ai-saas'); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="support_email"><?php esc_html_e('Support Email Address', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="email" name="ai_seo_saas_support_email" id="support_email"
+                                   value="<?php echo esc_attr($this->getSupportEmail()); ?>" class="regular-text"
+                                   placeholder="<?php echo esc_attr(get_option('admin_email')); ?>">
+                            <p class="description">
+                                <?php esc_html_e('Where new support ticket notifications are sent. Defaults to the WordPress admin email.', 'sseo-ai-saas'); ?>
                             </p>
                         </td>
                     </tr>

@@ -140,6 +140,11 @@ class FyndableDashboard
                 'label' => __('Integrations', 'ai-seo-client'),
                 'icon' => '&#128268;',
             ];
+            $this->menuItems[] = [
+                'slug' => 'ai-seo-support',
+                'label' => __('Support', 'ai-seo-client'),
+                'icon' => '&#128172;',
+            ];
         }
 
         $this->menuItems[] = [

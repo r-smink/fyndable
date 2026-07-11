@@ -20,6 +20,8 @@ class Dashboard
     private WhiteLabelAdmin $whiteLabelAdmin;
     private PaymentProcessor $paymentProcessor;
     private WebhookHandler $webhookHandler;
+    private SupportTickets $supportTickets;
+    private SupportAdmin $supportAdmin;
 
     public function __construct()
     {
@@ -41,11 +43,14 @@ class Dashboard
         $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
+        $this->supportTickets = new SupportTickets($this->tenants);
+        $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);
 
         // Register admin menu
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
+        add_action('admin_menu', [$this->supportAdmin, 'register']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
 
@@ -53,6 +58,7 @@ class Dashboard
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
         add_action('rest_api_init', [$this->apiGateway, 'register']);
         add_action('rest_api_init', [$this->webhookHandler, 'register']);
+        add_action('rest_api_init', [$this->supportTickets, 'registerRoutes']);
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);

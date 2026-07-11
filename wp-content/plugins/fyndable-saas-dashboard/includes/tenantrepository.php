@@ -15,6 +15,8 @@ class TenantRepository
     private const TENANT_USAGE_TABLE = 'sseo_ai_tenant_usage';
     private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
     private const GOOGLE_API_USAGE_TABLE = 'sseo_ai_google_api_usage';
+    private const SUPPORT_TICKETS_TABLE = 'sseo_ai_support_tickets';
+    private const SUPPORT_REPLIES_TABLE = 'sseo_ai_support_replies';
     
     private ?string $currentTenantId = null;
     
@@ -134,6 +136,41 @@ class TenantRepository
             KEY service (service)
         ) $charsetCollate;";
         dbDelta($sql5);
+
+        // Support ticket system
+        $sql6 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::SUPPORT_TICKETS_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tenant_id bigint(20) unsigned NOT NULL,
+            subject varchar(255) NOT NULL,
+            message longtext NOT NULL,
+            priority enum('low', 'middle', 'high') NOT NULL DEFAULT 'middle',
+            status enum('open', 'reaction', 'closed') NOT NULL DEFAULT 'open',
+            screenshots longtext DEFAULT NULL COMMENT 'JSON array of attachment URLs',
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY tenant_id (tenant_id),
+            KEY status (status),
+            KEY priority (priority),
+            KEY created_at (created_at)
+        ) $charsetCollate;";
+
+        $sql7 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::SUPPORT_REPLIES_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            ticket_id bigint(20) unsigned NOT NULL,
+            is_staff tinyint(1) NOT NULL DEFAULT 0,
+            author_name varchar(255) DEFAULT NULL,
+            message longtext NOT NULL,
+            screenshots longtext DEFAULT NULL COMMENT 'JSON array of attachment URLs',
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY ticket_id (ticket_id),
+            KEY is_staff (is_staff),
+            KEY created_at (created_at)
+        ) $charsetCollate;";
+
+        dbDelta($sql6);
+        dbDelta($sql7);
     }
     
     /**

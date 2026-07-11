@@ -696,4 +696,227 @@ class DashboardAPI
             return new \WP_Error('activation_error', $e->getMessage());
         }
     }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Support ticket API
+     * -------------------------------------------------------------------------
+     */
+
+    /**
+     * Get support tickets for the current tenant.
+     */
+    public function getSupportTickets(): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 5,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not retrieve support tickets.', 'ai-seo-client'));
+    }
+
+    /**
+     * Create a new support ticket.
+     */
+    public function createSupportTicket(string $subject, string $message, string $priority, array $screenshots = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'subject' => $subject,
+                    'message' => $message,
+                    'priority' => $priority,
+                    'screenshots' => $screenshots,
+                ]),
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 5,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not create support ticket.', 'ai-seo-client'));
+    }
+
+    /**
+     * Get a single support ticket with replies.
+     */
+    public function getSupportTicket(int $ticketId): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/ticket/' . $ticketId,
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 5,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not retrieve support ticket.', 'ai-seo-client'));
+    }
+
+    /**
+     * Add a reply to a support ticket.
+     */
+    public function addSupportReply(int $ticketId, string $message, array $screenshots = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/reply',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'ticket_id' => $ticketId,
+                    'message' => $message,
+                    'screenshots' => $screenshots,
+                ]),
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 5,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not send reply.', 'ai-seo-client'));
+    }
+
+    /**
+     * Upload a screenshot to the SaaS dashboard.
+     */
+    public function uploadSupportScreenshot(array $file): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        if (empty($file['tmp_name'])) {
+            return new \WP_Error('no_file', __('No screenshot uploaded.', 'ai-seo-client'));
+        }
+
+        $url = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/upload';
+
+        $boundary = wp_generate_password(24, false);
+        $body = $this->buildMultipartBody($file, $boundary);
+
+        $response = wp_remote_post(
+            $url,
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
+                ],
+                'body' => $body,
+                'timeout' => 60,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 5,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not upload screenshot.', 'ai-seo-client'));
+    }
+
+    /**
+     * Shared response handler for support ticket endpoints.
+     */
+    private function handleSupportResponse($response, string $errorMessage): array|\WP_Error
+    {
+        if (is_wp_error($response)) {
+            return new \WP_Error('connection_error', $errorMessage);
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 && $statusCode !== 201) {
+            $message = $body['message'] ?? $errorMessage;
+            return new \WP_Error(
+                $body['error'] ?? 'support_request_failed',
+                $message
+            );
+        }
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'support_request_failed',
+                $body['message'] ?? $errorMessage
+            );
+        }
+
+        return $body;
+    }
+
+    /**
+     * Build multipart body for a single file upload.
+     */
+    private function buildMultipartBody(array $file, string $boundary): string
+    {
+        $fileName = $file['name'] ?? 'screenshot.png';
+        $fileType = $file['type'] ?? 'image/png';
+        $fileContent = file_get_contents($file['tmp_name']);
+
+        $body = "--{$boundary}\r\n";
+        $body .= "Content-Disposition: form-data; name=\"screenshot\"; filename=\"{$fileName}\"\r\n";
+        $body .= "Content-Type: {$fileType}\r\n\r\n";
+        $body .= $fileContent . "\r\n";
+        $body .= "--{$boundary}--\r\n";
+
+        return $body;
+    }
 }
