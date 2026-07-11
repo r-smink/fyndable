@@ -73,6 +73,11 @@ class FyndableDashboard
                 'icon' => '&#128279;',
             ];
             $this->menuItems[] = [
+                'slug' => 'ai-seo-competitor-research',
+                'label' => __('Competitors', 'ai-seo-client'),
+                'icon' => '&#128269;',
+            ];
+            $this->menuItems[] = [
                 'slug' => 'ai-seo-sitemaps',
                 'label' => __('Sitemaps', 'ai-seo-client'),
                 'icon' => '&#128506;',
@@ -335,6 +340,14 @@ class FyndableDashboard
         $iframeUrl = admin_url('admin.php');
         $iframeUrl = add_query_arg('page', $currentPage, $iframeUrl);
         $iframeUrl = add_query_arg('fyndable_shell', '1', $iframeUrl);
+
+        // Pass through relevant query parameters (e.g. keyword) to the iframe
+        $passThroughParams = ['keyword'];
+        foreach ($passThroughParams as $param) {
+            if (isset($_GET[$param]) && $_GET[$param] !== '') {
+                $iframeUrl = add_query_arg($param, sanitize_text_field($_GET[$param]), $iframeUrl);
+            }
+        }
 
         $exitUrl = admin_url('admin.php?page=' . $currentPage);
         ?>

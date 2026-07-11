@@ -55,11 +55,29 @@ class CompetitorResearch
         $currentDomain = parse_url(get_site_url(), PHP_URL_HOST);
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('AI-Powered Competitor Research', 'ai-seo-client'); ?></h1>
-            
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .sseo-ai-dashboard-card .button-primary { background: linear-gradient(135deg, #FF4D00 0%, #ec4899 100%); border: none; }
+            .sseo-ai-dashboard-card .nav-tab-wrapper { border-bottom: 1px solid #e2e8f0; }
+            .sseo-ai-dashboard-card .nav-tab { background: #f1f5f9; border: 1px solid #e2e8f0; border-bottom: none; }
+            .sseo-ai-dashboard-card .nav-tab-active { background: #fff; border-bottom: 1px solid #fff; }
+            .sseo-ai-dashboard-card .tab-content { padding: 20px; background: #fff; border: 1px solid #e2e8f0; margin-top: -1px; }
+            .sseo-ai-dashboard-card table.widefat { border: 1px solid #e2e8f0; }
+            .sseo-ai-dashboard-card table.widefat thead th { background: #f8fafc; color: #334155; }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('AI-Powered Competitor Research', 'ai-seo-client'); ?></h1>
+            </div>
+
+            <div class="sseo-ai-content">
             <!-- Add Competitor -->
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h2>
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                     <div>
@@ -77,7 +95,7 @@ class CompetitorResearch
             
             <!-- Competitor Overview -->
             <?php if (!empty($competitors)): ?>
-            <div class="card" style="margin-bottom: 20px;">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Tracked Competitors', 'ai-seo-client'); ?></h2>
                 
                 <table class="wp-list-table widefat fixed striped">
@@ -134,7 +152,7 @@ class CompetitorResearch
             </div>
             
             <!-- Detailed Analysis Tabs -->
-            <div class="card">
+            <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Competitor Analysis', 'ai-seo-client'); ?></h2>
                 
                 <div id="competitor-tabs" style="margin-top: 15px;">
@@ -198,12 +216,8 @@ class CompetitorResearch
                 </div>
             </div>
             <?php endif; ?>
+            </div>
         </div>
-        
-        <style>
-        .tab-content { padding: 20px; background: #f9f9f9; margin-top: -1px; border: 1px solid #ccd0d4; }
-        .nav-tab-wrapper { border-bottom: 1px solid #ccd0d4; }
-        </style>
         
         <script>
         function sseoAddCompetitorTracking() {

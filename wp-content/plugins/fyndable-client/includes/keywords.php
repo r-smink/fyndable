@@ -1161,6 +1161,34 @@ PROMPT;
             </div>
         </div>
 
+        <!-- Add Competitor Modal -->
+        <div class="sseo-modal" id="modal-add-competitor" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Add Competitor', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <input type="hidden" id="add-competitor-keyword">
+                    <p class="description" style="margin-bottom: 15px;">
+                        <?php esc_html_e('Enter a competitor domain to analyze for this keyword.', 'ai-seo-client'); ?>
+                    </p>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Competitor Domain', 'ai-seo-client'); ?> *</label>
+                        <input type="text" id="add-competitor-domain" class="sseo-input" placeholder="competitor.com">
+                    </div>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="sseo-btn-primary" id="btn-confirm-add-competitor">
+                        <span class="spinner" style="display: none;"></span>
+                        <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Generate Keywords Modal -->
         <div class="sseo-modal" id="modal-generate-keywords" style="display: none;">
             <div class="sseo-modal-overlay"></div>
@@ -1745,12 +1773,48 @@ PROMPT;
                     });
                 });
 
-                // Show competitors (placeholder — opens competitor research page)
+                // Show competitors — open add competitor modal, then redirect inside Fyndable dashboard
                 $('.btn-show-competitors').on('click', function() {
                     const keyword = $(this).data('keyword');
                     if (keyword) {
-                        window.open('<?php echo esc_js(admin_url('admin.php?page=ai-seo-competitor-research')); ?>&keyword=' + encodeURIComponent(keyword), '_blank');
+                        $('#add-competitor-keyword').val(keyword);
+                        $('#add-competitor-domain').val('');
+                        $('#modal-add-competitor').show();
                     }
+                });
+
+                $('#btn-confirm-add-competitor').on('click', function() {
+                    const keyword = $('#add-competitor-keyword').val();
+                    const domain = $('#add-competitor-domain').val().trim();
+                    const btn = $(this);
+
+                    if (!domain) {
+                        alert('<?php echo esc_js(__('Please enter a competitor domain', 'ai-seo-client')); ?>');
+                        return;
+                    }
+
+                    btn.find('.spinner').show();
+                    btn.prop('disabled', true);
+
+                    jQuery.post(ajaxurl, {
+                        action: 'sseo_ai_analyze_competitor',
+                        domain: domain,
+                        nonce: '<?php echo wp_create_nonce('sseo_competitor'); ?>'
+                    }, function(response) {
+                        btn.find('.spinner').hide();
+                        btn.prop('disabled', false);
+
+                        if (response.success) {
+                            $('#modal-add-competitor').hide();
+                            window.location.href = '<?php echo esc_js(admin_url('admin.php?page=fyndable-dashboard&fyndable_page=ai-seo-competitor-research')); ?>&keyword=' + encodeURIComponent(keyword);
+                        } else {
+                            alert(response.data.message || '<?php echo esc_js(__('Error analyzing competitor', 'ai-seo-client')); ?>');
+                        }
+                    }).fail(function() {
+                        btn.find('.spinner').hide();
+                        btn.prop('disabled', false);
+                        alert('<?php echo esc_js(__('Error analyzing competitor', 'ai-seo-client')); ?>');
+                    });
                 });
             }
 

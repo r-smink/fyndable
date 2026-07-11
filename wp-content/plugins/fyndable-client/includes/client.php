@@ -647,6 +647,16 @@ class Client
                 [$this, 'renderLinkManagerPage']
             );
 
+            // 7c. Competitor Research - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Competitor Research', 'ai-seo-client'),
+                __('🔍 Competitor Research', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-competitor-research',
+                [$this, 'renderCompetitorResearchPage']
+            );
+
             // 7b. Link Genius (Auto Internal Linking) - starter+
             add_submenu_page(
                 'fyndable-dashboard',
@@ -1367,6 +1377,22 @@ class Client
         }
         if ($this->smartInternalLinking) {
             $this->smartInternalLinking->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Competitor Research page - delegates to CompetitorResearch class
+     */
+    public function renderCompetitorResearchPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->competitorResearch) {
+            $this->competitorResearch->renderDashboard();
         } else {
             $this->renderFeatureNotAvailable();
         }
