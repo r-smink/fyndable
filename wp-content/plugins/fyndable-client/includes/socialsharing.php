@@ -157,7 +157,7 @@ class SocialSharing
         $siteName = get_bloginfo('name');
         $type = is_page() ? 'website' : 'article';
 
-        echo "<!-- Fynable Open Graph -->\n";
+        echo "<!-- Fyndable Open Graph -->\n";
         echo '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
         echo '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
         echo '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
@@ -176,6 +176,6 @@ class SocialSharing
         if ($image) {
             echo '<meta name="twitter:image" content="' . esc_url($image) . '" />' . "\n";
         }
-        echo "<!-- /Fynable Open Graph -->\n";
+        echo "<!-- /Fyndable Open Graph -->\n";
     }
 }

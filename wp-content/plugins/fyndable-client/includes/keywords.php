@@ -1773,7 +1773,7 @@ PROMPT;
                     });
                 });
 
-                // Show competitors — open add competitor modal, then redirect inside Fyndable dashboard
+                // Show competitors — open add competitor modal, then redirect inside dashboard shell
                 $('.btn-show-competitors').on('click', function() {
                     const keyword = $(this).data('keyword');
                     if (keyword) {

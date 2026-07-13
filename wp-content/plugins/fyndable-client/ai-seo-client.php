@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Fynable
- * Description: Advanced AI-powered SEO plugin by Fynable with comprehensive optimization features
+ * Plugin Name: Fyndable
+ * Description: Advanced AI-powered SEO plugin by Fyndable with comprehensive optimization features
  * Version: 1.5.0
- * Author: Fynable
+ * Author: Fyndable
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: ai-seo-client

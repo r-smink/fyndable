@@ -353,10 +353,24 @@ class LicenseAPI
      */
     private function getWhiteLabelData(string $tenantKey): array
     {
+        // Global SaaS white-label switch overrides tenant-level settings
+        if (!get_option('sseo_ai_saas_wl_enabled', false)) {
+            return [
+                'company_name' => '',
+                'company_logo' => '',
+                'primary_color' => '',
+                'secondary_color' => '',
+                'use_primary_only' => false,
+                'support_email' => '',
+                'support_url' => '',
+                'enabled' => false,
+            ];
+        }
+
         // Only tenant-specific white-label settings (no global fallback)
         $tenantBrand = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
         $enabled = $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
-        
+
         // Only return white-label if explicitly enabled and configured
         if ($enabled && $tenantBrand) {
             $brand = is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
@@ -364,13 +378,13 @@ class LicenseAPI
                 return $brand;
             }
         }
-        
+
         // Return empty if no tenant white-label configured
         return [
             'company_name' => '',
             'company_logo' => '',
-            'primary_color' => '#2563eb',
-            'secondary_color' => '#1e40af',
+            'primary_color' => '',
+            'secondary_color' => '',
             'use_primary_only' => false,
             'support_email' => '',
             'support_url' => '',
@@ -808,6 +822,11 @@ class LicenseAPI
             wp_die(__('Google OAuth is not configured on the SaaS dashboard.', 'sseo-ai-saas'), 500);
         }
 
+        $whiteLabel = $this->getWhiteLabelData($tenantKey);
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $globalCompanyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : ($globalCompanyName ?: 'Fyndable');
+
         $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
         $exchangeUrl = rest_url($this->namespace . '/google/exchange');
 
@@ -818,7 +837,7 @@ class LicenseAPI
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connect Google — Fyndable</title>
+    <title><?php echo esc_html(sprintf(__('Connect Google — %s', 'sseo-ai-saas'), $companyName)); ?></title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
         .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; max-width: 420px; }
@@ -834,7 +853,7 @@ class LicenseAPI
 </head>
 <body>
     <div class="card">
-        <div class="logo">Fyndable</div>
+        <div class="logo"><?php echo esc_html($companyName); ?></div>
         <div id="status-area">
             <p class="status">Click the button below to connect your Google account.</p>
             <button class="btn" id="google-connect-btn" onclick="sseoStartGoogleAuth()">Connect Google Account</button>

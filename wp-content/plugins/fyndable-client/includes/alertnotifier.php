@@ -41,9 +41,13 @@ class AlertNotifier
             return false;
         }
 
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $subject = sprintf(__('%s Alert', 'ai-seo-client'), $companyName);
+
         return wp_mail(
             $this->adminEmail,
-            __('Fynable Alert', 'ai-seo-client'),
+            $subject,
             $message
         );
     }

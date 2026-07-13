@@ -5,7 +5,7 @@ namespace SSEOAISaaS;
 /**
  * SaaS Full-Page Dashboard Shell
  *
- * Replaces the WordPress admin chrome with a branded Fyndable SaaS experience.
+ * Replaces the WordPress admin chrome with a branded SaaS experience.
  * Existing admin pages are loaded inside an iframe within the shell.
  * An exit button (×) returns the user to the standard WordPress admin.
  */
@@ -261,6 +261,11 @@ class SaaSDashboardShell
     {
         $this->buildMenuItems();
 
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $companyLogo = $enabled ? get_option('sseo_ai_saas_wl_company_logo', '') : '';
+        $companyName = $companyName ?: 'Fyndable';
+
         $currentPage = isset($_GET['saas_page']) ? sanitize_key($_GET['saas_page']) : 'sseo-ai-licenses';
 
         $iframeUrl = admin_url('admin.php');
@@ -465,7 +470,13 @@ class SaaSDashboardShell
         <div class="saas-shell-wrap">
             <div class="saas-topbar">
                 <div class="saas-topbar-brand">
-                    <div class="saas-topbar-logo">Fyndable <span>SaaS</span></div>
+                    <div class="saas-topbar-logo">
+                        <?php if ($companyLogo): ?>
+                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" style="max-height: 36px; max-width: 180px; display: block;">
+                        <?php else: ?>
+                            <?php echo esc_html($companyName); ?> <span>SaaS</span>
+                        <?php endif; ?>
+                    </div>
                     <div class="saas-topbar-badge"><?php esc_html_e('Dashboard', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="saas-topbar-actions">
@@ -490,7 +501,7 @@ class SaaSDashboardShell
                         <?php endforeach; ?>
                     </ul>
                     <div class="saas-sidebar-footer">
-                        Fyndable SaaS v<?php echo esc_html(SSEO_AI_SAAS_VERSION); ?>
+                        <?php echo esc_html($companyName); ?> SaaS v<?php echo esc_html(SSEO_AI_SAAS_VERSION); ?>
                     </div>
                 </nav>
 

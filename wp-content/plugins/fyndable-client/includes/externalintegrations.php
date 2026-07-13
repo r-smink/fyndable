@@ -168,7 +168,11 @@ class ExternalIntegrations
         
         $gdriveFolderId = get_option('sseo_ai_gdrive_folder_id', '');
         $gdriveAutoExport = get_option('sseo_ai_gdrive_auto_export', false);
-        
+
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $supportContact = $companyName . ' ' . __('support', 'ai-seo-client');
+
         // GSC settings
         $gscConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']);
         $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
@@ -777,7 +781,7 @@ class ExternalIntegrations
             // Get SaaS dashboard URL and credentials
             wp.apiFetch({ path: '/sseo-ai/v1/google-status' }).then(function(status) {
                 if (!status.has_credentials) {
-                    alert('<?php esc_html_e('Google OAuth is not yet configured. Please contact Fyndable support.', 'ai-seo-client'); ?>');
+                    alert('<?php echo esc_js(sprintf(__('Google OAuth is not yet configured. Please contact %s.', 'ai-seo-client'), $supportContact)); ?>');
                     if (btn) btn.disabled = false;
                     return;
                 }
@@ -859,10 +863,12 @@ class ExternalIntegrations
         }
         
         $channel = get_option('sseo_ai_slack_channel', '#seo');
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         
         $payload = [
             'channel' => $channel,
-            'username' => 'Fynable Bot',
+            'username' => $companyName . ' Bot',
             'icon_emoji' => ':chart_with_upwards_trend:',
             'text' => $message,
         ];
@@ -1348,8 +1354,10 @@ class ExternalIntegrations
      */
     public function restTestSlack(): array
     {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         $success = $this->sendSlackNotification(
-            ':wave: Test message from Fynable',
+            ':wave: ' . sprintf(__('Test message from %s', 'ai-seo-client'), $companyName),
             [[
                 'color' => 'good',
                 'text' => 'Your Slack integration is working correctly!',

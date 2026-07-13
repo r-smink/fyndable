@@ -86,9 +86,13 @@ class Dashboard
      */
     public function registerShellMenu(): void
     {
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $menuName = $companyName ? $companyName . ' SaaS' : 'Fyndable SaaS';
+
         add_menu_page(
-            __('Fyndable SaaS', 'sseo-ai-saas'),
-            __('Fyndable SaaS', 'sseo-ai-saas'),
+            $menuName,
+            $menuName,
             'manage_options',
             'sseo-ai-shell',
             [$this->dashboardShell, 'render'],

@@ -100,7 +100,7 @@ class WhiteLabelManager
                                 <input type="text" id="company_name" name="sseo_ai_wl_company_name" 
                                        value="<?php echo esc_attr($companyName); ?>" class="regular-text">
                                 <p class="description">
-                                    <?php esc_html_e('This will replace "Fynable" throughout the interface', 'ai-seo-client'); ?>
+                                    <?php esc_html_e('This will replace the default brand name throughout the interface', 'ai-seo-client'); ?>
                                 </p>
                             </td>
                         </tr>
@@ -173,7 +173,7 @@ class WhiteLabelManager
                         <li>✓ <?php esc_html_e('Company logo in header', 'ai-seo-client'); ?></li>
                         <li>✓ <?php esc_html_e('Custom color scheme', 'ai-seo-client'); ?></li>
                         <li>✓ <?php esc_html_e('Company name and contact info', 'ai-seo-client'); ?></li>
-                        <li>✓ <?php esc_html_e('No "Powered by Fynable" branding', 'ai-seo-client'); ?></li>
+                        <li>✓ <?php esc_html_e('No "Powered by Fyndable" branding', 'ai-seo-client'); ?></li>
                     </ul>
                     
                     <button type="button" class="button" onclick="sseoPreviewReport()">

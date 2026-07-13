@@ -6,8 +6,8 @@ namespace SSEOAIClient;
  * Unified Post Meta Box with Grouped Accordion
  * 
  * Replaces 20+ individual meta boxes on the post edit screen
- * with a single "Fyndable SEO" meta box containing grouped
- * accordion sections with Fyndable branding.
+ * with a single "Fyndable Smart SEO" meta box containing grouped
+ * accordion sections with custom branding.
  */
 class PostMetaBox
 {
@@ -153,6 +153,7 @@ class PostMetaBox
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         $companyLogo = !empty($whiteLabel['company_logo']) ? $whiteLabel['company_logo'] : '';
+        $brandName = $companyName . ' Smart SEO';
 
         echo '<div class="fyndable-seo-container">';
 
@@ -162,7 +163,7 @@ class PostMetaBox
         if ($companyLogo) {
             echo '<img src="' . esc_url($companyLogo) . '" alt="' . esc_attr($companyName) . '" style="max-height: 22px; max-width: 160px; display: block; vertical-align: middle;">';
         } else {
-            echo esc_html($companyName) . ' <strong>SmartSEO</strong>';
+            echo esc_html($brandName);
         }
         echo '</span>';
         echo '<span class="fyndable-seo-badge">' . esc_html__('Post Optimization', 'ai-seo-client') . '</span>';
@@ -224,9 +225,10 @@ class PostMetaBox
     private function getInlineCSS(): string
     {
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6';
-        $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899';
-        $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+        $hasCustomBrand = !empty($whiteLabel['company_name']);
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6') : '#3b82f6';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899') : '#ec4899';
+        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
         $headerGradient = $usePrimaryOnly ? $primaryColor : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
 
         $css = <<<'CSS'

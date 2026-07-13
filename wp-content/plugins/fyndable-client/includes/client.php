@@ -81,7 +81,7 @@ class Client
     private ?SocialSharing $socialSharing = null;
     private ?GoogleDataDashboard $googleDataDashboard = null;
     private ?PostMetaBox $postMetaBox = null;
-    private ?FyndableDashboard $fyndableDashboard = null;
+    private ?DashboardShell $dashboardShell = null;
     private ?BrandVisibilityTracker $brandVisibility = null;
     private ?Supportickets $supportTickets = null;
 
@@ -160,6 +160,11 @@ class Client
     {
         // Check if license is valid on every page load (cached)
         $this->licenseValidator->validateStoredLicense();
+
+        // Keep white-label in sync with the SaaS dashboard (1 minute cache)
+        if (is_admin()) {
+            $this->dashboardAPI->syncWhiteLabel();
+        }
     }
     
     /**
@@ -548,19 +553,19 @@ class Client
         
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('Fyndable', 'ai-seo-client');
+        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
 
-        // Initialize Fyndable Dashboard shell
-        $this->fyndableDashboard = new FyndableDashboard($this);
-        $this->fyndableDashboard->register();
+        // Initialize dashboard shell
+        $this->dashboardShell = new DashboardShell($this);
+        $this->dashboardShell->register();
 
-        // Main menu — renders the full-page Fyndable dashboard shell
+        // Main menu — renders the full-page dashboard shell
         add_menu_page(
             $menuName,
             $menuName,
             'manage_options',
             'fyndable-dashboard',
-            [$this, 'renderFyndableDashboard'],
+            [$this, 'renderDashboardShell'],
             'dashicons-chart-line',
             30
         );
@@ -819,7 +824,7 @@ class Client
     }
 
     /**
-     * Hide all Fyndable submenu items from the WordPress admin menu via CSS.
+     * Hide all dashboard submenu items from the WordPress admin menu via CSS.
      * Pages remain registered and accessible via direct URL (needed for iframe).
      */
     public function hideSubmenuItems(): void
@@ -948,10 +953,10 @@ class Client
             })(jQuery);
         ', 'after');
 
-        // Apply white-label CSS variables
-        if (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color'])) {
-            $primaryColor = $whiteLabel['primary_color'] ?? '#2563eb';
-            $secondaryColor = $whiteLabel['secondary_color'] ?? '#1e40af';
+        // Apply white-label CSS variables only when a custom brand is configured
+        if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
+            $primaryColor = $whiteLabel['primary_color'] ?: '#2563eb';
+            $secondaryColor = $whiteLabel['secondary_color'] ?: '#1e40af';
             wp_add_inline_style('ai-seo-client-admin', "
                 :root {
                     --sseo-primary-color: {$primaryColor};
@@ -980,9 +985,13 @@ class Client
         $licenseStatus = get_option('sseo_ai_client_license_status', 'inactive');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $brandName = $companyName . ' ' . __('License Activation', 'ai-seo-client');
         ?>
         <div class="wrap ai-seo-client">
-            <h1><?php esc_html_e('Fynable License Activation', 'ai-seo-client'); ?></h1>
+            <h1><?php echo esc_html($brandName); ?></h1>
 
             <?php
             // Show activation success message
@@ -1072,7 +1081,7 @@ class Client
                                     <input type="text" name="license_key" id="license_key" 
                                            value="<?php echo esc_attr($licenseKey); ?>" 
                                            class="regular-text" 
-                                           placeholder="FYNABLE-XXXX-XXXX-XXXX-XXXX" required>
+                                           placeholder="SSEO-AI-XXXX-XXXX-XXXX" required>
                                 </td>
                             </tr>
                         </table>
@@ -1086,12 +1095,12 @@ class Client
     }
 
     /**
-     * Render the full-page Fyndable dashboard shell
+     * Render the full-page dashboard shell
      */
-    public function renderFyndableDashboard(): void
+    public function renderDashboardShell(): void
     {
-        if ($this->fyndableDashboard) {
-            $this->fyndableDashboard->render();
+        if ($this->dashboardShell) {
+            $this->dashboardShell->render();
         }
     }
 
@@ -1945,36 +1954,36 @@ class Client
     public function handleManualValidation(): void
     {
         // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: POST data = ' . print_r($_POST, true));
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: User ID = ' . get_current_user_id());
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: POST data = ' . print_r($_POST, true));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: User ID = ' . get_current_user_id());
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
         
         if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'manual_validate_license')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Nonce verification failed');
             wp_die(__('Security check failed. Please refresh the page and try again.', 'ai-seo-client'));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Nonce verified successfully');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Nonce verified successfully');
 
         if (!current_user_can('manage_options') && !current_user_can('activate_plugins')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: User lacks required capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: User lacks required capability');
             wp_die(__('You need administrator permissions to validate the license.', 'ai-seo-client'));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Permission check passed');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Permission check passed');
         
         // Clear validation cache and force re-validation
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $cacheKey = 'ai_seo_license_check_' . md5($licenseKey);
         delete_transient($cacheKey);
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Running validation...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Running validation...');
         
         // Trigger validation
         $this->licenseValidator->validateStoredLicense();
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Validation complete, redirecting...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Validation complete, redirecting...');
         
         wp_redirect(admin_url('admin.php?page=ai-seo-client&validated=1'));
         exit;
@@ -2004,6 +2013,10 @@ class Client
         $tier = get_option('sseo_ai_client_license_tier', 'free');
         $licenseType = get_option('sseo_ai_client_license_type', 'paid');
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $brandName = $companyName . ' Smart SEO';
         
         // Mask the keys for display
         $maskedLicenseKey = !empty($licenseKey) ? substr($licenseKey, 0, 12) . str_repeat('*', 20) . substr($licenseKey, -8) : '';
@@ -2040,7 +2053,7 @@ class Client
                         <div class="connection-status">
                             <h2>
                                 <?php esc_html_e('You are connected', 'ai-seo-client'); ?><br>
-                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php esc_html_e('Fyndable Smart SEO', 'ai-seo-client'); ?></span>
+                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php echo esc_html($brandName); ?></span>
                             </h2>
                         </div>
                         
@@ -2110,7 +2123,7 @@ class Client
                 <?php else: ?>
                     <div class="sseo-ai-connection-card">
                         <div class="connection-status">
-                            <h2><?php esc_html_e('Connect to Fyndable Smart SEO', 'ai-seo-client'); ?></h2>
+                            <h2><?php esc_html_e('Connect to', 'ai-seo-client'); ?> <?php echo esc_html($brandName); ?></h2>
                             <p><?php esc_html_e('Enter your license details to activate the plugin', 'ai-seo-client'); ?></p>
                         </div>
                         
@@ -2127,7 +2140,7 @@ class Client
                             <div class="form-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
                                 <input type="text" name="license_key" id="license_key" 
-                                       placeholder="FYNABLE-XXXX-XXXX-XXXX" required>
+                                       placeholder="SSEO-AI-XXXX-XXXX-XXXX" required>
                             </div>
                             
                             <button type="submit" class="button button-primary">
@@ -2146,17 +2159,17 @@ class Client
      */
     public function handleLicenseActivation(): void
     {
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: License activation handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: License activation handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
         
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'activate_license')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Nonce verification failed');
             wp_die(__('Security check failed. Please try again.', 'ai-seo-client'));
         }
 
         if (!current_user_can('manage_options')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: User lacks manage_options capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: User lacks manage_options capability');
             wp_die(__('Insufficient permissions. You must be an administrator to activate licenses.', 'ai-seo-client'));
         }
 
@@ -2176,13 +2189,13 @@ class Client
 
         if (is_wp_error($result)) {
             $errorMsg = $result->get_error_message();
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable License Activation Failed: ' . $errorMsg);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable License Activation Failed: ' . $errorMsg);
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode($errorMsg)));
             exit;
         }
 
         if (empty($result['tenant_key'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable License Activation: No tenant_key in response');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable License Activation: No tenant_key in response');
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Invalid response from dashboard - no tenant key')));
             exit;
         }

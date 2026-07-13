@@ -5,7 +5,7 @@ namespace SSEOAIClient;
 /**
  * Support Tickets — client-side UI
  *
- * Renders the “Support” page in the Fyndable dashboard shell. Lets customers
+ * Renders the “Support” page in the dashboard shell. Lets customers
  * view, create and reply to support tickets that are stored centrally on the
  * SaaS dashboard.
  */

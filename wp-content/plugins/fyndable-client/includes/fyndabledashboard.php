@@ -3,13 +3,13 @@
 namespace SSEOAIClient;
 
 /**
- * Fyndable Full-Page Dashboard Shell
+ * Full-Page Dashboard Shell
  *
- * Replaces the WordPress admin chrome with a branded Fyndable experience.
+ * Replaces the WordPress admin chrome with a branded dashboard experience.
  * Existing admin pages are loaded inside an iframe within the shell.
  * An exit button (×) returns the user to the standard WordPress admin.
  */
-class FyndableDashboard
+class DashboardShell
 {
     private Client $client;
     private array $menuItems = [];
@@ -156,7 +156,7 @@ class FyndableDashboard
     }
 
     /**
-     * Hide WordPress admin chrome when on Fyndable pages.
+     * Hide WordPress admin chrome when on dashboard pages.
      * - On the shell page: hide ALL WP chrome (menu, bar, footer, notices)
      * - In the iframe (fyndable_shell=1): hide WP chrome for clean content
      */
@@ -169,11 +169,11 @@ class FyndableDashboard
 
         $isShellPage = $screen->id === 'toplevel_page_fyndable-dashboard';
         $isIframePage = isset($_GET['fyndable_shell']);
-        $isFyndablePage = strpos($screen->id, 'ai-seo') !== false
+        $isDashboardPage = strpos($screen->id, 'ai-seo') !== false
             || strpos($screen->id, 'fyndable') !== false
             || $isShellPage;
 
-        if (!$isFyndablePage) {
+        if (!$isDashboardPage) {
             return;
         }
 
@@ -208,7 +208,7 @@ class FyndableDashboard
             </style>';
         }
 
-        // For all Fyndable pages (including iframe content): use JS to detect iframe
+        // For all dashboard pages (including iframe content): use JS to detect iframe
         // and hide WP chrome even when fyndable_shell param is missing from URL
         if (!$isShellPage) {
             echo '<script>
@@ -248,7 +248,7 @@ class FyndableDashboard
                     ";
                     document.head.appendChild(style);
 
-                    // Intercept links to Fyndable admin pages: append fyndable_shell=1
+                    // Intercept links to dashboard admin pages: append fyndable_shell=1
                     // so they stay inside the iframe shell
                     document.addEventListener("click", function(e) {
                         var link = e.target.closest("a");
@@ -266,7 +266,7 @@ class FyndableDashboard
                         window.location.href = url + sep + "fyndable_shell=1";
                     });
 
-                    // Also intercept form submissions that redirect to Fyndable admin pages
+                    // Also intercept form submissions that redirect to dashboard admin pages
                     // (e.g. options.php redirects back to admin.php?page=ai-seo-*)
                     // Handle this by modifying the _wp_http_referer to include fyndable_shell
                     document.addEventListener("DOMContentLoaded", function() {
@@ -325,7 +325,7 @@ class FyndableDashboard
     }
 
     /**
-     * Render the Fyndable dashboard shell (within WordPress .wrap).
+     * Render the dashboard shell (within WordPress .wrap).
      * WP chrome is hidden via hideWpChrome() CSS on admin_head.
      */
     public function render(): void
@@ -360,9 +360,12 @@ class FyndableDashboard
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         $companyLogo = !empty($whiteLabel['company_logo']) ? $whiteLabel['company_logo'] : '';
-        $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6';
-        $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899';
-        $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+        $brandName = $companyName . ' Smart SEO';
+        // Only apply custom colors when a company name is set; otherwise fall back to Fyndable defaults
+        $hasCustomBrand = !empty($whiteLabel['company_name']);
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6') : '#3b82f6';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899') : '#ec4899';
+        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
         $supportEmail = !empty($whiteLabel['support_email']) ? $whiteLabel['support_email'] : '';
         $supportUrl = !empty($whiteLabel['support_url']) ? $whiteLabel['support_url'] : '';
 
@@ -596,7 +599,7 @@ class FyndableDashboard
                         <?php if ($companyLogo): ?>
                             <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" title="<?php echo esc_attr($companyName); ?>">
                         <?php else: ?>
-                            <?php echo esc_html($companyName); ?> <span><?php esc_html_e('SmartSEO', 'ai-seo-client'); ?></span>
+                            <?php echo esc_html($brandName); ?>
                         <?php endif; ?>
                     </div>
                     <div class="fyndable-topbar-badge"><?php esc_html_e('Dashboard', 'ai-seo-client'); ?></div>
@@ -627,7 +630,7 @@ class FyndableDashboard
                             <?php if ($companyLogo): ?>
                                 <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" title="<?php echo esc_attr($companyName); ?>">
                             <?php else: ?>
-                                <strong><?php echo esc_html($companyName); ?></strong> <span><?php esc_html_e('SmartSEO', 'ai-seo-client'); ?></span>
+                                <?php echo esc_html($brandName); ?>
                             <?php endif; ?>
                         </div>
                         <?php if ($supportUrl || $supportEmail): ?>

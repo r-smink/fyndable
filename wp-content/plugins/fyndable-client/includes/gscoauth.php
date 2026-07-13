@@ -11,7 +11,7 @@ namespace SSEOAIClient;
  * - Google Ads (adwords)
  * 
  * OAuth credentials (client ID, secret, dev token) are stored on the
- * Fyndable.ai SaaS Dashboard and never exposed to client sites.
+ * SaaS dashboard and never exposed to client sites.
  * The SaaS dashboard acts as a proxy for the token exchange.
  */
 class GscOAuth

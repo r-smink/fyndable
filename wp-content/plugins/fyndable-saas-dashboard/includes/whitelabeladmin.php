@@ -60,12 +60,28 @@ class WhiteLabelAdmin
             'sseo-ai-billing',
             [$this, 'renderBilling']
         );
+
+        // Global White-Label settings
+        add_submenu_page(
+            'sseo-ai-licenses',
+            __('Global White-Label', 'sseo-ai-saas'),
+            __('Global White-Label', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-white-label',
+            [$this, 'renderWhiteLabelSettings']
+        );
     }
 
     public function registerSettings(): void
     {
-        // Global white-label settings removed - now only tenant-level white-label
-        // White-label is configured per-tenant in Client Portal
+        // Global white-label toggle and settings
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_enabled', ['default' => '0', 'sanitize_callback' => fn($v) => $v ? '1' : '0']);
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_company_name');
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_company_logo');
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_primary_color');
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_secondary_color');
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_support_email');
+        register_setting('sseo_ai_saas_whitelabel', 'sseo_ai_saas_wl_support_url');
         
         // Billing settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_key');
@@ -75,6 +91,7 @@ class WhiteLabelAdmin
 
     public function renderWhiteLabelSettings(): void
     {
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
         $companyName = get_option('sseo_ai_saas_wl_company_name', '');
         $companyLogo = get_option('sseo_ai_saas_wl_company_logo', '');
         $primaryColor = get_option('sseo_ai_saas_wl_primary_color', '#2563eb');
@@ -112,6 +129,14 @@ class WhiteLabelAdmin
                     <h2><?php esc_html_e('Branding', 'sseo-ai-saas'); ?></h2>
                     
                     <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="wl_enabled"><?php esc_html_e('Enable White-Label', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="hidden" name="sseo_ai_saas_wl_enabled" value="0">
+                                <input type="checkbox" id="wl_enabled" name="sseo_ai_saas_wl_enabled" value="1" <?php checked($enabled); ?>>
+                                <p class="description"><?php esc_html_e('When disabled, the SaaS dashboard reverts to the default Fyndable branding.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
                         <tr>
                             <th scope="row"><label for="company_name"><?php esc_html_e('Company Name', 'sseo-ai-saas'); ?></label></th>
                             <td>
