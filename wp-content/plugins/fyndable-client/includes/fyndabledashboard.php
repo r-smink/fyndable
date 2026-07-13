@@ -355,6 +355,24 @@ class FyndableDashboard
         }
 
         $exitUrl = admin_url('admin.php?page=' . $currentPage);
+
+        // Load white-label branding set by the SaaS dashboard
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $companyLogo = !empty($whiteLabel['company_logo']) ? $whiteLabel['company_logo'] : '';
+        $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6';
+        $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899';
+        $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+        $supportEmail = !empty($whiteLabel['support_email']) ? $whiteLabel['support_email'] : '';
+        $supportUrl = !empty($whiteLabel['support_url']) ? $whiteLabel['support_url'] : '';
+
+        if ($usePrimaryOnly) {
+            $topBarGradient = $primaryColor;
+            $activeGradient = $primaryColor;
+        } else {
+            $topBarGradient = "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+            $activeGradient = "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+        }
         ?>
         <style>
             .fyndable-shell-wrap {
@@ -368,7 +386,7 @@ class FyndableDashboard
             /* Top bar with gradient */
             .fyndable-topbar {
                 height: 56px;
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                background: <?php echo esc_attr($topBarGradient); ?>;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -388,6 +406,11 @@ class FyndableDashboard
                 font-size: 20px;
                 font-weight: 700;
                 letter-spacing: -0.3px;
+            }
+            .fyndable-topbar-logo img {
+                max-height: 36px;
+                max-width: 180px;
+                display: block;
             }
             .fyndable-topbar-logo span { font-weight: 400; opacity: 0.9; }
             .fyndable-topbar-badge {
@@ -470,13 +493,13 @@ class FyndableDashboard
             }
             .fyndable-sidebar-nav a:hover {
                 background: #f3f4f6;
-                color: #1e40af;
+                color: <?php echo esc_attr($primaryColor); ?>;
             }
             .fyndable-sidebar-nav a.active {
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+                background: <?php echo esc_attr($activeGradient); ?>;
                 color: #fff;
                 font-weight: 600;
-                box-shadow: 0 2px 6px rgba(59,130,246,0.3);
+                box-shadow: 0 2px 6px <?php echo esc_attr($primaryColor); ?>4d;
             }
             .fyndable-sidebar-nav .fyndable-nav-icon {
                 font-size: 16px;
@@ -491,6 +514,24 @@ class FyndableDashboard
                 color: #9ca3af;
                 text-align: center;
             }
+            .fyndable-sidebar-footer a {
+                color: #6b7280;
+                text-decoration: none;
+            }
+            .fyndable-footer-brand {
+                margin-bottom: 6px;
+                font-size: 12px;
+                color: #6b7280;
+            }
+            .fyndable-footer-brand img {
+                max-height: 24px;
+                max-width: 160px;
+                display: block;
+                margin: 0 auto 4px;
+            }
+            .fyndable-footer-brand strong { color: #6b7280; }
+            .fyndable-footer-brand span { font-weight: 600; opacity: 0.8; }
+            .fyndable-footer-support { margin-top: 4px; }
 
             /* Content area */
             .fyndable-content {
@@ -524,7 +565,7 @@ class FyndableDashboard
                 width: 36px;
                 height: 36px;
                 border: 3px solid #e5e7eb;
-                border-top-color: #3b82f6;
+                border-top-color: <?php echo esc_attr($primaryColor); ?>;
                 border-radius: 50%;
                 animation: fyndable-spin 0.8s linear infinite;
             }
@@ -551,7 +592,13 @@ class FyndableDashboard
         <div class="fyndable-shell-wrap">
             <div class="fyndable-topbar">
                 <div class="fyndable-topbar-brand">
-                    <div class="fyndable-topbar-logo">Fyndable <span>SmartSEO</span></div>
+                    <div class="fyndable-topbar-logo">
+                        <?php if ($companyLogo): ?>
+                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" title="<?php echo esc_attr($companyName); ?>">
+                        <?php else: ?>
+                            <?php echo esc_html($companyName); ?> <span><?php esc_html_e('SmartSEO', 'ai-seo-client'); ?></span>
+                        <?php endif; ?>
+                    </div>
                     <div class="fyndable-topbar-badge"><?php esc_html_e('Dashboard', 'ai-seo-client'); ?></div>
                 </div>
                 <div class="fyndable-topbar-actions">
@@ -576,7 +623,22 @@ class FyndableDashboard
                         <?php endforeach; ?>
                     </ul>
                     <div class="fyndable-sidebar-footer">
-                        Fyndable SmartSEO v<?php echo esc_html(get_option('sseo_ai_client_version', '1.4.0')); ?>
+                        <div class="fyndable-footer-brand">
+                            <?php if ($companyLogo): ?>
+                                <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" title="<?php echo esc_attr($companyName); ?>">
+                            <?php else: ?>
+                                <strong><?php echo esc_html($companyName); ?></strong> <span><?php esc_html_e('SmartSEO', 'ai-seo-client'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($supportUrl || $supportEmail): ?>
+                            <div class="fyndable-footer-support">
+                                <?php if ($supportUrl): ?>
+                                    <a href="<?php echo esc_url($supportUrl); ?>" target="_blank"><?php esc_html_e('Support', 'ai-seo-client'); ?></a>
+                                <?php elseif ($supportEmail): ?>
+                                    <a href="mailto:<?php echo esc_attr($supportEmail); ?>"><?php esc_html_e('Support', 'ai-seo-client'); ?></a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </nav>
 

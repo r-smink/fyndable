@@ -547,6 +547,52 @@ class BrandVisibilityTracker
     }
 
     /**
+     * Get actionable recommendations for improving AI search visibility.
+     */
+    public function getRecommendations(array $stats, array $config): array
+    {
+        $recommendations = [];
+        $brandName = sanitize_text_field($config['brand_name'] ?? '');
+        $category = sanitize_text_field($config['category'] ?? '');
+
+        if (empty($brandName)) {
+            $recommendations[] = __('Start by entering your brand name and category in the configuration above. This is the foundation for tracking.', 'ai-seo-client');
+        }
+
+        if ($stats['total_scans'] > 0) {
+            if ($stats['visibility_score'] < 30) {
+                $recommendations[] = __('Visibility is low. Increase mentions by building topic authority pages and FAQs around your category.', 'ai-seo-client');
+            }
+
+            if ($stats['avg_position'] > 0 && $stats['avg_position'] > 3) {
+                $recommendations[] = __('Your brand is usually mentioned later. Create comparison and “best of” content to appear earlier in AI-generated answers.', 'ai-seo-client');
+            }
+
+            if ($stats['sentiment']['negative'] > $stats['sentiment']['positive']) {
+                $recommendations[] = __('Negative sentiment is outweighing positive. Address common complaints and publish case studies or testimonials.', 'ai-seo-client');
+            }
+
+            if (!empty($stats['top_competitors'])) {
+                $topCompetitors = array_keys($stats['top_competitors']);
+                $topCompetitor = $topCompetitors[0];
+                $recommendations[] = sprintf(
+                    __('Competitor "%s" is mentioned frequently. Create comparison content that highlights your unique value proposition.', 'ai-seo-client'),
+                    $topCompetitor
+                );
+            }
+        }
+
+        // Always include best-practice tips.
+        $recommendations[] = __('Use the exact brand and product names from the configuration consistently across your site.', 'ai-seo-client');
+        $recommendations[] = __('Answer question-based, long-tail queries in your content (e.g., “What is the best {category}?”).', 'ai-seo-client');
+        $recommendations[] = __('Publish FAQ, comparison, and “best of” pages to train AI models on your context and authority.', 'ai-seo-client');
+        $recommendations[] = __('Add structured data (FAQ, Organization, Product) so AI engines can understand your brand and offerings.', 'ai-seo-client');
+        $recommendations[] = __('Build internal links and earn external citations from trusted sources to increase your topical authority.', 'ai-seo-client');
+
+        return $recommendations;
+    }
+
+    /**
      * Get trend data for charts
      */
     public function getTrend(int $days = 30): array

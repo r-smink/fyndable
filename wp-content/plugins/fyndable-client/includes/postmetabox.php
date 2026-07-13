@@ -60,6 +60,10 @@ class PostMetaBox
     {
         $postTypes = get_post_types(['public' => true]);
 
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $metaBoxTitle = $companyName . ' SEO';
+
         $hasNormal = false;
         $hasAttachment = false;
 
@@ -77,7 +81,7 @@ class PostMetaBox
             foreach ($postTypes as $postType) {
                 add_meta_box(
                     'fyndable_seo_meta',
-                    __('Fyndable SEO', 'ai-seo-client'),
+                    $metaBoxTitle,
                     [$this, 'renderMetaBox'],
                     $postType,
                     'normal',
@@ -89,7 +93,7 @@ class PostMetaBox
         if ($hasAttachment) {
             add_meta_box(
                 'fyndable_seo_meta_attachment',
-                __('Fyndable SEO', 'ai-seo-client'),
+                $metaBoxTitle,
                 [$this, 'renderAttachmentMetaBox'],
                 'attachment',
                 'normal',
@@ -146,11 +150,21 @@ class PostMetaBox
             return;
         }
 
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $companyLogo = !empty($whiteLabel['company_logo']) ? $whiteLabel['company_logo'] : '';
+
         echo '<div class="fyndable-seo-container">';
 
         // Gradient header
         echo '<div class="fyndable-seo-header">';
-        echo '<span class="fyndable-seo-logo">Fyndable <strong>SmartSEO</strong></span>';
+        echo '<span class="fyndable-seo-logo">';
+        if ($companyLogo) {
+            echo '<img src="' . esc_url($companyLogo) . '" alt="' . esc_attr($companyName) . '" style="max-height: 22px; max-width: 160px; display: block; vertical-align: middle;">';
+        } else {
+            echo esc_html($companyName) . ' <strong>SmartSEO</strong>';
+        }
+        echo '</span>';
         echo '<span class="fyndable-seo-badge">' . esc_html__('Post Optimization', 'ai-seo-client') . '</span>';
         echo '</div>';
 
@@ -209,7 +223,13 @@ class PostMetaBox
 
     private function getInlineCSS(): string
     {
-        return <<<'CSS'
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6';
+        $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899';
+        $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+        $headerGradient = $usePrimaryOnly ? $primaryColor : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+
+        $css = <<<'CSS'
 /* Container */
 .fyndable-seo-container { margin: -6px -12px -12px; }
 
@@ -217,11 +237,12 @@ class PostMetaBox
 .fyndable-seo-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 18px;
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+    background: __HEADER_GRADIENT__;
     color: #fff;
 }
 .fyndable-seo-logo { font-size: 15px; letter-spacing: 0.3px; opacity: 0.95; }
 .fyndable-seo-logo strong { font-weight: 700; }
+.fyndable-seo-logo img { display: inline-block; vertical-align: middle; }
 .fyndable-seo-badge {
     font-size: 11px; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px;
@@ -248,8 +269,8 @@ class PostMetaBox
 .fyndable-seo-chevron { font-size: 12px; color: #9ca3af; transition: transform 0.2s; }
 .fyndable-seo-group.open .fyndable-seo-chevron { transform: rotate(180deg); }
 .fyndable-seo-group.open .fyndable-seo-group-header {
-    background: #eef2ff; color: #1e40af;
-    border-left: 3px solid #3b82f6; padding-left: 15px;
+    background: #eef2ff; color: __PRIMARY__;
+    border-left: 3px solid __PRIMARY__; padding-left: 15px;
 }
 
 /* Group body */
@@ -268,9 +289,9 @@ class PostMetaBox
     border-bottom: 2px solid transparent; margin-bottom: -1px;
     transition: all 0.15s;
 }
-.fyndable-seo-subtab-nav li a:hover { color: #1e40af; background: #fff; }
+.fyndable-seo-subtab-nav li a:hover { color: __PRIMARY__; background: #fff; }
 .fyndable-seo-subtab-nav li.active a {
-    color: #1e40af; border-bottom-color: #3b82f6; background: #fff;
+    color: __PRIMARY__; border-bottom-color: __PRIMARY__; background: #fff;
     font-weight: 600;
 }
 .fyndable-seo-subtab-panel { padding: 16px 18px; }
@@ -302,6 +323,12 @@ class PostMetaBox
 }
 @keyframes sseo-spin { to { transform: rotate(360deg); } }
 CSS;
+
+        return str_replace(
+            ['__HEADER_GRADIENT__', '__PRIMARY__'],
+            [$headerGradient, $primaryColor],
+            $css
+        );
     }
 
     private function getInlineJS(): string

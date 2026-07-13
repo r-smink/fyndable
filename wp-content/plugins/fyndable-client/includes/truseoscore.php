@@ -230,8 +230,13 @@ class TruSEOSCORE
         $score = 0;
         $maxScore = 100;
 
+        // Rendered content supports Elementor, WPBakery and other page builders
+        $content = PageBuilderHelper::getContent($post);
+        $text = wp_strip_all_tags($content);
+        $textLower = strtolower($text);
+
         // Content length (max 15 points)
-        $wordCount = str_word_count(strip_tags($post->post_content));
+        $wordCount = str_word_count($text);
         if ($wordCount >= 1000) $score += 15;
         elseif ($wordCount >= 500) $score += 10;
         elseif ($wordCount >= 300) $score += 5;
@@ -239,21 +244,20 @@ class TruSEOSCORE
         // Focus keyphrase usage (max 20 points)
         if ($focusKeyphrase) {
             $keyphraseLower = strtolower($focusKeyphrase);
-            $contentLower = strtolower(strip_tags($post->post_content));
-            
+
             // In title (5 points)
             if (stripos($post->post_title, $focusKeyphrase) !== false) {
                 $score += 5;
             }
 
             // In first paragraph (5 points)
-            $firstPara = substr($contentLower, 0, 500);
+            $firstPara = substr($textLower, 0, 500);
             if (stripos($firstPara, $keyphraseLower) !== false) {
                 $score += 5;
             }
 
             // Density (max 10 points)
-            $count = substr_count($contentLower, $keyphraseLower);
+            $count = substr_count($textLower, $keyphraseLower);
             $density = $count / max(1, $wordCount) * 100;
             if ($density >= 0.5 && $density <= 2.5) {
                 $score += 10;
@@ -262,7 +266,7 @@ class TruSEOSCORE
             }
 
             // In headings (5 points)
-            if (preg_match('/<h[1-6][^>]*>.*?' . preg_quote($keyphraseLower, '/') . '.*?<\/h[1-6]>/i', $contentLower)) {
+            if (preg_match('/<h[1-6][^>]*>.*?' . preg_quote($keyphraseLower, '/') . '.*?<\/h[1-6]>/i', strtolower($content))) {
                 $score += 5;
             }
         }
@@ -274,21 +278,21 @@ class TruSEOSCORE
         if ($desc && strlen($desc) >= 120 && strlen($desc) <= 160) $score += 10;
 
         // Internal links (max 10 points)
-        $internalLinks = $this->countInternalLinks($post->post_content);
+        $internalLinks = $this->countInternalLinks($content);
         if ($internalLinks >= 3) $score += 10;
         elseif ($internalLinks >= 1) $score += 5;
 
         // Outbound links (max 5 points)
-        $outboundLinks = $this->countOutboundLinks($post->post_content);
+        $outboundLinks = $this->countOutboundLinks($content);
         if ($outboundLinks >= 1 && $outboundLinks <= 5) $score += 5;
 
         // Images with alt (max 10 points)
-        $images = $this->analyzeImages($post->post_content, $post->ID);
+        $images = $this->analyzeImages($content, $post->ID);
         $altRatio = $images['total'] > 0 ? $images['with_alt'] / $images['total'] : 0;
         $score += round($altRatio * 10);
 
         // Readability (max 10 points)
-        $readability = $this->calculateReadability($post->post_content);
+        $readability = $this->calculateReadability($content);
         if ($readability['flesch'] >= 60) $score += 10;
         elseif ($readability['flesch'] >= 40) $score += 5;
 
@@ -298,7 +302,7 @@ class TruSEOSCORE
         }
 
         // H1 usage (max 5 points)
-        $h1Count = preg_match_all('/<h1[^>]*>/i', $post->post_content);
+        $h1Count = preg_match_all('/<h1[^>]*>/i', $content);
         if ($h1Count === 1) $score += 5;
 
         return min($maxScore, max(0, $score));
@@ -307,7 +311,10 @@ class TruSEOSCORE
     public function getAnalysis(\WP_Post $post, string $focusKeyphrase): array
     {
         $analysis = [];
-        $content = strip_tags($post->post_content);
+
+        // Rendered content supports Elementor, WPBakery and other page builders
+        $htmlContent = PageBuilderHelper::getContent($post);
+        $content = wp_strip_all_tags($htmlContent);
         $contentLower = strtolower($content);
 
         // Content length
@@ -315,7 +322,7 @@ class TruSEOSCORE
         $analysis[] = [
             'label' => __('Content Length', 'ai-seo-client'),
             'status' => $wordCount >= 500 ? 'good' : ($wordCount >= 300 ? 'warning' : 'error'),
-            'message' => sprintf(__('%d words. %s', 'ai-seo-client'), $wordCount, 
+            'message' => sprintf(__('%d words. %s', 'ai-seo-client'), $wordCount,
                 $wordCount >= 500 ? __('Good length.', 'ai-seo-client') : __('Try to add more content.', 'ai-seo-client')),
         ];
 
@@ -348,7 +355,7 @@ class TruSEOSCORE
         }
 
         // Internal links
-        $internalCount = $this->countInternalLinks($post->post_content);
+        $internalCount = $this->countInternalLinks($htmlContent);
         $analysis[] = [
             'label' => __('Internal Links', 'ai-seo-client'),
             'status' => $internalCount >= 2 ? 'good' : 'warning',
@@ -356,7 +363,7 @@ class TruSEOSCORE
         ];
 
         // Images
-        $images = $this->analyzeImages($post->post_content, $post->ID);
+        $images = $this->analyzeImages($htmlContent, $post->ID);
         $analysis[] = [
             'label' => __('Images with Alt Text', 'ai-seo-client'),
             'status' => ($images['total'] === 0 || $images['with_alt'] === $images['total']) ? 'good' : 'warning',
@@ -364,7 +371,7 @@ class TruSEOSCORE
         ];
 
         // H1 usage
-        $h1Count = preg_match_all('/<h1[^>]*>/i', $post->post_content);
+        $h1Count = preg_match_all('/<h1[^>]*>/i', $htmlContent);
         $analysis[] = [
             'label' => __('H1 Heading', 'ai-seo-client'),
             'status' => $h1Count === 1 ? 'good' : 'error',
@@ -372,7 +379,7 @@ class TruSEOSCORE
         ];
 
         // Readability
-        $readability = $this->calculateReadability($content);
+        $readability = $this->calculateReadability($htmlContent);
         $analysis[] = [
             'label' => __('Readability', 'ai-seo-client'),
             'status' => $readability['flesch'] >= 50 ? 'good' : 'warning',
@@ -501,7 +508,8 @@ class TruSEOSCORE
 
     private function generateDefaultDescription(\WP_Post $post): string
     {
-        return wp_trim_words(strip_tags($post->post_content), 25, '');
+        $content = PageBuilderHelper::getContent($post);
+        return wp_trim_words(wp_strip_all_tags($content), 25, '');
     }
 
     private function getCanonicalUrl(\WP_Post $post): string
@@ -650,7 +658,8 @@ class TruSEOSCORE
         }
 
         // Add AI-powered content improvement suggestions
-        $wordCount = str_word_count(strip_tags($post->post_content));
+        $content = PageBuilderHelper::getContent($post);
+        $wordCount = str_word_count(wp_strip_all_tags($content));
         if ($wordCount < 500) {
             $suggestions[] = sprintf(
                 __('Consider expanding your content to at least 500 words. Currently at %d words.', 'ai-seo-client'),
@@ -658,7 +667,7 @@ class TruSEOSCORE
             );
         }
 
-        $internalLinks = $this->countInternalLinks($post->post_content);
+        $internalLinks = $this->countInternalLinks($content);
         if ($internalLinks < 2) {
             $suggestions[] = __('Add more internal links to related content on your site to improve topical authority.', 'ai-seo-client');
         }

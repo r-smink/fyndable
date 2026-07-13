@@ -98,7 +98,12 @@ class LicenseValidator
         if (!empty($body['image_api'])) {
             update_option('sseo_ai_client_image_api', $body['image_api']);
         }
-        
+
+        // Store white-label settings from SaaS dashboard
+        if (!empty($body['white_label']) && is_array($body['white_label'])) {
+            update_option('sseo_ai_white_label', $body['white_label']);
+        }
+
         // Store enabled features from SaaS dashboard (feature overrides)
         if (!empty($body['features']) && is_array($body['features'])) {
             update_option('sseo_ai_client_enabled_features', $body['features']);

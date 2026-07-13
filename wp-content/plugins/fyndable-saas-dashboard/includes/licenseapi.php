@@ -371,6 +371,7 @@ class LicenseAPI
             'company_logo' => '',
             'primary_color' => '#2563eb',
             'secondary_color' => '#1e40af',
+            'use_primary_only' => false,
             'support_email' => '',
             'support_url' => '',
             'enabled' => false,
@@ -409,6 +410,7 @@ class LicenseAPI
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
             'expires_at' => $tenant['expires_at'],
+            'white_label' => $this->getWhiteLabelData($tenantKey),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => $settings->getImageApiKey(),

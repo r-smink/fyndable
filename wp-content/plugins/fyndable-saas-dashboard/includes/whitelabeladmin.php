@@ -613,6 +613,7 @@ class WhiteLabelAdmin
                 'company_logo' => esc_url_raw($_POST['company_logo'] ?? ''),
                 'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#2563eb'),
                 'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '#1e40af'),
+                'use_primary_only' => !empty($_POST['use_primary_only']),
                 'support_email' => sanitize_email($_POST['support_email'] ?? ''),
                 'support_url' => esc_url_raw($_POST['support_url'] ?? ''),
             ];
@@ -693,6 +694,16 @@ class WhiteLabelAdmin
                                     <input type="color" id="secondary_color" name="secondary_color" 
                                            value="<?php echo esc_attr($whiteLabel['secondary_color'] ?? $globalWhiteLabel['secondary_color']); ?>">
                                     <span class="color-preview" style="display: inline-block; width: 30px; height: 30px; background: <?php echo esc_attr($whiteLabel['secondary_color'] ?? $globalWhiteLabel['secondary_color']); ?>; border-radius: 4px; margin-left: 10px; vertical-align: middle; border: 1px solid #ccc;"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><?php esc_html_e('Primary Color Only', 'sseo-ai-saas'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="use_primary_only" value="1" <?php checked(!empty($whiteLabel['use_primary_only'])); ?>>
+                                        <?php esc_html_e('Use only the primary color (no gradient)', 'sseo-ai-saas'); ?>
+                                    </label>
+                                    <p class="description"><?php esc_html_e('When checked, the client dashboard will use a solid primary color instead of a primary-to-secondary gradient.', 'sseo-ai-saas'); ?></p>
                                 </td>
                             </tr>
                             <tr>

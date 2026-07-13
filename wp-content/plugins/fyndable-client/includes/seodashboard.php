@@ -133,7 +133,7 @@ class SeoDashboard
             $post = get_post($postId);
             if (!$post) continue;
 
-            $content = $post->post_content;
+            $content = PageBuilderHelper::getContent($post);
             $wordCount = str_word_count(wp_strip_all_tags($content));
 
             // Now meta is cached, these are fast
@@ -501,7 +501,7 @@ class SeoDashboard
                 }
             });
 
-            // Load cached analysis on page load
+            // Load cached analysis on page load, or run an auto-scan if none exists
             var cached = localStorage.getItem('sseo_dashboard_overview');
             if (cached) {
                 try {
@@ -509,6 +509,8 @@ class SeoDashboard
                     window.sseoDashLastData = cachedData;
                     renderDashboard(cachedData);
                 } catch (e) {}
+            } else {
+                $('#seo-dash-scan').trigger('click');
             }
 
             $('#seo-dash-scan').on('click', function() {

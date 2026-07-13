@@ -378,6 +378,11 @@ class DashboardAPI
             );
         }
 
+        // Sync white-label settings from the SaaS dashboard
+        if (!empty($body['white_label']) && is_array($body['white_label'])) {
+            update_option('sseo_ai_white_label', $body['white_label']);
+        }
+
         return $body;
     }
 
@@ -676,8 +681,8 @@ class DashboardAPI
                 $licenseGenerator->markLicenseUsed($licenseKey);
             }
 
-            // Get white-label settings
-            $whiteLabel = get_option('sseo_ai_saas_white_label', []);
+            // Get tenant-specific white-label settings
+            $whiteLabel = $this->getTenantWhiteLabelData($tenants, $tenantKey);
 
             if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Direct activation successful, tenant_key: ' . $tenantKey);
 
@@ -695,6 +700,30 @@ class DashboardAPI
             if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Direct activation error: ' . $e->getMessage());
             return new \WP_Error('activation_error', $e->getMessage());
         }
+    }
+
+    /**
+     * Get tenant-specific white-label data for same-site activation
+     */
+    private function getTenantWhiteLabelData(\SSEOAISaaS\TenantRepository $tenants, string $tenantKey): array
+    {
+        $enabled = $tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
+        $brand = $tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
+
+        if ($enabled && is_array($brand) && !empty($brand['company_name'])) {
+            return $brand;
+        }
+
+        return [
+            'company_name' => '',
+            'company_logo' => '',
+            'primary_color' => '#2563eb',
+            'secondary_color' => '#1e40af',
+            'use_primary_only' => false,
+            'support_email' => '',
+            'support_url' => '',
+            'enabled' => false,
+        ];
     }
 
     /**

@@ -2245,6 +2245,7 @@ class Client
         delete_option('sseo_ai_client_license_type');
         delete_option('sseo_ai_client_license_expires');
         delete_option('sseo_ai_client_image_api');
+        delete_option('sseo_ai_white_label');
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&deactivated=1'));
         exit;
@@ -2468,6 +2469,7 @@ class Client
         $bvConfig = $this->brandVisibility->getSettings();
         $period = sanitize_text_field($_GET['period'] ?? '30d');
         $stats = $this->brandVisibility->getStats($period);
+        $recommendations = $this->brandVisibility->getRecommendations($stats, $bvConfig);
         $lastScan = $this->brandVisibility->getLastScanDate();
 
         $page = max(1, (int)($_GET['bv_page'] ?? 1));
@@ -2596,6 +2598,23 @@ class Client
                             <?php endif; ?>
                         </p>
                     </form>
+                </div>
+
+                <!-- What does this tracker do and how to get found -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('What does AI Search Visibility do?', 'ai-seo-client'); ?></h2>
+                    <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
+
+                    <h3 style="margin-top: 25px;"><?php esc_html_e('How to get found in AI search / LLM answers', 'ai-seo-client'); ?></h3>
+                    <?php if (empty($recommendations)): ?>
+                        <p style="color: #666;"><?php esc_html_e('Save your brand settings above to receive personalized recommendations.', 'ai-seo-client'); ?></p>
+                    <?php else: ?>
+                        <ul style="list-style: disc; margin-left: 20px; padding-left: 0;">
+                            <?php foreach ($recommendations as $recommendation): ?>
+                                <li style="margin-bottom: 8px;"><?php echo esc_html($recommendation); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
 
                 <?php if ($stats['total_scans'] > 0): ?>
