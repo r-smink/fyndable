@@ -26,9 +26,44 @@ class SaaSDashboardShell
 
     /**
      * Build the sidebar menu items for the SaaS dashboard.
+     * Agency partners get a scoped menu set.
      */
     private function buildMenuItems(): void
     {
+        $user = wp_get_current_user();
+        $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
+
+        if ($isAgency) {
+            $this->menuItems = [
+                [
+                    'slug' => 'sseo-ai-agency',
+                    'label' => __('Dashboard', 'sseo-ai-saas'),
+                    'icon' => '&#128202;',
+                ],
+                [
+                    'slug' => 'sseo-ai-agency-generate',
+                    'label' => __('Generate Licenses', 'sseo-ai-saas'),
+                    'icon' => '&#128273;',
+                ],
+                [
+                    'slug' => 'sseo-ai-agency-licenses',
+                    'label' => __('All Licenses', 'sseo-ai-saas'),
+                    'icon' => '&#128203;',
+                ],
+                [
+                    'slug' => 'sseo-ai-agency-tenants',
+                    'label' => __('Tenants', 'sseo-ai-saas'),
+                    'icon' => '&#127970;',
+                ],
+                [
+                    'slug' => 'sseo-ai-agency-support',
+                    'label' => __('Support', 'sseo-ai-saas'),
+                    'icon' => '&#128172;',
+                ],
+            ];
+            return;
+        }
+
         $this->menuItems = [
             [
                 'slug' => 'sseo-ai-licenses',
@@ -90,6 +125,11 @@ class SaaSDashboardShell
                 'label' => __('Settings', 'sseo-ai-saas'),
                 'icon' => '&#9881;',
             ],
+            [
+                'slug' => 'sseo-ai-agency-accounts',
+                'label' => __('Agency Accounts', 'sseo-ai-saas'),
+                'icon' => '&#127970;',
+            ],
         ];
     }
 
@@ -107,6 +147,7 @@ class SaaSDashboardShell
         $isIframePage = isset($_GET['saas_shell']);
         $isSaaSPage = strpos($screen->id, 'sseo-ai') !== false
             || strpos($screen->id, '_page_sseo-ai') !== false
+            || strpos($screen->id, 'agency') !== false
             || $isShellPage;
 
         if (!$isSaaSPage) {
@@ -266,13 +307,16 @@ class SaaSDashboardShell
         $companyLogo = $enabled ? get_option('sseo_ai_saas_wl_company_logo', '') : '';
         $companyName = $companyName ?: 'Fyndable';
 
-        $currentPage = isset($_GET['saas_page']) ? sanitize_key($_GET['saas_page']) : 'sseo-ai-licenses';
+        $user = wp_get_current_user();
+        $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
+        $defaultPage = $isAgency ? 'sseo-ai-agency' : 'sseo-ai-licenses';
+        $currentPage = isset($_GET['saas_page']) ? sanitize_key($_GET['saas_page']) : $defaultPage;
 
         $iframeUrl = admin_url('admin.php');
         $iframeUrl = add_query_arg('page', $currentPage, $iframeUrl);
         $iframeUrl = add_query_arg('saas_shell', '1', $iframeUrl);
 
-        $passThroughParams = ['view', 'ticket_id', 'tenant_key', 'month'];
+        $passThroughParams = ['view', 'ticket_id', 'tenant_key', 'tenant_id', 'month'];
         foreach ($passThroughParams as $param) {
             if (isset($_GET[$param]) && $_GET[$param] !== '') {
                 $iframeUrl = add_query_arg($param, sanitize_text_field($_GET[$param]), $iframeUrl);

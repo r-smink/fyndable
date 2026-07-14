@@ -744,6 +744,43 @@ body[class*="sseo-ai"] #wpfooter {
     color: #fff;
 }
 
+.badge-cancelled {
+    background: var(--sseo-gray-500);
+    color: #fff;
+}
+
+/* Ticket status badges */
+.badge-open {
+    background: var(--sseo-blue);
+    color: #fff;
+}
+
+.badge-reaction {
+    background: var(--sseo-warning);
+    color: #fff;
+}
+
+.badge-closed {
+    background: var(--sseo-gray-100);
+    color: var(--sseo-gray-700);
+}
+
+/* Ticket priority badges */
+.badge-low {
+    background: var(--sseo-gray-100);
+    color: var(--sseo-gray-700);
+}
+
+.badge-middle {
+    background: var(--sseo-warning-light);
+    color: var(--sseo-warning);
+}
+
+.badge-high {
+    background: var(--sseo-danger);
+    color: #fff;
+}
+
 /* Generated licenses */
 .sseo-ai-license-admin .generated-licenses {
     background: var(--sseo-success-light);

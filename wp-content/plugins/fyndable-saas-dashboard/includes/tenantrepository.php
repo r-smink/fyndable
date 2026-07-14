@@ -17,6 +17,7 @@ class TenantRepository
     private const GOOGLE_API_USAGE_TABLE = 'sseo_ai_google_api_usage';
     private const SUPPORT_TICKETS_TABLE = 'sseo_ai_support_tickets';
     private const SUPPORT_REPLIES_TABLE = 'sseo_ai_support_replies';
+    private const AGENCY_ACCOUNTS_TABLE = 'sseo_ai_agency_accounts';
     
     private ?string $currentTenantId = null;
     
@@ -50,12 +51,14 @@ class TenantRepository
             payment_status varchar(20) DEFAULT NULL,
             last_payment_at datetime DEFAULT NULL,
             metadata longtext DEFAULT NULL,
+            parent_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant ID for sub-tenants',
             PRIMARY KEY (id),
             UNIQUE KEY tenant_key (tenant_key),
             UNIQUE KEY license_key (license_key),
             KEY status (status),
             KEY tier (tier),
-            KEY expires_at (expires_at)
+            KEY expires_at (expires_at),
+            KEY parent_tenant_id (parent_tenant_id)
         ) $charsetCollate;";
         
         // Tenant settings (override global settings)
@@ -107,12 +110,15 @@ class TenantRepository
             expires_at datetime DEFAULT NULL,
             revoked_at datetime DEFAULT NULL,
             revoked_reason text DEFAULT NULL,
+            agency_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant that generated this sub-license',
+            key_prefix varchar(10) DEFAULT NULL COMMENT 'Custom prefix for agency sub-licenses',
             PRIMARY KEY (id),
             UNIQUE KEY license_key (license_key),
             KEY status (status),
             KEY license_type (license_type),
             KEY tier (tier),
-            KEY created_at (created_at)
+            KEY created_at (created_at),
+            KEY agency_tenant_id (agency_tenant_id)
         ) $charsetCollate;";
         
         dbDelta($sql1);
@@ -171,6 +177,19 @@ class TenantRepository
 
         dbDelta($sql6);
         dbDelta($sql7);
+
+        // Agency accounts table (links WP users to agency tenants)
+        $sql8 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::AGENCY_ACCOUNTS_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) unsigned NOT NULL COMMENT 'WordPress user ID with agency_partner role',
+            tenant_id bigint(20) unsigned NOT NULL COMMENT 'Agency tenant ID',
+            max_sub_licenses int(11) NOT NULL DEFAULT 10 COMMENT 'Maximum sub-licenses this agency can generate',
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY user_id (user_id),
+            KEY tenant_id (tenant_id)
+        ) $charsetCollate;";
+        dbDelta($sql8);
     }
     
     /**
@@ -238,6 +257,7 @@ class TenantRepository
             'api_calls_limit' => (int)($data['api_calls_limit'] ?? 1000),
             'expires_at' => !empty($data['expires_at']) ? $data['expires_at'] : null,
             'metadata' => !empty($data['metadata']) ? wp_json_encode($data['metadata']) : null,
+            'parent_tenant_id' => !empty($data['parent_tenant_id']) ? (int)$data['parent_tenant_id'] : null,
         ]);
         
         if ($result === false) {
@@ -388,7 +408,16 @@ class TenantRepository
             $params[] = $search;
             $params[] = $search;
         }
-        
+
+        if (array_key_exists('parent_tenant_id', $filters)) {
+            if ($filters['parent_tenant_id'] === null) {
+                $where[] = 'parent_tenant_id IS NULL';
+            } else {
+                $where[] = 'parent_tenant_id = %d';
+                $params[] = (int)$filters['parent_tenant_id'];
+            }
+        }
+
         $whereClause = implode(' AND ', $where);
         
         $sql = "SELECT * FROM $table WHERE $whereClause ORDER BY created_at DESC LIMIT %d OFFSET %d";
@@ -714,6 +743,51 @@ class TenantRepository
     {
         global $wpdb;
         
+        // Add parent_tenant_id to tenants table if missing
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+        $tenantsExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $tenantsTable));
+        if ($tenantsExists) {
+            $parentCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = %s 
+                AND COLUMN_NAME = 'parent_tenant_id'",
+                $tenantsTable
+            ));
+            if (empty($parentCol)) {
+                $wpdb->query("ALTER TABLE $tenantsTable ADD COLUMN parent_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant ID for sub-tenants' AFTER metadata");
+                $wpdb->query("ALTER TABLE $tenantsTable ADD KEY parent_tenant_id (parent_tenant_id)");
+            }
+        }
+        
+        // Add agency_tenant_id and key_prefix to license keys table if missing
+        $licenseTable = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        $licenseExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $licenseTable));
+        if ($licenseExists) {
+            $agencyCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = %s 
+                AND COLUMN_NAME = 'agency_tenant_id'",
+                $licenseTable
+            ));
+            if (empty($agencyCol)) {
+                $wpdb->query("ALTER TABLE $licenseTable ADD COLUMN agency_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant that generated this sub-license' AFTER revoked_reason");
+                $wpdb->query("ALTER TABLE $licenseTable ADD KEY agency_tenant_id (agency_tenant_id)");
+            }
+            
+            $prefixCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = %s 
+                AND COLUMN_NAME = 'key_prefix'",
+                $licenseTable
+            ));
+            if (empty($prefixCol)) {
+                $wpdb->query("ALTER TABLE $licenseTable ADD COLUMN key_prefix varchar(10) DEFAULT NULL COMMENT 'Custom prefix for agency sub-licenses' AFTER agency_tenant_id");
+            }
+        }
+        
         $tables = [
             'sseo_ai_snapshots',
             'sseo_ai_ai_overviews',
@@ -877,5 +951,207 @@ class TenantRepository
             LIMIT %d",
             $tenant['id'], $months * 4
         ), ARRAY_A);
+    }
+
+    // -------------------------------------------------------------------------
+    // Agency account management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create an agency account linking a WP user to an agency tenant.
+     */
+    public function createAgencyAccount(array $data): array|\WP_Error
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        if (empty($data['user_id']) || empty($data['tenant_id'])) {
+            return new \WP_Error('missing_fields', __('user_id and tenant_id are required', 'sseo-ai-saas'));
+        }
+
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table WHERE user_id = %d",
+            (int)$data['user_id']
+        ));
+
+        if ($existing) {
+            return new \WP_Error('duplicate', __('Agency account already exists for this user', 'sseo-ai-saas'));
+        }
+
+        $result = $wpdb->insert($table, [
+            'user_id' => (int)$data['user_id'],
+            'tenant_id' => (int)$data['tenant_id'],
+            'max_sub_licenses' => (int)($data['max_sub_licenses'] ?? 10),
+        ]);
+
+        if ($result === false) {
+            return new \WP_Error('db_error', __('Failed to create agency account', 'sseo-ai-saas'));
+        }
+
+        return [
+            'id' => $wpdb->insert_id,
+            'user_id' => (int)$data['user_id'],
+            'tenant_id' => (int)$data['tenant_id'],
+            'max_sub_licenses' => (int)($data['max_sub_licenses'] ?? 10),
+            'success' => true,
+        ];
+    }
+
+    /**
+     * Get agency account by WP user ID.
+     */
+    public function getAgencyAccount(int $userId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE user_id = %d",
+            $userId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Get agency account by tenant ID.
+     */
+    public function getAgencyAccountByTenant(int $tenantId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE tenant_id = %d",
+            $tenantId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Update agency account settings.
+     */
+    public function updateAgencyAccount(int $accountId, array $data): bool
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        $update = [];
+        if (isset($data['max_sub_licenses'])) {
+            $update['max_sub_licenses'] = (int)$data['max_sub_licenses'];
+        }
+
+        if (empty($update)) {
+            return false;
+        }
+
+        return $wpdb->update($table, $update, ['id' => $accountId]) !== false;
+    }
+
+    /**
+     * Get all sub-tenants for an agency tenant.
+     */
+    public function getSubTenants(int $agencyTenantId, int $limit = 50, int $offset = 0): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE parent_tenant_id = %d ORDER BY created_at DESC LIMIT %d OFFSET %d",
+            $agencyTenantId, $limit, $offset
+        ), ARRAY_A) ?: [];
+    }
+
+    /**
+     * Count sub-tenants for an agency tenant.
+     */
+    public function countSubTenants(int $agencyTenantId, array $filters = []): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $where = ['parent_tenant_id = %d'];
+        $params = [$agencyTenantId];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'status = %s';
+            $params[] = $filters['status'];
+        }
+
+        $sql = "SELECT COUNT(*) FROM $table WHERE " . implode(' AND ', $where);
+
+        return (int)$wpdb->get_var($wpdb->prepare($sql, $params));
+    }
+
+    /**
+     * Get sub-tenant IDs for an agency tenant.
+     */
+    public function getSubTenantIds(int $agencyTenantId): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT id FROM $table WHERE parent_tenant_id = %d",
+            $agencyTenantId
+        ), ARRAY_A) ?: [];
+
+        return array_map('intval', array_column($rows, 'id'));
+    }
+
+    /**
+     * Get aggregated API usage for all sub-tenants of an agency in a period.
+     */
+    public function getAgencySubTenantsUsage(int $agencyTenantId, ?string $period = null): array
+    {
+        global $wpdb;
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($period === null) {
+            $period = current_time('Y-m');
+        }
+
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT 
+                COALESCE(SUM(u.api_calls), 0) AS total_api_calls,
+                COALESCE(SUM(u.api_cost), 0) AS total_api_cost,
+                COALESCE(SUM(u.serp_requests), 0) AS total_serp_requests,
+                COALESCE(SUM(u.content_generated), 0) AS total_content_generated,
+                COALESCE(SUM(u.keywords_tracked), 0) AS total_keywords_tracked
+            FROM {$usageTable} u
+            INNER JOIN {$tenantsTable} t ON t.id = u.tenant_id
+            WHERE t.parent_tenant_id = %d AND u.period = %s",
+            $agencyTenantId, $period
+        ), ARRAY_A) ?: [
+            'total_api_calls' => 0,
+            'total_api_cost' => 0,
+            'total_serp_requests' => 0,
+            'total_content_generated' => 0,
+            'total_keywords_tracked' => 0,
+        ];
+    }
+
+    /**
+     * Get tenant by ID.
+     */
+    public function getTenantById(int $tenantId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE id = %d",
+            $tenantId
+        ), ARRAY_A);
+
+        if (!$row) {
+            return null;
+        }
+
+        $row['metadata'] = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+
+        return $row;
     }
 }

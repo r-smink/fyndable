@@ -95,6 +95,16 @@ class LicenseAdmin
             'sseo-ai-license-features',
             [$this, 'renderLicenseFeaturesPage']
         );
+
+        // Agency Accounts
+        add_submenu_page(
+            'sseo-ai-licenses',
+            __('Agency Accounts', 'sseo-ai-saas'),
+            __('Agency Accounts', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-agency-accounts',
+            [$this, 'renderAgencyAccountsPage']
+        );
     }
     
     /**
@@ -923,6 +933,148 @@ class LicenseAdmin
                 border-left-color: #2271b1;
             }
             </style>
+        </div>
+        <?php
+    }
+
+    public function renderAgencyAccountsPage(): void
+    {
+        $error = null;
+        $success = null;
+
+        if (isset($_POST['create_agency_account']) && wp_verify_nonce($_POST['_wpnonce'], 'create_agency_account')) {
+            $email = sanitize_email($_POST['agency_email'] ?? '');
+            $companyName = sanitize_text_field($_POST['agency_name'] ?? '');
+            $maxSubLicenses = (int)($_POST['max_sub_licenses'] ?? 10);
+            $tier = sanitize_text_field($_POST['agency_tier'] ?? 'agency');
+
+            if (empty($email) || !is_email($email)) {
+                $error = __('Valid email is required.', 'sseo-ai-saas');
+            } elseif (empty($companyName)) {
+                $error = __('Company name is required.', 'sseo-ai-saas');
+            } else {
+                $licenseResult = $this->licenseGenerator->generateLicense([
+                    'type' => 'paid',
+                    'tier' => $tier,
+                    'max_sites' => 1,
+                    'assigned_to' => $email,
+                    'notes' => 'Agency account: ' . $companyName,
+                ]);
+
+                if (is_wp_error($licenseResult)) {
+                    $error = $licenseResult->get_error_message();
+                } else {
+                    $tenantResult = $this->tenants->createTenant([
+                        'name' => $companyName,
+                        'email' => $email,
+                        'tier' => $tier,
+                        'license_key' => $licenseResult['license_key'],
+                        'status' => 'active',
+                    ]);
+
+                    if (is_wp_error($tenantResult)) {
+                        $error = $tenantResult->get_error_message();
+                    } else {
+                        $roleManager = new AgencyRoleManager($this->tenants);
+                        $userResult = $roleManager->createAgencyUser($email, $companyName, (int)$tenantResult['id'], $maxSubLicenses);
+
+                        if (is_wp_error($userResult)) {
+                            $error = $userResult->get_error_message();
+                        } else {
+                            $success = sprintf(
+                                __('Agency account created for %s with %d sub-license quota.', 'sseo-ai-saas'),
+                                $email,
+                                $maxSubLicenses
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        $agencyTenants = $this->tenants->getTenants(['tier' => 'agency'], 100, 0);
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Agency Accounts', 'sseo-ai-saas'); ?></h1>
+
+            <?php if ($error): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
+            <?php endif; ?>
+            <?php if ($success): ?>
+                <div class="notice notice-success"><p><?php echo esc_html($success); ?></p></div>
+            <?php endif; ?>
+
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Create Agency Account', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Create a new agency partner. This generates an agency tenant, a license key, and a WordPress user with the agency_partner role.', 'sseo-ai-saas'); ?></p>
+                <form method="post">
+                    <?php wp_nonce_field('create_agency_account'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="agency_name"><?php esc_html_e('Agency Name', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="agency_name" id="agency_name" class="regular-text" required placeholder="Acme SEO Agency"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="agency_email"><?php esc_html_e('Agency Email', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="email" name="agency_email" id="agency_email" class="regular-text" required placeholder="contact@acme.com"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="agency_tier"><?php esc_html_e('Agency Tier', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="agency_tier" id="agency_tier">
+                                    <option value="agency" selected><?php esc_html_e('Agency', 'sseo-ai-saas'); ?></option>
+                                    <option value="business"><?php esc_html_e('Business', 'sseo-ai-saas'); ?></option>
+                                    <option value="professional"><?php esc_html_e('Professional', 'sseo-ai-saas'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="max_sub_licenses"><?php esc_html_e('Max Sub-Licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="max_sub_licenses" id="max_sub_licenses" value="10" min="1" max="100" class="small-text">
+                                <p class="description"><?php esc_html_e('Maximum number of sub-licenses this agency can generate.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Create Agency Account', 'sseo-ai-saas'), 'primary', 'create_agency_account'); ?>
+                </form>
+            </div>
+
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Existing Agency Tenants', 'sseo-ai-saas'); ?></h2>
+                <table class="wp-list-table widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Agency Name', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Email', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Sub-Licenses', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($agencyTenants)): ?>
+                            <tr><td colspan="6"><?php esc_html_e('No agency tenants yet.', 'sseo-ai-saas'); ?></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($agencyTenants as $t):
+                                $account = $this->tenants->getAgencyAccountByTenant((int)$t['id']);
+                                $licenseCount = $this->licenseGenerator->countLicensesByAgency((int)$t['id']);
+                                $maxSubs = $account ? (int)$account['max_sub_licenses'] : '-';
+                            ?>
+                                <tr>
+                                    <td><?php echo esc_html($t['name']); ?></td>
+                                    <td><?php echo esc_html($t['email']); ?></td>
+                                    <td><code><?php echo esc_html($t['license_key'] ?: '-'); ?></code></td>
+                                    <td><span class="badge badge-<?php echo esc_attr($t['status']); ?>"><?php echo esc_html(ucfirst($t['status'])); ?></span></td>
+                                    <td><?php echo esc_html($licenseCount . ' / ' . $maxSubs); ?></td>
+                                    <td><?php echo esc_html($t['created_at']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php
     }

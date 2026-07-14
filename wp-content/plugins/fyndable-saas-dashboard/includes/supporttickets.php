@@ -416,6 +416,82 @@ class SupportTickets
     }
 
     /**
+     * Get tickets for a set of tenant IDs (used by agency portal).
+     */
+    public function getTicketsForTenants(array $tenantIds, array $filters = []): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TICKETS_TABLE;
+        $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
+
+        if (empty($tenantIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($tenantIds), '%d'));
+        $where = ['t.tenant_id IN (' . $placeholders . ')'];
+        $args = array_map('intval', $tenantIds);
+
+        if (!empty($filters['status'])) {
+            $where[] = 't.status = %s';
+            $args[] = sanitize_text_field($filters['status']);
+        }
+        if (!empty($filters['priority'])) {
+            $where[] = 't.priority = %s';
+            $args[] = sanitize_text_field($filters['priority']);
+        }
+        if (!empty($filters['search'])) {
+            $where[] = '(t.subject LIKE %s OR t.message LIKE %s OR tn.name LIKE %s OR tn.email LIKE %s)';
+            $like = '%' . $wpdb->esc_like(sanitize_text_field($filters['search'])) . '%';
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+        }
+
+        $sql = "SELECT t.*, tn.name AS tenant_name, tn.email AS tenant_email, tn.tenant_key, tn.license_key
+                FROM {$table} t
+                LEFT JOIN {$tenantsTable} tn ON tn.id = t.tenant_id
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY t.updated_at DESC";
+
+        $sql = $wpdb->prepare($sql, ...$args);
+        $results = $wpdb->get_results($sql, ARRAY_A);
+
+        if (empty($results)) {
+            return [];
+        }
+
+        foreach ($results as &$row) {
+            $row['screenshots'] = !empty($row['screenshots']) ? json_decode($row['screenshots'], true) : [];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Count open tickets for a set of tenant IDs (used by agency dashboard).
+     */
+    public function countOpenTicketsForTenants(array $tenantIds): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TICKETS_TABLE;
+
+        if (empty($tenantIds)) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($tenantIds), '%d'));
+        $args = array_map('intval', $tenantIds);
+        $args[] = 'open';
+
+        return (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE tenant_id IN ($placeholders) AND status = %s",
+            ...$args
+        ));
+    }
+
+    /**
      * -------------------------------------------------------------------------
      * Internal data methods
      * -------------------------------------------------------------------------

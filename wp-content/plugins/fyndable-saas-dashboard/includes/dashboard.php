@@ -28,6 +28,8 @@ class Dashboard
     private SignupCheckout $signupCheckout;
     private RevenueDashboard $revenueDashboard;
     private ProviderRouter $providerRouter;
+    private AgencyRoleManager $agencyRoleManager;
+    private AgencyPortal $agencyPortal;
 
     public function __construct()
     {
@@ -58,6 +60,16 @@ class Dashboard
         $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation);
         $this->revenueDashboard = new RevenueDashboard($this->tenants);
 
+        // Agency portal
+        $this->agencyRoleManager = new AgencyRoleManager($this->tenants);
+        $this->agencyPortal = new AgencyPortal(
+            $this->pluginFile,
+            $this->tenants,
+            $this->licenseGenerator,
+            $this->supportTickets,
+            $this->agencyRoleManager
+        );
+
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
         add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
@@ -82,6 +94,10 @@ class Dashboard
 
         // Register revenue dashboard
         $this->revenueDashboard->register();
+        
+        // Register agency portal
+        $this->agencyRoleManager->register();
+        $this->agencyPortal->register();
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
@@ -113,10 +129,14 @@ class Dashboard
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $menuName = $companyName ? $companyName . ' SaaS' : 'Fyndable SaaS';
 
+        $user = wp_get_current_user();
+        $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
+        $capability = $isAgency ? 'agency_view_dashboard' : 'manage_options';
+
         add_menu_page(
             $menuName,
             $menuName,
-            'manage_options',
+            $capability,
             'sseo-ai-shell',
             [$this->dashboardShell, 'render'],
             'dashicons-analytics',
