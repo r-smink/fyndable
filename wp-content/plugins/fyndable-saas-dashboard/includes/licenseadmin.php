@@ -953,22 +953,10 @@ class LicenseAdmin
             } elseif (empty($companyName)) {
                 $error = __('Company name is required.', 'sseo-ai-saas');
             } else {
-                $licenseResult = $this->licenseGenerator->generateLicense([
-                    'type' => 'paid',
-                    'tier' => $tier,
-                    'max_sites' => 1,
-                    'assigned_to' => $email,
-                    'notes' => 'Agency account: ' . $companyName,
-                ]);
-
-                if (is_wp_error($licenseResult)) {
-                    $error = $licenseResult->get_error_message();
-                } else {
                     $tenantResult = $this->tenants->createTenant([
                         'name' => $companyName,
                         'email' => $email,
                         'tier' => $tier,
-                        'license_key' => $licenseResult['license_key'],
                         'status' => 'active',
                     ]);
 
@@ -982,14 +970,13 @@ class LicenseAdmin
                             $error = $userResult->get_error_message();
                         } else {
                             $success = sprintf(
-                                __('Agency account created for %s with %d sub-license quota.', 'sseo-ai-saas'),
+                                __('Agency account created for %s with %d sub-license quota. A welcome email has been sent with login details.', 'sseo-ai-saas'),
                                 $email,
                                 $maxSubLicenses
                             );
                         }
                     }
                 }
-            }
         }
 
         $agencyTenants = $this->tenants->getTenants(['tier' => 'agency'], 100, 0);
@@ -1006,7 +993,7 @@ class LicenseAdmin
 
             <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Create Agency Account', 'sseo-ai-saas'); ?></h2>
-                <p class="description"><?php esc_html_e('Create a new agency partner. This generates an agency tenant, a license key, and a WordPress user with the agency_partner role.', 'sseo-ai-saas'); ?></p>
+                <p class="description"><?php esc_html_e('Create a new agency partner. This creates an agency tenant and a WordPress user with the agency_partner role. The agency gets portal access to manage their own sub-licenses — no license is consumed for the agency itself.', 'sseo-ai-saas'); ?></p>
                 <form method="post">
                     <?php wp_nonce_field('create_agency_account'); ?>
                     <table class="form-table">

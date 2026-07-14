@@ -1,0 +1,289 @@
+<?php
+
+namespace SSEOAISaaS;
+
+/**
+ * Fyndable Login
+ *
+ * Styles the WordPress login page with the Fyndable brand gradient
+ * and redirects users to the SaaS dashboard shell after login.
+ * Also provides secure auto-login links for agency-to-tenant access.
+ */
+class FyndableLogin
+{
+    private TenantRepository $tenants;
+    private AgencyRoleManager $agencyRoleManager;
+
+    public function __construct(TenantRepository $tenants, AgencyRoleManager $agencyRoleManager)
+    {
+        $this->tenants = $tenants;
+        $this->agencyRoleManager = $agencyRoleManager;
+    }
+
+    public function register(): void
+    {
+        add_action('login_head', [$this, 'renderLoginStyle']);
+        add_filter('login_redirect', [$this, 'filterLoginRedirect'], 10, 3);
+        add_filter('login_message', [$this, 'filterLoginMessage']);
+        add_filter('login_headerurl', [$this, 'getLoginHeaderUrl']);
+        add_filter('login_headertext', [$this, 'getLoginHeaderText']);
+        add_action('init', [$this, 'handleAutoLogin']);
+    }
+
+    /**
+     * Inject Fyndable brand styling into the WordPress login page.
+     */
+    public function renderLoginStyle(): void
+    {
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $brandName = $companyName ?: 'Fyndable';
+        ?>
+        <style>
+            body.login {
+                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #login {
+                width: 420px;
+                max-width: 90vw;
+                padding: 0;
+                margin: 0 auto;
+            }
+            #loginform, #registerform, #lostpasswordform {
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                padding: 40px;
+                border: none;
+            }
+            .login h1 {
+                margin-bottom: 24px;
+            }
+            .login h1 a {
+                background-image: none !important;
+                width: auto !important;
+                height: auto !important;
+                text-indent: 0 !important;
+                font-size: 28px;
+                font-weight: 700;
+                color: #fff;
+                text-decoration: none;
+                display: block;
+                text-align: center;
+                padding: 16px 0;
+                letter-spacing: -0.5px;
+            }
+            .login h1 a span {
+                font-weight: 400;
+                opacity: 0.85;
+            }
+            .login form .input, .login input[type="text"], .login input[type="email"], .login input[type="password"] {
+                border-radius: 8px;
+                border: 2px solid #e5e7eb;
+                padding: 12px 14px;
+                font-size: 15px;
+                transition: border-color 0.15s;
+            }
+            .login form .input:focus, .login input[type="text"]:focus, .login input[type="email"]:focus, .login input[type="password"]:focus {
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+            }
+            .login form .forgetmenot {
+                float: none;
+                margin-bottom: 16px;
+            }
+            .login .button-primary {
+                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 15px;
+                font-weight: 600;
+                height: auto;
+                width: 100%;
+                text-shadow: none;
+                box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+                transition: transform 0.15s, box-shadow 0.15s;
+            }
+            .login .button-primary:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+            }
+            .login .button-secondary {
+                border-radius: 8px;
+            }
+            #login form p {
+                margin-bottom: 16px;
+            }
+            #login .forgetmenot label {
+                font-size: 14px;
+                color: #6b7280;
+            }
+            #backtoblog, .login #nav {
+                text-align: center;
+                padding: 12px 0;
+            }
+            #backtoblog a, .login #nav a {
+                color: rgba(255,255,255,0.9) !important;
+                text-decoration: none;
+                font-size: 13px;
+            }
+            #backtoblog a:hover, .login #nav a:hover {
+                color: #fff !important;
+                text-decoration: underline;
+            }
+            .login .message, .login .success, .login #login_error {
+                border-radius: 8px;
+                margin-bottom: 20px;
+                font-size: 14px;
+            }
+            .language-switcher {
+                display: none;
+            }
+        </style>
+        <?php
+    }
+
+    /**
+     * Redirect users to the SaaS dashboard shell after login.
+     * Agency users go to the agency portal, admins go to the shell.
+     */
+    public function filterLoginRedirect($redirect_to, $requested_redirect_to, $user)
+    {
+        if (!is_wp_error($user) && $user instanceof \WP_User) {
+            if (in_array('agency_partner', (array)$user->roles, true)) {
+                return admin_url('admin.php?page=sseo-ai-shell');
+            }
+            if (in_array('administrator', (array)$user->roles, true)) {
+                return admin_url('admin.php?page=sseo-ai-shell');
+            }
+        }
+        return $requested_redirect_to ?: admin_url('admin.php?page=sseo-ai-shell');
+    }
+
+    /**
+     * Show a welcome message on the login form.
+     */
+    public function filterLoginMessage($message)
+    {
+        if (empty($message)) {
+            $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+            $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+            $brandName = $companyName ?: 'Fyndable';
+            return '<p style="text-align:center;color:#6b7280;font-size:14px;margin-bottom:20px;">'
+                . esc_html(sprintf(__('Welcome to %s — sign in to your dashboard', 'sseo-ai-saas'), $brandName))
+                . '</p>';
+        }
+        return $message;
+    }
+
+    public function getLoginHeaderUrl(): string
+    {
+        return home_url('/');
+    }
+
+    public function getLoginHeaderText(): string
+    {
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $brandName = $companyName ?: 'Fyndable';
+        return $brandName . ' <span>SaaS</span>';
+    }
+
+    /**
+     * Generate a secure auto-login link for a tenant.
+     * Only callable by agency partners or admins.
+     */
+    public function generateTenantLoginLink(int $tenantId): string|\WP_Error
+    {
+        $user = wp_get_current_user();
+        if (!$user || !$user->exists()) {
+            return new \WP_Error('not_logged_in', __('You must be logged in.', 'sseo-ai-saas'));
+        }
+
+        $isAgency = $this->agencyRoleManager->isAgencyUser($user);
+        $isAdmin = in_array('administrator', (array)$user->roles, true);
+
+        if (!$isAgency && !$isAdmin) {
+            return new \WP_Error('no_permission', __('You do not have permission to generate login links.', 'sseo-ai-saas'));
+        }
+
+        if ($isAgency) {
+            $agencyTenantId = $this->agencyRoleManager->getAgencyTenantId($user->ID);
+            $tenant = $this->tenants->getTenantById($tenantId);
+            if (!$tenant || (int)$tenant['parent_tenant_id'] !== $agencyTenantId) {
+                return new \WP_Error('not_your_tenant', __('This tenant does not belong to your agency.', 'sseo-ai-saas'));
+            }
+        }
+
+        $token = wp_generate_password(32, false);
+        $expiry = time() + 300;
+
+        set_transient(
+            'fyndable_autologin_' . $token,
+            [
+                'tenant_id' => $tenantId,
+                'generated_by' => $user->ID,
+            ],
+            300
+        );
+
+        return add_query_arg(
+            ['fyndable_autologin' => $token],
+            home_url('/wp-login.php')
+        );
+    }
+
+    /**
+     * Handle auto-login via token.
+     */
+    public function handleAutoLogin(): void
+    {
+        if (!isset($_GET['fyndable_autologin'])) {
+            return;
+        }
+
+        $token = sanitize_text_field($_GET['fyndable_autologin']);
+        $data = get_transient('fyndable_autologin_' . $token);
+
+        if (!$data || !is_array($data)) {
+            wp_die(__('Invalid or expired login link.', 'sseo-ai-saas'));
+        }
+
+        delete_transient('fyndable_autologin_' . $token);
+
+        $tenantId = (int)$data['tenant_id'];
+        $tenant = $this->tenants->getTenantById($tenantId);
+
+        if (!$tenant) {
+            wp_die(__('Tenant not found.', 'sseo-ai-saas'));
+        }
+
+        $email = $tenant['email'] ?? '';
+        if (empty($email)) {
+            wp_die(__('Tenant has no email address for login.', 'sseo-ai-saas'));
+        }
+
+        $user = get_user_by('email', $email);
+        if (!$user) {
+            $password = wp_generate_password(20, true);
+            $userId = wp_create_user($email, $password, $email);
+            if (is_wp_error($userId)) {
+                wp_die(__('Failed to create user account.', 'sseo-ai-saas'));
+            }
+            $user = get_user_by('ID', $userId);
+            $user->set_role('subscriber');
+        }
+
+        wp_set_current_user($user->ID, $user->user_login);
+        wp_set_auth_cookie($user->ID, true);
+
+        $redirect = admin_url('admin.php?page=sseo-ai-shell');
+        wp_redirect($redirect);
+        exit;
+    }
+}

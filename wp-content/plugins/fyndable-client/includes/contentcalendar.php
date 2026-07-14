@@ -659,7 +659,7 @@ class ContentCalendar
                 SELECT COUNT(*)
                 FROM {$wpdb->posts}
                 WHERE post_type = 'post'
-                AND post_status IN ('publish', 'future')
+                AND post_status IN ('publish', 'future', 'draft', 'pending')
                 AND DATE(post_date) = %s
             ", $day));
             

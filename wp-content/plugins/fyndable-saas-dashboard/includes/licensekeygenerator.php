@@ -442,6 +442,10 @@ class LicenseKeyGenerator
         
         $whereClause = implode(' AND ', $where);
         
+        if (empty($params)) {
+            return (int)$wpdb->get_var("SELECT COUNT(*) FROM $table WHERE $whereClause");
+        }
+        
         return (int)$wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table WHERE $whereClause",
             $params

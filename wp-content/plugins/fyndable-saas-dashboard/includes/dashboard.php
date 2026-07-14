@@ -30,6 +30,7 @@ class Dashboard
     private ProviderRouter $providerRouter;
     private AgencyRoleManager $agencyRoleManager;
     private AgencyPortal $agencyPortal;
+    private FyndableLogin $fyndableLogin;
 
     public function __construct()
     {
@@ -69,6 +70,7 @@ class Dashboard
             $this->supportTickets,
             $this->agencyRoleManager
         );
+        $this->fyndableLogin = new FyndableLogin($this->tenants, $this->agencyRoleManager);
 
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
@@ -98,6 +100,7 @@ class Dashboard
         // Register agency portal
         $this->agencyRoleManager->register();
         $this->agencyPortal->register();
+        $this->fyndableLogin->register();
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);

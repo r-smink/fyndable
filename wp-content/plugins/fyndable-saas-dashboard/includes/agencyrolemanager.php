@@ -68,6 +68,7 @@ class AgencyRoleManager
 
         $allowedPages = [
             'toplevel_page_sseo-ai-agency',
+            'toplevel_page_sseo-ai-shell',
             'agency-portal_page_sseo-ai-agency-dashboard',
             'agency-portal_page_sseo-ai-agency-generate',
             'agency-portal_page_sseo-ai-agency-licenses',
@@ -76,7 +77,7 @@ class AgencyRoleManager
             'agency-portal_page_sseo-ai-agency-tenant-detail',
         ];
 
-        $allowedPatterns = ['sseo-ai-agency'];
+        $allowedPatterns = ['sseo-ai-agency', 'sseo-ai-shell'];
 
         foreach ($allowedPatterns as $pattern) {
             if (strpos($screen->id, $pattern) !== false) {
@@ -88,7 +89,7 @@ class AgencyRoleManager
             return;
         }
 
-        wp_redirect(admin_url('admin.php?page=sseo-ai-agency'));
+        wp_redirect(admin_url('admin.php?page=sseo-ai-shell'));
         exit;
     }
 

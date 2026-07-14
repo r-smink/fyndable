@@ -35,6 +35,7 @@ class AgencyPortal
     {
         add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_action('admin_head', [$this, 'injectAgencyHeaderStyle']);
     }
 
     public function enqueueAssets(string $hook): void
@@ -47,6 +48,154 @@ class AgencyPortal
             plugins_url('assets/license-admin.css', $this->pluginFile),
             [],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
+        );
+    }
+
+    /**
+     * Inject the Fyndable gradient topbar header on agency pages.
+     */
+    public function injectAgencyHeaderStyle(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || strpos($screen->id, 'sseo-ai-agency') === false) {
+            return;
+        }
+
+        $account = $this->roleManager->getAgencyAccount();
+        $agencyName = '';
+        if ($account) {
+            $tenant = $this->tenants->getTenantById((int)$account['tenant_id']);
+            if ($tenant) {
+                $agencyName = $tenant['name'];
+            }
+        }
+
+        $user = wp_get_current_user();
+        ?>
+        <style>
+            .fyndable-agency-topbar {
+                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                color: #fff;
+                padding: 16px 30px;
+                margin: -10px -20px 0 -10px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            }
+            .fyndable-agency-topbar .brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .fyndable-agency-topbar .brand-logo {
+                font-size: 22px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+            }
+            .fyndable-agency-topbar .brand-logo span {
+                font-weight: 400;
+                opacity: 0.85;
+            }
+            .fyndable-agency-topbar .agency-badge {
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 4px 12px;
+                border-radius: 20px;
+                background: rgba(255,255,255,0.2);
+            }
+            .fyndable-agency-topbar .user-info {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 13px;
+            }
+            .fyndable-agency-topbar .user-info .avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 2px solid rgba(255,255,255,0.3);
+            }
+            .fyndable-agency-content {
+                padding: 20px 0;
+            }
+            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-stats-grid,
+            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-card {
+                margin-top: 20px;
+            }
+            .tenant-login-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 12px;
+                font-weight: 600;
+                padding: 4px 10px;
+                border-radius: 6px;
+                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                color: #fff !important;
+                text-decoration: none;
+                border: none;
+                cursor: pointer;
+                transition: transform 0.15s, box-shadow 0.15s;
+            }
+            .tenant-login-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+                color: #fff !important;
+            }
+        </style>
+        <?php
+    }
+
+    /**
+     * Render the shared agency topbar header.
+     */
+    private function renderAgencyHeader(): void
+    {
+        $account = $this->roleManager->getAgencyAccount();
+        $agencyName = '';
+        if ($account) {
+            $tenant = $this->tenants->getTenantById((int)$account['tenant_id']);
+            if ($tenant) {
+                $agencyName = $tenant['name'];
+            }
+        }
+
+        $user = wp_get_current_user();
+        $avatar = get_avatar_url($user->ID, ['size' => 32]);
+        ?>
+        <div class="fyndable-agency-topbar">
+            <div class="brand">
+                <div class="brand-logo">Fyndable <span>SaaS</span></div>
+                <div class="agency-badge"><?php echo esc_html($agencyName ?: __('Agency Portal', 'sseo-ai-saas')); ?></div>
+            </div>
+            <div class="user-info">
+                <span><?php echo esc_html($user->display_name); ?></span>
+                <img src="<?php echo esc_url($avatar); ?>" class="avatar" alt="">
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Generate a secure auto-login link for a sub-tenant.
+     */
+    private function getTenantLoginUrl(int $tenantId): string
+    {
+        $token = wp_generate_password(32, false);
+        set_transient(
+            'fyndable_autologin_' . $token,
+            [
+                'tenant_id' => $tenantId,
+                'generated_by' => get_current_user_id(),
+            ],
+            300
+        );
+        return add_query_arg(
+            ['fyndable_autologin' => $token],
+            home_url('/wp-login.php')
         );
     }
 
@@ -126,10 +275,12 @@ class AgencyPortal
         $recentTickets = array_slice($recentTickets, 0, 5);
         ?>
         <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
             <h1><?php esc_html_e('Agency Dashboard', 'sseo-ai-saas'); ?></h1>
 
             <!-- Stats Grid -->
-            <div class="sseo-ai-stats-grid">
+            <div class="sseo-ai-stats-grid" style="margin-top:20px;">
                 <div class="stat-card">
                     <div class="stat-value"><?php echo esc_html($licenseCount . ' / ' . $maxSubLicenses); ?></div>
                     <div class="stat-label"><?php esc_html_e('Sub-Licenses', 'sseo-ai-saas'); ?></div>
@@ -326,6 +477,7 @@ class AgencyPortal
                 </p>
             </div>
             <?php endif; ?>
+            </div>
         </div>
         <?php
     }
@@ -399,6 +551,8 @@ class AgencyPortal
         $defaultPrefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $ctx['tenant']['name'] ?? ''), 0, 4));
         ?>
         <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
             <h1><?php esc_html_e('Generate Sub-License', 'sseo-ai-saas'); ?></h1>
 
             <?php if ($error): ?>
@@ -495,7 +649,7 @@ class AgencyPortal
                         <tr>
                             <th scope="row"><label for="api_calls_limit"><?php esc_html_e('Monthly API Limit', 'sseo-ai-saas'); ?></label></th>
                             <td>
-                                <input type="number" name="api_calls_limit" id="api_calls_limit" value="1000" min="100" max="1000000" class="small-text">
+                                <input type="number" name="api_calls_limit" id="api_calls_limit" value="1000" min="100" max="1000000" class="regular-text" style="max-width:200px;">
                             </td>
                         </tr>
                         <tr>
@@ -516,6 +670,7 @@ class AgencyPortal
                 </form>
                 <?php endif; ?>
             </div>
+            </div>
         </div>
         <?php
     }
@@ -532,6 +687,8 @@ class AgencyPortal
         $licenses = $this->licenseGenerator->getLicensesByAgency($agencyTenantId, 100, 0);
         ?>
         <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
             <h1><?php esc_html_e('All Sub-Licenses', 'sseo-ai-saas'); ?></h1>
             <div class="sseo-ai-card">
                 <table class="wp-list-table widefat striped">
@@ -565,6 +722,7 @@ class AgencyPortal
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
         <?php
     }
@@ -581,6 +739,8 @@ class AgencyPortal
         $tenants = $this->tenants->getSubTenants($agencyTenantId, 100, 0);
         ?>
         <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
             <h1><?php esc_html_e('Sub-Tenants', 'sseo-ai-saas'); ?></h1>
             <div class="sseo-ai-card">
                 <table class="wp-list-table widefat striped">
@@ -593,11 +753,12 @@ class AgencyPortal
                             <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('API Use', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($tenants)): ?>
-                            <tr><td colspan="7"><?php esc_html_e('No sub-tenants yet.', 'sseo-ai-saas'); ?></td></tr>
+                            <tr><td colspan="8"><?php esc_html_e('No sub-tenants yet.', 'sseo-ai-saas'); ?></td></tr>
                         <?php else: ?>
                             <?php foreach ($tenants as $t):
                                 $tUsage = $this->tenants->getTenantUsage($t['tenant_key']);
@@ -632,11 +793,17 @@ class AgencyPortal
                                         }
                                         ?>
                                     </td>
+                                    <td>
+                                        <a href="<?php echo esc_url($this->getTenantLoginUrl((int)$t['id'])); ?>" class="tenant-login-btn" target="_blank">
+                                            <?php esc_html_e('Login', 'sseo-ai-saas'); ?>
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
         <?php
@@ -664,8 +831,15 @@ class AgencyPortal
         $tickets = $this->supportTickets->getTicketsForTenants([$tenantId]);
         ?>
         <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
             <h1><?php echo esc_html($tenant['name']); ?></h1>
-            <p><a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-tenants')); ?>">&larr; <?php esc_html_e('Back to Tenants', 'sseo-ai-saas'); ?></a></p>
+            <p>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-tenants')); ?>">&larr; <?php esc_html_e('Back to Tenants', 'sseo-ai-saas'); ?></a>
+                <a href="<?php echo esc_url($this->getTenantLoginUrl($tenantId)); ?>" class="tenant-login-btn" target="_blank" style="margin-left:15px;">
+                    <?php esc_html_e('Login as Tenant', 'sseo-ai-saas'); ?>
+                </a>
+            </p>
 
             <div class="sseo-ai-stats-grid">
                 <div class="stat-card">
@@ -759,6 +933,7 @@ class AgencyPortal
                 </table>
             </div>
             <?php endif; ?>
+            </div>
         </div>
         <?php
     }
@@ -785,6 +960,8 @@ class AgencyPortal
         $tickets = $this->supportTickets->getTicketsForTenants($subTenantIds, $filters);
         ?>
         <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
             <h1><?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?></h1>
 
             <div class="sseo-ai-card">
@@ -835,6 +1012,7 @@ class AgencyPortal
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
         <?php
