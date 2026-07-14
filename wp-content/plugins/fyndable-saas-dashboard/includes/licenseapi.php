@@ -327,7 +327,9 @@ class LicenseAPI
             'license' => $result,
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiKey(),
+                'key' => $settings->getImageApiProvider() === 'openart'
+                    ? get_option('ai_seo_saas_openart_api_key', '')
+                    : $settings->getImageApiKey(),
                 'model' => $settings->getImageApiModel(),
             ],
         ], 200);
@@ -389,7 +391,9 @@ class LicenseAPI
             'white_label' => $whiteLabelData,
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiKey(),
+                'key' => $settings->getImageApiProvider() === 'openart'
+                    ? get_option('ai_seo_saas_openart_api_key', '')
+                    : $settings->getImageApiKey(),
                 'model' => $settings->getImageApiModel(),
             ],
         ], 200);
@@ -474,7 +478,9 @@ class LicenseAPI
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiKey(),
+                'key' => $settings->getImageApiProvider() === 'openart'
+                    ? get_option('ai_seo_saas_openart_api_key', '')
+                    : $settings->getImageApiKey(),
                 'model' => $settings->getImageApiModel(),
             ],
         ], 200);

@@ -389,7 +389,7 @@ class DashboardAPI
     /**
      * Generate AI content through dashboard proxy
      */
-    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature): array|\WP_Error
+    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature, string $useCase = 'content_generation'): array|\WP_Error
     {
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
@@ -412,8 +412,9 @@ class DashboardAPI
                     'model' => $model,
                     'max_tokens' => $maxTokens,
                     'temperature' => $temperature,
+                    'use_case' => $useCase,
                 ]),
-                'timeout' => 60,
+                'timeout' => 90,
                 'sslverify' => $this->getSslVerify(),
                 'redirection' => 5,
             ]

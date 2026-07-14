@@ -432,7 +432,7 @@ Content:
 Return JSON array of suggestions, each with: "issue", "location" (quote the problematic text, max 50 chars), "suggestion" (how to fix it). Max 8 suggestions. Return ONLY valid JSON array.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, null, 2000);
+        $result = $this->llm->call($prompt, null, null, 2000, [], 'content_analysis');
         if (is_wp_error($result)) {
             return $result;
         }

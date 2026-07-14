@@ -534,7 +534,7 @@ Requirements:
 
 Featured snippet:";
         
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 150]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 150, 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;
@@ -574,7 +574,7 @@ Format as JSON:
   ...
 ]";
         
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 800]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 800, 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;

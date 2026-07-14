@@ -206,7 +206,7 @@ Identify 5-8 content gaps/opportunities.
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, null, 3000);
+        $result = $this->llm->call($prompt, null, null, 3000, [], 'content_analysis');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -342,7 +342,7 @@ Be specific and actionable. Identify 5-10 missing topics, 3-5 strengths, 3-5 opp
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, null, 2000);
+        $result = $this->llm->call($prompt, null, null, 2000, [], 'content_analysis');
         if (is_wp_error($result)) {
             return $result;
         }

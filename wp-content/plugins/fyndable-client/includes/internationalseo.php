@@ -649,7 +649,7 @@ Provide 5-10 keyword variations in JSON format:
   {\"keyword\": \"...\", \"volume\": estimated_volume, \"difficulty\": \"easy/medium/hard\"}
 ]";
         
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 500]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 500, 'use_case' => 'keyword_research']);
         
         if (is_wp_error($response)) {
             return [];
@@ -721,7 +721,7 @@ Provide recommendations for:
 
 Format as HTML list.";
         
-        $recommendations = $this->llm->generateText($prompt, ['max_tokens' => 400]);
+        $recommendations = $this->llm->generateText($prompt, ['max_tokens' => 400, 'use_case' => 'content_analysis']);
         
         if (is_wp_error($recommendations)) {
             return '<p>Error generating recommendations</p>';

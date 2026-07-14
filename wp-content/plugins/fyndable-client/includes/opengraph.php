@@ -655,7 +655,7 @@ Generate exactly this JSON format (no markdown, no code blocks):
 
 Return ONLY the JSON, nothing else.";
 
-        $result = $this->llm->call($prompt, null, null, 500);
+        $result = $this->llm->call($prompt, null, null, 500, [], 'meta_optimization');
         if (is_wp_error($result)) {
             return $result;
         }

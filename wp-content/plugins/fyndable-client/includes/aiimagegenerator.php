@@ -510,6 +510,9 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
             case 'stability':
                 return $this->generateWithStabilityAI($prompt, $apiKey, $model);
             
+            case 'openart':
+                return $this->generateWithOpenArt($prompt, $apiKey, $model);
+            
             default:
                 if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Unknown provider - ' . $provider);
                 return null;
@@ -601,7 +604,47 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         
         return $tempFile; // Return temp file path instead of URL
     }
-    
+
+    /**
+     * Generate image with OpenArt (Flux models)
+     */
+    private function generateWithOpenArt(string $prompt, string $apiKey, string $model): ?string
+    {
+        $model = $model ?: 'flux-1-schnell';
+
+        $response = wp_remote_post('https://api.openart.ai/api/v1/generation', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'model'          => $model,
+                'prompt'         => $prompt,
+                'width'          => 1024,
+                'height'         => 1024,
+                'num_images'     => 1,
+                'guidance_scale' => 7,
+            ]),
+            'timeout' => 120,
+        ]);
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenArt API error - ' . $response->get_error_message());
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        $imageUrl = $body['data'][0]['url'] ?? $body['images'][0]['url'] ?? $body['url'] ?? '';
+
+        if (empty($imageUrl)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image URL in OpenArt response - ' . print_r($body, true));
+            return null;
+        }
+
+        return $imageUrl;
+    }
+
     /**
      * Download and attach image
      */

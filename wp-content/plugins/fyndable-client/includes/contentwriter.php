@@ -189,7 +189,7 @@ Requirements:
 
 Write the section content:";
 
-        $result = $this->llm->call($prompt, null, max(800, $targetWords * 2));
+        $result = $this->llm->call($prompt, null, max(800, $targetWords * 2), null, [], 'content_generation');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -217,7 +217,7 @@ Requirements:
 
 Return ONLY the title, nothing else.";
 
-        $result = $this->llm->call($prompt, null, 100);
+        $result = $this->llm->call($prompt, null, 100, null, [], 'meta_optimization');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -247,7 +247,7 @@ Requirements:
 
 Write the introduction:";
 
-        $result = $this->llm->call($prompt, null, 500);
+        $result = $this->llm->call($prompt, null, 500, null, [], 'content_generation');
         if (is_wp_error($result)) {
             return $result;
         }

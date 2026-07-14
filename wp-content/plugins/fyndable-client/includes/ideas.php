@@ -191,7 +191,7 @@ Return ONLY a JSON array in this exact format (no markdown, no code blocks):
 Generate {$count} ideas now.
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 3000]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 3000, 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;
@@ -637,7 +637,7 @@ Return JSON in this format (no markdown):
 }
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2)]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2), 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;

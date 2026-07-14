@@ -199,7 +199,7 @@ Requirements:
 
 Output as a comma-separated list only.";
 
-        $result = $this->llm->call($prompt);
+        $result = $this->llm->call($prompt, null, null, null, [], 'keyword_research');
         
         if (is_wp_error($result)) {
             // Fallback: generate from common patterns

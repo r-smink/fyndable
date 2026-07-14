@@ -211,7 +211,7 @@ class KeywordDifficulty
 
         $prompt = "Estimate the keyword difficulty (0-100) for SEO ranking for: \"{$keyword}\". Consider search volume, competition from authoritative domains, and content saturation. Return ONLY a number between 0 and 100.";
 
-        $result = $this->llm->call($prompt, null, null, 50);
+        $result = $this->llm->call($prompt, null, null, 50, [], 'keyword_research');
         if (is_wp_error($result)) {
             return 50;
         }

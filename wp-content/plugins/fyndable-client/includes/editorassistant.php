@@ -100,6 +100,7 @@ class EditorAssistant
 
         $result = $this->llm->generateText($prompt, [
             'max_tokens' => 2000,
+            'use_case' => 'content_generation',
             'track_extra' => [
                 'endpoint' => 'editor_action.' . $action,
                 'context' => $topic,

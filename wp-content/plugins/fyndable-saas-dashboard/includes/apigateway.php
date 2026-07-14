@@ -12,13 +12,7 @@ class ApiGateway
 {
     private TenantRepository $tenants;
     private SaaSSettings $settings;
-    
-    // OpenAI pricing per 1K tokens (approximate, update as needed)
-    private const OPENAI_PRICING = [
-        'gpt-4' => ['input' => 0.03, 'output' => 0.06],
-        'gpt-4-turbo' => ['input' => 0.01, 'output' => 0.03],
-        'gpt-3.5-turbo' => ['input' => 0.0005, 'output' => 0.0015],
-    ];
+    private ProviderRouter $providerRouter;
     
     // SERP API pricing per request (approximate)
     private const SERP_PRICING = [
@@ -27,10 +21,11 @@ class ApiGateway
         'seranking' => 0.003,
     ];
 
-    public function __construct(TenantRepository $tenants, SaaSSettings $settings)
+    public function __construct(TenantRepository $tenants, SaaSSettings $settings, ProviderRouter $providerRouter)
     {
         $this->tenants = $tenants;
         $this->settings = $settings;
+        $this->providerRouter = $providerRouter;
     }
 
     /**
@@ -132,68 +127,42 @@ class ApiGateway
 
     /**
      * Handle AI generation request
+     * Routes through ProviderRouter which supports OpenRouter and OpenAI.
      */
     public function handleAiRequest(\WP_REST_Request $request): \WP_REST_Response
     {
         $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
         $tenant = $this->tenants->getTenant($tenantKey);
         
-        // Get OpenAI credentials
-        $apiKey = $this->settings->getOpenAiApiKey();
-        $model = $this->settings->getOpenAiModel();
-        
-        if (empty($apiKey)) {
-            return new \WP_REST_Response([
-                'success' => false,
-                'error' => 'ai_not_configured',
-                'message' => __('AI service is not configured', 'sseo-ai-saas')
-            ], 503);
-        }
-        
-        // Make request to OpenAI
         $body = $request->get_json_params();
+        $messages = $body['messages'] ?? [];
+        $model = $body['model'] ?? null;
+        $useCase = $body['use_case'] ?? 'content_generation';
+        $maxTokens = (int)($body['max_tokens'] ?? 2000);
+        $temperature = (float)($body['temperature'] ?? 0.7);
         
-        $openaiResponse = wp_remote_post('https://api.openai.com/v1/chat/completions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'body' => json_encode([
-                'model' => $model,
-                'messages' => $body['messages'] ?? [],
-                'temperature' => $body['temperature'] ?? 0.7,
-                'max_tokens' => $body['max_tokens'] ?? 2000,
-            ]),
-            'timeout' => 60,
-        ]);
+        // Route through provider router
+        $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature);
         
-        if (is_wp_error($openaiResponse)) {
+        if (is_wp_error($result)) {
+            $statusCode = $result->get_error_code() === 'no_provider' ? 503 : 502;
             return new \WP_REST_Response([
                 'success' => false,
-                'error' => 'ai_request_failed',
-                'message' => $openaiResponse->get_error_message()
-            ], 502);
+                'error' => $result->get_error_code(),
+                'message' => $result->get_error_message()
+            ], $statusCode);
         }
-        
-        $responseBody = json_decode(wp_remote_retrieve_body($openaiResponse), true);
-        
-        // Calculate cost
-        $inputTokens = $responseBody['usage']['prompt_tokens'] ?? 0;
-        $outputTokens = $responseBody['usage']['completion_tokens'] ?? 0;
-        $cost = $this->calculateAiCost($model, $inputTokens, $outputTokens);
         
         // Track usage
+        $cost = $result['usage']['cost'] ?? 0;
         $this->trackUsage($tenant['id'], 'ai_generation', 1, $cost);
         
         return new \WP_REST_Response([
             'success' => true,
-            'content' => $responseBody['choices'][0]['message']['content'] ?? '',
-            'usage' => [
-                'prompt_tokens' => $inputTokens,
-                'completion_tokens' => $outputTokens,
-                'total_tokens' => $responseBody['usage']['total_tokens'] ?? 0,
-                'cost' => $cost,
-            ]
+            'content' => $result['content'],
+            'model' => $result['model'],
+            'provider' => $result['provider'],
+            'usage' => $result['usage'],
         ], 200);
     }
 
@@ -291,19 +260,6 @@ class ApiGateway
                 'api_cost' => max(0, $costLimit - (float)($usage->cost ?? 0)),
             ]
         ], 200);
-    }
-
-    /**
-     * Calculate AI cost based on tokens
-     */
-    private function calculateAiCost(string $model, int $inputTokens, int $outputTokens): float
-    {
-        $pricing = self::OPENAI_PRICING[$model] ?? self::OPENAI_PRICING['gpt-3.5-turbo'];
-        
-        $inputCost = ($inputTokens / 1000) * $pricing['input'];
-        $outputCost = ($outputTokens / 1000) * $pricing['output'];
-        
-        return round($inputCost + $outputCost, 4);
     }
 
     /**

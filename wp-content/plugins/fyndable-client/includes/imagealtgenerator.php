@@ -195,7 +195,7 @@ class ImageAltGenerator
         $prompt = "Write a concise, descriptive alt text for this image. Keep it under 125 characters. Be specific about what's visible. Don't start with 'Image of' or 'Picture of'.\n\n";
         $prompt .= "Context:\n" . $context;
 
-        $result = $this->llm->call($prompt);
+        $result = $this->llm->call($prompt, null, null, null, [], 'image_alt_text');
         if (is_wp_error($result)) {
             // Fallback: use filename-based alt
             return $this->filenameToAlt($filename);

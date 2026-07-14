@@ -747,7 +747,7 @@ To: {$toPost->post_title}
 
 Provide only the anchor text (2-5 words), no explanation.";
         
-        $anchor = $this->llm->generateText($prompt, ['max_tokens' => 20]);
+        $anchor = $this->llm->generateText($prompt, ['max_tokens' => 20, 'use_case' => 'content_generation']);
         
         if (is_wp_error($anchor)) {
             return $toPost->post_title;

@@ -500,6 +500,7 @@ Make answers concise (2-3 sentences) and informative.";
         
         $response = $this->llm->generateText($prompt, [
             'max_tokens' => max(500, $count * 150),
+            'use_case' => 'faq_generation',
             'track_extra' => [
                 'endpoint' => 'faq.generate',
                 'post_id' => $postId,

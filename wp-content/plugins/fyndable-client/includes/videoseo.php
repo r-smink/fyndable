@@ -638,7 +638,7 @@ Content: " . wp_strip_all_tags(substr($post->post_content, 0, 1000)) . "
 
 Generate a natural, engaging video transcript (500-1000 words) that would match this content.";
         
-        $transcript = $this->llm->generateText($prompt, ['max_tokens' => 1500]);
+        $transcript = $this->llm->generateText($prompt, ['max_tokens' => 1500, 'use_case' => 'content_generation']);
         
         if (is_wp_error($transcript)) {
             return '';

@@ -281,7 +281,7 @@ Return JSON only (no markdown):
     ]
 }";
 
-        $result = $this->llm->call($prompt, null, null, 600);
+        $result = $this->llm->call($prompt, null, null, 600, [], 'content_analysis');
         if (is_wp_error($result)) {
             return $result;
         }

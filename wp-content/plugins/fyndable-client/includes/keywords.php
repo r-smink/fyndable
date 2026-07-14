@@ -514,7 +514,7 @@ Return ONLY a JSON array in this format (no markdown):
 Generate exactly {$count} keywords.
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 2000]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 2000, 'use_case' => 'keyword_research']);
 
         if (is_wp_error($response)) {
             return $response;
@@ -608,7 +608,7 @@ Return JSON array:
 ]
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 1500]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 1500, 'use_case' => 'keyword_research']);
 
         if (is_wp_error($response)) {
             return $response;

@@ -249,6 +249,7 @@ Write the content:";
 
         $result = $this->llm->generateText($prompt, [
             'max_tokens' => max(1000, (int)($wordCount * 2)),
+            'use_case' => 'content_generation',
             'track_extra' => [
                 'endpoint' => 'simple_content.generate',
                 'post_id' => $postId,

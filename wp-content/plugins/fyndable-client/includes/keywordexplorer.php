@@ -148,7 +148,7 @@ class KeywordExplorer
 
         // AI fallback
         $prompt = "For the keyword \"{$keyword}\", generate a realistic list of 15 Google search result titles. Return JSON array with objects having: title, link, snippet, position. Return ONLY valid JSON.";
-        $result = $this->llm->call($prompt, null, null, 2000);
+        $result = $this->llm->call($prompt, null, null, 2000, [], 'keyword_research');
         if (is_wp_error($result)) {
             return $result;
         }

@@ -425,7 +425,7 @@ Structure with:
 Write in a professional, persuasive tone. Include relevant keywords naturally for SEO.";
         }
 
-        $result = $this->llm->call($prompt, null, null, 800);
+        $result = $this->llm->call($prompt, null, null, 800, [], 'content_generation');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -467,7 +467,7 @@ Return JSON only (no markdown):
     \"focus_keyphrase\": \"2-4 word main keyword\"
 }";
 
-        $result = $this->llm->call($prompt, null, null, 300);
+        $result = $this->llm->call($prompt, null, null, 300, [], 'meta_optimization');
         if (is_wp_error($result)) {
             return $result;
         }

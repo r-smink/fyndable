@@ -183,7 +183,7 @@ Return a JSON response in this exact format:
 IMPORTANT: Return ONLY the JSON, no markdown formatting, no code blocks.
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2)]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2), 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;
@@ -291,7 +291,7 @@ Requirements:
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, 'seo_expert', 4000);
+        $result = $this->llm->call($prompt, null, 'seo_expert', 4000, [], 'keyword_research');
         if (is_wp_error($result)) {
             return $result;
         }

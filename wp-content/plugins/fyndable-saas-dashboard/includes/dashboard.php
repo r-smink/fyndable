@@ -27,6 +27,7 @@ class Dashboard
     private UpdateServer $updateServer;
     private SignupCheckout $signupCheckout;
     private RevenueDashboard $revenueDashboard;
+    private ProviderRouter $providerRouter;
 
     public function __construct()
     {
@@ -44,7 +45,8 @@ class Dashboard
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
         $this->saasSettings = new SaaSSettings();
-        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings);
+        $this->providerRouter = new ProviderRouter($this->saasSettings);
+        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter);
         $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
