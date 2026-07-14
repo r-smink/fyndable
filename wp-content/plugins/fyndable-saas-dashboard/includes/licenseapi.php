@@ -143,6 +143,30 @@ class LicenseAPI
             ],
         ]);
 
+        // Start free trial (no license key needed — creates one)
+        register_rest_route($this->namespace, '/license/trial', [
+            'methods' => 'POST',
+            'callback' => [$this, 'startTrial'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'email' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_email',
+                ],
+                'name' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'site_url' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_url',
+                ],
+            ],
+        ]);
+
         // Get tenant dashboard data (for client plugin)
         register_rest_route($this->namespace, '/tenant/dashboard', [
             'methods' => 'POST',
@@ -242,6 +266,29 @@ class LicenseAPI
         register_rest_route($this->namespace, '/google/oauth-start', [
             'methods' => 'GET',
             'callback' => [$this, 'googleOAuthStart'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // GDPR: Request data deletion (tenant can self-delete)
+        register_rest_route($this->namespace, '/gdpr/delete', [
+            'methods' => 'POST',
+            'callback' => [$this, 'gdprDelete'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'confirm' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // GDPR: Export all tenant data
+        register_rest_route($this->namespace, '/gdpr/export', [
+            'methods' => 'POST',
+            'callback' => [$this, 'gdprExport'],
             'permission_callback' => '__return_true',
             'args' => [
                 'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
@@ -489,6 +536,96 @@ class LicenseAPI
         return new \WP_REST_Response([
             'success' => true,
             'deactivated' => true,
+        ], 200);
+    }
+
+    /**
+     * Start a free trial — creates a trial tenant with 14-day expiry.
+     * No license key needed; one is generated automatically.
+     */
+    public function startTrial(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $email = $request->get_param('email');
+        $name = $request->get_param('name');
+        $siteUrl = $request->get_param('site_url');
+
+        // Check if email already has a tenant (prevent trial abuse)
+        $allTenants = $this->tenants->getAllTenants(500);
+        foreach ($allTenants as $existing) {
+            if (($existing['email'] ?? '') === $email) {
+                $tier = $existing['tier'] ?? '';
+                if ($tier === 'trial') {
+                    return new \WP_REST_Response([
+                        'success' => false,
+                        'error' => 'trial_exists',
+                        'message' => 'You already have a trial account. Use your existing license key or upgrade.',
+                        'license_key' => $existing['license_key'] ?? '',
+                    ], 409);
+                }
+                return new \WP_REST_Response([
+                    'success' => false,
+                    'error' => 'account_exists',
+                    'message' => 'An account with this email already exists.',
+                ], 409);
+            }
+        }
+
+        // Generate license key for trial
+        $licenseResult = $this->licenseGenerator->generateLicense([
+            'tier' => 'trial',
+            'name' => $name,
+        ]);
+
+        if (is_wp_error($licenseResult)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to generate license key.',
+            ], 500);
+        }
+
+        $licenseKey = $licenseResult['license_key'] ?? '';
+
+        // Create trial tenant (14 days)
+        $trialDays = (int) get_option('sseo_ai_saas_trial_days', 14);
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + $trialDays * DAY_IN_SECONDS);
+
+        $tenantResult = $this->tenants->createTenant([
+            'name' => $name,
+            'email' => $email,
+            'domain' => $siteUrl,
+            'tier' => 'trial',
+            'license_key' => $licenseKey,
+            'status' => 'active',
+            'max_sites' => 1,
+            'rate_limit' => 200,
+            'api_calls_limit' => 5000,
+            'expires_at' => $expiresAt,
+        ]);
+
+        if (is_wp_error($tenantResult)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => $tenantResult->get_error_message(),
+            ], 500);
+        }
+
+        $tenantKey = $tenantResult['tenant_key'];
+
+        // Fire activation hook for welcome email
+        do_action('sseo_ai_license_activated', $tenantKey, [
+            'email' => $email,
+            'tier' => 'trial',
+            'license_key' => $licenseKey,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'license_key' => $licenseKey,
+            'tenant_key' => $tenantKey,
+            'tier' => 'trial',
+            'expires_at' => $expiresAt,
+            'trial_days' => $trialDays,
         ], 200);
     }
 
@@ -973,5 +1110,131 @@ class LicenseAPI
 </html>
         <?php
         exit;
+    }
+
+    /**
+     * GDPR: Delete all tenant data (right to erasure).
+     * Anonymizes PII and removes tenant records.
+     */
+    public function gdprDelete(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $licenseKey = $request->get_param('license_key');
+        $tenantKey = $request->get_param('tenant_key');
+        $confirm = $request->get_param('confirm');
+
+        if ($confirm !== 'DELETE') {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Confirmation required. Send confirm=DELETE to proceed.',
+            ], 400);
+        }
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Invalid tenant or license mismatch.',
+            ], 403);
+        }
+
+        global $wpdb;
+
+        // Anonymize and delete tenant record
+        $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
+        $wpdb->update($tenantsTable, [
+            'name' => '[deleted]',
+            'email' => '[deleted]',
+            'domain' => null,
+            'status' => 'deleted',
+            'license_key' => null,
+            'metadata' => null,
+        ], ['tenant_key' => $tenantKey]);
+
+        // Delete usage records
+        $usageTable = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $wpdb->delete($usageTable, ['tenant_key' => $tenantKey]);
+
+        // Delete license key record
+        $licenseTable = $wpdb->prefix . 'sseo_ai_license_keys';
+        $wpdb->delete($licenseTable, ['license_key' => $licenseKey]);
+
+        // Delete support tickets
+        $ticketsTable = $wpdb->prefix . 'sseo_ai_support_tickets';
+        $wpdb->delete($ticketsTable, ['tenant_key' => $tenantKey]);
+
+        // Delete Google tokens if any
+        delete_option('sseo_ai_google_tokens_' . $tenantKey);
+
+        // Fire action for extensions
+        do_action('sseo_ai_gdpr_tenant_deleted', $tenantKey, $licenseKey);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'message' => 'All personal data has been deleted.',
+            'deleted_at' => current_time('mysql'),
+        ], 200);
+    }
+
+    /**
+     * GDPR: Export all tenant data (data portability).
+     */
+    public function gdprExport(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $licenseKey = $request->get_param('license_key');
+        $tenantKey = $request->get_param('tenant_key');
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Invalid tenant or license mismatch.',
+            ], 403);
+        }
+
+        global $wpdb;
+
+        // Gather all tenant data
+        $exportData = [
+            'tenant' => [
+                'name' => $tenant['name'],
+                'email' => $tenant['email'],
+                'domain' => $tenant['domain'],
+                'tier' => $tenant['tier'],
+                'status' => $tenant['status'],
+                'created_at' => $tenant['created_at'],
+                'expires_at' => $tenant['expires_at'],
+                'license_key' => $tenant['license_key'],
+            ],
+        ];
+
+        // Usage data
+        $usageTable = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $usageRecords = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $usageTable WHERE tenant_key = %s ORDER BY period DESC LIMIT 12",
+            $tenantKey
+        ), ARRAY_A);
+        $exportData['usage_history'] = $usageRecords;
+
+        // Support tickets
+        $ticketsTable = $wpdb->prefix . 'sseo_ai_support_tickets';
+        $tickets = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, subject, status, created_at, updated_at FROM $ticketsTable WHERE tenant_key = %s ORDER BY created_at DESC",
+            $tenantKey
+        ), ARRAY_A);
+        $exportData['support_tickets'] = $tickets;
+
+        // Google integration status
+        $googleTokens = get_option('sseo_ai_google_tokens_' . $tenantKey, []);
+        $exportData['google_integrations'] = [
+            'connected_services' => array_keys($googleTokens),
+            'has_tokens' => !empty($googleTokens),
+        ];
+
+        $exportData['exported_at'] = current_time('mysql');
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data' => $exportData,
+        ], 200);
     }
 }

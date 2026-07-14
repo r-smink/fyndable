@@ -103,6 +103,10 @@ class SaaSSettings
         // Mollie settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_api_key');
 
+        // Trial settings
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_days', ['default' => 14]);
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_enabled', ['default' => '1']);
+
         // Google OAuth credentials (central, used by all client sites)
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_id');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_secret');

@@ -23,6 +23,10 @@ class Dashboard
     private SupportTickets $supportTickets;
     private SupportAdmin $supportAdmin;
     private SaaSDashboardShell $dashboardShell;
+    private EmailAutomation $emailAutomation;
+    private UpdateServer $updateServer;
+    private SignupCheckout $signupCheckout;
+    private RevenueDashboard $revenueDashboard;
 
     public function __construct()
     {
@@ -47,6 +51,10 @@ class Dashboard
         $this->supportTickets = new SupportTickets($this->tenants);
         $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);
         $this->dashboardShell = new SaaSDashboardShell($this->pluginFile);
+        $this->emailAutomation = new EmailAutomation($this->tenants);
+        $this->updateServer = new UpdateServer($this->tenants);
+        $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation);
+        $this->revenueDashboard = new RevenueDashboard($this->tenants);
 
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
@@ -65,10 +73,23 @@ class Dashboard
         add_action('rest_api_init', [$this->apiGateway, 'register']);
         add_action('rest_api_init', [$this->webhookHandler, 'register']);
         add_action('rest_api_init', [$this->supportTickets, 'registerRoutes']);
+        add_action('rest_api_init', [$this->updateServer, 'register']);
+
+        // Register self-serve signup (REST + shortcode)
+        $this->signupCheckout->register();
+
+        // Register revenue dashboard
+        $this->revenueDashboard->register();
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
         add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
+
+        // Register email automation
+        $this->emailAutomation->register();
+
+        // Register update server settings
+        add_action('admin_init', [$this->updateServer, 'registerSettings']);
 
         // Register activation hook for table creation
         register_activation_hook($this->pluginFile, [$this, 'activate']);

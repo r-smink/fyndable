@@ -453,6 +453,12 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $cacheKey = 'sseo_ai_usage_status_' . md5($licenseKey);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
         $response = wp_remote_get(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/usage/check',
             [
@@ -478,6 +484,8 @@ class DashboardAPI
                 $body['message'] ?? __('Could not retrieve usage status.', 'ai-seo-client')
             );
         }
+
+        set_transient($cacheKey, $body, 5 * MINUTE_IN_SECONDS);
 
         return $body;
     }
@@ -782,7 +790,7 @@ class DashboardAPI
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
 
-        if (!empty($body['success']) && !empty($body['white_label']) && is_array($body['white_label'])) {
+        if (!empty($body['success']) && isset($body['white_label']) && is_array($body['white_label'])) {
             update_option('sseo_ai_white_label', $body['white_label']);
         }
 
@@ -802,6 +810,12 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $cacheKey = 'sseo_ai_support_tickets_' . md5($licenseKey);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
         $response = wp_remote_get(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
             [
@@ -815,7 +829,13 @@ class DashboardAPI
             ]
         );
 
-        return $this->handleSupportResponse($response, __('Could not retrieve support tickets.', 'ai-seo-client'));
+        $result = $this->handleSupportResponse($response, __('Could not retrieve support tickets.', 'ai-seo-client'));
+
+        if (!is_wp_error($result)) {
+            set_transient($cacheKey, $result, 2 * MINUTE_IN_SECONDS);
+        }
+
+        return $result;
     }
 
     /**
@@ -851,7 +871,14 @@ class DashboardAPI
             ]
         );
 
-        return $this->handleSupportResponse($response, __('Could not create support ticket.', 'ai-seo-client'));
+        $result = $this->handleSupportResponse($response, __('Could not create support ticket.', 'ai-seo-client'));
+
+        if (!is_wp_error($result)) {
+            $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+            delete_transient('sseo_ai_support_tickets_' . md5($licenseKey));
+        }
+
+        return $result;
     }
 
     /**

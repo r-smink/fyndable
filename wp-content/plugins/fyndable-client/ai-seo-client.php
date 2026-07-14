@@ -52,11 +52,44 @@ require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/serankingclient.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/serankingdataclient.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/ahrefsclient.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/seodatadashboard.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/privacyexport.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/reviewprompt.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/seoimporter.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/onboardingwizard.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/updatechecker.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/demomode.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function () {
-    $client = new \SSEOAIClient\Client();
-    $client->activate();
+    if (is_multisite()) {
+        // Network activation — run on all sites
+        $sites = get_sites(['number' => 0]);
+        foreach ($sites as $site) {
+            switch_to_blog((int) $site->blog_id);
+            $client = new \SSEOAIClient\Client();
+            $client->activate();
+            restore_current_blog();
+        }
+    } else {
+        $client = new \SSEOAIClient\Client();
+        $client->activate();
+    }
+});
+
+// Deactivation hook — clean up cron on multisite
+register_deactivation_hook(__FILE__, function () {
+    if (is_multisite()) {
+        $sites = get_sites(['number' => 0]);
+        foreach ($sites as $site) {
+            switch_to_blog((int) $site->blog_id);
+            wp_clear_scheduled_hook('sseo_ai_client_license_check');
+            wp_clear_scheduled_hook('sseo_ai_rank_check_cron');
+            restore_current_blog();
+        }
+    } else {
+        wp_clear_scheduled_hook('sseo_ai_client_license_check');
+        wp_clear_scheduled_hook('sseo_ai_rank_check_cron');
+    }
 });
 
 // Load text domain for translations

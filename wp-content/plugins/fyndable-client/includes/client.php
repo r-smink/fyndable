@@ -84,6 +84,12 @@ class Client
     private ?DashboardShell $dashboardShell = null;
     private ?BrandVisibilityTracker $brandVisibility = null;
     private ?Supportickets $supportTickets = null;
+    private ?PrivacyExport $privacyExport = null;
+    private ?ReviewPrompt $reviewPrompt = null;
+    private ?SeoImporter $seoImporter = null;
+    private ?OnboardingWizard $onboardingWizard = null;
+    private ?UpdateChecker $updateChecker = null;
+    private ?DemoMode $demoMode = null;
 
     public function init(): void
     {
@@ -94,12 +100,39 @@ class Client
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
         $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
 
+        // GDPR privacy export/erasure — always registered regardless of license
+        $this->privacyExport = new PrivacyExport();
+        $this->privacyExport->register();
+
+        // Review prompt notice (after 7 days)
+        $this->reviewPrompt = new ReviewPrompt();
+        $this->reviewPrompt->register();
+
+        // SEO Importer (Yoast/RankMath/AIOSEO migration)
+        $this->seoImporter = new SeoImporter();
+        $this->seoImporter->register();
+
+        // Onboarding wizard (first-run setup)
+        $this->onboardingWizard = new OnboardingWizard();
+        $this->onboardingWizard->register();
+
+        // Auto-update checker (SaaS dashboard served)
+        $this->updateChecker = new UpdateChecker($this->settings);
+        $this->updateChecker->register();
+
+        // Demo mode (sandbox with dummy data)
+        $this->demoMode = new DemoMode();
+        $this->demoMode->register();
+
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
 
         // Add admin menu for license activation
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+
+        // Network admin menu (multisite)
+        add_action('network_admin_menu', [$this, 'registerNetworkMenu']);
 
         // Handle license activation form
         add_action('admin_post_ai_seo_activate_license', [$this, 'handleLicenseActivation']);
@@ -126,6 +159,7 @@ class Client
         add_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         add_option('sseo_ai_client_dashboard_url', '');
         add_option('sseo_ai_client_license_status', 'inactive');
+        add_option('sseo_ai_client_first_activation', time());
         
         // Create rank tracker tables
         $settings = new Settings();
@@ -544,6 +578,63 @@ class Client
     }
 
     /**
+     * Register network admin menu (multisite)
+     */
+    public function registerNetworkMenu(): void
+    {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+
+        add_menu_page(
+            $menuName,
+            $menuName,
+            'manage_network_options',
+            'fyndable-network',
+            [$this, 'renderNetworkPage'],
+            'dashicons-analytics',
+            3
+        );
+    }
+
+    /**
+     * Render network admin page (multisite overview)
+     */
+    public function renderNetworkPage(): void
+    {
+        $sites = get_sites(['number' => 0]);
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+
+        echo '<div class="wrap"><h1>' . esc_html($menuName) . ' — Network Overview</h1>';
+        echo '<p>Manage plugin settings across all sites in your network.</p>';
+
+        echo '<table class="wp-list-table widefat fixed striped"><thead><tr>';
+        echo '<th>Site</th><th>Domain</th><th>License Status</th><th>Tier</th><th>Actions</th>';
+        echo '</tr></thead><tbody>';
+
+        foreach ($sites as $site) {
+            switch_to_blog((int) $site->blog_id);
+            $status = get_option('sseo_ai_client_license_status', 'inactive');
+            $tier = get_option('sseo_ai_client_license_tier', 'free');
+            $siteUrl = get_site_url();
+            $siteName = get_bloginfo('name');
+            $adminUrl = admin_url('admin.php?page=ai-seo-client');
+            restore_current_blog();
+
+            $statusColor = $status === 'active' ? 'green' : 'red';
+            echo '<tr>';
+            echo '<td><strong>' . esc_html($siteName) . '</strong></td>';
+            echo '<td>' . esc_html($siteUrl) . '</td>';
+            echo '<td><span style="color:' . esc_attr($statusColor) . ';font-weight:600;">' . esc_html(ucfirst($status)) . '</span></td>';
+            echo '<td>' . esc_html(ucfirst($tier)) . '</td>';
+            echo '<td><a href="' . esc_url($adminUrl) . '" class="button button-small">Manage</a></td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table></div>';
+    }
+
+    /**
      * Register admin menu
      */
     public function registerAdminMenu(): void
@@ -817,6 +908,16 @@ class Client
             'manage_options',
             'ai-seo-settings',
             [$this, 'renderSettingsPage']
+        );
+
+        // Import (always visible — useful even before license activation)
+        add_submenu_page(
+            'fyndable-dashboard',
+            __('Import SEO Data', 'ai-seo-client'),
+            __('📥 Import', 'ai-seo-client'),
+            'manage_options',
+            'ai-seo-import',
+            [$this, 'renderImportPage']
         );
 
         // Remove all submenu items from WP admin menu (pages stay accessible via URL for iframe)
@@ -1742,6 +1843,14 @@ class Client
             'reset_in' => $resetIn,
             'reset_in_minutes' => ceil($resetIn / 60),
         ];
+    }
+
+    /**
+     * Render import page
+     */
+    public function renderImportPage(): void
+    {
+        $this->seoImporter->renderPage();
     }
 
     /**

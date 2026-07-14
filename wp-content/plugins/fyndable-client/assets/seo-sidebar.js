@@ -190,6 +190,26 @@
 					)
 				),
 
+				// Social Preview
+				wp.element.createElement(PanelBody, { title: 'Social Preview', initialOpen: false },
+					wp.element.createElement('div', { style: { background: '#fff', border: '1px solid #ddd', borderRadius: 8, marginBottom: 12, overflow: 'hidden', fontFamily: 'arial, sans-serif' } },
+						wp.element.createElement('div', { style: { background: '#e4e6eb', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#65676b', fontSize: 13 } }, 'No image set'),
+						wp.element.createElement('div', { style: { padding: 10 } },
+							wp.element.createElement('div', { style: { fontSize: 12, color: '#65676b', textTransform: 'uppercase', marginBottom: 2 } }, siteUrl.replace(/^https?:\/\//, '')),
+							wp.element.createElement('div', { style: { fontSize: 15, color: '#050505', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, previewTitle.substring(0, 65)),
+							wp.element.createElement('div', { style: { fontSize: 13, color: '#65676b', lineHeight: 1.4 } }, previewDesc.substring(0, 155))
+						)
+					),
+					wp.element.createElement('div', { style: { background: '#fff', border: '1px solid #ddd', borderRadius: 12, overflow: 'hidden', fontFamily: 'arial, sans-serif' } },
+						wp.element.createElement('div', { style: { background: '#e4e6eb', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#65676b', fontSize: 13 } }, 'No image set'),
+						wp.element.createElement('div', { style: { padding: 10 } },
+							wp.element.createElement('div', { style: { fontSize: 13, color: '#536471', marginBottom: 2 } }, siteUrl.replace(/^https?:\/\//, '')),
+							wp.element.createElement('div', { style: { fontSize: 15, color: '#0f1419', fontWeight: 600, lineHeight: 1.3, marginBottom: 3 } }, previewTitle.substring(0, 70)),
+							wp.element.createElement('div', { style: { fontSize: 13, color: '#536471', lineHeight: 1.4 } }, previewDesc.substring(0, 160))
+						)
+					)
+				),
+
 				// Meta Fields
 				wp.element.createElement(PanelBody, { title: 'SEO Meta', initialOpen: true },
 					wp.element.createElement(TextControl, {
