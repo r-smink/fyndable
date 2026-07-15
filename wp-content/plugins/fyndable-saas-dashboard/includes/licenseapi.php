@@ -325,6 +325,7 @@ class LicenseAPI
             'success' => true,
             'valid' => true,
             'license' => $result,
+            'model_routing' => get_option('sseo_ai_saas_model_routing', []),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => $settings->getImageApiProvider() === 'openart'
@@ -389,6 +390,7 @@ class LicenseAPI
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
+            'model_routing' => get_option('sseo_ai_saas_model_routing', []),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => $settings->getImageApiProvider() === 'openart'
@@ -476,6 +478,7 @@ class LicenseAPI
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
             'expires_at' => $tenant['expires_at'],
             'white_label' => $this->getWhiteLabelData($tenantKey),
+            'model_routing' => get_option('sseo_ai_saas_model_routing', []),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => $settings->getImageApiProvider() === 'openart'

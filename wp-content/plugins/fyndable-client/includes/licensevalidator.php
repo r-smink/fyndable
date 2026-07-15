@@ -93,7 +93,10 @@ class LicenseValidator
         if (!empty($body['api_calls_limit'])) {
             update_option('sseo_ai_client_api_limit', $body['api_calls_limit']);
         }
-        
+        if (!empty($body['model_routing']) && is_array($body['model_routing'])) {
+            update_option('sseo_ai_client_model_routing', $body['model_routing']);
+        }
+
         // Store image API credentials from SaaS dashboard
         if (!empty($body['image_api'])) {
             update_option('sseo_ai_client_image_api', $body['image_api']);

@@ -61,7 +61,7 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openai_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openai_model', ['default' => 'gpt-4']);
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_key');
-        register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_provider', ['default' => 'dataforseo']);
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_provider', ['default' => 'serpapi']);
 
         // OpenRouter (multi-model gateway)
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_openrouter_api_key');
@@ -100,12 +100,13 @@ class SaaSSettings
         // Billing settings - Payment providers
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_payment_provider', ['default' => 'stripe']);
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_currency', ['default' => 'EUR']);
-        
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_self_serve_enabled', ['default' => false]);
+
         // Stripe settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_key');
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_secret');
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_webhook_secret');
-        
+
         // Mollie settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_api_key');
 
@@ -149,7 +150,7 @@ class SaaSSettings
      */
     public function getSerpApiProvider(): string
     {
-        return get_option('ai_seo_saas_serp_api_provider', 'dataforseo');
+        return get_option('ai_seo_saas_serp_api_provider', 'serpapi');
     }
     
     /**
@@ -573,6 +574,84 @@ class SaaSSettings
                 </table>
 
                 <?php submit_button(__('Save Tier Settings', 'sseo-ai-saas')); ?>
+            </form>
+
+            <form method="post" action="options.php">
+                <?php settings_fields('sseo_ai_saas_billing'); ?>
+
+                <h2><?php esc_html_e('Self-Serve Checkout & Payments', 'sseo-ai-saas'); ?></h2>
+                <p class="description">
+                    <?php esc_html_e('Configure Stripe and Mollie. Self-serve checkout is disabled by default until you enable it below.', 'sseo-ai-saas'); ?>
+                </p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="self_serve_enabled"><?php esc_html_e('Enable Self-Serve Checkout', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="checkbox" name="sseo_ai_saas_self_serve_enabled" id="self_serve_enabled" value="1" <?php checked(get_option('sseo_ai_saas_self_serve_enabled', false)); ?>>
+                            <p class="description"><?php esc_html_e('Allow visitors to sign up and pay automatically. Leave disabled for manual license beta.', 'sseo-ai-saas'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="payment_provider"><?php esc_html_e('Payment Provider', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <select name="sseo_ai_saas_payment_provider" id="payment_provider">
+                                <option value="stripe" <?php selected(get_option('sseo_ai_saas_payment_provider', 'stripe'), 'stripe'); ?>><?php esc_html_e('Stripe', 'sseo-ai-saas'); ?></option>
+                                <option value="mollie" <?php selected(get_option('sseo_ai_saas_payment_provider', 'stripe'), 'mollie'); ?>><?php esc_html_e('Mollie', 'sseo-ai-saas'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="payment_currency"><?php esc_html_e('Currency', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <select name="sseo_ai_saas_currency" id="payment_currency">
+                                <option value="EUR" <?php selected(get_option('sseo_ai_saas_currency', 'EUR'), 'EUR'); ?>><?php esc_html_e('EUR', 'sseo-ai-saas'); ?></option>
+                                <option value="USD" <?php selected(get_option('sseo_ai_saas_currency', 'EUR'), 'USD'); ?>><?php esc_html_e('USD', 'sseo-ai-saas'); ?></option>
+                                <option value="GBP" <?php selected(get_option('sseo_ai_saas_currency', 'EUR'), 'GBP'); ?>><?php esc_html_e('GBP', 'sseo-ai-saas'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="stripe_secret"><?php esc_html_e('Stripe Secret Key', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="sseo_ai_saas_stripe_secret" id="stripe_secret" value="<?php echo esc_attr(get_option('sseo_ai_saas_stripe_secret', '')); ?>" class="regular-text" placeholder="sk_...">
+                            <p class="description"><?php esc_html_e('Get from Stripe Dashboard → Developers → API keys.', 'sseo-ai-saas'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="stripe_webhook_secret"><?php esc_html_e('Stripe Webhook Secret', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="sseo_ai_saas_stripe_webhook_secret" id="stripe_webhook_secret" value="<?php echo esc_attr(get_option('sseo_ai_saas_stripe_webhook_secret', '')); ?>" class="regular-text" placeholder="whsec_...">
+                            <p class="description">
+                                <?php esc_html_e('Webhook URL:', 'sseo-ai-saas'); ?> <code><?php echo esc_url(rest_url('ai-seo-saas/v1/webhooks/stripe')); ?></code>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="mollie_api_key"><?php esc_html_e('Mollie API Key', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="sseo_ai_saas_mollie_api_key" id="mollie_api_key" value="<?php echo esc_attr(get_option('sseo_ai_saas_mollie_api_key', '')); ?>" class="regular-text" placeholder="test_... / live_...">
+                            <p class="description">
+                                <?php esc_html_e('Webhook URL:', 'sseo-ai-saas'); ?> <code><?php echo esc_url(rest_url('ai-seo-saas/v1/webhooks/mollie')); ?></code>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="trial_enabled"><?php esc_html_e('Enable Trial', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="checkbox" name="sseo_ai_saas_trial_enabled" id="trial_enabled" value="1" <?php checked(get_option('sseo_ai_saas_trial_enabled', '1')); ?>>
+                            <p class="description"><?php esc_html_e('Offer a free trial period on self-serve signup.', 'sseo-ai-saas'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="trial_days"><?php esc_html_e('Trial Days', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="number" name="sseo_ai_saas_trial_days" id="trial_days" value="<?php echo esc_attr(get_option('sseo_ai_saas_trial_days', 14)); ?>" style="width: 120px;">
+                        </td>
+                    </tr>
+                </table>
+
+                <?php submit_button(__('Save Billing Settings', 'sseo-ai-saas')); ?>
             </form>
         </div>
         <?php

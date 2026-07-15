@@ -498,12 +498,24 @@ class TechnicalSEOAuditor
     }
     
     /**
+     * Get the configured sitemap URL for health checks.
+     */
+    private function getConfiguredSitemapUrl(): string
+    {
+        $custom = get_option('sseo_sitemap_custom_url', '');
+        if (!empty($custom)) {
+            return $custom;
+        }
+        return home_url('/sitemap.xml');
+    }
+
+    /**
      * Check if XML sitemap exists
      */
     private function checkSitemapExists(): bool
     {
         $sitemapUrls = [
-            home_url('/sitemap_index.xml'),
+            $this->getConfiguredSitemapUrl(),
             home_url('/sitemap.xml'),
         ];
         
@@ -656,8 +668,9 @@ class TechnicalSEOAuditor
      */
     private function auditSitemap(): array
     {
-        // Try sitemap_index.xml first (Yoast SEO style), then sitemap.xml
+        // Try configured URL first, then fallback defaults
         $sitemapUrls = [
+            $this->getConfiguredSitemapUrl(),
             home_url('/sitemap_index.xml'),
             home_url('/sitemap.xml'),
         ];

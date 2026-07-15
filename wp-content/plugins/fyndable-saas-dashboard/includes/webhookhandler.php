@@ -106,35 +106,82 @@ class WebhookHandler
         $data = $event['data']['object'] ?? [];
 
         switch ($type) {
+            case 'checkout.session.completed':
+                return $this->handleStripeCheckoutCompleted($data);
+
             case 'invoice.payment_succeeded':
                 return $this->handleStripePaymentSuccess($data);
-                
+
             case 'invoice.payment_failed':
                 return $this->handleStripePaymentFailed($data);
-                
+
             case 'customer.subscription.created':
                 return $this->handleStripeSubscriptionCreated($data);
-                
+
             case 'customer.subscription.updated':
                 return $this->handleStripeSubscriptionUpdated($data);
-                
+
             case 'customer.subscription.deleted':
             case 'customer.subscription.canceled':
                 return $this->handleStripeSubscriptionCanceled($data);
-                
+
             case 'payment_intent.succeeded':
                 return $this->handleStripePaymentIntentSucceeded($data);
-                
+
             case 'payment_intent.payment_failed':
                 return $this->handleStripePaymentIntentFailed($data);
-                
+
             case 'customer.created':
                 return $this->handleStripeCustomerCreated($data);
-                
+
             default:
                 error_log('SSEO AI SaaS: Unhandled Stripe event: ' . $type);
                 return ['received' => true, 'processed' => false, 'reason' => 'Unhandled event type'];
         }
+    }
+
+    /**
+     * Handle Stripe checkout session completed
+     */
+    private function handleStripeCheckoutCompleted(array $session): array
+    {
+        $tenantKey = $session['client_reference_id'] ?? '';
+        $customerId = $session['customer'] ?? '';
+        $subscriptionId = $session['subscription'] ?? '';
+
+        if (empty($tenantKey)) {
+            return ['received' => true, 'processed' => false, 'reason' => 'No client_reference_id'];
+        }
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant) {
+            error_log("SSEO AI SaaS: No tenant found for checkout session: {$tenantKey}");
+            return ['received' => true, 'processed' => false, 'reason' => 'Tenant not found'];
+        }
+
+        if ($customerId) {
+            $this->tenants->setTenantSetting($tenantKey, 'stripe_customer_id', $customerId);
+        }
+        if ($subscriptionId) {
+            $this->tenants->setTenantSetting($tenantKey, 'stripe_subscription_id', $subscriptionId);
+        }
+
+        $this->tenants->updateTenant($tenantKey, [
+            'status' => 'active',
+            'payment_status' => 'active',
+            'last_payment_at' => current_time('mysql'),
+            'expires_at' => gmdate('Y-m-d H:i:s', strtotime('+1 month')),
+        ]);
+
+        do_action('sseo_ai_saas_payment_success', $tenantKey, $session, 'stripe');
+
+        return [
+            'received' => true,
+            'processed' => true,
+            'tenant_key' => $tenantKey,
+            'customer_id' => $customerId,
+            'subscription_id' => $subscriptionId,
+        ];
     }
 
     /**
@@ -159,7 +206,9 @@ class WebhookHandler
         // Update tenant
         $this->tenants->updateTenant($tenantKey, [
             'status' => 'active',
+            'payment_status' => 'active',
             'last_payment_at' => current_time('mysql'),
+            'expires_at' => gmdate('Y-m-d H:i:s', strtotime('+1 month')),
         ]);
 
         // Store subscription ID if provided
@@ -355,23 +404,60 @@ class WebhookHandler
      */
     private function processMolliePayment(string $paymentId): array
     {
-        // Find tenant by Mollie payment ID
-        $tenantKey = $this->findTenantByMolliePaymentId($paymentId);
+        $payment = $this->paymentProcessor->fetchMolliePayment($paymentId);
+
+        if (is_wp_error($payment)) {
+            error_log('SSEO AI SaaS: Mollie payment fetch failed: ' . $payment->get_error_message());
+            return ['received' => true, 'processed' => false, 'reason' => $payment->get_error_message()];
+        }
+
+        $status = $payment['status'] ?? '';
+        $tenantKey = $payment['metadata']['tenant_key'] ?? '';
+
+        if (empty($tenantKey)) {
+            $tenantKey = $this->findTenantByMolliePaymentId($paymentId);
+        }
 
         if (!$tenantKey) {
             error_log("SSEO AI SaaS: No tenant found for Mollie payment: {$paymentId}");
             return ['received' => true, 'processed' => false, 'reason' => 'Tenant not found'];
         }
 
-        // In production: Check actual payment status from Mollie API
-        // For now, assume success
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant) {
+            return ['received' => true, 'processed' => false, 'reason' => 'Tenant not found'];
+        }
 
-        $this->tenants->updateTenant($tenantKey, [
-            'status' => 'active',
-            'last_payment_at' => current_time('mysql'),
-        ]);
+        if ($status !== 'paid') {
+            $this->tenants->updateTenant($tenantKey, [
+                'payment_status' => $status,
+            ]);
+            return ['received' => true, 'processed' => true, 'tenant_key' => $tenantKey, 'status' => $status];
+        }
 
-        do_action('sseo_ai_saas_payment_success', $tenantKey, ['id' => $paymentId], 'mollie');
+        $sequenceType = $payment['sequenceType'] ?? '';
+        $subscriptionId = $payment['subscriptionId'] ?? '';
+
+        if ($sequenceType === 'first') {
+            $subscription = $this->paymentProcessor->createMollieSubscription($tenantKey, $payment);
+            if (is_wp_error($subscription)) {
+                error_log('SSEO AI SaaS: Mollie subscription creation failed: ' . $subscription->get_error_message());
+                return ['received' => true, 'processed' => false, 'reason' => $subscription->get_error_message()];
+            }
+        } else {
+            if (!empty($subscriptionId)) {
+                $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_id', $subscriptionId);
+            }
+
+            $this->tenants->updateTenant($tenantKey, [
+                'status' => 'active',
+                'payment_status' => 'active',
+                'last_payment_at' => current_time('mysql'),
+                'expires_at' => gmdate('Y-m-d H:i:s', strtotime('+1 month')),
+            ]);
+        }
+
+        do_action('sseo_ai_saas_payment_success', $tenantKey, $payment, 'mollie');
 
         return [
             'received' => true,

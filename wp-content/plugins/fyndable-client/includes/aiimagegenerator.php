@@ -507,6 +507,9 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
             case 'openai':
                 return $this->generateWithOpenAI($prompt, $apiKey, $model);
             
+            case 'openrouter':
+                return $this->generateWithOpenRouter($prompt, $apiKey, $model);
+            
             case 'stability':
                 return $this->generateWithStabilityAI($prompt, $apiKey, $model);
             
@@ -556,6 +559,56 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         return $body['data'][0]['url'];
     }
     
+    /**
+     * Generate image with OpenRouter (new unified Image API)
+     */
+    private function generateWithOpenRouter(string $prompt, string $apiKey, string $model): ?string
+    {
+        $model = $model ?: 'openai/dall-e-3';
+
+        $response = wp_remote_post('https://openrouter.ai/api/v1/images', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+                'HTTP-Referer'  => home_url(),
+                'X-Title'       => get_bloginfo('name'),
+            ],
+            'body' => wp_json_encode([
+                'model'   => $model,
+                'prompt'  => $prompt,
+                'n'       => 1,
+                'size'    => '1024x1024',
+            ]),
+            'timeout' => 120,
+        ]);
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenRouter API error - ' . $response->get_error_message());
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenRouter response - ' . print_r($body, true));
+
+        $imageUrl = $body['data'][0]['url'] ?? '';
+        $b64 = $body['data'][0]['b64_json'] ?? '';
+
+        if (!empty($imageUrl)) {
+            return $imageUrl;
+        }
+
+        if (!empty($b64)) {
+            $imageData = base64_decode($b64);
+            $tempFile = wp_tempnam('sseo-ai-image-');
+            file_put_contents($tempFile, $imageData);
+            return $tempFile;
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image URL or data in OpenRouter response - ' . print_r($body, true));
+        return null;
+    }
+
     /**
      * Generate image with Stability AI
      */

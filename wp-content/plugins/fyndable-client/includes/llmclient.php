@@ -214,6 +214,12 @@ class LlmClient
             );
         }
 
+        // Check SaaS dashboard per-function model routing (AI Model Routing per function)
+        $modelRouting = get_option('sseo_ai_client_model_routing', []);
+        if (empty($model) && is_array($modelRouting) && !empty($modelRouting[$useCase])) {
+            $model = $modelRouting[$useCase];
+        }
+
         // Validate requested model is available for tier
         $availableModels = $this->getAvailableModels();
         $requestedModel = $model ?? 'openai/gpt-4o-mini';

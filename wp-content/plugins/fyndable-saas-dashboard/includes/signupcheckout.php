@@ -200,6 +200,14 @@ class SignupCheckout
             ], 400);
         }
 
+        // Self-serve checkout is disabled by default for the beta
+        if ($tier !== 'free' && !get_option('sseo_ai_saas_self_serve_enabled', false)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Self-serve checkout is currently disabled. Please contact us for a license key.',
+            ], 400);
+        }
+
         // Check if email already exists
         $existingTenants = $this->tenants->getAllTenants(500);
         foreach ($existingTenants as $existing) {
@@ -312,7 +320,9 @@ class SignupCheckout
         // Update tenant status to active
         $this->tenants->updateTenant($tenantKey, [
             'status' => 'active',
-            'expires_at' => gmdate('Y-m-d H:i:s', time() + 365 * DAY_IN_SECONDS),
+            'payment_status' => 'active',
+            'last_payment_at' => current_time('mysql'),
+            'expires_at' => gmdate('Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS),
         ]);
 
         // Send welcome email

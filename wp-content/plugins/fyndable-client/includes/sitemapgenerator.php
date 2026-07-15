@@ -37,8 +37,8 @@ class SitemapGenerator
 
     public function restGetStatus(): array
     {
-        $sitemapUrl = home_url('/sitemap.xml');
-        $sitemapIndexUrl = home_url('/sitemap_index.xml');
+        $sitemapUrl = $this->getMainSitemapUrl();
+        $sitemapIndexUrl = $this->getSitemapIndexUrl();
 
         $response = wp_remote_get($sitemapUrl, ['timeout' => 5]);
         $sitemapExists = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
@@ -81,6 +81,17 @@ class SitemapGenerator
         ]);
         register_setting('sseo_sitemap_settings', 'sseo_sitemap_exclude_ids', ['type' => 'string', 'default' => '']);
         register_setting('sseo_sitemap_settings', 'sseo_sitemap_ping_engines', ['type' => 'boolean', 'default' => true]);
+        register_setting('sseo_sitemap_settings', 'sseo_sitemap_custom_url', [
+            'type' => 'string',
+            'default' => '',
+            'sanitize_callback' => function ($value) {
+                $value = trim($value);
+                if (empty($value)) {
+                    return '';
+                }
+                return esc_url_raw($value);
+            },
+        ]);
     }
 
     public function addRewriteRules(): void
@@ -90,6 +101,30 @@ class SitemapGenerator
         add_rewrite_rule('^wp-sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=$matches[1]', 'top');
         add_rewrite_rule('^sitemap-tax-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=tax-$matches[1]', 'top');
+    }
+
+    /**
+     * Get the configured main sitemap URL for health checks.
+     */
+    public function getMainSitemapUrl(): string
+    {
+        $custom = get_option('sseo_sitemap_custom_url', '');
+        if (!empty($custom)) {
+            return $custom;
+        }
+        return home_url('/sitemap.xml');
+    }
+
+    /**
+     * Get the configured sitemap index URL for health checks.
+     */
+    public function getSitemapIndexUrl(): string
+    {
+        $custom = get_option('sseo_sitemap_custom_url', '');
+        if (!empty($custom)) {
+            return $custom;
+        }
+        return home_url('/sitemap_index.xml');
     }
 
     public function disableWordPressSitemap(): void
@@ -454,6 +489,7 @@ class SitemapGenerator
 
         $excludeIds = get_option('sseo_sitemap_exclude_ids', '');
         $pingEngines = get_option('sseo_sitemap_ping_engines', true);
+        $customSitemapUrl = get_option('sseo_sitemap_custom_url', '');
 
         $allPostTypes = get_post_types(['public' => true], 'objects');
         $internalTypes = ['attachment', 'aiseo_note', 'aiseo_prompt', 'aiseo_calendar'];
@@ -493,6 +529,17 @@ class SitemapGenerator
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                </table>
+
+                <h2><?php esc_html_e('Sitemap Health Check URL', 'ai-seo-client'); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="sseo_sitemap_custom_url"><?php esc_html_e('Custom Sitemap URL', 'ai-seo-client'); ?></label></th>
+                        <td>
+                            <input type="url" name="sseo_sitemap_custom_url" id="sseo_sitemap_custom_url" value="<?php echo esc_attr($customSitemapUrl); ?>" class="regular-text" placeholder="https://example.com/sitemap.xml">
+                            <p class="description"><?php esc_html_e('Leave empty to use the Fyndable generated sitemap. Fill in your own sitemap URL if you use an external sitemap for health checks.', 'ai-seo-client'); ?></p>
+                        </td>
+                    </tr>
                 </table>
 
                 <h2><?php esc_html_e('Exclude Posts/Pages', 'ai-seo-client'); ?></h2>

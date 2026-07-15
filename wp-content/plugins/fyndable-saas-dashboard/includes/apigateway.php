@@ -356,21 +356,61 @@ class ApiGateway
      */
     private function fetchSerpApi(string $apiKey, string $keyword, string $location): array|\WP_Error
     {
+        $locale = $this->getSerpApiLocale($location);
+
         $url = add_query_arg([
             'q' => $keyword,
             'location' => $location,
+            'google_domain' => $locale['domain'],
+            'gl' => $locale['gl'],
+            'hl' => $locale['hl'],
             'api_key' => $apiKey,
             'output' => 'json',
         ], 'https://serpapi.com/search');
-        
+
         $response = wp_remote_get($url, ['timeout' => 60]);
-        
+
         if (is_wp_error($response)) {
             return $response;
         }
-        
+
+        $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 || !empty($body['error'])) {
+            $message = $body['error'] ?? __('Unknown SerpApi error', 'sseo-ai-saas');
+            return new \WP_Error('serpapi_error', is_string($message) ? $message : json_encode($message));
+        }
+
         return $body['organic_results'] ?? [];
+    }
+
+    /**
+     * Map a location string to SerpApi google_domain, gl and hl values.
+     */
+    private function getSerpApiLocale(string $location): array
+    {
+        $locationLower = strtolower($location);
+        $map = [
+            'netherlands' => ['domain' => 'google.nl', 'gl' => 'nl', 'hl' => 'nl'],
+            'belgium' => ['domain' => 'google.be', 'gl' => 'be', 'hl' => 'nl'],
+            'germany' => ['domain' => 'google.de', 'gl' => 'de', 'hl' => 'de'],
+            'france' => ['domain' => 'google.fr', 'gl' => 'fr', 'hl' => 'fr'],
+            'united kingdom' => ['domain' => 'google.co.uk', 'gl' => 'gb', 'hl' => 'en'],
+            'united states' => ['domain' => 'google.com', 'gl' => 'us', 'hl' => 'en'],
+            'canada' => ['domain' => 'google.ca', 'gl' => 'ca', 'hl' => 'en'],
+            'australia' => ['domain' => 'google.com.au', 'gl' => 'au', 'hl' => 'en'],
+            'spain' => ['domain' => 'google.es', 'gl' => 'es', 'hl' => 'es'],
+            'italy' => ['domain' => 'google.it', 'gl' => 'it', 'hl' => 'it'],
+        ];
+
+        foreach ($map as $country => $locale) {
+            if (str_contains($locationLower, $country)) {
+                return $locale;
+            }
+        }
+
+        return ['domain' => 'google.com', 'gl' => 'us', 'hl' => 'en'];
     }
 
     /**

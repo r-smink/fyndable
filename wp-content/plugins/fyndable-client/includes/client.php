@@ -1595,8 +1595,8 @@ class Client
         }
 
         // Sitemap URLs for reference
-        $sitemapUrl = home_url('/sitemap.xml');
-        $sitemapIndexUrl = home_url('/sitemap_index.xml');
+        $sitemapUrl = $this->sitemapGenerator->getMainSitemapUrl();
+        $sitemapIndexUrl = $this->sitemapGenerator->getSitemapIndexUrl();
         
         ?>
         <style>
@@ -1880,7 +1880,7 @@ class Client
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 900px; margin: 0 auto; }
+            .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 1200px; margin: 0 auto; }
             .sseo-ai-notice { padding: 16px 20px; border-radius: 6px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
             .sseo-ai-notice-success { background: #d1fae5; color: #10b981; border-left: 4px solid #10b981; }
             .settings-section { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 2px solid #f3f4f6; }
