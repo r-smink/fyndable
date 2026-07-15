@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.5.1 (2026-07-15)
+
+### New Features
+- **Fynable Login Screen** — Fully branded WordPress `wp-login.php` with separate toggle (Settings → White-Label & Login). Works for all users/tiers.
+- **Free Tier Toggle** — Onboarding free-tier skip can be toggled off; default is disabled for beta, code remains intact.
+
+### Fixed / Improved
+- **SaaS Dashboard Branding** — Topbar now shows `Fyndable Smart SEO` with a smaller `SaaS` suffix.
+- **SaaS Login Header** — Login screen now shows `Fyndable Smart SEO` instead of `Fyndable SaaS`.
+
 ## v0.5-beta (2026-03-08)
 
 ### New Features

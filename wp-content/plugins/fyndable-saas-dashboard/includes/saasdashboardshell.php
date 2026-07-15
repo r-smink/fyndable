@@ -358,6 +358,18 @@ class SaaSDashboardShell
                 letter-spacing: -0.3px;
             }
             .saas-topbar-logo span { font-weight: 400; opacity: 0.9; }
+            .saas-topbar-logo .saas-saas-suffix {
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                opacity: 0.85;
+                margin-left: 6px;
+                vertical-align: middle;
+                background: rgba(255,255,255,0.2);
+                padding: 2px 8px;
+                border-radius: 20px;
+            }
             .saas-topbar-badge {
                 font-size: 10px;
                 font-weight: 600;
@@ -516,9 +528,9 @@ class SaaSDashboardShell
                 <div class="saas-topbar-brand">
                     <div class="saas-topbar-logo">
                         <?php if ($companyLogo): ?>
-                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" style="max-height: 36px; max-width: 180px; display: block;">
+                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName . ' Smart SEO'); ?>" style="max-height: 36px; max-width: 180px; display: block;">
                         <?php else: ?>
-                            <?php echo esc_html($companyName); ?> <span>SaaS</span>
+                            <?php echo esc_html($companyName); ?> <span>Smart SEO</span><span class="saas-saas-suffix">SaaS</span>
                         <?php endif; ?>
                     </div>
                     <div class="saas-topbar-badge"><?php esc_html_e('Dashboard', 'sseo-ai-saas'); ?></div>

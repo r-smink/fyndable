@@ -191,7 +191,7 @@ class FyndableLogin
         $enabled = get_option('sseo_ai_saas_wl_enabled', false);
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $brandName = $companyName ?: 'Fyndable';
-        return $brandName . ' <span>SaaS</span>';
+        return $brandName . ' <span>Smart SEO</span>';
     }
 
     /**
