@@ -120,12 +120,69 @@ class OnboardingWizard
      */
     private function saveStep1(): void
     {
-        $action = sanitize_text_field($_POST['license_action'] ?? 'skip');
+        $action = sanitize_text_field($_POST['license_action'] ?? 'activate');
+        $dashboardUrl = esc_url_raw($_POST['dashboard_url'] ?? '');
+        $licenseKey = sanitize_text_field($_POST['license_key'] ?? '');
+        $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
 
-        if ($action === 'skip') {
+        if ($dashboardUrl) {
+            update_option('sseo_ai_client_dashboard_url', $dashboardUrl);
+        }
+
+        if ($action === 'skip' && $freeTierEnabled) {
             update_option('sseo_ai_client_license_status', 'free');
             update_option('sseo_ai_client_license_tier', 'free');
+            return;
         }
+
+        if ($action === 'skip' && !$freeTierEnabled) {
+            $this->redirectWithError(__('Free tier is not available. Please activate a license key.', 'ai-seo-client'));
+        }
+
+        if (empty($licenseKey) || empty($dashboardUrl)) {
+            $this->redirectWithError(__('Please enter a valid license key and dashboard URL.', 'ai-seo-client'));
+        }
+
+        $api = new DashboardAPI(new Settings());
+        $result = $api->activateLicense($licenseKey, $dashboardUrl);
+
+        if (is_wp_error($result)) {
+            $this->redirectWithError($result->get_error_message());
+        }
+
+        if (empty($result['tenant_key'])) {
+            $this->redirectWithError(__('Invalid response from dashboard. No tenant key received.', 'ai-seo-client'));
+        }
+
+        update_option(SSEO_AI_CLIENT_LICENSE_OPTION, $licenseKey);
+        update_option(SSEO_AI_CLIENT_TENANT_OPTION, $result['tenant_key']);
+        update_option('sseo_ai_client_license_status', 'active');
+        update_option('sseo_ai_client_license_tier', $result['tier'] ?? 'paid');
+        update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
+        update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
+        update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
+
+        if (!empty($result['white_label'])) {
+            update_option('sseo_ai_white_label', $result['white_label']);
+        }
+
+        if (!empty($result['image_api'])) {
+            update_option('sseo_ai_client_image_api', $result['image_api']);
+        }
+
+        if (!empty($result['model_routing'])) {
+            update_option('sseo_ai_client_model_routing', $result['model_routing']);
+        }
+    }
+
+    /**
+     * Redirect back to onboarding step with an error message.
+     */
+    private function redirectWithError(string $message): void
+    {
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=1&onboarding_error=' . urlencode($message)));
+        exit;
     }
 
     /**
@@ -196,6 +253,9 @@ class OnboardingWizard
         $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : (int) get_option(self::STEP_OPTION, 1);
         $currentStep = max(1, min(4, $currentStep));
 
+        $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
+        $onboardingError = isset($_GET['onboarding_error']) ? sanitize_text_field(urldecode($_GET['onboarding_error'])) : '';
+
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         $brandName = $companyName . ' Smart SEO';
@@ -259,6 +319,12 @@ class OnboardingWizard
             </div>
 
             <div class="sseo-onboarding-card">
+                <?php if ($onboardingError): ?>
+                    <div class="notice notice-error" style="margin-bottom: 20px;">
+                        <p><?php echo esc_html($onboardingError); ?></p>
+                    </div>
+                <?php endif; ?>
+
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <?php wp_nonce_field('sseo_ai_onboarding'); ?>
                     <input type="hidden" name="action" value="sseo_ai_onboarding_save">
@@ -267,7 +333,11 @@ class OnboardingWizard
                     <?php switch ($currentStep):
                         case 1: ?>
                             <h2><?php esc_html_e('Connect Your License', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Enter your license key to unlock all features, or skip to use the free tier.', 'ai-seo-client'); ?></p>
+                            <p class="description">
+                                <?php echo $freeTierEnabled
+                                    ? esc_html__('Enter your license key to unlock all features, or skip to use the free tier.', 'ai-seo-client')
+                                    : esc_html__('Enter your license key to unlock all features.', 'ai-seo-client'); ?>
+                            </p>
 
                             <div class="sseo-onboarding-field">
                                 <label for="dashboard_url"><?php esc_html_e('SaaS Dashboard URL', 'ai-seo-client'); ?></label>
@@ -276,13 +346,17 @@ class OnboardingWizard
                             <div class="sseo-onboarding-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
                                 <input type="text" id="license_key" name="license_key" placeholder="SSEO-AI-XXXX-XXXX-XXXX" value="">
-                                <div class="hint"><?php esc_html_e('Skip this step to use the free tier with limited features.', 'ai-seo-client'); ?></div>
+                                <?php if ($freeTierEnabled): ?>
+                                    <div class="hint"><?php esc_html_e('Skip this step to use the free tier with limited features.', 'ai-seo-client'); ?></div>
+                                <?php endif; ?>
                             </div>
-                            <input type="hidden" name="license_action" value="skip">
+                            <input type="hidden" name="license_action" value="activate">
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="sseo-onboarding-skip"><?php esc_html_e('Skip for now →', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> →</button>
+                                <?php if ($freeTierEnabled): ?>
+                                    <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now →', 'ai-seo-client'); ?></button>
+                                <?php endif; ?>
+                                <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?> →</button>
                             </div>
                             <?php break;
 

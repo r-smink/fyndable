@@ -33,7 +33,11 @@ class WhiteLabelManager
         add_filter('admin_footer_text', [$this, 'customAdminFooter']);
         add_action('admin_head', [$this, 'customAdminStyles']);
         add_action('login_head', [$this, 'customLoginStyles']);
-        
+        add_filter('login_headerurl', [$this, 'customLoginUrl']);
+        add_filter('login_headertext', [$this, 'customLoginText']);
+        add_filter('login_title', [$this, 'customLoginTitle'], 10, 2);
+        add_filter('login_body_class', [$this, 'customLoginBodyClass']);
+
         // Client portal
         add_action('init', [$this, 'registerClientPortalEndpoint']);
         add_filter('template_include', [$this, 'clientPortalTemplate']);
@@ -41,10 +45,13 @@ class WhiteLabelManager
     
     public function addMenu(): void
     {
-        // SaaS-only features - disabled in client plugin
-        // White-Label, Client Portal, Team Workspace, and Billing
-        // are only available in the SaaS Dashboard
-        return;
+        add_options_page(
+            __('White-Label & Fynable Login', 'ai-seo-client'),
+            __('White-Label & Login', 'ai-seo-client'),
+            'manage_options',
+            'ai-seo-white-label',
+            [$this, 'renderSettings']
+        );
     }
     
     /**
@@ -67,6 +74,15 @@ class WhiteLabelManager
         // Reseller
         register_setting('sseo_ai_white_label', 'sseo_ai_wl_reseller_enabled', ['default' => false]);
         register_setting('sseo_ai_white_label', 'sseo_ai_wl_commission_rate', ['default' => 20]);
+
+        // Fynable branded login
+        register_setting('sseo_ai_white_label', 'sseo_ai_fynable_login_enabled', ['default' => false]);
+        register_setting('sseo_ai_white_label', 'sseo_ai_fynable_login_title', ['default' => '']);
+        register_setting('sseo_ai_white_label', 'sseo_ai_fynable_login_bg_color', ['default' => '#f0f4f8']);
+        register_setting('sseo_ai_white_label', 'sseo_ai_fynable_login_bg_image', ['default' => '']);
+
+        // Free tier toggle (disabled by default for beta)
+        register_setting('sseo_ai_white_label', 'sseo_ai_free_tier_enabled', ['default' => false]);
     }
     
     /**
@@ -80,6 +96,11 @@ class WhiteLabelManager
         $secondaryColor = get_option('sseo_ai_wl_secondary_color', '#135e96');
         $footerText = get_option('sseo_ai_wl_footer_text', '');
         $customDomain = get_option('sseo_ai_wl_custom_domain', '');
+        $fynableLoginEnabled = get_option('sseo_ai_fynable_login_enabled', false);
+        $fynableLoginTitle = get_option('sseo_ai_fynable_login_title', '');
+        $fynableLoginBgColor = get_option('sseo_ai_fynable_login_bg_color', '#f0f4f8');
+        $fynableLoginBgImage = get_option('sseo_ai_fynable_login_bg_image', '');
+        $freeTierEnabled = get_option('sseo_ai_free_tier_enabled', false);
         
         ?>
         <div class="wrap">
@@ -180,7 +201,68 @@ class WhiteLabelManager
                         <?php esc_html_e('Preview Sample Report', 'ai-seo-client'); ?>
                     </button>
                 </div>
-                
+
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2><?php esc_html_e('Fynable Login Screen', 'ai-seo-client'); ?></h2>
+                    <p><?php esc_html_e('Customize the WordPress login page with a fully Fynable-branded design.', 'ai-seo-client'); ?></p>
+
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="fynable_login_enabled"><?php esc_html_e('Enable Fynable Login', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="checkbox" id="fynable_login_enabled" name="sseo_ai_fynable_login_enabled" value="1" <?php checked($fynableLoginEnabled); ?>>
+                                <p class="description"><?php esc_html_e('Replace the default WordPress login with a custom Fynable-branded design.', 'ai-seo-client'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="fynable_login_title"><?php esc_html_e('Login Page Title', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="fynable_login_title" name="sseo_ai_fynable_login_title"
+                                       value="<?php echo esc_attr($fynableLoginTitle); ?>" class="regular-text"
+                                       placeholder="<?php esc_attr_e('e.g., Fyndable Smart SEO', 'ai-seo-client'); ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="fynable_login_bg_color"><?php esc_html_e('Background Color', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="color" id="fynable_login_bg_color" name="sseo_ai_fynable_login_bg_color"
+                                       value="<?php echo esc_attr($fynableLoginBgColor); ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="fynable_login_bg_image"><?php esc_html_e('Background Image URL', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="url" id="fynable_login_bg_image" name="sseo_ai_fynable_login_bg_image"
+                                       value="<?php echo esc_attr($fynableLoginBgImage); ?>" class="regular-text"
+                                       placeholder="https://example.com/background.jpg">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2><?php esc_html_e('Beta / Onboarding', 'ai-seo-client'); ?></h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="free_tier_enabled"><?php esc_html_e('Enable Free Tier', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="checkbox" id="free_tier_enabled" name="sseo_ai_free_tier_enabled" value="1" <?php checked($freeTierEnabled); ?>>
+                                <p class="description"><?php esc_html_e('Allow users to skip the license step during onboarding. Disabled by default for the beta.', 'ai-seo-client'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
                 <?php submit_button(__('Save White-Label Settings', 'ai-seo-client')); ?>
             </form>
         </div>
@@ -671,13 +753,18 @@ class WhiteLabelManager
      */
     public function customLoginStyles(): void
     {
+        if ($this->isFynableLoginEnabled()) {
+            $this->renderFynableLoginStyles();
+            return;
+        }
+
         $companyLogo = get_option('sseo_ai_wl_company_logo', '');
         $primaryColor = get_option('sseo_ai_wl_primary_color', '');
-        
+
         if (empty($companyLogo) && empty($primaryColor)) {
             return;
         }
-        
+
         ?>
         <style>
         <?php if ($companyLogo): ?>
@@ -687,7 +774,7 @@ class WhiteLabelManager
             width: 100%;
         }
         <?php endif; ?>
-        
+
         <?php if ($primaryColor): ?>
         .wp-core-ui .button-primary {
             background-color: <?php echo esc_attr($primaryColor); ?>;
@@ -695,6 +782,178 @@ class WhiteLabelManager
         <?php endif; ?>
         </style>
         <?php
+    }
+
+    /**
+     * Render a fully Fynable-branded WordPress login page
+     */
+    private function renderFynableLoginStyles(): void
+    {
+        $companyName = get_option('sseo_ai_wl_company_name', 'Fyndable');
+        $companyLogo = get_option('sseo_ai_wl_company_logo', '');
+        $primaryColor = get_option('sseo_ai_wl_primary_color', '#2271b1');
+        $secondaryColor = get_option('sseo_ai_wl_secondary_color', '#135e96');
+        $title = get_option('sseo_ai_fynable_login_title', $companyName . ' Smart SEO');
+        $bgColor = get_option('sseo_ai_fynable_login_bg_color', '#f0f4f8');
+        $bgImage = get_option('sseo_ai_fynable_login_bg_image', '');
+
+        $logoCss = $companyLogo ? 'background-image: url(' . esc_url($companyLogo) . ') !important;' : '';
+        $bgImageCss = $bgImage ? 'background-image: url(' . esc_url($bgImage) . ');' : '';
+
+        ?>
+        <style>
+        body.sseo-fynable-login {
+            background-color: <?php echo esc_attr($bgColor); ?>;
+            <?php echo $bgImage ? 'background-size: cover; background-position: center;' : ''; ?>
+            <?php echo $bgImageCss; ?>
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        body.sseo-fynable-login #login {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        body.sseo-fynable-login #login h1 a {
+            <?php echo $logoCss; ?>
+            background-size: contain;
+            width: 100%;
+            height: 64px;
+            margin-bottom: 20px;
+        }
+        body.sseo-fynable-login #login h1 a::after {
+            content: '<?php echo esc_js($title); ?>';
+            display: block;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+            text-indent: 0;
+            margin-top: 70px;
+        }
+        body.sseo-fynable-login .message,
+        body.sseo-fynable-login #login_error {
+            border-radius: 8px;
+            border-left-color: <?php echo esc_attr($primaryColor); ?>;
+        }
+        body.sseo-fynable-login #loginform,
+        body.sseo-fynable-login #lostpasswordform,
+        body.sseo-fynable-login #registerform {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+        }
+        body.sseo-fynable-login #loginform .input,
+        body.sseo-fynable-login #lostpasswordform .input,
+        body.sseo-fynable-login #registerform .input {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 15px;
+        }
+        body.sseo-fynable-login #loginform .input:focus,
+        body.sseo-fynable-login #lostpasswordform .input:focus,
+        body.sseo-fynable-login #registerform .input:focus {
+            border-color: <?php echo esc_attr($primaryColor); ?>;
+            box-shadow: 0 0 0 3px rgba(34, 113, 177, 0.1);
+        }
+        body.sseo-fynable-login .wp-core-ui .button-primary {
+            background-color: <?php echo esc_attr($primaryColor); ?>;
+            border-color: <?php echo esc_attr($primaryColor); ?>;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 15px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        body.sseo-fynable-login .wp-core-ui .button-primary:hover {
+            background-color: <?php echo esc_attr($secondaryColor); ?>;
+            border-color: <?php echo esc_attr($secondaryColor); ?>;
+        }
+        body.sseo-fynable-login #nav,
+        body.sseo-fynable-login #backtoblog {
+            text-align: center;
+            padding: 0;
+            margin-top: 16px;
+        }
+        body.sseo-fynable-login #nav a,
+        body.sseo-fynable-login #backtoblog a {
+            color: <?php echo esc_attr($primaryColor); ?>;
+            text-decoration: none;
+        }
+        body.sseo-fynable-login #nav a:hover,
+        body.sseo-fynable-login #backtoblog a:hover {
+            text-decoration: underline;
+        }
+        </style>
+        <?php
+    }
+
+    /**
+     * Custom login URL
+     */
+    public function customLoginUrl(string $url): string
+    {
+        return $this->isFynableLoginEnabled() ? home_url('/') : $url;
+    }
+
+    /**
+     * Custom login header text
+     */
+    public function customLoginText(string $text): string
+    {
+        if (!$this->isFynableLoginEnabled()) {
+            return $text;
+        }
+
+        $companyName = get_option('sseo_ai_wl_company_name', 'Fyndable');
+        return $companyName ?: 'Fyndable';
+    }
+
+    /**
+     * Custom login title
+     */
+    public function customLoginTitle(string $title, string $sep): string
+    {
+        if (!$this->isFynableLoginEnabled()) {
+            return $title;
+        }
+
+        $companyName = get_option('sseo_ai_wl_company_name', 'Fyndable');
+        $loginTitle = get_option('sseo_ai_fynable_login_title', $companyName . ' Smart SEO');
+        return $loginTitle . ' ' . $sep . ' ' . get_bloginfo('name');
+    }
+
+    /**
+     * Add custom body class to login page
+     */
+    public function customLoginBodyClass(array $classes): array
+    {
+        if ($this->isFynableLoginEnabled()) {
+            $classes[] = 'sseo-fynable-login';
+        }
+        return $classes;
+    }
+
+    /**
+     * Check if Fynable login is enabled
+     */
+    private function isFynableLoginEnabled(): bool
+    {
+        return (bool) get_option('sseo_ai_fynable_login_enabled', false);
+    }
+
+    /**
+     * Check if free tier is enabled
+     */
+    private function isFreeTierEnabled(): bool
+    {
+        return (bool) get_option('sseo_ai_free_tier_enabled', false);
     }
     
     /**

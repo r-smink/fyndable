@@ -443,14 +443,14 @@ class Client
         if (in_array($tier, ['agency', 'dev'])) {
             $this->seoRevisions = new SeoRevisions();
             $this->seoRevisions->register();
-            
+
             $this->plagiarismChecker = new PlagiarismChecker($this->settings, $this->llmClient);
             $this->plagiarismChecker->register();
-            
-            // White-Label Manager (Agency only)
-            $this->whiteLabelManager = new WhiteLabelManager($this->settings);
-            $this->whiteLabelManager->register();
         }
+
+        // White-Label Manager (branded login for everyone, agency extras optional)
+        $this->whiteLabelManager = new WhiteLabelManager($this->settings);
+        $this->whiteLabelManager->register();
 
         // Unified Post Meta Box with tabs — replaces individual meta boxes
         $this->initPostMetaBox();
