@@ -118,6 +118,20 @@ class AgencyPortal
                 border-radius: 50%;
                 border: 2px solid rgba(255,255,255,0.3);
             }
+            .fyndable-agency-topbar .user-info .logout-link {
+                color: #fff;
+                text-decoration: none;
+                background: rgba(255,255,255,0.15);
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 8px;
+                padding: 6px 14px;
+                font-size: 13px;
+                font-weight: 500;
+                transition: background 0.15s;
+            }
+            .fyndable-agency-topbar .user-info .logout-link:hover {
+                background: rgba(255,255,255,0.25);
+            }
             .fyndable-agency-content {
                 padding: 20px 0;
             }
@@ -174,6 +188,7 @@ class AgencyPortal
             <div class="user-info">
                 <span><?php echo esc_html($user->display_name); ?></span>
                 <img src="<?php echo esc_url($avatar); ?>" class="avatar" alt="">
+                <a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>" class="logout-link"><?php esc_html_e('Logout', 'sseo-ai-saas'); ?></a>
             </div>
         </div>
         <?php

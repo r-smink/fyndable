@@ -324,6 +324,7 @@ class SaaSDashboardShell
         }
 
         $exitUrl = admin_url('admin.php?page=' . $currentPage);
+        $logoutUrl = $isAgency ? wp_logout_url(home_url('/')) : '';
         ?>
         <style>
             .saas-shell-wrap {
@@ -536,10 +537,16 @@ class SaaSDashboardShell
                     <div class="saas-topbar-badge"><?php esc_html_e('Dashboard', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="saas-topbar-actions">
-                    <a href="<?php echo esc_url($exitUrl); ?>" class="saas-exit-btn" title="<?php esc_attr_e('Exit to WordPress', 'sseo-ai-saas'); ?>">
-                        <span class="saas-exit-x">&times;</span>
-                        <span><?php esc_html_e('Exit', 'sseo-ai-saas'); ?></span>
-                    </a>
+                    <?php if ($isAgency): ?>
+                        <a href="<?php echo esc_url($logoutUrl); ?>" class="saas-exit-btn" title="<?php esc_attr_e('Logout', 'sseo-ai-saas'); ?>">
+                            <span><?php esc_html_e('Logout', 'sseo-ai-saas'); ?></span>
+                        </a>
+                    <?php else: ?>
+                        <a href="<?php echo esc_url($exitUrl); ?>" class="saas-exit-btn" title="<?php esc_attr_e('Exit to WordPress', 'sseo-ai-saas'); ?>">
+                            <span class="saas-exit-x">&times;</span>
+                            <span><?php esc_html_e('Exit', 'sseo-ai-saas'); ?></span>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
 

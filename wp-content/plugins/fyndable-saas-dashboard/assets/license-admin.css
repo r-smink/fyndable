@@ -281,6 +281,9 @@ body[class*="sseo-ai"] #wpfooter {
     border-radius: var(--sseo-radius-sm);
     padding: 10px 15px;
     font-size: 14px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
     transition: var(--sseo-transition);
 }
 

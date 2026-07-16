@@ -25,6 +25,25 @@ class SaaSSettings
      */
     public function addSettingsMenu(): void
     {
+        add_menu_page(
+            __('Checkout', 'sseo-ai-saas'),
+            __('Checkout', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-checkout',
+            [$this, 'renderCheckoutPage'],
+            'dashicons-cart',
+            31
+        );
+
+        add_submenu_page(
+            'sseo-ai-checkout',
+            __('Self-Serve Checkout & Payments', 'sseo-ai-saas'),
+            __('Self-Serve Checkout & Payments', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-checkout',
+            [$this, 'renderCheckoutPage'],
+        );
+
         add_submenu_page(
             'sseo-ai-licenses',
             __('SaaS Settings', 'sseo-ai-saas'),
@@ -155,10 +174,16 @@ class SaaSSettings
     
     /**
      * Get Image API provider
+     *
+     * Falls back to the default AI provider when no image provider is selected.
      */
     public function getImageApiProvider(): string
     {
-        return get_option('ai_seo_saas_image_api_provider', '');
+        $provider = get_option('ai_seo_saas_image_api_provider', '');
+        if (empty($provider)) {
+            $provider = get_option('sseo_ai_saas_ai_provider', 'openrouter');
+        }
+        return $provider;
     }
     
     /**
@@ -307,274 +332,365 @@ class SaaSSettings
      */
     public function renderSettingsPage(): void
     {
+        $isOpenRouter = get_option('sseo_ai_saas_ai_provider', 'openrouter') === 'openrouter';
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('SSEO AI SaaS Settings', 'sseo-ai-saas'); ?></h1>
-            
+
+            <style>
+                .sseo-ai-tab-panel { display: none; }
+                .sseo-ai-tab-panel.active { display: block; }
+                .nav-tab-active { background: #fff; border-bottom: 1px solid #fff; }
+            </style>
+
+            <h2 class="nav-tab-wrapper sseo-ai-settings-tabs">
+                <a href="#tab-ai-models" class="nav-tab nav-tab-active" data-tab="ai-models"><?php esc_html_e('AI Models', 'sseo-ai-saas'); ?></a>
+                <a href="#tab-api-credentials" class="nav-tab" data-tab="api-credentials"><?php esc_html_e('API Credentials', 'sseo-ai-saas'); ?></a>
+                <a href="#tab-image-generation" class="nav-tab" data-tab="image-generation"><?php esc_html_e('Image Generation', 'sseo-ai-saas'); ?></a>
+                <a href="#tab-integrations" class="nav-tab" data-tab="integrations"><?php esc_html_e('Integrations', 'sseo-ai-saas'); ?></a>
+                <a href="#tab-tier-pricing" class="nav-tab" data-tab="tier-pricing"><?php esc_html_e('Tier Pricing', 'sseo-ai-saas'); ?></a>
+            </h2>
+
             <form method="post" action="options.php">
                 <?php settings_fields('ai_seo_saas_settings'); ?>
-                
-                <h2><?php esc_html_e('API Credentials', 'sseo-ai-saas'); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="openai_api_key"><?php esc_html_e('OpenAI API Key', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="ai_seo_saas_openai_api_key" id="openai_api_key" 
-                                   value="<?php echo esc_attr($this->getOpenAiApiKey()); ?>" class="regular-text">
-                            <p class="description">
-                                <?php esc_html_e('Your OpenAI API key for AI content generation. Keep this secret!', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="openai_model"><?php esc_html_e('OpenAI Model', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <select name="ai_seo_saas_openai_model" id="openai_model">
-                                <option value="gpt-4" <?php selected($this->getOpenAiModel(), 'gpt-4'); ?>>GPT-4 (Best quality, higher cost)</option>
-                                <option value="gpt-4-turbo" <?php selected($this->getOpenAiModel(), 'gpt-4-turbo'); ?>>GPT-4 Turbo</option>
-                                <option value="gpt-3.5-turbo" <?php selected($this->getOpenAiModel(), 'gpt-3.5-turbo'); ?>>GPT-3.5 Turbo (Cheaper, faster)</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="serp_api_key"><?php esc_html_e('SERP API Key', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="ai_seo_saas_serp_api_key" id="serp_api_key" 
-                                   value="<?php echo esc_attr($this->getSerpApiKey()); ?>" class="regular-text">
-                            <p class="description">
-                                <?php esc_html_e('API key for SERP data (DataForSEO, SerpApi, etc.)', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="serp_api_provider"><?php esc_html_e('SERP Provider', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <select name="ai_seo_saas_serp_api_provider" id="serp_api_provider">
-                                <option value="dataforseo" <?php selected($this->getSerpApiProvider(), 'dataforseo'); ?>>DataForSEO</option>
-                                <option value="serpapi" <?php selected($this->getSerpApiProvider(), 'serpapi'); ?>>SerpApi</option>
-                                <option value="seranking" <?php selected($this->getSerpApiProvider(), 'seranking'); ?>>SE Ranking</option>
-                            </select>
-                        </td>
-                    </tr>
-                </table>
 
-                <h2><?php esc_html_e('OpenRouter (Multi-Model Gateway)', 'sseo-ai-saas'); ?></h2>
-                <p class="description"><?php esc_html_e('OpenRouter provides access to 100+ AI models (OpenAI, Anthropic, Deepseek, Google, Meta) via a single API key. This is the recommended provider.', 'sseo-ai-saas'); ?></p>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="openrouter_api_key"><?php esc_html_e('OpenRouter API Key', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="sseo_ai_saas_openrouter_api_key" id="openrouter_api_key"
-                                   value="<?php echo esc_attr(get_option('sseo_ai_saas_openrouter_api_key', '')); ?>" class="regular-text"
-                                   placeholder="<?php esc_attr_e('sk-or-v1-...', 'sseo-ai-saas'); ?>">
-                            <p class="description">
-                                <?php esc_html_e('Get your API key at', 'sseo-ai-saas'); ?>
-                                <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="ai_provider"><?php esc_html_e('Default AI Provider', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <select name="sseo_ai_saas_ai_provider" id="ai_provider">
-                                <option value="openrouter" <?php selected(get_option('sseo_ai_saas_ai_provider', 'openrouter'), 'openrouter'); ?>><?php esc_html_e('OpenRouter (recommended)', 'sseo-ai-saas'); ?></option>
-                                <option value="openai" <?php selected(get_option('sseo_ai_saas_ai_provider', 'openrouter'), 'openai'); ?>><?php esc_html_e('OpenAI (direct)', 'sseo-ai-saas'); ?></option>
-                            </select>
-                            <p class="description"><?php esc_html_e('OpenRouter routes to many providers. OpenAI direct uses only OpenAI models.', 'sseo-ai-saas'); ?></p>
-                        </td>
-                    </tr>
-                </table>
-
-                <h2><?php esc_html_e('AI Model Routing (Per Function)', 'sseo-ai-saas'); ?></h2>
-                <p class="description"><?php esc_html_e('Choose which AI model to use for each function. Models with a slash (e.g. openai/gpt-4o) route through OpenRouter.', 'sseo-ai-saas'); ?></p>
-                <table class="form-table">
-                    <?php
-                    $routing = get_option('sseo_ai_saas_model_routing', []);
-                    if (!is_array($routing)) { $routing = []; }
-                    $useCases = \SSEOAISaaS\ProviderRouter::getUseCases();
-                    $models = \SSEOAISaaS\ProviderRouter::getAvailableModels();
-                    $defaults = \SSEOAISaaS\ProviderRouter::getDefaultRouting();
-                    foreach ($useCases as $key => $label):
-                        $currentModel = $routing[$key] ?? $defaults[$key] ?? 'openai/gpt-4o';
-                    ?>
-                    <tr>
-                        <th scope="row"><label for="routing_<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></label></th>
-                        <td>
-                            <select name="sseo_ai_saas_model_routing[<?php echo esc_attr($key); ?>]" id="routing_<?php echo esc_attr($key); ?>">
-                                <?php foreach ($models as $modelKey => $modelLabel): ?>
-                                    <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($currentModel, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </table>
-
-                <h2><?php esc_html_e('AI Image Generation API', 'sseo-ai-saas'); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="image_api_provider"><?php esc_html_e('Image API Provider', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <select name="ai_seo_saas_image_api_provider" id="image_api_provider">
-                                <option value=""><?php esc_html_e('-- Disabled --', 'sseo-ai-saas'); ?></option>
-                                <option value="openai" <?php selected($this->getImageApiProvider(), 'openai'); ?>><?php esc_html_e('OpenAI DALL-E 3', 'sseo-ai-saas'); ?></option>
-                                <option value="stability" <?php selected($this->getImageApiProvider(), 'stability'); ?>><?php esc_html_e('Stability AI (Stable Diffusion)', 'sseo-ai-saas'); ?></option>
-                                <option value="openart" <?php selected($this->getImageApiProvider(), 'openart'); ?>><?php esc_html_e('OpenArt (Flux Models)', 'sseo-ai-saas'); ?></option>
-                            </select>
-                            <p class="description">
-                                <?php esc_html_e('Choose AI image generation service for all tenants', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="image_api_key"><?php esc_html_e('Image API Key', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="ai_seo_saas_image_api_key" id="image_api_key" 
-                                   value="<?php echo esc_attr($this->getImageApiKey()); ?>" class="regular-text">
-                            <p class="description">
-                                <?php esc_html_e('Get your key:', 'sseo-ai-saas'); ?>
-                                <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI</a> |
-                                <a href="https://platform.stability.ai/account/keys" target="_blank">Stability AI</a> |
-                                <a href="https://openart.ai/api" target="_blank">OpenArt</a>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="openart_api_key"><?php esc_html_e('OpenArt API Key (Flux)', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="ai_seo_saas_openart_api_key" id="openart_api_key"
-                                   value="<?php echo esc_attr(get_option('ai_seo_saas_openart_api_key', '')); ?>" class="regular-text"
-                                   placeholder="<?php esc_attr_e('OpenArt API key for Flux models', 'sseo-ai-saas'); ?>">
-                            <p class="description"><?php esc_html_e('Only required when OpenArt is selected as image provider.', 'sseo-ai-saas'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="image_api_model"><?php esc_html_e('Default Model', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <select name="ai_seo_saas_image_api_model" id="image_api_model">
-                                <option value="dall-e-3" <?php selected($this->getImageApiModel(), 'dall-e-3'); ?>><?php esc_html_e('DALL-E 3 Standard (1024x1024)', 'sseo-ai-saas'); ?></option>
-                                <option value="dall-e-3-hd" <?php selected($this->getImageApiModel(), 'dall-e-3-hd'); ?>><?php esc_html_e('DALL-E 3 HD (1024x1024)', 'sseo-ai-saas'); ?></option>
-                                <option value="stable-diffusion-xl" <?php selected($this->getImageApiModel(), 'stable-diffusion-xl'); ?>><?php esc_html_e('Stable Diffusion XL 1.0', 'sseo-ai-saas'); ?></option>
-                                <option value="flux-1-schnell" <?php selected($this->getImageApiModel(), 'flux-1-schnell'); ?>><?php esc_html_e('Flux 1 Schnell (Fast)', 'sseo-ai-saas'); ?></option>
-                                <option value="flux-1-dev" <?php selected($this->getImageApiModel(), 'flux-1-dev'); ?>><?php esc_html_e('Flux 1 Dev (Higher quality)', 'sseo-ai-saas'); ?></option>
-                                <option value="flux-1-pro" <?php selected($this->getImageApiModel(), 'flux-1-pro'); ?>><?php esc_html_e('Flux 1 Pro (Best quality)', 'sseo-ai-saas'); ?></option>
-                            </select>
-                            <p class="description">
-                                <?php esc_html_e('Costs: DALL-E 3 Standard ~$0.04/image, HD ~$0.08/image, SDXL ~$0.01/image', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                
-                <h2><?php esc_html_e('Google OAuth Credentials', 'sseo-ai-saas'); ?></h2>
-                <p class="description"><?php esc_html_e('Central Google Cloud OAuth app used by all client sites. Customers never see these credentials — they just click "Connect with Google".', 'sseo-ai-saas'); ?></p>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="google_client_id"><?php esc_html_e('Google OAuth Client ID', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="text" name="ai_seo_saas_google_client_id" id="google_client_id"
-                                   value="<?php echo esc_attr($this->getGoogleClientId()); ?>" class="regular-text"
-                                   placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
-                            <p class="description">
-                                <?php esc_html_e('From Google Cloud Console → APIs & Services → Credentials', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="google_client_secret"><?php esc_html_e('Google OAuth Client Secret', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="ai_seo_saas_google_client_secret" id="google_client_secret"
-                                   value="<?php echo esc_attr($this->getGoogleClientSecret()); ?>" class="regular-text">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="google_ads_dev_token"><?php esc_html_e('Google Ads Developer Token', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="password" name="ai_seo_saas_google_ads_dev_token" id="google_ads_dev_token"
-                                   value="<?php echo esc_attr($this->getGoogleAdsDevToken()); ?>" class="regular-text"
-                                   placeholder="Developer token from Google Ads API Center">
-                            <p class="description">
-                                <?php esc_html_e('Required for Google Ads API. Apply at Google Ads → Tools → API Center.', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-
-                <h2><?php esc_html_e('Support Notifications', 'sseo-ai-saas'); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="support_email"><?php esc_html_e('Support Email Address', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="email" name="ai_seo_saas_support_email" id="support_email"
-                                   value="<?php echo esc_attr($this->getSupportEmail()); ?>" class="regular-text"
-                                   placeholder="<?php echo esc_attr(get_option('admin_email')); ?>">
-                            <p class="description">
-                                <?php esc_html_e('Where new support ticket notifications are sent. Defaults to the WordPress admin email.', 'sseo-ai-saas'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                
-                <?php submit_button(__('Save Settings', 'sseo-ai-saas')); ?>
-            </form>
-
-            <form method="post" action="options.php">
-                <?php settings_fields('ai_seo_saas_limits'); ?>
-
-                <h2><?php esc_html_e('Tier Pricing & Limits', 'sseo-ai-saas'); ?></h2>
-                <p class="description"><?php esc_html_e('Set the monthly subscription price (EUR), API call limit and cost cap (USD) for each tier.', 'sseo-ai-saas'); ?></p>
-
-                <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
-                    <thead>
+                <div class="sseo-ai-tab-panel active" id="tab-ai-models">
+                    <h2><?php esc_html_e('AI Models', 'sseo-ai-saas'); ?></h2>
+                    <p class="description"><?php esc_html_e('Configure the default AI provider and per-function model routing.', 'sseo-ai-saas'); ?></p>
+                    <table class="form-table">
                         <tr>
-                            <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
-                            <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
-                            <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
-                            <th style="width: 150px;"><?php esc_html_e('Cost Cap (USD)', 'sseo-ai-saas'); ?></th>
+                            <th scope="row"><label for="ai_provider"><?php esc_html_e('Default AI Provider', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="sseo_ai_saas_ai_provider" id="ai_provider">
+                                    <option value="openrouter" <?php selected(get_option('sseo_ai_saas_ai_provider', 'openrouter'), 'openrouter'); ?>><?php esc_html_e('OpenRouter (recommended)', 'sseo-ai-saas'); ?></option>
+                                    <option value="openai" <?php selected(get_option('sseo_ai_saas_ai_provider', 'openrouter'), 'openai'); ?>><?php esc_html_e('OpenAI (direct)', 'sseo-ai-saas'); ?></option>
+                                </select>
+                                <p class="description"><?php esc_html_e('OpenRouter routes to many providers. OpenAI direct uses only OpenAI models.', 'sseo-ai-saas'); ?></p>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
+                        <tr>
+                            <th scope="row"><label for="openrouter_api_key"><?php esc_html_e('OpenRouter API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="sseo_ai_saas_openrouter_api_key" id="openrouter_api_key"
+                                       value="<?php echo esc_attr(get_option('sseo_ai_saas_openrouter_api_key', '')); ?>" class="regular-text"
+                                       placeholder="<?php esc_attr_e('sk-or-v1-...', 'sseo-ai-saas'); ?>">
+                                <p class="description">
+                                    <?php esc_html_e('Get your API key at', 'sseo-ai-saas'); ?>
+                                    <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h3><?php esc_html_e('AI Model Routing (Per Function)', 'sseo-ai-saas'); ?></h3>
+                    <p class="description"><?php esc_html_e('Choose which AI model to use for each function. Models with a slash (e.g. openai/gpt-4o) route through OpenRouter.', 'sseo-ai-saas'); ?></p>
+                    <table class="form-table">
                         <?php
-                        $tiers = [
-                            'free' => __('Free', 'sseo-ai-saas'),
-                            'starter' => __('Starter', 'sseo-ai-saas'),
-                            'trial' => __('Trial', 'sseo-ai-saas'),
-                            'professional' => __('Professional', 'sseo-ai-saas'),
-                            'business' => __('Business', 'sseo-ai-saas'),
-                            'agency' => __('Agency', 'sseo-ai-saas'),
-                        ];
-                        foreach ($tiers as $tier => $label):
-                            $price = $this->getPriceForTier($tier);
-                            $calls = $this->getApiLimitForTier($tier);
-                            $cost = $this->getCostLimitForTier($tier);
+                        $routing = get_option('sseo_ai_saas_model_routing', []);
+                        if (!is_array($routing)) { $routing = []; }
+                        $useCases = \SSEOAISaaS\ProviderRouter::getUseCases();
+                        $models = \SSEOAISaaS\ProviderRouter::getAvailableModels();
+                        $defaults = \SSEOAISaaS\ProviderRouter::getDefaultRouting();
+                        foreach ($useCases as $key => $label):
+                            $currentModel = $routing[$key] ?? $defaults[$key] ?? 'openai/gpt-4o';
                         ?>
                         <tr>
-                            <td><strong><?php echo esc_html($label); ?></strong></td>
+                            <th scope="row"><label for="routing_<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></label></th>
                             <td>
-                                <input type="number" step="0.01" min="0"
-                                       name="ai_seo_saas_<?php echo esc_attr($tier); ?>_price"
-                                       value="<?php echo esc_attr(number_format($price, 2, '.', '')); ?>"
-                                       style="width: 120px;">
-                            </td>
-                            <td>
-                                <input type="number" step="1" min="0"
-                                       name="ai_seo_saas_<?php echo esc_attr($tier); ?>_api_calls"
-                                       value="<?php echo esc_attr($calls); ?>"
-                                       style="width: 120px;">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" min="0"
-                                       name="ai_seo_saas_<?php echo esc_attr($tier); ?>_cost_limit"
-                                       value="<?php echo esc_attr(number_format($cost, 2, '.', '')); ?>"
-                                       style="width: 120px;">
+                                <select name="sseo_ai_saas_model_routing[<?php echo esc_attr($key); ?>]" id="routing_<?php echo esc_attr($key); ?>">
+                                    <?php foreach ($models as $modelKey => $modelLabel): ?>
+                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($currentModel, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </td>
                         </tr>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
+                    </table>
+                </div>
 
-                <?php submit_button(__('Save Tier Settings', 'sseo-ai-saas')); ?>
+                <div class="sseo-ai-tab-panel" id="tab-api-credentials">
+                    <h2><?php esc_html_e('API Credentials', 'sseo-ai-saas'); ?></h2>
+                    <table class="form-table">
+                        <tr class="sseo-ai-openai-only"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
+                            <th scope="row"><label for="openai_api_key"><?php esc_html_e('OpenAI API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_openai_api_key" id="openai_api_key"
+                                       value="<?php echo esc_attr($this->getOpenAiApiKey()); ?>" class="regular-text">
+                                <p class="description">
+                                    <?php esc_html_e('Your OpenAI API key for AI content generation. Keep this secret!', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr class="sseo-ai-openai-only"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
+                            <th scope="row"><label for="openai_model"><?php esc_html_e('OpenAI Model', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="ai_seo_saas_openai_model" id="openai_model">
+                                    <option value="gpt-4" <?php selected($this->getOpenAiModel(), 'gpt-4'); ?>>GPT-4 (Best quality, higher cost)</option>
+                                    <option value="gpt-4-turbo" <?php selected($this->getOpenAiModel(), 'gpt-4-turbo'); ?>>GPT-4 Turbo</option>
+                                    <option value="gpt-3.5-turbo" <?php selected($this->getOpenAiModel(), 'gpt-3.5-turbo'); ?>>GPT-3.5 Turbo (Cheaper, faster)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="serp_api_key"><?php esc_html_e('SERP API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_serp_api_key" id="serp_api_key"
+                                       value="<?php echo esc_attr($this->getSerpApiKey()); ?>" class="regular-text">
+                                <p class="description">
+                                    <?php esc_html_e('API key for SERP data (DataForSEO, SerpApi, etc.)', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="serp_api_provider"><?php esc_html_e('SERP Provider', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="ai_seo_saas_serp_api_provider" id="serp_api_provider">
+                                    <option value="dataforseo" <?php selected($this->getSerpApiProvider(), 'dataforseo'); ?>>DataForSEO</option>
+                                    <option value="serpapi" <?php selected($this->getSerpApiProvider(), 'serpapi'); ?>>SerpApi</option>
+                                    <option value="seranking" <?php selected($this->getSerpApiProvider(), 'seranking'); ?>>SE Ranking</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-tab-panel" id="tab-image-generation">
+                    <h2><?php esc_html_e('AI Image Generation API', 'sseo-ai-saas'); ?></h2>
+                    <p class="description">
+                        <?php if ($isOpenRouter): ?>
+                            <?php esc_html_e('Image generation is routed through OpenRouter using the selected model below.', 'sseo-ai-saas'); ?>
+                        <?php else: ?>
+                            <?php esc_html_e('Choose the image generation service for all tenants.', 'sseo-ai-saas'); ?>
+                        <?php endif; ?>
+                    </p>
+                    <table class="form-table">
+                        <tr class="sseo-ai-image-provider-row"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
+                            <th scope="row"><label for="image_api_provider"><?php esc_html_e('Image API Provider', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="ai_seo_saas_image_api_provider" id="image_api_provider">
+                                    <option value=""><?php esc_html_e('-- Use default AI provider --', 'sseo-ai-saas'); ?></option>
+                                    <option value="openai" <?php selected(get_option('ai_seo_saas_image_api_provider', ''), 'openai'); ?>><?php esc_html_e('OpenAI DALL-E 3', 'sseo-ai-saas'); ?></option>
+                                    <option value="openrouter" <?php selected(get_option('ai_seo_saas_image_api_provider', ''), 'openrouter'); ?>><?php esc_html_e('OpenRouter (Multi-Provider Image API)', 'sseo-ai-saas'); ?></option>
+                                    <option value="stability" <?php selected(get_option('ai_seo_saas_image_api_provider', ''), 'stability'); ?>><?php esc_html_e('Stability AI (Stable Diffusion)', 'sseo-ai-saas'); ?></option>
+                                    <option value="openart" <?php selected(get_option('ai_seo_saas_image_api_provider', ''), 'openart'); ?>><?php esc_html_e('OpenArt (Flux Models)', 'sseo-ai-saas'); ?></option>
+                                </select>
+                                <p class="description">
+                                    <?php esc_html_e('Choose AI image generation service for all tenants. Leave empty to use the default AI provider.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr class="sseo-ai-image-key-row"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
+                            <th scope="row"><label for="image_api_key"><?php esc_html_e('Image API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_image_api_key" id="image_api_key"
+                                       value="<?php echo esc_attr($this->getImageApiKey()); ?>" class="regular-text">
+                                <p class="description">
+                                    <?php esc_html_e('Get your key:', 'sseo-ai-saas'); ?>
+                                    <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI</a> |
+                                    <a href="https://platform.stability.ai/account/keys" target="_blank">Stability AI</a> |
+                                    <a href="https://openart.ai/api" target="_blank">OpenArt</a>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr class="sseo-ai-image-key-row"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
+                            <th scope="row"><label for="openart_api_key"><?php esc_html_e('OpenArt API Key (Flux)', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_openart_api_key" id="openart_api_key"
+                                       value="<?php echo esc_attr(get_option('ai_seo_saas_openart_api_key', '')); ?>" class="regular-text"
+                                       placeholder="<?php esc_attr_e('OpenArt API key for Flux models', 'sseo-ai-saas'); ?>">
+                                <p class="description"><?php esc_html_e('Only required when OpenArt is selected as image provider.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="image_api_model"><?php esc_html_e('Default Model', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="ai_seo_saas_image_api_model" id="image_api_model">
+                                    <optgroup label="<?php esc_attr_e('OpenAI DALL-E', 'sseo-ai-saas'); ?>">
+                                        <option value="dall-e-3" <?php selected($this->getImageApiModel(), 'dall-e-3'); ?>><?php esc_html_e('DALL-E 3 Standard (1024x1024)', 'sseo-ai-saas'); ?></option>
+                                        <option value="dall-e-3-hd" <?php selected($this->getImageApiModel(), 'dall-e-3-hd'); ?>><?php esc_html_e('DALL-E 3 HD (1024x1024)', 'sseo-ai-saas'); ?></option>
+                                    </optgroup>
+                                    <optgroup label="<?php esc_attr_e('OpenRouter Image API', 'sseo-ai-saas'); ?>">
+                                        <option value="openai/gpt-image-2" <?php selected($this->getImageApiModel(), 'openai/gpt-image-2'); ?>><?php esc_html_e('OpenAI GPT Image 2 (OpenRouter)', 'sseo-ai-saas'); ?></option>
+                                        <option value="openai/gpt-image-1" <?php selected($this->getImageApiModel(), 'openai/gpt-image-1'); ?>><?php esc_html_e('OpenAI GPT Image 1 (OpenRouter)', 'sseo-ai-saas'); ?></option>
+                                        <option value="bytedance-seed/seedream-4.5" <?php selected($this->getImageApiModel(), 'bytedance-seed/seedream-4.5'); ?>><?php esc_html_e('Seedream 4.5 (OpenRouter)', 'sseo-ai-saas'); ?></option>
+                                        <option value="google/gemini-3.1-flash-image" <?php selected($this->getImageApiModel(), 'google/gemini-3.1-flash-image'); ?>><?php esc_html_e('Gemini 3.1 Flash Image (OpenRouter)', 'sseo-ai-saas'); ?></option>
+                                        <option value="black-forest-labs/flux.2-pro" <?php selected($this->getImageApiModel(), 'black-forest-labs/flux.2-pro'); ?>><?php esc_html_e('FLUX.2 Pro (OpenRouter)', 'sseo-ai-saas'); ?></option>
+                                        <option value="black-forest-labs/flux.2-klein-4b" <?php selected($this->getImageApiModel(), 'black-forest-labs/flux.2-klein-4b'); ?>><?php esc_html_e('FLUX.2 Klein (OpenRouter, fast)', 'sseo-ai-saas'); ?></option>
+                                        <option value="sourceful/riverflow-v2.5-pro" <?php selected($this->getImageApiModel(), 'sourceful/riverflow-v2.5-pro'); ?>><?php esc_html_e('Riverflow V2.5 Pro (OpenRouter)', 'sseo-ai-saas'); ?></option>
+                                    </optgroup>
+                                    <optgroup label="<?php esc_attr_e('Stability AI', 'sseo-ai-saas'); ?>">
+                                        <option value="stable-diffusion-xl" <?php selected($this->getImageApiModel(), 'stable-diffusion-xl'); ?>><?php esc_html_e('Stable Diffusion XL 1.0', 'sseo-ai-saas'); ?></option>
+                                    </optgroup>
+                                    <optgroup label="<?php esc_attr_e('OpenArt Flux', 'sseo-ai-saas'); ?>">
+                                        <option value="flux-1-schnell" <?php selected($this->getImageApiModel(), 'flux-1-schnell'); ?>><?php esc_html_e('Flux 1 Schnell (Fast)', 'sseo-ai-saas'); ?></option>
+                                        <option value="flux-1-dev" <?php selected($this->getImageApiModel(), 'flux-1-dev'); ?>><?php esc_html_e('Flux 1 Dev (Higher quality)', 'sseo-ai-saas'); ?></option>
+                                        <option value="flux-1-pro" <?php selected($this->getImageApiModel(), 'flux-1-pro'); ?>><?php esc_html_e('Flux 1 Pro (Best quality)', 'sseo-ai-saas'); ?></option>
+                                    </optgroup>
+                                </select>
+                                <p class="description">
+                                    <?php esc_html_e('Choose the image model for the selected provider. When using OpenRouter, DALL-E 3 is automatically mapped to OpenAI GPT Image 2.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-tab-panel" id="tab-integrations">
+                    <h2><?php esc_html_e('Google OAuth Credentials', 'sseo-ai-saas'); ?></h2>
+                    <p class="description"><?php esc_html_e('Central Google Cloud OAuth app used by all client sites. Customers never see these credentials — they just click "Connect with Google".', 'sseo-ai-saas'); ?></p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="google_client_id"><?php esc_html_e('Google OAuth Client ID', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="ai_seo_saas_google_client_id" id="google_client_id"
+                                       value="<?php echo esc_attr($this->getGoogleClientId()); ?>" class="regular-text"
+                                       placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
+                                <p class="description">
+                                    <?php esc_html_e('From Google Cloud Console → APIs & Services → Credentials', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="google_client_secret"><?php esc_html_e('Google OAuth Client Secret', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_google_client_secret" id="google_client_secret"
+                                       value="<?php echo esc_attr($this->getGoogleClientSecret()); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="google_ads_dev_token"><?php esc_html_e('Google Ads Developer Token', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_google_ads_dev_token" id="google_ads_dev_token"
+                                       value="<?php echo esc_attr($this->getGoogleAdsDevToken()); ?>" class="regular-text"
+                                       placeholder="Developer token from Google Ads API Center">
+                                <p class="description">
+                                    <?php esc_html_e('Required for Google Ads API. Apply at Google Ads → Tools → API Center.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h2><?php esc_html_e('Support Notifications', 'sseo-ai-saas'); ?></h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="support_email"><?php esc_html_e('Support Email Address', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="email" name="ai_seo_saas_support_email" id="support_email"
+                                       value="<?php echo esc_attr($this->getSupportEmail()); ?>" class="regular-text"
+                                       placeholder="<?php echo esc_attr(get_option('admin_email')); ?>">
+                                <p class="description">
+                                    <?php esc_html_e('Where new support ticket notifications are sent. Defaults to the WordPress admin email.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <?php submit_button(__('Save Settings', 'sseo-ai-saas')); ?>
             </form>
+
+            <div class="sseo-ai-tab-panel" id="tab-tier-pricing">
+                <form method="post" action="options.php">
+                    <?php settings_fields('ai_seo_saas_limits'); ?>
+
+                    <h2><?php esc_html_e('Tier Pricing & Limits', 'sseo-ai-saas'); ?></h2>
+                    <p class="description"><?php esc_html_e('Set the monthly subscription price (EUR), API call limit and cost cap (USD) for each tier.', 'sseo-ai-saas'); ?></p>
+
+                    <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                                <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
+                                <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
+                                <th style="width: 150px;"><?php esc_html_e('Cost Cap (USD)', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $tiers = [
+                                'free' => __('Free', 'sseo-ai-saas'),
+                                'starter' => __('Starter', 'sseo-ai-saas'),
+                                'trial' => __('Trial', 'sseo-ai-saas'),
+                                'professional' => __('Professional', 'sseo-ai-saas'),
+                                'business' => __('Business', 'sseo-ai-saas'),
+                                'agency' => __('Agency', 'sseo-ai-saas'),
+                            ];
+                            foreach ($tiers as $tier => $label):
+                                $price = $this->getPriceForTier($tier);
+                                $calls = $this->getApiLimitForTier($tier);
+                                $cost = $this->getCostLimitForTier($tier);
+                            ?>
+                            <tr>
+                                <td><strong><?php echo esc_html($label); ?></strong></td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                           name="ai_seo_saas_<?php echo esc_attr($tier); ?>_price"
+                                           value="<?php echo esc_attr(number_format($price, 2, '.', '')); ?>"
+                                           style="width: 120px;">
+                                </td>
+                                <td>
+                                    <input type="number" step="1" min="0"
+                                           name="ai_seo_saas_<?php echo esc_attr($tier); ?>_api_calls"
+                                           value="<?php echo esc_attr($calls); ?>"
+                                           style="width: 120px;">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                           name="ai_seo_saas_<?php echo esc_attr($tier); ?>_cost_limit"
+                                           value="<?php echo esc_attr(number_format($cost, 2, '.', '')); ?>"
+                                           style="width: 120px;">
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+
+                    <?php submit_button(__('Save Tier Settings', 'sseo-ai-saas')); ?>
+                </form>
+            </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var tabs = document.querySelectorAll('.sseo-ai-settings-tabs .nav-tab');
+                var panels = document.querySelectorAll('.sseo-ai-tab-panel');
+                tabs.forEach(function(tab) {
+                    tab.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var target = this.getAttribute('data-tab');
+                        tabs.forEach(function(t) { t.classList.remove('nav-tab-active'); });
+                        panels.forEach(function(p) { p.classList.remove('active'); });
+                        this.classList.add('nav-tab-active');
+                        var panel = document.getElementById('tab-' + target);
+                        if (panel) { panel.classList.add('active'); }
+                    });
+                });
+
+                function updateProviderFields() {
+                    var provider = document.getElementById('ai_provider').value;
+                    var openaiRows = document.querySelectorAll('.sseo-ai-openai-only');
+                    var imageProviderRows = document.querySelectorAll('.sseo-ai-image-provider-row');
+                    var imageKeyRows = document.querySelectorAll('.sseo-ai-image-key-row');
+                    var display = provider === 'openrouter' ? 'none' : '';
+                    openaiRows.forEach(function(row) { row.style.display = display; });
+                    imageProviderRows.forEach(function(row) { row.style.display = display; });
+                    imageKeyRows.forEach(function(row) { row.style.display = display; });
+                }
+                var aiProvider = document.getElementById('ai_provider');
+                if (aiProvider) {
+                    aiProvider.addEventListener('change', updateProviderFields);
+                    updateProviderFields();
+                }
+            });
+            </script>
+        </div>
+        <?php
+    }
+
+    public function renderCheckoutPage(): void
+    {
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Checkout', 'sseo-ai-saas'); ?></h1>
 
             <form method="post" action="options.php">
                 <?php settings_fields('sseo_ai_saas_billing'); ?>
@@ -651,15 +767,13 @@ class SaaSSettings
                     </tr>
                 </table>
 
-                <?php submit_button(__('Save Billing Settings', 'sseo-ai-saas')); ?>
+                <?php submit_button(__('Save Checkout Settings', 'sseo-ai-saas')); ?>
             </form>
         </div>
         <?php
     }
-    
-    /**
-     * Render cost dashboard
-     */
+
+
     public function renderCostDashboard(): void
     {
         global $wpdb;

@@ -33,6 +33,7 @@ class ContentCalendar
         add_action('transition_post_status', [$this, 'handleStatusChange'], 10, 3);
         add_action('wp_ajax_sseo_ai_assign_content', [$this, 'ajaxAssignContent']);
         add_action('wp_ajax_sseo_ai_approve_content', [$this, 'ajaxApproveContent']);
+        add_action('wp_ajax_sseo_ai_move_draft', [$this, 'ajaxMoveDraft']);
         
         // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveWorkflowMetaBox'], 10, 2);
@@ -82,8 +83,9 @@ class ContentCalendar
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
-            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
+            .sseo-two-columns { display: grid; grid-template-columns: 2.5fr 1fr; gap: 30px; }
+            .sseo-full-width-row { display: grid; grid-template-columns: 1fr; gap: 30px; }
+            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } .sseo-full-width-row { grid-template-columns: 1fr; } }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -126,6 +128,10 @@ class ContentCalendar
                 .sseo-calendar .content-item.scheduled { background: #d1e7dd; }
                 .sseo-calendar .today { background: #f0f6fc; }
                 .sseo-calendar .content-gap { background: #f8d7da; }
+                .sseo-calendar td.drag-over { background: #e5e7eb; border: 2px dashed #2271b1; }
+                .sseo-calendar .content-item.draft { cursor: grab; }
+                .sseo-calendar .content-item.draft:active { cursor: grabbing; }
+                .sseo-calendar .content-item.dragging { opacity: 0.5; }
                 </style>
                 
                 <table class="sseo-calendar">
@@ -151,21 +157,33 @@ class ContentCalendar
                             if ($day > $daysInMonth) break;
                         ?>
                         <tr>
-                            <?php for ($dayOfWeek = 1; $dayOfWeek <= 7; $dayOfWeek++): ?>
-                            <td class="<?php echo ($week === 0 && $dayOfWeek < $firstDay) || $day > $daysInMonth ? '' : ''; ?>
-                                       <?php 
-                                       $currentDate = sprintf('%04d-%02d-%02d', $currentYear, $currentMonth, $day);
-                                       echo $currentDate === $today ? 'today' : ''; 
-                                       ?>">
-                                <?php if (($week === 0 && $dayOfWeek >= $firstDay) || ($week > 0 && $day <= $daysInMonth)): ?>
+                            <?php for ($dayOfWeek = 1; $dayOfWeek <= 7; $dayOfWeek++):
+                                $isValidDay = ($week === 0 && $dayOfWeek >= $firstDay) || ($week > 0 && $day <= $daysInMonth);
+                                $currentDate = sprintf('%04d-%02d-%02d', $currentYear, $currentMonth, $day);
+                                $cellClasses = $isValidDay && $currentDate === $today ? 'today' : '';
+                            ?>
+                            <td class="<?php echo esc_attr($cellClasses); ?>"
+                                <?php if ($isValidDay): ?>
+                                data-date="<?php echo esc_attr($currentDate); ?>"
+                                ondragover="sseoDragOver(event)"
+                                ondrop="sseoDrop(event)"
+                                ondragenter="sseoDragEnter(event)"
+                                ondragleave="sseoDragLeave(event)"
+                                <?php endif; ?>>
+                                <?php if ($isValidDay): ?>
                                     <div class="day-number"><?php echo $day; ?></div>
                                     
                                     <?php
-                                    $dateKey = sprintf('%04d-%02d-%02d', $currentYear, $currentMonth, $day);
+                                    $dateKey = $currentDate;
                                     if (isset($calendarData[$dateKey])):
                                         foreach ($calendarData[$dateKey] as $item):
                                     ?>
                                     <div class="content-item <?php echo esc_attr($item['status']); ?>" 
+                                         <?php if ($item['status'] === 'draft'): ?>
+                                         draggable="true"
+                                         ondragstart="sseoDragStart(event)"
+                                         data-post-id="<?php echo esc_attr($item['id']); ?>"
+                                         <?php endif; ?>
                                          onclick="sseoEditContent(<?php echo $item['id']; ?>)"
                                          title="<?php echo esc_attr($item['title']); ?>">
                                         <?php echo esc_html(mb_substr($item['title'], 0, 30)); ?>
@@ -224,47 +242,6 @@ class ContentCalendar
                 </ul>
                 <?php else: ?>
                 <p style="color: #00a32a;">✓ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
-                    </div>
-                    
-                    <!-- Keyword Opportunity Timeline -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Keyword Opportunity Timeline', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($keywordOpportunities)): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Opportunity Type', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Suggested Date', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($keywordOpportunities as $opp): ?>
-                        <tr>
-                            <td><strong><?php echo esc_html($opp['keyword']); ?></strong></td>
-                            <td><?php echo esc_html($opp['type']); ?></td>
-                            <td><?php echo esc_html(date('M j, Y', strtotime($opp['suggested_date']))); ?></td>
-                            <td>
-                                <span style="color: <?php echo $opp['priority'] === 'high' ? '#d63638' : '#dba617'; ?>;">
-                                    <?php echo esc_html(ucfirst($opp['priority'])); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <button type="button" class="button button-small" 
-                                        onclick="sseoCreateFromOpportunity('<?php echo esc_js($opp['keyword']); ?>', '<?php echo esc_js($opp['suggested_date']); ?>')">
-                                    <?php esc_html_e('Create Content', 'ai-seo-client'); ?>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('No keyword opportunities identified yet.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
                     </div>
                     
@@ -341,6 +318,49 @@ class ContentCalendar
                     </div>
                 </div>
             </div>
+            
+            <div class="sseo-full-width-row">
+                <!-- Keyword Opportunity Timeline -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Keyword Opportunity Timeline', 'ai-seo-client'); ?></h2>
+                    
+                    <?php if (!empty($keywordOpportunities)): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Opportunity Type', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Suggested Date', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($keywordOpportunities as $opp): ?>
+                            <tr>
+                                <td><strong><?php echo esc_html($opp['keyword']); ?></strong></td>
+                                <td><?php echo esc_html($opp['type']); ?></td>
+                                <td><?php echo esc_html(date('M j, Y', strtotime($opp['suggested_date']))); ?></td>
+                                <td>
+                                    <span style="color: <?php echo $opp['priority'] === 'high' ? '#d63638' : '#dba617'; ?>;">
+                                        <?php echo esc_html(ucfirst($opp['priority'])); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="button button-small" 
+                                            onclick="sseoCreateFromOpportunity('<?php echo esc_js($opp['keyword']); ?>', '<?php echo esc_js($opp['suggested_date']); ?>')">
+                                        <?php esc_html_e('Create Content', 'ai-seo-client'); ?>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php else: ?>
+                    <p><?php esc_html_e('No keyword opportunities identified yet.', 'ai-seo-client'); ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
         
         <script>
@@ -413,6 +433,72 @@ class ContentCalendar
                 }
             });
         }
+
+        // Drag & Drop for draft posts
+        let draggedEl = null;
+
+        function sseoDragStart(e) {
+            draggedEl = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.postId);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function sseoDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function sseoDragEnter(e) {
+            e.preventDefault();
+            const cell = e.target.closest('td[data-date]');
+            if (cell) {
+                cell.classList.add('drag-over');
+            }
+        }
+
+        function sseoDragLeave(e) {
+            const cell = e.target.closest('td[data-date]');
+            if (cell) {
+                cell.classList.remove('drag-over');
+            }
+        }
+
+        function sseoDrop(e) {
+            e.preventDefault();
+            const cell = e.target.closest('td[data-date]');
+            if (!cell) return;
+
+            cell.classList.remove('drag-over');
+
+            const postId = e.dataTransfer.getData('text/plain');
+            const date = cell.dataset.date;
+            if (!postId || !date) return;
+
+            sseoMoveDraft(postId, date, draggedEl);
+        }
+
+        function sseoMoveDraft(postId, date, el) {
+            jQuery.post(ajaxurl, {
+                action: 'sseo_ai_move_draft',
+                post_id: postId,
+                date: date,
+                nonce: '<?php echo wp_create_nonce('sseo_calendar'); ?>'
+            }, function(response) {
+                if (el) el.classList.remove('dragging');
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.data.message || 'Error scheduling post');
+                }
+            });
+        }
+
+        document.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('content-item')) {
+                e.target.classList.remove('dragging');
+            }
+        });
         </script>
         <?php
     }
@@ -591,19 +677,21 @@ class ContentCalendar
         $endDate = date('Y-m-t', strtotime($startDate));
         
         $posts = $wpdb->get_results($wpdb->prepare("
-            SELECT ID, post_title, post_status, post_date
+            SELECT ID, post_title, post_status, post_date, post_modified
             FROM {$wpdb->posts}
             WHERE post_type IN ('post', 'page')
             AND (
-                (post_status = 'publish' AND post_date BETWEEN %s AND %s)
-                OR (post_status IN ('draft', 'pending', 'future') AND post_modified BETWEEN %s AND %s)
+                (post_status IN ('publish', 'future') AND post_date BETWEEN %s AND %s)
+                OR (post_status IN ('draft', 'pending') AND post_modified BETWEEN %s AND %s)
             )
             ORDER BY post_date ASC
         ", $startDate, $endDate . ' 23:59:59', $startDate, $endDate . ' 23:59:59'));
         
         $calendar = [];
         foreach ($posts as $post) {
-            $date = date('Y-m-d', strtotime($post->post_date));
+            $date = date('Y-m-d', strtotime(
+                in_array($post->post_status, ['draft', 'pending'], true) ? $post->post_modified : $post->post_date
+            ));
             
             if (!isset($calendar[$date])) {
                 $calendar[$date] = [];
@@ -912,6 +1000,54 @@ class ContentCalendar
         wp_publish_post($postId);
         
         wp_send_json_success(['message' => 'Content approved']);
+    }
+    
+    /**
+     * AJAX: Move a draft post to another date and schedule it
+     */
+    public function ajaxMoveDraft(): void
+    {
+        check_ajax_referer('sseo_calendar', 'nonce');
+        
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+        
+        $postId = (int)($_POST['post_id'] ?? 0);
+        $date = sanitize_text_field($_POST['date'] ?? '');
+        
+        if (!$postId || !$date) {
+            wp_send_json_error(['message' => 'Post ID and date required']);
+        }
+        
+        $post = get_post($postId);
+        if (!$post || !in_array($post->post_type, ['post', 'page'], true)) {
+            wp_send_json_error(['message' => 'Post not found']);
+        }
+        
+        if (!get_current_user_id() || !current_user_can('edit_post', $postId)) {
+            wp_send_json_error(['message' => 'You cannot edit this post']);
+        }
+        
+        $newDate = date('Y-m-d H:i:s', strtotime($date . ' 09:00:00'));
+        $gmtDate = get_gmt_from_date($newDate);
+        
+        $result = wp_update_post([
+            'ID' => $postId,
+            'post_date' => $newDate,
+            'post_date_gmt' => $gmtDate,
+            'post_modified' => current_time('mysql'),
+            'post_modified_gmt' => current_time('mysql', true),
+            'post_status' => 'future',
+        ], true);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()]);
+        }
+        
+        update_post_meta($postId, '_sseo_ai_workflow_status', 'scheduled');
+        
+        wp_send_json_success(['message' => 'Post scheduled']);
     }
     
     /**

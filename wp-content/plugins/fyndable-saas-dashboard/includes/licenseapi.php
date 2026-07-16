@@ -328,9 +328,11 @@ class LicenseAPI
             'model_routing' => get_option('sseo_ai_saas_model_routing', []),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiProvider() === 'openart'
-                    ? get_option('ai_seo_saas_openart_api_key', '')
-                    : $settings->getImageApiKey(),
+                'key' => match ($settings->getImageApiProvider()) {
+                    'openart' => get_option('ai_seo_saas_openart_api_key', ''),
+                    'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                    default => $settings->getImageApiKey(),
+                },
                 'model' => $settings->getImageApiModel(),
             ],
         ], 200);
@@ -393,9 +395,11 @@ class LicenseAPI
             'model_routing' => get_option('sseo_ai_saas_model_routing', []),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiProvider() === 'openart'
-                    ? get_option('ai_seo_saas_openart_api_key', '')
-                    : $settings->getImageApiKey(),
+                'key' => match ($settings->getImageApiProvider()) {
+                    'openart' => get_option('ai_seo_saas_openart_api_key', ''),
+                    'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                    default => $settings->getImageApiKey(),
+                },
                 'model' => $settings->getImageApiModel(),
             ],
         ], 200);
@@ -481,9 +485,11 @@ class LicenseAPI
             'model_routing' => get_option('sseo_ai_saas_model_routing', []),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiProvider() === 'openart'
-                    ? get_option('ai_seo_saas_openart_api_key', '')
-                    : $settings->getImageApiKey(),
+                'key' => match ($settings->getImageApiProvider()) {
+                    'openart' => get_option('ai_seo_saas_openart_api_key', ''),
+                    'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                    default => $settings->getImageApiKey(),
+                },
                 'model' => $settings->getImageApiModel(),
             ],
         ], 200);

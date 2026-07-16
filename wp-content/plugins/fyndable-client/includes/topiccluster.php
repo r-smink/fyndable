@@ -103,6 +103,7 @@ class TopicCluster
         $wordCount = (int) ($request->get_param('word_count') ?: 1500);
         $contentType = sanitize_text_field($request->get_param('content_type') ?: 'article');
         $clusterContext = sanitize_textarea_field($request->get_param('cluster_context') ?: '');
+        $scheduleDate = sanitize_text_field($request->get_param('schedule_date') ?: '');
 
         if (empty($title) || empty($keyword)) {
             return new \WP_Error('missing_params', __('Title and keyword are required', 'ai-seo-client'), ['status' => 400]);
@@ -115,11 +116,10 @@ class TopicCluster
             return $content;
         }
 
-        // Create WordPress post draft
-        $postId = wp_insert_post([
+        // Determine post status and date based on scheduling
+        $postData = [
             'post_title'   => $title,
             'post_content' => $content['content'],
-            'post_status'  => 'draft',
             'post_type'    => 'post',
             'post_author'  => get_current_user_id(),
             'meta_input'   => [
@@ -129,7 +129,16 @@ class TopicCluster
                 '_sseo_ai_generated' => '1',
                 '_sseo_ai_generated_date' => current_time('mysql'),
             ],
-        ]);
+        ];
+
+        if (!empty($scheduleDate) && strtotime(get_gmt_from_date($scheduleDate)) > time()) {
+            $postData['post_status'] = 'future';
+            $postData['post_date']   = $scheduleDate;
+        } else {
+            $postData['post_status'] = 'draft';
+        }
+
+        $postId = wp_insert_post($postData);
 
         if (is_wp_error($postId)) {
             return $postId;
@@ -575,9 +584,15 @@ PROMPT;
                     <!-- Pages Review Table (Hidden by default) -->
                     <div id="tc-review-section" style="display:none;margin-top:20px;">
                         <div class="postbox" style="padding:20px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
                                 <h3 style="margin:0;">📄 <?php esc_html_e('All Pages in Cluster', 'ai-seo-client'); ?></h3>
-                                <div style="display:flex;gap:10px;">
+                                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                                    <div style="display:flex;gap:8px;align-items:center;">
+                                        <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Start date', 'ai-seo-client'); ?></label>
+                                        <input type="date" id="tc-schedule-start" class="small-text" style="font-size:12px;">
+                                        <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Gap (days)', 'ai-seo-client'); ?></label>
+                                        <input type="number" id="tc-schedule-gap" value="3" min="1" class="small-text" style="width:60px;font-size:12px;">
+                                    </div>
                                     <button type="button" class="button" id="tc-select-all"><?php esc_html_e('Select All', 'ai-seo-client'); ?></button>
                                     <button type="button" class="button" id="tc-deselect-all"><?php esc_html_e('Deselect All', 'ai-seo-client'); ?></button>
                                     <button type="button" class="button button-primary" id="tc-bulk-generate" style="background:#16a34a;border-color:#16a34a;">
@@ -774,7 +789,7 @@ PROMPT;
             });
 
             // Generate content for cluster item
-            function generateClusterContent(title, keyword, wordCount, contentType, buttonElement) {
+            function generateClusterContent(title, keyword, wordCount, contentType, buttonElement, scheduleDate) {
                 var context = currentCluster ? 'Part of "' + (currentCluster.topic || '') + '" topic cluster. Related pages: ' +
                     ((currentCluster.clusters||[]).map(function(c) {
                         return (c.hub_page?.title||'') + ', ' + (c.supporting_pages||[]).map(function(s){return s.title;}).join(', ');
@@ -785,18 +800,24 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
                 if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
+                var payload = {
+                    title: title,
+                    keyword: keyword,
+                    word_count: wordCount || 1500,
+                    content_type: contentType || 'article',
+                    cluster_context: context
+                };
+                if (scheduleDate) {
+                    payload.schedule_date = scheduleDate;
+                }
+
                 wp.apiFetch({
                     path: '/sseo-ai/v1/clusters/generate-content',
                     method: 'POST',
-                    data: {
-                        title: title,
-                        keyword: keyword,
-                        word_count: wordCount || 1500,
-                        content_type: contentType || 'article',
-                        cluster_context: context
-                    }
+                    data: payload
                 }).then(function(res) {
-                    btn.prop('disabled', false).html('✓ <?php echo esc_js(__('Created Draft', 'ai-seo-client')); ?>');
+                    var statusLabel = scheduleDate ? '✓ <?php echo esc_js(__('Scheduled', 'ai-seo-client')); ?>' : '✓ <?php echo esc_js(__('Created Draft', 'ai-seo-client')); ?>';
+                    btn.prop('disabled', false).html(statusLabel);
                     btn.after(' <a href="' + res.edit_url + '" class="button button-small" style="margin-left:5px;"><?php echo esc_js(__('Edit', 'ai-seo-client')); ?></a>');
                     setTimeout(function() {
                         btn.text(originalText).prop('disabled', false);
@@ -910,6 +931,24 @@ PROMPT;
                 
                 // Populate review table
                 populateReviewTable(data);
+
+                // Set default schedule start date to tomorrow if empty
+                if (!$('#tc-schedule-start').val()) {
+                    var tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    var yyyy = tomorrow.getFullYear();
+                    var mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                    var dd = String(tomorrow.getDate()).padStart(2, '0');
+                    $('#tc-schedule-start').val(yyyy + '-' + mm + '-' + dd);
+                }
+
+                // Suggest gap based on content calendar (fallback to 3 days)
+                var totalPages = data.total_pages || (window.tcAllPages || []).length;
+                var months = data.estimated_months || 1;
+                if (totalPages && months) {
+                    var suggestedGap = Math.max(1, Math.round((months * 30) / totalPages));
+                    $('#tc-schedule-gap').val(suggestedGap);
+                }
             }
 
             // Review Table Population
@@ -1056,7 +1095,27 @@ PROMPT;
                     return;
                 }
 
-                if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages? This may take several minutes.', 'ai-seo-client')); ?>')) {
+                // Scheduling settings
+                var startDateInput = $('#tc-schedule-start').val();
+                var gapDays = parseInt($('#tc-schedule-gap').val(), 10) || 3;
+                if (!startDateInput) {
+                    // Default to tomorrow
+                    var tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    var yyyy = tomorrow.getFullYear();
+                    var mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                    var dd = String(tomorrow.getDate()).padStart(2, '0');
+                    startDateInput = yyyy + '-' + mm + '-' + dd;
+                }
+                var startDate = new Date(startDateInput + 'T09:00:00');
+                var scheduledDates = {};
+
+                function pad(n) { return n < 10 ? '0' + n : n; }
+                function formatDate(d) {
+                    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+                }
+
+                if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages and schedule them? This may take several minutes.', 'ai-seo-client')); ?>')) {
                     return;
                 }
 
@@ -1092,8 +1151,8 @@ PROMPT;
                         // Show results
                         var resultsHtml = '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:20px;">' +
                             '<h4 style="margin:0 0 15px 0;color:#166534;">✅ <?php echo esc_js(__('Content Generation Complete!', 'ai-seo-client')); ?></h4>' +
-                            '<p><?php echo esc_js(__('Successfully generated', 'ai-seo-client')); ?> ' + completed + ' <?php echo esc_js(__('drafts. Go to Posts → Drafts to review and publish.', 'ai-seo-client')); ?></p>' +
-                            '<a href="<?php echo esc_url(admin_url('edit.php?post_status=draft&post_type=post')); ?>" class="button button-primary" style="background:#16a34a;border-color:#16a34a;"><?php echo esc_js(__('View Drafts', 'ai-seo-client')); ?></a>' +
+                            '<p><?php echo esc_js(__('Successfully generated and scheduled', 'ai-seo-client')); ?> ' + completed + ' <?php echo esc_js(__('posts. They will auto-publish on their scheduled dates.', 'ai-seo-client')); ?></p>' +
+                            '<a href="<?php echo esc_url(admin_url('edit.php?post_status=future&post_type=post')); ?>" class="button button-primary" style="background:#16a34a;border-color:#16a34a;"><?php echo esc_js(__('View Scheduled Posts', 'ai-seo-client')); ?></a>' +
                             '</div>';
                         $('#tc-bulk-results').html(resultsHtml).show();
                         return;
@@ -1107,12 +1166,18 @@ PROMPT;
                         processNext(index + 1);
                         return;
                     }
+
+                    // Compute scheduled date for this page
+                    var scheduledDate = new Date(startDate);
+                    scheduledDate.setDate(startDate.getDate() + (index * gapDays));
+                    var scheduledDateString = formatDate(scheduledDate);
+                    scheduledDates[pageId] = scheduledDateString;
                     
                     // Update status to generating
                     var $row = $('tr[data-page-id="' + pageId + '"]');
                     $row.find('.tc-status-cell').html('<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:12px;font-size:11px;">⏳ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
                     
-                    log('<?php echo esc_js(__('Generating', 'ai-seo-client')); ?>: ' + page.title);
+                    log('<?php echo esc_js(__('Generating', 'ai-seo-client')); ?>: ' + page.title + ' → ' + scheduledDateString);
                     
                     // Get cluster context
                     var context = currentCluster ? 'Part of "' + (currentCluster.topic || '') + '" topic cluster.' : '';
@@ -1125,15 +1190,16 @@ PROMPT;
                             keyword: page.keyword,
                             word_count: page.words,
                             content_type: page.content_type,
-                            cluster_context: context
+                            cluster_context: context,
+                            schedule_date: scheduledDateString
                         }
                     }).then(function(res) {
                         completed++;
                         updateProgress();
-                        log('✅ <?php echo esc_js(__('Created', 'ai-seo-client')); ?>: ' + page.title);
+                        log('✅ <?php echo esc_js(__('Created', 'ai-seo-client')); ?>: ' + page.title + ' (' + scheduledDateString + ')');
                         
                         // Update row status
-                        $row.find('.tc-status-cell').html('<a href="' + res.edit_url + '" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:11px;text-decoration:none;">✓ <?php echo esc_js(__('Edit Draft', 'ai-seo-client')); ?></a>');
+                        $row.find('.tc-status-cell').html('<a href="' + res.edit_url + '" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:11px;text-decoration:none;">✓ <?php echo esc_js(__('Scheduled', 'ai-seo-client')); ?></a>');
                         $row.find('.tc-page-checkbox').prop('checked', false);
                         
                         // Continue to next

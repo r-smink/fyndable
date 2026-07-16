@@ -494,32 +494,73 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         $provider = $imageApi['provider'] ?? '';
         $apiKey = $imageApi['key'] ?? '';
         $model = $imageApi['model'] ?? 'dall-e-3';
-        
+
+        // Resolve provider from key/model hints when missing or mismatched
+        $provider = $this->resolveImageProvider($provider, $apiKey, $model);
+
         // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
-        
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Resolved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
+
         if (empty($provider) || empty($apiKey)) {
             if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
             return null;
         }
-        
+
         switch ($provider) {
             case 'openai':
                 return $this->generateWithOpenAI($prompt, $apiKey, $model);
-            
+
             case 'openrouter':
                 return $this->generateWithOpenRouter($prompt, $apiKey, $model);
-            
+
             case 'stability':
                 return $this->generateWithStabilityAI($prompt, $apiKey, $model);
-            
+
             case 'openart':
                 return $this->generateWithOpenArt($prompt, $apiKey, $model);
-            
+
             default:
                 if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Unknown provider - ' . $provider);
                 return null;
         }
+    }
+
+    /**
+     * Resolve the image API provider from key/model hints.
+     *
+     * Falls back to the general AI provider settings when the stored image
+     * provider is empty or mismatched with the provided key.
+     */
+    private function resolveImageProvider(string $provider, string $apiKey, string $model): string
+    {
+        // Key-based hints
+        if (stripos($apiKey, 'sk-or-') === 0) {
+            return 'openrouter';
+        }
+        if (stripos($apiKey, 'sk-') === 0 && stripos($apiKey, 'sk-or-') !== 0) {
+            return 'openai';
+        }
+
+        // Model-based hints
+        if (stripos($model, 'openai/') === 0) {
+            return 'openrouter';
+        }
+        if (stripos($model, 'flux') !== false) {
+            return 'openart';
+        }
+
+        if (!empty($provider)) {
+            return $provider;
+        }
+
+        // Fall back to the general AI provider configured for the client
+        $modelRouting = get_option('sseo_ai_client_model_routing', []);
+        $defaultModel = is_array($modelRouting) ? ($modelRouting['content_generation'] ?? $model) : $model;
+        if (stripos($defaultModel, 'openai/') === 0) {
+            return 'openrouter';
+        }
+
+        return 'openrouter';
     }
     
     /**
@@ -560,11 +601,22 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
     }
     
     /**
-     * Generate image with OpenRouter (new unified Image API)
+     * Generate image with OpenRouter (unified Image API)
      */
     private function generateWithOpenRouter(string $prompt, string $apiKey, string $model): ?string
     {
-        $model = $model ?: 'openai/dall-e-3';
+        [$model, $quality] = $this->resolveOpenRouterImageModel($model);
+
+        $body = [
+            'model'   => $model,
+            'prompt'  => $prompt,
+            'n'       => 1,
+            'size'    => '1024x1024',
+        ];
+
+        if (!empty($quality) && $quality !== 'auto') {
+            $body['quality'] = $quality;
+        }
 
         $response = wp_remote_post('https://openrouter.ai/api/v1/images', [
             'headers' => [
@@ -573,12 +625,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
                 'HTTP-Referer'  => home_url(),
                 'X-Title'       => get_bloginfo('name'),
             ],
-            'body' => wp_json_encode([
-                'model'   => $model,
-                'prompt'  => $prompt,
-                'n'       => 1,
-                'size'    => '1024x1024',
-            ]),
+            'body' => wp_json_encode($body),
             'timeout' => 120,
         ]);
 
@@ -600,13 +647,107 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
 
         if (!empty($b64)) {
             $imageData = base64_decode($b64);
-            $tempFile = wp_tempnam('sseo-ai-image-');
+            if ($imageData === false) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Failed to decode OpenRouter base64 image');
+                return null;
+            }
+
+            $mediaType = $body['data'][0]['media_type'] ?? 'image/png';
+            $extension = 'png';
+            if (stripos($mediaType, 'svg') !== false) {
+                $extension = 'svg';
+            } elseif (stripos($mediaType, 'jpeg') !== false || stripos($mediaType, 'jpg') !== false) {
+                $extension = 'jpg';
+            } elseif (stripos($mediaType, 'webp') !== false) {
+                $extension = 'webp';
+            }
+
+            $tempFile = wp_tempnam('sseo-ai-image-' . time() . '.' . $extension);
             file_put_contents($tempFile, $imageData);
             return $tempFile;
         }
 
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image URL or data in OpenRouter response - ' . print_r($body, true));
         return null;
+    }
+
+    /**
+     * Resolve a model string to a valid OpenRouter image model ID and quality.
+     */
+    private function resolveOpenRouterImageModel(string $model): array
+    {
+        $model = trim($model);
+        $quality = 'auto';
+
+        $validModels = [
+            'openai/gpt-image-2',
+            'openai/gpt-image-1',
+            'openai/gpt-image-1-mini',
+            'openai/gpt-5-image',
+            'openai/gpt-5-image-mini',
+            'openai/gpt-5.4-image-2',
+            'google/gemini-3.1-flash-image',
+            'google/gemini-3.1-flash-lite-image',
+            'google/gemini-3.1-flash-image-preview',
+            'google/gemini-3-pro-image',
+            'google/gemini-3-pro-image-preview',
+            'google/gemini-2.5-flash-image',
+            'google/gemini-2.5-flash-image-preview',
+            'bytedance-seed/seedream-4.5',
+            'black-forest-labs/flux.2-pro',
+            'black-forest-labs/flux.2-flex',
+            'black-forest-labs/flux.2-max',
+            'black-forest-labs/flux.2-klein-4b',
+            'sourceful/riverflow-v2.5-pro',
+            'sourceful/riverflow-v2.5-fast',
+            'sourceful/riverflow-v2-pro',
+            'sourceful/riverflow-v2-fast',
+            'sourceful/riverflow-v2-max-preview',
+            'sourceful/riverflow-v2-standard-preview',
+            'sourceful/riverflow-v2-fast-preview',
+            'microsoft/mai-image-2.5',
+            'x-ai/grok-imagine-image-quality',
+            'recraft/recraft-v4.1-pro',
+            'recraft/recraft-v4.1',
+            'recraft/recraft-v4.1-pro-vector',
+            'recraft/recraft-v4.1-vector',
+            'recraft/recraft-v4.1-utility-pro',
+            'recraft/recraft-v4.1-utility',
+            'recraft/recraft-v4-pro',
+            'recraft/recraft-v4',
+            'recraft/recraft-v3',
+            'openrouter/auto',
+        ];
+
+        if (in_array(strtolower($model), array_map('strtolower', $validModels), true)) {
+            return [$model, $quality];
+        }
+
+        if (stripos($model, 'dall-e-3') === 0 || stripos($model, 'openai/dall-e-3') !== false) {
+            $quality = (stripos($model, 'hd') !== false) ? 'high' : 'auto';
+            return ['openai/gpt-image-2', $quality];
+        }
+
+        if (stripos($model, 'flux') !== false) {
+            if (stripos($model, 'schnell') !== false || stripos($model, 'fast') !== false || stripos($model, 'klein') !== false) {
+                return ['black-forest-labs/flux.2-klein-4b', $quality];
+            }
+            return ['black-forest-labs/flux.2-pro', $quality];
+        }
+
+        if (stripos($model, 'stable') !== false || stripos($model, 'sdxl') !== false) {
+            return ['black-forest-labs/flux.2-pro', $quality];
+        }
+
+        if (stripos($model, 'gemini') !== false) {
+            return ['google/gemini-3.1-flash-image', $quality];
+        }
+
+        if (stripos($model, 'seedream') !== false) {
+            return ['bytedance-seed/seedream-4.5', $quality];
+        }
+
+        return ['openai/gpt-image-2', $quality];
     }
 
     /**
@@ -707,20 +848,61 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/image.php';
         
-        $tmp = download_url($imageUrl);
-        
-        if (is_wp_error($tmp)) {
-            return null;
+        // Some providers return a local temp file path (e.g. OpenRouter base64)
+        if (file_exists($imageUrl) && is_readable($imageUrl)) {
+            $tmp = $imageUrl;
+        } else {
+            $tmp = download_url($imageUrl);
+            if (is_wp_error($tmp)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: download_url error - ' . $tmp->get_error_message());
+                return null;
+            }
         }
-        
+
+        // Detect the real MIME type from the file contents. wp_tempnam() always
+        // appends .tmp, so pathinfo() on the temp path cannot be trusted.
+        $mime = function_exists('wp_get_image_mime') ? wp_get_image_mime($tmp) : false;
+        if (!$mime) {
+            $info = @getimagesize($tmp);
+            $mime = $info['mime'] ?? false;
+        }
+        if (!$mime) {
+            $firstBytes = @file_get_contents($tmp, false, null, 0, 200);
+            if ($firstBytes !== false && (stripos($firstBytes, '<?xml') !== false || stripos($firstBytes, '<svg') !== false)) {
+                $mime = 'image/svg+xml';
+            }
+        }
+
+        $extensionMap = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+            'image/avif' => 'avif',
+        ];
+
+        $extension = !empty($mime) ? ($extensionMap[$mime] ?? '') : '';
+        if (!$extension) {
+            $extension = pathinfo($tmp, PATHINFO_EXTENSION);
+            if (!$extension || $extension === 'tmp') {
+                $extension = 'png';
+            }
+        }
+
+        $safeTitle = sanitize_file_name($title) ?: 'image';
         $fileArray = [
-            'name' => sanitize_file_name($title) . '.jpg',
+            'name' => $safeTitle . '.' . $extension,
             'tmp_name' => $tmp,
+            'type' => $mime ?: 'image/png',
+            'error' => 0,
+            'size' => filesize($tmp) ?: 0,
         ];
         
         $attachmentId = media_handle_sideload($fileArray, $postId);
         
         if (is_wp_error($attachmentId)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: media_handle_sideload error - ' . $attachmentId->get_error_message());
             @unlink($tmp);
             return null;
         }
