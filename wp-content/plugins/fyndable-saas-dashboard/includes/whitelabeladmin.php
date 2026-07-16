@@ -13,6 +13,7 @@ class WhiteLabelAdmin
     public function __construct(TenantRepository $tenants)
     {
         $this->tenants = $tenants;
+        add_action('admin_post_sseo_ai_download_whitelabel_client', [$this, 'handleDownloadWhiteLabelClient']);
     }
 
     public function enqueueAssets(string $hook): void
@@ -87,6 +88,50 @@ class WhiteLabelAdmin
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_key');
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_stripe_secret');
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_currency');
+    }
+
+    /**
+     * Build and serve a white-labeled client plugin .zip download.
+     */
+    public function handleDownloadWhiteLabelClient(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to download packages.', 'sseo-ai-saas'));
+        }
+
+        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'download_whitelabel_client')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        $companyName = sanitize_text_field(get_option('sseo_ai_saas_wl_company_name', ''));
+        if (empty($companyName)) {
+            wp_die(__('Please set a Company Name on the White-Label settings page first.', 'sseo-ai-saas'));
+        }
+
+        $builder = new WhiteLabelPackageBuilder();
+        $zipPath = $builder->buildClientZip($companyName);
+
+        if (is_wp_error($zipPath)) {
+            wp_die(esc_html($zipPath->get_error_message()));
+        }
+
+        $companySlug = sanitize_title($companyName);
+        $companySlug = preg_replace('/[^a-z0-9-]/', '', $companySlug) ?: 'agency';
+        $zipName = $companySlug . '-client.zip';
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $zipName . '"');
+        header('Content-Length: ' . filesize($zipPath));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        readfile($zipPath);
+        @unlink($zipPath);
+        exit;
     }
 
     public function renderWhiteLabelSettings(): void
@@ -214,6 +259,17 @@ class WhiteLabelAdmin
                 
                 <?php submit_button(__('Save White-Label Settings', 'sseo-ai-saas'), 'primary', 'submit', true, ['style' => 'font-size: 16px; padding: 10px 30px; height: auto;']); ?>
             </form>
+
+            <div class="sseo-ai-card" style="margin-top: 20px;">
+                <h2><?php esc_html_e('White-Label Client Plugin', 'sseo-ai-saas'); ?></h2>
+                <p style="color: #646970;">
+                    <?php esc_html_e('Download a ready-to-install, re-branded client plugin for your customers.', 'sseo-ai-saas'); ?>
+                </p>
+                <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_download_whitelabel_client&_wpnonce=' . wp_create_nonce('download_whitelabel_client'))); ?>"
+                   class="button button-primary button-hero" style="margin-top: 10px;">
+                    <?php esc_html_e('Download White-Label Client (.zip)', 'sseo-ai-saas'); ?>
+                </a>
+            </div>
         </div>
         <?php
     }

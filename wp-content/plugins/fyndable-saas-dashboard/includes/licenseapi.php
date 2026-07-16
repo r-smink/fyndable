@@ -406,37 +406,40 @@ class LicenseAPI
     }
     
     /**
-     * Get white-label data for tenant - ONLY tenant-level (no global fallback)
+     * Get white-label data for tenant.
+     *
+     * Falls back to the global agency white-label settings when no tenant-specific
+     * brand is configured. This ensures agency/whitelabel API keys sync the correct
+     * branding to the client plugin.
      */
     private function getWhiteLabelData(string $tenantKey): array
     {
-        // Global SaaS white-label switch overrides tenant-level settings
-        if (!get_option('sseo_ai_saas_wl_enabled', false)) {
-            return [
-                'company_name' => '',
-                'company_logo' => '',
-                'primary_color' => '',
-                'secondary_color' => '',
-                'use_primary_only' => false,
-                'support_email' => '',
-                'support_url' => '',
-                'enabled' => false,
-            ];
-        }
+        $isGlobalEnabled = (bool) get_option('sseo_ai_saas_wl_enabled', false);
 
-        // Only tenant-specific white-label settings (no global fallback)
+        // Tenant-specific white-label takes priority if enabled.
         $tenantBrand = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
-        $enabled = $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
-
-        // Only return white-label if explicitly enabled and configured
-        if ($enabled && $tenantBrand) {
+        $tenantEnabled = (bool) $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
+        if ($tenantEnabled && $tenantBrand) {
             $brand = is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
             if (!empty($brand['company_name'])) {
                 return $brand;
             }
         }
 
-        // Return empty if no tenant white-label configured
+        // Fall back to global agency white-label settings.
+        if ($isGlobalEnabled) {
+            return [
+                'company_name' => get_option('sseo_ai_saas_wl_company_name', ''),
+                'company_logo' => get_option('sseo_ai_saas_wl_company_logo', ''),
+                'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#2563eb'),
+                'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#1e40af'),
+                'use_primary_only' => false,
+                'support_email' => get_option('sseo_ai_saas_wl_support_email', ''),
+                'support_url' => get_option('sseo_ai_saas_wl_support_url', ''),
+                'enabled' => true,
+            ];
+        }
+
         return [
             'company_name' => '',
             'company_logo' => '',

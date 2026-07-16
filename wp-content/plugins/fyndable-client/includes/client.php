@@ -202,6 +202,27 @@ class Client
     }
     
     /**
+     * Get the brand name to display in the plugin UI.
+     *
+     * Prefers the synced white-label company name. Falls back to a generic
+     * brand for agency/whitelabel licenses, and Fyndable otherwise.
+     */
+    private function getBrandName(): string
+    {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        if (!empty($whiteLabel['company_name'])) {
+            return $whiteLabel['company_name'];
+        }
+
+        $tier = get_option('sseo_ai_client_license_tier', 'free');
+        if ($tier === 'agency') {
+            return 'Smart SEO';
+        }
+
+        return 'Fyndable';
+    }
+
+    /**
      * Initialize SEO features based on license tier
      */
     public function initializeFeatures(): void
@@ -583,7 +604,7 @@ class Client
     public function registerNetworkMenu(): void
     {
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $menuName = $this->getBrandName();
 
         add_menu_page(
             $menuName,
@@ -603,7 +624,7 @@ class Client
     {
         $sites = get_sites(['number' => 0]);
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $menuName = $this->getBrandName();
 
         echo '<div class="wrap"><h1>' . esc_html($menuName) . ' — Network Overview</h1>';
         echo '<p>Manage plugin settings across all sites in your network.</p>';
@@ -644,7 +665,7 @@ class Client
         
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $menuName = $this->getBrandName();
 
         // Initialize dashboard shell
         $this->dashboardShell = new DashboardShell($this);
@@ -1088,7 +1109,7 @@ class Client
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $companyName = $this->getBrandName();
         $brandName = $companyName . ' ' . __('License Activation', 'ai-seo-client');
         ?>
         <div class="wrap ai-seo-client">
@@ -2124,7 +2145,7 @@ class Client
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $companyName = $this->getBrandName();
         $brandName = $companyName . ' Smart SEO';
         
         // Mask the keys for display
