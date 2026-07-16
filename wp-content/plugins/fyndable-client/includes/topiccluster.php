@@ -149,7 +149,15 @@ class TopicCluster
             wp_set_post_tags($postId, $content['tags']);
         }
 
-        return [
+        // Generate a featured image automatically when image API credentials are configured
+        $imageAttachmentId = null;
+        $imageApi = get_option('sseo_ai_client_image_api', []);
+        if (current_user_can('upload_files') && !empty($imageApi['provider']) && !empty($imageApi['key'])) {
+            $generator = new AIImageGenerator($this->settings, $this->llm);
+            $imageAttachmentId = $generator->generateFeaturedImage($postId, 'photorealistic', $title, 100);
+        }
+
+        $result = [
             'success' => true,
             'post_id' => $postId,
             'edit_url' => get_edit_post_link($postId, ''),
@@ -157,6 +165,12 @@ class TopicCluster
             'title' => $title,
             'word_count' => $content['word_count'] ?? 0,
         ];
+
+        if ($imageAttachmentId) {
+            $result['image_attachment_id'] = $imageAttachmentId;
+        }
+
+        return $result;
     }
 
     /**
