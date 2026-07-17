@@ -33,6 +33,18 @@ class HealthLogger
     }
 
     /**
+     * Log an error with a clear, provider-specific message.
+     */
+    public function logProviderError(string $provider, string $code, string $rawMessage = '', string $type = 'ai'): void
+    {
+        $message = ($this->notifier)
+            ? $this->notifier->explainProviderError($provider, $code, $rawMessage)
+            : ($rawMessage ?: $code);
+
+        $this->log($type, $provider, 'error', $message);
+    }
+
+    /**
      * @return array<int,array{type:string,provider:string,status:string,message:string,time:string}>
      */
     public function latest(int $limit = 10): array

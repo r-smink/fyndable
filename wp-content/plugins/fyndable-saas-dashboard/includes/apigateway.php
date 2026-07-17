@@ -27,6 +27,11 @@ class ApiGateway
     private const CIRCUIT_BREAKER_FAILURES = 3;
     private const CIRCUIT_BREAKER_WINDOW = 900; // 15 minutes
 
+    // AI request resilience
+    private const AI_TIMEOUT_SECONDS = 120;
+    private const AI_MAX_RETRIES = 3;
+    private const AI_RETRY_BASE_MS = 500000; // 0.5 seconds
+
     public function __construct(TenantRepository $tenants, SaaSSettings $settings, ProviderRouter $providerRouter)
     {
         $this->tenants = $tenants;
@@ -141,42 +146,67 @@ class ApiGateway
     /**
      * Handle AI generation request
      * Routes through ProviderRouter which supports OpenRouter and OpenAI.
+     * Includes retry, timeout and circuit-breaker protection.
      */
     public function handleAiRequest(\WP_REST_Request $request): \WP_REST_Response
     {
         $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
         $tenant = $this->tenants->getTenant($tenantKey);
-        
+
         $body = $request->get_json_params();
         $messages = $body['messages'] ?? [];
         $model = $body['model'] ?? null;
         $useCase = $body['use_case'] ?? 'content_generation';
         $maxTokens = (int)($body['max_tokens'] ?? 2000);
         $temperature = (float)($body['temperature'] ?? 0.7);
-        
-        // Route through provider router
-        $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature);
-        
-        if (is_wp_error($result)) {
-            $statusCode = $result->get_error_code() === 'no_provider' ? 503 : 502;
+
+        // Circuit breaker for the AI service as a whole
+        if ($this->isProviderCircuitOpen('ai', 'ai')) {
             return new \WP_REST_Response([
                 'success' => false,
-                'error' => $result->get_error_code(),
-                'message' => $result->get_error_message()
-            ], $statusCode);
+                'error' => 'ai_circuit_open',
+                'message' => __('AI service is temporarily unavailable due to recent failures. Please try again later.', 'sseo-ai-saas')
+            ], 503);
         }
-        
-        // Track usage
-        $cost = $result['usage']['cost'] ?? 0;
-        $this->trackUsage($tenant['id'], 'ai_generation', 1, $cost);
-        
+
+        // Give the AI request enough runway before PHP times out
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(self::AI_TIMEOUT_SECONDS);
+        }
+
+        $lastError = null;
+        for ($attempt = 1; $attempt <= self::AI_MAX_RETRIES; $attempt++) {
+            $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature);
+
+            if (!is_wp_error($result)) {
+                $this->recordProviderSuccess('ai', 'ai');
+                $cost = $result['usage']['cost'] ?? 0;
+                $this->trackUsage($tenant['id'], 'ai_generation', 1, $cost);
+
+                return new \WP_REST_Response([
+                    'success' => true,
+                    'content' => $result['content'],
+                    'model' => $result['model'],
+                    'provider' => $result['provider'],
+                    'usage' => $result['usage'],
+                    'fallback_used' => $result['fallback_used'] ?? false,
+                ], 200);
+            }
+
+            $this->recordProviderFailure('ai', 'ai');
+            $lastError = $result;
+
+            if ($attempt < self::AI_MAX_RETRIES) {
+                usleep(min(4000000, self::AI_RETRY_BASE_MS * (2 ** ($attempt - 1))));
+            }
+        }
+
+        $statusCode = ($lastError && $lastError->get_error_code() === 'no_provider') ? 503 : 502;
         return new \WP_REST_Response([
-            'success' => true,
-            'content' => $result['content'],
-            'model' => $result['model'],
-            'provider' => $result['provider'],
-            'usage' => $result['usage'],
-        ], 200);
+            'success' => false,
+            'error' => $lastError ? $lastError->get_error_code() : 'ai_request_failed',
+            'message' => $lastError ? $lastError->get_error_message() : __('AI generation failed', 'sseo-ai-saas')
+        ], $statusCode);
     }
 
     /**
@@ -203,9 +233,9 @@ class ApiGateway
         $keyword = sanitize_text_field($body['keyword'] ?? '');
         $location = sanitize_text_field($body['location'] ?? 'United States');
         
-        // Route to appropriate provider
-        $result = $this->fetchSerpData($provider, $apiKey, $keyword, $location);
-        
+        // Route to appropriate provider with fallback, retry and circuit breaker
+        $result = $this->fetchSerpData($provider, $apiKey, $keyword, $location, true);
+
         if (is_wp_error($result)) {
             return new \WP_REST_Response([
                 'success' => false,
@@ -213,9 +243,10 @@ class ApiGateway
                 'message' => $result->get_error_message()
             ], 502);
         }
-        
-        // Calculate and track cost
-        $cost = self::SERP_PRICING[$provider] ?? 0.005;
+
+        // Calculate and track cost using the provider that actually answered
+        $actualProvider = $result['_provider'] ?? $provider;
+        $cost = self::SERP_PRICING[$actualProvider] ?? 0.005;
         $this->trackUsage($tenant['id'], 'serp_query', 1, $cost);
         
         return new \WP_REST_Response([
@@ -689,18 +720,18 @@ class ApiGateway
     /**
      * Circuit breaker: check if a provider should be skipped.
      */
-    private function isProviderCircuitOpen(string $provider): bool
+    private function isProviderCircuitOpen(string $provider, string $type = 'serp'): bool
     {
-        $failures = (int) get_transient('sseo_serp_fail_' . $provider);
+        $failures = (int) get_transient('sseo_' . $type . '_fail_' . $provider);
         return $failures >= self::CIRCUIT_BREAKER_FAILURES;
     }
 
     /**
      * Record a provider failure for the circuit breaker.
      */
-    private function recordProviderFailure(string $provider): void
+    private function recordProviderFailure(string $provider, string $type = 'serp'): void
     {
-        $key = 'sseo_serp_fail_' . $provider;
+        $key = 'sseo_' . $type . '_fail_' . $provider;
         $failures = (int) get_transient($key);
         set_transient($key, $failures + 1, self::CIRCUIT_BREAKER_WINDOW);
     }
@@ -708,8 +739,8 @@ class ApiGateway
     /**
      * Reset the circuit breaker for a provider after a successful call.
      */
-    private function recordProviderSuccess(string $provider): void
+    private function recordProviderSuccess(string $provider, string $type = 'serp'): void
     {
-        delete_transient('sseo_serp_fail_' . $provider);
+        delete_transient('sseo_' . $type . '_fail_' . $provider);
     }
 }

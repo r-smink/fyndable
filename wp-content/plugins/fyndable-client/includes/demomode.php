@@ -24,6 +24,9 @@ class DemoMode
 
     public function register(): void
     {
+        // Register the admin bar badge globally so it can reflect the toggle state
+        add_action('admin_bar_menu', [$this, 'addAdminBarBadge'], 1000);
+
         if (!$this->enabled) {
             return;
         }
@@ -46,6 +49,37 @@ class DemoMode
 
         // Provide dummy dashboard stats
         add_filter('sseo_ai_dashboard_stats', [$this, 'dummyDashboardStats']);
+    }
+
+    /**
+     * Get the HTML for a visual demo badge.
+     */
+    public function getBadgeHtml(string $label = 'DEMO'): string
+    {
+        return sprintf(
+            '<span class="sseo-demo-badge" style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;margin-left:6px;">%s</span>',
+            esc_html($label)
+        );
+    }
+
+    /**
+     * Add a DEMO badge to the WordPress admin bar so every page is visually labelled.
+     */
+    public function addAdminBarBadge(\WP_Admin_Bar $wpAdminBar): void
+    {
+        if (!$this->enabled) {
+            return;
+        }
+
+        $wpAdminBar->add_node([
+            'id'    => 'sseo-demo-mode-badge',
+            'title' => '🎭 ' . esc_html__('Demo Mode', 'ai-seo-client'),
+            'href'  => admin_url('admin.php?page=ai-seo-settings'),
+            'meta'  => [
+                'title' => esc_attr__('Demo mode is active — all data is fictitious', 'ai-seo-client'),
+                'class' => 'sseo-demo-admin-bar-badge',
+            ],
+        ]);
     }
 
     public function isEnabled(): bool
@@ -115,6 +149,8 @@ class DemoMode
             'difficulty' => 20 + ($hash % 60),
             'url' => home_url('/sample-page/'),
             'last_checked' => current_time('mysql'),
+            'is_demo' => true,
+            'demo_label' => esc_html__('Demo Data', 'ai-seo-client'),
         ];
     }
 
@@ -134,6 +170,8 @@ class DemoMode
             'content_score_avg' => 78,
             'ai_credits_used' => 340,
             'ai_credits_limit' => 2000,
+            'is_demo' => true,
+            'demo_label' => esc_html__('Demo Data', 'ai-seo-client'),
         ];
     }
 

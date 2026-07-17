@@ -69,10 +69,10 @@ class LicenseFeatureManager
         'bulk_optimizer' => ['name' => 'Bulk AI Optimizer', 'tier' => 'business', 'category' => 'AI Generation'],
         'content_decay' => ['name' => 'Content Decay Monitor', 'tier' => 'business', 'category' => 'AI Generation'],
         'audit_service' => ['name' => 'Audit Service', 'tier' => 'business', 'category' => 'AI Generation'],
-        'content_optimizer_calibration' => ['name' => 'Content Optimizer Calibration', 'tier' => 'business', 'category' => 'Advanced SEO'],
-        'advanced_backlinks' => ['name' => 'Advanced Backlinks / DataForSEO', 'tier' => 'business', 'category' => 'Advanced SEO'],
-        'content_workflow' => ['name' => 'Content Workflow', 'tier' => 'business', 'category' => 'Advanced SEO'],
-        'prompt_template_library' => ['name' => 'Prompt Template Library', 'tier' => 'business', 'category' => 'AI Generation'],
+        'content_optimizer_calibration' => ['name' => 'Content Optimizer Calibration', 'tier' => 'business', 'category' => 'Advanced SEO', 'is_beta' => true],
+        'advanced_backlinks' => ['name' => 'Advanced Backlinks / DataForSEO', 'tier' => 'business', 'category' => 'Advanced SEO', 'is_beta' => true],
+        'content_workflow' => ['name' => 'Content Workflow', 'tier' => 'business', 'category' => 'Advanced SEO', 'is_beta' => true],
+        'prompt_template_library' => ['name' => 'Prompt Template Library', 'tier' => 'business', 'category' => 'AI Generation', 'is_beta' => true],
         
         // Agency+ Features
         'seo_revisions' => ['name' => 'SEO Revisions', 'tier' => 'agency', 'category' => 'Agency Tools'],
@@ -96,6 +96,7 @@ class LicenseFeatureManager
             if (!isset($features[$config['category']])) {
                 $features[$config['category']] = [];
             }
+            $config['is_beta'] = $config['is_beta'] ?? false;
             $features[$config['category']][$key] = $config;
         }
         return $features;
@@ -113,6 +114,7 @@ class LicenseFeatureManager
         foreach (self::ALL_FEATURES as $key => $config) {
             $featureLevel = $tierLevels[$config['tier']] ?? 0;
             if ($featureLevel <= $tierLevel || $tier === 'dev') {
+                $config['is_beta'] = $config['is_beta'] ?? false;
                 $available[$key] = $config;
             }
         }
@@ -231,7 +233,9 @@ class LicenseFeatureManager
                 if ($enabled && !isset($effective[$feature])) {
                     // Add feature that's not in tier
                     if (isset(self::ALL_FEATURES[$feature])) {
-                        $effective[$feature] = self::ALL_FEATURES[$feature];
+                        $added = self::ALL_FEATURES[$feature];
+                        $added['is_beta'] = $added['is_beta'] ?? false;
+                        $effective[$feature] = $added;
                     }
                 } elseif (!$enabled && isset($effective[$feature])) {
                     // Remove feature from tier
@@ -247,7 +251,9 @@ class LicenseFeatureManager
                 foreach ($tenantOverrides as $feature => $enabled) {
                     if ($enabled && !isset($effective[$feature])) {
                         if (isset(self::ALL_FEATURES[$feature])) {
-                            $effective[$feature] = self::ALL_FEATURES[$feature];
+                            $added = self::ALL_FEATURES[$feature];
+                            $added['is_beta'] = $added['is_beta'] ?? false;
+                            $effective[$feature] = $added;
                         }
                     } elseif (!$enabled && isset($effective[$feature])) {
                         unset($effective[$feature]);
@@ -266,6 +272,14 @@ class LicenseFeatureManager
     {
         $effective = $this->getEffectiveFeatures($licenseKey, $tenantKey);
         return isset($effective[$feature]);
+    }
+
+    /**
+     * Check if a feature is marked as beta.
+     */
+    public function isBeta(string $feature): bool
+    {
+        return (self::ALL_FEATURES[$feature]['is_beta'] ?? false) === true;
     }
     
     /**
@@ -316,6 +330,7 @@ class LicenseFeatureManager
                     'in_tier' => $isInTier,
                     'overridden' => $isOverridden,
                     'enabled' => $enabled,
+                    'is_beta' => $config['is_beta'] ?? false,
                 ];
             }
         }

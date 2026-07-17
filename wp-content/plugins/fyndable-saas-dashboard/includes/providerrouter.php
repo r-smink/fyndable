@@ -52,6 +52,19 @@ class ProviderRouter
     ];
 
     /**
+     * Model fallback chain per use-case.
+     * Used when the primary model or its provider fails.
+     */
+    private const FALLBACK_CHAIN = [
+        'content_generation'  => ['openai/gpt-4o', 'openai/gpt-4o-mini', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
+        'meta_optimization'   => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
+        'keyword_research'    => ['openai/gpt-4o', 'openai/gpt-4o-mini', 'deepseek/deepseek-chat', 'anthropic/claude-3-haiku'],
+        'faq_generation'      => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
+        'content_analysis'    => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
+        'image_alt_text'      => ['openai/gpt-4o-mini', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
+    ];
+
+    /**
      * Available models for dropdowns.
      */
     private const AVAILABLE_MODELS = [
@@ -92,55 +105,121 @@ class ProviderRouter
         int $maxTokens,
         float $temperature
     ): array|\WP_Error {
-        // Resolve model: explicit > routing > default
-        if (empty($model)) {
-            $model = $this->resolveModelForUseCase($useCase);
+        // Build ordered list of candidate models: explicit/routing model + fallback chain
+        $candidates = $this->getModelCandidates($model, $useCase);
+
+        if (empty($candidates)) {
+            return new \WP_Error(
+                'no_provider',
+                __('No AI model candidates available for this request.', 'sseo-ai-saas')
+            );
         }
 
-        // Determine which provider handles this model
-        $provider = $this->getProviderForModel($model);
+        $lastError = null;
+        $attempted = [];
 
+        foreach ($candidates as $candidateModel) {
+            $provider = $this->getProviderForModel($candidateModel);
+            $attempted[] = $candidateModel . '(' . $provider . ')';
+
+            $result = $this->executeProviderChat($provider, $messages, $candidateModel, $maxTokens, $temperature);
+
+            if (is_wp_error($result)) {
+                $lastError = $result;
+                continue;
+            }
+
+            // Normalize response and calculate cost based on the model that actually answered
+            $inputTokens = $result['usage']['prompt_tokens'] ?? $result['usage']['input_tokens'] ?? 0;
+            $outputTokens = $result['usage']['completion_tokens'] ?? $result['usage']['output_tokens'] ?? 0;
+            $cost = $this->calculateCost($candidateModel, $inputTokens, $outputTokens);
+
+            return [
+                'content'  => $result['content'] ?? '',
+                'model'    => $result['model'] ?? $candidateModel,
+                'provider' => $provider,
+                'usage'    => [
+                    'prompt_tokens'     => $inputTokens,
+                    'completion_tokens' => $outputTokens,
+                    'total_tokens'      => $inputTokens + $outputTokens,
+                    'cost'              => $cost,
+                ],
+                'fallback_used' => ($candidateModel !== $candidates[0]),
+            ];
+        }
+
+        if ($lastError instanceof \WP_Error) {
+            return new \WP_Error(
+                'model_fallback_exhausted',
+                sprintf(
+                    __('All AI models failed. Attempted: %s. Last error: %s', 'sseo-ai-saas'),
+                    implode(' → ', $attempted),
+                    $lastError->get_error_message()
+                ),
+                ['attempted' => $attempted, 'last_error' => $lastError->get_error_message()]
+            );
+        }
+
+        return new \WP_Error(
+            'no_provider',
+            __('No AI provider is configured. Set up OpenRouter or OpenAI API key in SaaS settings.', 'sseo-ai-saas')
+        );
+    }
+
+    /**
+     * Execute a chat request against the requested provider.
+     */
+    private function executeProviderChat(
+        string $provider,
+        array $messages,
+        string $model,
+        int $maxTokens,
+        float $temperature
+    ): array|\WP_Error {
         switch ($provider) {
             case 'openrouter':
-                $result = $this->openRouter->chat($messages, $model, $maxTokens, $temperature);
-                break;
+                return $this->openRouter->chat($messages, $model, $maxTokens, $temperature);
             case 'openai':
-                $result = $this->openAi->chat($messages, $model, $maxTokens, $temperature);
-                break;
+                return $this->openAi->chat($messages, $model, $maxTokens, $temperature);
             default:
                 // Fallback to OpenRouter if configured, else OpenAI
                 if ($this->openRouter->isConfigured()) {
-                    $result = $this->openRouter->chat($messages, $model, $maxTokens, $temperature);
-                } elseif ($this->openAi->isConfigured()) {
-                    $result = $this->openAi->chat($messages, $model, $maxTokens, $temperature);
-                } else {
-                    return new \WP_Error(
-                        'no_provider',
-                        __('No AI provider is configured. Set up OpenRouter or OpenAI API key in SaaS settings.', 'sseo-ai-saas')
-                    );
+                    return $this->openRouter->chat($messages, $model, $maxTokens, $temperature);
                 }
+                if ($this->openAi->isConfigured()) {
+                    return $this->openAi->chat($messages, $model, $maxTokens, $temperature);
+                }
+                return new \WP_Error(
+                    'no_provider',
+                    __('No AI provider is configured. Set up OpenRouter or OpenAI API key in SaaS settings.', 'sseo-ai-saas')
+                );
+        }
+    }
+
+    /**
+     * Build the ordered list of models to try for a request.
+     */
+    private function getModelCandidates(?string $requestedModel, string $useCase): array
+    {
+        $primary = $requestedModel;
+        if (empty($primary)) {
+            $primary = $this->resolveModelForUseCase($useCase);
         }
 
-        if (is_wp_error($result)) {
-            return $result;
+        $chain = self::FALLBACK_CHAIN[$useCase] ?? self::FALLBACK_CHAIN['content_generation'];
+
+        $candidates = [];
+        if (!empty($primary)) {
+            $candidates[] = $primary;
         }
 
-        // Normalize response and calculate cost
-        $inputTokens = $result['usage']['prompt_tokens'] ?? $result['usage']['input_tokens'] ?? 0;
-        $outputTokens = $result['usage']['completion_tokens'] ?? $result['usage']['output_tokens'] ?? 0;
-        $cost = $this->calculateCost($model, $inputTokens, $outputTokens);
+        foreach ($chain as $model) {
+            if ($model !== $primary && !in_array($model, $candidates, true)) {
+                $candidates[] = $model;
+            }
+        }
 
-        return [
-            'content'  => $result['content'] ?? '',
-            'model'    => $result['model'] ?? $model,
-            'provider' => $provider,
-            'usage'    => [
-                'prompt_tokens'     => $inputTokens,
-                'completion_tokens' => $outputTokens,
-                'total_tokens'      => $inputTokens + $outputTokens,
-                'cost'              => $cost,
-            ],
-        ];
+        return $candidates;
     }
 
     /**

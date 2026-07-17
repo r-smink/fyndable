@@ -491,38 +491,138 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
     {
         // Get image API credentials from SaaS dashboard (stored during license activation)
         $imageApi = get_option('sseo_ai_client_image_api', []);
-        $provider = $imageApi['provider'] ?? '';
-        $apiKey = $imageApi['key'] ?? '';
-        $model = $imageApi['model'] ?? 'dall-e-3';
+        $primaryProvider = $this->resolveImageProvider($imageApi['provider'] ?? '', $imageApi['key'] ?? '', $imageApi['model'] ?? 'dall-e-3');
 
-        // Resolve provider from key/model hints when missing or mismatched
-        $provider = $this->resolveImageProvider($provider, $apiKey, $model);
+        // Fallback order: OpenRouter -> OpenAI -> Stability AI. Primary provider is tried first.
+        $fallbackOrder = ['openrouter', 'openai', 'stability'];
+        $providers = [];
+        if (!empty($primaryProvider)) {
+            $providers[] = $primaryProvider;
+        }
+        foreach ($fallbackOrder as $provider) {
+            if ($provider !== $primaryProvider && !in_array($provider, $providers, true)) {
+                $providers[] = $provider;
+            }
+        }
 
-        // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Resolved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
+        $lastError = null;
+        foreach ($providers as $provider) {
+            $apiKey = $this->getImageProviderKey($provider, $imageApi);
+            $model = $this->mapModelForProvider($provider, $imageApi['model'] ?? 'dall-e-3');
 
-        if (empty($provider) || empty($apiKey)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
-            return null;
+            if (empty($apiKey)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No API key for provider ' . $provider);
+                continue;
+            }
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Fyndable Image: Trying provider ' . $provider . ' with model ' . $model);
+            }
+
+            switch ($provider) {
+                case 'openai':
+                    $result = $this->generateWithOpenAI($prompt, $apiKey, $model);
+                    break;
+                case 'openrouter':
+                    $result = $this->generateWithOpenRouter($prompt, $apiKey, $model);
+                    break;
+                case 'stability':
+                    $result = $this->generateWithStabilityAI($prompt, $apiKey, $model);
+                    break;
+                case 'openart':
+                    $result = $this->generateWithOpenArt($prompt, $apiKey, $model);
+                    break;
+                default:
+                    $result = null;
+            }
+
+            if (!empty($result)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Provider ' . $provider . ' succeeded');
+                return $result;
+            }
+
+            $lastError = $provider;
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Fyndable Image: All image providers failed. Last attempted: ' . ($lastError ?? 'none'));
+        }
+
+        return null;
+    }
+
+    /**
+     * Pick the right API key for a provider from the stored image API config.
+     */
+    private function getImageProviderKey(string $provider, array $imageApi): ?string
+    {
+        $specific = $imageApi[$provider . '_key'] ?? '';
+        if (!empty($specific)) {
+            return $specific;
+        }
+
+        $generic = $imageApi['key'] ?? '';
+        if ($this->keyMatchesProvider($provider, $generic, $imageApi['model'] ?? '')) {
+            return $generic;
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect whether a given API key belongs to a specific image provider.
+     */
+    private function keyMatchesProvider(string $provider, string $apiKey, string $model): bool
+    {
+        if (empty($apiKey)) {
+            return false;
         }
 
         switch ($provider) {
-            case 'openai':
-                return $this->generateWithOpenAI($prompt, $apiKey, $model);
-
             case 'openrouter':
-                return $this->generateWithOpenRouter($prompt, $apiKey, $model);
-
+                return stripos($apiKey, 'sk-or-') === 0 || stripos($model, 'openai/') === 0;
+            case 'openai':
+                return (stripos($apiKey, 'sk-') === 0 && stripos($apiKey, 'sk-or-') !== 0) && stripos($model, 'openai/') !== 0;
             case 'stability':
-                return $this->generateWithStabilityAI($prompt, $apiKey, $model);
-
             case 'openart':
-                return $this->generateWithOpenArt($prompt, $apiKey, $model);
-
+                return !empty($apiKey);
             default:
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Unknown provider - ' . $provider);
-                return null;
+                return false;
         }
+    }
+
+    /**
+     * Map a generic / OpenRouter model ID to a provider-specific image model.
+     */
+    private function mapModelForProvider(string $provider, string $model): string
+    {
+        if ($provider === 'openrouter') {
+            return $this->resolveOpenRouterImageModel($model)[0];
+        }
+
+        if ($provider === 'openai') {
+            $model = trim($model);
+            if (stripos($model, 'openai/') === 0) {
+                $base = substr($model, 7);
+                if (stripos($base, 'dall-e') === 0) {
+                    return $base;
+                }
+                if (stripos($base, 'gpt-image') === 0) {
+                    return 'dall-e-3';
+                }
+                return 'dall-e-3';
+            }
+            if (in_array(strtolower($model), ['dall-e-3', 'dall-e-2', 'dall-e-3-hd', 'gpt-image-1'], true)) {
+                return $model;
+            }
+            return 'dall-e-3';
+        }
+
+        if ($provider === 'stability') {
+            return 'stable-diffusion-xl';
+        }
+
+        return $model;
     }
 
     /**

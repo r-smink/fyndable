@@ -713,28 +713,11 @@ PROMPT;
         $table = $wpdb->prefix . 'sseo_ai_ideas';
         $totalIdeas = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'active'") ?: 0;
         $scheduledCount = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'scheduled'") ?: 0;
-        
-        // Get AI-generated posts count
-        $postsCount = wp_count_posts('post');
-        $aiPostsCount = (int) $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_generated' AND meta_value = '1'"
-        ) ?: 0;
-        
-        // Get keyword count
-        $keywordCount = (int) $wpdb->get_var(
-            "SELECT COUNT(DISTINCT keywords) FROM {$table} WHERE keywords != ''"
-        ) ?: 0;
-        
-        // Get available credits (placeholder - integrate with your credit system)
-        $credits = [
-            'posts' => 35,
-            'ideas' => 300,
-            'outlines' => 100,
-            'keywords' => 10,
-            'images' => 111,
-        ];
+
+        // Use configurable or dynamically computed credits
+        $credits = $this->getCredits($table);
         ?>
+
         <div class="wrap sseo-ai-modern" id="sseo-ideas-page">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Ideas', 'ai-seo-client'); ?></h1>
@@ -1262,5 +1245,52 @@ PROMPT;
         });
         </script>
         <?php
+    }
+
+    /**
+     * Get credit counts for the Ideas page.
+     *
+     * Resolution order:
+     * 1. sseo_ai_client_credits option (e.g. set by dashboard / admin code)
+     * 2. apply_filters('sseo_ai_ideas_credits', ...)
+     * 3. Dynamically computed from local data
+     */
+    private function getCredits(string $table): array
+    {
+        $optionCredits = get_option('sseo_ai_client_credits');
+        if (is_array($optionCredits) && !empty($optionCredits)) {
+            return $optionCredits;
+        }
+
+        global $wpdb;
+
+        $aiPostsCount = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$wpdb->postmeta}
+             WHERE meta_key = '_sseo_ai_generated' AND meta_value = '1'"
+        ) ?: 0;
+
+        $scheduledCount = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$table} WHERE status = 'scheduled'"
+        ) ?: 0;
+
+        $keywordCount = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT keywords) FROM {$table} WHERE keywords != ''"
+        ) ?: 0;
+
+        $aiImages = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta}
+             WHERE meta_key IN ('_sseo_ai_og_image', '_sseo_ai_twitter_image')"
+        ) ?: 0;
+
+        $credits = [
+            'posts'    => $aiPostsCount,
+            'ideas'    => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'active'") ?: 0,
+            'outlines' => $scheduledCount,
+            'keywords' => $keywordCount,
+            'images'   => $aiImages,
+        ];
+
+        // Allow SaaS dashboard / custom code to override credit display values
+        return apply_filters('sseo_ai_ideas_credits', $credits);
     }
 }

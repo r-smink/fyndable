@@ -252,6 +252,9 @@ class LlmClient
         $durationMs = (int)((microtime(true) - $startTime) * 1000);
 
         if (is_wp_error($response)) {
+            $provider = $this->detectProvider($requestedModel);
+            $this->health->logProviderError($provider, $response->get_error_code(), $response->get_error_message());
+
             // Log error
             LLMTracker::log([
                 'prompt' => $prompt,
@@ -377,5 +380,35 @@ class LlmClient
     private function buildDefaultSystemPrompt(): string
     {
         return 'You are an AI SEO assistant. Help create optimized, engaging content that performs well in search engines.';
+    }
+
+    /**
+     * Detect the AI provider from a model identifier for error logging.
+     */
+    private function detectProvider(string $model): string
+    {
+        $model = strtolower($model);
+
+        if (strpos($model, '/') !== false) {
+            return 'openrouter';
+        }
+
+        if (strpos($model, 'gpt-') === 0 || strpos($model, 'text-') === 0) {
+            return 'openai';
+        }
+
+        if (strpos($model, 'claude') !== false) {
+            return 'anthropic';
+        }
+
+        if (strpos($model, 'deepseek') !== false) {
+            return 'deepseek';
+        }
+
+        if (strpos($model, 'gemini') !== false) {
+            return 'google';
+        }
+
+        return 'ai';
     }
 }

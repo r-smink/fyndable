@@ -97,7 +97,7 @@ class Client
         $this->settings = new Settings();
         $this->licenseValidator = new LicenseValidator($this->settings);
         $this->dashboardAPI = new DashboardAPI($this->settings);
-        $this->healthLogger = new HealthLogger();
+        $this->healthLogger = new HealthLogger(new AlertNotifier());
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
         $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
 
@@ -1919,7 +1919,8 @@ class Client
         $brandVoice = get_option('sseo_ai_brand_voice', '');
         $sslVerify = $this->settings->sslVerify();
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
-        
+        $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
+
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
         
@@ -2061,7 +2062,7 @@ class Client
                         <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
-                            
+
                             <div class="form-field">
                                 <label for="ssl_verify">
                                     <input type="checkbox" name="ssl_verify" id="ssl_verify" value="1" <?php checked($sslVerify, true); ?>>
@@ -2070,7 +2071,27 @@ class Client
                                 <p class="field-description"><?php esc_html_e('Disable only for development environments with self-signed certificates. Disabling on production is a security risk.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
-                        
+
+                        <div class="settings-section" style="border:2px solid #f59e0b;background:#fffbeb;border-radius:8px;">
+                            <h2>
+                                <?php esc_html_e('Demo Mode', 'ai-seo-client'); ?>
+                                <?php if ($demoMode): ?>
+                                    <span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
+                                <?php endif; ?>
+                            </h2>
+                            <p class="description"><?php esc_html_e('When enabled, the plugin uses fictitious data and bypasses license validation for demo purposes.', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="demo_mode">
+                                    <input type="checkbox" name="demo_mode" id="demo_mode" value="1" <?php checked($demoMode, true); ?>>
+                                    <?php esc_html_e('Enable demo mode', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description" style="color:#92400e;">
+                                    <?php esc_html_e('All data shown while demo mode is active is fictitious and clearly labelled.', 'ai-seo-client'); ?>
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="settings-actions">
                             <button type="submit" class="button button-primary button-large">
                                 <?php esc_html_e('Save Settings', 'ai-seo-client'); ?>
@@ -2104,6 +2125,7 @@ class Client
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
+        update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
 
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
