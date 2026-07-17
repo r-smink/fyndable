@@ -55,6 +55,7 @@ class Client
     private ?ContentRewriter $contentRewriter = null;
     private ?ReadabilityScore $readabilityScore = null;
     private ?IndexNow $indexNow = null;
+    private ?DirectIndex $directIndex = null;
     private ?GscDashboard $gscDashboard = null;
     private ?BacklinkAnalyzer $backlinkAnalyzer = null;
     private ?SerpFeatureTracker $serpFeatureTracker = null;
@@ -278,6 +279,10 @@ class Client
         
         $this->indexNow = new IndexNow($this->settings);
         $this->indexNow->register();
+        
+        // Direct Index (Google Indexing API) - available to all tiers
+        $this->directIndex = new DirectIndex($this->settings, $this->healthLogger);
+        $this->directIndex->register();
         
         // External Integrations - available to all tiers
         $this->externalIntegrations = new ExternalIntegrations($this->settings);

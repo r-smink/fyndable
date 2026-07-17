@@ -846,7 +846,7 @@ class LicenseAPI
         return new \WP_REST_Response([
             'success' => true,
             'client_id' => $clientId,
-            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
+            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
         ], 200);
     }
 
@@ -982,7 +982,7 @@ class LicenseAPI
         $globalCompanyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : ($globalCompanyName ?: 'Fyndable');
 
-        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
+        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
         $exchangeUrl = rest_url($this->namespace . '/google/exchange');
 
         header('Content-Type: text/html; charset=utf-8');

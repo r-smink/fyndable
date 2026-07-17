@@ -144,6 +144,21 @@ class ExternalIntegrations
 
         // Google Ads
         register_setting('sseo_ai_integrations', 'sseo_ai_google_ads_customer_id');
+
+        // Direct Index (Google Indexing API)
+        register_setting('sseo_ai_integrations', 'sseo_direct_index_enabled', [
+            'default' => true,
+            'sanitize_callback' => fn($value) => $value === '1' || $value === true || $value === 1,
+        ]);
+        register_setting('sseo_ai_integrations', 'sseo_direct_index_post_types', [
+            'default' => [],
+            'sanitize_callback' => function ($value) {
+                if (!is_array($value)) {
+                    return [];
+                }
+                return array_values(array_filter(array_map('sanitize_text_field', $value)));
+            },
+        ]);
     }
     
     /**
@@ -208,6 +223,17 @@ class ExternalIntegrations
         // Google Ads
         $adsCustomerId = get_option('sseo_ai_google_ads_customer_id', '');
         $adsConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']) && !empty($adsCustomerId);
+
+        // Direct Index
+        $directIndexEnabled = (bool) get_option('sseo_direct_index_enabled', true);
+        $directIndexPostTypes = (array) get_option('sseo_direct_index_post_types', []);
+        $allPublicPostTypes = get_post_types(['public' => true], 'objects');
+        $directIndex = new DirectIndex($this->settings, new HealthLogger());
+        $directIndexConnected = $directIndex->isConnected();
+        $directIndexHasScope = $directIndex->hasIndexingScope();
+        $directIndexQuotaUsed = $directIndex->getQuotaUsedToday();
+        $directIndexQuotaRemaining = max(0, DirectIndex::QUOTA_DAILY - $directIndexQuotaUsed);
+        $directIndexLog = array_slice($directIndex->getLog(), 0, 10);
         
         ?>
         <style>
@@ -601,7 +627,95 @@ class ExternalIntegrations
                         <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
                     </div>
                         </div>
-                        
+
+                        <!-- Direct Index (Google Indexing API) -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Direct Index', 'ai-seo-client'); ?></h2>
+
+                            <?php if ($directIndexConnected && $directIndexHasScope): ?>
+                                <span class="notice notice-success inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
+                                    ✓ <?php esc_html_e('Google Indexing API scope granted', 'ai-seo-client'); ?>
+                                </span>
+                            <?php elseif ($directIndexConnected): ?>
+                                <span class="notice notice-warning inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
+                                    <?php esc_html_e('Connected, but the indexing scope is missing. Reconnect via the Google Services card above.', 'ai-seo-client'); ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="notice notice-error inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
+                                    <?php esc_html_e('Not connected. Connect your Google account in the Google Services card above.', 'ai-seo-client'); ?>
+                                </span>
+                            <?php endif; ?>
+
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row"><?php esc_html_e('Automatic Indexing', 'ai-seo-client'); ?></th>
+                                    <td>
+                                        <label>
+                                            <input type="checkbox" name="sseo_direct_index_enabled" value="1" <?php checked($directIndexEnabled); ?>>
+                                            <?php esc_html_e('Submit new/scheduled posts to Google automatically on publish', 'ai-seo-client'); ?>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php esc_html_e('Post Types', 'ai-seo-client'); ?></th>
+                                    <td>
+                                        <input type="hidden" name="sseo_direct_index_post_types[]" value="">
+                                        <?php foreach ($allPublicPostTypes as $postType): ?>
+                                            <?php if (in_array($postType->name, ['attachment'], true)) continue; ?>
+                                            <label style="display:block; margin-bottom:5px;">
+                                                <input type="checkbox" name="sseo_direct_index_post_types[]" value="<?php echo esc_attr($postType->name); ?>"
+                                                    <?php checked(empty($directIndexPostTypes) || in_array($postType->name, $directIndexPostTypes, true)); ?>>
+                                                <?php echo esc_html($postType->label); ?> <code><?php echo esc_html($postType->name); ?></code>
+                                            </label>
+                                        <?php endforeach; ?>
+                                        <p class="description">
+                                            <?php esc_html_e('Leave all checked to allow all public post types.', 'ai-seo-client'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php esc_html_e('Quota', 'ai-seo-client'); ?></th>
+                                    <td>
+                                        <?php echo esc_html(sprintf(__('Used today: %d / %d — Remaining: %d', 'ai-seo-client'), $directIndexQuotaUsed, DirectIndex::QUOTA_DAILY, $directIndexQuotaRemaining)); ?>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <?php if (!empty($directIndexLog)): ?>
+                                <h3 style="margin-top: 25px;"><?php esc_html_e('Recent Submissions', 'ai-seo-client'); ?></h3>
+                                <table class="wp-list-table widefat fixed striped" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th><?php esc_html_e('Time', 'ai-seo-client'); ?></th>
+                                            <th><?php esc_html_e('URL', 'ai-seo-client'); ?></th>
+                                            <th><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
+                                            <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($directIndexLog as $entry): ?>
+                                            <tr>
+                                                <td><?php echo esc_html($entry['time'] ?? ''); ?></td>
+                                                <td><?php echo esc_html($entry['url'] ?? ''); ?></td>
+                                                <td><?php echo esc_html($entry['type'] ?? ''); ?></td>
+                                                <td>
+                                                    <?php if (!empty($entry['success'])): ?>
+                                                        <span style="color:#00a32a;">✓</span>
+                                                    <?php else: ?>
+                                                        <span style="color:#d63638;">✗ <?php echo esc_html($entry['code'] ?? ''); ?></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php endif; ?>
+
+                            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                                <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                            </div>
+                        </div>
+
                         <!-- Notion Integration -->
                         <div class="sseo-ai-dashboard-card">
                             <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>

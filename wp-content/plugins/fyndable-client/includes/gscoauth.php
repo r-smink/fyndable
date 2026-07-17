@@ -352,6 +352,10 @@ class GscOAuth
         if (!is_array($body)) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
         $body['refresh_token'] = $refresh;
         $body['created'] = time();
+        if (empty($body['scope'])) {
+            $existing = get_option('aiseoclient_gsc_tokens', []);
+            $body['scope'] = $existing['scope'] ?? '';
+        }
         update_option('aiseoclient_gsc_tokens', $body, false);
         return $body;
     }
