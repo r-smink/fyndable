@@ -138,11 +138,19 @@ class LicenseValidator
             'starter' => ['content_analysis', 'meta_optimization'],
             'trial' => ['content_analysis', 'meta_optimization', 'serp_tracking', 'keyword_research'],
             'professional' => ['content_analysis', 'meta_optimization', 'serp_tracking', 'keyword_research'],
-            'business' => ['content_analysis', 'meta_optimization', 'serp_tracking', 'keyword_research', 'content_decay', 'ai_generation'],
-            'agency' => ['content_analysis', 'meta_optimization', 'serp_tracking', 'keyword_research', 'content_decay', 'ai_generation', 'multi_site', 'white_label'],
+            'business' => ['content_analysis', 'meta_optimization', 'serp_tracking', 'keyword_research', 'content_decay', 'ai_generation', 'content_optimizer_calibration', 'advanced_backlinks', 'content_workflow', 'prompt_template_library'],
+            'agency' => ['content_analysis', 'meta_optimization', 'serp_tracking', 'keyword_research', 'content_decay', 'ai_generation', 'multi_site', 'white_label', 'content_optimizer_calibration', 'advanced_backlinks', 'content_workflow', 'prompt_template_library'],
         ];
 
         return in_array($feature, $features[$tier] ?? []);
+    }
+
+    /**
+     * Check if current tier is Business or higher (Business, Agency or Dev).
+     */
+    public function isBusinessPlus(): bool
+    {
+        return in_array($this->getLicenseTier(), ['business', 'agency', 'dev'], true);
     }
 
     /**

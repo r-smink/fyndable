@@ -117,6 +117,12 @@ class ExternalIntegrations
         // Ahrefs
         register_setting('sseo_ai_integrations', 'sseo_ai_ahrefs_api_key');
 
+        // DataForSEO
+        register_setting('sseo_ai_integrations', 'sseo_ai_dataforseo_api_key');
+
+        // Backlink provider preference
+        register_setting('sseo_ai_integrations', 'sseo_ai_backlink_provider', ['default' => 'dataforseo']);
+
         // Google Analytics 4
         register_setting('sseo_ai_integrations', 'sseo_ai_ga4_property_id');
 
@@ -186,6 +192,10 @@ class ExternalIntegrations
 
         // Ahrefs
         $ahrefsApiKey = get_option('sseo_ai_ahrefs_api_key', '');
+
+        // DataForSEO
+        $dataforseoApiKey = get_option('sseo_ai_dataforseo_api_key', '');
+        $backlinkProvider = get_option('sseo_ai_backlink_provider', 'dataforseo');
 
         // Google Analytics 4
         $ga4PropertyId = get_option('sseo_ai_ga4_property_id', '');
@@ -683,6 +693,41 @@ class ExternalIntegrations
                                     <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
                                 </a>
                             <?php endif; ?>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
+                        </div>
+
+                        <!-- DataForSEO Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('DataForSEO Backlinks', 'ai-seo-client'); ?></h2>
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="dataforseo_api_key"><?php esc_html_e('DataForSEO API Credentials', 'ai-seo-client'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="password" id="dataforseo_api_key" name="sseo_ai_dataforseo_api_key"
+                                               value="<?php echo esc_attr($dataforseoApiKey); ?>" class="regular-text">
+                                        <p class="description">
+                                            <?php esc_html_e('Enter login:password from your DataForSEO account.', 'ai-seo-client'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="backlink_provider"><?php esc_html_e('Preferred Backlink Provider', 'ai-seo-client'); ?></label>
+                                    </th>
+                                    <td>
+                                        <select id="backlink_provider" name="sseo_ai_backlink_provider">
+                                            <option value="dataforseo" <?php selected($backlinkProvider, 'dataforseo'); ?>><?php esc_html_e('DataForSEO (primary)', 'ai-seo-client'); ?></option>
+                                            <option value="ahrefs" <?php selected($backlinkProvider, 'ahrefs'); ?>><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></option>
+                                            <option value="seranking" <?php selected($backlinkProvider, 'seranking'); ?>><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></option>
+                                            <option value="semrush" <?php selected($backlinkProvider, 'semrush'); ?>><?php esc_html_e('Semrush', 'ai-seo-client'); ?></option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
                         <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #2563eb 0%, #db2777 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
                     </div>

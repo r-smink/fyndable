@@ -69,6 +69,10 @@ class LicenseFeatureManager
         'bulk_optimizer' => ['name' => 'Bulk AI Optimizer', 'tier' => 'business', 'category' => 'AI Generation'],
         'content_decay' => ['name' => 'Content Decay Monitor', 'tier' => 'business', 'category' => 'AI Generation'],
         'audit_service' => ['name' => 'Audit Service', 'tier' => 'business', 'category' => 'AI Generation'],
+        'content_optimizer_calibration' => ['name' => 'Content Optimizer Calibration', 'tier' => 'business', 'category' => 'Advanced SEO'],
+        'advanced_backlinks' => ['name' => 'Advanced Backlinks / DataForSEO', 'tier' => 'business', 'category' => 'Advanced SEO'],
+        'content_workflow' => ['name' => 'Content Workflow', 'tier' => 'business', 'category' => 'Advanced SEO'],
+        'prompt_template_library' => ['name' => 'Prompt Template Library', 'tier' => 'business', 'category' => 'AI Generation'],
         
         // Agency+ Features
         'seo_revisions' => ['name' => 'SEO Revisions', 'tier' => 'agency', 'category' => 'Agency Tools'],

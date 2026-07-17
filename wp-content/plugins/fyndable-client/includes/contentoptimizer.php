@@ -31,8 +31,19 @@ class ContentOptimizer
 
     public function register(): void
     {
+        add_filter('cron_schedules', [$this, 'addCronSchedules']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        // Menu registration moved to Client class
+        // Calibration cron: weekly correlation of term coverage vs rankings
+        if (!wp_next_scheduled('sseo_ai_calibration_run')) {
+            wp_schedule_event(strtotime('next sunday 2:00 am'), 'weekly', 'sseo_ai_calibration_run');
+        }
+        add_action('sseo_ai_calibration_run', [$this, 'runCalibration']);
+    }
+
+    public function addCronSchedules(array $schedules): array
+    {
+        $schedules['weekly'] = ['interval' => 7 * DAY_IN_SECONDS, 'display' => __('Once Weekly', 'ai-seo-client')];
+        return $schedules;
     }
 
     public function addMenu(): void
@@ -67,6 +78,16 @@ class ContentOptimizer
                 'keyword' => ['type' => 'string', 'required' => true],
                 'content' => ['type' => 'string', 'required' => true],
                 'title' => ['type' => 'string', 'default' => ''],
+                'post_id' => ['type' => 'integer', 'default' => 0],
+            ],
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/optimizer/calibration/(?P<id>\\d+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetCalibration'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+            'args' => [
+                'id' => ['type' => 'integer', 'required' => true],
             ],
         ]);
 
@@ -250,11 +271,16 @@ PROMPT;
      * Score content against a topic model — the real-time content score.
      * Returns 0-100 score + per-term coverage analysis.
      */
-    public function scoreContent(string $keyword, string $content, string $title = ''): array|\WP_Error
+    public function scoreContent(string $keyword, string $content, string $title = '', ?int $postId = null): array|\WP_Error
     {
         $model = $this->getTopicModel($keyword);
         if (is_wp_error($model)) {
             return $model;
+        }
+
+        // Calibration: store model and term coverage per post when post_id is known
+        if ($postId && get_post($postId)) {
+            update_post_meta($postId, '_sseo_ai_topic_model', $model);
         }
 
         $plainContent = strtolower(wp_strip_all_tags($content));
@@ -333,7 +359,7 @@ PROMPT;
         $overused = count(array_filter($termResults, fn($t) => $t['status'] === 'overused'));
         $low = count(array_filter($termResults, fn($t) => $t['status'] === 'low'));
 
-        return [
+        $result = [
             'content_score' => $contentScore,
             'grade' => $grade,
             'word_count' => $wordCount,
@@ -351,6 +377,24 @@ PROMPT;
             'questions' => $model['questions'] ?? [],
             'entities' => $model['entities'] ?? [],
         ];
+
+        if ($postId && get_post($postId)) {
+            update_post_meta($postId, '_sseo_ai_term_coverage', $termResults);
+            update_post_meta($postId, '_sseo_ai_content_score', $contentScore);
+
+            if ($this->isCalibrationEnabled()) {
+                $correlations = $this->getTermCorrelations($postId);
+                $correlationMap = [];
+                foreach ($correlations as $c) {
+                    $correlationMap[$c['term']] = $c['correlation'];
+                }
+                foreach ($result['term_results'] as $idx => $tr) {
+                    $result['term_results'][$idx]['correlation'] = $correlationMap[$tr['term']] ?? null;
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -454,7 +498,8 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
         $keyword = sanitize_text_field($request->get_param('keyword'));
         $content = $request->get_param('content');
         $title = sanitize_text_field($request->get_param('title') ?: '');
-        return $this->scoreContent($keyword, $content, $title);
+        $postId = (int) $request->get_param('post_id');
+        return $this->scoreContent($keyword, $content, $title, $postId ?: null);
     }
 
     public function restSuggestTermInsertions(\WP_REST_Request $request): array|\WP_Error
@@ -466,10 +511,130 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
     }
 
     /**
+     * Get calibration data for a post: rank-correlation per term.
+     */
+    public function restGetCalibration(\WP_REST_Request $request): array
+    {
+        $postId = (int) $request->get_param('id');
+        return [
+            'post_id' => $postId,
+            'term_correlations' => $this->getTermCorrelations($postId),
+        ];
+    }
+
+    /**
+     * Run calibration: correlate term coverage with rank history.
+     */
+    public function runCalibration(): void
+    {
+        global $wpdb;
+
+        $rankTable = $wpdb->prefix . 'sseo_ai_tracked_keywords';
+        $historyTable = $wpdb->prefix . 'sseo_ai_rank_history';
+
+        $posts = get_posts([
+            'post_type' => 'any',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => '_sseo_ai_term_coverage',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+            'fields' => 'ids',
+        ]);
+
+        $termStats = [];
+
+        foreach ($posts as $postId) {
+            $coverage = get_post_meta($postId, '_sseo_ai_term_coverage', true);
+            $keywordId = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$rankTable} WHERE post_id = %d AND active = 1 LIMIT 1", $postId));
+            if (!$keywordId || empty($coverage) || !is_array($coverage)) {
+                continue;
+            }
+
+            $avgPosition = $wpdb->get_var($wpdb->prepare(
+                "SELECT AVG(position) FROM {$historyTable} WHERE keyword_id = %d",
+                $keywordId
+            ));
+            $avgPosition = (float) $avgPosition;
+            $isTop3 = $avgPosition > 0 && $avgPosition <= 3;
+
+            foreach ($coverage as $term) {
+                $name = $term['term'] ?? '';
+                if (empty($name)) continue;
+
+                if (!isset($termStats[$name])) {
+                    $termStats[$name] = ['top3_good' => 0, 'top3_total' => 0, 'all_total' => 0, 'good_total' => 0];
+                }
+
+                $termStats[$name]['all_total']++;
+                if ($term['status'] === 'good') {
+                    $termStats[$name]['good_total']++;
+                }
+                if ($isTop3) {
+                    $termStats[$name]['top3_total']++;
+                    if ($term['status'] === 'good') {
+                        $termStats[$name]['top3_good']++;
+                    }
+                }
+            }
+        }
+
+        $correlations = [];
+        foreach ($termStats as $term => $stats) {
+            $globalRate = $stats['all_total'] > 0 ? $stats['good_total'] / $stats['all_total'] : 0;
+            $top3Rate = $stats['top3_total'] > 0 ? $stats['top3_good'] / $stats['top3_total'] : 1;
+            $correlations[$term] = [
+                'lift' => round($top3Rate - $globalRate, 2),
+                'top3_rate' => round($top3Rate, 2),
+                'global_rate' => round($globalRate, 2),
+                'sample_size' => $stats['all_total'],
+            ];
+        }
+
+        update_option('sseo_ai_term_correlations', $correlations);
+    }
+
+    /**
+     * Get stored term correlation data for a post.
+     */
+    private function getTermCorrelations(int $postId): array
+    {
+        $correlations = get_option('sseo_ai_term_correlations', []);
+        $coverage = get_post_meta($postId, '_sseo_ai_term_coverage', true);
+        if (empty($coverage) || !is_array($coverage)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($coverage as $term) {
+            $name = $term['term'] ?? '';
+            $result[] = [
+                'term' => $name,
+                'status' => $term['status'] ?? '',
+                'correlation' => $correlations[$name] ?? null,
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * Check if calibration features are available (Business+ only).
+     */
+    private function isCalibrationEnabled(): bool
+    {
+        $validator = new LicenseValidator($this->settings);
+        return $validator->isBusinessPlus();
+    }
+
+    /**
      * Render the Content Optimizer admin page (SurferSEO-style editor).
      */
     public function renderPage(): void
     {
+        $postId = (int) ($_GET['post_id'] ?? 0);
         ?>
         <div class="wrap aiseo-modern">
             <h1><?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h1>
@@ -479,6 +644,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 <!-- Left: Editor -->
                 <div>
                     <div class="postbox" style="padding:20px;">
+                        <input type="hidden" id="opt-post-id" value="<?php echo esc_attr($postId); ?>">
                         <div style="display:flex; gap:10px; margin-bottom:15px;">
                             <input type="text" id="opt-keyword" class="regular-text" style="flex:1;" placeholder="<?php esc_attr_e('Target keyword...', 'ai-seo-client'); ?>">
                             <button type="button" class="button button-primary" id="opt-analyze"><?php esc_html_e('Analyze', 'ai-seo-client'); ?></button>
@@ -609,6 +775,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 var content = $('#opt-content').val().trim();
                 var title = $('#opt-title').val().trim();
                 var kw = $('#opt-keyword').val().trim();
+                var postId = parseInt($('#opt-post-id').val(), 10) || 0;
                 if (!content || !kw) return;
 
                 var btn = $(this);
@@ -617,7 +784,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 wp.apiFetch({
                     path: '/sseo-ai/v1/optimizer/score',
                     method: 'POST',
-                    data: { keyword: kw, content: content, title: title }
+                    data: { keyword: kw, content: content, title: title, post_id: postId }
                 }).then(function(result) {
                     scoreData = result;
                     renderScore(result);
@@ -647,7 +814,18 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                     var el = $('.opt-term[data-term="' + t.term + '"]');
                     if (el.length) {
                         var statusColors = {good:'#00a32a',missing:'#d63638',low:'#dba617',overused:'#b45309'};
-                        el.find('.opt-term-count').text(t.count + '/' + t.recommended).css('color', statusColors[t.status] || '#999');
+                        var corr = '';
+                        if (t.correlation) {
+                            var lift = parseFloat(t.correlation.lift);
+                            if (lift > 0.2) {
+                                corr = ' <span style="color:#00a32a;font-size:10px;" title="<?php echo esc_js(__('Higher coverage correlates with top rankings', 'ai-seo-client')); ?>">↑</span>';
+                            } else if (lift < -0.2) {
+                                corr = ' <span style="color:#d63638;font-size:10px;" title="<?php echo esc_js(__('Lower coverage correlates with top rankings', 'ai-seo-client')); ?>">↓</span>';
+                            } else if (lift >= -0.2 && lift <= 0.2) {
+                                corr = ' <span style="color:#999;font-size:10px;" title="<?php echo esc_js(__('No strong rank correlation yet', 'ai-seo-client')); ?>">•</span>';
+                            }
+                        }
+                        el.find('.opt-term-count').html(t.count + '/' + t.recommended + corr).css('color', statusColors[t.status] || '#999');
                         el.css('border-left-color', statusColors[t.status] || el.css('border-left-color'));
                     }
                 });

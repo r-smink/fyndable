@@ -60,6 +60,8 @@ class RankTracker
             best_position int DEFAULT 0,
             previous_position int DEFAULT 0,
             last_checked datetime DEFAULT NULL,
+            last_provider varchar(50) DEFAULT NULL,
+            last_error text DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             active tinyint(1) DEFAULT 1,
             PRIMARY KEY (id),
@@ -108,6 +110,13 @@ class RankTracker
         $createdAtExists = $wpdb->get_results("SHOW COLUMNS FROM {$this->tableName} LIKE 'created_at'");
         if (empty($createdAtExists)) {
             $wpdb->query("ALTER TABLE {$this->tableName} ADD COLUMN created_at datetime DEFAULT CURRENT_TIMESTAMP");
+        }
+        
+        // Check if last_provider and last_error columns exist
+        $lastProviderExists = $wpdb->get_results("SHOW COLUMNS FROM {$this->keywordsTable} LIKE 'last_provider'");
+        if (empty($lastProviderExists)) {
+            $wpdb->query("ALTER TABLE {$this->keywordsTable} ADD COLUMN last_provider varchar(50) DEFAULT NULL");
+            $wpdb->query("ALTER TABLE {$this->keywordsTable} ADD COLUMN last_error text DEFAULT NULL");
         }
     }
 
@@ -291,9 +300,12 @@ class RankTracker
                 continue;
             }
 
-            $position = $this->checkKeywordPosition($kw['keyword'], $kw['url'], $kw['country']);
+            $checkResult = $this->checkKeywordPosition($kw['keyword'], $kw['url'], $kw['country']);
+            $now = current_time('mysql');
 
-            if ($position !== null) {
+            if ($checkResult !== null) {
+                $position = (int) ($checkResult['position'] ?? 0);
+
                 // Insert history record
                 $wpdb->replace($this->tableName, [
                     'keyword_id' => $kw['id'],
@@ -307,7 +319,9 @@ class RankTracker
                 $updateData = [
                     'previous_position' => $kw['current_position'],
                     'current_position' => $position,
-                    'last_checked' => current_time('mysql'),
+                    'last_checked' => $now,
+                    'last_provider' => $checkResult['provider'] ?? null,
+                    'last_error' => $checkResult['error'] ?? null,
                 ];
                 if ($position > 0 && ($kw['best_position'] == 0 || $position < $kw['best_position'])) {
                     $updateData['best_position'] = $position;
@@ -315,6 +329,11 @@ class RankTracker
 
                 $wpdb->update($this->keywordsTable, $updateData, ['id' => $kw['id']]);
                 $checked++;
+            } else {
+                $wpdb->update($this->keywordsTable, [
+                    'last_error' => __('No response from dashboard', 'ai-seo-client'),
+                    'last_checked' => $now,
+                ], ['id' => $kw['id']]);
             }
         }
 
@@ -322,9 +341,10 @@ class RankTracker
     }
 
     /**
-     * Check a single keyword position via SaaS Dashboard SERP proxy
+     * Check a single keyword position via SaaS Dashboard SERP proxy.
+     * Returns null on connection failure, or an array with position, provider, checked_at, error.
      */
-    private function checkKeywordPosition(string $keyword, string $targetUrl, string $country): ?int
+    private function checkKeywordPosition(string $keyword, string $targetUrl, string $country): ?array
     {
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
@@ -347,22 +367,40 @@ class RankTracker
                     'target_url' => $targetUrl,
                     'country' => $country,
                 ]),
-                'timeout' => 30,
+                'timeout' => 60,
                 'sslverify' => true,
             ]
         );
 
         if (is_wp_error($response)) {
-            return null;
+            return [
+                'position' => 0,
+                'provider' => null,
+                'checked_at' => current_time('mysql'),
+                'error' => $response->get_error_message(),
+            ];
         }
 
+        $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
+        $now = current_time('mysql');
 
-        if (!empty($body['success']) && isset($body['position'])) {
-            return (int) $body['position'];
+        if ($statusCode !== 200 || empty($body['success']) || !isset($body['position'])) {
+            $message = $body['message'] ?? __('Invalid response from SERP service', 'ai-seo-client');
+            return [
+                'position' => 0,
+                'provider' => $body['provider'] ?? null,
+                'checked_at' => $now,
+                'error' => $message,
+            ];
         }
 
-        return null;
+        return [
+            'position' => (int) $body['position'],
+            'provider' => $body['provider'] ?? null,
+            'checked_at' => $body['checked_at'] ?? $now,
+            'error' => null,
+        ];
     }
 
     /**
@@ -430,11 +468,12 @@ class RankTracker
                                 <th style="width:60px;"><?php esc_html_e('Country', 'ai-seo-client'); ?></th>
                                 <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
                                 <th style="width:140px;"><?php esc_html_e('Last Checked', 'ai-seo-client'); ?></th>
+                                <th style="width:80px;"><?php esc_html_e('Provider', 'ai-seo-client'); ?></th>
                                 <th style="width:130px;"><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
                             </tr>
                         </thead>
                         <tbody id="rank-table-body">
-                            <tr><td colspan="8" style="text-align:center;color:#999;"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></td></tr>
+                            <tr><td colspan="9" style="text-align:center;color:#999;"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -458,10 +497,11 @@ class RankTracker
                     var keywords = (res && res.keywords) ? res.keywords : [];
 
                     if (!keywords.length) {
-                        tbody.append('<tr><td colspan="8" style="text-align:center;color:#999;"><?php echo esc_js(__('No keywords tracked yet. Add one above!', 'ai-seo-client')); ?></td></tr>');
+                        tbody.append('<tr><td colspan="9" style="text-align:center;color:#999;"><?php echo esc_js(__('No keywords tracked yet. Add one above!', 'ai-seo-client')); ?></td></tr>');
                         return;
                     }
 
+                    var now = new Date();
                     keywords.forEach(function(kw) {
                         var pos = kw.current_position || '—';
                         var prev = kw.previous_position || 0;
@@ -482,15 +522,29 @@ class RankTracker
                         var posColor = curr > 0 && curr <= 3 ? '#00a32a' : (curr <= 10 ? '#2271b1' : (curr <= 20 ? '#dba617' : '#d63638'));
                         if (curr === 0) posColor = '#999';
 
+                        var lastCheckedText = kw.last_checked || '<?php echo esc_js(__('Never', 'ai-seo-client')); ?>';
+                        var lastCheckedStyle = '';
+                        if (kw.last_checked) {
+                            var checkedDate = new Date(kw.last_checked.replace(' ', 'T'));
+                            if (!isNaN(checkedDate) && (now - checkedDate) > (48 * 60 * 60 * 1000)) {
+                                lastCheckedText += ' (stale)';
+                                lastCheckedStyle = 'color:#d63638;';
+                            }
+                        }
+
+                        var providerText = kw.last_provider ? kw.last_provider : '—';
+                        var errorAttr = kw.last_error ? ' title="' + $('<span>').text(kw.last_error).html().replace(/"/g, '&quot;') + '"' : '';
+
                         tbody.append(
-                            '<tr>' +
+                            '<tr' + errorAttr + '>' +
                             '<td><strong>' + $('<span>').text(kw.keyword).html() + '</strong></td>' +
                             '<td><span style="font-size:18px;font-weight:bold;color:' + posColor + ';">' + (curr || '—') + '</span></td>' +
                             '<td>' + changeHtml + '</td>' +
                             '<td>' + (kw.best_position || '—') + '</td>' +
                             '<td>' + (kw.country || '').toUpperCase() + '</td>' +
                             '<td style="font-size:12px;">' + $('<span>').text(kw.url || '').html() + '</td>' +
-                            '<td style="font-size:12px;">' + (kw.last_checked || '<?php echo esc_js(__('Never', 'ai-seo-client')); ?>') + '</td>' +
+                            '<td style="font-size:12px;' + lastCheckedStyle + '">' + lastCheckedText + '</td>' +
+                            '<td style="font-size:12px;">' + $('<span>').text(providerText).html() + '</td>' +
                             '<td>' +
                                 '<button class="button button-small rank-show-history" data-id="' + kw.id + '" data-keyword="' + $('<span>').text(kw.keyword).html() + '"><?php echo esc_js(__('History', 'ai-seo-client')); ?></button> ' +
                                 '<button class="button button-small rank-delete" data-id="' + kw.id + '" style="color:#d63638;">✕</button>' +
@@ -501,7 +555,7 @@ class RankTracker
                 }).catch(function(error) {
                     var tbody = $('#rank-table-body');
                     tbody.empty();
-                    tbody.append('<tr><td colspan="8" style="text-align:center;color:#d63638;"><?php echo esc_js(__('Failed to load keywords. Please refresh the page.', 'ai-seo-client')); ?></td></tr>');
+                    tbody.append('<tr><td colspan="9" style="text-align:center;color:#d63638;"><?php echo esc_js(__('Failed to load keywords. Please refresh the page.', 'ai-seo-client')); ?></td></tr>');
                     console.error('Rank tracker loadKeywords error:', error);
                 });
             }

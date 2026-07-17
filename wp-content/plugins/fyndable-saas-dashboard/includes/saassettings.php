@@ -81,6 +81,9 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openai_model', ['default' => 'gpt-4']);
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_provider', ['default' => 'serpapi']);
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_dataforseo_api_key');
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_serpapi_api_key');
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_seranking_api_key');
 
         // OpenRouter (multi-model gateway)
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_openrouter_api_key');
@@ -170,6 +173,15 @@ class SaaSSettings
     public function getSerpApiProvider(): string
     {
         return get_option('ai_seo_saas_serp_api_provider', 'serpapi');
+    }
+    
+    /**
+     * Get SERP API key for a specific provider.
+     */
+    public function getSerpApiKeyForProvider(string $provider): string
+    {
+        $specific = get_option('ai_seo_saas_serp_' . $provider . '_api_key', '');
+        return !empty($specific) ? $specific : get_option('ai_seo_saas_serp_api_key', '');
     }
     
     /**

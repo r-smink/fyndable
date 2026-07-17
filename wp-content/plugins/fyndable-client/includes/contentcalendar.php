@@ -18,25 +18,57 @@ class ContentCalendar
 {
     private Settings $settings;
     private LLMClient $llm;
-    
-    public function __construct(Settings $settings, LLMClient $llm)
+    private LicenseValidator $licenseValidator;
+
+    public function __construct(Settings $settings, LLMClient $llm, LicenseValidator $licenseValidator)
     {
         $this->settings = $settings;
         $this->llm = $llm;
+        $this->licenseValidator = $licenseValidator;
     }
-    
+
     public function register(): void
     {
         // Menu registration moved to Client class
         add_action('admin_init', [$this, 'registerSettings']);
-        add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('transition_post_status', [$this, 'handleStatusChange'], 10, 3);
-        add_action('wp_ajax_sseo_ai_assign_content', [$this, 'ajaxAssignContent']);
-        add_action('wp_ajax_sseo_ai_approve_content', [$this, 'ajaxApproveContent']);
-        add_action('wp_ajax_sseo_ai_move_draft', [$this, 'ajaxMoveDraft']);
-        
-        // Meta box moved to PostMetaBox tabbed container
-        add_action('save_post', [$this, 'saveWorkflowMetaBox'], 10, 2);
+        add_action('init', [$this, 'registerCustomStatuses']);
+
+        // Advanced workflow features (custom statuses, approvals, assignments) are Business+ only
+        if ($this->licenseValidator->isBusinessPlus()) {
+            add_action('rest_api_init', [$this, 'registerRestRoutes']);
+            add_action('transition_post_status', [$this, 'handleStatusChange'], 10, 3);
+            add_action('wp_ajax_sseo_ai_assign_content', [$this, 'ajaxAssignContent']);
+            add_action('wp_ajax_sseo_ai_approve_content', [$this, 'ajaxApproveContent']);
+            add_action('wp_ajax_sseo_ai_move_draft', [$this, 'ajaxMoveDraft']);
+
+            // Meta box moved to PostMetaBox tabbed container
+            add_action('save_post', [$this, 'saveWorkflowMetaBox'], 10, 2);
+        }
+    }
+
+    /**
+     * Register custom workflow statuses.
+     */
+    public function registerCustomStatuses(): void
+    {
+        $statuses = [
+            'sseo_ideation' => __('Ideation', 'ai-seo-client'),
+            'sseo_in_progress' => __('In Progress', 'ai-seo-client'),
+            'sseo_review' => __('In Review', 'ai-seo-client'),
+            'sseo_revision' => __('Revision Needed', 'ai-seo-client'),
+            'sseo_approved' => __('Approved', 'ai-seo-client'),
+            'sseo_scheduled' => __('Scheduled', 'ai-seo-client'),
+        ];
+
+        foreach ($statuses as $slug => $label) {
+            register_post_status($slug, [
+                'label' => $label,
+                'public' => false,
+                'protected' => true,
+                'show_in_admin_status_list' => true,
+                'label_count' => _n_noop("{$label} <span class=\"count\">(%s)</span>", "{$label} <span class=\"count\">(%s)</span>", 'ai-seo-client'),
+            ]);
+        }
     }
     
     public function addMenu(): void
@@ -575,14 +607,17 @@ class ContentCalendar
                 <label for="workflow_status"><strong><?php esc_html_e('Workflow Status:', 'ai-seo-client'); ?></strong></label><br>
                 <select id="workflow_status" name="sseo_workflow_status" style="width: 100%;">
                     <option value="draft" <?php selected($workflowStatus, 'draft'); ?>><?php esc_html_e('Draft', 'ai-seo-client'); ?></option>
-                    <option value="in_progress" <?php selected($workflowStatus, 'in_progress'); ?>><?php esc_html_e('In Progress', 'ai-seo-client'); ?></option>
-                    <option value="pending_review" <?php selected($workflowStatus, 'pending_review'); ?>><?php esc_html_e('Pending Review', 'ai-seo-client'); ?></option>
+                    <option value="sseo_ideation" <?php selected($workflowStatus, 'sseo_ideation'); ?>><?php esc_html_e('Ideation', 'ai-seo-client'); ?></option>
+                    <option value="sseo_in_progress" <?php selected($workflowStatus, 'sseo_in_progress'); ?>><?php esc_html_e('In Progress', 'ai-seo-client'); ?></option>
+                    <option value="sseo_review" <?php selected($workflowStatus, 'sseo_review'); ?>><?php esc_html_e('In Review', 'ai-seo-client'); ?></option>
+                    <option value="sseo_revision" <?php selected($workflowStatus, 'sseo_revision'); ?>><?php esc_html_e('Revision Needed', 'ai-seo-client'); ?></option>
                     <option value="approved" <?php selected($workflowStatus, 'approved'); ?>><?php esc_html_e('Approved', 'ai-seo-client'); ?></option>
+                    <option value="sseo_scheduled" <?php selected($workflowStatus, 'sseo_scheduled'); ?>><?php esc_html_e('Scheduled', 'ai-seo-client'); ?></option>
                     <option value="rejected" <?php selected($workflowStatus, 'rejected'); ?>><?php esc_html_e('Rejected', 'ai-seo-client'); ?></option>
                 </select>
             </p>
-            
-            <?php if ($workflowStatus === 'pending_review' && current_user_can('edit_others_posts')): ?>
+
+            <?php if (in_array($workflowStatus, ['pending_review', 'sseo_review']) && current_user_can('edit_others_posts')): ?>
             <p>
                 <button type="button" class="button button-primary" style="width: 100%;" 
                         onclick="sseoQuickApprove(<?php echo $post->ID; ?>)">
@@ -656,11 +691,12 @@ class ContentCalendar
         if (isset($_POST['sseo_workflow_status'])) {
             $oldStatus = get_post_meta($postId, '_sseo_ai_workflow_status', true);
             $newStatus = sanitize_text_field($_POST['sseo_workflow_status']);
-            
+
             update_post_meta($postId, '_sseo_ai_workflow_status', $newStatus);
-            
-            // Send notification if status changed to pending review
-            if ($oldStatus != 'pending_review' && $newStatus === 'pending_review') {
+
+            // Send notification if status changed to a review state
+            $reviewStatuses = ['pending_review', 'sseo_review'];
+            if (!in_array($oldStatus, $reviewStatuses, true) && in_array($newStatus, $reviewStatuses, true)) {
                 $this->sendApprovalNotification($postId);
             }
         }
@@ -831,13 +867,33 @@ class ContentCalendar
     private function getWorkflowStats(): array
     {
         global $wpdb;
-        
-        return [
-            'draft' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'draft' AND post_type = 'post'"),
-            'pending' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'pending' AND post_type = 'post'"),
-            'scheduled' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'future' AND post_type = 'post'"),
-            'published' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type = 'post' AND post_date > DATE_SUB(NOW(), INTERVAL 30 DAY)"),
-        ];
+
+        $postIds = $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_type = 'post' AND post_status IN ('draft','pending','future','publish','sseo_ideation','sseo_in_progress','sseo_review','sseo_revision','sseo_approved','sseo_scheduled')");
+        $counts = ['draft' => 0, 'pending' => 0, 'scheduled' => 0, 'published' => 0];
+
+        foreach ($postIds as $postId) {
+            $workflowStatus = get_post_meta((int) $postId, '_sseo_ai_workflow_status', true);
+            if (empty($workflowStatus)) {
+                $workflowStatus = 'draft';
+            }
+
+            if (in_array($workflowStatus, ['draft', 'sseo_ideation'], true)) {
+                $counts['draft']++;
+            } elseif (in_array($workflowStatus, ['in_progress', 'sseo_in_progress', 'sseo_revision'], true)) {
+                $counts['pending']++;
+            } elseif (in_array($workflowStatus, ['pending_review', 'sseo_review'], true)) {
+                $counts['pending']++;
+            } elseif (in_array($workflowStatus, ['approved', 'sseo_approved', 'scheduled', 'sseo_scheduled'], true)) {
+                $counts['scheduled']++;
+            }
+
+            $post = get_post($postId);
+            if ($post && $post->post_status === 'publish' && $post->post_date > date('Y-m-d H:i:s', strtotime('-30 days'))) {
+                $counts['published']++;
+            }
+        }
+
+        return $counts;
     }
     
     /**
@@ -854,7 +910,7 @@ class ContentCalendar
             LEFT JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id AND pm1.meta_key = '_sseo_ai_assigned_to'
             LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = '_sseo_ai_workflow_status'
             WHERE p.post_type = 'post'
-            AND pm2.meta_value = 'pending_review'
+            AND pm2.meta_value IN ('pending_review', 'sseo_review')
             ORDER BY p.post_modified DESC
         ");
         
@@ -973,7 +1029,7 @@ class ContentCalendar
         
         // Auto-update workflow status based on post status
         if ($newStatus === 'publish' && $oldStatus !== 'publish') {
-            update_post_meta($post->ID, '_sseo_ai_workflow_status', 'approved');
+            update_post_meta($post->ID, '_sseo_ai_workflow_status', 'sseo_approved');
         }
     }
     
@@ -994,11 +1050,11 @@ class ContentCalendar
             wp_send_json_error(['message' => 'Post ID required']);
         }
         
-        update_post_meta($postId, '_sseo_ai_workflow_status', 'approved');
-        
+        update_post_meta($postId, '_sseo_ai_workflow_status', 'sseo_approved');
+
         // Optionally publish the post
         wp_publish_post($postId);
-        
+
         wp_send_json_success(['message' => 'Content approved']);
     }
     
@@ -1045,8 +1101,8 @@ class ContentCalendar
             wp_send_json_error(['message' => $result->get_error_message()]);
         }
         
-        update_post_meta($postId, '_sseo_ai_workflow_status', 'scheduled');
-        
+        update_post_meta($postId, '_sseo_ai_workflow_status', 'sseo_scheduled');
+
         wp_send_json_success(['message' => 'Post scheduled']);
     }
     

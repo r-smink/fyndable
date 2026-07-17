@@ -65,6 +65,7 @@ class Client
     private ?InternationalSEO $internationalSEO = null;
     private ?TechnicalSEOAuditor $technicalSEOAuditor = null;
     private ?ContentCalendar $contentCalendar = null;
+    private ?PromptTemplateLibrary $promptTemplateLibrary = null;
     private ?AdvancedBacklinks $advancedBacklinks = null;
     private ?SmartInternalLinking $smartInternalLinking = null;
     private ?EEATValidator $eeatValidator = null;
@@ -287,7 +288,7 @@ class Client
         $this->contentPerformanceMonitor->register();
         
         // Content Calendar - available to all tiers
-        $this->contentCalendar = new ContentCalendar($this->settings, $this->llmClient);
+        $this->contentCalendar = new ContentCalendar($this->settings, $this->llmClient, $this->licenseValidator);
         $this->contentCalendar->register();
         
         // Smart Internal Linking - available to all tiers
@@ -443,7 +444,10 @@ class Client
         
         // Business+ features
         if (in_array($tier, ['business', 'agency', 'dev'])) {
-            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings);
+            $this->promptTemplateLibrary = new PromptTemplateLibrary($this->settings, $this->licenseValidator);
+            $this->promptTemplateLibrary->register();
+
+            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary);
             $this->contentWriter->register();
             
             $this->aiRepurposer = new AIRepurposer($this->settings, $this->llmClient);
@@ -515,7 +519,7 @@ class Client
             $this->postMetaBox->addPanel('content', 'performance', __('Performance', 'ai-seo-client'), [$this->contentPerformanceMonitor, 'renderMetaBox']);
         }
 
-        if ($this->contentCalendar) {
+        if ($this->contentCalendar && $this->licenseValidator->isBusinessPlus()) {
             $this->postMetaBox->addPanel('content', 'workflow', __('Workflow', 'ai-seo-client'), [$this->contentCalendar, 'renderWorkflowMetaBox']);
         }
 
@@ -918,6 +922,18 @@ class Client
                     'ai-seo-ab-testing',
                     [$this, 'renderABTestingPage']
                 );
+
+                // 14b. Prompt Templates - Business+
+                if ($this->promptTemplateLibrary) {
+                    add_submenu_page(
+                        'fyndable-dashboard',
+                        __('Prompt Templates', 'ai-seo-client'),
+                        __('📝 Prompt Templates', 'ai-seo-client'),
+                        'manage_options',
+                        'ai-seo-prompt-templates',
+                        [$this, 'renderPromptTemplatesPage']
+                    );
+                }
             }
         }
 
@@ -1504,6 +1520,22 @@ class Client
         }
         if ($this->abTesting) {
             $this->abTesting->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Prompt Templates page - delegates to PromptTemplateLibrary class
+     */
+    public function renderPromptTemplatesPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->promptTemplateLibrary) {
+            $this->promptTemplateLibrary->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }

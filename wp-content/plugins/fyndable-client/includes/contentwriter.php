@@ -14,12 +14,14 @@ class ContentWriter
     private LlmClient $llm;
     private Settings $settings;
     private ?ContentBrief $contentBrief;
+    private ?PromptTemplateLibrary $templates;
 
-    public function __construct(LlmClient $llm, Settings $settings, ?ContentBrief $contentBrief = null)
+    public function __construct(LlmClient $llm, Settings $settings, ?ContentBrief $contentBrief = null, ?PromptTemplateLibrary $templates = null)
     {
         $this->llm = $llm;
         $this->settings = $settings;
         $this->contentBrief = $contentBrief;
+        $this->templates = $templates;
     }
 
     public function register(): void
@@ -55,6 +57,7 @@ class ContentWriter
                 'word_count' => ['type' => 'integer', 'required' => false],
                 'outline' => ['type' => 'string', 'required' => false],
                 'brief_id' => ['type' => 'string', 'required' => false],
+                'template_id' => ['type' => 'string', 'required' => false],
                 'create_draft' => ['type' => 'boolean', 'required' => false],
             ],
         ]);
@@ -71,6 +74,7 @@ class ContentWriter
                 'context' => ['type' => 'string', 'required' => false],
                 'tone' => ['type' => 'string', 'required' => false],
                 'word_count' => ['type' => 'integer', 'required' => false],
+                'template_id' => ['type' => 'string', 'required' => false],
             ],
         ]);
     }
@@ -85,6 +89,7 @@ class ContentWriter
         $targetWords = $options['word_count'] ?? 1500;
         $outline = $options['outline'] ?? '';
         $briefId = $options['brief_id'] ?? '';
+        $templateId = $options['template_id'] ?? '';
 
         // Get brief data if available
         $brief = null;
@@ -103,26 +108,26 @@ class ContentWriter
 
         // Generate title if not provided
         if (!$title) {
-            $title = $this->generateTitle($keyword, $brief);
+            $title = $this->generateTitle($keyword, $brief, $templateId);
             if (is_wp_error($title)) {
                 $title = ucfirst($keyword);
             }
         }
 
         // Build the article in sections for higher quality
-        $sections = $this->buildSections($keyword, $title, $outline, $brief, $tone, $targetWords);
+        $sections = $this->buildSections($keyword, $title, $outline, $brief, $tone, $targetWords, $templateId);
         if (is_wp_error($sections)) {
             return $sections;
         }
 
         // Generate intro
-        $intro = $this->generateIntro($keyword, $title, $tone, $brief);
+        $intro = $this->generateIntro($keyword, $title, $tone, $brief, $templateId);
         if (is_wp_error($intro)) {
             return $intro;
         }
 
         // Generate conclusion
-        $conclusion = $this->generateConclusion($keyword, $title, $tone);
+        $conclusion = $this->generateConclusion($keyword, $title, $tone, $templateId);
         if (is_wp_error($conclusion)) {
             return $conclusion;
         }
@@ -131,7 +136,7 @@ class ContentWriter
         $faq = '';
         $questions = $brief['recommended_questions'] ?? [];
         if (!empty($questions)) {
-            $faq = $this->generateFAQ($keyword, $questions, $tone);
+            $faq = $this->generateFAQ($keyword, $questions, $tone, $templateId);
         }
 
         // Assemble the full article
@@ -142,7 +147,7 @@ class ContentWriter
         $article .= "\n\n<h2>" . __('Conclusion', 'ai-seo-client') . "</h2>\n\n" . $conclusion;
 
         // Generate meta description
-        $metaDesc = $this->generateMetaDescription($keyword, $title);
+        $metaDesc = $this->generateMetaDescription($keyword, $title, $templateId);
 
         $result = [
             'title' => $title,
@@ -172,6 +177,7 @@ class ContentWriter
         $tone = $options['tone'] ?? 'professional';
         $targetWords = $options['word_count'] ?? 300;
         $context = $options['context'] ?? '';
+        $templateId = $options['template_id'] ?? '';
 
         $prompt = "Write a section for an article about \"{$keyword}\".
 
@@ -189,6 +195,19 @@ Requirements:
 
 Write the section content:";
 
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'heading' => $heading,
+                'tone' => $tone,
+                'word_count' => (int) $targetWords,
+                'context' => $context ? "Context from previous sections: {$context}\n" : "",
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
+
         $result = $this->llm->call($prompt, null, max(800, $targetWords * 2), null, [], 'content_generation');
         if (is_wp_error($result)) {
             return $result;
@@ -200,7 +219,7 @@ Write the section content:";
     /**
      * Generate an SEO-optimized title.
      */
-    private function generateTitle(string $keyword, ?array $brief = null): string|\WP_Error
+    private function generateTitle(string $keyword, ?array $brief = null, ?string $templateId = null): string|\WP_Error
     {
         $serpTitles = '';
         if ($brief && !empty($brief['competitor_analysis']['serp_titles'])) {
@@ -217,6 +236,16 @@ Requirements:
 
 Return ONLY the title, nothing else.";
 
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'serp_titles' => $serpTitles,
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
+
         $result = $this->llm->call($prompt, null, 100, null, [], 'meta_optimization');
         if (is_wp_error($result)) {
             return $result;
@@ -228,7 +257,7 @@ Return ONLY the title, nothing else.";
     /**
      * Generate article introduction.
      */
-    private function generateIntro(string $keyword, string $title, string $tone, ?array $brief = null): string|\WP_Error
+    private function generateIntro(string $keyword, string $title, string $tone, ?array $brief = null, ?string $templateId = null): string|\WP_Error
     {
         $intent = $brief['search_intent'] ?? 'informational';
 
@@ -247,6 +276,18 @@ Requirements:
 
 Write the introduction:";
 
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'title' => $title,
+                'tone' => $tone,
+                'intent' => $intent,
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
+
         $result = $this->llm->call($prompt, null, 500, null, [], 'content_generation');
         if (is_wp_error($result)) {
             return $result;
@@ -258,7 +299,7 @@ Write the introduction:";
     /**
      * Generate conclusion.
      */
-    private function generateConclusion(string $keyword, string $title, string $tone): string|\WP_Error
+    private function generateConclusion(string $keyword, string $title, string $tone, ?string $templateId = null): string|\WP_Error
     {
         $prompt = "Write a conclusion (100-150 words) for an article titled: \"{$title}\"
 Target keyword: \"{$keyword}\"
@@ -273,6 +314,17 @@ Requirements:
 
 Write the conclusion:";
 
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'title' => $title,
+                'tone' => $tone,
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
+
         $result = $this->llm->call($prompt, null, 400);
         if (is_wp_error($result)) {
             return $result;
@@ -284,7 +336,7 @@ Write the conclusion:";
     /**
      * Generate FAQ section.
      */
-    private function generateFAQ(string $keyword, array $questions, string $tone): string
+    private function generateFAQ(string $keyword, array $questions, string $tone, ?string $templateId = null): string
     {
         $qList = implode("\n", array_slice($questions, 0, 5));
 
@@ -300,6 +352,17 @@ Format each as:
 
 Write the FAQ:";
 
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'tone' => $tone,
+                'questions' => $qList,
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
+
         $result = $this->llm->call($prompt, null, 1500);
         if (is_wp_error($result)) {
             return '';
@@ -311,12 +374,22 @@ Write the FAQ:";
     /**
      * Generate meta description.
      */
-    private function generateMetaDescription(string $keyword, string $title): string|\WP_Error
+    private function generateMetaDescription(string $keyword, string $title, ?string $templateId = null): string|\WP_Error
     {
         $prompt = "Write a meta description (max 155 characters) for an article titled: \"{$title}\"
 Include the keyword: \"{$keyword}\"
 Make it compelling with a call-to-action.
 Return ONLY the meta description, nothing else.";
+
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'title' => $title,
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
 
         $result = $this->llm->call($prompt, null, 100);
         if (is_wp_error($result)) {
@@ -329,7 +402,7 @@ Return ONLY the meta description, nothing else.";
     /**
      * Build article sections from outline or brief.
      */
-    private function buildSections(string $keyword, string $title, string $outline, ?array $brief, string $tone, int $targetWords): array|\WP_Error
+    private function buildSections(string $keyword, string $title, string $outline, ?array $brief, string $tone, int $targetWords, ?string $templateId = null): array|\WP_Error
     {
         // Extract headings from brief or outline
         $headings = [];
@@ -353,7 +426,7 @@ Return ONLY the meta description, nothing else.";
 
         // Fallback: generate headings with AI
         if (empty($headings)) {
-            $headings = $this->generateHeadings($keyword, $title);
+            $headings = $this->generateHeadings($keyword, $title, $templateId);
             if (is_wp_error($headings)) {
                 return $headings;
             }
@@ -377,6 +450,7 @@ Return ONLY the meta description, nothing else.";
                 'tone' => $tone,
                 'word_count' => $wordsPerSection,
                 'context' => $previousContext,
+                'template_id' => $templateId,
             ]);
 
             if (is_wp_error($sectionContent)) {
@@ -397,7 +471,7 @@ Return ONLY the meta description, nothing else.";
     /**
      * Generate heading structure with AI.
      */
-    private function generateHeadings(string $keyword, string $title): array|\WP_Error
+    private function generateHeadings(string $keyword, string $title, ?string $templateId = null): array|\WP_Error
     {
         $prompt = "Generate 5-7 H2 headings for an article titled: \"{$title}\"
 Target keyword: \"{$keyword}\"
@@ -407,6 +481,16 @@ Requirements:
 - Include the keyword or synonym in 2-3 headings
 - Make headings descriptive and engaging
 - Return ONLY the headings, one per line, prefixed with 'H2: '";
+
+        if ($templateId && $this->templates) {
+            $templatePrompt = $this->templates->applyTemplate($templateId, [
+                'keyword' => $keyword,
+                'title' => $title,
+            ]);
+            if ($templatePrompt !== null) {
+                $prompt = $templatePrompt;
+            }
+        }
 
         $result = $this->llm->call($prompt, null, 500);
         if (is_wp_error($result)) {
@@ -492,6 +576,7 @@ Requirements:
             'word_count' => (int)($request->get_param('word_count') ?: 1500),
             'outline' => $request->get_param('outline') ?? '',
             'brief_id' => sanitize_text_field($request->get_param('brief_id') ?? ''),
+            'template_id' => sanitize_text_field($request->get_param('template_id') ?? ''),
             'create_draft' => (bool)$request->get_param('create_draft'),
         ]);
     }
@@ -512,6 +597,7 @@ Requirements:
             'tone' => sanitize_text_field($request->get_param('tone') ?? ''),
             'word_count' => (int)($request->get_param('word_count') ?: 300),
             'context' => $request->get_param('context') ?? '',
+            'template_id' => sanitize_text_field($request->get_param('template_id') ?? ''),
         ]);
 
         if (is_wp_error($content)) {
