@@ -21,27 +21,18 @@ class SaaSSettings
     }
     
     /**
-     * Add settings submenu
+     * Add settings and checkout admin pages
      */
     public function addSettingsMenu(): void
     {
-        add_menu_page(
-            __('Checkout', 'sseo-ai-saas'),
-            __('Checkout', 'sseo-ai-saas'),
-            'manage_options',
-            'sseo-ai-checkout',
-            [$this, 'renderCheckoutPage'],
-            'dashicons-cart',
-            31
-        );
-
+        // Checkout is accessed via the SaaS dashboard shell, not as a standalone WP menu item.
         add_submenu_page(
-            'sseo-ai-checkout',
-            __('Self-Serve Checkout & Payments', 'sseo-ai-saas'),
-            __('Self-Serve Checkout & Payments', 'sseo-ai-saas'),
+            'sseo-ai-licenses',
+            __('Checkout', 'sseo-ai-saas'),
+            __('Checkout', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-checkout',
-            [$this, 'renderCheckoutPage'],
+            [$this, 'renderCheckoutPage']
         );
 
         add_submenu_page(

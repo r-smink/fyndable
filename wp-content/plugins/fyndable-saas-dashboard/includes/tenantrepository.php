@@ -1138,6 +1138,46 @@ class TenantRepository
     }
 
     /**
+     * Get per-sub-tenant usage and cost breakdown for an agency in a period.
+     */
+    public function getSubTenantsUsageByPeriod(int $agencyTenantId, ?string $period = null, string $orderBy = 'api_cost'): array
+    {
+        global $wpdb;
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($period === null) {
+            $period = current_time('Y-m');
+        }
+
+        $orderColumn = in_array($orderBy, ['api_cost', 'api_calls', 'content_generated', 'serp_requests', 'keywords_tracked'], true) ? $orderBy : 'api_cost';
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT
+                t.id,
+                t.tenant_key,
+                t.name,
+                t.tier,
+                t.status,
+                t.domain,
+                t.api_calls_limit,
+                t.last_active,
+                COALESCE(u.api_calls, 0) AS api_calls,
+                COALESCE(u.api_cost, 0.0000) AS api_cost,
+                COALESCE(u.serp_requests, 0) AS serp_requests,
+                COALESCE(u.content_generated, 0) AS content_generated,
+                COALESCE(u.keywords_tracked, 0) AS keywords_tracked
+            FROM {$tenantsTable} t
+            LEFT JOIN {$usageTable} u ON u.tenant_id = t.id AND u.period = %s
+            WHERE t.parent_tenant_id = %d
+            ORDER BY u.{$orderColumn} DESC, t.name ASC",
+            $period, $agencyTenantId
+        ), ARRAY_A);
+
+        return $rows ?: [];
+    }
+
+    /**
      * Get tenant by ID.
      */
     public function getTenantById(int $tenantId): ?array

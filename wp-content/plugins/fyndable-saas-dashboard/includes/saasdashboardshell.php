@@ -56,6 +56,11 @@ class SaaSDashboardShell
                     'icon' => '&#127970;',
                 ],
                 [
+                    'slug' => 'sseo-ai-agency-usage',
+                    'label' => __('Usage & Costs', 'sseo-ai-saas'),
+                    'icon' => '&#128200;',
+                ],
+                [
                     'slug' => 'sseo-ai-agency-support',
                     'label' => __('Support', 'sseo-ai-saas'),
                     'icon' => '&#128172;',
@@ -104,6 +109,11 @@ class SaaSDashboardShell
                 'slug' => 'sseo-ai-billing',
                 'label' => __('Billing', 'sseo-ai-saas'),
                 'icon' => '&#128179;',
+            ],
+            [
+                'slug' => 'sseo-ai-checkout',
+                'label' => __('Checkout', 'sseo-ai-saas'),
+                'icon' => '&#128722;',
             ],
             [
                 'slug' => 'sseo-ai-support-tickets',
@@ -316,7 +326,7 @@ class SaaSDashboardShell
         $iframeUrl = add_query_arg('page', $currentPage, $iframeUrl);
         $iframeUrl = add_query_arg('saas_shell', '1', $iframeUrl);
 
-        $passThroughParams = ['view', 'ticket_id', 'tenant_key', 'tenant_id', 'month'];
+        $passThroughParams = ['view', 'ticket_id', 'tenant_key', 'tenant_id', 'month', 'period'];
         foreach ($passThroughParams as $param) {
             if (isset($_GET[$param]) && $_GET[$param] !== '') {
                 $iframeUrl = add_query_arg($param, sanitize_text_field($_GET[$param]), $iframeUrl);

@@ -235,6 +235,7 @@ class AgencyPortal
         add_submenu_page('sseo-ai-agency', __('All Licenses', 'sseo-ai-saas'), __('All Licenses', 'sseo-ai-saas'), 'agency_generate_licenses', 'sseo-ai-agency-licenses', [$this, 'renderLicensesPage']);
         add_submenu_page('sseo-ai-agency', __('Tenants', 'sseo-ai-saas'), __('Tenants', 'sseo-ai-saas'), 'agency_view_tenants', 'sseo-ai-agency-tenants', [$this, 'renderTenantsPage']);
         add_submenu_page('sseo-ai-agency', __('Tenant Detail', 'sseo-ai-saas'), __('Tenant Detail', 'sseo-ai-saas'), 'agency_view_tenants', 'sseo-ai-agency-tenant-detail', [$this, 'renderTenantDetailPage']);
+        add_submenu_page('sseo-ai-agency', __('Usage & Costs', 'sseo-ai-saas'), __('Usage & Costs', 'sseo-ai-saas'), 'agency_view_tenants', 'sseo-ai-agency-usage', [$this, 'renderUsagePage']);
         add_submenu_page('sseo-ai-agency', __('Support', 'sseo-ai-saas'), __('Support', 'sseo-ai-saas'), 'agency_view_support', 'sseo-ai-agency-support', [$this, 'renderSupportPage']);
     }
 
@@ -309,6 +310,10 @@ class AgencyPortal
                     <div class="stat-label"><?php esc_html_e('API Calls This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-value">$<?php echo esc_html(number_format((float)($usage['total_api_cost'] ?? 0), 2)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('API Cost This Month', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-value"><?php echo esc_html(number_format($openTickets)); ?></div>
                     <div class="stat-label"><?php esc_html_e('Open Tickets', 'sseo-ai-saas'); ?></div>
                 </div>
@@ -346,6 +351,9 @@ class AgencyPortal
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-tenants')); ?>" class="button button-secondary button-hero">
                         <?php esc_html_e('View Tenants', 'sseo-ai-saas'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-usage')); ?>" class="button button-secondary button-hero">
+                        <?php esc_html_e('Usage & Costs', 'sseo-ai-saas'); ?>
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-support')); ?>" class="button button-secondary button-hero">
                         <?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?>
@@ -767,13 +775,14 @@ class AgencyPortal
                             <th><?php esc_html_e('Domain', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('API Use', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('API Cost', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($tenants)): ?>
-                            <tr><td colspan="8"><?php esc_html_e('No sub-tenants yet.', 'sseo-ai-saas'); ?></td></tr>
+                            <tr><td colspan="9"><?php esc_html_e('No sub-tenants yet.', 'sseo-ai-saas'); ?></td></tr>
                         <?php else: ?>
                             <?php foreach ($tenants as $t):
                                 $tUsage = $this->tenants->getTenantUsage($t['tenant_key']);
@@ -799,6 +808,7 @@ class AgencyPortal
                                             <span style="font-size:11px;"><?php echo esc_html(number_format($apiUsed) . '/' . number_format($apiLimit)); ?></span>
                                         </div>
                                     </td>
+                                    <td>$<?php echo esc_html(number_format((float)($tUsage['api_cost'] ?? 0), 2)); ?></td>
                                     <td>
                                         <?php
                                         if (!empty($t['last_active'])) {
@@ -868,6 +878,10 @@ class AgencyPortal
                 <div class="stat-card">
                     <div class="stat-value"><?php echo esc_html(number_format($usage['api_calls'] ?? 0)); ?></div>
                     <div class="stat-label"><?php esc_html_e('API Calls This Month', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$<?php echo esc_html(number_format((float)($usage['api_cost'] ?? 0), 2)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('API Cost This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value"><?php echo esc_html(number_format($usage['content_generated'] ?? 0)); ?></div>
@@ -1026,6 +1040,151 @@ class AgencyPortal
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function renderUsagePage(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $agencyTenantId = (int)$ctx['account']['tenant_id'];
+
+        $period = !empty($_GET['period']) ? sanitize_text_field($_GET['period']) : current_time('Y-m');
+        $orderBy = !empty($_GET['order_by']) ? sanitize_text_field($_GET['order_by']) : 'api_cost';
+
+        $usage = $this->tenants->getAgencySubTenantsUsage($agencyTenantId, $period);
+        $subTenants = $this->tenants->getSubTenantsUsageByPeriod($agencyTenantId, $period, $orderBy);
+
+        $periodLabel = date_i18n('F Y', strtotime($period . '-01'));
+        $totalCost = (float)($usage['total_api_cost'] ?? 0);
+        $totalCalls = (int)($usage['total_api_calls'] ?? 0);
+        $totalContent = (int)($usage['total_content_generated'] ?? 0);
+        $totalSerp = (int)($usage['total_serp_requests'] ?? 0);
+
+        $prevPeriod = date('Y-m', strtotime($period . '-01 -1 month'));
+        $nextPeriod = date('Y-m', strtotime($period . '-01 +1 month'));
+        $isCurrentPeriod = $period === current_time('Y-m');
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
+            <h1><?php esc_html_e('Usage & Costs', 'sseo-ai-saas'); ?></h1>
+
+            <div class="sseo-ai-card" style="margin-bottom: 20px;">
+                <form method="get" class="sseo-ai-inline-form" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <input type="hidden" name="page" value="sseo-ai-agency-usage">
+                    <label for="period"><strong><?php esc_html_e('Period:', 'sseo-ai-saas'); ?></strong></label>
+                    <input type="month" id="period" name="period" value="<?php echo esc_attr($period); ?>">
+                    <label for="order_by"><strong><?php esc_html_e('Sort by:', 'sseo-ai-saas'); ?></strong></label>
+                    <select id="order_by" name="order_by">
+                        <option value="api_cost" <?php selected($orderBy, 'api_cost'); ?>><?php esc_html_e('API Cost', 'sseo-ai-saas'); ?></option>
+                        <option value="api_calls" <?php selected($orderBy, 'api_calls'); ?>><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></option>
+                        <option value="content_generated" <?php selected($orderBy, 'content_generated'); ?>><?php esc_html_e('Content Generated', 'sseo-ai-saas'); ?></option>
+                        <option value="serp_requests" <?php selected($orderBy, 'serp_requests'); ?>><?php esc_html_e('SERP Requests', 'sseo-ai-saas'); ?></option>
+                    </select>
+                    <?php submit_button(__('Filter', 'sseo-ai-saas'), 'secondary', 'filter', false); ?>
+                    <?php if (!$isCurrentPeriod): ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-usage')); ?>" class="button button-secondary"><?php esc_html_e('Current Month', 'sseo-ai-saas'); ?></a>
+                    <?php endif; ?>
+                </form>
+                <p class="description" style="margin-top:10px;">
+                    <?php printf(esc_html__('Showing usage for %s. Total values include all sub-tenants under your agency.', 'sseo-ai-saas'), esc_html($periodLabel)); ?>
+                </p>
+            </div>
+
+            <div class="sseo-ai-stats-grid" style="margin-top:20px;">
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo esc_html(number_format($totalCalls)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$<?php echo esc_html(number_format($totalCost, 2)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('API Cost', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo esc_html(number_format($totalContent)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Content Generated', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo esc_html(number_format($totalSerp)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('SERP Requests', 'sseo-ai-saas'); ?></div>
+                </div>
+            </div>
+
+            <div class="sseo-ai-card">
+                <h3><?php esc_html_e('Sub-Tenant Usage & Costs', 'sseo-ai-saas'); ?></h3>
+                <table class="wp-list-table widefat striped" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Tenant', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('API Cost', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('API Use', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Content', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('SERP', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($subTenants)): ?>
+                            <tr><td colspan="9"><?php esc_html_e('No sub-tenants found.', 'sseo-ai-saas'); ?></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($subTenants as $t):
+                                $apiUsed = (int)($t['api_calls'] ?? 0);
+                                $apiLimit = (int)($t['api_calls_limit'] ?? 0);
+                                $usePct = $apiLimit > 0 ? min(round(($apiUsed / $apiLimit) * 100), 100) : 0;
+                            ?>
+                                <tr>
+                                    <td>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-tenant-detail&tenant_id=' . $t['id'])); ?>">
+                                            <?php echo esc_html($t['name']); ?>
+                                        </a>
+                                    </td>
+                                    <td><?php echo esc_html(ucfirst($t['tier'])); ?></td>
+                                    <td><span class="badge badge-<?php echo esc_attr($t['status']); ?>"><?php echo esc_html(ucfirst($t['status'])); ?></span></td>
+                                    <td><?php echo esc_html(number_format($apiUsed)); ?></td>
+                                    <td>$<?php echo esc_html(number_format((float)($t['api_cost'] ?? 0), 2)); ?></td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            <div class="sseo-ai-usage-bar" style="flex:1;max-width:80px;height:6px;">
+                                                <div class="sseo-ai-usage-bar__fill sseo-ai-usage-bar__fill--<?php echo $usePct >= 95 ? 'critical' : ($usePct >= 80 ? 'warning' : 'ok'); ?>" style="width:<?php echo esc_attr($usePct); ?>%"></div>
+                                            </div>
+                                            <span style="font-size:11px;"><?php echo esc_html(number_format($apiUsed) . '/' . number_format($apiLimit)); ?></span>
+                                        </div>
+                                    </td>
+                                    <td><?php echo esc_html(number_format((int)($t['content_generated'] ?? 0))); ?></td>
+                                    <td><?php echo esc_html(number_format((int)($t['serp_requests'] ?? 0))); ?></td>
+                                    <td>
+                                        <?php
+                                        if (!empty($t['last_active'])) {
+                                            echo esc_html(human_time_diff(strtotime($t['last_active']), current_time('timestamp')) . ' ago');
+                                        } else {
+                                            esc_html_e('Never', 'sseo-ai-saas');
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight:600;">
+                            <td colspan="3"><?php esc_html_e('Total', 'sseo-ai-saas'); ?></td>
+                            <td><?php echo esc_html(number_format($totalCalls)); ?></td>
+                            <td>$<?php echo esc_html(number_format($totalCost, 2)); ?></td>
+                            <td colspan="5"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             </div>
