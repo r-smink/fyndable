@@ -92,6 +92,12 @@ class Client
     private ?OnboardingWizard $onboardingWizard = null;
     private ?UpdateChecker $updateChecker = null;
     private ?DemoMode $demoMode = null;
+    private ?AISeoAgent $aiAgent = null;
+    private ?BrandVoice $brandVoice = null;
+    private ?GeoContentScore $geoScore = null;
+    private ?ProgrammaticSEO $programmaticSEO = null;
+    private ?MultiCMSPublisher $multiCMS = null;
+    private ?SerpChangeMonitor $serpMonitor = null;
 
     public function init(): void
     {
@@ -394,14 +400,50 @@ class Client
             $this->serpCompetitor = new SerpCompetitor($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->serpCompetitor->register();
             
-            $this->topicCluster = new TopicCluster($this->settings, $this->llmClient);
+            $this->topicCluster = new TopicCluster(
+                $this->settings,
+                $this->llmClient,
+                $this->contentBrief ?? null,
+                $this->contentOptimizer ?? null,
+                $this->smartTags ?? null,
+                $this->faqSchema ?? null,
+                $this->openGraph ?? null,
+                $this->truSEO ?? null
+            );
             $this->topicCluster->register();
+            add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
+            add_filter('cron_schedules', function($schedules) {
+                $schedules['sseo_ai_queue_interval'] = [
+                    'interval' => 120,
+                    'display' => __('Every 2 minutes (Fyndable Queue)', 'ai-seo-client'),
+                ];
+                return $schedules;
+            });
             
             $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient);
             $this->keywordDifficulty->register();
             
             $this->contentBrief = new ContentBrief($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->contentBrief->register();
+            
+            // Re-instantiate TopicCluster now that ContentBrief and ContentOptimizer are available
+            if ($this->topicCluster) {
+                $this->topicCluster = new TopicCluster(
+                    $this->settings,
+                    $this->llmClient,
+                    $this->contentBrief,
+                    $this->contentOptimizer,
+                    $this->smartTags,
+                    $this->faqSchema,
+                    $this->openGraph,
+                    $this->truSEO,
+                    $this->geoScore
+                );
+                $this->topicCluster->register();
+                add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
+            }
+
+            // AI SEO Agent placeholder — instantiated after Business+ features so ContentWriter is available
             
             $this->keywordExplorer = new KeywordExplorer($this->settings, $this->dashboardAPI, $this->llmClient);
             $this->keywordExplorer->register();
@@ -463,10 +505,60 @@ class Client
             
             $snapshots = new SnapshotRepository();
             $gscClientBiz = new GscClient($this->settings);
-            $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings);
+            $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings, $this->llmClient);
             $this->contentDecay->register();
             
             $this->auditService = new AuditService();
+        }
+
+        // AI SEO Agent — conversational interface (after all features are loaded)
+        $this->aiAgent = new AISeoAgent(
+            $this->llmClient,
+            $this->settings,
+            $this->topicCluster,
+            $this->contentBrief,
+            $this->contentWriter,
+            $this->truSEO,
+            $this->smartTags,
+            $this->faqSchema
+        );
+        $this->aiAgent->register();
+
+        // Brand Voice Engine — injects voice into all LLM prompts
+        $this->brandVoice = new BrandVoice($this->settings);
+        $this->brandVoice->register();
+
+        // GEO Content Score — AI search citability scoring
+        $this->geoScore = new GeoContentScore($this->llmClient, $this->settings);
+        $this->geoScore->register();
+
+        // Programmatic SEO — template-led page generation at scale
+        $this->programmaticSEO = new ProgrammaticSEO($this->llmClient, $this->settings);
+        $this->programmaticSEO->register();
+
+        // Multi-CMS Publishing — Webflow/Shopify API integration
+        $this->multiCMS = new MultiCMSPublisher($this->settings);
+        $this->multiCMS->register();
+
+        // SERP Change Monitor — auto-update content on ranking drops
+        $this->serpMonitor = new SerpChangeMonitor($this->settings, $this->llmClient);
+        $this->serpMonitor->register();
+
+        // Re-instantiate TopicCluster with GEO score dependency
+        if ($this->topicCluster) {
+            $this->topicCluster = new TopicCluster(
+                $this->settings,
+                $this->llmClient,
+                $this->contentBrief,
+                $this->contentOptimizer,
+                $this->smartTags,
+                $this->faqSchema,
+                $this->openGraph,
+                $this->truSEO,
+                $this->geoScore
+            );
+            $this->topicCluster->register();
+            add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
         }
         
         // Agency-only features (DEV includes these)

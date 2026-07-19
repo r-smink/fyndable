@@ -321,14 +321,115 @@ class LlmClient
         $systemRole = $options['system_role'] ?? null;
         $trackExtra = $options['track_extra'] ?? [];
         $useCase = $options['use_case'] ?? 'content_generation';
+
+        // Inject brand voice instructions for content generation use cases
+        if (in_array($useCase, ['content_generation', 'analysis', 'keyword_research'], true)) {
+            $brandVoicePrompt = apply_filters('sseo_ai_brand_voice_prompt', '');
+            if (!empty($brandVoicePrompt)) {
+                $prompt = $brandVoicePrompt . $prompt;
+            }
+        }
         
         $result = $this->call($prompt, $model, $systemRole, $maxTokens, $trackExtra, $useCase);
         
         if (is_wp_error($result)) {
             return $result;
         }
-        
+
         return $result['text'] ?? '';
+    }
+
+    /**
+     * Call LLM with an image (vision support).
+     * Sends both text prompt and image URL to a vision-capable model.
+     *
+     * @param string $prompt Text prompt
+     * @param string $imageUrl URL of the image to analyze
+     * @param string|null $model Model override (must be vision-capable)
+     * @param int|null $maxTokens Max tokens
+     * @param string $useCase Use case for tracking
+     * @return array|\WP_Error ['text' => string, 'model' => string, 'usage' => array]
+     */
+    public function callWithImage(
+        string $prompt,
+        string $imageUrl,
+        ?string $model = null,
+        ?int $maxTokens = null,
+        string $useCase = 'image_alt_text'
+    ) {
+        if (!$this->isAvailable()) {
+            return new \WP_Error('not_licensed', __('AI features require an active license', 'ai-seo-client'));
+        }
+
+        // Use a vision-capable model by default
+        if (empty($model)) {
+            $model = 'openai/gpt-4o-mini'; // gpt-4o-mini supports vision
+        }
+
+        // Build messages with image content
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'You are an expert at analyzing images and writing concise, descriptive alt text for SEO and accessibility.',
+            ],
+            [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => $prompt],
+                    ['type' => 'image_url', 'image_url' => ['url' => $imageUrl]],
+                ],
+            ],
+        ];
+
+        $startTime = microtime(true);
+
+        $response = $this->dashboardAPI->aiGenerate(
+            $messages,
+            $model,
+            $maxTokens ?? 500,
+            0.3,
+            $useCase
+        );
+
+        $durationMs = (int)((microtime(true) - $startTime) * 1000);
+
+        if (is_wp_error($response)) {
+            LLMTracker::log([
+                'prompt' => $prompt . ' [image: ' . $imageUrl . ']',
+                'response' => '',
+                'model' => $model,
+                'endpoint' => 'llm.callWithImage',
+                'status' => 'error',
+                'error_message' => $response->get_error_message(),
+                'duration_ms' => $durationMs,
+                'context' => $useCase,
+            ]);
+            return $response;
+        }
+
+        $this->incrementRateLimit();
+
+        $result = [
+            'text' => $response['content'] ?? '',
+            'model' => $response['model'] ?? $model,
+            'usage' => $response['usage'] ?? [],
+            'provider' => $response['provider'] ?? 'openrouter',
+        ];
+
+        LLMTracker::log([
+            'prompt' => $prompt . ' [image]',
+            'response' => $result['text'],
+            'model' => $result['model'],
+            'tokens_input' => $result['usage']['prompt_tokens'] ?? $result['usage']['input_tokens'] ?? 0,
+            'tokens_output' => $result['usage']['completion_tokens'] ?? $result['usage']['output_tokens'] ?? 0,
+            'cost' => $result['usage']['cost'] ?? 0,
+            'endpoint' => 'llm.callWithImage',
+            'status' => 'success',
+            'duration_ms' => $durationMs,
+            'context' => $useCase,
+        ]);
+
+        return $result;
     }
 
     /**

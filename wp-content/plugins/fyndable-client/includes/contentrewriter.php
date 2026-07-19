@@ -56,6 +56,17 @@ class ContentRewriter
                 'keyword' => ['type' => 'string', 'default' => ''],
             ],
         ]);
+
+        register_rest_route('sseo-ai/v1', '/humanize', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restHumanize'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+            'args' => [
+                'content' => ['type' => 'string', 'required' => true],
+                'keyword' => ['type' => 'string', 'default' => ''],
+                'intensity' => ['type' => 'string', 'default' => 'balanced'],
+            ],
+        ]);
     }
 
     /**
@@ -148,6 +159,7 @@ PROMPT;
             'condense' => "Condense this content to its essential points. Remove fluff, redundancy, and filler. Keep all key information but reduce word count by 30-40%.",
             'paraphrase' => "Completely paraphrase this content for originality. Change sentence structures, use different vocabulary, reorganize paragraphs. The meaning must stay identical but the text must be entirely new.",
             'tone_shift' => "Rewrite this content in a {$tone} tone. Adjust vocabulary, sentence structure, and style to match the requested tone while keeping all information intact.",
+            'humanize' => "Rewrite this content to sound more human and natural. Apply these techniques:\n- Vary sentence length significantly (mix short punchy sentences with longer flowing ones)\n- Add personal perspectives and conversational asides\n- Use contractions naturally (don't, can't, it's)\n- Include rhetorical questions where appropriate\n- Replace overly formal language with everyday expressions\n- Add transitional phrases that feel organic, not formulaic\n- Break the fourth wall occasionally (address the reader directly)\n- Replace generic statements with specific, vivid examples\n- Add mild imperfections that feel human (starting sentences with 'And' or 'But')\n- Remove AI-typical phrases like 'In conclusion', 'It's worth noting', 'Furthermore', 'Moreover'\n- Keep all factual information and SEO value intact",
             default => "Improve this content's overall quality. Fix grammar, improve flow, strengthen weak sentences, and make it more engaging. Keep the same structure and information.",
         };
 
@@ -181,6 +193,81 @@ PROMPT;
                 'keyword' => sanitize_text_field($request->get_param('keyword')),
                 'tone' => sanitize_text_field($request->get_param('tone')),
                 'instructions' => sanitize_text_field($request->get_param('instructions')),
+            ]
+        );
+    }
+
+    /**
+     * Humanize AI-generated content to bypass AI detection.
+     * @param string $content HTML content to humanize
+     * @param array $options {keyword, intensity}
+     * @return array|\WP_Error
+     */
+    public function humanize(string $content, array $options = []): array|\WP_Error
+    {
+        $keyword = $options['keyword'] ?? '';
+        $intensity = $options['intensity'] ?? 'balanced'; // subtle, balanced, aggressive
+
+        $intensityGuide = match ($intensity) {
+            'subtle' => "Make light touches — vary a few sentences, add a couple of contractions, soften formal phrases.",
+            'aggressive' => "Heavily rework the text — change most sentence structures, add personal anecdotes, use colloquial language, break conventions.",
+            default => "Moderately rework the text for a natural, human feel without losing professionalism.",
+        };
+
+        $keywordNote = $keyword ? "\nPreserve SEO keyword: \"{$keyword}\" with natural 1-2% density." : '';
+
+        $prompt = <<<PROMPT
+You are a humanizing editor. Rewrite the following content so it reads like it was written by a real person, not an AI.
+
+{$intensityGuide}{$keywordNote}
+
+Techniques to apply:
+- Vary sentence rhythm and length dramatically
+- Use conversational connectors ("Here's the thing...", "Now...", "But wait...")
+- Replace AI clichés with fresh alternatives
+- Add micro-stories or relatable examples
+- Use second-person address ("you", "your")
+- Include occasional humor or personality
+- Make paragraphs uneven in length
+- Avoid bullet-point-heavy sections — convert some to prose
+
+Content to humanize:
+---
+{$content}
+---
+
+Return ONLY the humanized content. Preserve HTML structure. Keep all factual information.
+PROMPT;
+
+        $result = $this->llm->call($prompt, 'You are a humanizing editor. Return only the rewritten content.', null, 4000);
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $humanized = trim($result['text'] ?? '');
+        $humanized = preg_replace('/^```(?:html)?\s*\n?/i', '', $humanized);
+        $humanized = preg_replace('/\n?```\s*$/', '', $humanized);
+
+        $originalWords = str_word_count(wp_strip_all_tags($content));
+        $newWords = str_word_count(wp_strip_all_tags($humanized));
+
+        return [
+            'original' => $content,
+            'humanized' => $humanized,
+            'intensity' => $intensity,
+            'original_word_count' => $originalWords,
+            'new_word_count' => $newWords,
+            'word_change' => $newWords - $originalWords,
+        ];
+    }
+
+    public function restHumanize(\WP_REST_Request $request): array|\WP_Error
+    {
+        return $this->humanize(
+            $request->get_param('content'),
+            [
+                'keyword' => sanitize_text_field($request->get_param('keyword')),
+                'intensity' => sanitize_text_field($request->get_param('intensity') ?? 'balanced'),
             ]
         );
     }

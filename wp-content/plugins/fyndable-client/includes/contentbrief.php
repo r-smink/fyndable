@@ -162,6 +162,7 @@ class ContentBrief
             'target_audience' => $brief['audience'] ?? '',
             'content_angle' => $brief['angle'] ?? '',
             'internal_link_opportunities' => $this->findInternalLinkOpportunities($keyword),
+            'sources' => $this->extractSources($topResults),
         ];
 
         // Cache the brief
@@ -402,6 +403,30 @@ PROMPT;
             ];
         }
         return $opportunities;
+    }
+
+    /**
+     * Extract authoritative sources from SERP results for citation.
+     */
+    private function extractSources(array $results): array
+    {
+        $sources = [];
+        foreach (array_slice($results, 0, 5) as $i => $result) {
+            $url = $result['link'] ?? $result['url'] ?? '';
+            $title = $result['title'] ?? '';
+            if (empty($url) || empty($title)) continue;
+
+            $parsed = parse_url($url);
+            $domain = $parsed['host'] ?? '';
+
+            $sources[] = [
+                'title' => $title,
+                'url' => $url,
+                'domain' => $domain,
+                'snippet' => $result['snippet'] ?? $result['description'] ?? '',
+            ];
+        }
+        return $sources;
     }
 
     /**

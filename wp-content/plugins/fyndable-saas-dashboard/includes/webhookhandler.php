@@ -390,10 +390,6 @@ class WebhookHandler
 
         error_log("SSEO AI SaaS: Mollie webhook received for payment: {$paymentId}");
 
-        // In production: Fetch payment details from Mollie API
-        // $payment = $this->fetchMolliePayment($paymentId);
-
-        // For now, process based on stored information
         $result = $this->processMolliePayment($paymentId);
 
         return new \WP_REST_Response($result, 200);

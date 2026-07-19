@@ -80,7 +80,7 @@ class PaymentProcessor
      */
     private function getTierPricing(string $tier): array|\WP_Error
     {
-        $pricing = [
+        $defaultPricing = [
             'free' => ['amount' => 0.00, 'interval' => 'month'],
             'trial' => ['amount' => 0.00, 'interval' => 'month'],
             'starter' => ['amount' => 19.00, 'interval' => 'month'],
@@ -89,11 +89,17 @@ class PaymentProcessor
             'agency' => ['amount' => 199.00, 'interval' => 'month'],
         ];
 
-        if (!isset($pricing[$tier])) {
+        // Allow custom pricing via option
+        $customPricing = get_option('sseo_ai_saas_pricing', []);
+        if (is_array($customPricing) && !empty($customPricing)) {
+            $defaultPricing = array_merge($defaultPricing, $customPricing);
+        }
+
+        if (!isset($defaultPricing[$tier])) {
             return new \WP_Error('invalid_tier', __('Invalid subscription tier', 'sseo-ai-saas'));
         }
 
-        return $pricing[$tier];
+        return $defaultPricing[$tier];
     }
 
     /**

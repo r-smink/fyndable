@@ -127,6 +127,9 @@ class SaaSSettings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_days', ['default' => 14]);
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_enabled', ['default' => '1']);
 
+        // Custom tier pricing (overrides defaults in PaymentProcessor)
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_pricing', ['default' => []]);
+
         // Google OAuth credentials (central, used by all client sites)
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_id');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_secret');
@@ -768,6 +771,27 @@ class SaaSSettings
                             <input type="number" name="sseo_ai_saas_trial_days" id="trial_days" value="<?php echo esc_attr(get_option('sseo_ai_saas_trial_days', 14)); ?>" style="width: 120px;">
                         </td>
                     </tr>
+                </table>
+
+                <h3><?php esc_html_e('Custom Tier Pricing', 'sseo-ai-saas'); ?></h3>
+                <p class="description"><?php esc_html_e('Override the default monthly prices for each tier. Leave blank to use defaults.', 'sseo-ai-saas'); ?></p>
+                <table class="form-table" role="presentation">
+                    <?php
+                    $customPricing = get_option('sseo_ai_saas_pricing', []);
+                    if (!is_array($customPricing)) $customPricing = [];
+                    $tiers = ['starter', 'professional', 'business', 'agency'];
+                    $defaults = ['starter' => 19, 'professional' => 49, 'business' => 99, 'agency' => 199];
+                    foreach ($tiers as $tier):
+                        $current = $customPricing[$tier]['amount'] ?? '';
+                    ?>
+                    <tr>
+                        <th scope="row"><label for="pricing_<?php echo esc_attr($tier); ?>"><?php echo esc_html(ucfirst($tier)); ?></label></th>
+                        <td>
+                            <input type="number" step="0.01" name="sseo_ai_saas_pricing[<?php echo esc_attr($tier); ?>][amount]" id="pricing_<?php echo esc_attr($tier); ?>" value="<?php echo esc_attr($current); ?>" placeholder="<?php echo esc_attr($defaults[$tier]); ?>" style="width: 120px;">
+                            <span class="description"><?php echo esc_html(get_option('sseo_ai_saas_currency', 'EUR')); ?> / <?php esc_html_e('month', 'sseo-ai-saas'); ?></span>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
                 </table>
 
                 <?php submit_button(__('Save Checkout Settings', 'sseo-ai-saas')); ?>

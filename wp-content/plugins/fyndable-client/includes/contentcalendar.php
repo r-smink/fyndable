@@ -1118,6 +1118,14 @@ class ContentCalendar
                 return current_user_can('edit_posts');
             },
         ]);
+
+        register_rest_route('sseo-ai/v1', '/calendar/sync-cluster', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restSyncFromCluster'],
+            'permission_callback' => function() {
+                return current_user_can('edit_posts');
+            },
+        ]);
     }
     
     /**
@@ -1135,6 +1143,120 @@ class ContentCalendar
         ];
     }
     
+    /**
+     * Sync cluster calendar items into the Content Calendar.
+     * Creates draft posts with scheduled dates based on the cluster's content calendar.
+     */
+    public function syncFromCluster(array $clusterData, string $startDate, int $gapDays = 3): array
+    {
+        $calendar = $clusterData['content_calendar'] ?? [];
+        $allPages = $clusterData['all_pages'] ?? [];
+        $synced = 0;
+        $errors = [];
+
+        // If no explicit all_pages provided, build from cluster structure
+        if (empty($allPages)) {
+            if (isset($clusterData['pillar_page'])) {
+                $allPages[] = [
+                    'title' => $clusterData['pillar_page']['title'],
+                    'keyword' => $clusterData['pillar_page']['target_keyword'] ?? '',
+                    'word_count' => $clusterData['pillar_page']['target_word_count'] ?? 3000,
+                    'content_type' => 'pillar',
+                ];
+            }
+            foreach ($clusterData['clusters'] ?? [] as $cl) {
+                if (isset($cl['hub_page'])) {
+                    $allPages[] = [
+                        'title' => $cl['hub_page']['title'],
+                        'keyword' => $cl['hub_page']['target_keyword'] ?? '',
+                        'word_count' => $cl['hub_page']['target_word_count'] ?? 1500,
+                        'content_type' => 'hub',
+                    ];
+                }
+                foreach ($cl['supporting_pages'] ?? [] as $sp) {
+                    $allPages[] = [
+                        'title' => $sp['title'],
+                        'keyword' => $sp['target_keyword'] ?? '',
+                        'word_count' => $sp['target_word_count'] ?? 800,
+                        'content_type' => 'supporting',
+                    ];
+                }
+            }
+        }
+
+        $baseDate = strtotime($startDate);
+        if (!$baseDate) {
+            $baseDate = strtotime('+1 day');
+        }
+
+        foreach ($allPages as $idx => $page) {
+            $scheduledDate = date('Y-m-d H:i:s', strtotime('+' . ($idx * $gapDays) . ' days', $baseDate));
+
+            // Check if a draft with this title already exists
+            $existing = get_page_by_title($page['title'], OBJECT, 'post');
+            if ($existing) {
+                // Update schedule if it's a draft
+                if ($existing->post_status === 'draft') {
+                    wp_update_post([
+                        'ID' => $existing->ID,
+                        'post_date' => $scheduledDate,
+                        'post_date_gmt' => get_gmt_from_date($scheduledDate),
+                        'post_status' => 'future',
+                    ]);
+                    update_post_meta($existing->ID, '_sseo_ai_calendar_synced', '1');
+                    update_post_meta($existing->ID, '_sseo_ai_focus_keyphrase', $page['keyword'] ?? '');
+                    $synced++;
+                }
+                continue;
+            }
+
+            // Create a placeholder draft post
+            $postId = wp_insert_post([
+                'post_title' => $page['title'],
+                'post_content' => '',
+                'post_type' => 'post',
+                'post_status' => 'draft',
+                'post_author' => get_current_user_id(),
+                'post_date' => $scheduledDate,
+                'post_date_gmt' => get_gmt_from_date($scheduledDate),
+                'meta_input' => [
+                    '_sseo_ai_focus_keyphrase' => $page['keyword'] ?? '',
+                    '_sseo_ai_calendar_synced' => '1',
+                    '_sseo_ai_cluster_content_type' => $page['content_type'] ?? '',
+                    '_sseo_ai_target_word_count' => $page['word_count'] ?? 1500,
+                ],
+            ]);
+
+            if (is_wp_error($postId)) {
+                $errors[] = $page['title'] . ': ' . $postId->get_error_message();
+            } else {
+                $synced++;
+            }
+        }
+
+        return [
+            'synced' => $synced,
+            'errors' => $errors,
+            'total' => count($allPages),
+        ];
+    }
+
+    /**
+     * REST: Sync cluster to content calendar
+     */
+    public function restSyncFromCluster(\WP_REST_Request $request): array|\WP_Error
+    {
+        $cluster = $request->get_param('cluster');
+        $startDate = sanitize_text_field($request->get_param('start_date') ?? date('Y-m-d H:i:s', strtotime('+1 day')));
+        $gapDays = (int) ($request->get_param('gap_days') ?? 3);
+
+        if (empty($cluster)) {
+            return new \WP_Error('missing', __('Cluster data required', 'ai-seo-client'), ['status' => 400]);
+        }
+
+        return $this->syncFromCluster($cluster, $startDate, $gapDays);
+    }
+
     /**
      * Analyze best publishing times
      */

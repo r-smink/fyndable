@@ -648,22 +648,144 @@ Generate a natural, engaging video transcript (500-1000 words) that would match 
     }
     
     /**
-     * Fetch YouTube transcript
+     * Fetch YouTube transcript using the timedtext API.
+     * Falls back to AI generation from video metadata if captions are unavailable.
      */
     private function fetchYouTubeTranscript(string $videoUrl): string
     {
         // Extract video ID
         preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\?\/]+)/', $videoUrl, $matches);
-        
+
         if (empty($matches[1])) {
             return '';
         }
-        
+
         $videoId = $matches[1];
-        
-        // This would use YouTube Data API to fetch captions
-        // Placeholder implementation
+
+        // Try fetching captions via YouTube timedtext API
+        $transcript = $this->fetchYouTubeCaptions($videoId);
+        if (!empty($transcript)) {
+            return $transcript;
+        }
+
+        // Fallback: fetch video page HTML and extract caption track URLs
+        $transcript = $this->fetchCaptionsFromPage($videoId);
+        if (!empty($transcript)) {
+            return $transcript;
+        }
+
+        // Final fallback: use AI to generate a transcript summary from the video title/description
+        return $this->generateTranscriptFromMetadata($videoId, $videoUrl);
+    }
+
+    /**
+     * Fetch captions from YouTube timedtext API.
+     */
+    private function fetchYouTubeCaptions(string $videoId): string
+    {
+        // Try common caption track URLs
+        $captionUrls = [
+            "https://www.youtube.com/api/timedtext?lang=en&v={$videoId}",
+            "https://video.google.com/timedtext?lang=en&v={$videoId}",
+            "https://www.youtube.com/api/timedtext?v={$videoId}&kind=asr&lang=en",
+        ];
+
+        foreach ($captionUrls as $url) {
+            $response = wp_remote_get($url, ['timeout' => 10]);
+            if (is_wp_error($response)) continue;
+
+            $body = wp_remote_retrieve_body($response);
+            if (!empty($body) && trim($body) !== '') {
+                // Parse XML caption format: <text start="0" dur="2.5">Caption text</text>
+                if (preg_match_all('/<text[^>]*>(.*?)<\/text>/s', $body, $matches)) {
+                    $captions = array_map('html_entity_decode', $matches[1]);
+                    return implode(' ', $captions);
+                }
+                // If it's already plain text
+                if (!preg_match('/^<\?xml/', $body)) {
+                    return trim($body);
+                }
+            }
+        }
+
         return '';
+    }
+
+    /**
+     * Fetch caption track URLs from the YouTube video page HTML.
+     */
+    private function fetchCaptionsFromPage(string $videoId): string
+    {
+        $response = wp_remote_get("https://www.youtube.com/watch?v={$videoId}", [
+            'timeout' => 15,
+            'headers' => ['User-Agent' => 'Mozilla/5.0'],
+        ]);
+
+        if (is_wp_error($response)) return '';
+
+        $html = wp_remote_retrieve_body($response);
+        if (empty($html)) return '';
+
+        // Look for captionTracks in the player response
+        if (preg_match('/"captionTracks":\s*(\[.*?\])/', $html, $trackMatch)) {
+            $tracks = json_decode($trackMatch[1], true);
+            if (is_array($tracks)) {
+                // Prefer English, fall back to first available
+                $preferred = null;
+                foreach ($tracks as $track) {
+                    if (($track['languageCode'] ?? '') === 'en') {
+                        $preferred = $track;
+                        break;
+                    }
+                }
+                $track = $preferred ?? ($tracks[0] ?? null);
+                if ($track && !empty($track['baseUrl'])) {
+                    $captionResponse = wp_remote_get($track['baseUrl'], ['timeout' => 10]);
+                    if (!is_wp_error($captionResponse)) {
+                        $captionBody = wp_remote_retrieve_body($captionResponse);
+                        if (!empty($captionBody) && preg_match_all('/<text[^>]*>(.*?)<\/text>/s', $captionBody, $matches)) {
+                            $captions = array_map('html_entity_decode', $matches[1]);
+                            return implode(' ', $captions);
+                        }
+                    }
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Generate a transcript summary from video metadata using AI.
+     */
+    private function generateTranscriptFromMetadata(string $videoId, string $videoUrl): string
+    {
+        // Try to get video title from oEmbed
+        $oembed = wp_remote_get("https://www.youtube.com/oembed?url=" . urlencode($videoUrl) . "&format=json", ['timeout' => 10]);
+        $title = '';
+        $description = '';
+
+        if (!is_wp_error($oembed)) {
+            $data = json_decode(wp_remote_retrieve_body($oembed), true);
+            if (is_array($data)) {
+                $title = $data['title'] ?? '';
+                $author = $data['author_name'] ?? '';
+            }
+        }
+
+        if (empty($title)) {
+            return '';
+        }
+
+        // Use LLM to generate a descriptive transcript from the title
+        $prompt = "Based on the YouTube video titled \"{$title}\", generate a detailed transcript/summary of what the video likely covers. Write it as a spoken narration that would match the video content. Include key points, explanations, and transitions.\n\nReturn only the transcript text, no formatting.";
+
+        $result = $this->llm->call($prompt, null, null, 2000, [], 'content_generation');
+        if (is_wp_error($result)) {
+            return '';
+        }
+
+        return trim($result['text'] ?? '');
     }
     
     /**
