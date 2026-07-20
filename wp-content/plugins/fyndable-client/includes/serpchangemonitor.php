@@ -463,6 +463,8 @@ PROMPT;
                     }
                 }).then(function() {
                     alert('<?php echo esc_js(__("Settings saved!", "ai-seo-client")); ?>');
+                }).catch(function(err) {
+                    alert(err.message || '<?php echo esc_js(__("Save failed", "ai-seo-client")); ?>');
                 });
             });
 

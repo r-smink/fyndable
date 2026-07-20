@@ -444,6 +444,9 @@ class PaymentProcessor
 
         $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($body)) {
+            $body = [];
+        }
 
         if ($statusCode >= 400 || !empty($body['error'])) {
             $message = $body['error']['message'] ?? __('Stripe API request failed', 'sseo-ai-saas');
@@ -484,8 +487,11 @@ class PaymentProcessor
 
         $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($body)) {
+            $body = [];
+        }
 
-        if ($statusCode >= 400 || !empty($body['status']) && $body['status'] >= 400 || !empty($body['detail'])) {
+        if ($statusCode >= 400 || (!empty($body['status']) && $body['status'] >= 400) || !empty($body['detail'])) {
             $message = $body['detail'] ?? ($body['title'] ?? __('Mollie API request failed', 'sseo-ai-saas'));
             return new \WP_Error('mollie_request_failed', $message, ['status' => $statusCode]);
         }

@@ -1124,6 +1124,10 @@ class ContentDecay
             return new \WP_Error('no_post', __('Post not found', 'ai-seo-client'), ['status' => 404]);
         }
 
+        if (!$this->llm) {
+            return new \WP_Error('no_llm', __('AI features are not available', 'ai-seo-client'), ['status' => 503]);
+        }
+
         $keyword = $alert->keyword;
         $positionChange = (int) $alert->position_change;
         $content = $post->post_content;

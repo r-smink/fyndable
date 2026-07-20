@@ -985,6 +985,20 @@ class LicenseAPI
         $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
         $exchangeUrl = rest_url($this->namespace . '/google/exchange');
 
+        // SECURITY: restrict postMessage target origin to the tenant's registered
+        // domain so OAuth tokens cannot be intercepted by an arbitrary opener.
+        // Falls back to '*' only when the domain cannot be parsed (never breaks flow).
+        $clientOrigin = '*';
+        if (!empty($tenant['domain'])) {
+            $parsed = wp_parse_url($tenant['domain']);
+            if (!empty($parsed['host'])) {
+                $clientOrigin = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+                if (!empty($parsed['port'])) {
+                    $clientOrigin .= ':' . $parsed['port'];
+                }
+            }
+        }
+
         header('Content-Type: text/html; charset=utf-8');
         ?>
 <!DOCTYPE html>
@@ -1023,6 +1037,7 @@ class LicenseAPI
             var EXCHANGE_URL = <?php echo wp_json_encode($exchangeUrl); ?>;
             var LICENSE_KEY = <?php echo wp_json_encode($licenseKey); ?>;
             var TENANT_KEY = <?php echo wp_json_encode($tenantKey); ?>;
+            var TARGET_ORIGIN = <?php echo wp_json_encode($clientOrigin); ?>;
 
             var statusArea = document.getElementById('status-area');
 
@@ -1065,7 +1080,7 @@ class LicenseAPI
                                             type: 'fyndable_google_tokens',
                                             tokens: data.tokens,
                                             success: true
-                                        }, '*');
+                                        }, TARGET_ORIGIN);
                                     }
                                     setStatus('Successfully connected! Closing...');
                                     closePopup();
@@ -1076,7 +1091,7 @@ class LicenseAPI
                                             type: 'fyndable_google_tokens',
                                             success: false,
                                             error: msg
-                                        }, '*');
+                                        }, TARGET_ORIGIN);
                                     }
                                     setStatus(msg, true);
                                     closePopup();
@@ -1088,7 +1103,7 @@ class LicenseAPI
                                         type: 'fyndable_google_tokens',
                                         success: false,
                                         error: msg
-                                    }, '*');
+                                    }, TARGET_ORIGIN);
                                 }
                                 setStatus(msg, true);
                                 closePopup();
@@ -1101,7 +1116,7 @@ class LicenseAPI
                                     type: 'fyndable_google_tokens',
                                     success: false,
                                     error: msg
-                                }, '*');
+                                }, TARGET_ORIGIN);
                             }
                             setStatus(msg, true);
                             closePopup();

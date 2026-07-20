@@ -87,6 +87,10 @@ class OnboardingWizard
     {
         check_admin_referer('sseo_ai_onboarding');
 
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+
         $step = (int) ($_POST['step'] ?? 1);
         $nextStep = $step + 1;
 

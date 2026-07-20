@@ -837,13 +837,14 @@ class SaaSSettings
         ));
         
         // Get tier distribution
-        $tierDistribution = $wpdb->get_results(
+        $tierDistribution = $wpdb->get_results($wpdb->prepare(
             "SELECT t.tier, COUNT(*) as count, COALESCE(SUM(u.api_cost), 0) as total_cost
             FROM {$wpdb->prefix}sseo_ai_tenants t
-            LEFT JOIN {$tableUsage} u ON t.id = u.tenant_id AND u.period = '{$wpdb->_real_escape($currentMonth)}'
+            LEFT JOIN {$tableUsage} u ON t.id = u.tenant_id AND u.period = %s
             WHERE t.status = 'active'
-            GROUP BY t.tier"
-        );
+            GROUP BY t.tier",
+            $currentMonth
+        ));
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?></h1>

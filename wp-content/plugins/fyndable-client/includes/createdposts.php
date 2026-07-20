@@ -540,8 +540,8 @@ class CreatedPosts
              FROM {$wpdb->postmeta} 
              WHERE meta_key = '_sseo_ai_word_count'"
         );
-        $minWords = $wordCountRange->min_words ?? 0;
-        $maxWords = $wordCountRange->max_words ?? 3000;
+        $minWords = (int)($wordCountRange->min_words ?? 0);
+        $maxWords = (int)($wordCountRange->max_words ?? 3000);
         ?>
         <div class="wrap sseo-ai-modern" id="sseo-created-posts-page">
             <div class="sseo-ai-header">

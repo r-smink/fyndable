@@ -37,7 +37,6 @@ class ContentCalendar
         if ($this->licenseValidator->isBusinessPlus()) {
             add_action('rest_api_init', [$this, 'registerRestRoutes']);
             add_action('transition_post_status', [$this, 'handleStatusChange'], 10, 3);
-            add_action('wp_ajax_sseo_ai_assign_content', [$this, 'ajaxAssignContent']);
             add_action('wp_ajax_sseo_ai_approve_content', [$this, 'ajaxApproveContent']);
             add_action('wp_ajax_sseo_ai_move_draft', [$this, 'ajaxMoveDraft']);
 
@@ -1192,11 +1191,20 @@ class ContentCalendar
         foreach ($allPages as $idx => $page) {
             $scheduledDate = date('Y-m-d H:i:s', strtotime('+' . ($idx * $gapDays) . ' days', $baseDate));
 
-            // Check if a draft with this title already exists
-            $existing = get_page_by_title($page['title'], OBJECT, 'post');
-            if ($existing) {
+            // Check if a post with this title already exists
+            $existingQuery = new \WP_Query([
+                'post_type' => 'post',
+                'title' => $page['title'],
+                'posts_per_page' => 1,
+                'post_status' => ['draft', 'future', 'publish', 'pending'],
+                'fields' => 'ids',
+            ]);
+            $existingId = $existingQuery->posts[0] ?? 0;
+            wp_reset_postdata();
+            if ($existingId) {
+                $existing = get_post($existingId);
                 // Update schedule if it's a draft
-                if ($existing->post_status === 'draft') {
+                if ($existing && $existing->post_status === 'draft') {
                     wp_update_post([
                         'ID' => $existing->ID,
                         'post_date' => $scheduledDate,
@@ -1210,12 +1218,12 @@ class ContentCalendar
                 continue;
             }
 
-            // Create a placeholder draft post
+            // Create a placeholder scheduled draft post
             $postId = wp_insert_post([
                 'post_title' => $page['title'],
                 'post_content' => '',
                 'post_type' => 'post',
-                'post_status' => 'draft',
+                'post_status' => 'future',
                 'post_author' => get_current_user_id(),
                 'post_date' => $scheduledDate,
                 'post_date_gmt' => get_gmt_from_date($scheduledDate),

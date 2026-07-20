@@ -400,48 +400,11 @@ class Client
             $this->serpCompetitor = new SerpCompetitor($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->serpCompetitor->register();
             
-            $this->topicCluster = new TopicCluster(
-                $this->settings,
-                $this->llmClient,
-                $this->contentBrief ?? null,
-                $this->contentOptimizer ?? null,
-                $this->smartTags ?? null,
-                $this->faqSchema ?? null,
-                $this->openGraph ?? null,
-                $this->truSEO ?? null
-            );
-            $this->topicCluster->register();
-            add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
-            add_filter('cron_schedules', function($schedules) {
-                $schedules['sseo_ai_queue_interval'] = [
-                    'interval' => 120,
-                    'display' => __('Every 2 minutes (Fyndable Queue)', 'ai-seo-client'),
-                ];
-                return $schedules;
-            });
-            
             $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient);
             $this->keywordDifficulty->register();
             
             $this->contentBrief = new ContentBrief($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->contentBrief->register();
-            
-            // Re-instantiate TopicCluster now that ContentBrief and ContentOptimizer are available
-            if ($this->topicCluster) {
-                $this->topicCluster = new TopicCluster(
-                    $this->settings,
-                    $this->llmClient,
-                    $this->contentBrief,
-                    $this->contentOptimizer,
-                    $this->smartTags,
-                    $this->faqSchema,
-                    $this->openGraph,
-                    $this->truSEO,
-                    $this->geoScore
-                );
-                $this->topicCluster->register();
-                add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
-            }
 
             // AI SEO Agent placeholder — instantiated after Business+ features so ContentWriter is available
             
@@ -544,8 +507,8 @@ class Client
         $this->serpMonitor = new SerpChangeMonitor($this->settings, $this->llmClient);
         $this->serpMonitor->register();
 
-        // Re-instantiate TopicCluster with GEO score dependency
-        if ($this->topicCluster) {
+        // TopicCluster — instantiated once after all dependencies are available
+        if (in_array($tier, ['professional', 'business', 'agency', 'trial', 'dev'])) {
             $this->topicCluster = new TopicCluster(
                 $this->settings,
                 $this->llmClient,
@@ -559,6 +522,13 @@ class Client
             );
             $this->topicCluster->register();
             add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
+            add_filter('cron_schedules', function($schedules) {
+                $schedules['sseo_ai_queue_interval'] = [
+                    'interval' => 120,
+                    'display' => __('Every 2 minutes (Fyndable Queue)', 'ai-seo-client'),
+                ];
+                return $schedules;
+            });
         }
         
         // Agency-only features (DEV includes these)
@@ -1190,8 +1160,8 @@ class Client
 
         // Apply white-label CSS variables only when a custom brand is configured
         if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
-            $primaryColor = $whiteLabel['primary_color'] ?: '#2563eb';
-            $secondaryColor = $whiteLabel['secondary_color'] ?: '#1e40af';
+            $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?: '#2563eb') ?: '#2563eb';
+            $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?: '#1e40af') ?: '#1e40af';
             wp_add_inline_style('ai-seo-client-admin', "
                 :root {
                     --sseo-primary-color: {$primaryColor};
@@ -2236,7 +2206,6 @@ class Client
     {
         // Debug logging
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: POST data = ' . print_r($_POST, true));
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: User ID = ' . get_current_user_id());
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
         

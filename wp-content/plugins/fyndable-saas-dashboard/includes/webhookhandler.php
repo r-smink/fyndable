@@ -68,19 +68,17 @@ class WebhookHandler
         $sigHeader = $request->get_header('stripe-signature');
         $webhookSecret = get_option('sseo_ai_saas_stripe_webhook_secret', '');
 
-        // Log webhook receipt
-        error_log('SSEO AI SaaS: Stripe webhook received');
-        error_log('Signature: ' . ($sigHeader ? 'Present' : 'Missing'));
+        // SECURITY: Verify the webhook signature before trusting any data.
+        // Fail closed — if no secret is configured, the webhook cannot be trusted.
+        if (empty($webhookSecret)) {
+            error_log('SSEO AI SaaS: Stripe webhook rejected — webhook secret not configured');
+            return new \WP_REST_Response(['error' => 'Webhook secret not configured'], 400);
+        }
 
-        // For production: Verify webhook signature
-        // This requires Stripe PHP SDK
-        // try {
-        //     $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
-        // } catch(\UnexpectedValueException $e) {
-        //     return new \WP_REST_Response(['error' => 'Invalid payload'], 400);
-        // } catch(\Stripe\Exception\SignatureVerificationException $e) {
-        //     return new \WP_REST_Response(['error' => 'Invalid signature'], 400);
-        // }
+        if (!$this->verifyStripeSignature($payload, $sigHeader, $webhookSecret)) {
+            error_log('SSEO AI SaaS: Stripe webhook signature verification failed');
+            return new \WP_REST_Response(['error' => 'Invalid signature'], 400);
+        }
 
         $event = json_decode($payload, true);
 
@@ -89,10 +87,18 @@ class WebhookHandler
             return new \WP_REST_Response(['error' => 'Invalid payload'], 400);
         }
 
-        error_log('SSEO AI SaaS: Stripe event type: ' . $event['type']);
+        // Idempotency: skip events we have already processed (Stripe retries deliveries).
+        $eventId = $event['id'] ?? '';
+        if ($eventId !== '' && $this->isEventProcessed($eventId)) {
+            return new \WP_REST_Response(['received' => true, 'processed' => false, 'reason' => 'Duplicate event'], 200);
+        }
 
         // Process the event
         $result = $this->processStripeEvent($event);
+
+        if ($eventId !== '') {
+            $this->markEventProcessed($eventId);
+        }
 
         return new \WP_REST_Response($result, 200);
     }
@@ -523,6 +529,72 @@ class WebhookHandler
     private function findTenantByMolliePaymentId(string $paymentId): ?string
     {
         return $this->findTenantByProviderId('mollie_payment_id', $paymentId);
+    }
+
+    /**
+     * Verify a Stripe webhook signature using HMAC-SHA256.
+     * Implements the same scheme as the Stripe SDK without requiring it.
+     * Includes replay protection via the signed timestamp.
+     */
+    private function verifyStripeSignature(string $payload, ?string $sigHeader, string $secret): bool
+    {
+        if (empty($secret) || empty($sigHeader)) {
+            return false;
+        }
+
+        // Header format: t=timestamp,v1=signature[,v1=signature...]
+        $timestamp = null;
+        $signatures = [];
+        foreach (explode(',', $sigHeader) as $part) {
+            $kv = explode('=', trim($part), 2);
+            if (count($kv) !== 2) {
+                continue;
+            }
+            [$k, $v] = $kv;
+            if ($k === 't') {
+                $timestamp = $v;
+            } elseif ($k === 'v1') {
+                $signatures[] = $v;
+            }
+        }
+
+        if ($timestamp === null || !ctype_digit((string) $timestamp) || empty($signatures)) {
+            return false;
+        }
+
+        // Replay protection: reject signatures older than 5 minutes.
+        $tolerance = 300;
+        if (abs(time() - (int) $timestamp) > $tolerance) {
+            error_log('SSEO AI SaaS: Stripe webhook timestamp outside tolerance');
+            return false;
+        }
+
+        $signedPayload = $timestamp . '.' . $payload;
+        $expected = hash_hmac('sha256', $signedPayload, $secret);
+
+        foreach ($signatures as $sig) {
+            if (hash_equals($expected, $sig)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Idempotency: has this webhook event already been processed?
+     */
+    private function isEventProcessed(string $eventId): bool
+    {
+        return get_transient('sseo_ai_saas_evt_' . md5($eventId)) !== false;
+    }
+
+    /**
+     * Idempotency: mark a webhook event as processed (retained 24h).
+     */
+    private function markEventProcessed(string $eventId): void
+    {
+        set_transient('sseo_ai_saas_evt_' . md5($eventId), 1, DAY_IN_SECONDS);
     }
 
     /**

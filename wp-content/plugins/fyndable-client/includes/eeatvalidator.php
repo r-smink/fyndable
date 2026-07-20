@@ -322,6 +322,10 @@ class EEATValidator
             return;
         }
         
+        if (!current_user_can('edit_post', $postId)) {
+            return;
+        }
+        
         // Auto-calculate and store E-E-A-T score
         $eeatScore = $this->analyzePostEEAT($post);
         update_post_meta($postId, '_sseo_ai_eeat_score', $eeatScore);

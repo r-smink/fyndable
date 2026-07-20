@@ -37,7 +37,6 @@ class DashboardAPI
         
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Attempting license activation');
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Dashboard URL: ' . $dashboardUrl);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: License Key: ' . substr($licenseKey, 0, 15) . '...');
 
         // Check if SaaS Dashboard plugin is active on this same WordPress installation
         // This avoids HTTP loopback issues on shared hosting
@@ -141,7 +140,6 @@ class DashboardAPI
         }
         
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Response status: ' . $statusCode);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Response body: ' . json_encode($body));
 
         if ($statusCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
@@ -213,7 +211,6 @@ class DashboardAPI
         }
 
         if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: cURL response code: ' . $httpCode);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: cURL response body: ' . substr($response, 0, 500));
 
         $body = json_decode($response, true);
         
@@ -1021,8 +1018,8 @@ class DashboardAPI
      */
     private function buildMultipartBody(array $file, string $boundary): string
     {
-        $fileName = $file['name'] ?? 'screenshot.png';
-        $fileType = $file['type'] ?? 'image/png';
+        $fileName = sanitize_file_name($file['name'] ?? 'screenshot.png');
+        $fileType = sanitize_text_field($file['type'] ?? 'image/png');
         $fileContent = file_get_contents($file['tmp_name']);
 
         $body = "--{$boundary}\r\n";

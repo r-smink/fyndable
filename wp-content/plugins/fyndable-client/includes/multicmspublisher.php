@@ -132,7 +132,7 @@ class MultiCMSPublisher
             return new \WP_Error('missing_config', __('Webflow API token, site ID, and collection ID required', 'ai-seo-client'));
         }
 
-        $body = [
+        $requestBody = [
             'fields' => [
                 'name' => $post->post_title,
                 'slug' => $post->post_name,
@@ -149,25 +149,25 @@ class MultiCMSPublisher
                 'Content-Type' => 'application/json',
                 'Accept-Version' => '1.0.0',
             ],
-            'body' => json_encode($body),
+            'body' => json_encode($requestBody),
             'timeout' => 30,
         ]);
 
         if (is_wp_error($response)) return $response;
 
         $code = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $responseBody = json_decode(wp_remote_retrieve_body($response), true);
 
         if ($code < 200 || $code >= 300) {
-            return new \WP_Error('webflow_error', sprintf('Webflow API error: %s', $body['message'] ?? 'Unknown'), ['status' => $code]);
+            return new \WP_Error('webflow_error', sprintf('Webflow API error: %s', $responseBody['message'] ?? 'Unknown'), ['status' => $code]);
         }
 
-        update_post_meta($postId, '_sseo_ai_webflow_item_id', $body['_id'] ?? '');
+        update_post_meta($postId, '_sseo_ai_webflow_item_id', $responseBody['_id'] ?? '');
 
         return [
             'platform' => 'webflow',
-            'item_id' => $body['_id'] ?? '',
-            'url' => $body['url'] ?? '',
+            'item_id' => $responseBody['_id'] ?? '',
+            'url' => $responseBody['url'] ?? '',
         ];
     }
 
@@ -186,13 +186,11 @@ class MultiCMSPublisher
         if (empty($domain) || empty($token)) {
             return new \WP_Error('missing_config', __('Shopify domain and access token required', 'ai-seo-client'));
         }
-
-        $endpoint = "https://{$domain}/admin/api/2024-01/blogs";
-        if (!empty($blogId)) {
-            $endpoint .= "/{$blogId}/articles.json";
-        } else {
-            $endpoint .= ".json"; // List blogs to let user pick
+        if (empty($blogId)) {
+            return new \WP_Error('missing_blog_id', __('Shopify Blog ID is required to publish articles', 'ai-seo-client'));
         }
+
+        $endpoint = "https://{$domain}/admin/api/2024-01/blogs/{$blogId}/articles.json";
 
         $article = [
             'article' => [
@@ -439,7 +437,7 @@ class MultiCMSPublisher
                     $('#mcms-publish-result').html('<div style="background:#dcfce7;padding:15px;border-radius:8px;">✅ <?php echo esc_js(__("Published to", "ai-seo-client")); ?> ' + platform + '!<br><?php echo esc_js(__("Item ID:", "ai-seo-client")); ?> ' + (res.result.item_id || res.result.article_id || '—') + '</div>');
                 }).catch(function(err) {
                     $('#mcms-publish-result').html('<div style="background:#fee2e2;padding:15px;border-radius:8px;color:#dc2626;">❌ ' + (err.message || 'Publish failed') + '</div>');
-                }).always(function() {
+                }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Publish", "ai-seo-client")); ?>');
                 });
             });

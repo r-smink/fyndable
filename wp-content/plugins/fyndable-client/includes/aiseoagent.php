@@ -900,7 +900,7 @@ Return as JSON array.";
                 }).catch(function(err) {
                     $('.agent-typing').parent().remove();
                     addMessage('assistant', '❌ ' + (err.message || '<?php echo esc_js(__("Error occurred", "ai-seo-client")); ?>'));
-                }).always(function() {
+                }).finally(function() {
                     $('#agent-send').prop('disabled', false);
                 });
             }

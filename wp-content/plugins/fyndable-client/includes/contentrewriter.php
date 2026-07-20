@@ -80,7 +80,7 @@ class ContentRewriter
 
         $prompt = $this->buildPrompt($content, $mode, $keyword, $tone, $instructions);
 
-        $result = $this->llm->call($prompt, 'You are an expert SEO content editor. Preserve HTML structure. Return only the rewritten content.', null, 4000);
+        $result = $this->llm->call($prompt, null, 'You are an expert SEO content editor. Preserve HTML structure. Return only the rewritten content.', 4000);
         if (is_wp_error($result)) {
             return $result;
         }
@@ -239,7 +239,7 @@ Content to humanize:
 Return ONLY the humanized content. Preserve HTML structure. Keep all factual information.
 PROMPT;
 
-        $result = $this->llm->call($prompt, 'You are a humanizing editor. Return only the rewritten content.', null, 4000);
+        $result = $this->llm->call($prompt, null, 'You are a humanizing editor. Return only the rewritten content.', 4000);
         if (is_wp_error($result)) {
             return $result;
         }

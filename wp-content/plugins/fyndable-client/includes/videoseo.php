@@ -763,13 +763,11 @@ Generate a natural, engaging video transcript (500-1000 words) that would match 
         // Try to get video title from oEmbed
         $oembed = wp_remote_get("https://www.youtube.com/oembed?url=" . urlencode($videoUrl) . "&format=json", ['timeout' => 10]);
         $title = '';
-        $description = '';
 
         if (!is_wp_error($oembed)) {
             $data = json_decode(wp_remote_retrieve_body($oembed), true);
             if (is_array($data)) {
                 $title = $data['title'] ?? '';
-                $author = $data['author_name'] ?? '';
             }
         }
 

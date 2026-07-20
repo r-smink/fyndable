@@ -87,6 +87,7 @@ class TopicCluster
         register_rest_route('sseo-ai/v1', '/clusters/list', [
             'methods' => 'GET',
             'callback' => [$this, 'restListClusters'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
 
         register_rest_route('sseo-ai/v1', '/clusters/(?P<id>\d+)', [

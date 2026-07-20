@@ -317,33 +317,82 @@ class SignupCheckout
             ], 404);
         }
 
-        // Update tenant status to active
-        $this->tenants->updateTenant($tenantKey, [
-            'status' => 'active',
-            'payment_status' => 'active',
-            'last_payment_at' => current_time('mysql'),
-            'expires_at' => gmdate('Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS),
-        ]);
+        // SECURITY: This is a public endpoint. It must NEVER activate a paid plan
+        // without a verified payment. Activation is driven by the signature-verified
+        // payment webhooks. Here we only (a) return the license if the webhook has
+        // already activated the tenant, or (b) re-verify the payment inline as a
+        // fallback for race conditions before activating.
+        $isActive = ($tenant['status'] ?? '') === 'active'
+            && ($tenant['payment_status'] ?? '') === 'active';
 
-        // Send welcome email
-        $this->emailAutomation->sendWelcomeEmail($tenantKey, [
-            'email' => $tenant['email'],
-            'tier' => $tenant['tier'],
-            'license_key' => $tenant['license_key'],
-        ]);
+        // Free tier is always active without payment.
+        $isFree = ($tenant['tier'] ?? '') === 'free';
 
-        // Fire payment success action for receipt email
-        do_action('sseo_ai_payment_success', $tenantKey, $tenant['tier'], [
-            'tier' => $tenant['tier'],
-            'date' => current_time('mysql'),
-            'payment_id' => $paymentId,
-        ]);
+        if (!$isActive && !$isFree) {
+            $verified = $this->verifyPaymentInline($tenant, $paymentId);
+            if (!$verified) {
+                // Do not activate — payment not confirmed yet.
+                return new \WP_REST_Response([
+                    'success' => false,
+                    'pending' => true,
+                    'message' => 'Payment not yet confirmed. This can take a few moments; please retry shortly.',
+                ], 202);
+            }
+
+            // Payment verified inline — safe to activate.
+            $this->tenants->updateTenant($tenantKey, [
+                'status' => 'active',
+                'payment_status' => 'active',
+                'last_payment_at' => current_time('mysql'),
+                'expires_at' => gmdate('Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS),
+            ]);
+
+            $this->emailAutomation->sendWelcomeEmail($tenantKey, [
+                'email' => $tenant['email'],
+                'tier' => $tenant['tier'],
+                'license_key' => $tenant['license_key'],
+            ]);
+
+            do_action('sseo_ai_payment_success', $tenantKey, $tenant['tier'], [
+                'tier' => $tenant['tier'],
+                'date' => current_time('mysql'),
+                'payment_id' => $paymentId,
+            ]);
+        }
 
         return new \WP_REST_Response([
             'success' => true,
             'license_key' => $tenant['license_key'],
             'redirect_url' => $this->getSuccessUrl($tenant['license_key']),
         ], 200);
+    }
+
+    /**
+     * Re-verify a payment directly with the provider before activating.
+     * Currently supports Mollie (its API is safe to query by payment id).
+     * Stripe activation is handled exclusively by the signature-verified webhook.
+     */
+    private function verifyPaymentInline(array $tenant, ?string $paymentId): bool
+    {
+        if (empty($paymentId)) {
+            return false;
+        }
+
+        // Mollie payment ids are prefixed with "tr_".
+        if (strpos($paymentId, 'tr_') === 0) {
+            $payment = $this->paymentProcessor->fetchMolliePayment($paymentId);
+            if (is_wp_error($payment) || !is_array($payment)) {
+                return false;
+            }
+
+            $status = $payment['status'] ?? '';
+            $metaTenant = $payment['metadata']['tenant_key'] ?? '';
+
+            return $status === 'paid' && $metaTenant === ($tenant['tenant_key'] ?? '');
+        }
+
+        // Unknown/unsupported payment reference — refuse to activate.
+        return false;
     }
 
     /**

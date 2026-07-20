@@ -344,7 +344,7 @@ class GeoContentScore
                     renderResult(r);
                 }).catch(function(err) {
                     alert(err.message || 'Error');
-                }).always(function() {
+                }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Score Content", "ai-seo-client")); ?>');
                 });
             });
@@ -364,7 +364,7 @@ class GeoContentScore
                     });
                     html += '</tbody></table>';
                     $('#geo-result').html(html).show();
-                }).always(function() {
+                }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Score All Posts", "ai-seo-client")); ?>');
                 });
             });

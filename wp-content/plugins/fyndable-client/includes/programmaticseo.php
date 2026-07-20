@@ -127,7 +127,8 @@ class ProgrammaticSEO
     {
         $result = $template;
         foreach ($row as $key => $value) {
-            $result = str_replace('{' . $key . '}', $value, $result);
+            if (is_array($value)) continue;
+            $result = str_replace('{' . $key . '}', (string)$value, $result);
         }
         return $result;
     }
@@ -477,7 +478,7 @@ PROMPT;
                     $('#pseo-preview-result').html(html);
                 }).catch(function(err) {
                     alert(err.message || 'Preview failed');
-                }).always(function() {
+                }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Preview First Page", "ai-seo-client")); ?>');
                 });
             });
@@ -513,7 +514,7 @@ PROMPT;
                     $('#pseo-generate-result').html(html);
                 }).catch(function(err) {
                     alert(err.message || 'Generation failed');
-                }).always(function() {
+                }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Generate All Pages", "ai-seo-client")); ?>');
                 });
             });
