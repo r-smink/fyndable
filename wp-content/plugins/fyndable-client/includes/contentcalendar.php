@@ -156,12 +156,15 @@ class ContentCalendar
                 .sseo-calendar .content-item { background: #f0f6fc; padding: 5px; margin: 3px 0; border-radius: 3px; font-size: 12px; cursor: pointer; }
                 .sseo-calendar .content-item.draft { background: #fff3cd; }
                 .sseo-calendar .content-item.pending { background: #cfe2ff; }
+                .sseo-calendar .content-item.future { background: #d1e7dd; }
                 .sseo-calendar .content-item.scheduled { background: #d1e7dd; }
                 .sseo-calendar .today { background: #f0f6fc; }
                 .sseo-calendar .content-gap { background: #f8d7da; }
                 .sseo-calendar td.drag-over { background: #e5e7eb; border: 2px dashed #2271b1; }
-                .sseo-calendar .content-item.draft { cursor: grab; }
-                .sseo-calendar .content-item.draft:active { cursor: grabbing; }
+                .sseo-calendar .content-item.draft,
+                .sseo-calendar .content-item.future { cursor: grab; }
+                .sseo-calendar .content-item.draft:active,
+                .sseo-calendar .content-item.future:active { cursor: grabbing; }
                 .sseo-calendar .content-item.dragging { opacity: 0.5; }
                 </style>
                 
@@ -210,7 +213,7 @@ class ContentCalendar
                                         foreach ($calendarData[$dateKey] as $item):
                                     ?>
                                     <div class="content-item <?php echo esc_attr($item['status']); ?>" 
-                                         <?php if ($item['status'] === 'draft'): ?>
+                                         <?php if (in_array($item['status'], ['draft', 'future'])): ?>
                                          draggable="true"
                                          ondragstart="sseoDragStart(event)"
                                          data-post-id="<?php echo esc_attr($item['id']); ?>"

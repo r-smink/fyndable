@@ -404,7 +404,10 @@ class SmartInternalLinking
             <?php if (!empty($suggestions)): ?>
             <p><strong><?php esc_html_e('Suggested Internal Links:', 'ai-seo-client'); ?></strong></p>
             <ul style="list-style: none; padding: 0;">
-                <?php foreach (array_slice($suggestions, 0, 5) as $suggestion): ?>
+                <?php foreach (array_slice($suggestions, 0, 5) as $suggestion):
+                    $suggestionUrl = $suggestion['url'] ?? get_permalink($suggestion['id']);
+                    if (!$suggestionUrl) continue;
+                ?>
                 <li style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #2271b1;">
                     <div style="font-weight: bold; margin-bottom: 5px;">
                         <?php echo esc_html($this->truncate($suggestion['title'], 40)); ?>
@@ -416,7 +419,7 @@ class SmartInternalLinking
                         Relevance: <?php echo esc_html($suggestion['relevance']); ?>%
                     </div>
                     <button type="button" class="button button-small" style="margin-top: 5px;"
-                            onclick="sseoInsertLink('<?php echo esc_js(get_permalink($suggestion['id'])); ?>', '<?php echo esc_js($suggestion['anchor']); ?>')">
+                            onclick="sseoInsertLink('<?php echo esc_js($suggestionUrl); ?>', '<?php echo esc_js($suggestion['anchor']); ?>')">
                         <?php esc_html_e('Insert Link', 'ai-seo-client'); ?>
                     </button>
                 </li>
@@ -433,8 +436,12 @@ class SmartInternalLinking
         
         <script>
         function sseoInsertLink(url, anchorText) {
-            if (!url || !anchorText) {
-                alert('<?php echo esc_js(__('Invalid link data.', 'ai-seo-client')); ?>');
+            if (!url || url === 'false' || url === '') {
+                alert('<?php echo esc_js(__('Invalid link data: no URL available.', 'ai-seo-client')); ?>');
+                return;
+            }
+            if (!anchorText) {
+                alert('<?php echo esc_js(__('Invalid link data: no anchor text.', 'ai-seo-client')); ?>');
                 return;
             }
 
@@ -685,6 +692,9 @@ class SmartInternalLinking
                 
                 // Check if link already exists
                 $toUrl = get_permalink($toPost->ID);
+                if (!$toUrl) {
+                    continue;
+                }
                 if (stripos($fromPost->post_content, $toUrl) !== false) {
                     continue;
                 }
@@ -793,6 +803,11 @@ Provide only the anchor text (2-5 words), no explanation.";
         $suggestions = [];
         
         foreach ($relatedPosts as $relatedPost) {
+            $permalink = get_permalink($relatedPost->ID);
+            if (!$permalink) {
+                continue;
+            }
+            
             $relevance = $this->calculateRelevance($relatedPost, $keywords);
             
             if ($relevance >= 40) {
@@ -803,6 +818,7 @@ Provide only the anchor text (2-5 words), no explanation.";
                     'title' => $relatedPost->post_title,
                     'anchor' => $anchor,
                     'relevance' => $relevance,
+                    'url' => $permalink,
                 ];
             }
         }
@@ -975,9 +991,14 @@ Provide only the anchor text (2-5 words), no explanation.";
             wp_send_json_error(['message' => 'Source post not found']);
         }
 
+        $toPost = get_post($toId);
+        if (!$toPost || $toPost->post_status !== 'publish') {
+            wp_send_json_error(['message' => 'Target post not found or not published']);
+        }
+
         $toUrl = get_permalink($toId);
         if (!$toUrl) {
-            wp_send_json_error(['message' => 'Target post not found']);
+            wp_send_json_error(['message' => 'Target post has no valid permalink']);
         }
 
         $link = '<a href="' . esc_url($toUrl) . '">' . esc_html($anchorText) . '</a>';
@@ -1042,7 +1063,12 @@ Provide only the anchor text (2-5 words), no explanation.";
         $sourceId = (int) $sources[0]['id'];
         $sourcePost = get_post($sourceId);
         if (!$sourcePost || $sourcePost->post_status !== 'publish') {
-            wp_send_json_error(['message' => 'Source page not found']);
+            wp_send_json_error(['message' => 'Source page not found or not published']);
+        }
+
+        $sourcePermalink = get_permalink($sourceId);
+        if (!$sourcePermalink) {
+            wp_send_json_error(['message' => 'Source page has no valid permalink']);
         }
 
         // Build anchor text from orphan title or focus keyphrase
