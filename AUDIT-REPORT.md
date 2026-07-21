@@ -530,21 +530,6 @@ WP-5 dekt alle bestanden die niet in WP-1 t/m WP-4 zijn geaudit, plus een finale
 
 ---
 
-## Volledige audit samenvatting (WP-1 t/m WP-5)
-
-| Work package | Kritiek | High | Medium | Low | Bug | OK | Totaal gefixt |
-|-------------|---------|------|--------|-----|-----|-----|---------------|
-| WP-1 | 2 | 1 | 0 | 1 | 1 | 8 | 5 |
-| WP-2 | 0 | 2 | 1 | 2 | 0 | 18 | 5 |
-| WP-3 | 0 | 1 | 2 | 1 | 1 | 28+ | 5 |
-| WP-4 | 0 | 0 | 0 | 1 | 0 | 60+ | 1 |
-| WP-5 | 0 | 0 | 0 | 1 | 0 | 35+ | 1 |
-| **Totaal** | **2** | **4** | **3** | **6** | **2** | **149+** | **17** |
-
-Alle 17 gevonden security en bug issues zijn gefixed. De codebase is volledig geaudit.
-
----
-
 ## Quality / Refactor backlog (jouw keuze — niet auto-gefixt)
 
 ### WP-2 bevindingen
@@ -553,6 +538,69 @@ Alle 17 gevonden security en bug issues zijn gefixed. De codebase is volledig ge
 - **[client.php]** `renderBrandVisibilityPage()` — ~350 regels inline HTML/CSS/JS, verplaats naar template file.
 - **[topiccluster.php]** LLM prompt string interpolation met ongesaniteerde user input (`$title`, `$keyword`) — voeg input validatie toe.
 - **[keywords.php]** `fetchKeywordData()` gebruikt `rand()` voor fallback CPC/difficulty — vervang door echte API data of verwijder fallback.
+
+## WP-6 — Cross-cutting security her-check
+
+Gerichte grep/search-based check over de volledige codebase (beide plugins) op 12 veelvoorkomende WordPress security patterns. Uitgevoerd als aanvulling op de bestand-voor-bestand audit uit WP-1 t/m WP-5.
+
+### Uitgevoerde checks
+
+| # | Check | Methode | Resultaat |
+|---|-------|---------|-----------|
+| 1 | SQL Injection | grep naar `$wpdb->query/get_var/get_results/get_row/get_col` met `$var` interpolatie | **OK** — alle variabele interpolatie gebruikt hardcoded tabelnamen (`$wpdb->prefix . CONSTANT`), geen user input |
+| 2 | XSS | grep naar `echo $` patronen zonder `esc_html`/`esc_attr`/`esc_url` | **3 FIXES** — `saassettings.php` DB COUNT waarden zonder `(int)` cast (zie hieronder) |
+| 3 | CSRF | grep naar `admin_post_` handlers + vergelijk met `wp_verify_nonce`/`check_admin_referer`/`check_ajax_referer` | **OK** — alle admin-post handlers en AJAX handlers hebben nonce checks |
+| 4 | Open REST endpoints | grep naar `__return_true` permission callbacks | **OK** — alle 20+ `__return_true` endpoints hebben interne validatie (license_key↔tenant_key, webhook signature, of publieke signup/plan endpoints) |
+| 5 | Missing capability checks | grep naar `current_user_can` + vergelijk met REST endpoints, admin pages, form handlers | **OK** — alle REST endpoints, admin pages, en form handlers hebben proper `current_user_can` checks |
+| 6 | SSL verificatie uitgeschakeld | grep naar `sslverify` | **OK** — alle HTTP requests gebruiken `$this->settings->sslVerify()` (default `true`). Geen hardcoded `sslverify => false` |
+| 7 | Gevaarlijke functies | grep naar `eval`/`exec`/`system`/`shell_exec`/`passthru`/`proc_open`/`unserialize`/`serialize` | **OK** — geen enkele gevonden in de codebase |
+| 8 | Onveilige file includes | grep naar `include($var)`/`require($var)` | **OK** — geen file includes met variabele paden gevonden |
+| 9 | Hardcoded secrets | grep naar `sk_`/`pk_`/`api_key`/`secret`/`password` met string waarden | **OK** — geen hardcoded secrets. Alle API keys via `get_option()` en gemaskeerd in UI |
+| 10 | Onveilige random | grep naar `rand()`/`mt_rand()` | **OK** — alleen gebruikt voor A/B test traffic split (`abtesting.php`), fallback keyword data (`keywords.php`, reeds in quality backlog), en datum-suggestie (`contentcalendar.php`). Geen security tokens met `rand()` |
+| 11 | Directe superglobal access | grep naar `$_POST`/`$_GET`/`$_REQUEST`/`$_SERVER` | **OK** — alle `$_POST`/`$_GET`/`$_REQUEST` access gebruikt `sanitize_text_field`/`sanitize_email`/`esc_url_raw`/`(int)`/`sanitize_key`. `$_SERVER` waarden (`REMOTE_ADDR`, `HTTP_HOST`, `REQUEST_URI`) worden veilig gebruikt (escaped in output, gevalideerd met `filter_var`, of intern gebruikt) |
+| 12 | Path traversal | grep naar `file_get_contents`/`file_put_contents`/`fopen`/`readfile`/`unlink` met `$var` | **OK** — alle file operaties gebruiken hardcoded paden, `$_FILES['tmp_name']` (server-controlled), of `RecursiveDirectoryIterator` op hardcoded source dirs |
+
+### Bevindingen
+
+#### saassettings.php (fyndable-saas-dashboard — 3 locaties)
+- **[FIXED · SECURITY · LOW]** `echo $monthlyStats->active_tenants ?? 0` (regel 864) — DB COUNT waarde zonder `(int)` cast of `esc_html()`. Hoewel de waarde uit een SQL `COUNT(*)` aggregatie komt en normaal numeriek is, kon een gemanipuleerde database-waarde theoretisch HTML/JS injecteren. Nu naar `(int)` gecast.
+- **[FIXED · SECURITY · LOW]** `echo $tier->count` (regel 920) — zelfde issue, DB COUNT waarde zonder cast. Nu `(int)` gecast.
+- **[FIXED · SECURITY · LOW]** `echo $row['active_tenants']` (regel 1207) — zelfde issue, DB COUNT waarde zonder cast. Nu `(int)` gecast.
+
+### WP-6 Samenvatting
+
+| Severity | Aantal | Status |
+|----------|--------|--------|
+| Kritiek | 0 | — |
+| High | 0 | — |
+| Medium | 0 | — |
+| Low | 3 | 3 FIXED |
+| OK | 12 checks | — |
+
+**Gefixte issues:**
+1. `saassettings.php:864` — `$monthlyStats->active_tenants` zonder cast → `(int)` cast
+2. `saassettings.php:920` — `$tier->count` zonder cast → `(int)` cast
+3. `saassettings.php:1207` — `$row['active_tenants']` zonder cast → `(int)` cast
+
+**Conclusie:** De cross-cutting her-check bevestigt dat de codebase in goede staat verankerd is. Alle 12 security patterns zijn gecontroleerd via grep/search. Geen kritieke, high, of medium issues gevonden. 3 low-severity XSS defense-in-depth verbeteringen doorgevoerd in `saassettings.php`. De eerdere 17 fixes uit WP-1 t/m WP-5 staan nog correct in de code.
+
+---
+
+## Volledige audit samenvatting (WP-1 t/m WP-6)
+
+| Work package | Kritiek | High | Medium | Low | Bug | OK | Totaal gefixt |
+|-------------|---------|------|--------|-----|-----|-----|---------------|
+| WP-1 | 2 | 1 | 0 | 1 | 1 | 8 | 5 |
+| WP-2 | 0 | 2 | 1 | 2 | 0 | 18 | 5 |
+| WP-3 | 0 | 1 | 2 | 1 | 1 | 28+ | 5 |
+| WP-4 | 0 | 0 | 0 | 1 | 0 | 60+ | 1 |
+| WP-5 | 0 | 0 | 0 | 1 | 0 | 35+ | 1 |
+| WP-6 | 0 | 0 | 0 | 3 | 0 | 12 | 3 |
+| **Totaal** | **2** | **4** | **3** | **9** | **2** | **161+** | **20** |
+
+Alle 20 gevonden security en bug issues zijn gefixed. De codebase is volledig geaudit via zowel bestand-voor-bestand (WP-1 t/m WP-5) als cross-cutting pattern-based checks (WP-6).
+
+---
 
 ## Performance-aanbevelingen
 _(wordt gevuld tijdens audit)_

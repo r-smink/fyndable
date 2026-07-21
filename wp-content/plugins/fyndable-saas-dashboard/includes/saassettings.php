@@ -861,7 +861,7 @@ class SaaSSettings
                         <p><?php esc_html_e('Total API Calls', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
-                        <h3><?php echo $monthlyStats->active_tenants ?? 0; ?></h3>
+                        <h3><?php echo (int)($monthlyStats->active_tenants ?? 0); ?></h3>
                         <p><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
@@ -917,7 +917,7 @@ class SaaSSettings
                             <?php foreach ($tierDistribution as $tier): ?>
                             <tr>
                                 <td><?php echo esc_html(ucfirst($tier->tier)); ?></td>
-                                <td><?php echo $tier->count; ?></td>
+                                <td><?php echo (int)$tier->count; ?></td>
                                 <td>$<?php echo number_format($tier->total_cost ?? 0, 2); ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -1204,7 +1204,7 @@ class SaaSSettings
                                     <tr>
                                         <td><?php echo esc_html($serviceLabels[$row['service']] ?? $row['service']); ?></td>
                                         <td><?php echo number_format($row['total_calls']); ?></td>
-                                        <td><?php echo $row['active_tenants']; ?></td>
+                                        <td><?php echo (int)$row['active_tenants']; ?></td>
                                         <td>$<?php echo number_format($row['total_cost'], 4); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
