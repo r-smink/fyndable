@@ -17,6 +17,7 @@ class SitemapGenerator
     {
         add_action('init', [$this, 'addRewriteRules'], 10, 0);
         add_filter('query_vars', [$this, 'addQueryVars']);
+        add_action('parse_request', [$this, 'interceptSitemapRequest'], 1);
         add_action('template_redirect', [$this, 'maybeServeSitemap']);
         add_action('save_post', [$this, 'onPostSave'], 10, 3);
         add_action('delete_post', [$this, 'onPostDelete']);
@@ -24,6 +25,29 @@ class SitemapGenerator
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         $this->disableWordPressSitemap();
+    }
+
+    /**
+     * Intercept sitemap requests at parse_request (before redirect_canonical).
+     * This prevents WordPress from redirecting /sitemap.xml to /wp-sitemap.xml.
+     */
+    public function interceptSitemapRequest(\WP $wp): void
+    {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        $path = parse_url($requestUri, PHP_URL_PATH) ?: '';
+        $path = trim($path, '/');
+
+        $sitemapPaths = ['sitemap.xml', 'sitemap_index.xml'];
+        if (in_array($path, $sitemapPaths, true)) {
+            $wp->query_vars['aiseo_sitemap'] = 'main';
+            $this->maybeServeSitemap();
+        } elseif (preg_match('/^sitemap-tax-([a-z0-9_-]+)\.xml$/', $path, $matches)) {
+            $wp->query_vars['aiseo_sitemap'] = 'tax-' . $matches[1];
+            $this->maybeServeSitemap();
+        } elseif (preg_match('/^sitemap-([a-z0-9_-]+)\.xml$/', $path, $matches)) {
+            $wp->query_vars['aiseo_sitemap'] = $matches[1];
+            $this->maybeServeSitemap();
+        }
     }
 
     public function registerRestRoutes(): void
@@ -98,7 +122,6 @@ class SitemapGenerator
     {
         add_rewrite_rule('^sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap_index\.xml$', 'index.php?aiseo_sitemap=main', 'top');
-        add_rewrite_rule('^wp-sitemap\.xml$', 'index.php?aiseo_sitemap=main', 'top');
         add_rewrite_rule('^sitemap-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=$matches[1]', 'top');
         add_rewrite_rule('^sitemap-tax-([a-z0-9_-]+)\.xml$', 'index.php?aiseo_sitemap=tax-$matches[1]', 'top');
     }
@@ -171,7 +194,7 @@ class SitemapGenerator
         $path = parse_url($requestUri, PHP_URL_PATH) ?: '';
         $path = trim($path, '/');
 
-        if ($path === 'sitemap.xml' || $path === 'sitemap_index.xml' || $path === 'wp-sitemap.xml') {
+        if ($path === 'sitemap.xml' || $path === 'sitemap_index.xml') {
             return 'main';
         }
         if (preg_match('/^sitemap-tax-([a-z0-9_-]+)\.xml$/', $path, $matches)) {

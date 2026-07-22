@@ -130,10 +130,17 @@ class Dashboard
     {
         $enabled = get_option('sseo_ai_saas_wl_enabled', false);
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
-        $menuName = $companyName ? $companyName . ' SaaS' : 'Fyndable SaaS';
 
         $user = wp_get_current_user();
         $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
+        if ($isAgency) {
+            $wl = get_user_meta($user->ID, 'sseo_ai_agency_wl', true);
+            if (is_array($wl) && !empty($wl['company_name'])) {
+                $companyName = $wl['company_name'];
+            }
+        }
+
+        $menuName = $companyName ? $companyName . ' SaaS' : 'Fyndable SaaS';
         $capability = $isAgency ? 'agency_view_dashboard' : 'manage_options';
 
         add_menu_page(

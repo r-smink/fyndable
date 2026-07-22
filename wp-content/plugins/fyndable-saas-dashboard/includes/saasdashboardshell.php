@@ -65,6 +65,11 @@ class SaaSDashboardShell
                     'label' => __('Support', 'sseo-ai-saas'),
                     'icon' => '&#128172;',
                 ],
+                [
+                    'slug' => 'sseo-ai-agency-wl',
+                    'label' => __('White-Label', 'sseo-ai-saas'),
+                    'icon' => '&#127912;',
+                ],
             ];
             return;
         }
@@ -316,9 +321,28 @@ class SaaSDashboardShell
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $companyLogo = $enabled ? get_option('sseo_ai_saas_wl_company_logo', '') : '';
         $companyName = $companyName ?: 'Fyndable';
+        $primaryColor = '#3b82f6';
+        $secondaryColor = '#ec4899';
 
         $user = wp_get_current_user();
         $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
+        if ($isAgency) {
+            $wl = get_user_meta($user->ID, 'sseo_ai_agency_wl', true);
+            if (is_array($wl) && !empty($wl['company_name'])) {
+                $companyName = $wl['company_name'];
+            }
+            if (is_array($wl) && !empty($wl['company_logo'])) {
+                $companyLogo = $wl['company_logo'];
+            }
+            if (is_array($wl) && !empty($wl['primary_color'])) {
+                $primaryColor = $wl['primary_color'];
+            }
+            if (is_array($wl) && !empty($wl['secondary_color'])) {
+                $secondaryColor = $wl['secondary_color'];
+            }
+        }
+
+        $topbarGradient = 'linear-gradient(135deg, ' . esc_attr($primaryColor) . ' 0%, ' . esc_attr($secondaryColor) . ' 100%)';
         $defaultPage = $isAgency ? 'sseo-ai-agency' : 'sseo-ai-licenses';
         $currentPage = isset($_GET['saas_page']) ? sanitize_key($_GET['saas_page']) : $defaultPage;
 
@@ -535,7 +559,7 @@ class SaaSDashboardShell
             }
         </style>
         <div class="saas-shell-wrap">
-            <div class="saas-topbar">
+            <div class="saas-topbar" style="background: <?php echo esc_attr($topbarGradient); ?>;">
                 <div class="saas-topbar-brand">
                     <div class="saas-topbar-logo">
                         <?php if ($companyLogo): ?>

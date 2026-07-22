@@ -540,7 +540,7 @@ class Client
             $this->plagiarismChecker->register();
         }
 
-        // White-Label Manager (branded login for everyone, agency extras optional)
+        // White-Label Branding (settings managed via SaaS dashboard / license)
         $this->whiteLabelManager = new WhiteLabelManager($this->settings);
         $this->whiteLabelManager->register();
 

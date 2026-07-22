@@ -36,6 +36,7 @@ class AgencyPortal
         add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('admin_head', [$this, 'injectAgencyHeaderStyle']);
+        add_action('admin_post_sseo_ai_agency_save_wl', [$this, 'handleSaveWhiteLabel']);
     }
 
     public function enqueueAssets(string $hook): void
@@ -49,6 +50,7 @@ class AgencyPortal
             [],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
         );
+        wp_enqueue_media();
     }
 
     /**
@@ -133,7 +135,13 @@ class AgencyPortal
                 background: rgba(255,255,255,0.25);
             }
             .fyndable-agency-content {
-                padding: 20px 0;
+                padding: 0;
+            }
+            .fyndable-agency-content h1 {
+                color: #fff !important;
+                padding: 16px 20px !important;
+                margin: 0 !important;
+                background: transparent !important;
             }
             .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-stats-grid,
             .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-card {
@@ -177,13 +185,25 @@ class AgencyPortal
             }
         }
 
+        $wl = $this->getWhiteLabelSettings();
+        $companyName = !empty($wl['company_name']) ? $wl['company_name'] : $agencyName;
+        $companyLogo = $wl['company_logo'] ?? '';
+        $primaryColor = $wl['primary_color'] ?? '#3b82f6';
+        $secondaryColor = $wl['secondary_color'] ?? '#ec4899';
+
         $user = wp_get_current_user();
         $avatar = get_avatar_url($user->ID, ['size' => 32]);
         ?>
-        <div class="fyndable-agency-topbar">
+        <div class="fyndable-agency-topbar" style="background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%);">
             <div class="brand">
-                <div class="brand-logo">Fyndable <span>SaaS</span></div>
-                <div class="agency-badge"><?php echo esc_html($agencyName ?: __('Agency Portal', 'sseo-ai-saas')); ?></div>
+                <div class="brand-logo">
+                    <?php if ($companyLogo): ?>
+                        <img src="<?php echo esc_url($companyLogo); ?>" alt="" style="max-height: 36px; max-width: 180px; display: block;">
+                    <?php else: ?>
+                        <?php echo esc_html($companyName ?: 'Fyndable'); ?> <span>SaaS</span>
+                    <?php endif; ?>
+                </div>
+                <div class="agency-badge"><?php echo esc_html($companyName ?: __('Agency Portal', 'sseo-ai-saas')); ?></div>
             </div>
             <div class="user-info">
                 <span><?php echo esc_html($user->display_name); ?></span>
@@ -237,6 +257,7 @@ class AgencyPortal
         add_submenu_page('sseo-ai-agency', __('Tenant Detail', 'sseo-ai-saas'), __('Tenant Detail', 'sseo-ai-saas'), 'agency_view_tenants', 'sseo-ai-agency-tenant-detail', [$this, 'renderTenantDetailPage']);
         add_submenu_page('sseo-ai-agency', __('Usage & Costs', 'sseo-ai-saas'), __('Usage & Costs', 'sseo-ai-saas'), 'agency_view_tenants', 'sseo-ai-agency-usage', [$this, 'renderUsagePage']);
         add_submenu_page('sseo-ai-agency', __('Support', 'sseo-ai-saas'), __('Support', 'sseo-ai-saas'), 'agency_view_support', 'sseo-ai-agency-support', [$this, 'renderSupportPage']);
+        add_submenu_page('sseo-ai-agency', __('White-Label', 'sseo-ai-saas'), __('White-Label', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-wl', [$this, 'renderWhiteLabelSettings']);
     }
 
     private function getAgencyContext(): array
@@ -1190,5 +1211,156 @@ class AgencyPortal
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Get the current agency's white-label settings.
+     */
+    public function getWhiteLabelSettings(): array
+    {
+        $userId = get_current_user_id();
+        $saved = get_user_meta($userId, 'sseo_ai_agency_wl', true);
+        if (!is_array($saved)) {
+            $saved = [];
+        }
+
+        return array_merge([
+            'company_name' => '',
+            'company_logo' => '',
+            'primary_color' => '#3b82f6',
+            'secondary_color' => '#ec4899',
+            'support_email' => '',
+            'support_url' => '',
+        ], $saved);
+    }
+
+    /**
+     * Render agency white-label settings page.
+     */
+    public function renderWhiteLabelSettings(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $wl = $this->getWhiteLabelSettings();
+        $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
+            <h1><?php esc_html_e('White-Label Settings', 'sseo-ai-saas'); ?></h1>
+
+            <?php if ($message === 'saved'): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('White-label settings saved.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_save_wl')); ?>">
+                <?php wp_nonce_field('sseo_ai_agency_wl_save'); ?>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="company_name"><?php esc_html_e('Company Name', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="text" id="company_name" name="company_name" value="<?php echo esc_attr($wl['company_name']); ?>" class="regular-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="company_logo"><?php esc_html_e('Company Logo', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="url" id="company_logo" name="company_logo" value="<?php echo esc_attr($wl['company_logo']); ?>" class="regular-text">
+                            <input type="button" id="upload_agency_logo" class="button" value="<?php esc_attr_e('Upload Logo', 'sseo-ai-saas'); ?>">
+                            <p class="description"><?php esc_html_e('Recommended: 200x50px transparent PNG.', 'sseo-ai-saas'); ?></p>
+                            <?php if ($wl['company_logo']): ?>
+                                <p><img id="logo-preview" src="<?php echo esc_url($wl['company_logo']); ?>" alt="" style="max-height: 50px; margin-top: 10px; background: #f0f0f0; padding: 5px;"></p>
+                            <?php else: ?>
+                                <p><img id="logo-preview" src="" alt="" style="max-height: 50px; margin-top: 10px; background: #f0f0f0; padding: 5px; display: none;"></p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="primary_color"><?php esc_html_e('Primary Color', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="color" id="primary_color" name="primary_color" value="<?php echo esc_attr($wl['primary_color']); ?>">
+                            <span class="color-preview" style="display: inline-block; width: 30px; height: 30px; background: <?php echo esc_attr($wl['primary_color']); ?>; border-radius: 4px; margin-left: 10px; vertical-align: middle; border: 1px solid #ccc;"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="secondary_color"><?php esc_html_e('Secondary Color', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="color" id="secondary_color" name="secondary_color" value="<?php echo esc_attr($wl['secondary_color']); ?>">
+                            <span class="color-preview" style="display: inline-block; width: 30px; height: 30px; background: <?php echo esc_attr($wl['secondary_color']); ?>; border-radius: 4px; margin-left: 10px; vertical-align: middle; border: 1px solid #ccc;"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="support_email"><?php esc_html_e('Support Email', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="email" id="support_email" name="support_email" value="<?php echo esc_attr($wl['support_email']); ?>" class="regular-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="support_url"><?php esc_html_e('Support URL', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="url" id="support_url" name="support_url" value="<?php echo esc_attr($wl['support_url']); ?>" class="regular-text">
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(__('Save White-Label Settings', 'sseo-ai-saas'), 'primary'); ?>
+            </form>
+            </div>
+        </div>
+        <script>
+        jQuery(document).ready(function($) {
+            var frame;
+            $('#upload_agency_logo').on('click', function(e) {
+                e.preventDefault();
+                if (frame) {
+                    frame.open();
+                    return;
+                }
+                frame = wp.media({
+                    title: '<?php echo esc_js(__('Select Company Logo', 'sseo-ai-saas')); ?>',
+                    button: { text: '<?php echo esc_js(__('Use this logo', 'sseo-ai-saas')); ?>' },
+                    multiple: false
+                });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#company_logo').val(attachment.url);
+                    $('#logo-preview').attr('src', attachment.url).show();
+                });
+                frame.open();
+            });
+        });
+        </script>
+        <?php
+    }
+
+    /**
+     * Save agency white-label settings from the form post.
+     */
+    public function handleSaveWhiteLabel(): void
+    {
+        if (!check_admin_referer('sseo_ai_agency_wl_save')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        if (!$this->roleManager->isAgencyUser()) {
+            wp_die(__('You do not have permission to manage white-label settings.', 'sseo-ai-saas'));
+        }
+
+        $wl = [
+            'company_name' => sanitize_text_field($_POST['company_name'] ?? ''),
+            'company_logo' => esc_url_raw($_POST['company_logo'] ?? ''),
+            'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '') ?: '#3b82f6',
+            'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '') ?: '#ec4899',
+            'support_email' => sanitize_email($_POST['support_email'] ?? ''),
+            'support_url' => esc_url_raw($_POST['support_url'] ?? ''),
+        ];
+
+        update_user_meta(get_current_user_id(), 'sseo_ai_agency_wl', $wl);
+
+        wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&message=saved'));
+        exit;
     }
 }
