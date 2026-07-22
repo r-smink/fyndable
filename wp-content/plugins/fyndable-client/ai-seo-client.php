@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable
  * Description: Advanced AI-powered SEO plugin by Fyndable with comprehensive optimization features
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Fyndable
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_CLIENT_VERSION', '1.5.1');
+define('SSEO_AI_CLIENT_VERSION', '1.5.2');
 define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
