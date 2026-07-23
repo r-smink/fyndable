@@ -298,7 +298,7 @@ class SEODataDashboard
         $ahConnected = !empty($ahKey);
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
@@ -415,11 +415,11 @@ class SEODataDashboard
 
         <script>
         var SSEO_STR = {
-            loading: '<?php echo esc_js(__('Loading…', 'ai-seo-client')); ?>',
+            loading: '<?php echo esc_js(__('Loadingâ€¦', 'ai-seo-client')); ?>',
             noData: '<?php echo esc_js(__('No data available.', 'ai-seo-client')); ?>',
             needDomain: '<?php echo esc_js(__('Please enter a domain.', 'ai-seo-client')); ?>',
             needKeyword: '<?php echo esc_js(__('Please enter a keyword.', 'ai-seo-client')); ?>',
-            serpWait: '<?php echo esc_js(__('Fetching live SERP results, this can take up to a minute…', 'ai-seo-client')); ?>'
+            serpWait: '<?php echo esc_js(__('Fetching live SERP results, this can take up to a minuteâ€¦', 'ai-seo-client')); ?>'
         };
 
         function sseoEsc(s) {
@@ -429,7 +429,7 @@ class SEODataDashboard
             });
         }
         function sseoNum(n) {
-            if (n === null || n === undefined || n === '') return '—';
+            if (n === null || n === undefined || n === '') return 'â€”';
             var v = Number(n);
             return isNaN(v) ? sseoEsc(n) : v.toLocaleString();
         }
@@ -479,9 +479,9 @@ class SEODataDashboard
             rows.forEach(function(k) {
                 html += '<tr><td>' + sseoEsc(k.keyword) + '</td>' +
                     '<td>' + sseoNum(k.volume) + '</td>' +
-                    '<td>' + (k.cpc != null ? '$' + sseoEsc(k.cpc) : '—') + '</td>' +
-                    '<td>' + (k.difficulty != null ? sseoEsc(k.difficulty) : '—') + '</td>' +
-                    '<td>' + (k.position != null ? '#' + sseoEsc(k.position) : '—') + '</td></tr>';
+                    '<td>' + (k.cpc != null ? '$' + sseoEsc(k.cpc) : 'â€”') + '</td>' +
+                    '<td>' + (k.difficulty != null ? sseoEsc(k.difficulty) : 'â€”') + '</td>' +
+                    '<td>' + (k.position != null ? '#' + sseoEsc(k.position) : 'â€”') + '</td></tr>';
             });
             return html + '</tbody></table>';
         }
@@ -750,7 +750,7 @@ class SEODataDashboard
                 if (data.ahrefs) {
                     html += '<h3><?php echo esc_js(__('Ahrefs (current site)', 'ai-seo-client')); ?></h3><div class="seo-stat-grid">';
                     (data.ahrefs.stats || []).forEach(function(s) {
-                        html += '<div class="seo-stat-card"><div class="seo-stat-value">' + sseoEsc(s.value != null ? s.value : '—') + '</div><div class="seo-stat-label">' + sseoEsc(s.label) + '</div></div>';
+                        html += '<div class="seo-stat-card"><div class="seo-stat-value">' + sseoEsc(s.value != null ? s.value : 'â€”') + '</div><div class="seo-stat-label">' + sseoEsc(s.label) + '</div></div>';
                     });
                     html += '</div>';
                 }
@@ -790,7 +790,7 @@ class SEODataDashboard
                 if (data.error) { container.innerHTML = sseoErr(data.error); return; }
                 var html = '<h3><?php echo esc_js(__('Ahrefs Domain Overview', 'ai-seo-client')); ?></h3><div class="seo-stat-grid">';
                 (data.stats || []).forEach(function(s) {
-                    html += '<div class="seo-stat-card"><div class="seo-stat-value">' + sseoEsc(s.value != null ? s.value : '—') + '</div><div class="seo-stat-label">' + sseoEsc(s.label) + '</div></div>';
+                    html += '<div class="seo-stat-card"><div class="seo-stat-value">' + sseoEsc(s.value != null ? s.value : 'â€”') + '</div><div class="seo-stat-label">' + sseoEsc(s.label) + '</div></div>';
                 });
                 html += '</div>';
                 container.innerHTML = html;
@@ -832,9 +832,9 @@ class SEODataDashboard
 
             $result['ahrefs'] = [
                 'stats' => [
-                    ['label' => __('Domain Rating', 'ai-seo-client'), 'value' => (!is_wp_error($dr) && isset($dr['domain_rating'])) ? $dr['domain_rating']['value'] : '—'],
-                    ['label' => __('Backlinks', 'ai-seo-client'), 'value' => (!is_wp_error($bl) && isset($bl['metrics'])) ? number_format($bl['metrics']['live_refs'] ?? 0) : '—'],
-                    ['label' => __('Referring Domains', 'ai-seo-client'), 'value' => (!is_wp_error($bl) && isset($bl['metrics'])) ? number_format($bl['metrics']['live_ref_domains'] ?? 0) : '—'],
+                    ['label' => __('Domain Rating', 'ai-seo-client'), 'value' => (!is_wp_error($dr) && isset($dr['domain_rating'])) ? $dr['domain_rating']['value'] : 'â€”'],
+                    ['label' => __('Backlinks', 'ai-seo-client'), 'value' => (!is_wp_error($bl) && isset($bl['metrics'])) ? number_format($bl['metrics']['live_refs'] ?? 0) : 'â€”'],
+                    ['label' => __('Referring Domains', 'ai-seo-client'), 'value' => (!is_wp_error($bl) && isset($bl['metrics'])) ? number_format($bl['metrics']['live_ref_domains'] ?? 0) : 'â€”'],
                 ],
             ];
         }

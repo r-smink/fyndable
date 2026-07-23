@@ -197,7 +197,7 @@ class ExternalIntegrations
         // GSC settings
         $gscConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']);
         $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
-        $gscClientId = ''; // Central OAuth — no per-customer credentials
+        $gscClientId = ''; // Central OAuth â€” no per-customer credentials
         
         $notionApiKey = get_option('sseo_ai_notion_api_key', '');
         $notionDatabaseId = get_option('sseo_ai_notion_database_id', '');
@@ -237,7 +237,7 @@ class ExternalIntegrations
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
@@ -517,7 +517,7 @@ class ExternalIntegrations
                     <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
                         <?php if ($gscConnected): ?>
                             <span class="notice notice-success inline" style="margin: 0; padding: 5px 10px;">
-                                ✓ <?php esc_html_e('Connected to Google', 'ai-seo-client'); ?>
+                                âœ“ <?php esc_html_e('Connected to Google', 'ai-seo-client'); ?>
                             </span>
                             <button type="button" class="button" onclick="sseoDisconnectGSC()">
                                 <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
@@ -549,11 +549,11 @@ class ExternalIntegrations
                                        value="<?php echo esc_attr($ga4PropertyId); ?>" class="regular-text"
                                        placeholder="123456789">
                                 <p class="description">
-                                    <?php esc_html_e('Numeric property ID from GA4 (Admin → Property Settings).', 'ai-seo-client'); ?>
+                                    <?php esc_html_e('Numeric property ID from GA4 (Admin â†’ Property Settings).', 'ai-seo-client'); ?>
                                     <?php if ($ga4Connected): ?>
-                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GA4 Connected', 'ai-seo-client'); ?></span>
+                                        <span style="color: #00a32a;">âœ“ <?php esc_html_e('GA4 Connected', 'ai-seo-client'); ?></span>
                                     <?php elseif ($ga4PropertyId): ?>
-                                        <span style="color: #dba617;"><?php esc_html_e('Property ID set — verify connection on Google Data Dashboard', 'ai-seo-client'); ?></span>
+                                        <span style="color: #dba617;"><?php esc_html_e('Property ID set â€” verify connection on Google Data Dashboard', 'ai-seo-client'); ?></span>
                                     <?php else: ?>
                                         <span style="color: #6b7280;"><?php esc_html_e('Set property ID to enable GA4 data', 'ai-seo-client'); ?></span>
                                     <?php endif; ?>
@@ -575,7 +575,7 @@ class ExternalIntegrations
                                 <p class="description">
                                     <?php esc_html_e('Your GTM container ID. The snippet will be added to wp_head and after the opening body tag.', 'ai-seo-client'); ?>
                                     <?php if ($gtmId): ?>
-                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GTM snippet active', 'ai-seo-client'); ?></span>
+                                        <span style="color: #00a32a;">âœ“ <?php esc_html_e('GTM snippet active', 'ai-seo-client'); ?></span>
                                     <?php endif; ?>
                                 </p>
                             </td>
@@ -595,7 +595,7 @@ class ExternalIntegrations
                                 <p class="description">
                                     <?php esc_html_e('Direct GA4 tracking snippet (gtag.js). Only use this if you do NOT track GA4 via the GTM container above, otherwise you will count visitors twice.', 'ai-seo-client'); ?>
                                     <?php if ($ga4MeasurementId): ?>
-                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GA4 gtag snippet active', 'ai-seo-client'); ?></span>
+                                        <span style="color: #00a32a;">âœ“ <?php esc_html_e('GA4 gtag snippet active', 'ai-seo-client'); ?></span>
                                     <?php endif; ?>
                                 </p>
                             </td>
@@ -615,7 +615,7 @@ class ExternalIntegrations
                                 <p class="description">
                                     <?php esc_html_e('Your Google Ads customer ID (10 digits with dashes).', 'ai-seo-client'); ?>
                                     <?php if ($adsConnected): ?>
-                                        <span style="color: #00a32a;">✓ <?php esc_html_e('Google Ads Connected', 'ai-seo-client'); ?></span>
+                                        <span style="color: #00a32a;">âœ“ <?php esc_html_e('Google Ads Connected', 'ai-seo-client'); ?></span>
                                     <?php endif; ?>
                                 </p>
                             </td>
@@ -634,7 +634,7 @@ class ExternalIntegrations
 
                             <?php if ($directIndexConnected && $directIndexHasScope): ?>
                                 <span class="notice notice-success inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
-                                    ✓ <?php esc_html_e('Google Indexing API scope granted', 'ai-seo-client'); ?>
+                                    âœ“ <?php esc_html_e('Google Indexing API scope granted', 'ai-seo-client'); ?>
                                 </span>
                             <?php elseif ($directIndexConnected): ?>
                                 <span class="notice notice-warning inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
@@ -676,7 +676,7 @@ class ExternalIntegrations
                                 <tr>
                                     <th scope="row"><?php esc_html_e('Quota', 'ai-seo-client'); ?></th>
                                     <td>
-                                        <?php echo esc_html(sprintf(__('Used today: %d / %d — Remaining: %d', 'ai-seo-client'), $directIndexQuotaUsed, DirectIndex::QUOTA_DAILY, $directIndexQuotaRemaining)); ?>
+                                        <?php echo esc_html(sprintf(__('Used today: %d / %d â€” Remaining: %d', 'ai-seo-client'), $directIndexQuotaUsed, DirectIndex::QUOTA_DAILY, $directIndexQuotaRemaining)); ?>
                                     </td>
                                 </tr>
                             </table>
@@ -700,9 +700,9 @@ class ExternalIntegrations
                                                 <td><?php echo esc_html($entry['type'] ?? ''); ?></td>
                                                 <td>
                                                     <?php if (!empty($entry['success'])): ?>
-                                                        <span style="color:#00a32a;">✓</span>
+                                                        <span style="color:#00a32a;">âœ“</span>
                                                     <?php else: ?>
-                                                        <span style="color:#d63638;">✗ <?php echo esc_html($entry['code'] ?? ''); ?></span>
+                                                        <span style="color:#d63638;">âœ— <?php echo esc_html($entry['code'] ?? ''); ?></span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
@@ -930,7 +930,7 @@ class ExternalIntegrations
             });
         }
         
-        // Google OAuth — SaaS dashboard proxy flow (only fyndable.ai needs to be in Google's authorised origins)
+        // Google OAuth â€” SaaS dashboard proxy flow (only fyndable.ai needs to be in Google's authorised origins)
         let sseoGooglePopup = null;
 
         function sseoConnectGoogle() {

@@ -65,7 +65,7 @@ class EmailAutomation
 
         $subject = sprintf(
             /* translators: %s: site name */
-            __('Welcome to %s — Your SEO Journey Starts Here', 'sseo-ai-saas'),
+            __('Welcome to %s â€” Your SEO Journey Starts Here', 'sseo-ai-saas'),
             $siteName
         );
 
@@ -208,7 +208,7 @@ class EmailAutomation
 
         $subject = sprintf(
             /* translators: %s: amount */
-            __('Payment Receipt — %s', 'sseo-ai-saas'),
+            __('Payment Receipt â€” %s', 'sseo-ai-saas'),
             $amount
         );
 
@@ -239,7 +239,7 @@ class EmailAutomation
             return;
         }
 
-        $subject = __('Payment Failed — Action Required', 'sseo-ai-saas');
+        $subject = __('Payment Failed â€” Action Required', 'sseo-ai-saas');
 
         $body = $this->renderTemplate('payment_failed', [
             'site_name'    => get_bloginfo('name'),
@@ -288,7 +288,7 @@ class EmailAutomation
         $headerColor = '#3b82f6';
         $secondaryColor = '#ec4899';
 
-        $header = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;background:#f3f4f6;">';
+        $header = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;font-family: Outfit, -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;background:#f3f4f6;">';
         $header .= '<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">';
         $header .= '<div style="background:linear-gradient(135deg,' . $headerColor . ' 0%,' . $secondaryColor . ' 100%);padding:30px 40px;text-align:center;">';
         $header .= '<h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">' . esc_html($siteName) . '</h1>';
@@ -299,7 +299,7 @@ class EmailAutomation
 
         switch ($template) {
             case 'welcome':
-                $content .= '<h2 style="color:#111827;margin:0 0 16px 0;font-size:20px;">' . __('Welcome aboard! 🎉', 'sseo-ai-saas') . '</h2>';
+                $content .= '<h2 style="color:#111827;margin:0 0 16px 0;font-size:20px;">' . __('Welcome aboard! ðŸŽ‰', 'sseo-ai-saas') . '</h2>';
                 $content .= '<p style="color:#374151;line-height:1.6;">' . sprintf(
                     /* translators: %1$s: tier, %2$s: site name */
                     __('Your <strong>%1$s</strong> license is now active. You\'re ready to supercharge your SEO with %2$s.', 'sseo-ai-saas'),
@@ -381,7 +381,7 @@ class EmailAutomation
 
         $footer = '</div>';
         $footer .= '<div style="padding:20px 40px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">';
-        $footer .= '<p style="margin:0;font-size:13px;color:#9ca3af;">' . esc_html($siteName) . ' — ' . __('This is an automated email, please do not reply.', 'sseo-ai-saas') . '</p>';
+        $footer .= '<p style="margin:0;font-size:13px;color:#9ca3af;">' . esc_html($siteName) . ' â€” ' . __('This is an automated email, please do not reply.', 'sseo-ai-saas') . '</p>';
         $footer .= '</div>';
         $footer .= '</div></body></html>';
 

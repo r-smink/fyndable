@@ -306,7 +306,7 @@ class MultiCMSPublisher
         $settings = $this->getSettings();
         ?>
         <style>
-            .mcms-wrap { max-width: 800px; margin: 20px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .mcms-wrap { max-width: 800px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .mcms-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
             .mcms-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
             .mcms-header h1 { margin: 0; font-size: 22px; }
@@ -320,13 +320,13 @@ class MultiCMSPublisher
         <div class="wrap mcms-wrap">
             <div class="mcms-card">
                 <div class="mcms-header">
-                    <h1>🌐 <?php esc_html_e('Multi-CMS Publishing', 'ai-seo-client'); ?></h1>
+                    <h1>ðŸŒ <?php esc_html_e('Multi-CMS Publishing', 'ai-seo-client'); ?></h1>
                     <p><?php esc_html_e('Publish AI-generated content to Webflow, Shopify, and other CMS platforms.', 'ai-seo-client'); ?></p>
                 </div>
 
                 <!-- Webflow -->
                 <div class="mcms-platform">
-                    <h3>🔵 Webflow CMS</h3>
+                    <h3>ðŸ”µ Webflow CMS</h3>
                     <div class="mcms-field">
                         <label><input type="checkbox" id="mcms-wf-enabled" <?php checked($settings['webflow']['enabled']); ?>> <?php esc_html_e('Enable Webflow publishing', 'ai-seo-client'); ?></label>
                     </div>
@@ -346,7 +346,7 @@ class MultiCMSPublisher
 
                 <!-- Shopify -->
                 <div class="mcms-platform">
-                    <h3>🟢 Shopify Blog</h3>
+                    <h3>ðŸŸ¢ Shopify Blog</h3>
                     <div class="mcms-field">
                         <label><input type="checkbox" id="mcms-sh-enabled" <?php checked($settings['shopify']['enabled']); ?>> <?php esc_html_e('Enable Shopify publishing', 'ai-seo-client'); ?></label>
                     </div>
@@ -365,7 +365,7 @@ class MultiCMSPublisher
                 </div>
 
                 <button class="button button-primary" id="mcms-save"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
-                <div id="mcms-saved" style="display:none;color:#16a34a;margin-top:10px;">✅ <?php esc_html_e('Saved!', 'ai-seo-client'); ?></div>
+                <div id="mcms-saved" style="display:none;color:#16a34a;margin-top:10px;">âœ… <?php esc_html_e('Saved!', 'ai-seo-client'); ?></div>
             </div>
 
             <!-- Publish Panel -->
@@ -376,7 +376,7 @@ class MultiCMSPublisher
                     <div>
                         <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Post', 'ai-seo-client'); ?></label>
                         <select id="mcms-post-select" style="min-width:300px;">
-                            <option value=""><?php esc_html_e('— Select —', 'ai-seo-client'); ?></option>
+                            <option value=""><?php esc_html_e('â€” Select â€”', 'ai-seo-client'); ?></option>
                             <?php
                             $posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'draft'], 'posts_per_page' => 100]);
                             foreach ($posts as $p) {
@@ -434,9 +434,9 @@ class MultiCMSPublisher
                     method: 'POST',
                     data: { post_id: postId, platform: platform }
                 }).then(function(res) {
-                    $('#mcms-publish-result').html('<div style="background:#dcfce7;padding:15px;border-radius:8px;">✅ <?php echo esc_js(__("Published to", "ai-seo-client")); ?> ' + platform + '!<br><?php echo esc_js(__("Item ID:", "ai-seo-client")); ?> ' + (res.result.item_id || res.result.article_id || '—') + '</div>');
+                    $('#mcms-publish-result').html('<div style="background:#dcfce7;padding:15px;border-radius:8px;">âœ… <?php echo esc_js(__("Published to", "ai-seo-client")); ?> ' + platform + '!<br><?php echo esc_js(__("Item ID:", "ai-seo-client")); ?> ' + (res.result.item_id || res.result.article_id || 'â€”') + '</div>');
                 }).catch(function(err) {
-                    $('#mcms-publish-result').html('<div style="background:#fee2e2;padding:15px;border-radius:8px;color:#dc2626;">❌ ' + (err.message || 'Publish failed') + '</div>');
+                    $('#mcms-publish-result').html('<div style="background:#fee2e2;padding:15px;border-radius:8px;color:#dc2626;">âŒ ' + (err.message || 'Publish failed') + '</div>');
                 }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Publish", "ai-seo-client")); ?>');
                 });

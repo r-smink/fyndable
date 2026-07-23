@@ -786,6 +786,25 @@ class CreatedPosts
             </div>
         </div>
 
+        <!-- Post Detail Modal -->
+        <div class="sseo-modal" id="modal-post-detail" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Post Details', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body" id="post-detail-body">
+                    <p><?php esc_html_e('Loading...', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="sseo-modal-footer">
+                    <a href="#" class="sseo-btn-secondary" id="post-detail-view" target="_blank"><?php esc_html_e('View on site', 'ai-seo-client'); ?></a>
+                    <a href="#" class="sseo-btn-primary" id="post-detail-edit" target="_blank"><?php esc_html_e('Edit Post', 'ai-seo-client'); ?></a>
+                    <button type="button" class="sseo-btn-secondary modal-close"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>
+                </div>
+            </div>
+        </div>
+
         <script>
         jQuery(document).ready(function($) {
             let currentPage = 1;
@@ -1071,6 +1090,42 @@ class CreatedPosts
                     selectedPosts.push(parseInt($(this).val()));
                 });
             }
+
+            // View post details
+            $(document).on('click', '.btn-expand', function() {
+                const postId = $(this).closest('tr').data('id');
+                const body = $('#post-detail-body');
+                $('#modal-post-detail').show();
+                body.html('<p>' + <?php echo wp_json_encode(__('Loading...', 'ai-seo-client')); ?> + '</p>');
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/created-posts/' + postId,
+                    method: 'GET'
+                }).then(function(post) {
+                    $('#post-detail-edit').attr('href', post.edit_url);
+                    $('#post-detail-view').attr('href', post.view_url);
+
+                    let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Title', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.title) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Status', 'ai-seo-client')); ?> + '</strong><p>' + getStatusLabel(post.status) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Edit Status', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.edit_status) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Review Status', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.review_status) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Language', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.language) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Cluster', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.cluster_name || '-') + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Word Count', 'ai-seo-client')); ?> + '</strong><p>' + post.word_count + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Post Type', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.post_type) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Generated Date', 'ai-seo-client')); ?> + '</strong><p>' + (post.generated_date ? formatDateTime(post.generated_date) : '-') + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Last Modified', 'ai-seo-client')); ?> + '</strong><p>' + formatDateTime(post.modified) + '</p></div>';
+                    html += '</div>';
+                    body.html(html);
+                }).catch(function(err) {
+                    body.html('<p>' + (err.message || <?php echo wp_json_encode(__('Failed to load details', 'ai-seo-client')); ?>) + '</p>');
+                });
+            });
+
+            $('#modal-post-detail .modal-close, #modal-post-detail .sseo-modal-overlay').on('click', function() {
+                $('#modal-post-detail').hide();
+            });
 
             // Helpers
             function getStatusLabel(status) {

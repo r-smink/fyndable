@@ -1,7 +1,14 @@
+@font-face {
+    font-family: 'Outfit';
+    src: url('fonts/outfit/Outfit-Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
 .fyndable-signup-container {
     max-width: 1100px;
     margin: 0 auto;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 .fyndable-signup-header {
     text-align: center;
@@ -90,7 +97,7 @@
     gap: 8px;
 }
 .fyndable-signup-plan ul li::before {
-    content: '✓';
+    content: 'âœ“';
     color: #10b981;
     font-weight: 700;
 }

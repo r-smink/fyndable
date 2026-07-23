@@ -1,4 +1,3 @@
-
 <?php
 
 namespace SSEOAIClient;
@@ -337,7 +336,7 @@ Return ONLY the JSON.";
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
@@ -471,9 +470,9 @@ Return ONLY the JSON.";
                         '<td><a href="' + p.edit_url + '" target="_blank">' + $('<span>').text(p.title).html() + '</a></td>' +
                         '<td>' + p.type + '</td>' +
                         '<td>' + p.word_count + '</td>' +
-                        '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">—</em>') + '</td>' +
-                        '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">—</em>') + '</td>' +
-                        '<td>' + (issueHtml || '<span style="color:#00a32a;">✓</span>') + '</td>' +
+                        '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">Ã¢â‚¬â€</em>') + '</td>' +
+                        '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">Ã¢â‚¬â€</em>') + '</td>' +
+                        '<td>' + (issueHtml || '<span style="color:#00a32a;">Ã¢Å“â€œ</span>') + '</td>' +
                         '<td><button class="button button-small bulk-gen-single" data-id="' + p.id + '"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button></td>' +
                         '</tr>'
                     );

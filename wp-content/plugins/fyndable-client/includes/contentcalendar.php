@@ -108,7 +108,7 @@ class ContentCalendar
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
@@ -129,7 +129,7 @@ class ContentCalendar
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth - 1) . '&year=' . $currentYear); ?>" 
                            class="button">
-                            ← <?php esc_html_e('Previous', 'ai-seo-client'); ?>
+                            â† <?php esc_html_e('Previous', 'ai-seo-client'); ?>
                         </a>
                         
                         <h2 style="margin: 0;">
@@ -138,7 +138,7 @@ class ContentCalendar
                         
                         <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth + 1) . '&year=' . $currentYear); ?>" 
                            class="button">
-                            <?php esc_html_e('Next', 'ai-seo-client'); ?> →
+                            <?php esc_html_e('Next', 'ai-seo-client'); ?> â†’
                         </a>
                     </div>
                 </div>
@@ -231,7 +231,7 @@ class ContentCalendar
                                     if (in_array($dateKey, $contentGaps)):
                                     ?>
                                     <div style="color: #d63638; font-size: 11px; margin-top: 5px;">
-                                        ⚠ <?php esc_html_e('Gap', 'ai-seo-client'); ?>
+                                        âš  <?php esc_html_e('Gap', 'ai-seo-client'); ?>
                                     </div>
                                     <?php endif; ?>
                                     
@@ -275,7 +275,7 @@ class ContentCalendar
                     <?php endforeach; ?>
                 </ul>
                 <?php else: ?>
-                <p style="color: #00a32a;">✓ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
+                <p style="color: #00a32a;">âœ“ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
                     </div>
                     

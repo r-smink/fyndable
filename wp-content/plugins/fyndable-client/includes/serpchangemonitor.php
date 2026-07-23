@@ -379,7 +379,7 @@ PROMPT;
     {
         ?>
         <style>
-            .sm-wrap { max-width: 900px; margin: 20px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sm-wrap { max-width: 900px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sm-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
             .sm-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
             .sm-header h1 { margin: 0; font-size: 22px; }
@@ -392,7 +392,7 @@ PROMPT;
         <div class="wrap sm-wrap">
             <div class="sm-card">
                 <div class="sm-header">
-                    <h1>📊 <?php esc_html_e('SERP Change Monitor', 'ai-seo-client'); ?></h1>
+                    <h1>ðŸ“Š <?php esc_html_e('SERP Change Monitor', 'ai-seo-client'); ?></h1>
                     <p><?php esc_html_e('Monitor ranking changes and auto-update content when positions drop.', 'ai-seo-client'); ?></p>
                 </div>
 
@@ -427,10 +427,10 @@ PROMPT;
 
                     var html = '';
                     if (!data.changes.length) {
-                        html = '<p style="color:#666;">🎉 <?php echo esc_js(__("No significant changes detected.", "ai-seo-client")); ?></p>';
+                        html = '<p style="color:#666;">ðŸŽ‰ <?php echo esc_js(__("No significant changes detected.", "ai-seo-client")); ?></p>';
                     } else {
                         data.changes.forEach(function(c) {
-                            var statusLabel = c.status === 'auto_updated' ? '✅ <?php echo esc_js(__("Auto-updated", "ai-seo-client")); ?>' : (c.status === 'acknowledged' ? '👁️ Acknowledged' : '⚠️ New');
+                            var statusLabel = c.status === 'auto_updated' ? 'âœ… <?php echo esc_js(__("Auto-updated", "ai-seo-client")); ?>' : (c.status === 'acknowledged' ? 'ðŸ‘ï¸ Acknowledged' : 'âš ï¸ New');
                             html += '<div class="sm-change ' + c.status + '">';
                             html += '<div><strong>' + c.keyword + '</strong><div style="font-size:12px;color:#64748b;">' + c.detected_at + '</div></div>';
                             html += '<div style="text-align:center;"><span style="font-size:18px;font-weight:700;color:#dc2626;">#' + c.current_position + '</span> <span style="color:#64748b;">was #' + c.previous_position + '</span></div>';

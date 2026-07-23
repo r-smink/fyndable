@@ -251,7 +251,7 @@ Return ONLY the JSON.";
         $settings = $this->getSettings();
         ?>
         <style>
-            .bv-wrap { max-width: 800px; margin: 20px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .bv-wrap { max-width: 800px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .bv-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
             .bv-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
             .bv-header h1 { margin: 0; font-size: 22px; }
@@ -267,11 +267,11 @@ Return ONLY the JSON.";
         <div class="wrap bv-wrap">
             <div class="bv-card">
                 <div class="bv-header">
-                    <h1>🎙️ <?php esc_html_e('Brand Voice Engine', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Define your brand voice once — all AI-generated content will follow it automatically.', 'ai-seo-client'); ?></p>
+                    <h1>ðŸŽ™ï¸ <?php esc_html_e('Brand Voice Engine', 'ai-seo-client'); ?></h1>
+                    <p><?php esc_html_e('Define your brand voice once â€” all AI-generated content will follow it automatically.', 'ai-seo-client'); ?></p>
                 </div>
 
-                <div id="bv-saved-msg" class="bv-saved">✅ <?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></div>
+                <div id="bv-saved-msg" class="bv-saved">âœ… <?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></div>
 
                 <div class="bv-toggle">
                     <input type="checkbox" id="bv-enabled" <?php checked($settings['enabled']); ?>>
@@ -371,7 +371,7 @@ Return ONLY the JSON.";
                 wp.apiFetch({ path: '/sseo-ai/v1/brand-voice' }).then(function(s) {
                     var parts = [];
                     if (!s.enabled) {
-                        $('#bv-preview').text('(Brand Voice is disabled — no prompt snippet injected)');
+                        $('#bv-preview').text('(Brand Voice is disabled â€” no prompt snippet injected)');
                         $('#bv-preview-wrap').show();
                         return;
                     }

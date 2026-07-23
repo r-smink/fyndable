@@ -262,7 +262,7 @@ class RankTracker
     }
 
     /**
-     * Manual check — check all keywords now
+     * Manual check â€” check all keywords now
      */
     public function restCheckNow(\WP_REST_Request $request): array|\WP_Error
     {
@@ -410,7 +410,7 @@ class RankTracker
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
@@ -441,13 +441,13 @@ class RankTracker
                         <div>
                             <label><strong><?php esc_html_e('Country', 'ai-seo-client'); ?></strong></label><br>
                             <select id="rank-country">
-                                <option value="nl">🇳🇱 NL</option>
-                                <option value="be">🇧🇪 BE</option>
-                                <option value="us">🇺🇸 US</option>
-                                <option value="gb">🇬🇧 GB</option>
-                                <option value="de">🇩🇪 DE</option>
-                                <option value="fr">🇫🇷 FR</option>
-                                <option value="es">🇪🇸 ES</option>
+                                <option value="nl">ðŸ‡³ðŸ‡± NL</option>
+                                <option value="be">ðŸ‡§ðŸ‡ª BE</option>
+                                <option value="us">ðŸ‡ºðŸ‡¸ US</option>
+                                <option value="gb">ðŸ‡¬ðŸ‡§ GB</option>
+                                <option value="de">ðŸ‡©ðŸ‡ª DE</option>
+                                <option value="fr">ðŸ‡«ðŸ‡· FR</option>
+                                <option value="es">ðŸ‡ªðŸ‡¸ ES</option>
                             </select>
                         </div>
                         <button type="button" class="button button-primary" id="rank-add"><?php esc_html_e('Add Keyword', 'ai-seo-client'); ?></button>
@@ -503,17 +503,17 @@ class RankTracker
 
                     var now = new Date();
                     keywords.forEach(function(kw) {
-                        var pos = kw.current_position || '—';
+                        var pos = kw.current_position || 'â€”';
                         var prev = kw.previous_position || 0;
                         var curr = kw.current_position || 0;
-                        var changeHtml = '—';
+                        var changeHtml = 'â€”';
 
                         if (prev > 0 && curr > 0) {
                             var diff = prev - curr;
                             if (diff > 0) {
-                                changeHtml = '<span style="color:#00a32a;font-weight:bold;">▲ ' + diff + '</span>';
+                                changeHtml = '<span style="color:#00a32a;font-weight:bold;">â–² ' + diff + '</span>';
                             } else if (diff < 0) {
-                                changeHtml = '<span style="color:#d63638;font-weight:bold;">▼ ' + Math.abs(diff) + '</span>';
+                                changeHtml = '<span style="color:#d63638;font-weight:bold;">â–¼ ' + Math.abs(diff) + '</span>';
                             } else {
                                 changeHtml = '<span style="color:#999;">= 0</span>';
                             }
@@ -532,22 +532,22 @@ class RankTracker
                             }
                         }
 
-                        var providerText = kw.last_provider ? kw.last_provider : '—';
+                        var providerText = kw.last_provider ? kw.last_provider : 'â€”';
                         var errorAttr = kw.last_error ? ' title="' + $('<span>').text(kw.last_error).html().replace(/"/g, '&quot;') + '"' : '';
 
                         tbody.append(
                             '<tr' + errorAttr + '>' +
                             '<td><strong>' + $('<span>').text(kw.keyword).html() + '</strong></td>' +
-                            '<td><span style="font-size:18px;font-weight:bold;color:' + posColor + ';">' + (curr || '—') + '</span></td>' +
+                            '<td><span style="font-size:18px;font-weight:bold;color:' + posColor + ';">' + (curr || 'â€”') + '</span></td>' +
                             '<td>' + changeHtml + '</td>' +
-                            '<td>' + (kw.best_position || '—') + '</td>' +
+                            '<td>' + (kw.best_position || 'â€”') + '</td>' +
                             '<td>' + (kw.country || '').toUpperCase() + '</td>' +
                             '<td style="font-size:12px;">' + $('<span>').text(kw.url || '').html() + '</td>' +
                             '<td style="font-size:12px;' + lastCheckedStyle + '">' + lastCheckedText + '</td>' +
                             '<td style="font-size:12px;">' + $('<span>').text(providerText).html() + '</td>' +
                             '<td>' +
                                 '<button class="button button-small rank-show-history" data-id="' + kw.id + '" data-keyword="' + $('<span>').text(kw.keyword).html() + '"><?php echo esc_js(__('History', 'ai-seo-client')); ?></button> ' +
-                                '<button class="button button-small rank-delete" data-id="' + kw.id + '" style="color:#d63638;">✕</button>' +
+                                '<button class="button button-small rank-delete" data-id="' + kw.id + '" style="color:#d63638;">âœ•</button>' +
                             '</td>' +
                             '</tr>'
                         );

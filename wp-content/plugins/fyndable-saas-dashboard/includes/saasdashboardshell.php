@@ -7,7 +7,7 @@ namespace SSEOAISaaS;
  *
  * Replaces the WordPress admin chrome with a branded SaaS experience.
  * Existing admin pages are loaded inside an iframe within the shell.
- * An exit button (×) returns the user to the standard WordPress admin.
+ * An exit button (Ã—) returns the user to the standard WordPress admin.
  */
 class SaaSDashboardShell
 {
@@ -371,7 +371,7 @@ class SaaSDashboardShell
                 top: 0; left: 0; right: 0; bottom: 0;
                 z-index: 999999;
                 background: #f0f2f5;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+                font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
             }
 
             .saas-topbar {

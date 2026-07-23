@@ -143,7 +143,7 @@ class LicenseAPI
             ],
         ]);
 
-        // Start free trial (no license key needed — creates one)
+        // Start free trial (no license key needed â€” creates one)
         register_rest_route($this->namespace, '/license/trial', [
             'methods' => 'POST',
             'callback' => [$this, 'startTrial'],
@@ -262,7 +262,7 @@ class LicenseAPI
             ],
         ]);
 
-        // Google OAuth start page — renders HTML with GIS popup (only SaaS domain needed in Google Console)
+        // Google OAuth start page â€” renders HTML with GIS popup (only SaaS domain needed in Google Console)
         register_rest_route($this->namespace, '/google/oauth-start', [
             'methods' => 'GET',
             'callback' => [$this, 'googleOAuthStart'],
@@ -546,7 +546,7 @@ class LicenseAPI
             ], 403);
         }
 
-        // Set tenant to inactive (not suspended — suspended is only for revoked licenses)
+        // Set tenant to inactive (not suspended â€” suspended is only for revoked licenses)
         $this->tenants->updateTenant($tenantKey, [
             'status' => 'inactive',
         ]);
@@ -558,7 +558,7 @@ class LicenseAPI
     }
 
     /**
-     * Start a free trial — creates a trial tenant with 14-day expiry.
+     * Start a free trial â€” creates a trial tenant with 14-day expiry.
      * No license key needed; one is generated automatically.
      */
     public function startTrial(\WP_REST_Request $request): \WP_REST_Response
@@ -827,7 +827,7 @@ class LicenseAPI
     }
 
     /**
-     * REST: Get Google OAuth config (client ID only — secret stays server-side)
+     * REST: Get Google OAuth config (client ID only â€” secret stays server-side)
      */
     public function getGoogleOAuthConfig(\WP_REST_Request $request): \WP_REST_Response
     {
@@ -1006,9 +1006,9 @@ class LicenseAPI
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo esc_html(sprintf(__('Connect Google — %s', 'sseo-ai-saas'), $companyName)); ?></title>
+    <title><?php echo esc_html(sprintf(__('Connect Google â€” %s', 'sseo-ai-saas'), $companyName)); ?></title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
+        body { font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
         .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; max-width: 420px; }
         .logo { font-size: 24px; font-weight: 700; color: #2563eb; margin-bottom: 8px; }
         .status { color: #555; margin: 16px 0; }

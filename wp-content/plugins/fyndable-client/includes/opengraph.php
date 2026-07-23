@@ -181,7 +181,7 @@ class OpenGraph
         $title = $ogTitle ?: $seoTitle ?: get_the_title($postId);
         $description = $ogDesc ?: $seoDesc ?: $this->generateExcerpt($postId);
 
-        // Image fallback chain: OG image → Featured image → Default image
+        // Image fallback chain: OG image â†’ Featured image â†’ Default image
         $image = $ogImage;
         $imageWidth = '';
         $imageHeight = '';
@@ -388,7 +388,7 @@ class OpenGraph
             .aiseo-og-tab.active { color: #2271b1; border-bottom-color: #2271b1; }
             .aiseo-og-panel { display: none; }
             .aiseo-og-panel.active { display: block; }
-            .aiseo-og-preview { background: #f0f2f5; border-radius: 8px; overflow: hidden; max-width: 500px; margin: 15px 0; font-family: -apple-system, system-ui, sans-serif; }
+            .aiseo-og-preview { background: #f0f2f5; border-radius: 8px; overflow: hidden; max-width: 500px; margin: 15px 0; font-family: Outfit, -apple-system, system-ui, sans-serif; }
             .aiseo-og-preview-image { width: 100%; height: 260px; background: #e4e6eb; display: flex; align-items: center; justify-content: center; overflow: hidden; }
             .aiseo-og-preview-image img { width: 100%; height: 100%; object-fit: cover; }
             .aiseo-og-preview-body { padding: 12px 16px; }
@@ -454,7 +454,7 @@ class OpenGraph
                 <button type="button" class="button aiseo-og-upload-btn" data-target="aiseo_og_image">
                     <?php esc_html_e('Upload Image', 'ai-seo-client'); ?>
                 </button>
-                <p class="description"><?php esc_html_e('Recommended: 1200×630px. Leave empty to use featured image.', 'ai-seo-client'); ?></p>
+                <p class="description"><?php esc_html_e('Recommended: 1200Ã—630px. Leave empty to use featured image.', 'ai-seo-client'); ?></p>
             </div>
 
             <button type="button" class="button aiseo-og-generate-btn" id="aiseo-generate-og" data-post="<?php echo $post->ID; ?>">
@@ -731,6 +731,6 @@ Return ONLY the JSON, nothing else.";
         if ($lastSpace !== false && $lastSpace > $max * 0.5) {
             $text = mb_substr($text, 0, $lastSpace);
         }
-        return $text . '…';
+        return $text . 'â€¦';
     }
 }

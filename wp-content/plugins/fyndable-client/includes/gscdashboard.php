@@ -231,7 +231,7 @@ class GscDashboard
         ?>
         <style>
             #wpcontent { padding-left: 0 !important; }
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
@@ -241,7 +241,7 @@ class GscDashboard
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO → Settings to enable.', 'ai-seo-client'); ?></p>
+                <p><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO â†’ Settings to enable.', 'ai-seo-client'); ?></p>
             </div>
             <div class="sseo-ai-content">
                 <div class="sseo-ai-dashboard-card">

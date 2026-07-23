@@ -35,7 +35,7 @@ class GeoScanReport
         ?>
         <style>
             .sseo-geo-report {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 max-width: 900px;
                 margin: 20px auto;
                 padding: 32px;
