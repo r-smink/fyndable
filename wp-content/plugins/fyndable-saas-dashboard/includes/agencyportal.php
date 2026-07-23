@@ -120,6 +120,17 @@ class AgencyPortal
                 border-radius: 50%;
                 border: 2px solid rgba(255,255,255,0.3);
             }
+            .fyndable-agency-content {
+                padding: 0;
+            }
+            .fyndable-agency-content h1 {
+                display: none !important;
+            }
+            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-stats-grid,
+            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-card {
+                margin-top: 20px;
+            }
+            .fyndable-agency-topbar .user-info .account-link,
             .fyndable-agency-topbar .user-info .logout-link {
                 color: #fff;
                 text-decoration: none;
@@ -131,21 +142,9 @@ class AgencyPortal
                 font-weight: 500;
                 transition: background 0.15s;
             }
+            .fyndable-agency-topbar .user-info .account-link:hover,
             .fyndable-agency-topbar .user-info .logout-link:hover {
                 background: rgba(255,255,255,0.25);
-            }
-            .fyndable-agency-content {
-                padding: 0;
-            }
-            .fyndable-agency-content h1 {
-                color: #fff !important;
-                padding: 16px 20px !important;
-                margin: 0 !important;
-                background: transparent !important;
-            }
-            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-stats-grid,
-            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-card {
-                margin-top: 20px;
             }
             .tenant-login-btn {
                 display: inline-flex;
@@ -187,27 +186,16 @@ class AgencyPortal
 
         $wl = $this->getWhiteLabelSettings();
         $companyName = !empty($wl['company_name']) ? $wl['company_name'] : $agencyName;
-        $companyLogo = $wl['company_logo'] ?? '';
         $primaryColor = $wl['primary_color'] ?? '#3b82f6';
         $secondaryColor = $wl['secondary_color'] ?? '#ec4899';
-
-        $user = wp_get_current_user();
-        $avatar = get_avatar_url($user->ID, ['size' => 32]);
         ?>
         <div class="fyndable-agency-topbar" style="background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%);">
             <div class="brand">
-                <div class="brand-logo">
-                    <?php if ($companyLogo): ?>
-                        <img src="<?php echo esc_url($companyLogo); ?>" alt="" style="max-height: 36px; max-width: 180px; display: block;">
-                    <?php else: ?>
-                        <?php echo esc_html($companyName ?: 'Fyndable'); ?> <span>SaaS</span>
-                    <?php endif; ?>
-                </div>
-                <div class="agency-badge"><?php echo esc_html($companyName ?: __('Agency Portal', 'sseo-ai-saas')); ?></div>
+                <div class="brand-logo">Fyndable Smart SEO</div>
+                <div class="agency-badge"><?php echo esc_html($companyName ?: __('Agency', 'sseo-ai-saas')); ?></div>
             </div>
             <div class="user-info">
-                <span><?php echo esc_html($user->display_name); ?></span>
-                <img src="<?php echo esc_url($avatar); ?>" class="avatar" alt="">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency')); ?>" class="account-link"><?php esc_html_e('Agency account', 'sseo-ai-saas'); ?></a>
                 <a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>" class="logout-link"><?php esc_html_e('Logout', 'sseo-ai-saas'); ?></a>
             </div>
         </div>
