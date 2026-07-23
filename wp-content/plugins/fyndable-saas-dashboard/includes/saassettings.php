@@ -135,6 +135,11 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_secret');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_ads_dev_token');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_support_email');
+
+        // GEO Scan settings
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_firecrawl_api_key');
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_model', ['default' => 'google/gemini-flash-1.5']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_language', ['default' => 'nl']);
     }
     
     /**
@@ -230,6 +235,30 @@ class SaaSSettings
     public function getSupportEmail(): string
     {
         return get_option('ai_seo_saas_support_email', get_option('admin_email'));
+    }
+
+    /**
+     * Get Firecrawl API key (optional HTML extraction fallback)
+     */
+    public function getFirecrawlApiKey(): string
+    {
+        return get_option('sseo_ai_saas_firecrawl_api_key', '');
+    }
+
+    /**
+     * Get GEO Scan model
+     */
+    public function getGeoModel(): string
+    {
+        return get_option('sseo_ai_saas_geo_model', 'google/gemini-flash-1.5');
+    }
+
+    /**
+     * Get default GEO Scan language
+     */
+    public function getGeoLanguage(): string
+    {
+        return get_option('sseo_ai_saas_geo_language', 'nl');
     }
 
     /**
@@ -454,6 +483,33 @@ class SaaSSettings
                                     <option value="dataforseo" <?php selected($this->getSerpApiProvider(), 'dataforseo'); ?>>DataForSEO</option>
                                     <option value="serpapi" <?php selected($this->getSerpApiProvider(), 'serpapi'); ?>>SerpApi</option>
                                     <option value="seranking" <?php selected($this->getSerpApiProvider(), 'seranking'); ?>>SE Ranking</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_geo_firecrawl_key"><?php esc_html_e('Firecrawl API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="sseo_ai_saas_firecrawl_api_key" id="sseo_geo_firecrawl_key"
+                                       value="<?php echo esc_attr($this->getFirecrawlApiKey()); ?>" class="regular-text">
+                                <p class="description"><?php esc_html_e('Optional fallback for HTML extraction when Jina Reader fails.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_geo_model"><?php esc_html_e('GEO Scan Model', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="sseo_ai_saas_geo_model" id="sseo_geo_model">
+                                    <?php foreach (\SSEOAISaaS\ProviderRouter::getAvailableModels() as $modelKey => $modelLabel): ?>
+                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($this->getGeoModel(), $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_geo_language"><?php esc_html_e('Default GEO Scan Language', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="sseo_ai_saas_geo_language" id="sseo_geo_language">
+                                    <option value="nl" <?php selected($this->getGeoLanguage(), 'nl'); ?>><?php esc_html_e('Dutch', 'sseo-ai-saas'); ?></option>
+                                    <option value="en" <?php selected($this->getGeoLanguage(), 'en'); ?>><?php esc_html_e('English', 'sseo-ai-saas'); ?></option>
                                 </select>
                             </td>
                         </tr>

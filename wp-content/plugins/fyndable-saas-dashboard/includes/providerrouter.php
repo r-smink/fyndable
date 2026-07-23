@@ -49,6 +49,7 @@ class ProviderRouter
         'faq_generation'      => 'openai/gpt-4o-mini',
         'content_analysis'    => 'openai/gpt-4o-mini',
         'image_alt_text'      => 'openai/gpt-4o-mini',
+        'geo_readiness'       => 'google/gemini-flash-1.5',
     ];
 
     /**
@@ -62,6 +63,7 @@ class ProviderRouter
         'faq_generation'      => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
         'content_analysis'    => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
         'image_alt_text'      => ['openai/gpt-4o-mini', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
+        'geo_readiness'       => ['google/gemini-flash-1.5', 'anthropic/claude-3-haiku', 'openai/gpt-4o-mini', 'deepseek/deepseek-chat'],
     ];
 
     /**
@@ -298,6 +300,7 @@ class ProviderRouter
             'faq_generation'      => __('FAQ Generation', 'sseo-ai-saas'),
             'content_analysis'    => __('Content Analysis', 'sseo-ai-saas'),
             'image_alt_text'      => __('Image Alt Text', 'sseo-ai-saas'),
+            'geo_readiness'       => __('GEO Readiness Scan', 'sseo-ai-saas'),
         ];
     }
 

@@ -31,6 +31,12 @@ class Dashboard
     private AgencyRoleManager $agencyRoleManager;
     private AgencyPortal $agencyPortal;
     private FyndableLogin $fyndableLogin;
+    private GeoScanRepository $geoScanRepository;
+    private HtmlFetcher $htmlFetcher;
+    private AiOverviewExtractor $aiOverviewExtractor;
+    private GeoScanner $geoScanner;
+    private GeoScanReport $geoScanReport;
+    private GeoScanAdmin $geoScanAdmin;
 
     public function __construct()
     {
@@ -72,6 +78,24 @@ class Dashboard
         );
         $this->fyndableLogin = new FyndableLogin($this->tenants, $this->agencyRoleManager);
 
+        $this->geoScanRepository = new GeoScanRepository();
+        $this->htmlFetcher = new HtmlFetcher($this->saasSettings);
+        $this->aiOverviewExtractor = new AiOverviewExtractor($this->saasSettings);
+        $this->geoScanner = new GeoScanner(
+            $this->htmlFetcher,
+            $this->aiOverviewExtractor,
+            $this->providerRouter,
+            $this->saasSettings,
+            $this->geoScanRepository
+        );
+        $this->geoScanReport = new GeoScanReport($this->geoScanRepository);
+        $this->geoScanAdmin = new GeoScanAdmin(
+            $this->pluginFile,
+            $this->geoScanner,
+            $this->geoScanRepository,
+            $this->geoScanReport
+        );
+
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
         add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
@@ -81,8 +105,10 @@ class Dashboard
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
         add_action('admin_menu', [$this->supportAdmin, 'register']);
+        add_action('admin_menu', [$this->geoScanAdmin, 'register']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
+        add_action('admin_enqueue_scripts', [$this->geoScanAdmin, 'enqueueAssets']);
 
         // Register REST API for client plugin communication
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
@@ -105,6 +131,7 @@ class Dashboard
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
         add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
+        add_action('admin_init', [$this->geoScanRepository, 'maybeCreateTables']);
 
         // Register email automation
         $this->emailAutomation->register();
@@ -120,6 +147,7 @@ class Dashboard
     {
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
+        $this->geoScanRepository->maybeCreateTables();
     }
 
     /**

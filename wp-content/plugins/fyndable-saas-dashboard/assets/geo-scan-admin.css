@@ -1,0 +1,43 @@
+.sseo-geo-admin {
+    max-width: 960px;
+}
+
+.sseo-geo-form {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
+.sseo-geo-form .form-table th {
+    width: 180px;
+}
+
+.sseo-geo-form textarea {
+    width: 100%;
+    max-width: 500px;
+}
+
+.sseo-geo-spinner {
+    margin-left: 12px;
+    color: #555;
+    font-style: italic;
+}
+
+.sseo-geo-error {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+}
+
+.sseo-geo-scans-table {
+    margin-top: 16px;
+}
+
+.sseo-geo-scans-table td {
+    vertical-align: middle;
+}

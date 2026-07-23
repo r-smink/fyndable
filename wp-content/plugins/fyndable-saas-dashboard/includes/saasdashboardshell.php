@@ -106,6 +106,11 @@ class SaaSDashboardShell
                 'icon' => '&#128241;',
             ],
             [
+                'slug' => 'sseo-ai-geo-scan',
+                'label' => __('GEO Scan', 'sseo-ai-saas'),
+                'icon' => '&#128269;',
+            ],
+            [
                 'slug' => 'sseo-ai-team',
                 'label' => __('Team', 'sseo-ai-saas'),
                 'icon' => '&#128101;',
