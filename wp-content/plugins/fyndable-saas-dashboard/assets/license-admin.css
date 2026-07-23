@@ -870,3 +870,49 @@ body[class*="sseo-ai"] #wpfooter {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ================================================
+   15. SETTINGS TABS
+   ================================================ */
+.sseo-ai-license-admin .sseo-ai-settings-tabs {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: var(--sseo-radius);
+    padding: 15px 20px 0;
+    margin: 20px 40px;
+    box-shadow: var(--sseo-shadow-lg);
+    border-bottom: 0;
+}
+
+.sseo-ai-license-admin .sseo-ai-settings-tabs .nav-tab {
+    background: transparent;
+    border: none;
+    border-radius: var(--sseo-radius-sm) var(--sseo-radius-sm) 0 0;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: var(--sseo-gray-500);
+    transition: var(--sseo-transition);
+    margin-left: 4px;
+}
+
+.sseo-ai-license-admin .sseo-ai-settings-tabs .nav-tab:first-child {
+    margin-left: 0;
+}
+
+.sseo-ai-license-admin .sseo-ai-settings-tabs .nav-tab:hover {
+    background: var(--sseo-gray-100);
+    color: var(--sseo-gray-900);
+}
+
+.sseo-ai-license-admin .sseo-ai-settings-tabs .nav-tab-active {
+    background: linear-gradient(135deg, var(--sseo-primary) 0%, var(--sseo-primary-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(255, 77, 0, 0.3);
+}
+
+@media screen and (max-width: 782px) {
+    .sseo-ai-license-admin .sseo-ai-settings-tabs {
+        margin: 20px;
+    }
+}

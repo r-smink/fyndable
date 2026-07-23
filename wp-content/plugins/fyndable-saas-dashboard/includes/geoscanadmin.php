@@ -92,7 +92,7 @@ class GeoScanAdmin
 
         $recentScans = $this->repository->getRecent(20);
         ?>
-        <div class="wrap sseo-geo-admin">
+        <div class="wrap sseo-ai-license-admin sseo-geo-admin">
             <h1><?php esc_html_e('GEO Readiness Scan', 'sseo-ai-saas'); ?></h1>
 
             <form id="sseo-geo-scan-form" class="sseo-geo-form">
@@ -131,39 +131,41 @@ class GeoScanAdmin
 
             <div id="sseo-geo-scan-error" class="sseo-geo-error" style="display:none;"></div>
 
-            <h2><?php esc_html_e('Recent Scans', 'sseo-ai-saas'); ?></h2>
-            <?php if (empty($recentScans)) : ?>
-                <p><?php esc_html_e('No scans yet.', 'sseo-ai-saas'); ?></p>
-            <?php else : ?>
-                <table class="wp-list-table widefat fixed striped sseo-geo-scans-table">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('URL', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Keywords', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Score', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recentScans as $scan) :
-                            $result = $scan['result'] ?? [];
-                            $score = (int)($result['score'] ?? 0);
-                            $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$scan['id']);
-                        ?>
-                        <tr>
-                            <td><?php echo esc_html($scan['created_at']); ?></td>
-                            <td><?php echo esc_url($scan['url']); ?></td>
-                            <td><?php echo esc_html($scan['keywords']); ?></td>
-                            <td><?php echo esc_html($score); ?>/100</td>
-                            <td>
-                                <a href="<?php echo esc_url($viewUrl); ?>" class="button button-small"><?php esc_html_e('View Report', 'sseo-ai-saas'); ?></a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Recent Scans', 'sseo-ai-saas'); ?></h2>
+                <?php if (empty($recentScans)) : ?>
+                    <p><?php esc_html_e('No scans yet.', 'sseo-ai-saas'); ?></p>
+                <?php else : ?>
+                    <table class="wp-list-table widefat fixed striped sseo-geo-scans-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('URL', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Keywords', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Score', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recentScans as $scan) :
+                                $result = $scan['result'] ?? [];
+                                $score = (int)($result['score'] ?? 0);
+                                $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$scan['id']);
+                            ?>
+                            <tr>
+                                <td><?php echo esc_html($scan['created_at']); ?></td>
+                                <td><?php echo esc_url($scan['url']); ?></td>
+                                <td><?php echo esc_html($scan['keywords']); ?></td>
+                                <td><?php echo esc_html($score); ?>/100</td>
+                                <td>
+                                    <a href="<?php echo esc_url($viewUrl); ?>" class="button button-small"><?php esc_html_e('View Report', 'sseo-ai-saas'); ?></a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
     }
