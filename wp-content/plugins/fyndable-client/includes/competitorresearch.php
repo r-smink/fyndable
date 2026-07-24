@@ -57,12 +57,12 @@ class CompetitorResearch
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: 0; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-ai-dashboard-card .button-primary { background: linear-gradient(135deg, #FF4D00 0%, #ec4899 100%); border: none; }
+            .sseo-ai-dashboard-card .button-primary { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; }
             .sseo-ai-dashboard-card .nav-tab-wrapper { border-bottom: 1px solid #e2e8f0; }
             .sseo-ai-dashboard-card .nav-tab { background: #f1f5f9; border: 1px solid #e2e8f0; border-bottom: none; }
             .sseo-ai-dashboard-card .nav-tab-active { background: #fff; border-bottom: 1px solid #fff; }

@@ -17,7 +17,7 @@
 .fyndable-signup-header h1 {
     font-size: 36px;
     font-weight: 700;
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin: 0 0 12px 0;
@@ -43,20 +43,20 @@
     position: relative;
 }
 .fyndable-signup-plan:hover {
-    border-color: #3b82f6;
+    border-color: #379fd3;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 4px 12px rgba(55, 159, 211, 0.1);
 }
 .fyndable-signup-plan.popular {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    border-color: #379fd3;
+    box-shadow: 0 4px 12px rgba(55, 159, 211, 0.15);
 }
 .fyndable-signup-plan .badge {
     position: absolute;
     top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
     font-size: 12px;
     font-weight: 600;
@@ -118,7 +118,7 @@
 }
 .fyndable-signup-plan.popular button,
 .fyndable-signup-plan button.selected {
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
 }
 .fyndable-signup-form {
@@ -158,7 +158,7 @@
     box-sizing: border-box;
 }
 .fyndable-signup-field input:focus {
-    border-color: #3b82f6;
+    border-color: #379fd3;
     outline: none;
 }
 .fyndable-signup-submit {
@@ -169,7 +169,7 @@
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
     transition: opacity 0.2s;
 }
@@ -204,13 +204,13 @@
 }
 .fyndable-signup-success .license-key {
     background: #f0f9ff;
-    border: 2px dashed #3b82f6;
+    border: 2px dashed #379fd3;
     border-radius: 8px;
     padding: 20px;
     margin: 24px 0;
     font-family: monospace;
     font-size: 18px;
-    color: #1e40af;
+    color: #8f39ac;
     word-break: break-all;
 }
 .fyndable-signup-success .instructions {

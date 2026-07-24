@@ -58,7 +58,7 @@ class GeoScanReport
                 width: 140px;
                 height: 140px;
                 border-radius: 50%;
-                background: conic-gradient(#2563eb calc(var(--score) * 1%), #e5e7eb 0);
+                background: conic-gradient(#379fd3 calc(var(--score) * 1%), #e5e7eb 0);
                 font-size: 36px;
                 font-weight: 700;
                 color: #111827;

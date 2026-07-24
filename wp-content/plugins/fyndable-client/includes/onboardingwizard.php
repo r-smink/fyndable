@@ -271,8 +271,8 @@ class OnboardingWizard
             4 => __('Integrations', 'ai-seo-client'),
         ];
 
-        $primaryColor = '#3b82f6';
-        $secondaryColor = '#ec4899';
+        $primaryColor = '#379fd3';
+        $secondaryColor = '#8f39ac';
         ?>
         <style>
             .sseo-onboarding { max-width: 700px; margin: 40px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }

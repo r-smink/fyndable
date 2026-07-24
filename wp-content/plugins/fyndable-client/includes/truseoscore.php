@@ -173,8 +173,8 @@ class TruSEOSCORE
                     data: { keyphrase: focusKeyphrase }
                 }).then(function(data) {
                     if (data.suggestions && data.suggestions.length > 0) {
-                        var html = '<div class="aiseo-suggestions-list" style="background:#f0f7ff;border-left:3px solid #2563eb;padding:10px 15px;margin:10px 0;border-radius:0 4px 4px 0;">';
-                        html += '<h4 style="margin-top:0;color:#2563eb;"><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul style="margin:0;">';
+                        var html = '<div class="aiseo-suggestions-list" style="background:#e8f4fa;border-left:3px solid #379fd3;padding:10px 15px;margin:10px 0;border-radius:0 4px 4px 0;">';
+                        html += '<h4 style="margin-top:0;color:#379fd3;"><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul style="margin:0;">';
                         data.suggestions.forEach(function(s) {
                             html += '<li style="margin:5px 0;">' + s + '</li>';
                         });

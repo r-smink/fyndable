@@ -58,7 +58,7 @@ class ReviewPrompt
         }
 
         ?>
-        <div class="notice notice-info is-dismissible sseo-ai-review-notice" style="border-left-color: #3b82f6;">
+        <div class="notice notice-info is-dismissible sseo-ai-review-notice" style="border-left-color: #379fd3;">
             <p style="font-size: 14px; margin: 12px 0;">
                 <?php
                 printf(

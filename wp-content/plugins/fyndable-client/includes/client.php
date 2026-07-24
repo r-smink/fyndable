@@ -1160,8 +1160,8 @@ class Client
 
         // Apply white-label CSS variables only when a custom brand is configured
         if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
-            $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?: '#2563eb') ?: '#2563eb';
-            $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?: '#1e40af') ?: '#1e40af';
+            $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?: '#379fd3') ?: '#379fd3';
+            $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?: '#8f39ac') ?: '#8f39ac';
             wp_add_inline_style('ai-seo-client-admin', "
                 :root {
                     --sseo-primary-color: {$primaryColor};
@@ -1382,12 +1382,12 @@ class Client
         <style>
             /* Critical layout CSS */
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
             .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card:hover { border-color: #379fd3; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15); }
             .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
             .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
         </style>
@@ -1721,9 +1721,9 @@ class Client
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sitemap-status { display: flex; align-items: center; gap: 15px; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
             .sitemap-status.ok { background: #d1fae5; border-left: 4px solid #00a32a; }
@@ -1823,7 +1823,7 @@ class Client
                                         // Stats
                                         html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
                                         html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
-                                        html += '<div style="font-size: 32px; font-weight: bold; color: #2563eb;">' + (sitemap.total_urls || 0) + '</div>';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #379fd3;">' + (sitemap.total_urls || 0) + '</div>';
                                         html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
                                         html += '</div>';
                                         html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
@@ -1906,12 +1906,12 @@ class Client
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
             .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card:hover { border-color: #379fd3; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15); }
             .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
             .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
         </style>
@@ -1998,9 +1998,9 @@ class Client
         <style>
             /* Critical layout CSS */
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 1200px; margin: 0 auto; }
             .sseo-ai-notice { padding: 16px 20px; border-radius: 6px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
             .sseo-ai-notice-success { background: #d1fae5; color: #10b981; border-left: 4px solid #10b981; }
@@ -2009,7 +2009,7 @@ class Client
             .form-field { margin-bottom: 24px; }
             .form-field label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
             .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1); }
+            .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1); }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -2276,12 +2276,12 @@ class Client
         <style>
             /* Critical layout CSS */
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-connection-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 60px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); text-align: center; }
             .sseo-ai-connection-card h2 { font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 20px 0; }
-            .sseo-ai-connection-card .highlight { background: linear-gradient(135deg, #3b82f6 0%, #FF4D00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .sseo-ai-connection-card .highlight { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .connection-details { text-align: left; margin-top: 40px; padding-top: 30px; border-top: 2px solid #f3f4f6; }
             .detail-item { margin-bottom: 20px; }
             .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 6px; }
@@ -2290,7 +2290,7 @@ class Client
             .connection-form .form-field { margin-bottom: 20px; }
             .connection-form label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
             .connection-form input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .connection-form input:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1); }
+            .connection-form input:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1); }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -2583,7 +2583,7 @@ class Client
         <style>
             .sseo-upgrade-wrap { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-upgrade-header { 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); 
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); 
                 color: #fff; 
                 padding: 60px 40px; 
                 margin: -10px -20px 0 -20px;
@@ -2623,14 +2623,14 @@ class Client
             }
             .sseo-tier-badge {
                 display: inline-block;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 color: #fff;
                 padding: 12px 30px;
                 border-radius: 50px;
                 font-size: 18px;
                 font-weight: 700;
                 margin-bottom: 30px;
-                box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+                box-shadow: 0 4px 6px rgba(55, 159, 211, 0.3);
             }
             .sseo-benefits-list {
                 text-align: left;
@@ -2752,15 +2752,15 @@ class Client
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
             .bv-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; margin-bottom: 20px; }
             .bv-stat-card { background: #f8fafc; border-radius: 8px; padding: 18px; text-align: center; border: 1px solid #e2e8f0; }
-            .bv-stat-value { font-size: 28px; font-weight: 700; color: #2563eb; }
+            .bv-stat-value { font-size: 28px; font-weight: 700; color: #379fd3; }
             .bv-stat-value.score { color: #16a34a; }
             .bv-stat-value.positive { color: #16a34a; }
             .bv-stat-value.negative { color: #dc2626; }
@@ -2778,13 +2778,13 @@ class Client
             .bv-platform-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
             .bv-platform-chatgpt { background: #e0e7ff; color: #3730a3; }
             .bv-platform-perplexity { background: #fce7f3; color: #9d174d; }
-            .bv-platform-gemini { background: #dbeafe; color: #1e40af; }
+            .bv-platform-gemini { background: #dbeafe; color: #8f39ac; }
             .bv-excerpt { max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
             .bv-pagination { margin-top: 20px; }
             .bv-pagination a, .bv-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
             .bv-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
-            .bv-pagination a:hover { background: #2563eb; color: #fff; }
-            .bv-pagination span.current { background: #2563eb; color: #fff; }
+            .bv-pagination a:hover { background: #379fd3; color: #fff; }
+            .bv-pagination span.current { background: #379fd3; color: #fff; }
             .bv-settings-form table { width: 100%; }
             .bv-settings-form th { text-align: left; padding: 8px 10px; width: 200px; vertical-align: top; }
             .bv-settings-form td { padding: 8px 10px; }
@@ -2794,14 +2794,14 @@ class Client
             .bv-filter-bar select { padding: 5px 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
             .bv-period-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
             .bv-period-tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; text-decoration: none; background: #e2e8f0; color: #334155; }
-            .bv-period-tab.active { background: #2563eb; color: #fff; }
+            .bv-period-tab.active { background: #379fd3; color: #fff; }
             .bv-competitor-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
             .bv-competitor-name { min-width: 120px; font-size: 13px; font-weight: 500; }
             .bv-competitor-bar-bg { flex: 1; background: #e2e8f0; border-radius: 4px; height: 20px; overflow: hidden; }
-            .bv-competitor-bar-fill { height: 100%; border-radius: 4px; background: #3b82f6; transition: width 0.3s; }
+            .bv-competitor-bar-fill { height: 100%; border-radius: 4px; background: #379fd3; transition: width 0.3s; }
             .bv-competitor-count { min-width: 30px; text-align: right; font-size: 13px; font-weight: 600; }
-            .bv-scan-btn { background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-            .bv-scan-btn:hover { background: #1d4ed8; }
+            .bv-scan-btn { background: #379fd3; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+            .bv-scan-btn:hover { background: #2a7ba8; }
             .bv-scan-btn:disabled { background: #94a3b8; cursor: not-allowed; }
             .bv-empty { text-align: center; padding: 40px; color: #94a3b8; }
         </style>

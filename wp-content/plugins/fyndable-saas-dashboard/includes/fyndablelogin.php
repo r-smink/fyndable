@@ -41,7 +41,7 @@ class FyndableLogin
         ?>
         <style>
             body.login {
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
@@ -89,15 +89,15 @@ class FyndableLogin
                 transition: border-color 0.15s;
             }
             .login form .input:focus, .login input[type="text"]:focus, .login input[type="email"]:focus, .login input[type="password"]:focus {
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+                border-color: #379fd3;
+                box-shadow: 0 0 0 3px rgba(55,159,211,0.1);
             }
             .login form .forgetmenot {
                 float: none;
                 margin-bottom: 16px;
             }
             .login .button-primary {
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 border: none;
                 border-radius: 8px;
                 padding: 12px;
@@ -106,12 +106,12 @@ class FyndableLogin
                 height: auto;
                 width: 100%;
                 text-shadow: none;
-                box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+                box-shadow: 0 4px 12px rgba(55,159,211,0.3);
                 transition: transform 0.15s, box-shadow 0.15s;
             }
             .login .button-primary:hover {
                 transform: translateY(-1px);
-                box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+                box-shadow: 0 6px 20px rgba(55,159,211,0.4);
             }
             .login .button-secondary {
                 border-radius: 8px;

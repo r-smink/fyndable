@@ -26,9 +26,9 @@ body[class*="sseo-ai"] #wpfooter {
    1. VARIABLES & BASE
    ================================================ */
 :root {
-    --sseo-primary: #FF4D00;
-    --sseo-primary-light: #fff5f0;
-    --sseo-primary-dark: #e64400;
+    --sseo-primary: #379fd3;
+    --sseo-primary-light: #e8f4fa;
+    --sseo-primary-dark: #2a7ba8;
     --sseo-success: #10b981;
     --sseo-success-light: #d1fae5;
     --sseo-warning: #f59e0b;
@@ -37,8 +37,8 @@ body[class*="sseo-ai"] #wpfooter {
     --sseo-danger-light: #fee2e2;
     --sseo-purple: #a855f7;
     --sseo-purple-light: #f3e8ff;
-    --sseo-blue: #3b82f6;
-    --sseo-blue-light: #dbeafe;
+    --sseo-blue: #379fd3;
+    --sseo-blue-light: #e8f4fa;
     --sseo-gray-50: #f9fafb;
     --sseo-gray-100: #f3f4f6;
     --sseo-gray-200: #e5e7eb;
@@ -64,7 +64,7 @@ body[class*="sseo-ai"] #wpfooter {
 }
 
 .wrap.sseo-ai-license-admin > h1 {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
     padding: 30px 40px;
     margin: 0;
@@ -76,7 +76,7 @@ body[class*="sseo-ai"] #wpfooter {
 
 /* Gradient content background â€” matches client plugin .sseo-ai-content */
 .wrap.sseo-ai-license-admin {
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     min-height: calc(100vh - 32px);
 }
 
@@ -215,13 +215,13 @@ body[class*="sseo-ai"] #wpfooter {
     border: none;
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 4px 6px -1px rgba(255, 77, 0, 0.3);
+    box-shadow: 0 4px 6px -1px rgba(55, 159, 211, 0.3);
     transition: var(--sseo-transition);
 }
 
 .sseo-ai-license-admin .quick-actions .button-hero:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255, 77, 0, 0.3);
+    box-shadow: 0 10px 20px rgba(55, 159, 211, 0.3);
 }
 
 .sseo-ai-license-admin .quick-actions .button-secondary {
@@ -254,7 +254,7 @@ body[class*="sseo-ai"] #wpfooter {
 
 .sseo-ai-license-admin .button-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255, 77, 0, 0.3) !important;
+    box-shadow: 0 10px 20px rgba(55, 159, 211, 0.3) !important;
 }
 
 /* Generic button override */
@@ -302,7 +302,7 @@ body[class*="sseo-ai"] #wpfooter {
 .sseo-ai-license-admin .form-table select:focus,
 .sseo-ai-license-admin .form-table textarea:focus {
     border-color: var(--sseo-primary);
-    box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1);
     outline: none;
 }
 
@@ -520,7 +520,7 @@ body[class*="sseo-ai"] #wpfooter {
 
 /* Upgrade CTA */
 .sseo-ai-upgrade-cta {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
     padding: 24px;
     border-radius: var(--sseo-radius);
@@ -540,7 +540,7 @@ body[class*="sseo-ai"] #wpfooter {
 
 .sseo-ai-upgrade-cta .button {
     background: #fff;
-    color: #667eea;
+    color: #379fd3;
     border: none;
     padding: 10px 25px;
     font-weight: 600;
@@ -549,7 +549,7 @@ body[class*="sseo-ai"] #wpfooter {
 
 .sseo-ai-upgrade-cta .button:hover {
     background: var(--sseo-gray-50);
-    color: #764ba2;
+    color: #8f39ac;
 }
 
 /* Usage Limits Bar */
@@ -915,7 +915,7 @@ body[class*="sseo-ai"] #wpfooter {
 .sseo-ai-license-admin .sseo-ai-settings-tabs .nav-tab-active {
     background: linear-gradient(135deg, var(--sseo-primary) 0%, var(--sseo-primary-dark) 100%);
     color: #fff;
-    box-shadow: 0 2px 6px rgba(255, 77, 0, 0.3);
+    box-shadow: 0 2px 6px rgba(55, 159, 211, 0.3);
 }
 
 @media screen and (max-width: 782px) {

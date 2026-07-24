@@ -1140,10 +1140,10 @@ PROMPT;
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
         </style>
         <div class="wrap sseo-ai-modern">
@@ -1195,7 +1195,7 @@ PROMPT;
                     <!-- Overview -->
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
                         <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="tc-total-pages" style="font-size:28px;font-weight:bold;color:#2563eb;">0</div>
+                            <div id="tc-total-pages" style="font-size:28px;font-weight:bold;color:#379fd3;">0</div>
                             <div style="font-size:12px;color:#666;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
                         </div>
                         <div class="postbox" style="padding:15px;text-align:center;">
@@ -1213,7 +1213,7 @@ PROMPT;
                     </div>
 
                     <!-- Pillar Page -->
-                    <div id="tc-pillar" class="postbox" style="padding:20px;border-left:4px solid #2563eb;"></div>
+                    <div id="tc-pillar" class="postbox" style="padding:20px;border-left:4px solid #379fd3;"></div>
 
                     <!-- Cluster Grid -->
                     <div id="tc-cluster-grid" style="margin-top:20px;"></div>
@@ -1276,7 +1276,7 @@ PROMPT;
                             <!-- Stats -->
                             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
                                 <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
-                                    <div id="tc-review-total" style="font-size:24px;font-weight:bold;color:#2563eb;">0</div>
+                                    <div id="tc-review-total" style="font-size:24px;font-weight:bold;color:#379fd3;">0</div>
                                     <div style="font-size:12px;color:#64748b;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
                                 </div>
                                 <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
@@ -1521,7 +1521,7 @@ PROMPT;
                 $('#tc-pillar').html(
                     '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
                     '<div>' +
-                    '<h2 style="margin-top:0;color:#2563eb;">ðŸ›ï¸ ' + (p.title || 'Pillar Page') + '</h2>' +
+                    '<h2 style="margin-top:0;color:#379fd3;">ðŸ›ï¸ ' + (p.title || 'Pillar Page') + '</h2>' +
                     '<p>' + (p.description || '') + '</p>' +
                     '<div style="display:flex;gap:15px;font-size:13px;color:#666;">' +
                     '<span>ðŸŽ¯ ' + (p.target_keyword || '') + '</span>' +
@@ -1546,7 +1546,7 @@ PROMPT;
 
                     // Hub with generate button
                     var h = cl.hub_page || {};
-                    gridHtml += '<div style="padding:10px;background:#eff6ff;border-radius:6px;border-left:3px solid #2563eb;margin:10px 0;display:flex;justify-content:space-between;align-items:center;">' +
+                    gridHtml += '<div style="padding:10px;background:#eff6ff;border-radius:6px;border-left:3px solid #379fd3;margin:10px 0;display:flex;justify-content:space-between;align-items:center;">' +
                         '<div>' +
                         '<strong>Hub: ' + (h.title || '') + '</strong>' +
                         '<div style="font-size:11px;color:#666;margin-top:4px;">' +
@@ -1601,10 +1601,10 @@ PROMPT;
                 // Calendar
                 var calHtml = '';
                 (data.content_calendar || []).forEach(function(w) {
-                    calHtml += '<div style="padding:12px;background:#f9f9f9;border-radius:6px;border-top:3px solid #2563eb;">' +
+                    calHtml += '<div style="padding:12px;background:#f9f9f9;border-radius:6px;border-top:3px solid #379fd3;">' +
                         '<strong>Week ' + w.week + '</strong><br>' +
                         '<span style="font-size:12px;color:#666;">' + w.action + '</span><br>' +
-                        '<span style="font-size:11px;color:#2563eb;">' + (w.pages || []).join(', ') + '</span></div>';
+                        '<span style="font-size:11px;color:#379fd3;">' + (w.pages || []).join(', ') + '</span></div>';
                 });
                 $('#tc-calendar').html(calHtml);
                 
@@ -1695,7 +1695,7 @@ PROMPT;
                 
                 pages.forEach(function(page) {
                     var typeBadge = '';
-                    if (page.typeClass === 'pillarp') typeBadge = '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">PILLAR</span>';
+                    if (page.typeClass === 'pillarp') typeBadge = '<span style="background:#e8f4fa;color:#8f39ac;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">PILLAR</span>';
                     else if (page.typeClass === 'hub') typeBadge = '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">HUB</span>';
                     else typeBadge = '<span style="background:#f3f4f6;color:#4b5563;padding:2px 8px;border-radius:4px;font-size:11px;">Supporting</span>';
                     
@@ -1863,7 +1863,7 @@ PROMPT;
                                 } else if (item.status === 'failed') {
                                     $row.find('.tc-status-cell').html('<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:12px;font-size:11px;">âŒ <?php echo esc_js(__('Failed', 'ai-seo-client')); ?></span>');
                                 } else if (item.status === 'processing') {
-                                    $row.find('.tc-status-cell').html('<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:12px;font-size:11px;">â³ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
+                                    $row.find('.tc-status-cell').html('<span style="background:#e8f4fa;color:#8f39ac;padding:3px 10px;border-radius:12px;font-size:11px;">â³ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
                                 }
                             });
 

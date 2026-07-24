@@ -287,7 +287,7 @@ class GeoContentScore
         <style>
             .geo-wrap { max-width: 900px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .geo-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .geo-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
+            .geo-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
             .geo-header h1 { margin: 0; font-size: 22px; }
             .geo-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
             .geo-score-big { font-size: 48px; font-weight: 800; text-align: center; }

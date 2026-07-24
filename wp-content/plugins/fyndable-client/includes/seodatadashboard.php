@@ -299,18 +299,18 @@ class SEODataDashboard
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
             .seo-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
             .seo-stat-card { background: #f8fafc; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e2e8f0; }
-            .seo-stat-value { font-size: 28px; font-weight: 700; color: #2563eb; }
+            .seo-stat-value { font-size: 28px; font-weight: 700; color: #379fd3; }
             .seo-stat-label { font-size: 13px; color: #64748b; margin-top: 5px; }
             .seo-data-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
             .seo-data-tab { padding: 10px 20px; cursor: pointer; background: none; border: none; font-weight: 500; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-            .seo-data-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+            .seo-data-tab.active { color: #379fd3; border-bottom-color: #379fd3; }
             .seo-data-panel { display: none; }
             .seo-data-panel.active { display: block; }
             .connection-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
@@ -320,8 +320,8 @@ class SEODataDashboard
             .seo-search-field { display: flex; flex-direction: column; gap: 4px; }
             .seo-search-field label { font-size: 12px; font-weight: 600; color: #475569; }
             .seo-search-field input, .seo-search-field select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; min-width: 220px; }
-            .seo-search-bar button { padding: 9px 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
-            .seo-search-bar button:hover { background: #1d4ed8; }
+            .seo-search-bar button { padding: 9px 20px; background: #379fd3; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+            .seo-search-bar button:hover { background: #2a7ba8; }
             .seo-data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             .seo-data-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
             .seo-data-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
@@ -735,7 +735,7 @@ class SEODataDashboard
                 var pos = r.position || r.pos || (i + 1);
                 var url = r.url || r.link || '';
                 var title = r.title || url;
-                html += '<tr><td>' + sseoEsc(pos) + '</td><td><strong>' + sseoEsc(title) + '</strong><br><a href="' + sseoEsc(url) + '" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px;">' + sseoEsc(url) + '</a></td></tr>';
+                html += '<tr><td>' + sseoEsc(pos) + '</td><td><strong>' + sseoEsc(title) + '</strong><br><a href="' + sseoEsc(url) + '" target="_blank" rel="noopener" style="color:#379fd3;font-size:12px;">' + sseoEsc(url) + '</a></td></tr>';
             });
             html += '</tbody></table>';
             c.innerHTML = html;

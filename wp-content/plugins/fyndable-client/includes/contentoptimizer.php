@@ -752,7 +752,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 var terms = model.primary_terms || [];
                 var html = '';
                 terms.forEach(function(t) {
-                    var catColors = {core:'#2563eb',supporting:'#059669',entity:'#7c3aed',question:'#d97706'};
+                    var catColors = {core:'#379fd3',supporting:'#059669',entity:'#7c3aed',question:'#d97706'};
                     var bgColors = {core:'#eff6ff',supporting:'#ecfdf5',entity:'#f5f3ff',question:'#fffbeb'};
                     html += '<div class="opt-term" data-term="' + t.term + '" style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;margin:2px 0;border-left:3px solid ' + (catColors[t.category]||'#999') + ';background:' + (bgColors[t.category]||'#f9f9f9') + ';border-radius:0 3px 3px 0;">' +
                         '<span>' + t.term + '</span>' +
@@ -847,8 +847,8 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 }).then(function(res) {
                     var html = '<div class="postbox" style="padding:15px;margin-top:15px;"><h3 style="margin-top:0;"><?php echo esc_js(__('AI Suggestions for Missing Terms', 'ai-seo-client')); ?></h3>';
                     (res.suggestions || []).forEach(function(s) {
-                        html += '<div style="padding:8px;margin:5px 0;background:#f0f7ff;border-left:3px solid #2563eb;border-radius:0 4px 4px 0;">' +
-                            '<strong style="color:#2563eb;">' + s.term + '</strong><br>' +
+                        html += '<div style="padding:8px;margin:5px 0;background:#f0f7ff;border-left:3px solid #379fd3;border-radius:0 4px 4px 0;">' +
+                            '<strong style="color:#379fd3;">' + s.term + '</strong><br>' +
                             '<span style="color:#333;">' + s.suggestion + '</span>' +
                             (s.insert_after ? '<br><em style="color:#999;font-size:11px;">→ ' + s.insert_after + '</em>' : '') +
                             '</div>';

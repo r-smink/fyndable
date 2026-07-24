@@ -253,7 +253,7 @@ Return ONLY the JSON.";
         <style>
             .bv-wrap { max-width: 800px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .bv-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .bv-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
+            .bv-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
             .bv-header h1 { margin: 0; font-size: 22px; }
             .bv-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
             .bv-field { margin-bottom: 20px; }

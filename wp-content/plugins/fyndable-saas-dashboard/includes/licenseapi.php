@@ -431,8 +431,8 @@ class LicenseAPI
             return [
                 'company_name' => get_option('sseo_ai_saas_wl_company_name', ''),
                 'company_logo' => get_option('sseo_ai_saas_wl_company_logo', ''),
-                'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#2563eb'),
-                'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#1e40af'),
+                'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#379fd3'),
+                'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac'),
                 'use_primary_only' => false,
                 'support_email' => get_option('sseo_ai_saas_wl_support_email', ''),
                 'support_url' => get_option('sseo_ai_saas_wl_support_url', ''),
@@ -1010,13 +1010,13 @@ class LicenseAPI
     <style>
         body { font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
         .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; max-width: 420px; }
-        .logo { font-size: 24px; font-weight: 700; color: #2563eb; margin-bottom: 8px; }
+        .logo { font-size: 24px; font-weight: 700; color: #379fd3; margin-bottom: 8px; }
         .status { color: #555; margin: 16px 0; }
         .error { color: #d63638; }
-        .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px 0; }
+        .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #379fd3; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .btn { display: inline-block; background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn:hover { background: #1d4ed8; }
+        .btn { display: inline-block; background: #379fd3; color: #fff; border: none; border-radius: 8px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #2a7ba8; }
         .btn:disabled { background: #93a3bf; cursor: not-allowed; }
     </style>
 </head>

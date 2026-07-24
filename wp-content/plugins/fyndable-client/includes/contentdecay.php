@@ -616,7 +616,7 @@ class ContentDecay
             echo 'datasets: [{';
             echo 'label: "Position",';
             echo 'data: ' . wp_json_encode($trends['positions']) . ',';
-            echo 'borderColor: "#667eea",';
+            echo 'borderColor: "#379fd3",';
             echo 'tension: 0.4';
             echo '}]';
             echo '},';
@@ -866,7 +866,7 @@ class ContentDecay
 
                     html += '<h4>📋 Suggestions</h4><div style="margin-bottom:20px;">';
                     res.suggestions.forEach(function(s) {
-                        var color = s.type === 'content_refresh' ? '#dc2626' : (s.type === 'internal_links' ? '#d97706' : '#2563eb');
+                        var color = s.type === 'content_refresh' ? '#dc2626' : (s.type === 'internal_links' ? '#d97706' : '#379fd3');
                         html += '<div style="padding:12px;margin:8px 0;background:#f8fafc;border-radius:8px;border-left:4px solid ' + color + ';">';
                         html += '<strong>' + s.title + '</strong>';
                         html += '<p style="margin:5px 0 0 0;font-size:13px;color:#64748b;">' + s.description + '</p>';

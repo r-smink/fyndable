@@ -294,7 +294,7 @@ class SeoImporter
                                 </button>
                                 <div class="import-progress" data-plugin="<?php echo esc_attr($pluginKey); ?>" style="display: none; margin-top: 16px;">
                                     <div style="background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden;">
-                                        <div class="import-progress-bar" style="background: #3b82f6; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                                        <div class="import-progress-bar" style="background: #379fd3; height: 100%; width: 0%; transition: width 0.3s;"></div>
                                     </div>
                                     <p class="import-progress-text" style="font-size: 13px; color: #6b7280; margin-top: 8px;"></p>
                                 </div>

@@ -326,8 +326,8 @@ class SaaSDashboardShell
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $companyLogo = $enabled ? get_option('sseo_ai_saas_wl_company_logo', '') : '';
         $companyName = $companyName ?: 'Fyndable';
-        $primaryColor = '#3b82f6';
-        $secondaryColor = '#ec4899';
+        $primaryColor = '#379fd3';
+        $secondaryColor = '#8f39ac';
 
         $user = wp_get_current_user();
         $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
@@ -376,7 +376,7 @@ class SaaSDashboardShell
 
             .saas-topbar {
                 height: 56px;
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -488,13 +488,13 @@ class SaaSDashboardShell
             }
             .saas-sidebar-nav a:hover {
                 background: #f3f4f6;
-                color: #1e40af;
+                color: #8f39ac;
             }
             .saas-sidebar-nav a.active {
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 color: #fff;
                 font-weight: 600;
-                box-shadow: 0 2px 6px rgba(59,130,246,0.3);
+                box-shadow: 0 2px 6px rgba(55,159,211,0.3);
             }
             .saas-sidebar-nav .saas-nav-icon {
                 font-size: 16px;
@@ -540,7 +540,7 @@ class SaaSDashboardShell
                 width: 36px;
                 height: 36px;
                 border: 3px solid #e5e7eb;
-                border-top-color: #3b82f6;
+                border-top-color: #379fd3;
                 border-radius: 50%;
                 animation: saas-spin 0.8s linear infinite;
             }

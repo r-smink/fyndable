@@ -363,8 +363,8 @@ class DashboardShell
         $brandName = $companyName . ' Smart SEO';
         // Only apply custom colors when a company name is set; otherwise fall back to Fyndable defaults
         $hasCustomBrand = !empty($whiteLabel['company_name']);
-        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6') : '#3b82f6';
-        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899') : '#ec4899';
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
         $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
         $supportEmail = !empty($whiteLabel['support_email']) ? $whiteLabel['support_email'] : '';
         $supportUrl = !empty($whiteLabel['support_url']) ? $whiteLabel['support_url'] : '';

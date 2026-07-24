@@ -777,7 +777,7 @@ PROMPT;
                 var headingsHtml = '';
                 (brief.recommended_headings || []).forEach(function(h) {
                     var isH3 = h.toLowerCase().indexOf('h3') === 0;
-                    headingsHtml += '<li style="padding:5px 8px; margin:3px 0; background:#f0f7ff; border-left:3px solid ' + (isH3 ? '#93c5fd' : '#2563eb') + '; ' + (isH3 ? 'margin-left:20px;' : 'font-weight:bold;') + '">' + h + '</li>';
+                    headingsHtml += '<li style="padding:5px 8px; margin:3px 0; background:#f0f7ff; border-left:3px solid ' + (isH3 ? '#93c5fd' : '#379fd3') + '; ' + (isH3 ? 'margin-left:20px;' : 'font-weight:bold;') + '">' + h + '</li>';
                 });
                 $('#brief-headings').html(headingsHtml);
 

@@ -139,8 +139,8 @@ class WhiteLabelAdmin
         $enabled = get_option('sseo_ai_saas_wl_enabled', false);
         $companyName = get_option('sseo_ai_saas_wl_company_name', '');
         $companyLogo = get_option('sseo_ai_saas_wl_company_logo', '');
-        $primaryColor = get_option('sseo_ai_saas_wl_primary_color', '#2563eb');
-        $secondaryColor = get_option('sseo_ai_saas_wl_secondary_color', '#1e40af');
+        $primaryColor = get_option('sseo_ai_saas_wl_primary_color', '#379fd3');
+        $secondaryColor = get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac');
         $supportEmail = get_option('sseo_ai_saas_wl_support_email', '');
         $supportUrl = get_option('sseo_ai_saas_wl_support_url', '');
         ?>
@@ -692,8 +692,8 @@ class WhiteLabelAdmin
             $whiteLabelData = [
                 'company_name' => sanitize_text_field($_POST['company_name'] ?? ''),
                 'company_logo' => esc_url_raw($_POST['company_logo'] ?? ''),
-                'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#2563eb'),
-                'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '#1e40af'),
+                'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#379fd3'),
+                'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '#8f39ac'),
                 'use_primary_only' => !empty($_POST['use_primary_only']),
                 'support_email' => sanitize_email($_POST['support_email'] ?? ''),
                 'support_url' => esc_url_raw($_POST['support_url'] ?? ''),
@@ -713,8 +713,8 @@ class WhiteLabelAdmin
         $globalWhiteLabel = [
             'company_name' => get_option('sseo_ai_saas_wl_company_name', ''),
             'company_logo' => get_option('sseo_ai_saas_wl_company_logo', ''),
-            'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#2563eb'),
-            'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#1e40af'),
+            'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#379fd3'),
+            'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac'),
             'support_email' => get_option('sseo_ai_saas_wl_support_email', ''),
             'support_url' => get_option('sseo_ai_saas_wl_support_url', ''),
         ];
@@ -983,7 +983,7 @@ class WhiteLabelAdmin
                     <div class="stat-label"><?php esc_html_e('Monthly Revenue (MRR)', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" style="color: #2563eb;"><?php echo number_format($activeSubscriptions); ?></div>
+                    <div class="stat-value" style="color: #379fd3;"><?php echo number_format($activeSubscriptions); ?></div>
                     <div class="stat-label"><?php esc_html_e('Active Subscriptions', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">

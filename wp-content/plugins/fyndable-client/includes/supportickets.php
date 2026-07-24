@@ -209,15 +209,15 @@ class Supportickets
             .sseo-form-field select { width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; }
             .sseo-form-field input:focus,
             .sseo-form-field textarea:focus,
-            .sseo-form-field select:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255,77,0,.1); }
+            .sseo-form-field select:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55,159,211,.1); }
             .sseo-ticket-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
             .sseo-ticket-item { border: 2px solid #e5e7eb; border-radius: 10px; padding: 20px 24px; transition: all .2s ease; cursor: pointer; }
-            .sseo-ticket-item:hover { border-color: #FF4D00; box-shadow: 0 4px 12px rgba(255,77,0,.1); transform: translateY(-1px); }
+            .sseo-ticket-item:hover { border-color: #379fd3; box-shadow: 0 4px 12px rgba(55,159,211,.1); transform: translateY(-1px); }
             .sseo-ticket-item a { text-decoration: none; color: #111827; }
-            .sseo-ticket-item a:hover { color: #FF4D00; }
+            .sseo-ticket-item a:hover { color: #379fd3; }
             .sseo-ticket-meta { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
             .sseo-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-            .sseo-badge.status-open { background: #dbeafe; color: #1e40af; }
+            .sseo-badge.status-open { background: #e8f4fa; color: #8f39ac; }
             .sseo-badge.status-reaction { background: #fef3c7; color: #92400e; }
             .sseo-badge.status-closed { background: #d1fae5; color: #065f46; }
             .sseo-badge.priority-high { background: #fee2e2; color: #991b1b; }
@@ -225,7 +225,7 @@ class Supportickets
             .sseo-badge.priority-low { background: #f3f4f6; color: #374151; }
             .sseo-file-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
             .sseo-file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; transition: all .2s ease; cursor: pointer; }
-            .sseo-file-drop:hover { border-color: #FF4D00; background: #fff5f0; }
+            .sseo-file-drop:hover { border-color: #379fd3; background: #e8f4fa; }
             .sseo-file-drop input[type="file"] { width: 100%; }
             @media (max-width: 900px) { .sseo-support-grid { grid-template-columns: 1fr; } }
         </style>
@@ -334,9 +334,9 @@ class Supportickets
             .sseo-reply.customer { background: #fff; border-color: #e5e7eb; }
             .sseo-reply-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 600; align-items: center; }
             .sseo-reply-header .sseo-reply-author { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-            .sseo-reply-header .sseo-reply-author .sseo-reply-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-            .sseo-reply.staff .sseo-reply-avatar { background: #1e40af; }
-            .sseo-reply.customer .sseo-reply-avatar { background: #FF4D00; }
+            .sseo-reply-header .sseo-reply-author .sseo-reply-avatar { width: 28px; height: 28px; border-radius: 50%; background: #379fd3; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+            .sseo-reply.staff .sseo-reply-avatar { background: #8f39ac; }
+            .sseo-reply.customer .sseo-reply-avatar { background: #379fd3; }
             .sseo-reply-message { color: #374151; line-height: 1.6; font-size: 14px; }
             .sseo-screenshots { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
             .sseo-screenshots a { display: inline-block; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
@@ -345,9 +345,9 @@ class Supportickets
             .sseo-reply-form h3 { margin: 0 0 16px 0; font-size: 16px; font-weight: 700; color: #111827; }
             .sseo-reply-form .sseo-form-field { margin-bottom: 16px; }
             .sseo-reply-form textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical; min-height: 100px; }
-            .sseo-reply-form textarea:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255,77,0,.1); }
+            .sseo-reply-form textarea:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55,159,211,.1); }
             .sseo-file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; transition: all .2s ease; cursor: pointer; }
-            .sseo-file-drop:hover { border-color: #FF4D00; background: #fff5f0; }
+            .sseo-file-drop:hover { border-color: #379fd3; background: #e8f4fa; }
             .sseo-file-drop input[type="file"] { width: 100%; }
             .sseo-file-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
         </style>

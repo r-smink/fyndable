@@ -76,7 +76,7 @@ class AgencyPortal
         ?>
         <style>
             .fyndable-agency-topbar {
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 color: #fff;
                 padding: 16px 30px;
                 margin: -10px -20px 0 -10px;
@@ -154,7 +154,7 @@ class AgencyPortal
                 font-weight: 600;
                 padding: 4px 10px;
                 border-radius: 6px;
-                background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 color: #fff !important;
                 text-decoration: none;
                 border: none;
@@ -163,7 +163,7 @@ class AgencyPortal
             }
             .tenant-login-btn:hover {
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+                box-shadow: 0 4px 12px rgba(55,159,211,0.3);
                 color: #fff !important;
             }
         </style>
@@ -186,8 +186,8 @@ class AgencyPortal
 
         $wl = $this->getWhiteLabelSettings();
         $companyName = !empty($wl['company_name']) ? $wl['company_name'] : $agencyName;
-        $primaryColor = $wl['primary_color'] ?? '#3b82f6';
-        $secondaryColor = $wl['secondary_color'] ?? '#ec4899';
+        $primaryColor = $wl['primary_color'] ?? '#379fd3';
+        $secondaryColor = $wl['secondary_color'] ?? '#8f39ac';
         ?>
         <div class="fyndable-agency-topbar" style="background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%);">
             <div class="brand">
@@ -1215,8 +1215,8 @@ class AgencyPortal
         return array_merge([
             'company_name' => '',
             'company_logo' => '',
-            'primary_color' => '#3b82f6',
-            'secondary_color' => '#ec4899',
+            'primary_color' => '#379fd3',
+            'secondary_color' => '#8f39ac',
             'support_email' => '',
             'support_url' => '',
         ], $saved);
@@ -1340,8 +1340,8 @@ class AgencyPortal
         $wl = [
             'company_name' => sanitize_text_field($_POST['company_name'] ?? ''),
             'company_logo' => esc_url_raw($_POST['company_logo'] ?? ''),
-            'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '') ?: '#3b82f6',
-            'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '') ?: '#ec4899',
+            'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '') ?: '#379fd3',
+            'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '') ?: '#8f39ac',
             'support_email' => sanitize_email($_POST['support_email'] ?? ''),
             'support_url' => esc_url_raw($_POST['support_url'] ?? ''),
         ];

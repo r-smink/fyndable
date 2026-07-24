@@ -226,8 +226,8 @@ class PostMetaBox
     {
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $hasCustomBrand = !empty($whiteLabel['company_name']);
-        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#3b82f6') : '#3b82f6';
-        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#ec4899') : '#ec4899';
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
         $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
         $headerGradient = $usePrimaryOnly ? $primaryColor : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
 
