@@ -41,7 +41,7 @@ class FyndableLogin
         ?>
         <style>
             body.login {
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%) !important;
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
