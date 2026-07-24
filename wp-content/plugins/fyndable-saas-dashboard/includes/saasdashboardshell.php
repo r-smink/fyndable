@@ -376,7 +376,7 @@ class SaaSDashboardShell
 
             .saas-topbar {
                 height: 56px;
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                background: <?php echo $topbarGradient; ?>;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -488,10 +488,10 @@ class SaaSDashboardShell
             }
             .saas-sidebar-nav a:hover {
                 background: #f3f4f6;
-                color: #8f39ac;
+                color: <?php echo esc_attr($secondaryColor); ?>;
             }
             .saas-sidebar-nav a.active {
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                background: <?php echo $topbarGradient; ?>;
                 color: #fff;
                 font-weight: 600;
                 box-shadow: 0 2px 6px rgba(55,159,211,0.3);
@@ -540,7 +540,7 @@ class SaaSDashboardShell
                 width: 36px;
                 height: 36px;
                 border: 3px solid #e5e7eb;
-                border-top-color: #379fd3;
+                border-top-color: <?php echo esc_attr($primaryColor); ?>;
                 border-radius: 50%;
                 animation: saas-spin 0.8s linear infinite;
             }
