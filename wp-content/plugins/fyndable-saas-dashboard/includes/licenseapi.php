@@ -483,6 +483,7 @@ class LicenseAPI
             'limits' => $limits['checks'] ?? [],
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
+            'monthly_auto_posts' => (int)$settings->getAutoPostLimitForTier($tenant['tier']),
             'expires_at' => $tenant['expires_at'],
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'model_routing' => get_option('sseo_ai_saas_model_routing', []),

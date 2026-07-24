@@ -254,6 +254,34 @@ body[class*="aiseo"] #wpfooter {
     margin: 0 0 10px 0;
 }
 
+.sseo-ai-content .postbox {
+    border-radius: var(--sseo-radius);
+    overflow: hidden;
+}
+
+#sseo-sortable-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#sseo-sortable-cards > [data-card-id] {
+    cursor: grab;
+    transition: box-shadow 0.2s, transform 0.1s;
+}
+
+#sseo-sortable-cards > [data-card-id].sseo-dragging {
+    opacity: 0.7;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    transform: scale(1.01);
+    cursor: grabbing;
+}
+
+#sseo-sortable-cards > [data-card-id].sseo-drag-over {
+    border-top: 3px dashed var(--sseo-primary, #2271b1);
+    margin-top: -3px;
+}
+
 /* Two-column grid layout (used by multiple pages) */
 .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
 @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }

@@ -1154,8 +1154,9 @@ PROMPT;
             
             <div class="sseo-ai-content">
                 <div style="max-width:1400px;">
+                    <?php DashboardSorter::begin('ai-seo-topic-clusters'); ?>
                     <!-- Generator -->
-                    <div class="postbox" style="padding:20px;">
+                    <div class="postbox" style="padding:20px;" data-card-id="tc-generator">
                     <h2 style="margin-top:0;"><?php esc_html_e('Generate Topic Cluster', 'ai-seo-client'); ?></h2>
                     <div style="display:flex;gap:10px;align-items:end;">
                         <div style="flex:1;">
@@ -1335,6 +1336,7 @@ PROMPT;
                         <h3 style="margin-top:0;"><?php esc_html_e('Saved Cluster Maps', 'ai-seo-client'); ?></h3>
                         <div id="tc-saved-list"></div>
                     </div>
+                    <?php DashboardSorter::end('ai-seo-topic-clusters'); ?>
                 </div>
             </div>
         </div>

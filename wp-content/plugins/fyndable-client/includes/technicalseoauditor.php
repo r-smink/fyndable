@@ -100,6 +100,7 @@ class TechnicalSEOAuditor
             </div>
             
             <div class="sseo-ai-content">
+                <?php DashboardSorter::begin('ai-seo-site-audit'); ?>
                 <!-- Top Section: Overview + Scores side by side -->
                 <div class="sseo-top-section">
                     <!-- Audit Overview -->
@@ -377,6 +378,7 @@ class TechnicalSEOAuditor
                     </div>
                 </div>
             </div>
+            <?php DashboardSorter::end('ai-seo-site-audit'); ?>
             </div>
         </div>
         

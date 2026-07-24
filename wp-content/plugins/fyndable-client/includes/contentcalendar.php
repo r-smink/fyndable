@@ -124,6 +124,7 @@ class ContentCalendar
             </div>
             
             <div class="sseo-ai-content">
+                <?php DashboardSorter::begin('ai-seo-content-calendar'); ?>
                 <!-- Calendar Navigation -->
                 <div class="sseo-ai-dashboard-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -395,6 +396,7 @@ class ContentCalendar
                     <?php endif; ?>
                 </div>
             </div>
+        <?php DashboardSorter::end('ai-seo-content-calendar'); ?>
         </div>
         
         <script>

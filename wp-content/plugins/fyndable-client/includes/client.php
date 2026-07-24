@@ -44,6 +44,7 @@ class Client
     private ?ContentOptimizer $contentOptimizer = null;
     private ?SerpCompetitor $serpCompetitor = null;
     private ?TopicCluster $topicCluster = null;
+    private ?AutomationOrchestrator $automationOrchestrator = null;
     private ?KeywordDifficulty $keywordDifficulty = null;
     private ?LSIKeywords $lsiKeywords = null;
     private ?AIRepurposer $aiRepurposer = null;
@@ -529,6 +530,15 @@ class Client
                 ];
                 return $schedules;
             });
+
+            $this->automationOrchestrator = new AutomationOrchestrator(
+                $this->settings,
+                $this->licenseValidator,
+                $this->topicCluster,
+                $this->llmClient
+            );
+            $this->automationOrchestrator->register();
+            $this->automationOrchestrator->addMenu();
         }
         
         // Agency-only features (DEV includes these)
@@ -543,6 +553,9 @@ class Client
         // White-Label Branding (settings managed via SaaS dashboard / license)
         $this->whiteLabelManager = new WhiteLabelManager($this->settings);
         $this->whiteLabelManager->register();
+
+        // Dashboard card drag-and-drop ordering
+        DashboardSorter::register();
 
         // Unified Post Meta Box with tabs â€” replaces individual meta boxes
         $this->initPostMetaBox();
@@ -938,6 +951,16 @@ class Client
                     'manage_options',
                     'ai-seo-topic-clusters',
                     [$this, 'renderTopicClusterPage']
+                );
+
+                // 10b. Automation
+                add_submenu_page(
+                    'fyndable-dashboard',
+                    __('Automation', 'ai-seo-client'),
+                    __('Automation', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-automation',
+                    [$this, 'renderAutomationPage']
                 );
 
                 // 11. Site Audit
@@ -1364,6 +1387,22 @@ class Client
         }
         if ($this->topicCluster) {
             $this->topicCluster->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Automation page - delegates to AutomationOrchestrator class
+     */
+    public function renderAutomationPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->automationOrchestrator) {
+            $this->automationOrchestrator->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }

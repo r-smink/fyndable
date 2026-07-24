@@ -109,6 +109,14 @@ class SaaSSettings
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_price', ['default' => 79]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_price', ['default' => 199]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_price', ['default' => 499]);
+
+        // Monthly auto-scheduled post limits per tier
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_auto_posts', ['default' => 0]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_auto_posts', ['default' => 4]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_auto_posts', ['default' => 10]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_auto_posts', ['default' => 10]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_auto_posts', ['default' => 30]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_auto_posts', ['default' => 100]);
         
         // Billing settings - Payment providers
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_payment_provider', ['default' => 'stripe']);
@@ -320,6 +328,31 @@ class SaaSSettings
     }
 
     /**
+     * Get auto-scheduled posts limit for tier
+     */
+    public function getAutoPostLimitForTier(string $tier): int
+    {
+        $optionName = "ai_seo_saas_{$tier}_auto_posts";
+        return (int)get_option($optionName, $this->getDefaultAutoPostLimit($tier));
+    }
+
+    /**
+     * Default auto-scheduled post limits per tier
+     */
+    private function getDefaultAutoPostLimit(string $tier): int
+    {
+        $defaults = [
+            'free' => 0,
+            'starter' => 4,
+            'trial' => 10,
+            'professional' => 10,
+            'business' => 30,
+            'agency' => 100,
+        ];
+        return $defaults[$tier] ?? 0;
+    }
+
+    /**
      * Get monthly subscription price for tier (EUR)
      */
     public function getPriceForTier(string $tier): float
@@ -357,6 +390,7 @@ class SaaSSettings
                 'price' => $this->getPriceForTier($tier),
                 'api_calls' => $this->getApiLimitForTier($tier),
                 'cost_limit' => $this->getCostLimitForTier($tier),
+                'auto_posts' => $this->getAutoPostLimitForTier($tier),
             ];
         }
         return $result;
@@ -665,6 +699,7 @@ class SaaSSettings
                                 <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
                                 <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
                                 <th style="width: 150px;"><?php esc_html_e('Cost Cap (USD)', 'sseo-ai-saas'); ?></th>
+                                <th style="width: 150px;"><?php esc_html_e('Auto Posts/mo', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -681,6 +716,7 @@ class SaaSSettings
                                 $price = $this->getPriceForTier($tier);
                                 $calls = $this->getApiLimitForTier($tier);
                                 $cost = $this->getCostLimitForTier($tier);
+                                $autoPosts = $this->getAutoPostLimitForTier($tier);
                             ?>
                             <tr>
                                 <td><strong><?php echo esc_html($label); ?></strong></td>
@@ -700,6 +736,12 @@ class SaaSSettings
                                     <input type="number" step="0.01" min="0"
                                            name="ai_seo_saas_<?php echo esc_attr($tier); ?>_cost_limit"
                                            value="<?php echo esc_attr(number_format($cost, 2, '.', '')); ?>"
+                                           style="width: 120px;">
+                                </td>
+                                <td>
+                                    <input type="number" step="1" min="0"
+                                           name="ai_seo_saas_<?php echo esc_attr($tier); ?>_auto_posts"
+                                           value="<?php echo esc_attr($autoPosts); ?>"
                                            style="width: 120px;">
                                 </td>
                             </tr>

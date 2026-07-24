@@ -337,15 +337,20 @@ class SEODataDashboard
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('SEO Data Dashboard', 'ai-seo-client'); ?></h1>
                 <div style="margin-top: 10px; display: flex; gap: 10px;">
-                    <span class="connection-badge <?php echo $seConnected ? 'connected' : 'disconnected'; ?>">
-                        SE Ranking: <?php echo $seConnected ? 'Connected' : 'Not Connected'; ?>
-                    </span>
-                    <span class="connection-badge <?php echo $ahConnected ? 'connected' : 'disconnected'; ?>">
-                        Ahrefs: <?php echo $ahConnected ? 'Connected' : 'Not Connected'; ?>
-                    </span>
+                    <?php if ($seConnected): ?>
+                    <span class="connection-badge connected">SE Ranking: Connected</span>
+                    <?php else: ?>
+                    <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">SE Ranking: Not Connected</a>
+                    <?php endif; ?>
+                    <?php if ($ahConnected): ?>
+                    <span class="connection-badge connected">Ahrefs: Connected</span>
+                    <?php else: ?>
+                    <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">Ahrefs: Not Connected</a>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="sseo-ai-content">
+                <?php DashboardSorter::begin('ai-seo-google-data'); ?>
                 <?php $defaultSource = $this->defaultSource(); ?>
                 <div class="sseo-ai-dashboard-card">
                     <div class="seo-search-bar">
@@ -410,6 +415,7 @@ class SEODataDashboard
                         <div id="panel-ahrefs" style="margin-top:20px;"></div>
                     </div>
                 </div>
+                <?php DashboardSorter::end('ai-seo-google-data'); ?>
             </div>
         </div>
 

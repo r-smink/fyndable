@@ -93,6 +93,9 @@ class LicenseValidator
         if (!empty($body['api_calls_limit'])) {
             update_option('sseo_ai_client_api_limit', $body['api_calls_limit']);
         }
+        if (!empty($body['monthly_auto_posts'])) {
+            update_option('sseo_ai_client_monthly_auto_posts', $body['monthly_auto_posts']);
+        }
         if (!empty($body['model_routing']) && is_array($body['model_routing'])) {
             update_option('sseo_ai_client_model_routing', $body['model_routing']);
         }
@@ -167,6 +170,19 @@ class LicenseValidator
     ];
     
     /**
+     * Default monthly auto-scheduled post limits per tier
+     */
+    private const TIER_AUTO_POST_LIMITS = [
+        'free'         => 0,
+        'starter'      => 4,
+        'trial'        => 10,
+        'professional' => 10,
+        'business'     => 30,
+        'agency'       => 100,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
      * Default API call limits per tier (per month)
      */
     private const TIER_API_LIMITS = [
@@ -209,6 +225,22 @@ class LicenseValidator
         
         $tierDefault = self::TIER_API_LIMITS[$tier] ?? 1000;
         return (int)get_option('sseo_ai_client_api_limit', $tierDefault);
+    }
+
+    /**
+     * Get monthly auto-scheduled posts limit
+     */
+    public function getMonthlyAutoPostLimit(): int
+    {
+        $tier = $this->getLicenseTier();
+
+        // DEV tier has unlimited automation
+        if ($tier === 'dev') {
+            return PHP_INT_MAX;
+        }
+
+        $tierDefault = self::TIER_AUTO_POST_LIMITS[$tier] ?? 0;
+        return (int)get_option('sseo_ai_client_monthly_auto_posts', $tierDefault);
     }
 
     /**

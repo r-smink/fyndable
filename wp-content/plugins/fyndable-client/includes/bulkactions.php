@@ -470,9 +470,9 @@ Return ONLY the JSON.";
                         '<td><a href="' + p.edit_url + '" target="_blank">' + $('<span>').text(p.title).html() + '</a></td>' +
                         '<td>' + p.type + '</td>' +
                         '<td>' + p.word_count + '</td>' +
-                        '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">Ã¢â‚¬â€</em>') + '</td>' +
-                        '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">Ã¢â‚¬â€</em>') + '</td>' +
-                        '<td>' + (issueHtml || '<span style="color:#00a32a;">Ã¢Å“â€œ</span>') + '</td>' +
+                        '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">&mdash;</em>') + '</td>' +
+                        '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">&mdash;</em>') + '</td>' +
+                        '<td>' + (issueHtml || '<span style="color:#00a32a;">&check;</span>') + '</td>' +
                         '<td><button class="button button-small bulk-gen-single" data-id="' + p.id + '"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button></td>' +
                         '</tr>'
                     );
