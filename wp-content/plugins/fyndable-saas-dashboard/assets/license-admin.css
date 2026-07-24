@@ -22,6 +22,12 @@ body[class*="sseo-ai"] #wpfooter {
     position: relative !important;
 }
 
+/* Fyndable brand background for all SaaS admin pages */
+body[class*="sseo-ai"] {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%) !important;
+    min-height: 100vh;
+}
+
 /* ================================================
    1. VARIABLES & BASE
    ================================================ */

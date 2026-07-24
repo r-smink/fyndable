@@ -128,7 +128,7 @@ class WhiteLabelManager
         ?>
         <style>
         body.sseo-fynable-login {
-            background-color: <?php echo esc_attr($bgColor); ?>;
+            background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
             <?php echo $bgImage ? 'background-size: cover; background-position: center;' : ''; ?>
             <?php echo $bgImageCss; ?>
             display: flex;
