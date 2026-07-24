@@ -74,9 +74,9 @@ body[class*="sseo-ai"] #wpfooter {
     border-radius: 0;
 }
 
-/* Neutral content background â€” no longer uses the old blue/purple gradient */
+/* Fyndable branded content background */
 .wrap.sseo-ai-license-admin {
-    background: var(--sseo-gray-50, #f9fafb);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     min-height: calc(100vh - 32px);
 }
 

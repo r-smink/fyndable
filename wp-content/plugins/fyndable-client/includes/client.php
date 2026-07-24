@@ -538,7 +538,6 @@ class Client
                 $this->llmClient
             );
             $this->automationOrchestrator->register();
-            $this->automationOrchestrator->addMenu();
         }
         
         // Agency-only features (DEV includes these)
@@ -766,6 +765,18 @@ class Client
             30
         );
 
+        // All tiers: Dashboard, Content Calendar, AI Tools, Link Manager, Integrations
+
+        // 1. Dashboard / Statistics - all tiers (first, so the top-level menu lands here)
+        add_submenu_page(
+            'fyndable-dashboard',
+            __('Dashboard', 'ai-seo-client'),
+            __('ðŸ“Š Dashboard', 'ai-seo-client'),
+            'manage_options',
+            'ai-seo-dashboard',
+            [$this, 'renderDashboardPage']
+        );
+
         // Connection page (separate slug so it can load in iframe)
         add_submenu_page(
             'fyndable-dashboard',
@@ -775,20 +786,9 @@ class Client
             'ai-seo-client',
             [$this, 'renderConnectionPage']
         );
-        
+
         // Only show feature menus if license is valid
         if ($isLicenseValid) {
-            // All tiers: Dashboard, Content Calendar, AI Tools, Link Manager, Integrations
-            
-            // 1. Dashboard / Statistics - all tiers
-            add_submenu_page(
-                'fyndable-dashboard',
-                __('Dashboard', 'ai-seo-client'),
-                __('ðŸ“Š Dashboard', 'ai-seo-client'),
-                'manage_options',
-                'ai-seo-dashboard',
-                [$this, 'renderDashboardPage']
-            );
 
             // 2. Content Calendar - all tiers
             add_submenu_page(

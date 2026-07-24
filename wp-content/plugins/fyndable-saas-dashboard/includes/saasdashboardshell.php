@@ -326,8 +326,8 @@ class SaaSDashboardShell
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $companyLogo = $enabled ? get_option('sseo_ai_saas_wl_company_logo', '') : '';
         $companyName = $companyName ?: 'Fyndable';
-        $primaryColor = '#379fd3';
-        $secondaryColor = '#8f39ac';
+        $primaryColor = $enabled ? get_option('sseo_ai_saas_wl_primary_color', '#379fd3') : '#379fd3';
+        $secondaryColor = $enabled ? get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac') : '#8f39ac';
 
         $user = wp_get_current_user();
         $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
