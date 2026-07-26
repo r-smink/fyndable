@@ -76,3 +76,22 @@
     color: #6b7280;
     margin-top: 8px;
 }
+
+@media screen and (max-width: 600px) {
+    .fyndable-revenue-cards {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .fyndable-revenue-card,
+    .fyndable-revenue-section {
+        padding: 16px;
+    }
+    .fyndable-mrr-chart {
+        height: auto;
+        min-height: 200px;
+        overflow-x: auto;
+        gap: 8px;
+    }
+    .chart-value {
+        font-size: 10px;
+    }
+}

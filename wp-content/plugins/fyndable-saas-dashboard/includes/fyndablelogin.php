@@ -27,6 +27,7 @@ class FyndableLogin
         add_filter('login_message', [$this, 'filterLoginMessage']);
         add_filter('login_headerurl', [$this, 'getLoginHeaderUrl']);
         add_filter('login_headertext', [$this, 'getLoginHeaderText']);
+        add_shortcode('fyndable_login', [$this, 'renderLoginShortcode']);
         add_action('init', [$this, 'handleAutoLogin']);
     }
 
@@ -285,5 +286,139 @@ class FyndableLogin
         $redirect = admin_url('admin.php?page=sseo-ai-shell');
         wp_redirect($redirect);
         exit;
+    }
+
+    /**
+     * Shortcode: [fyndable_login redirect="..."]
+     *
+     * Renders a branded login form that submits to WordPress login.
+     */
+    public function renderLoginShortcode(array $atts = []): string
+    {
+        $atts = shortcode_atts([
+            'redirect' => admin_url('admin.php?page=sseo-ai-shell'),
+        ], $atts, 'fyndable_login');
+
+        $redirect = esc_url_raw($atts['redirect']);
+
+        if (is_user_logged_in()) {
+            $dashboardUrl = admin_url('admin.php?page=sseo-ai-shell');
+            return '<div class="fyndable-login-message" style="max-width:420px;margin:0 auto;padding:24px;background:#f0f9ff;border-radius:12px;text-align:center;">' .
+                sprintf(
+                    __('You are already logged in. <a href="%s" style="color:#379fd3;font-weight:600;">Go to dashboard</a>', 'sseo-ai-saas'),
+                    esc_url($dashboardUrl)
+                ) .
+                '</div>';
+        }
+
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $brandName = $companyName ?: 'Fyndable';
+        $action = esc_url(wp_login_url($redirect));
+
+        ob_start();
+        ?>
+        <style>
+            .fyndable-login-wrap {
+                max-width: 420px;
+                margin: 0 auto;
+                padding: 40px;
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+                box-sizing: border-box;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            .fyndable-login-wrap h2 {
+                margin: 0 0 8px 0;
+                font-size: 24px;
+                font-weight: 700;
+                color: #111827;
+            }
+            .fyndable-login-wrap .subtitle {
+                color: #6b7280;
+                margin: 0 0 30px 0;
+                font-size: 14px;
+            }
+            .fyndable-login-field {
+                margin-bottom: 20px;
+            }
+            .fyndable-login-field label {
+                display: block;
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 6px;
+            }
+            .fyndable-login-field input {
+                width: 100%;
+                padding: 12px 14px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                font-size: 15px;
+                box-sizing: border-box;
+                transition: border-color 0.15s;
+            }
+            .fyndable-login-field input:focus {
+                border-color: #379fd3;
+                box-shadow: 0 0 0 3px rgba(55,159,211,0.1);
+                outline: none;
+            }
+            .fyndable-login-remember {
+                margin-bottom: 24px;
+                font-size: 14px;
+                color: #6b7280;
+            }
+            .fyndable-login-remember input {
+                margin-right: 6px;
+            }
+            .fyndable-login-submit {
+                width: 100%;
+                padding: 14px;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                color: #fff;
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                cursor: pointer;
+                transition: transform 0.15s, box-shadow 0.15s;
+            }
+            .fyndable-login-submit:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(55,159,211,0.4);
+            }
+            @media screen and (max-width: 480px) {
+                .fyndable-login-wrap {
+                    padding: 24px 16px;
+                    width: 100%;
+                    max-width: calc(100% - 32px);
+                }
+                .fyndable-login-wrap h2 { font-size: 20px; }
+                .fyndable-login-field input { font-size: 16px; }
+            }
+        </style>
+        <div class='fyndable-login-wrap'>
+            <h2><?php echo esc_html(sprintf(__('Sign in to %s', 'sseo-ai-saas'), $brandName)); ?></h2>
+            <p class='subtitle'><?php echo esc_html(__('Enter your credentials to access your dashboard.', 'sseo-ai-saas')); ?></p>
+            <form action='<?php echo $action; ?>' method='post'>
+                <p class='fyndable-login-field'>
+                    <label for='fyndable_log'><?php echo esc_html(__('Email or username', 'sseo-ai-saas')); ?></label>
+                    <input type='text' name='log' id='fyndable_log' required>
+                </p>
+                <p class='fyndable-login-field'>
+                    <label for='fyndable_pwd'><?php echo esc_html(__('Password', 'sseo-ai-saas')); ?></label>
+                    <input type='password' name='pwd' id='fyndable_pwd' required>
+                </p>
+                <p class='fyndable-login-remember'>
+                    <label><input type='checkbox' name='rememberme' value='forever'> <?php echo esc_html(__('Remember me', 'sseo-ai-saas')); ?></label>
+                </p>
+                <input type='hidden' name='redirect_to' value='<?php echo esc_url($redirect); ?>'>
+                <input type='hidden' name='testcookie' value='1'>
+                <p><button type='submit' class='fyndable-login-submit'><?php echo esc_html(__('Sign in', 'sseo-ai-saas')); ?></button></p>
+            </form>
+        </div>
+        <?php
+        return ob_get_clean();
     }
 }

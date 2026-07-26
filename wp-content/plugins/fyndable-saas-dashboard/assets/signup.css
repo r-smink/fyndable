@@ -241,3 +241,35 @@
 .fyndable-signup-back:hover {
     color: #374151;
 }
+
+@media screen and (max-width: 600px) {
+    .fyndable-signup-container {
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+    .fyndable-signup-header {
+        margin-bottom: 30px;
+    }
+    .fyndable-signup-header h1 {
+        font-size: 28px;
+    }
+    .fyndable-signup-header p {
+        font-size: 16px;
+    }
+    .fyndable-signup-plans {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .fyndable-signup-plan {
+        padding: 24px 16px;
+    }
+    .fyndable-signup-form {
+        width: 100%;
+        max-width: 100%;
+        padding: 24px 16px;
+        box-sizing: border-box;
+    }
+    .fyndable-signup-field input {
+        font-size: 16px;
+    }
+}
