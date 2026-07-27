@@ -353,7 +353,13 @@ class SignupCheckout
                 'license_key' => $tenant['license_key'],
             ]);
 
-            do_action('sseo_ai_payment_success', $tenantKey, $tenant['tier'], [
+            $plans = $this->getPlans();
+            $plan = $plans[$tenant['tier']] ?? null;
+            $currency = get_option('sseo_ai_saas_currency', 'EUR');
+            $symbol = $this->getCurrencySymbol($currency);
+            $amount = $plan ? ($symbol . $plan['price']) : '';
+
+            do_action('sseo_ai_payment_success', $tenantKey, $amount, [
                 'tier' => $tenant['tier'],
                 'date' => current_time('mysql'),
                 'payment_id' => $paymentId,

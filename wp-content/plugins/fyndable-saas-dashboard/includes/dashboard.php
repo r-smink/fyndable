@@ -23,6 +23,8 @@ class Dashboard
     private SupportTickets $supportTickets;
     private SupportAdmin $supportAdmin;
     private SaaSDashboardShell $dashboardShell;
+    private EmailTemplateRepository $emailTemplateRepository;
+    private EmailTemplateAdmin $emailTemplateAdmin;
     private EmailAutomation $emailAutomation;
     private UpdateServer $updateServer;
     private SignupCheckout $signupCheckout;
@@ -59,10 +61,15 @@ class Dashboard
         $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
-        $this->supportTickets = new SupportTickets($this->tenants);
+        $this->emailTemplateRepository = new EmailTemplateRepository();
+        $this->emailTemplateRepository->maybeCreateTables();
+        $this->emailTemplateRepository->seedDefaults();
+
+        $this->supportTickets = new SupportTickets($this->tenants, $this->emailTemplateRepository);
         $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);
         $this->dashboardShell = new SaaSDashboardShell($this->pluginFile);
-        $this->emailAutomation = new EmailAutomation($this->tenants);
+        $this->emailTemplateAdmin = new EmailTemplateAdmin($this->emailTemplateRepository, new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants));
+        $this->emailAutomation = new EmailAutomation($this->tenants, $this->emailTemplateRepository);
         $this->updateServer = new UpdateServer($this->tenants);
         $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation);
         $this->revenueDashboard = new RevenueDashboard($this->tenants);
@@ -105,6 +112,7 @@ class Dashboard
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
         add_action('admin_menu', [$this->supportAdmin, 'register']);
+        add_action('admin_menu', [$this->emailTemplateAdmin, 'addMenu']);
         add_action('admin_menu', [$this->geoScanAdmin, 'register']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
@@ -148,6 +156,8 @@ class Dashboard
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
         $this->geoScanRepository->maybeCreateTables();
+        $this->emailTemplateRepository->maybeCreateTables();
+        $this->emailTemplateRepository->seedDefaults();
     }
 
     /**

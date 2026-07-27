@@ -179,7 +179,11 @@ class WebhookHandler
             'expires_at' => gmdate('Y-m-d H:i:s', strtotime('+1 month')),
         ]);
 
-        do_action('sseo_ai_saas_payment_success', $tenantKey, $session, 'stripe');
+        do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount(($session['amount_total'] ?? 0) / 100, $session['currency'] ?? 'eur'), [
+            'tier' => $tenant['tier'],
+            'date' => current_time('mysql'),
+            'payment_id' => $session['payment_intent'] ?? $session['id'] ?? '',
+        ]);
 
         return [
             'received' => true,
@@ -226,7 +230,11 @@ class WebhookHandler
         $this->createInvoiceRecord($tenantKey, 'stripe', $amount / 100, $invoice['currency'] ?? 'eur', $invoice['id']);
 
         // Send notification
-        do_action('sseo_ai_saas_payment_success', $tenantKey, $invoice, 'stripe');
+        do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount(($invoice['amount_paid'] ?? 0) / 100, $invoice['currency'] ?? 'eur'), [
+            'tier' => $tenant['tier'],
+            'date' => current_time('mysql'),
+            'payment_id' => $invoice['id'] ?? '',
+        ]);
 
         return [
             'received' => true,
@@ -254,7 +262,9 @@ class WebhookHandler
             // Notify admin
             $this->notifyPaymentFailure($tenantKey, $invoice, 'stripe');
 
-            do_action('sseo_ai_saas_payment_failed', $tenantKey, $invoice, 'stripe');
+            do_action('sseo_ai_payment_failed', $tenantKey, [
+                'amount' => $this->formatAmount(($invoice['amount_due'] ?? 0) / 100, $invoice['currency'] ?? 'eur'),
+            ]);
         }
 
         return ['received' => true, 'processed' => true, 'tenant_key' => $tenantKey];
@@ -459,7 +469,11 @@ class WebhookHandler
             ]);
         }
 
-        do_action('sseo_ai_saas_payment_success', $tenantKey, $payment, 'mollie');
+        do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount((float)($payment['amount']['value'] ?? 0), $payment['amount']['currency'] ?? 'eur'), [
+            'tier' => $tenant['tier'],
+            'date' => current_time('mysql'),
+            'payment_id' => $payment['id'] ?? '',
+        ]);
 
         return [
             'received' => true,
@@ -724,5 +738,21 @@ This is an automated message from %s", 'sseo-ai-saas'),
         );
 
         wp_mail($adminEmail, $subject, $message);
+    }
+
+    /**
+     * Format an amount with a currency symbol.
+     */
+    private function formatAmount(float $amount, string $currency): string
+    {
+        $currency = strtoupper($currency);
+        $symbols = [
+            'EUR' => '€',
+            'USD' => '$',
+            'GBP' => '£',
+        ];
+        $symbol = $symbols[$currency] ?? ($currency . ' ');
+
+        return $symbol . number_format_i18n($amount, 2);
     }
 }

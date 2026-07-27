@@ -15,10 +15,12 @@ class SupportTickets
     private const REPLIES_TABLE = 'sseo_ai_support_replies';
 
     private TenantRepository $tenants;
+    private EmailTemplateRenderer $renderer;
 
-    public function __construct(TenantRepository $tenants)
+    public function __construct(TenantRepository $tenants, EmailTemplateRepository $repository)
     {
         $this->tenants = $tenants;
+        $this->renderer = new EmailTemplateRenderer($repository, $tenants);
     }
 
     public function register(): void
@@ -589,77 +591,32 @@ class SupportTickets
 
     private function sendNewTicketNotification(array $tenant, int $ticketId, string $subject, string $message): void
     {
-        $to = $this->getSupportEmail();
-        $headers = ['Content-Type: text/html; charset=UTF-8'];
+        $rendered = $this->renderer->render('support_new_ticket', $tenant['tenant_key'] ?? '', [
+            'ticket_id' => $ticketId,
+            'ticket_subject' => $subject,
+            'ticket_message' => $message,
+        ]);
 
-        $emailSubject = sprintf(
-            __('[%s] New support ticket #%d from %s', 'sseo-ai-saas'),
-            get_bloginfo('name'),
-            $ticketId,
-            $tenant['name']
-        );
-
-        $body = sprintf(
-            "<h2>%s</h2>
-            <p><strong>%s:</strong> %s</p>
-            <p><strong>%s:</strong> %s</p>
-            <p><strong>%s:</strong> %s</p>
-            <p><strong>%s:</strong> %s</p>
-            <hr>
-            <p>%s</p>",
-            __('New support ticket received', 'sseo-ai-saas'),
-            __('Tenant', 'sseo-ai-saas'),
-            esc_html($tenant['name']),
-            __('Email', 'sseo-ai-saas'),
-            esc_html($tenant['email']),
-            __('License', 'sseo-ai-saas'),
-            esc_html($tenant['license_key']),
-            __('Subject', 'sseo-ai-saas'),
-            esc_html($subject),
-            nl2br(esc_html($message))
-        );
-
-        wp_mail($to, $emailSubject, $body, $headers);
+        wp_mail($this->getSupportEmail(), $rendered['subject'], $rendered['body'], ['Content-Type: text/html; charset=UTF-8']);
     }
 
     private function sendReplyNotification(array $tenant, array $ticket, string $message, bool $isStaffReply): void
     {
+        $context = [
+            'ticket_id' => $ticket['id'],
+            'ticket_subject' => $ticket['subject'] ?? '',
+            'reply_message' => $message,
+        ];
+
         if ($isStaffReply) {
             $to = $tenant['email'];
-            $emailSubject = sprintf(
-                __('[%s] Reply to your support ticket #%d', 'sseo-ai-saas'),
-                get_bloginfo('name'),
-                $ticket['id']
-            );
-            $heading = __('A reply has been added to your support ticket', 'sseo-ai-saas');
+            $templateKey = 'support_reply_customer';
         } else {
             $to = $this->getSupportEmail();
-            $emailSubject = sprintf(
-                __('[%s] New reply on ticket #%d from %s', 'sseo-ai-saas'),
-                get_bloginfo('name'),
-                $ticket['id'],
-                $tenant['name']
-            );
-            $heading = __('A client replied to a support ticket', 'sseo-ai-saas');
+            $templateKey = 'support_reply_staff';
         }
 
-        $headers = ['Content-Type: text/html; charset=UTF-8'];
-
-        $body = sprintf(
-            "<h2>%s</h2>
-            <p><strong>%s:</strong> %s</p>
-            <p><strong>%s:</strong> #%d - %s</p>
-            <hr>
-            <p>%s</p>",
-            $heading,
-            __('Tenant', 'sseo-ai-saas'),
-            esc_html($tenant['name']),
-            __('Ticket', 'sseo-ai-saas'),
-            (int)$ticket['id'],
-            esc_html($ticket['subject']),
-            nl2br(esc_html($message))
-        );
-
-        wp_mail($to, $emailSubject, $body, $headers);
+        $rendered = $this->renderer->render($templateKey, $tenant['tenant_key'] ?? '', $context);
+        wp_mail($to, $rendered['subject'], $rendered['body'], ['Content-Type: text/html; charset=UTF-8']);
     }
 }

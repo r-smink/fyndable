@@ -181,7 +181,7 @@ class ApiGateway
             if (!is_wp_error($result)) {
                 $this->recordProviderSuccess('ai', 'ai');
                 $cost = $result['usage']['cost'] ?? 0;
-                $this->trackUsage($tenant['id'], 'ai_generation', 1, $cost);
+                $this->trackUsage($tenant, 'ai_generation', 1, $cost);
 
                 return new \WP_REST_Response([
                     'success' => true,
@@ -247,7 +247,7 @@ class ApiGateway
         // Calculate and track cost using the provider that actually answered
         $actualProvider = $result['_provider'] ?? $provider;
         $cost = self::SERP_PRICING[$actualProvider] ?? 0.005;
-        $this->trackUsage($tenant['id'], 'serp_query', 1, $cost);
+        $this->trackUsage($tenant, 'serp_query', 1, $cost);
         
         return new \WP_REST_Response([
             'success' => true,
@@ -294,7 +294,7 @@ class ApiGateway
         $position = $this->findUrlPosition($result, $targetUrl);
         $provider = $result['_provider'] ?? $this->settings->getSerpApiProvider();
         $cost = self::SERP_PRICING[$provider] ?? 0.005;
-        $this->trackUsage($tenant['id'], 'serp_query', 1, $cost);
+        $this->trackUsage($tenant, 'serp_query', 1, $cost);
 
         return new \WP_REST_Response([
             'success' => true,
@@ -358,19 +358,20 @@ class ApiGateway
     /**
      * Track usage for tenant
      */
-    private function trackUsage(int $tenantId, string $metric, int $count, float $cost): void
+    private function trackUsage(array $tenant, string $metric, int $count, float $cost): void
     {
         global $wpdb;
+        $tenantId = (int)$tenant['id'];
         $tableUsage = $wpdb->prefix . 'sseo_ai_tenant_usage';
         $period = current_time('Y-m');
-        
+
         // Upsert: update existing period row or insert new one
         $existing = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$tableUsage} WHERE tenant_id = %d AND period = %s",
             $tenantId,
             $period
         ));
-        
+
         if ($existing) {
             // Determine which column to increment based on metric
             $column = 'api_calls';
@@ -379,7 +380,7 @@ class ApiGateway
             } elseif ($metric === 'content_generated') {
                 $column = 'content_generated';
             }
-            
+
             $wpdb->query($wpdb->prepare(
                 "UPDATE {$tableUsage} SET {$column} = {$column} + %d, api_cost = api_cost + %f WHERE id = %d",
                 $count,
@@ -398,6 +399,38 @@ class ApiGateway
             ];
             $wpdb->insert($tableUsage, $data);
         }
+
+        $this->maybeNotifyUsageLimit($tenant);
+    }
+
+    /**
+     * Fire usage limit hook once per tenant/period when the limit is reached.
+     */
+    private function maybeNotifyUsageLimit(array $tenant): void
+    {
+        $tenantKey = $tenant['tenant_key'] ?? '';
+        if (empty($tenantKey)) {
+            return;
+        }
+
+        $period = current_time('Y-m');
+        $transientKey = 'sseo_ai_usage_limit_notified_' . $tenantKey . '_' . $period;
+        if (get_transient($transientKey)) {
+            return;
+        }
+
+        if (!$this->isOverLimit($tenant)) {
+            return;
+        }
+
+        $apiLimit = (int)$tenant['api_calls_limit'] ?: $this->settings->getApiLimitForTier($tenant['tier']);
+
+        do_action('sseo_ai_usage_limit_reached', $tenantKey, [
+            'limit' => $apiLimit,
+            'used' => $apiLimit,
+        ]);
+
+        set_transient($transientKey, true, MONTH_IN_SECONDS);
     }
 
     /**
