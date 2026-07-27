@@ -40,7 +40,7 @@ class SeoReportExport
     /**
      * Gather all SEO data for the report
      */
-    private function gatherReportData(): array
+    public function getReportData(): array
     {
         $postTypes = get_post_types(['public' => true]);
         unset($postTypes['attachment']);
@@ -174,7 +174,7 @@ class SeoReportExport
         }
         check_admin_referer('aiseo_export_pdf');
 
-        $data = $this->gatherReportData();
+        $data = $this->getReportData();
 
         $postsWithIssues = array_filter($data['rows'], fn($r) => $r['issue_count'] > 0);
         $postsOk = $data['total_posts'] - count($postsWithIssues);

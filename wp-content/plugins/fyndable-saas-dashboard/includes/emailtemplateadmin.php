@@ -106,27 +106,38 @@ class EmailTemplateAdmin
 
         $saved = false;
         $preview = '';
+        $testSent = false;
+        $testError = '';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('sseo_ai_email_template_edit')) {
-            $data = [
-                'template_key' => $templateKey,
-                'name' => sanitize_text_field($_POST['name'] ?? $template['name']),
-                'subject' => sanitize_text_field($_POST['subject'] ?? $template['subject']),
-                'body_html' => wp_kses_post($_POST['body_html'] ?? ''),
-                'layout' => sanitize_key($_POST['layout'] ?? 'default'),
-                'brand_logo' => esc_url_raw($_POST['brand_logo'] ?? ''),
-                'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#379fd3'),
-                'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '#8f39ac'),
-                'button_color' => sanitize_hex_color($_POST['button_color'] ?? ''),
-                'footer_text' => sanitize_textarea_field($_POST['footer_text'] ?? ''),
-                'is_active' => !empty($_POST['is_active']),
-            ];
-            $this->repository->saveTemplate($data);
-            $template = $this->repository->getTemplate($templateKey);
-            $saved = true;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['sseo_ai_email_template_test']) && check_admin_referer('sseo_ai_email_template_test', 'sseo_ai_email_template_test')) {
+                $testEmail = sanitize_email($_POST['test_email'] ?? '');
+                if ($this->sendTestEmail($templateKey, $testEmail)) {
+                    $testSent = true;
+                } else {
+                    $testError = __('Could not send test email. Check the address and template.', 'sseo-ai-saas');
+                }
+            } elseif (check_admin_referer('sseo_ai_email_template_edit')) {
+                $data = [
+                    'template_key' => $templateKey,
+                    'name' => sanitize_text_field($_POST['name'] ?? $template['name']),
+                    'subject' => sanitize_text_field($_POST['subject'] ?? $template['subject']),
+                    'body_html' => wp_kses_post($_POST['body_html'] ?? ''),
+                    'layout' => sanitize_key($_POST['layout'] ?? 'default'),
+                    'brand_logo' => esc_url_raw($_POST['brand_logo'] ?? ''),
+                    'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#379fd3'),
+                    'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '#8f39ac'),
+                    'button_color' => sanitize_hex_color($_POST['button_color'] ?? ''),
+                    'footer_text' => sanitize_textarea_field($_POST['footer_text'] ?? ''),
+                    'is_active' => !empty($_POST['is_active']),
+                ];
+                $this->repository->saveTemplate($data);
+                $template = $this->repository->getTemplate($templateKey);
+                $saved = true;
 
-            if (!empty($_POST['preview_template'])) {
-                $preview = $this->generatePreview($templateKey);
+                if (!empty($_POST['preview_template'])) {
+                    $preview = $this->generatePreview($templateKey);
+                }
             }
         }
 
@@ -139,6 +150,12 @@ class EmailTemplateAdmin
 
             <?php if ($saved): ?>
                 <div class="notice notice-success"><p><?php esc_html_e('Template saved.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+            <?php if ($testSent): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('Test email sent.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+            <?php if ($testError): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($testError); ?></p></div>
             <?php endif; ?>
 
             <form method="post" action="">
@@ -222,6 +239,17 @@ class EmailTemplateAdmin
                     </div>
                 </div>
             <?php endif; ?>
+
+            <form method="post" action="" class="sseo-ai-card" style="margin-top:20px;">
+                <?php wp_nonce_field('sseo_ai_email_template_test', 'sseo_ai_email_template_test'); ?>
+                <input type="hidden" name="template" value="<?php echo esc_attr($templateKey); ?>">
+                <h2><?php esc_html_e('Send test email', 'sseo-ai-saas'); ?></h2>
+                <p><?php esc_html_e('Enter an email address to receive a test of this template with sample data.', 'sseo-ai-saas'); ?></p>
+                <p>
+                    <input type="email" name="test_email" value="<?php echo esc_attr(wp_get_current_user()->user_email); ?>" class="regular-text" required>
+                </p>
+                <?php submit_button(__('Send test email', 'sseo-ai-saas'), 'secondary', 'send_test_email', false); ?>
+            </form>
         </div>
         <?php
     }
@@ -250,11 +278,31 @@ class EmailTemplateAdmin
     }
 
     /**
-     * Generate a preview for the current template.
+     * Send a test email with sample data for the current template.
      */
-    private function generatePreview(string $templateKey): string
+    private function sendTestEmail(string $templateKey, string $to): bool
     {
-        $dummy = [
+        if (empty($to) || !is_email($to)) {
+            return false;
+        }
+
+        $dummy = $this->getDummyContext();
+        $rendered = $this->renderer->render($templateKey, '', $dummy);
+
+        if (empty($rendered['body'])) {
+            return false;
+        }
+
+        $headers = ['Content-Type: text/html; charset=UTF-8'];
+        return wp_mail($to, __('TEST:', 'sseo-ai-saas') . ' ' . $rendered['subject'], $rendered['body'], $headers);
+    }
+
+    /**
+     * Build a sample context for previews and test emails.
+     */
+    private function getDummyContext(): array
+    {
+        return [
             'tenant_name' => 'Acme Corp',
             'tenant_email' => 'customer@example.com',
             'tenant_domain' => 'example.com',
@@ -284,7 +332,14 @@ class EmailTemplateAdmin
             'error_code' => 'rate_limited',
             'status' => 'error',
         ];
+    }
 
+    /**
+     * Generate a preview for the current template.
+     */
+    private function generatePreview(string $templateKey): string
+    {
+        $dummy = $this->getDummyContext();
         $rendered = $this->renderer->render($templateKey, '', $dummy);
         return $rendered['body'];
     }

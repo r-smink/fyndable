@@ -16,10 +16,12 @@ namespace SSEOAIClient;
 class ExternalIntegrations
 {
     private Settings $settings;
+    private ReportDataCollector $reportCollector;
     
     public function __construct(Settings $settings)
     {
         $this->settings = $settings;
+        $this->reportCollector = new ReportDataCollector(new SeoReportExport($settings));
     }
     
     public function register(): void
@@ -1300,18 +1302,129 @@ class ExternalIntegrations
      */
     private function generateReport(string $period): string
     {
-        // This would generate a comprehensive HTML report
-        // For now, a simple template
-        
-        $html = '<html><body>';
-        $html .= '<h1>' . sprintf(__('%s SEO Report', 'ai-seo-client'), ucfirst($period)) . '</h1>';
-        $html .= '<p>' . sprintf(__('Report for %s', 'ai-seo-client'), get_bloginfo('name')) . '</p>';
-        
-        // Add report sections here
-        
-        $html .= '</body></html>';
-        
+        $data = $this->reportCollector->collect($period);
+        $summary = $data['summary'];
+
+        $html = '<html><body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #1f2937;">';
+        $html .= '<div style="max-width: 640px; margin: 0 auto; padding: 24px;">';
+
+        // Header
+        $html .= '<h1 style="color: #111827; margin-bottom: 4px;">' . esc_html(sprintf(__('%s SEO Report', 'ai-seo-client'), ucfirst($period))) . '</h1>';
+        $html .= '<p style="color: #6b7280; margin-top: 0;">' . esc_html($summary['site_name']) . ' &mdash; ' . esc_html($summary['date']) . '</p>';
+
+        // Summary cards
+        $html .= $this->buildCardSection(__('Summary', 'ai-seo-client'), function () use ($summary, $data) {
+            return $this->buildMetricCard(__('Average SEO Score', 'ai-seo-client'), $summary['avg_score'] . '/100')
+                . $this->buildMetricCard(__('Total Posts Analyzed', 'ai-seo-client'), number_format_i18n($summary['total_posts']))
+                . $this->buildMetricCard(__('Posts with Issues', 'ai-seo-client'), number_format_i18n($summary['posts_with_issues']))
+                . $this->buildMetricCard(__('Tracked Keywords', 'ai-seo-client'), number_format_i18n($data['rank_data']['total_keywords']));
+        });
+
+        // Winnaars
+        if (!empty($data['winners'])) {
+            $html .= $this->buildCardSection(__('Top performing content', 'ai-seo-client'), function () use ($data) {
+                $out = '<ul style="padding-left: 20px; margin: 0;">';
+                foreach ($data['winners'] as $winner) {
+                    $out .= '<li><a href="' . esc_url($winner['url']) . '">' . esc_html($winner['title']) . '</a> ' . esc_html('(' . $winner['score'] . '/100)') . '</li>';
+                }
+                $out .= '</ul>';
+                return $out;
+            });
+        }
+
+        // Ranking winners
+        if (!empty($data['rank_data']['risers'])) {
+            $html .= $this->buildCardSection(__('Keywords moving up', 'ai-seo-client'), function () use ($data) {
+                $out = '<ul style="padding-left: 20px; margin: 0;">';
+                foreach ($data['rank_data']['risers'] as $r) {
+                    $change = '+' . absint($r['change']) . ' ' . __('positions', 'ai-seo-client');
+                    $out .= '<li>' . esc_html($r['keyword']) . ' <span style="color:#16a34a;">' . esc_html($change) . '</span> ' . esc_html('(' . $r['current'] . ')') . '</li>';
+                }
+                $out .= '</ul>';
+                return $out;
+            });
+        }
+
+        // Ranking losers
+        if (!empty($data['rank_data']['fallers'])) {
+            $html .= $this->buildCardSection(__('Keywords losing ground', 'ai-seo-client'), function () use ($data) {
+                $out = '<ul style="padding-left: 20px; margin: 0;">';
+                foreach ($data['rank_data']['fallers'] as $r) {
+                    $change = $r['change'] . ' ' . __('positions', 'ai-seo-client');
+                    $out .= '<li>' . esc_html($r['keyword']) . ' <span style="color:#dc2626;">' . esc_html($change) . '</span> ' . esc_html('(' . $r['current'] . ')') . '</li>';
+                }
+                $out .= '</ul>';
+                return $out;
+            });
+        }
+
+        // Technical scores
+        if ($data['technical']['has_data']) {
+            $html .= $this->buildCardSection(__('Technical health', 'ai-seo-client'), function () use ($data) {
+                $scores = $data['technical']['scores'];
+                $out = '<div style="display:flex; gap:16px; flex-wrap:wrap;">';
+                foreach ($scores as $label => $value) {
+                    $out .= '<div style="text-align:center; min-width:120px;"><strong style="font-size:22px;">' . esc_html($value) . '</strong><br><span style="font-size:12px; text-transform:uppercase;">' . esc_html($label) . '</span></div>';
+                }
+                $out .= '</div>';
+                if (!empty($data['technical']['critical_issues'])) {
+                    $out .= '<h4 style="margin-top:16px; margin-bottom:4px;">' . esc_html__('Critical issues', 'ai-seo-client') . '</h4><ul style="padding-left:20px; margin:0;">';
+                    foreach ($data['technical']['critical_issues'] as $issue) {
+                        $out .= '<li>' . esc_html($issue['name']) . ': ' . esc_html($issue['details']) . '</li>';
+                    }
+                    $out .= '</ul>';
+                }
+                return $out;
+            });
+        }
+
+        // Action items
+        $html .= $this->buildCardSection(__('Opportunities & action items', 'ai-seo-client'), function () use ($summary, $data) {
+            $out = '<ul style="padding-left: 20px; margin: 0;">';
+            $out .= '<li><strong>' . esc_html__('Missing SEO titles:', 'ai-seo-client') . '</strong> ' . esc_html($summary['missing_seo_title']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            $out .= '<li><strong>' . esc_html__('Missing meta descriptions:', 'ai-seo-client') . '</strong> ' . esc_html($summary['missing_meta_desc']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            $out .= '<li><strong>' . esc_html__('Missing focus keyphrases:', 'ai-seo-client') . '</strong> ' . esc_html($summary['missing_keyphrase']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            $out .= '<li><strong>' . esc_html__('Thin content:', 'ai-seo-client') . '</strong> ' . esc_html($summary['thin_content']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            if (!empty($data['action_items']['decay'])) {
+                $out .= '<li><strong>' . esc_html__('Declining posts:', 'ai-seo-client') . '</strong> ' . count($data['action_items']['decay']) . '</li>';
+            }
+            $out .= '</ul>';
+
+            if (!empty($data['action_items']['posts_with_issues'])) {
+                $out .= '<h4 style="margin-top:16px; margin-bottom:4px;">' . esc_html__('Pages to optimize', 'ai-seo-client') . '</h4>';
+                $out .= '<ul style="padding-left: 20px; margin: 0;">';
+                foreach (array_slice($data['action_items']['posts_with_issues'], 0, 5) as $post) {
+                    $out .= '<li><a href="' . esc_url($post['url']) . '">' . esc_html($post['title']) . '</a> ' . esc_html('(' . implode(', ', $post['issues']) . ')') . '</li>';
+                }
+                $out .= '</ul>';
+            }
+            return $out;
+        });
+
+        $html .= '<p style="margin-top: 24px; font-size: 13px; color: #6b7280;">' . esc_html__('Open the full report in the Fyndable dashboard for more details.', 'ai-seo-client') . ' <a href="' . esc_url(admin_url('admin.php?page=ai-seo-report')) . '">' . esc_html__('View report', 'ai-seo-client') . '</a></p>';
+        $html .= '</div></body></html>';
+
         return $html;
+    }
+
+    /**
+     * Build a report card section.
+     */
+    private function buildCardSection(string $title, callable $content): string
+    {
+        $html = '<div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin-bottom:20px;">';
+        $html .= '<h3 style="margin-top:0; margin-bottom:12px; color:#111827;">' . esc_html($title) . '</h3>';
+        $html .= $content();
+        $html .= '</div>';
+        return $html;
+    }
+
+    /**
+     * Build a single metric card.
+     */
+    private function buildMetricCard(string $label, string $value): string
+    {
+        return '<div style="display:inline-block; min-width:120px; margin-right:16px; margin-bottom:12px;"><div style="font-size:24px; font-weight:700; color:#111827;">' . esc_html($value) . '</div><div style="font-size:12px; color:#6b7280;">' . esc_html($label) . '</div></div>';
     }
     
     /**

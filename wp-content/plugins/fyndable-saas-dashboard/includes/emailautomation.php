@@ -66,7 +66,7 @@ class EmailAutomation
             'support_url'  => admin_url('admin.php?page=ai-seo-support'),
         ]);
 
-        $this->send($email, $rendered['subject'], $rendered['body']);
+        $this->send($email, $rendered);
     }
 
     /**
@@ -123,7 +123,7 @@ class EmailAutomation
             'upgrade_url' => admin_url('admin.php?page=sseo-ai-licenses'),
         ]);
 
-        $this->send($email, $rendered['subject'], $rendered['body']);
+        $this->send($email, $rendered);
     }
 
     /**
@@ -166,7 +166,7 @@ class EmailAutomation
             'renew_url' => admin_url('admin.php?page=sseo-ai-licenses'),
         ]);
 
-        $this->send($email, $rendered['subject'], $rendered['body']);
+        $this->send($email, $rendered);
     }
 
     /**
@@ -192,7 +192,7 @@ class EmailAutomation
             'receipt_url'  => admin_url('admin.php?page=sseo-ai-licenses'),
         ]);
 
-        $this->send($email, $rendered['subject'], $rendered['body']);
+        $this->send($email, $rendered);
     }
 
     /**
@@ -216,7 +216,7 @@ class EmailAutomation
             'support_url'  => admin_url('admin.php?page=sseo-ai-licenses'),
         ]);
 
-        $this->send($email, $rendered['subject'], $rendered['body']);
+        $this->send($email, $rendered);
     }
 
     /**
@@ -240,20 +240,24 @@ class EmailAutomation
             'upgrade_url'  => admin_url('admin.php?page=sseo-ai-licenses'),
         ]);
 
-        $this->send($email, $rendered['subject'], $rendered['body']);
+        $this->send($email, $rendered);
     }
 
 
     /**
      * Send an email with HTML content type.
      */
-    private function send(string $to, string $subject, string $htmlBody): void
+    private function send(string $to, array $rendered): void
     {
+        if (empty($rendered['is_active']) || empty($rendered['body'])) {
+            return;
+        }
+
         $headers = [
             'Content-Type: text/html; charset=UTF-8',
             'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>',
         ];
 
-        wp_mail($to, $subject, $htmlBody, $headers);
+        wp_mail($to, $rendered['subject'], $rendered['body'], $headers);
     }
 }

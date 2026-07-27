@@ -22,14 +22,24 @@ class EmailTemplateRenderer
     /**
      * Render a template for a given tenant and context.
      *
-     * @return array{subject: string, body: string}
+     * @return array{subject: string, body: string, is_active: bool}
      */
     public function render(string $templateKey, string $tenantKey, array $context): array
     {
         $template = $this->repository->getTemplate($templateKey);
 
         if (!$template || empty($template['body_html'])) {
-            return $this->renderFallback($templateKey, $tenantKey, $context);
+            $fallback = $this->renderFallback($templateKey, $tenantKey, $context);
+            $fallback['is_active'] = true;
+            return $fallback;
+        }
+
+        if (empty($template['is_active'])) {
+            return [
+                'subject' => '',
+                'body' => '',
+                'is_active' => false,
+            ];
         }
 
         $brand = $this->getBrandData($template);
@@ -42,6 +52,7 @@ class EmailTemplateRenderer
         return [
             'subject' => $subject,
             'body' => $body,
+            'is_active' => true,
         ];
     }
 

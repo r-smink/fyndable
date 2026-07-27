@@ -56,6 +56,9 @@ class Dashboard
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
         $this->saasSettings = new SaaSSettings();
+        add_action('phpmailer_init', [$this->saasSettings, 'configureMailer']);
+        add_filter('wp_mail_from', [$this->saasSettings, 'getSmtpFromEmail']);
+        add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
         $this->providerRouter = new ProviderRouter($this->saasSettings);
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter);
         $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);

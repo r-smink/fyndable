@@ -597,6 +597,10 @@ class SupportTickets
             'ticket_message' => $message,
         ]);
 
+        if (empty($rendered['is_active'])) {
+            return;
+        }
+
         wp_mail($this->getSupportEmail(), $rendered['subject'], $rendered['body'], ['Content-Type: text/html; charset=UTF-8']);
     }
 
@@ -617,6 +621,11 @@ class SupportTickets
         }
 
         $rendered = $this->renderer->render($templateKey, $tenant['tenant_key'] ?? '', $context);
+
+        if (empty($rendered['is_active'])) {
+            return;
+        }
+
         wp_mail($to, $rendered['subject'], $rendered['body'], ['Content-Type: text/html; charset=UTF-8']);
     }
 }

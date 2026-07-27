@@ -18,6 +18,10 @@ class SaaSSettings
     {
         add_action('admin_menu', [$this, 'addSettingsMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
+
+        add_action('phpmailer_init', [$this, 'configureMailer']);
+        add_filter('wp_mail_from', [$this, 'getSmtpFromEmail']);
+        add_filter('wp_mail_from_name', [$this, 'getSmtpFromName']);
     }
     
     /**
@@ -143,6 +147,22 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_secret');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_ads_dev_token');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_support_email');
+
+        // SMTP / Email settings
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_enabled', ['default' => false, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_host', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_port', ['default' => 587, 'sanitize_callback' => 'absint']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_encryption', [
+            'default' => 'tls',
+            'sanitize_callback' => function ($value) {
+                return in_array($value, ['', 'ssl', 'tls'], true) ? $value : 'tls';
+            },
+        ]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_auth', ['default' => true, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_username', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_password', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_from_email', ['sanitize_callback' => 'sanitize_email']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_smtp_from_name', ['sanitize_callback' => 'sanitize_text_field']);
 
         // GEO Scan settings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_firecrawl_api_key');
@@ -275,6 +295,52 @@ class SaaSSettings
     public function getGoogleAdsDevToken(): string
     {
         return get_option('ai_seo_saas_google_ads_dev_token', '');
+    }
+
+    /**
+     * Configure PHPMailer to use the configured SMTP server.
+     */
+    public function configureMailer($phpmailer): void
+    {
+        if (!get_option('sseo_ai_saas_smtp_enabled')) {
+            return;
+        }
+
+        $host = get_option('sseo_ai_saas_smtp_host', '');
+        if (empty($host)) {
+            return;
+        }
+
+        $phpmailer->isSMTP();
+        $phpmailer->Host = $host;
+        $phpmailer->Port = (int) get_option('sseo_ai_saas_smtp_port', 587);
+        $phpmailer->SMTPAuth = (bool) get_option('sseo_ai_saas_smtp_auth', true);
+
+        if ($phpmailer->SMTPAuth) {
+            $phpmailer->Username = get_option('sseo_ai_saas_smtp_username', '');
+            $phpmailer->Password = get_option('sseo_ai_saas_smtp_password', '');
+        }
+
+        $encryption = get_option('sseo_ai_saas_smtp_encryption', 'tls');
+        $phpmailer->SMTPSecure = in_array($encryption, ['ssl', 'tls'], true) ? $encryption : '';
+    }
+
+    /**
+     * Get the configured SMTP from email, if any.
+     */
+    public function getSmtpFromEmail(string $email): string
+    {
+        $configured = get_option('sseo_ai_saas_smtp_from_email', '');
+        return !empty($configured) ? $configured : $email;
+    }
+
+    /**
+     * Get the configured SMTP from name, if any.
+     */
+    public function getSmtpFromName(string $name): string
+    {
+        $configured = get_option('sseo_ai_saas_smtp_from_name', '');
+        return !empty($configured) ? $configured : $name;
     }
     
     /**
@@ -417,6 +483,7 @@ class SaaSSettings
                 <a href="#tab-api-credentials" class="nav-tab" data-tab="api-credentials"><?php esc_html_e('API Credentials', 'sseo-ai-saas'); ?></a>
                 <a href="#tab-image-generation" class="nav-tab" data-tab="image-generation"><?php esc_html_e('Image Generation', 'sseo-ai-saas'); ?></a>
                 <a href="#tab-integrations" class="nav-tab" data-tab="integrations"><?php esc_html_e('Integrations', 'sseo-ai-saas'); ?></a>
+                <a href="#tab-email-smtp" class="nav-tab" data-tab="email-smtp"><?php esc_html_e('Email / SMTP', 'sseo-ai-saas'); ?></a>
                 <a href="#tab-tier-pricing" class="nav-tab" data-tab="tier-pricing"><?php esc_html_e('Tier Pricing', 'sseo-ai-saas'); ?></a>
             </h2>
 
@@ -677,6 +744,75 @@ class SaaSSettings
                                 <p class="description">
                                     <?php esc_html_e('Where new support ticket notifications are sent. Defaults to the WordPress admin email.', 'sseo-ai-saas'); ?>
                                 </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-tab-panel" id="tab-email-smtp">
+                    <h2><?php esc_html_e('SMTP / Outgoing Email', 'sseo-ai-saas'); ?></h2>
+                    <p class="description"><?php esc_html_e('When enabled, all wp_mail() emails sent by the SaaS and client plugins are routed through the configured SMTP server.', 'sseo-ai-saas'); ?></p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="smtp_enabled"><?php esc_html_e('Enable SMTP', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="checkbox" name="sseo_ai_saas_smtp_enabled" id="smtp_enabled" value="1" <?php checked(get_option('sseo_ai_saas_smtp_enabled', false)); ?>>
+                                <p class="description"><?php esc_html_e('Override the default WordPress mailer with SMTP.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_host"><?php esc_html_e('SMTP Host', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="sseo_ai_saas_smtp_host" id="smtp_host" class="regular-text" value="<?php echo esc_attr(get_option('sseo_ai_saas_smtp_host', '')); ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_port"><?php esc_html_e('SMTP Port', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="sseo_ai_saas_smtp_port" id="smtp_port" class="small-text" value="<?php echo esc_attr(get_option('sseo_ai_saas_smtp_port', 587)); ?>">
+                                <p class="description"><?php esc_html_e('Common ports: 25, 465 (SSL), 587 (TLS).', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_encryption"><?php esc_html_e('Encryption', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="sseo_ai_saas_smtp_encryption" id="smtp_encryption">
+                                    <option value="tls" <?php selected(get_option('sseo_ai_saas_smtp_encryption', 'tls'), 'tls'); ?>>TLS</option>
+                                    <option value="ssl" <?php selected(get_option('sseo_ai_saas_smtp_encryption', 'tls'), 'ssl'); ?>>SSL</option>
+                                    <option value="" <?php selected(get_option('sseo_ai_saas_smtp_encryption', 'tls'), ''); ?>><?php esc_html_e('None', 'sseo-ai-saas'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_auth"><?php esc_html_e('SMTP Authentication', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="checkbox" name="sseo_ai_saas_smtp_auth" id="smtp_auth" value="1" <?php checked(get_option('sseo_ai_saas_smtp_auth', true)); ?>>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_username"><?php esc_html_e('SMTP Username', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="sseo_ai_saas_smtp_username" id="smtp_username" class="regular-text" value="<?php echo esc_attr(get_option('sseo_ai_saas_smtp_username', '')); ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_password"><?php esc_html_e('SMTP Password', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="sseo_ai_saas_smtp_password" id="smtp_password" class="regular-text" value="<?php echo esc_attr(get_option('sseo_ai_saas_smtp_password', '')); ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_from_email"><?php esc_html_e('From Email Address', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="email" name="sseo_ai_saas_smtp_from_email" id="smtp_from_email" class="regular-text" value="<?php echo esc_attr(get_option('sseo_ai_saas_smtp_from_email', '')); ?>">
+                                <p class="description"><?php esc_html_e('Used as the sender address for all emails. Leave empty to use WordPress default.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="smtp_from_name"><?php esc_html_e('From Name', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="sseo_ai_saas_smtp_from_name" id="smtp_from_name" class="regular-text" value="<?php echo esc_attr(get_option('sseo_ai_saas_smtp_from_name', '')); ?>">
+                                <p class="description"><?php esc_html_e('Used as the sender name for all emails. Leave empty to use WordPress default.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                     </table>
