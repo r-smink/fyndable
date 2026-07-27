@@ -131,6 +131,11 @@ class SaaSDashboardShell
                 'icon' => '&#128172;',
             ],
             [
+                'slug' => 'sseo-ai-email-templates',
+                'label' => __('Email Templates', 'sseo-ai-saas'),
+                'icon' => '&#9993;',
+            ],
+            [
                 'slug' => 'sseo-ai-costs',
                 'label' => __('Cost Dashboard', 'sseo-ai-saas'),
                 'icon' => '&#128176;',

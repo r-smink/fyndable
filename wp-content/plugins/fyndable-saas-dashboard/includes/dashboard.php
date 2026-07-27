@@ -66,7 +66,7 @@ class Dashboard
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->emailTemplateRepository = new EmailTemplateRepository();
         $this->emailTemplateRepository->maybeCreateTables();
-        $this->emailTemplateRepository->seedDefaults();
+        add_action('init', [$this->emailTemplateRepository, 'seedDefaults'], 20);
 
         $this->supportTickets = new SupportTickets($this->tenants, $this->emailTemplateRepository);
         $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);

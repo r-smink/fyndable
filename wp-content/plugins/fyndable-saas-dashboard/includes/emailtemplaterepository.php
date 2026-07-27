@@ -165,15 +165,67 @@ class EmailTemplateRepository
     }
 
     /**
-     * Get available layouts.
+     * Get built-in layout labels.
      */
-    public function getLayouts(): array
+    private function getBuiltInLayouts(): array
     {
         return [
             'default' => __('Default', 'sseo-ai-saas'),
             'minimal' => __('Minimal', 'sseo-ai-saas'),
             'announcement' => __('Announcement', 'sseo-ai-saas'),
         ];
+    }
+
+    /**
+     * Get custom layouts stored in options.
+     */
+    public function getCustomLayouts(): array
+    {
+        return get_option('sseo_ai_email_layouts', []);
+    }
+
+    /**
+     * Get available layout labels (built-in + custom).
+     */
+    public function getLayouts(): array
+    {
+        $custom = [];
+        foreach ($this->getCustomLayouts() as $slug => $data) {
+            $custom[$slug] = !empty($data['name']) ? $data['name'] : $slug;
+        }
+        return array_merge($this->getBuiltInLayouts(), $custom);
+    }
+
+    /**
+     * Get a custom layout definition by slug.
+     */
+    public function getLayoutConfig(string $slug): ?array
+    {
+        $layouts = $this->getCustomLayouts();
+        return $layouts[$slug] ?? null;
+    }
+
+    /**
+     * Save a custom layout.
+     */
+    public function saveLayout(string $slug, array $data): void
+    {
+        $layouts = $this->getCustomLayouts();
+        $layouts[$slug] = [
+            'name' => sanitize_text_field($data['name'] ?? $slug),
+            'html' => wp_kses_post($data['html'] ?? ''),
+        ];
+        update_option('sseo_ai_email_layouts', $layouts);
+    }
+
+    /**
+     * Delete a custom layout.
+     */
+    public function deleteLayout(string $slug): void
+    {
+        $layouts = $this->getCustomLayouts();
+        unset($layouts[$slug]);
+        update_option('sseo_ai_email_layouts', $layouts);
     }
 
     /**

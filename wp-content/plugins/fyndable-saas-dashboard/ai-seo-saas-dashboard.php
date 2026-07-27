@@ -52,6 +52,11 @@ register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();
 });
 
+// Load translations
+add_action('init', function () {
+    load_plugin_textdomain('sseo-ai-saas', false, dirname(plugin_basename(__FILE__)) . '/languages');
+}, 5);
+
 // Initialize
 add_action('plugins_loaded', function () {
     $plugin = new \SSEOAISaaS\Dashboard();

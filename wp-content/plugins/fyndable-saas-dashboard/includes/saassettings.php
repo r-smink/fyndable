@@ -1101,7 +1101,7 @@ class SaaSSettings
                     <div>
                         <h3>$<?php 
                             $avg = ($monthlyStats->active_tenants ?? 0) > 0 
-                                ? ($monthlyStats->total_cost / $monthlyStats->active_tenants) 
+                                ? ((float)($monthlyStats->total_cost ?? 0) / (float)($monthlyStats->active_tenants ?? 0)) 
                                 : 0;
                             echo number_format($avg, 2);
                         ?></h3>
@@ -1129,8 +1129,8 @@ class SaaSSettings
                                 <td><span class="badge badge-<?php echo esc_attr($tenant->tier); ?>">
                                     <?php echo esc_html(ucfirst($tenant->tier)); ?>
                                 </span></td>
-                                <td><?php echo number_format($tenant->total_calls); ?></td>
-                                <td>$<?php echo number_format($tenant->total_cost, 2); ?></td>
+                                <td><?php echo number_format((int)($tenant->total_calls ?? 0)); ?></td>
+                                <td>$<?php echo number_format((float)($tenant->total_cost ?? 0), 2); ?></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -1198,9 +1198,9 @@ class SaaSSettings
                         ?>
                         <tr>
                             <td><?php echo esc_html(ucwords(str_replace('_', ' ', $service->metric))); ?></td>
-                            <td><?php echo number_format($service->total_calls); ?></td>
-                            <td>$<?php echo number_format($service->total_cost, 2); ?></td>
-                            <td><?php echo number_format($percent, 1); ?>%</td>
+                            <td><?php echo number_format((int)($service->total_calls ?? 0)); ?></td>
+                            <td>$<?php echo number_format((float)($service->total_cost ?? 0), 2); ?></td>
+                            <td><?php echo number_format((float)$percent, 1); ?>%</td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

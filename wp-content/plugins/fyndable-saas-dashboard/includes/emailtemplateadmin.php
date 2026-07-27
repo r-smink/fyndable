@@ -45,6 +45,21 @@ class EmailTemplateAdmin
             return;
         }
 
+        if ($action === 'layouts') {
+            $this->renderLayoutsPage();
+            return;
+        }
+
+        if ($action === 'edit_layout') {
+            $this->renderEditLayoutPage(sanitize_key($_GET['layout'] ?? ''));
+            return;
+        }
+
+        if ($action === 'delete_layout' && !empty($_GET['layout'])) {
+            $this->handleDeleteLayout(sanitize_key($_GET['layout']));
+            return;
+        }
+
         $this->renderListPage();
     }
 
@@ -62,6 +77,11 @@ class EmailTemplateAdmin
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Email Templates', 'sseo-ai-saas'); ?></h1>
             <p><?php esc_html_e('Edit the content, colours and logo for every email the SaaS plugin sends.', 'sseo-ai-saas'); ?></p>
+            <p>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=layouts')); ?>" class="button">
+                    <?php esc_html_e('Manage Layouts', 'sseo-ai-saas'); ?>
+                </a>
+            </p>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
@@ -166,19 +186,19 @@ class EmailTemplateAdmin
                         <table class="form-table">
                             <tr>
                                 <th><label for="name"><?php esc_html_e('Name', 'sseo-ai-saas'); ?></label></th>
-                                <td><input type="text" id="name" name="name" value="<?php echo esc_attr($template['name']); ?>" class="regular-text"></td>
+                                <td><input type="text" id="name" name="name" value="<?php echo esc_attr($template['name'] ?? ''); ?>" class="regular-text"></td>
                             </tr>
                             <tr>
                                 <th><label for="subject"><?php esc_html_e('Subject', 'sseo-ai-saas'); ?></label></th>
-                                <td><input type="text" id="subject" name="subject" value="<?php echo esc_attr($template['subject']); ?>" class="regular-text"></td>
+                                <td><input type="text" id="subject" name="subject" value="<?php echo esc_attr($template['subject'] ?? ''); ?>" class="regular-text"></td>
                             </tr>
                             <tr>
                                 <th><label for="body_html"><?php esc_html_e('Body HTML', 'sseo-ai-saas'); ?></label></th>
-                                <td><textarea id="body_html" name="body_html" rows="14" class="large-text code"><?php echo esc_textarea($template['body_html']); ?></textarea></td>
+                                <td><textarea id="body_html" name="body_html" rows="14" class="large-text code"><?php echo esc_textarea($template['body_html'] ?? ''); ?></textarea></td>
                             </tr>
                             <tr>
                                 <th><label for="footer_text"><?php esc_html_e('Footer text', 'sseo-ai-saas'); ?></label></th>
-                                <td><textarea id="footer_text" name="footer_text" rows="3" class="large-text"><?php echo esc_textarea($template['footer_text']); ?></textarea></td>
+                                <td><textarea id="footer_text" name="footer_text" rows="3" class="large-text"><?php echo esc_textarea($template['footer_text'] ?? ''); ?></textarea></td>
                             </tr>
                         </table>
                     </div>
@@ -190,26 +210,26 @@ class EmailTemplateAdmin
                                 <td>
                                     <select id="layout" name="layout">
                                         <?php foreach ($layouts as $key => $label): ?>
-                                            <option value="<?php echo esc_attr($key); ?>" <?php selected($template['layout'], $key); ?>><?php echo esc_html($label); ?></option>
+                                            <option value="<?php echo esc_attr($key); ?>" <?php selected($template['layout'] ?? 'default', $key); ?>><?php echo esc_html($label); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </td>
                             </tr>
                             <tr>
                                 <th><label for="brand_logo"><?php esc_html_e('Logo URL', 'sseo-ai-saas'); ?></label></th>
-                                <td><input type="url" id="brand_logo" name="brand_logo" value="<?php echo esc_attr($template['brand_logo']); ?>" class="regular-text"></td>
+                                <td><input type="url" id="brand_logo" name="brand_logo" value="<?php echo esc_attr($template['brand_logo'] ?? ''); ?>" class="regular-text"></td>
                             </tr>
                             <tr>
                                 <th><label for="primary_color"><?php esc_html_e('Primary color', 'sseo-ai-saas'); ?></label></th>
-                                <td><input type="color" id="primary_color" name="primary_color" value="<?php echo esc_attr($template['primary_color']); ?>"></td>
+                                <td><input type="color" id="primary_color" name="primary_color" value="<?php echo esc_attr($template['primary_color'] ?? '#379fd3'); ?>"></td>
                             </tr>
                             <tr>
                                 <th><label for="secondary_color"><?php esc_html_e('Secondary color', 'sseo-ai-saas'); ?></label></th>
-                                <td><input type="color" id="secondary_color" name="secondary_color" value="<?php echo esc_attr($template['secondary_color']); ?>"></td>
+                                <td><input type="color" id="secondary_color" name="secondary_color" value="<?php echo esc_attr($template['secondary_color'] ?? '#8f39ac'); ?>"></td>
                             </tr>
                             <tr>
                                 <th><label for="button_color"><?php esc_html_e('Button color', 'sseo-ai-saas'); ?></label></th>
-                                <td><input type="color" id="button_color" name="button_color" value="<?php echo esc_attr($template['button_color'] ?: $template['primary_color']); ?>"></td>
+                                <td><input type="color" id="button_color" name="button_color" value="<?php echo esc_attr($template['button_color'] ?: $template['primary_color'] ?? '#379fd3'); ?>"></td>
                             </tr>
                             <tr>
                                 <th><label for="is_active"><?php esc_html_e('Active', 'sseo-ai-saas'); ?></label></th>
@@ -342,6 +362,179 @@ class EmailTemplateAdmin
         $dummy = $this->getDummyContext();
         $rendered = $this->renderer->render($templateKey, '', $dummy);
         return $rendered['body'];
+    }
+
+    /**
+     * Render the layout management list.
+     */
+    private function renderLayoutsPage(): void
+    {
+        $builtIn = ['default', 'minimal', 'announcement'];
+        $custom = $this->repository->getCustomLayouts();
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Email Layouts', 'sseo-ai-saas'); ?></h1>
+            <p><?php esc_html_e('Custom layouts can be added, edited or removed. Built-in layouts cannot be deleted.', 'sseo-ai-saas'); ?></p>
+            <p>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=edit_layout')); ?>" class="button">
+                    <?php esc_html_e('Add Layout', 'sseo-ai-saas'); ?>
+                </a>
+            </p>
+
+            <h2><?php esc_html_e('Built-in layouts', 'sseo-ai-saas'); ?></h2>
+            <table class="wp-list-table widefat fixed striped" style="margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Slug', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Name', 'sseo-ai-saas'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($builtIn as $slug): ?>
+                        <tr>
+                            <td><code><?php echo esc_html($slug); ?></code></td>
+                            <td><?php echo esc_html($this->repository->getLayouts()[$slug] ?? $slug); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <h2><?php esc_html_e('Custom layouts', 'sseo-ai-saas'); ?></h2>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Slug', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Name', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($custom)): ?>
+                        <tr><td colspan="3"><?php esc_html_e('No custom layouts found.', 'sseo-ai-saas'); ?></td></tr>
+                    <?php else: ?>
+                        <?php foreach ($custom as $slug => $data): ?>
+                            <tr>
+                                <td><code><?php echo esc_html($slug); ?></code></td>
+                                <td><?php echo esc_html($data['name'] ?? $slug); ?></td>
+                                <td>
+                                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=edit_layout&layout=' . $slug)); ?>" class="button button-small">
+                                        <?php esc_html_e('Edit', 'sseo-ai-saas'); ?>
+                                    </a>
+                                    <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=sseo-ai-email-templates&action=delete_layout&layout=' . $slug), 'sseo_ai_email_layout_delete')); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e('Delete this layout?', 'sseo-ai-saas'); ?>');">
+                                        <?php esc_html_e('Delete', 'sseo-ai-saas'); ?>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render the add/edit layout form.
+     */
+    private function renderEditLayoutPage(string $layoutKey): void
+    {
+        $builtIn = ['default', 'minimal', 'announcement'];
+        $isNew = empty($layoutKey);
+        $saved = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('sseo_ai_email_layout_edit')) {
+            $slug = sanitize_key($_POST['layout_slug'] ?? $layoutKey);
+            $name = sanitize_text_field($_POST['layout_name'] ?? '');
+            $html = wp_kses_post($_POST['layout_html'] ?? '');
+
+            if (!empty($slug) && !in_array($slug, $builtIn, true)) {
+                $this->repository->saveLayout($slug, ['name' => $name, 'html' => $html]);
+                $saved = true;
+                $layoutKey = $slug;
+            }
+        }
+
+        $layout = $this->repository->getLayoutConfig($layoutKey);
+        if (!$layout) {
+            $layout = [
+                'name' => '',
+                'html' => $this->getDefaultLayoutHtml(),
+            ];
+        }
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php echo $isNew ? esc_html__('Add Layout', 'sseo-ai-saas') : esc_html__('Edit Layout', 'sseo-ai-saas'); ?></h1>
+            <?php if ($saved): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('Layout saved.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+            <form method="post" action="">
+                <?php wp_nonce_field('sseo_ai_email_layout_edit'); ?>
+                <table class="form-table">
+                    <tr>
+                        <th><label for="layout_slug"><?php esc_html_e('Slug', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="text" id="layout_slug" name="layout_slug" value="<?php echo esc_attr($layoutKey); ?>" class="regular-text" <?php echo $isNew ? '' : 'readonly'; ?>>
+                            <p class="description"><?php esc_html_e('A unique machine name, e.g. "newsletter" or "promo".', 'sseo-ai-saas'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="layout_name"><?php esc_html_e('Name', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="text" id="layout_name" name="layout_name" value="<?php echo esc_attr($layout['name'] ?? ''); ?>" class="regular-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="layout_html"><?php esc_html_e('Layout HTML', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <textarea id="layout_html" name="layout_html" rows="20" class="large-text code" style="font-family:monospace;"><?php echo esc_textarea($layout['html'] ?? ''); ?></textarea>
+                            <p class="description">
+                                <?php esc_html_e('Use {{content}} for the email body. Available placeholders: {{site_name}}, {{company_logo}}, {{primary_color}}, {{secondary_color}}, {{button_color}}, {{footer_text}}.', 'sseo-ai-saas'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button($isNew ? __('Add Layout', 'sseo-ai-saas') : __('Save Layout', 'sseo-ai-saas')); ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Delete a custom layout after nonce verification.
+     */
+    private function handleDeleteLayout(string $layoutKey): void
+    {
+        if (in_array($layoutKey, ['default', 'minimal', 'announcement'], true)) {
+            wp_die(__('Built-in layouts cannot be deleted.', 'sseo-ai-saas'));
+        }
+
+        if (check_admin_referer('sseo_ai_email_layout_delete')) {
+            $this->repository->deleteLayout($layoutKey);
+        }
+
+        wp_redirect(admin_url('admin.php?page=sseo-ai-email-templates&action=layouts'));
+        exit;
+    }
+
+    /**
+     * Get a starter HTML template for new custom layouts.
+     */
+    private function getDefaultLayoutHtml(): string
+    {
+        return "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'></head>\n"
+            . "<body style='margin:0;padding:0;font-family:Outfit,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f3f4f6;'>\n"
+            . "<div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);'>\n"
+            . "<div style='background:linear-gradient(135deg, {{primary_color}} 0%, {{secondary_color}} 100%);padding:30px 40px;text-align:center;'>\n"
+            . "    <h1 style='color:#fff;margin:0;font-size:24px;font-weight:700;'>{{site_name}}</h1>\n"
+            . "</div>\n"
+            . "<div style='padding:30px 40px;'>\n"
+            . "    {{content}}\n"
+            . "</div>\n"
+            . "<div style='padding:20px 40px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;'>\n"
+            . "    <p style='margin:0;font-size:13px;color:#9ca3af;'>{{site_name}} — " . __('This is an automated email, please do not reply.', 'sseo-ai-saas') . "</p>\n"
+            . "</div>\n"
+            . "</div>\n"
+            . "</body></html>";
     }
 
     /**

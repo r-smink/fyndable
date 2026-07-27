@@ -129,6 +129,14 @@ class EmailTemplateRenderer
      */
     private function wrapLayout(string $content, string $layout, array $context): string
     {
+        if (!in_array($layout, ['default', 'minimal', 'announcement'], true)) {
+            $layoutConfig = $this->repository->getLayoutConfig($layout);
+            if ($layoutConfig && !empty($layoutConfig['html'])) {
+                return $this->renderCustomLayout($content, $layoutConfig, $context);
+            }
+            $layout = 'default';
+        }
+
         $primary = esc_attr($context['primary_color'] ?? '#379fd3');
         $secondary = esc_attr($context['secondary_color'] ?? '#8f39ac');
         $button = esc_attr($context['button_color'] ?? $primary);
@@ -160,7 +168,7 @@ class EmailTemplateRenderer
         $html .= "<body style='margin:0;padding:0;font-family:Outfit,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f3f4f6;'>";
         $html .= "<div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);'>";
         $html .= $header;
-        $html .= "<div style='padding:30px 40px;'>"> . $content . "</div>";
+        $html .= '<div style="padding:30px 40px;">' . $content . '</div>';
         $html .= "<div style='padding:20px 40px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;'>";
         $html .= $footerExtra;
         $html .= "<p style='margin:0;font-size:13px;color:#9ca3af;'>" . esc_html($siteName) . ' — ' . __('This is an automated email, please do not reply.', 'sseo-ai-saas') . '</p>';
@@ -168,6 +176,27 @@ class EmailTemplateRenderer
 
         // Replace color variables inside the generated HTML, including inside inline styles
         $html = $this->replacePlaceholders($html, $context, false);
+
+        return $html;
+    }
+
+    /**
+     * Render a custom layout defined by the user.
+     */
+    private function renderCustomLayout(string $content, array $layoutConfig, array $context): string
+    {
+        $safeContext = [
+            'site_name' => esc_html($context['site_name'] ?? get_bloginfo('name')),
+            'company_logo' => esc_url($context['company_logo'] ?? ''),
+            'primary_color' => esc_attr($context['primary_color'] ?? '#379fd3'),
+            'secondary_color' => esc_attr($context['secondary_color'] ?? '#8f39ac'),
+            'button_color' => esc_attr($context['button_color'] ?? $context['primary_color'] ?? '#379fd3'),
+            'footer_text' => esc_html($context['footer_text'] ?? ''),
+        ];
+
+        $html = $layoutConfig['html'] ?? '';
+        $html = str_replace('{{content}}', $content, $html);
+        $html = $this->replacePlaceholders($html, $safeContext, false);
 
         return $html;
     }
