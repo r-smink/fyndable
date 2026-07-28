@@ -25,7 +25,16 @@
         plans = plansData;
         var html = '<div class="fyndable-signup-container">';
         html += '<div class="fyndable-signup-header"><h1>Choose Your Plan</h1><p>Start free, upgrade anytime. No credit card required.</p></div>';
-        html += '<div class="fyndable-signup-billing"><label><input type="radio" name="fyndable-billing" value="month" ' + (selectedInterval === 'month' ? 'checked' : '') + '> Monthly</label> <label><input type="radio" name="fyndable-billing" value="year" ' + (selectedInterval === 'year' ? 'checked' : '') + '> Yearly</label></div>';
+        var firstPlan = plans[Object.keys(plans)[0]];
+        var yearSavings = (firstPlan && firstPlan.intervals && firstPlan.intervals.year && firstPlan.intervals.year.savings_label) || '';
+        html += '<div class="fyndable-signup-billing">';
+        html += '<span class="fyndable-signup-billing-label">Monthly</span>';
+        html += '<label class="fyndable-signup-toggle">';
+        html += '<input type="checkbox" id="fyndable-billing-toggle" ' + (selectedInterval === 'year' ? 'checked' : '') + '>';
+        html += '<span class="fyndable-signup-toggle-slider"></span>';
+        html += '</label>';
+        html += '<span class="fyndable-signup-billing-label">Yearly ' + (yearSavings ? '<span class="fyndable-signup-savings">' + escapeHtml(yearSavings) + '</span>' : '') + '</span>';
+        html += '</div>';
         html += '<div class="fyndable-signup-plans">';
 
         Object.keys(plans).forEach(function (key) {
@@ -35,9 +44,6 @@
             if (plan.popular) html += '<span class="badge">Most Popular</span>';
             html += '<h3>' + escapeHtml(plan.name) + '</h3>';
             html += '<div class="price">' + escapeHtml(interval.price_display) + '<span class="period">' + escapeHtml(interval.period) + '</span></div>';
-            if (selectedInterval === 'year' && interval.savings_label) {
-                html += '<div class="savings">' + escapeHtml(interval.savings_label) + '</div>';
-            }
             html += '<ul>';
             plan.features.forEach(function (f) {
                 html += '<li>' + escapeHtml(f) + '</li>';
@@ -69,6 +75,13 @@
 
         container.innerHTML = html;
 
+        if (selectedTier) {
+            var selectedPlanEl = document.getElementById('fyndable-selected-plan');
+            if (selectedPlanEl) {
+                selectedPlanEl.textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
+            }
+        }
+
         // Bind plan selection
         container.querySelectorAll('.fyndable-signup-plan button').forEach(function (btn) {
             btn.addEventListener('click', function () {
@@ -79,14 +92,13 @@
         });
 
         // Billing interval toggle
-        container.querySelectorAll('input[name="fyndable-billing"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                if (radio.checked) {
-                    selectedInterval = radio.value;
-                    renderPlans(plans);
-                }
+        var billingToggle = document.getElementById('fyndable-billing-toggle');
+        if (billingToggle) {
+            billingToggle.addEventListener('change', function () {
+                selectedInterval = billingToggle.checked ? 'year' : 'month';
+                renderPlans(plans);
             });
-        });
+        }
 
         document.getElementById('fyndable-signup-back').addEventListener('click', function () {
             showStep('plans');

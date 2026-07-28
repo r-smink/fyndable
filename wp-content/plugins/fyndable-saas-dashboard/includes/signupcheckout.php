@@ -178,7 +178,7 @@ class SignupCheckout
                         'price' => $yearlyAmount,
                         'price_display' => $symbol . number_format($yearlyAmount, 0),
                         'period' => '/year',
-                        'savings_label' => $discount > 0 ? sprintf('%.0f%% korting', $discount) : '',
+                        'savings_label' => ($monthsSaved = (int) round($discount / 100 * 12)) > 0 ? sprintf('%d %s gratis', $monthsSaved, $monthsSaved === 1 ? 'maand' : 'maanden') : '',
                     ],
                 ],
             ];
