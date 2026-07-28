@@ -14,6 +14,9 @@ class PaymentProcessor
     private string $provider;
     private string $stripeSecretKey;
     private string $mollieApiKey;
+    private string $mollieMode;
+    private string $mollieLiveKey;
+    private string $mollieTestKey;
     private string $currency;
     private TenantRepository $tenants;
 
@@ -25,7 +28,10 @@ class PaymentProcessor
         $this->tenants = $tenants;
         $this->provider = get_option('sseo_ai_saas_payment_provider', 'stripe');
         $this->stripeSecretKey = get_option('sseo_ai_saas_stripe_secret', '');
-        $this->mollieApiKey = get_option('sseo_ai_saas_mollie_api_key', '');
+        $this->mollieMode = get_option('sseo_ai_saas_mollie_mode', 'live');
+        $this->mollieLiveKey = get_option('sseo_ai_saas_mollie_api_key', '');
+        $this->mollieTestKey = get_option('sseo_ai_saas_mollie_test_api_key', '');
+        $this->mollieApiKey = ($this->mollieMode === 'test' && !empty($this->mollieTestKey)) ? $this->mollieTestKey : $this->mollieLiveKey;
         $this->currency = get_option('sseo_ai_saas_currency', 'EUR');
     }
 

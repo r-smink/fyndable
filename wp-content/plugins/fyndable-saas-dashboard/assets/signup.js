@@ -9,7 +9,7 @@
     var plans = {};
 
     function init() {
-        fetch(restUrl + '/signup/plans')
+        fetch(restUrl + '/signup/plans?_=' + Date.now())
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.success) {

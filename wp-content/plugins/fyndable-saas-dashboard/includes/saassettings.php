@@ -134,6 +134,8 @@ class SaaSSettings
 
         // Mollie settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_api_key');
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_test_api_key');
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_mollie_mode', ['default' => 'live']);
 
         // Trial settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_days', ['default' => 14]);
@@ -987,9 +989,24 @@ class SaaSSettings
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="mollie_api_key"><?php esc_html_e('Mollie API Key', 'sseo-ai-saas'); ?></label></th>
+                        <th scope="row"><label for="mollie_mode"><?php esc_html_e('Mollie Mode', 'sseo-ai-saas'); ?></label></th>
                         <td>
-                            <input type="password" name="sseo_ai_saas_mollie_api_key" id="mollie_api_key" value="<?php echo esc_attr(get_option('sseo_ai_saas_mollie_api_key', '')); ?>" class="regular-text" placeholder="test_... / live_...">
+                            <select name="sseo_ai_saas_mollie_mode" id="mollie_mode">
+                                <option value="live" <?php selected(get_option('sseo_ai_saas_mollie_mode', 'live'), 'live'); ?>><?php esc_html_e('Live', 'sseo-ai-saas'); ?></option>
+                                <option value="test" <?php selected(get_option('sseo_ai_saas_mollie_mode', 'live'), 'test'); ?>><?php esc_html_e('Test', 'sseo-ai-saas'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="mollie_api_key"><?php esc_html_e('Mollie Live API Key', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="sseo_ai_saas_mollie_api_key" id="mollie_api_key" value="<?php echo esc_attr(get_option('sseo_ai_saas_mollie_api_key', '')); ?>" class="regular-text" placeholder="live_...">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="mollie_test_api_key"><?php esc_html_e('Mollie Test API Key', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="password" name="sseo_ai_saas_mollie_test_api_key" id="mollie_test_api_key" value="<?php echo esc_attr(get_option('sseo_ai_saas_mollie_test_api_key', '')); ?>" class="regular-text" placeholder="test_...">
                             <p class="description">
                                 <?php esc_html_e('Webhook URL:', 'sseo-ai-saas'); ?> <code><?php echo esc_url(rest_url('ai-seo-saas/v1/webhooks/mollie')); ?></code>
                             </p>
