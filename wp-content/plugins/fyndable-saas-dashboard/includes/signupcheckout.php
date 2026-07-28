@@ -100,18 +100,6 @@ class SignupCheckout
         $discount = (float) get_option('sseo_ai_saas_yearly_discount_pct', 17);
 
         $tiers = [
-            'free' => [
-                'name' => 'Free',
-                'features' => [
-                    '1 site',
-                    '30 AI calls/month',
-                    'Basic SEO meta',
-                    'XML Sitemap',
-                    'robots.txt editor',
-                ],
-                'popular' => false,
-                'cta' => 'Get Started Free',
-            ],
             'starter' => [
                 'name' => 'Starter',
                 'features' => [
