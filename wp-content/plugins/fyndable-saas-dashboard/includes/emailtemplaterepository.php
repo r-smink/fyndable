@@ -210,10 +210,18 @@ class EmailTemplateRepository
      */
     public function saveLayout(string $slug, array $data): void
     {
+        $allowed = wp_kses_allowed_html('post');
+        $allowed['html'] = [];
+        $allowed['head'] = [];
+        $allowed['body'] = [];
+        $allowed['meta'] = ['charset' => true, 'name' => true, 'content' => true];
+        $allowed['style'] = [];
+        $allowed['title'] = [];
+
         $layouts = $this->getCustomLayouts();
         $layouts[$slug] = [
             'name' => sanitize_text_field($data['name'] ?? $slug),
-            'html' => wp_kses_post($data['html'] ?? ''),
+            'html' => wp_kses($data['html'] ?? '', $allowed),
         ];
         update_option('sseo_ai_email_layouts', $layouts);
     }

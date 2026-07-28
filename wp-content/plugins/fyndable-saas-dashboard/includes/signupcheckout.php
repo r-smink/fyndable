@@ -62,6 +62,7 @@ class SignupCheckout
                 'email' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_email'],
                 'site_url' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'esc_url_raw'],
                 'tier' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'interval' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
             ],
         ]);
 
@@ -96,13 +97,11 @@ class SignupCheckout
     {
         $currency = get_option('sseo_ai_saas_currency', 'EUR');
         $symbol = $this->getCurrencySymbol($currency);
+        $discount = (float) get_option('sseo_ai_saas_yearly_discount_pct', 17);
 
-        return [
+        $tiers = [
             'free' => [
                 'name' => 'Free',
-                'price' => 0,
-                'price_display' => '€0',
-                'period' => 'forever',
                 'features' => [
                     '1 site',
                     '30 AI calls/month',
@@ -115,9 +114,6 @@ class SignupCheckout
             ],
             'starter' => [
                 'name' => 'Starter',
-                'price' => 19,
-                'price_display' => $symbol . '19',
-                'period' => '/month',
                 'features' => [
                     '1 site',
                     '500 AI calls/month',
@@ -131,9 +127,6 @@ class SignupCheckout
             ],
             'professional' => [
                 'name' => 'Professional',
-                'price' => 49,
-                'price_display' => $symbol . '49',
-                'period' => '/month',
                 'features' => [
                     '3 sites',
                     '2,000 AI calls/month',
@@ -148,9 +141,6 @@ class SignupCheckout
             ],
             'business' => [
                 'name' => 'Business',
-                'price' => 99,
-                'price_display' => $symbol . '99',
-                'period' => '/month',
                 'features' => [
                     '10 sites',
                     '5,000 AI calls/month',
@@ -164,9 +154,6 @@ class SignupCheckout
             ],
             'agency' => [
                 'name' => 'Agency',
-                'price' => 199,
-                'price_display' => $symbol . '199',
-                'period' => '/month',
                 'features' => [
                     'Unlimited sites',
                     '20,000 AI calls/month',
@@ -180,6 +167,36 @@ class SignupCheckout
                 'cta' => 'Choose Agency',
             ],
         ];
+
+        $plans = [];
+        foreach ($tiers as $key => $tier) {
+            $monthly = $this->paymentProcessor->getTierPricing($key, 'month');
+            $yearly = $this->paymentProcessor->getTierPricing($key, 'year');
+            $monthlyAmount = is_wp_error($monthly) ? 0.0 : $monthly['amount'];
+            $yearlyAmount = is_wp_error($yearly) ? 0.0 : $yearly['amount'];
+
+            $plans[$key] = [
+                'name' => $tier['name'],
+                'popular' => $tier['popular'],
+                'cta' => $tier['cta'],
+                'features' => $tier['features'],
+                'intervals' => [
+                    'month' => [
+                        'price' => $monthlyAmount,
+                        'price_display' => $symbol . number_format($monthlyAmount, 0),
+                        'period' => '/month',
+                    ],
+                    'year' => [
+                        'price' => $yearlyAmount,
+                        'price_display' => $symbol . number_format($yearlyAmount, 0),
+                        'period' => '/year',
+                        'savings_label' => $discount > 0 ? sprintf('%.0f%% korting', $discount) : '',
+                    ],
+                ],
+            ];
+        }
+
+        return $plans;
     }
 
     /**
@@ -191,6 +208,8 @@ class SignupCheckout
         $email = $request->get_param('email');
         $siteUrl = $request->get_param('site_url');
         $tier = $request->get_param('tier');
+        $interval = $request->get_param('interval') ?: 'month';
+        $interval = in_array($interval, ['month', 'year'], true) ? $interval : 'month';
 
         $plans = $this->getPlans();
         if (!isset($plans[$tier])) {
@@ -261,6 +280,7 @@ class SignupCheckout
         }
 
         $tenantKey = $tenantResult['tenant_key'];
+        $this->tenants->setTenantSetting($tenantKey, 'subscription_interval', $interval);
 
         // For free tier, activate immediately
         if ($tier === 'free') {
@@ -280,7 +300,7 @@ class SignupCheckout
         }
 
         // For paid tiers, create checkout session
-        $checkoutResult = $this->paymentProcessor->createSubscription($tenantKey, $tier);
+        $checkoutResult = $this->paymentProcessor->createSubscription($tenantKey, $tier, $interval);
 
         if (is_wp_error($checkoutResult)) {
             return new \WP_REST_Response([
@@ -340,11 +360,13 @@ class SignupCheckout
             }
 
             // Payment verified inline — safe to activate.
+            $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+            $period = $interval === 'year' ? '+1 year' : '+1 month';
             $this->tenants->updateTenant($tenantKey, [
                 'status' => 'active',
                 'payment_status' => 'active',
                 'last_payment_at' => current_time('mysql'),
-                'expires_at' => gmdate('Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS),
+                'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
             ]);
 
             $this->emailAutomation->sendWelcomeEmail($tenantKey, [

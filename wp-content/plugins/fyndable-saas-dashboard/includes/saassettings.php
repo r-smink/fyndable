@@ -139,6 +139,9 @@ class SaaSSettings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_days', ['default' => 14]);
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_enabled', ['default' => '1']);
 
+        // Yearly billing discount
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_yearly_discount_pct', ['default' => 17]);
+
         // Custom tier pricing (overrides defaults in PaymentProcessor)
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_pricing', ['default' => []]);
 
@@ -1003,6 +1006,13 @@ class SaaSSettings
                         <th scope="row"><label for="trial_days"><?php esc_html_e('Trial Days', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <input type="number" name="sseo_ai_saas_trial_days" id="trial_days" value="<?php echo esc_attr(get_option('sseo_ai_saas_trial_days', 14)); ?>" style="width: 120px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="yearly_discount_pct"><?php esc_html_e('Yearly Discount %', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="number" step="0.01" name="sseo_ai_saas_yearly_discount_pct" id="yearly_discount_pct" value="<?php echo esc_attr(get_option('sseo_ai_saas_yearly_discount_pct', 17)); ?>" style="width: 120px;">
+                            <p class="description"><?php esc_html_e('Discount applied to 12 x monthly price for yearly billing.', 'sseo-ai-saas'); ?></p>
                         </td>
                     </tr>
                 </table>

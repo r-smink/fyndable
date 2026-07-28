@@ -425,7 +425,15 @@ class WebhookHandler
 
         $status = $payment['status'] ?? '';
         $tenantKey = $payment['metadata']['tenant_key'] ?? '';
+        $subscriptionId = $payment['subscriptionId'] ?? '';
+        $customerId = $payment['customerId'] ?? '';
 
+        if (empty($tenantKey) && !empty($subscriptionId)) {
+            $tenantKey = $this->findTenantByProviderId('mollie_subscription_id', $subscriptionId);
+        }
+        if (empty($tenantKey) && !empty($customerId)) {
+            $tenantKey = $this->findTenantByProviderId('mollie_customer_id', $customerId);
+        }
         if (empty($tenantKey)) {
             $tenantKey = $this->findTenantByMolliePaymentId($paymentId);
         }
@@ -461,11 +469,13 @@ class WebhookHandler
                 $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_id', $subscriptionId);
             }
 
+            $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+            $period = $interval === 'year' ? '+1 year' : '+1 month';
             $this->tenants->updateTenant($tenantKey, [
                 'status' => 'active',
                 'payment_status' => 'active',
                 'last_payment_at' => current_time('mysql'),
-                'expires_at' => gmdate('Y-m-d H:i:s', strtotime('+1 month')),
+                'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
             ]);
         }
 

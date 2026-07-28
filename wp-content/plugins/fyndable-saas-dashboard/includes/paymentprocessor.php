@@ -53,14 +53,14 @@ class PaymentProcessor
     /**
      * Create a subscription checkout for a tenant
      */
-    public function createSubscription(string $tenantKey, string $tier): array|\WP_Error
+    public function createSubscription(string $tenantKey, string $tier, string $interval = 'month'): array|\WP_Error
     {
         $tenant = $this->tenants->getTenant($tenantKey);
         if (!$tenant) {
             return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
 
-        $pricing = $this->getTierPricing($tier);
+        $pricing = $this->getTierPricing($tier, $interval);
         if (is_wp_error($pricing)) {
             return $pricing;
         }
@@ -76,30 +76,62 @@ class PaymentProcessor
     }
 
     /**
-     * Get pricing for a tier
+     * Get pricing for a tier and billing interval
      */
-    private function getTierPricing(string $tier): array|\WP_Error
+    public function getTierPricing(string $tier, string $interval = 'month'): array|\WP_Error
     {
-        $defaultPricing = [
-            'free' => ['amount' => 0.00, 'interval' => 'month'],
-            'trial' => ['amount' => 0.00, 'interval' => 'month'],
-            'starter' => ['amount' => 19.00, 'interval' => 'month'],
-            'professional' => ['amount' => 49.00, 'interval' => 'month'],
-            'business' => ['amount' => 99.00, 'interval' => 'month'],
-            'agency' => ['amount' => 199.00, 'interval' => 'month'],
+        $defaultMonthly = [
+            'free' => 0.00,
+            'trial' => 0.00,
+            'starter' => 19.00,
+            'professional' => 49.00,
+            'business' => 99.00,
+            'agency' => 199.00,
         ];
 
-        // Allow custom pricing via option
+        // Custom monthly pricing override
         $customPricing = get_option('sseo_ai_saas_pricing', []);
-        if (is_array($customPricing) && !empty($customPricing)) {
-            $defaultPricing = array_merge($defaultPricing, $customPricing);
+        $monthlyAmount = null;
+        if (is_array($customPricing) && !empty($customPricing[$tier])) {
+            $custom = $customPricing[$tier];
+            if (is_array($custom)) {
+                if (isset($custom['monthly_amount'])) {
+                    $monthlyAmount = (float) $custom['monthly_amount'];
+                } elseif (isset($custom['amount'])) {
+                    $monthlyAmount = (float) $custom['amount'];
+                }
+            }
         }
 
-        if (!isset($defaultPricing[$tier])) {
+        if ($monthlyAmount === null) {
+            $monthlyAmount = $defaultMonthly[$tier] ?? null;
+        }
+        if ($monthlyAmount === null) {
             return new \WP_Error('invalid_tier', __('Invalid subscription tier', 'sseo-ai-saas'));
         }
 
-        return $defaultPricing[$tier];
+        // Yearly is computed from monthly unless an explicit yearly amount is configured
+        $yearlyDiscount = (float) get_option('sseo_ai_saas_yearly_discount_pct', 17);
+        $customYearly = null;
+        if (is_array($customPricing[$tier] ?? null) && isset($customPricing[$tier]['yearly_amount'])) {
+            $customYearly = (float) $customPricing[$tier]['yearly_amount'];
+        }
+
+        if ($interval === 'year') {
+            $amount = $customYearly ?? (float) round($monthlyAmount * 12 * (1 - $yearlyDiscount / 100), 0);
+            $stripeInterval = 'year';
+            $mollieInterval = '12 months';
+        } else {
+            $amount = $monthlyAmount;
+            $stripeInterval = 'month';
+            $mollieInterval = '1 month';
+        }
+
+        return [
+            'amount' => $amount,
+            'interval' => $stripeInterval,
+            'mollie_interval' => $mollieInterval,
+        ];
     }
 
     /**
@@ -208,12 +240,15 @@ class PaymentProcessor
             'amount' => $this->mollieAmount($pricing['amount']),
             'customerId' => $customerId,
             'sequenceType' => 'first',
+            'method' => 'ideal',
             'description' => sprintf(__('Fyndable SmartSEO %s subscription', 'sseo-ai-saas'), ucfirst($tier)),
             'redirectUrl' => $this->getReturnUrl($tenant['tenant_key'], 'mollie'),
             'webhookUrl' => $this->getWebhookUrl('mollie'),
             'metadata' => [
                 'tenant_key' => $tenant['tenant_key'],
                 'tier' => $tier,
+                'interval' => $pricing['interval'] ?? 'month',
+                'mollie_interval' => $pricing['mollie_interval'] ?? '1 month',
             ],
         ]);
 
@@ -282,23 +317,26 @@ class PaymentProcessor
         $customerId = $payment['customerId'] ?? '';
         $mandateId = $payment['mandateId'] ?? '';
         $tier = $payment['metadata']['tier'] ?? $tenant['tier'];
+        $interval = $payment['metadata']['interval'] ?? 'month';
+        $mollieInterval = $payment['metadata']['mollie_interval'] ?? '1 month';
 
         if (empty($customerId) || empty($mandateId)) {
             return new \WP_Error('mollie_no_mandate', __('Mollie payment does not have a mandate yet', 'sseo-ai-saas'));
         }
 
-        $pricing = $this->getTierPricing($tier);
+        $pricing = $this->getTierPricing($tier, $interval);
         if (is_wp_error($pricing)) {
             return $pricing;
         }
 
+        $period = $interval === 'year' ? 'P1Y' : 'P1M';
         $startDate = (new \DateTime('now', new \DateTimeZone('UTC')))
-            ->add(new \DateInterval('P1M'))
+            ->add(new \DateInterval($period))
             ->format('Y-m-d');
 
         $subscription = $this->mollieRequest('customers/' . $customerId . '/subscriptions', [
             'amount' => $this->mollieAmount($pricing['amount']),
-            'interval' => '1 month',
+            'interval' => $mollieInterval,
             'startDate' => $startDate,
             'description' => sprintf(__('Fyndable SmartSEO %s subscription', 'sseo-ai-saas'), ucfirst($tier)),
             'mandateId' => $mandateId,
@@ -306,6 +344,7 @@ class PaymentProcessor
             'metadata' => [
                 'tenant_key' => $tenantKey,
                 'tier' => $tier,
+                'interval' => $interval,
             ],
         ]);
 
@@ -315,12 +354,15 @@ class PaymentProcessor
 
         $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_id', $subscription['id']);
         $this->tenants->setTenantSetting($tenantKey, 'mollie_mandate_id', $mandateId);
+        $this->tenants->setTenantSetting($tenantKey, 'subscription_interval', $interval);
+        $this->tenants->setTenantSetting($tenantKey, 'mollie_interval', $mollieInterval);
 
+        $expiresPeriod = $interval === 'year' ? '+1 year' : '+1 month';
         $this->tenants->updateTenant($tenantKey, [
             'status' => 'active',
             'payment_status' => 'active',
             'last_payment_at' => current_time('mysql'),
-            'expires_at' => gmdate('Y-m-d H:i:s', strtotime('+1 month')),
+            'expires_at' => gmdate('Y-m-d H:i:s', strtotime($expiresPeriod)),
         ]);
 
         return $subscription;
@@ -369,7 +411,8 @@ class PaymentProcessor
             return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
 
-        $pricing = $this->getTierPricing($newTier);
+        $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+        $pricing = $this->getTierPricing($newTier, $interval);
         if (is_wp_error($pricing)) {
             return $pricing;
         }
