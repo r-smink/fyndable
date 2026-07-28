@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" width="373.87" height="116.75" viewBox="0 0 373.87 116.75">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: Outfit-SemiBold, Outfit;
+        font-size: 54.72px;
+        font-variation-settings: 'wght' 600;
+        font-weight: 600;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-4 {
+        font-family: Outfit-ExtraLight, Outfit;
+        font-size: 45.6px;
+        font-variation-settings: 'wght' 200;
+        font-weight: 200;
+      }
+
+      .cls-5 {
+        letter-spacing: 0em;
+      }
+
+      .cls-6 {
+        letter-spacing: .03em;
+      }
+
+      .cls-7 {
+        letter-spacing: .02em;
+      }
+    </style>
+  </defs>
+  <g id="CVI_DEF" data-name="CVI DEF">
+    <g>
+      <g>
+        <g>
+          <path class="cls-2" d="M83.58,57.32l-9.81-5.06,32.3-15.77-3.34,35.66-9.05-7.73-20.72,24.48c-3.28,3.88-7.23,6.88-11.58,9.4-5.37,3.12-11.26,4.28-17.45,3.89-4.52-.28-8.68-1.71-12.66-3.39C6.08,88.19-6.29,59.8,3.18,34.09,10.83,13.29,30.55-.69,53.14.03c21.56.68,40.47,14.71,47.08,35.32l-7.51,3.91c-2.37-7.91-6.81-14.84-13.03-20.39-7.29-6.51-16.43-10.01-26.2-10.52-12.29-.65-24.83,4.62-33.15,13.75-7.94,8.72-12.19,20.32-11.44,32.22.89,13.99,9.24,28.24,21.97,34.36,11.01,5.29,24.13,2.21,31.89-6.89l20.83-24.46Z"/>
+          <path class="cls-2" d="M102.15,114.24l-14.61-14.55c-2.86-2.85.46-5.77-1.07-6.99l-2.27-1.81-4.07,3.29c-4.87,3.1-10.02,5.7-15.96,6.89,4.53-3.06,8.42-6.11,12.04-10.04,6.35-6.88,12.21-13.97,18.02-21.35l3.76,3.51c-1.87,3.72-4.09,7.03-6.55,10.52.45,1.23,1.39,2.24,2.49,2.89,2.14-1.18,4.8-1.35,6.56.39l10.68,10.55c1.86,1.84,3.84,3.45,5.14,5.75,1.75,3.11,1.28,6.85-.83,9.7-3.15,4.26-9.38,5.18-13.34,1.24Z"/>
+        </g>
+        <path class="cls-2" d="M34.87,71.49V27.31h8.55v44.19h-8.55ZM41.16,34.85v-7.54h23.32v7.54h-23.32ZM41.16,53.39v-7.54h22.25v7.54h-22.25Z"/>
+      </g>
+      <text class="cls-2" transform="translate(133.87 52.69)"><tspan class="cls-1"><tspan class="cls-3" x="0" y="0">Fy</tspan><tspan x="59.1" y="0">ndable </tspan></tspan><tspan class="cls-4"><tspan class="cls-7" x="0" y="45.6">Sma</tspan><tspan x="93.84" y="45.6">r</tspan><tspan class="cls-6" x="112.45" y="45.6">t S</tspan><tspan class="cls-5" x="167.03" y="45.6">E</tspan><tspan class="cls-6" x="194.25" y="45.6">O</tspan></tspan></text>
+    </g>
+  </g>
+</svg>
