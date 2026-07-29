@@ -152,7 +152,8 @@ class SignupCheckout
                     'SLA support',
                 ],
                 'popular' => false,
-                'cta' => 'Choose Agency',
+                'cta' => 'Contact Us',
+                'self_serve' => false,
             ],
         ];
 
@@ -205,6 +206,14 @@ class SignupCheckout
                 'success' => false,
                 'message' => 'Invalid plan selected.',
             ], 400);
+        }
+
+        // Agency tier is not available via self-serve checkout — contact us manually
+        if ($tier === 'agency') {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'The Agency plan is not available via self-serve checkout. Please contact us at ' . get_option('admin_email') . ' to set up an agency account.',
+            ], 403);
         }
 
         // Self-serve checkout is disabled by default for the beta

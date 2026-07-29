@@ -479,7 +479,12 @@ class WebhookHandler
             ]);
         }
 
-        do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount((float)($payment['amount']['value'] ?? 0), $payment['amount']['currency'] ?? 'eur'), [
+        // Create invoice record for this Mollie payment
+        $paymentAmount = (float)($payment['amount']['value'] ?? 0);
+        $paymentCurrency = $payment['amount']['currency'] ?? 'eur';
+        $this->createInvoiceRecord($tenantKey, 'mollie', $paymentAmount, $paymentCurrency, $payment['id'] ?? '');
+
+        do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount($paymentAmount, $paymentCurrency), [
             'tier' => $tenant['tier'],
             'date' => current_time('mysql'),
             'payment_id' => $payment['id'] ?? '',
@@ -659,6 +664,18 @@ class WebhookHandler
         // Create invoices table if it doesn't exist
         $this->maybeCreateInvoicesTable();
 
+        // Generate invoice number
+        $year = date('Y');
+        $count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE invoice_number LIKE %s",
+            "FYND-$year-%"
+        ));
+        $invoiceNumber = sprintf('FYND-%s-%04d', $year, $count + 1);
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        $tier = $tenant['tier'] ?? '';
+        $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+
         $wpdb->insert($table, [
             'tenant_key' => $tenantKey,
             'provider' => $provider,
@@ -666,8 +683,15 @@ class WebhookHandler
             'currency' => strtoupper($currency),
             'external_id' => $externalId,
             'status' => 'paid',
+            'invoice_number' => $invoiceNumber,
+            'tier' => $tier,
+            'billing_interval' => $interval,
+            'description' => sprintf('Fyndable SmartSEO %s - %s subscription', ucfirst($tier), $interval),
             'created_at' => current_time('mysql'),
+            'paid_at' => current_time('mysql'),
         ]);
+
+        do_action('sseo_ai_invoice_created', $tenantKey, $wpdb->insert_id, $invoiceNumber);
     }
 
     /**
@@ -700,13 +724,19 @@ class WebhookHandler
             external_id varchar(255) DEFAULT NULL,
             status enum('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
             invoice_number varchar(50) DEFAULT NULL,
+            tier varchar(20) DEFAULT NULL,
+            billing_interval varchar(10) DEFAULT NULL,
+            description varchar(255) DEFAULT NULL,
+            mollie_subscription_id varchar(255) DEFAULT NULL,
+            pdf_path varchar(500) DEFAULT NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             paid_at datetime DEFAULT NULL,
             PRIMARY KEY (id),
             KEY tenant_key (tenant_key),
             KEY provider (provider),
             KEY status (status),
-            KEY created_at (created_at)
+            KEY created_at (created_at),
+            KEY invoice_number (invoice_number)
         ) $charsetCollate;";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';

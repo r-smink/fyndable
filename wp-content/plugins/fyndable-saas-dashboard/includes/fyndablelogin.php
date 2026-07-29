@@ -156,6 +156,16 @@ class FyndableLogin
     public function filterLoginRedirect($redirect_to, $requested_redirect_to, $user)
     {
         if (!is_wp_error($user) && $user instanceof \WP_User) {
+            if (in_array('fyndable_customer', (array)$user->roles, true)) {
+                $portalPageId = (int) get_option('sseo_ai_saas_customer_portal_page', 0);
+                if ($portalPageId > 0) {
+                    $url = get_permalink($portalPageId);
+                    if ($url) {
+                        return $url;
+                    }
+                }
+                return home_url('/customer-portal/');
+            }
             if (in_array('agency_partner', (array)$user->roles, true)) {
                 return admin_url('admin.php?page=sseo-ai-shell');
             }

@@ -33,6 +33,9 @@ class Dashboard
     private AgencyRoleManager $agencyRoleManager;
     private AgencyPortal $agencyPortal;
     private FyndableLogin $fyndableLogin;
+    private CustomerRoleManager $customerRoleManager;
+    private CustomerPortal $customerPortal;
+    private InvoiceManager $invoiceManager;
     private GeoScanRepository $geoScanRepository;
     private HtmlFetcher $htmlFetcher;
     private AiOverviewExtractor $aiOverviewExtractor;
@@ -88,6 +91,16 @@ class Dashboard
         );
         $this->fyndableLogin = new FyndableLogin($this->tenants, $this->agencyRoleManager);
 
+        // Customer portal
+        $this->customerRoleManager = new CustomerRoleManager($this->tenants);
+        $this->invoiceManager = new InvoiceManager($this->tenants);
+        $this->customerPortal = new CustomerPortal(
+            $this->tenants,
+            $this->paymentProcessor,
+            $this->customerRoleManager,
+            $this->invoiceManager
+        );
+
         $this->geoScanRepository = new GeoScanRepository();
         $this->htmlFetcher = new HtmlFetcher($this->saasSettings);
         $this->aiOverviewExtractor = new AiOverviewExtractor($this->saasSettings);
@@ -138,6 +151,11 @@ class Dashboard
         $this->agencyRoleManager->register();
         $this->agencyPortal->register();
         $this->fyndableLogin->register();
+        
+        // Register customer portal
+        $this->customerRoleManager->register();
+        $this->customerPortal->register();
+        $this->invoiceManager->register();
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);

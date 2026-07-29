@@ -173,6 +173,10 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_firecrawl_api_key');
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_model', ['default' => 'google/gemini-flash-1.5']);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_language', ['default' => 'nl']);
+
+        // Customer portal settings
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_customer_portal_page', ['default' => 0, 'sanitize_callback' => 'absint']);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_vat_rate', ['default' => 21, 'sanitize_callback' => function($v) { return (float) $v; }]);
     }
     
     /**

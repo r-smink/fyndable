@@ -1,0 +1,406 @@
+/* Customer Portal Styles */
+.fyndable-portal {
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #111827;
+}
+
+/* Header */
+.fyndable-portal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+.fyndable-portal-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.fyndable-portal-logo {
+    font-size: 24px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.fyndable-portal-tagline {
+    font-size: 14px;
+    color: #6b7280;
+}
+.fyndable-portal-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.fyndable-portal-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+.fyndable-portal-logout {
+    font-size: 13px;
+    color: #6b7280;
+    text-decoration: none;
+}
+.fyndable-portal-logout:hover {
+    color: #111827;
+    text-decoration: underline;
+}
+
+/* Tabs */
+.fyndable-portal-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.fyndable-portal-tab {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+}
+.fyndable-portal-tab:hover {
+    color: #379fd3;
+}
+.fyndable-portal-tab.active {
+    color: #379fd3;
+    border-bottom-color: #379fd3;
+}
+
+/* Panels */
+.fyndable-portal-panel {
+    display: none;
+    min-height: 200px;
+}
+.fyndable-portal-panel.active {
+    display: block;
+}
+.fyndable-portal-loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+/* Cards */
+.fyndable-portal-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+.fyndable-portal-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #111827;
+}
+
+/* Subscription details */
+.fyndable-portal-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.fyndable-portal-detail-item {
+    display: flex;
+    flex-direction: column;
+}
+.fyndable-portal-detail-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+.fyndable-portal-detail-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Status badges */
+.fyndable-portal-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.fyndable-portal-badge-active { background: #d1fae5; color: #065f46; }
+.fyndable-portal-badge-suspended { background: #fef3c7; color: #92400e; }
+.fyndable-portal-badge-cancelled { background: #fee2e2; color: #991b1b; }
+.fyndable-portal-badge-pending { background: #e0e7ff; color: #3730a3; }
+
+/* Usage bars */
+.fyndable-portal-usage-bar {
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+.fyndable-portal-usage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #379fd3 0%, #8f39ac 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+.fyndable-portal-usage-fill.warning { background: #f59e0b; }
+.fyndable-portal-usage-fill.critical { background: #ef4444; }
+
+/* Buttons */
+.fyndable-portal-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.fyndable-portal-btn-primary {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+}
+.fyndable-portal-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(55,159,211,0.3);
+    color: #fff;
+}
+.fyndable-portal-btn-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+.fyndable-portal-btn-danger:hover {
+    background: #fecaca;
+}
+.fyndable-portal-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+.fyndable-portal-btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* Invoice table */
+.fyndable-portal-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.fyndable-portal-table th {
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    padding: 12px 16px;
+    border-bottom: 2px solid #e5e7eb;
+}
+.fyndable-portal-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+}
+.fyndable-portal-table tr:hover {
+    background: #f9fafb;
+}
+
+/* License key box */
+.fyndable-portal-license-box {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 12px 0;
+}
+.fyndable-portal-license-key {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0369a1;
+    letter-spacing: 1px;
+}
+.fyndable-portal-copy-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #379fd3;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.fyndable-portal-copy-btn:hover {
+    background: #0284c7;
+}
+
+/* Forms */
+.fyndable-portal-form-group {
+    margin-bottom: 20px;
+}
+.fyndable-portal-form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+.fyndable-portal-form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+.fyndable-portal-form-group input:focus {
+    border-color: #379fd3;
+    outline: none;
+}
+
+/* Modal */
+.fyndable-portal-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: none;
+}
+.fyndable-portal-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+.fyndable-portal-modal-content {
+    position: relative;
+    max-width: 750px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 12px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding: 0;
+}
+.fyndable-portal-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 28px;
+    line-height: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    z-index: 1;
+}
+.fyndable-portal-modal-close:hover {
+    color: #111827;
+}
+
+/* Login prompt */
+.fyndable-portal-login-prompt {
+    max-width: 420px;
+    margin: 60px auto;
+}
+.fyndable-portal-login-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    padding: 40px;
+    text-align: center;
+}
+.fyndable-portal-login-card h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+.fyndable-portal-login-card p {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+.fyndable-portal-login-btn {
+    display: inline-block;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.fyndable-portal-login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(55,159,211,0.4);
+    color: #fff;
+}
+
+/* Notices */
+.fyndable-portal-notice {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 24px;
+    background: #f0f9ff;
+    border-radius: 12px;
+    text-align: center;
+    color: #374151;
+}
+
+/* Alert messages */
+.fyndable-portal-alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+.fyndable-portal-alert-success { background: #d1fae5; color: #065f46; }
+.fyndable-portal-alert-error { background: #fee2e2; color: #991b1b; }
+.fyndable-portal-alert-info { background: #e0e7ff; color: #3730a3; }
+
+/* Responsive */
+@media (max-width: 640px) {
+    .fyndable-portal-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .fyndable-portal-tabs {
+        gap: 0;
+    }
+    .fyndable-portal-tab {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    .fyndable-portal-table {
+        font-size: 12px;
+    }
+    .fyndable-portal-table th,
+    .fyndable-portal-table td {
+        padding: 8px;
+    }
+}

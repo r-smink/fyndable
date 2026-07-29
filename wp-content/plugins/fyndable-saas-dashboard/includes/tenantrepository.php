@@ -316,6 +316,28 @@ class TenantRepository
         
         return $row;
     }
+
+    /**
+     * Find a tenant by email address.
+     */
+    public function findTenantByEmail(string $email): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE email = %s ORDER BY id DESC LIMIT 1",
+            $email
+        ), ARRAY_A);
+
+        if (!$row) {
+            return null;
+        }
+
+        $row['metadata'] = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+
+        return $row;
+    }
     
     /**
      * Update tenant
@@ -955,6 +977,70 @@ class TenantRepository
             LIMIT %d",
             $tenant['id'], $months * 4
         ), ARRAY_A);
+    }
+
+    // -------------------------------------------------------------------------
+    // Invoice management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Get invoices for a tenant.
+     */
+    public function getInvoicesByTenantKey(string $tenantKey, int $limit = 50, int $offset = 0): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE tenant_key = %s ORDER BY created_at DESC LIMIT %d OFFSET %d",
+            $tenantKey, $limit, $offset
+        ), ARRAY_A) ?: [];
+    }
+
+    /**
+     * Get a single invoice by ID.
+     */
+    public function getInvoiceById(int $invoiceId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE id = %d",
+            $invoiceId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Get a single invoice by invoice number.
+     */
+    public function getInvoiceByNumber(string $invoiceNumber): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE invoice_number = %s",
+            $invoiceNumber
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Count invoices for a tenant.
+     */
+    public function countInvoicesByTenantKey(string $tenantKey): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        return (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE tenant_key = %s",
+            $tenantKey
+        ));
     }
 
     // -------------------------------------------------------------------------

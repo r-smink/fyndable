@@ -63,6 +63,11 @@ class UpdateServer
      */
     public function registerSettings(): void
     {
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_update_server_url', [
+            'type' => 'string',
+            'default' => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ]);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_latest_version', [
             'type' => 'string',
             'default' => SSEO_AI_SAAS_VERSION,
@@ -130,14 +135,39 @@ class UpdateServer
         $changelog = get_option('sseo_ai_saas_update_changelog', '');
         $minWpVersion = get_option('sseo_ai_saas_min_wp_version', '6.0');
 
+        // If an update server URL is configured, fetch metadata from there (cached)
+        $updateServerUrl = get_option('sseo_ai_saas_update_server_url', '');
+        if (!empty($updateServerUrl)) {
+            $remoteMeta = $this->fetchRemoteMetadata(rtrim($updateServerUrl, '/') . '/fyndable-client/latest.json');
+            if ($remoteMeta !== null) {
+                $latestVersion = $remoteMeta['version'] ?? $latestVersion;
+                $downloadUrl = $remoteMeta['download_url'] ?? $downloadUrl;
+                $changelog = $remoteMeta['changelog'] ?? $changelog;
+                $minWpVersion = $remoteMeta['min_wp_version'] ?? $minWpVersion;
+            }
+        }
+
         // Beta channel
         if ($wantBeta && get_option('sseo_ai_saas_beta_enabled', '0') === '1') {
-            $betaVersion = get_option('sseo_ai_saas_beta_version', '');
-            $betaUrl = get_option('sseo_ai_saas_beta_download_url', '');
-            if (!empty($betaVersion) && !empty($betaUrl) && version_compare($betaVersion, $latestVersion, '>')) {
-                $latestVersion = $betaVersion;
-                $downloadUrl = $betaUrl;
-                $changelog = get_option('sseo_ai_saas_beta_changelog', '');
+            if (!empty($updateServerUrl)) {
+                $betaMeta = $this->fetchRemoteMetadata(rtrim($updateServerUrl, '/') . '/fyndable-client/beta/latest-beta.json');
+                if ($betaMeta !== null) {
+                    $betaVersion = $betaMeta['version'] ?? '';
+                    $betaUrl = $betaMeta['download_url'] ?? '';
+                    if (!empty($betaVersion) && !empty($betaUrl) && version_compare($betaVersion, $latestVersion, '>')) {
+                        $latestVersion = $betaVersion;
+                        $downloadUrl = $betaUrl;
+                        $changelog = $betaMeta['changelog'] ?? $changelog;
+                    }
+                }
+            } else {
+                $betaVersion = get_option('sseo_ai_saas_beta_version', '');
+                $betaUrl = get_option('sseo_ai_saas_beta_download_url', '');
+                if (!empty($betaVersion) && !empty($betaUrl) && version_compare($betaVersion, $latestVersion, '>')) {
+                    $latestVersion = $betaVersion;
+                    $downloadUrl = $betaUrl;
+                    $changelog = get_option('sseo_ai_saas_beta_changelog', '');
+                }
             }
         }
 
@@ -152,6 +182,41 @@ class UpdateServer
             'min_wp_version' => $minWpVersion,
             'last_checked'  => current_time('mysql'),
         ], 200);
+    }
+
+    /**
+     * Fetch remote metadata JSON from the update server, with caching.
+     * Returns decoded array or null on failure.
+     */
+    private function fetchRemoteMetadata(string $url): ?array
+    {
+        $cacheKey = 'sseo_ai_update_meta_' . md5($url);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        if (is_wp_error($response)) {
+            return null;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code >= 400) {
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($body)) {
+            return null;
+        }
+
+        set_transient($cacheKey, $body, 6 * HOUR_IN_SECONDS);
+        return $body;
     }
 
     /**

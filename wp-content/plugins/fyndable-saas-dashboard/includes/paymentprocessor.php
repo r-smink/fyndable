@@ -246,7 +246,6 @@ class PaymentProcessor
             'amount' => $this->mollieAmount($pricing['amount']),
             'customerId' => $customerId,
             'sequenceType' => 'first',
-            'method' => 'ideal',
             'description' => sprintf(__('Fyndable SmartSEO %s subscription', 'sseo-ai-saas'), ucfirst($tier)),
             'redirectUrl' => $this->getReturnUrl($tenant['tenant_key'], 'mollie'),
             'webhookUrl' => $this->getWebhookUrl('mollie'),
@@ -326,8 +325,16 @@ class PaymentProcessor
         $interval = $payment['metadata']['interval'] ?? 'month';
         $mollieInterval = $payment['metadata']['mollie_interval'] ?? '1 month';
 
-        if (empty($customerId) || empty($mandateId)) {
-            return new \WP_Error('mollie_no_mandate', __('Mollie payment does not have a mandate yet', 'sseo-ai-saas'));
+        if (empty($customerId)) {
+            return new \WP_Error('mollie_no_customer', __('Mollie payment does not have a customer ID', 'sseo-ai-saas'));
+        }
+
+        // If no mandateId in payment response, fetch mandates for the customer
+        if (empty($mandateId)) {
+            $mandateId = $this->fetchValidMandateId($customerId);
+            if (empty($mandateId)) {
+                return new \WP_Error('mollie_no_mandate', __('No valid mandate found for Mollie customer. The payment method may not support recurring payments.', 'sseo-ai-saas'));
+            }
         }
 
         $pricing = $this->getTierPricing($tier, $interval);
@@ -642,6 +649,73 @@ class PaymentProcessor
         }
 
         return null;
+    }
+
+    /**
+     * Fetch a valid mandate ID for a Mollie customer.
+     * Returns the first valid mandate, or empty string if none found.
+     */
+    public function fetchValidMandateId(string $customerId): string
+    {
+        $mandates = $this->mollieRequest('customers/' . $customerId . '/mandates', [], 'GET');
+        if (is_wp_error($mandates) || empty($mandates['_embedded']['mandates'])) {
+            return '';
+        }
+
+        foreach ($mandates['_embedded']['mandates'] as $mandate) {
+            if (($mandate['status'] ?? '') === 'valid') {
+                return $mandate['id'] ?? '';
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Fetch a Mollie subscription by customer and subscription ID.
+     */
+    public function fetchMollieSubscription(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+    }
+
+    /**
+     * Fetch Mollie payments for a customer (for invoice/billing history).
+     */
+    public function fetchMollieCustomerPayments(string $tenantKey, int $limit = 50): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+
+        if (empty($customerId)) {
+            return new \WP_Error('not_configured', __('Mollie customer not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        return $this->mollieRequest('customers/' . $customerId . '/payments', [
+            'limit' => $limit,
+            'sort' => 'desc',
+        ], 'GET');
+    }
+
+    /**
+     * Cancel a Mollie subscription.
+     */
+    public function cancelMollieSubscription(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'DELETE');
     }
 
     /**
