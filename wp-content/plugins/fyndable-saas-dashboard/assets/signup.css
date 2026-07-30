@@ -337,3 +337,32 @@
         font-size: 16px;
     }
 }
+.fyndable-signup-field-row {
+    display: flex;
+    gap: 16px;
+}
+.fyndable-signup-field-row .fyndable-signup-field {
+    flex: 1;
+}
+.fyndable-signup-field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fff;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+.fyndable-signup-field select:focus {
+    outline: none;
+    border-color: #379fd3;
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1);
+}
+@media (max-width: 600px) {
+    .fyndable-signup-field-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}

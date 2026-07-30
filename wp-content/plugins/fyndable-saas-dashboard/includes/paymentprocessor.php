@@ -89,10 +89,10 @@ class PaymentProcessor
         $defaultMonthly = [
             'free' => 0.00,
             'trial' => 0.00,
-            'starter' => 19.00,
-            'professional' => 49.00,
-            'business' => 99.00,
-            'agency' => 199.00,
+            'starter' => 29.00,
+            'professional' => 79.00,
+            'business' => 199.00,
+            'agency' => 499.00,
         ];
 
         // Custom monthly pricing override
@@ -116,15 +116,14 @@ class PaymentProcessor
             return new \WP_Error('invalid_tier', __('Invalid subscription tier', 'sseo-ai-saas'));
         }
 
-        // Yearly is computed from monthly unless an explicit yearly amount is configured
-        $yearlyDiscount = (float) get_option('sseo_ai_saas_yearly_discount_pct', 17);
+        // Yearly amount: use explicit yearly_amount from custom pricing, otherwise monthly * 12
         $customYearly = null;
         if (is_array($customPricing[$tier] ?? null) && isset($customPricing[$tier]['yearly_amount'])) {
             $customYearly = (float) $customPricing[$tier]['yearly_amount'];
         }
 
         if ($interval === 'year') {
-            $amount = $customYearly ?? (float) round($monthlyAmount * 12 * (1 - $yearlyDiscount / 100), 0);
+            $amount = $customYearly ?? (float) round($monthlyAmount * 12, 0);
             $stripeInterval = 'year';
             $mollieInterval = '12 months';
         } else {

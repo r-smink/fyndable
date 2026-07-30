@@ -116,11 +116,19 @@ class SaaSSettings
 
         // Monthly auto-scheduled post limits per tier
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_auto_posts', ['default' => 0]);
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_auto_posts', ['default' => 4]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_auto_posts', ['default' => 15]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_auto_posts', ['default' => 10]);
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_auto_posts', ['default' => 10]);
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_auto_posts', ['default' => 30]);
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_auto_posts', ['default' => 100]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_auto_posts', ['default' => 35]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_auto_posts', ['default' => 150]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_auto_posts', ['default' => 999999]);
+
+        // Monthly GEO scan/audit limits per tier
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_geo_scans', ['default' => 0]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_geo_scans', ['default' => 5]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_geo_scans', ['default' => 5]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_geo_scans', ['default' => 35]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_geo_scans', ['default' => 90]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_geo_scans', ['default' => 999999]);
         
         // Billing settings - Payment providers
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_payment_provider', ['default' => 'stripe']);
@@ -140,9 +148,6 @@ class SaaSSettings
         // Trial settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_days', ['default' => 14]);
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_enabled', ['default' => '1']);
-
-        // Yearly billing discount
-        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_yearly_discount_pct', ['default' => 17]);
 
         // Custom tier pricing (overrides defaults in PaymentProcessor)
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_pricing', ['default' => []]);
@@ -177,6 +182,10 @@ class SaaSSettings
         // Customer portal settings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_customer_portal_page', ['default' => 0, 'sanitize_callback' => 'absint']);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_vat_rate', ['default' => 21, 'sanitize_callback' => function($v) { return (float) $v; }]);
+
+        // Model tier routing overrides
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_standard_routing', ['default' => []]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_premium_routing', ['default' => []]);
     }
     
     /**
@@ -418,11 +427,36 @@ class SaaSSettings
     {
         $defaults = [
             'free' => 0,
-            'starter' => 4,
+            'starter' => 15,
             'trial' => 10,
-            'professional' => 10,
-            'business' => 30,
-            'agency' => 100,
+            'professional' => 35,
+            'business' => 150,
+            'agency' => 999999,
+        ];
+        return $defaults[$tier] ?? 0;
+    }
+
+    /**
+     * Get GEO scan/audit limit for tier
+     */
+    public function getGeoScanLimitForTier(string $tier): int
+    {
+        $optionName = "ai_seo_saas_{$tier}_geo_scans";
+        return (int)get_option($optionName, $this->getDefaultGeoScanLimit($tier));
+    }
+
+    /**
+     * Default GEO scan/audit limits per tier
+     */
+    private function getDefaultGeoScanLimit(string $tier): int
+    {
+        $defaults = [
+            'free' => 0,
+            'starter' => 5,
+            'trial' => 5,
+            'professional' => 35,
+            'business' => 90,
+            'agency' => 999999,
         ];
         return $defaults[$tier] ?? 0;
     }
@@ -466,6 +500,7 @@ class SaaSSettings
                 'api_calls' => $this->getApiLimitForTier($tier),
                 'cost_limit' => $this->getCostLimitForTier($tier),
                 'auto_posts' => $this->getAutoPostLimitForTier($tier),
+                'geo_scans' => $this->getGeoScanLimitForTier($tier),
             ];
         }
         return $result;
@@ -845,6 +880,7 @@ class SaaSSettings
                                 <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
                                 <th style="width: 150px;"><?php esc_html_e('Cost Cap (USD)', 'sseo-ai-saas'); ?></th>
                                 <th style="width: 150px;"><?php esc_html_e('Auto Posts/mo', 'sseo-ai-saas'); ?></th>
+                                <th style="width: 150px;"><?php esc_html_e('GEO Scans/mo', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -862,6 +898,7 @@ class SaaSSettings
                                 $calls = $this->getApiLimitForTier($tier);
                                 $cost = $this->getCostLimitForTier($tier);
                                 $autoPosts = $this->getAutoPostLimitForTier($tier);
+                                $geoScans = $this->getGeoScanLimitForTier($tier);
                             ?>
                             <tr>
                                 <td><strong><?php echo esc_html($label); ?></strong></td>
@@ -887,6 +924,12 @@ class SaaSSettings
                                     <input type="number" step="1" min="0"
                                            name="ai_seo_saas_<?php echo esc_attr($tier); ?>_auto_posts"
                                            value="<?php echo esc_attr($autoPosts); ?>"
+                                           style="width: 120px;">
+                                </td>
+                                <td>
+                                    <input type="number" step="1" min="0"
+                                           name="ai_seo_saas_<?php echo esc_attr($tier); ?>_geo_scans"
+                                           value="<?php echo esc_attr($geoScans); ?>"
                                            style="width: 120px;">
                                 </td>
                             </tr>
@@ -1029,34 +1072,42 @@ class SaaSSettings
                             <input type="number" name="sseo_ai_saas_trial_days" id="trial_days" value="<?php echo esc_attr(get_option('sseo_ai_saas_trial_days', 14)); ?>" style="width: 120px;">
                         </td>
                     </tr>
-                    <tr>
-                        <th scope="row"><label for="yearly_discount_pct"><?php esc_html_e('Yearly Discount %', 'sseo-ai-saas'); ?></label></th>
-                        <td>
-                            <input type="number" step="0.01" name="sseo_ai_saas_yearly_discount_pct" id="yearly_discount_pct" value="<?php echo esc_attr(get_option('sseo_ai_saas_yearly_discount_pct', 17)); ?>" style="width: 120px;">
-                            <p class="description"><?php esc_html_e('Discount applied to 12 x monthly price for yearly billing.', 'sseo-ai-saas'); ?></p>
-                        </td>
-                    </tr>
                 </table>
 
                 <h3><?php esc_html_e('Custom Tier Pricing', 'sseo-ai-saas'); ?></h3>
-                <p class="description"><?php esc_html_e('Override the default monthly prices for each tier. Leave blank to use defaults.', 'sseo-ai-saas'); ?></p>
-                <table class="form-table" role="presentation">
+                <p class="description"><?php esc_html_e('Set the monthly and yearly prices for each tier. Leave blank to use defaults.', 'sseo-ai-saas'); ?></p>
+                <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Monthly Price', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Yearly Price', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     <?php
                     $customPricing = get_option('sseo_ai_saas_pricing', []);
                     if (!is_array($customPricing)) $customPricing = [];
                     $tiers = ['starter', 'professional', 'business', 'agency'];
-                    $defaults = ['starter' => 19, 'professional' => 49, 'business' => 99, 'agency' => 199];
+                    $defaultsMonthly = ['starter' => 29, 'professional' => 79, 'business' => 199, 'agency' => 499];
+                    $defaultsYearly = ['starter' => 290, 'professional' => 790, 'business' => 1990, 'agency' => 4990];
                     foreach ($tiers as $tier):
-                        $current = $customPricing[$tier]['amount'] ?? '';
+                        $currentMonthly = $customPricing[$tier]['monthly_amount'] ?? ($customPricing[$tier]['amount'] ?? '');
+                        $currentYearly = $customPricing[$tier]['yearly_amount'] ?? '';
                     ?>
                     <tr>
-                        <th scope="row"><label for="pricing_<?php echo esc_attr($tier); ?>"><?php echo esc_html(ucfirst($tier)); ?></label></th>
+                        <td><strong><?php echo esc_html(ucfirst($tier)); ?></strong></td>
                         <td>
-                            <input type="number" step="0.01" name="sseo_ai_saas_pricing[<?php echo esc_attr($tier); ?>][amount]" id="pricing_<?php echo esc_attr($tier); ?>" value="<?php echo esc_attr($current); ?>" placeholder="<?php echo esc_attr($defaults[$tier]); ?>" style="width: 120px;">
+                            <input type="number" step="0.01" min="0" name="sseo_ai_saas_pricing[<?php echo esc_attr($tier); ?>][monthly_amount]" id="pricing_<?php echo esc_attr($tier); ?>" value="<?php echo esc_attr($currentMonthly); ?>" placeholder="<?php echo esc_attr($defaultsMonthly[$tier]); ?>" style="width: 120px;">
                             <span class="description"><?php echo esc_html(get_option('sseo_ai_saas_currency', 'EUR')); ?> / <?php esc_html_e('month', 'sseo-ai-saas'); ?></span>
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" name="sseo_ai_saas_pricing[<?php echo esc_attr($tier); ?>][yearly_amount]" id="pricing_yearly_<?php echo esc_attr($tier); ?>" value="<?php echo esc_attr($currentYearly); ?>" placeholder="<?php echo esc_attr($defaultsYearly[$tier]); ?>" style="width: 120px;">
+                            <span class="description"><?php echo esc_html(get_option('sseo_ai_saas_currency', 'EUR')); ?> / <?php esc_html_e('year', 'sseo-ai-saas'); ?></span>
                         </td>
                     </tr>
                     <?php endforeach; ?>
+                    </tbody>
                 </table>
 
                 <?php submit_button(__('Save Checkout Settings', 'sseo-ai-saas')); ?>

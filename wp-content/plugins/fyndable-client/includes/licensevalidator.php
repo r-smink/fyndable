@@ -96,6 +96,9 @@ class LicenseValidator
         if (!empty($body['monthly_auto_posts'])) {
             update_option('sseo_ai_client_monthly_auto_posts', $body['monthly_auto_posts']);
         }
+        if (isset($body['monthly_geo_scans'])) {
+            update_option('sseo_ai_client_monthly_geo_scans', (int) $body['monthly_geo_scans']);
+        }
         if (!empty($body['model_routing']) && is_array($body['model_routing'])) {
             update_option('sseo_ai_client_model_routing', $body['model_routing']);
         }
@@ -174,11 +177,24 @@ class LicenseValidator
      */
     private const TIER_AUTO_POST_LIMITS = [
         'free'         => 0,
-        'starter'      => 4,
+        'starter'      => 15,
         'trial'        => 10,
-        'professional' => 10,
-        'business'     => 30,
-        'agency'       => 100,
+        'professional' => 35,
+        'business'     => 150,
+        'agency'       => PHP_INT_MAX,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
+     * Default monthly GEO scan/audit limits per tier
+     */
+    private const TIER_GEO_SCAN_LIMITS = [
+        'free'         => 0,
+        'starter'      => 5,
+        'trial'        => 5,
+        'professional' => 35,
+        'business'     => 90,
+        'agency'       => PHP_INT_MAX,
         'dev'          => PHP_INT_MAX,
     ];
 
@@ -241,6 +257,21 @@ class LicenseValidator
 
         $tierDefault = self::TIER_AUTO_POST_LIMITS[$tier] ?? 0;
         return (int)get_option('sseo_ai_client_monthly_auto_posts', $tierDefault);
+    }
+
+    /**
+     * Get monthly GEO scan/audit limit
+     */
+    public function getMonthlyGeoScanLimit(): int
+    {
+        $tier = $this->getLicenseTier();
+
+        if ($tier === 'dev') {
+            return PHP_INT_MAX;
+        }
+
+        $tierDefault = self::TIER_GEO_SCAN_LIMITS[$tier] ?? 0;
+        return (int)get_option('sseo_ai_client_monthly_geo_scans', $tierDefault);
     }
 
     /**

@@ -325,7 +325,7 @@ class LicenseAPI
             'success' => true,
             'valid' => true,
             'license' => $result,
-            'model_routing' => get_option('sseo_ai_saas_model_routing', []),
+            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'free'),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => match ($settings->getImageApiProvider()) {
@@ -392,7 +392,7 @@ class LicenseAPI
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
-            'model_routing' => get_option('sseo_ai_saas_model_routing', []),
+            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'free'),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => match ($settings->getImageApiProvider()) {
@@ -405,6 +405,27 @@ class LicenseAPI
         ], 200);
     }
     
+    /**
+     * Get model routing for a tenant based on tier or per-tenant override.
+     */
+    private function getModelRoutingForTenant(string $tenantKey, string $tier): array
+    {
+        $modelTier = $this->tenants->getTenantSetting($tenantKey, 'model_tier', null);
+        if ($modelTier === 'standard' || $modelTier === 'premium') {
+            return ProviderRouter::getRoutingForModelTier($modelTier);
+        }
+        return $this->getModelRoutingForTier($tier);
+    }
+
+    /**
+     * Get model routing for a tier (no per-tenant override).
+     */
+    private function getModelRoutingForTier(string $tier): array
+    {
+        $modelTier = ProviderRouter::getModelTierForTier($tier);
+        return ProviderRouter::getRoutingForModelTier($modelTier);
+    }
+
     /**
      * Get white-label data for tenant.
      *
@@ -484,9 +505,10 @@ class LicenseAPI
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
             'monthly_auto_posts' => (int)$settings->getAutoPostLimitForTier($tenant['tier']),
+            'monthly_geo_scans' => (int)$settings->getGeoScanLimitForTier($tenant['tier']),
             'expires_at' => $tenant['expires_at'],
             'white_label' => $this->getWhiteLabelData($tenantKey),
-            'model_routing' => get_option('sseo_ai_saas_model_routing', []),
+            'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => match ($settings->getImageApiProvider()) {

@@ -65,11 +65,49 @@
     function loadTab(tab) {
         switch (tab) {
             case 'subscription': loadSubscription(); break;
+            case 'license': loadLicense(); break;
             case 'usage': loadUsage(); break;
             case 'download': loadDownload(); break;
             case 'invoices': loadInvoices(); break;
             case 'account': loadAccount(); break;
         }
+    }
+
+    // --- License ---
+    function loadLicense() {
+        var panel = '#panel-license';
+        showLoading('panel-license');
+
+        apiRequest('/portal/license').done(function (res) {
+            if (!res.success) {
+                $(panel).html('<div class="fyndable-portal-error">' + (res.message || FyndablePortal.i18n.error) + '</div>');
+                return;
+            }
+
+            var html = '<div class="fyndable-portal-card">';
+            html += '<h3>' + (res.tier ? res.tier.charAt(0).toUpperCase() + res.tier.slice(1) : '') + ' License</h3>';
+            html += '<div class="fyndable-portal-license-key-row">';
+            html += '<label>License Key</label>';
+            html += '<div class="fyndable-portal-license-key-box">';
+            html += '<code class="fyndable-portal-license-key">' + res.license_key + '</code>';
+            html += '<button class="button fyndable-portal-copy-btn" data-key="' + res.license_key + '">' + (FyndablePortal.i18n.copied || 'Copy') + '</button>';
+            html += '</div></div>';
+            html += '<table class="fyndable-portal-info-table">';
+            html += '<tr><td>Status</td><td>' + statusBadge(res.status) + '</td></tr>';
+            html += '<tr><td>Tier</td><td>' + (res.tier || '—') + '</td></tr>';
+            html += '<tr><td>Max Sites</td><td>' + (res.max_sites || 1) + '</td></tr>';
+            html += '<tr><td>Rate Limit</td><td>' + (res.rate_limit || 60) + ' /hour</td></tr>';
+            html += '<tr><td>API Calls Limit</td><td>' + (res.api_calls_limit || 1000) + ' /month</td></tr>';
+            html += '<tr><td>Expires</td><td>' + formatDate(res.expires_at) + '</td></tr>';
+            html += '</table>';
+            html += '<p class="fyndable-portal-help">Use this license key to activate the Fyndable plugin on your WordPress site. Go to Settings → Fyndable, paste the key, and click Activate.</p>';
+            html += '</div>';
+
+            $(panel).html(html);
+            loaded.license = true;
+        }).fail(function () {
+            $(panel).html('<div class="fyndable-portal-error">' + FyndablePortal.i18n.error + '</div>');
+        });
     }
 
     // --- Subscription ---
@@ -339,6 +377,15 @@
         }).fail(function () {
             showAlert('panel-account', 'error', FyndablePortal.i18n.error);
         });
+    });
+
+    // Copy license key to clipboard
+    $(document).on('click', '.fyndable-portal-copy-btn', function (e) {
+        e.preventDefault();
+        var key = $(this).data('key');
+        if (window.copyToClipboard) {
+            window.copyToClipboard(key);
+        }
     });
 
     // --- Init: load first tab ---

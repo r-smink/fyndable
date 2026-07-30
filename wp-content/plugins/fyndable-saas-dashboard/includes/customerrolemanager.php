@@ -34,21 +34,39 @@ class CustomerRoleManager
     public function ensureRole(): void
     {
         $role = get_role(self::ROLE_NAME);
-        if ($role) {
-            return;
+        if (!$role) {
+            add_role(
+                self::ROLE_NAME,
+                __('Fyndable Customer', 'sseo-ai-saas'),
+                [
+                    'read' => true,
+                    'fyndable_view_portal' => true,
+                    'fyndable_manage_subscription' => true,
+                    'fyndable_download_plugin' => true,
+                    'fyndable_view_invoices' => true,
+                ]
+            );
         }
 
-        add_role(
-            self::ROLE_NAME,
-            __('Fyndable Customer', 'sseo-ai-saas'),
-            [
-                'read' => true,
-                'fyndable_view_portal' => true,
-                'fyndable_manage_subscription' => true,
-                'fyndable_download_plugin' => true,
-                'fyndable_view_invoices' => true,
-            ]
-        );
+        // Register tier-specific roles for backend filtering
+        $tierRoles = [
+            'fyndable_starter'      => __('Fyndable Starter', 'sseo-ai-saas'),
+            'fyndable_professional' => __('Fyndable Professional', 'sseo-ai-saas'),
+            'fyndable_business'     => __('Fyndable Business', 'sseo-ai-saas'),
+        ];
+
+        foreach ($tierRoles as $roleName => $displayName) {
+            $tierRole = get_role($roleName);
+            if (!$tierRole) {
+                add_role($roleName, $displayName, [
+                    'read' => true,
+                    'fyndable_view_portal' => true,
+                    'fyndable_manage_subscription' => true,
+                    'fyndable_download_plugin' => true,
+                    'fyndable_view_invoices' => true,
+                ]);
+            }
+        }
     }
 
     /**
@@ -215,6 +233,12 @@ class CustomerRoleManager
             }
             $user->set_role(self::ROLE_NAME);
 
+            // Also assign tier-specific role for backend filtering
+            $tierRole = $this->getTierRoleName($tier);
+            if ($tierRole) {
+                $user->add_role($tierRole);
+            }
+
             // Send password reset email so the customer can set their own password
             $this->sendWelcomeEmail($email, $name, $userId);
         }
@@ -224,7 +248,29 @@ class CustomerRoleManager
         update_user_meta($userId, 'fyndable_tier', $tier);
         update_user_meta($userId, 'fyndable_customer_since', current_time('mysql'));
 
+        // Ensure tier-specific role is assigned (handles existing users too)
+        $tierRole = $this->getTierRoleName($tier);
+        if ($tierRole) {
+            $user = get_user_by('ID', $userId);
+            if ($user && !in_array($tierRole, (array)$user->roles, true)) {
+                $user->add_role($tierRole);
+            }
+        }
+
         return (int)$userId;
+    }
+
+    /**
+     * Get the tier-specific role name for a given tier.
+     */
+    private function getTierRoleName(string $tier): ?string
+    {
+        $map = [
+            'starter'      => 'fyndable_starter',
+            'professional' => 'fyndable_professional',
+            'business'     => 'fyndable_business',
+        ];
+        return $map[$tier] ?? null;
     }
 
     /**
@@ -248,18 +294,16 @@ class CustomerRoleManager
 
 Your Fyndable SmartSEO account has been created! You can now manage your subscription, view invoices, download the plugin, and track your usage.
 
-Set your password and log in here:
+Set your password and log in to your customer portal:
 %s
 
-Or access your customer portal directly:
-%s
+After logging in, you can download the Fyndable plugin and find your license key in the License tab.
 
 If you have any questions, feel free to reply to this email.
 
 — The Fyndable Team", 'sseo-ai-saas'),
             $name ?: 'there',
-            $resetUrl,
-            $portalUrl
+            $resetUrl
         );
 
         wp_mail($email, $subject, $message);

@@ -60,7 +60,10 @@ class SignupCheckout
             'args' => [
                 'name' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'email' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_email'],
-                'site_url' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'esc_url_raw'],
+                'street' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'postal_code' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'city' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'country' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'tier' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'interval' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
             ],
@@ -97,13 +100,14 @@ class SignupCheckout
     {
         $currency = get_option('sseo_ai_saas_currency', 'EUR');
         $symbol = $this->getCurrencySymbol($currency);
-        $discount = (float) get_option('sseo_ai_saas_yearly_discount_pct', 17);
 
         $tiers = [
             'starter' => [
                 'name' => 'Starter',
                 'features' => [
                     '1 site',
+                    '15 auto-posts/month',
+                    '5 GEO audits/month',
                     '500 AI calls/month',
                     'All SEO features',
                     'Schema markup',
@@ -116,7 +120,9 @@ class SignupCheckout
             'professional' => [
                 'name' => 'Professional',
                 'features' => [
-                    '3 sites',
+                    '1 site',
+                    '35 auto-posts/month',
+                    '35 GEO audits/month',
                     '2,000 AI calls/month',
                     'Everything in Starter',
                     'Rank tracking',
@@ -130,7 +136,9 @@ class SignupCheckout
             'business' => [
                 'name' => 'Business',
                 'features' => [
-                    '10 sites',
+                    '3 sites',
+                    '150 auto-posts/month',
+                    '90 GEO audits/month',
                     '5,000 AI calls/month',
                     'Everything in Professional',
                     'White-label reports',
@@ -143,7 +151,9 @@ class SignupCheckout
             'agency' => [
                 'name' => 'Agency',
                 'features' => [
-                    'Unlimited sites',
+                    '5+ sites',
+                    'Unlimited auto-posts',
+                    'Unlimited GEO audits',
                     '20,000 AI calls/month',
                     'Everything in Business',
                     'Full white-label',
@@ -164,6 +174,11 @@ class SignupCheckout
             $monthlyAmount = is_wp_error($monthly) ? 0.0 : $monthly['amount'];
             $yearlyAmount = is_wp_error($yearly) ? 0.0 : $yearly['amount'];
 
+            $savingsLabel = '';
+            if ($monthlyAmount > 0 && $yearlyAmount > 0 && $yearlyAmount < $monthlyAmount * 12) {
+                $savingsLabel = __('2 maanden korting', 'sseo-ai-saas');
+            }
+
             $plans[$key] = [
                 'name' => $tier['name'],
                 'popular' => $tier['popular'],
@@ -179,7 +194,7 @@ class SignupCheckout
                         'price' => $yearlyAmount,
                         'price_display' => $symbol . number_format($yearlyAmount, 0),
                         'period' => '/year',
-                        'savings_label' => ($monthsSaved = (int) round($discount / 100 * 12)) > 0 ? sprintf('%d %s gratis', $monthsSaved, $monthsSaved === 1 ? 'maand' : 'maanden') : '',
+                        'savings_label' => $savingsLabel,
                     ],
                 ],
             ];
@@ -195,7 +210,10 @@ class SignupCheckout
     {
         $name = $request->get_param('name');
         $email = $request->get_param('email');
-        $siteUrl = $request->get_param('site_url');
+        $street = $request->get_param('street');
+        $postalCode = $request->get_param('postal_code');
+        $city = $request->get_param('city');
+        $country = $request->get_param('country');
         $tier = $request->get_param('tier');
         $interval = $request->get_param('interval') ?: 'month';
         $interval = in_array($interval, ['month', 'year'], true) ? $interval : 'month';
@@ -257,7 +275,6 @@ class SignupCheckout
         $tenantData = [
             'name' => $name,
             'email' => $email,
-            'domain' => $siteUrl,
             'tier' => $tier,
             'license_key' => $licenseKey,
             'status' => $tier === 'free' ? 'active' : 'pending_payment',
@@ -278,6 +295,20 @@ class SignupCheckout
 
         $tenantKey = $tenantResult['tenant_key'];
         $this->tenants->setTenantSetting($tenantKey, 'subscription_interval', $interval);
+
+        // Store address in tenant settings
+        if (!empty($street)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_street', $street);
+        }
+        if (!empty($postalCode)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_postal_code', $postalCode);
+        }
+        if (!empty($city)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_city', $city);
+        }
+        if (!empty($country)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_country', $country);
+        }
 
         // For free tier, activate immediately
         if ($tier === 'free') {
@@ -426,11 +457,11 @@ class SignupCheckout
     private function getTierLimits(string $tier): array
     {
         $limits = [
-            'free' => ['max_sites' => 1, 'rate_limit' => 30, 'api_calls_limit' => 30],
-            'starter' => ['max_sites' => 1, 'rate_limit' => 60, 'api_calls_limit' => 500],
-            'professional' => ['max_sites' => 3, 'rate_limit' => 120, 'api_calls_limit' => 2000],
-            'business' => ['max_sites' => 10, 'rate_limit' => 300, 'api_calls_limit' => 5000],
-            'agency' => ['max_sites' => 999, 'rate_limit' => 600, 'api_calls_limit' => 20000],
+            'free' => ['max_sites' => 1, 'rate_limit' => 30, 'api_calls_limit' => 30, 'geo_scan_limit' => 0],
+            'starter' => ['max_sites' => 1, 'rate_limit' => 60, 'api_calls_limit' => 500, 'geo_scan_limit' => 5],
+            'professional' => ['max_sites' => 1, 'rate_limit' => 120, 'api_calls_limit' => 2000, 'geo_scan_limit' => 35],
+            'business' => ['max_sites' => 3, 'rate_limit' => 300, 'api_calls_limit' => 5000, 'geo_scan_limit' => 90],
+            'agency' => ['max_sites' => 5, 'rate_limit' => 600, 'api_calls_limit' => 20000, 'geo_scan_limit' => 999999],
         ];
 
         return $limits[$tier] ?? $limits['free'];

@@ -574,6 +574,11 @@ class AgencyPortal
 
                         if (is_wp_error($tenantResult)) {
                             $error = $tenantResult->get_error_message();
+                        } else {
+                            $modelTier = sanitize_text_field($_POST['model_tier'] ?? '');
+                            if ($modelTier === 'standard' || $modelTier === 'premium') {
+                                $this->tenants->setTenantSetting($tenantResult['tenant_key'], 'model_tier', $modelTier);
+                            }
                         }
                     }
                 }
@@ -664,6 +669,16 @@ class AgencyPortal
                                     <option value="professional"><?php esc_html_e('Professional', 'sseo-ai-saas'); ?></option>
                                     <option value="business"><?php esc_html_e('Business', 'sseo-ai-saas'); ?></option>
                                 </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="model_tier"><?php esc_html_e('AI Model Tier', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="model_tier" id="model_tier">
+                                    <option value="standard"><?php esc_html_e('Standard (cost-effective models)', 'sseo-ai-saas'); ?></option>
+                                    <option value="premium"><?php esc_html_e('Premium (higher-quality models)', 'sseo-ai-saas'); ?></option>
+                                </select>
+                                <p class="description"><?php esc_html_e('Standard uses affordable models (GPT-4o-mini, Deepseek). Premium uses higher-quality models (GPT-4o, Claude 3.5).', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         <tr>

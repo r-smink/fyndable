@@ -404,3 +404,55 @@
         padding: 8px;
     }
 }
+
+/* License Tab */
+.fyndable-portal-license-key-row {
+    margin-bottom: 20px;
+}
+.fyndable-portal-license-key-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #374151;
+}
+.fyndable-portal-license-key-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.fyndable-portal-license-key {
+    flex: 1;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    word-break: break-all;
+    color: #1f2937;
+}
+.fyndable-portal-copy-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.fyndable-portal-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+}
+.fyndable-portal-info-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+.fyndable-portal-info-table td:first-child {
+    font-weight: 600;
+    color: #6b7280;
+    width: 40%;
+}
+.fyndable-portal-help {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 12px;
+    line-height: 1.5;
+}

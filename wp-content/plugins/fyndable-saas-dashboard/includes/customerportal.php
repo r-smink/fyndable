@@ -84,6 +84,13 @@ class CustomerPortal
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
+        // Get license details
+        register_rest_route($this->namespace, '/portal/license', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getLicense'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
         // Update account info
         register_rest_route($this->namespace, '/portal/account', [
             'methods' => 'POST',
@@ -314,6 +321,33 @@ class CustomerPortal
     }
 
     /**
+     * Get license details for the current customer.
+     */
+    public function getLicense(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->roleManager->getCustomerTenant();
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+        }
+
+        // Don't show license tab for agency tier
+        if (($tenant['tier'] ?? '') === 'agency') {
+            return new \WP_REST_Response(['success' => false, 'message' => 'License tab not available for agency accounts'], 403);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'license_key' => $tenant['license_key'] ?? '',
+            'tier' => $tenant['tier'] ?? 'free',
+            'status' => $tenant['status'] ?? 'active',
+            'expires_at' => $tenant['expires_at'] ?? null,
+            'max_sites' => (int)($tenant['max_sites'] ?? 1),
+            'rate_limit' => (int)($tenant['rate_limit'] ?? 60),
+            'api_calls_limit' => (int)($tenant['api_calls_limit'] ?? 1000),
+        ], 200);
+    }
+
+    /**
      * Update customer account info (name, domain).
      */
     public function updateAccount(\WP_REST_Request $request): \WP_REST_Response
@@ -416,6 +450,7 @@ class CustomerPortal
             <!-- Tab Navigation -->
             <div class="fyndable-portal-tabs">
                 <button class="fyndable-portal-tab active" data-tab="subscription"><?php esc_html_e('Subscription', 'sseo-ai-saas'); ?></button>
+                <button class="fyndable-portal-tab" data-tab="license"><?php esc_html_e('License', 'sseo-ai-saas'); ?></button>
                 <button class="fyndable-portal-tab" data-tab="usage"><?php esc_html_e('Usage', 'sseo-ai-saas'); ?></button>
                 <button class="fyndable-portal-tab" data-tab="download"><?php esc_html_e('Plugin', 'sseo-ai-saas'); ?></button>
                 <button class="fyndable-portal-tab" data-tab="invoices"><?php esc_html_e('Invoices', 'sseo-ai-saas'); ?></button>
@@ -425,6 +460,11 @@ class CustomerPortal
             <!-- Tab: Subscription -->
             <div class="fyndable-portal-panel active" id="panel-subscription">
                 <div class="fyndable-portal-loading"><?php esc_html_e('Loading subscription...', 'sseo-ai-saas'); ?></div>
+            </div>
+
+            <!-- Tab: License -->
+            <div class="fyndable-portal-panel" id="panel-license">
+                <div class="fyndable-portal-loading"><?php esc_html_e('Loading license...', 'sseo-ai-saas'); ?></div>
             </div>
 
             <!-- Tab: Usage -->

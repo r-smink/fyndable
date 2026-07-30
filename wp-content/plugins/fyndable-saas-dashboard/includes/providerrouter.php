@@ -83,6 +83,54 @@ class ProviderRouter
         'meta-llama/llama-3.1-70b-instruct' => 'Meta Llama 3.1 70B',
     ];
 
+    /**
+     * Standard tier models (Starter).
+     * Cost-effective models for lower-tier plans.
+     */
+    private const STANDARD_MODELS = [
+        'openai/gpt-4o-mini',
+        'deepseek/deepseek-chat',
+        'anthropic/claude-3-haiku',
+        'google/gemini-flash-1.5',
+    ];
+
+    /**
+     * Premium tier models (Professional / Business).
+     * Higher-quality models for mid-tier plans.
+     */
+    private const PREMIUM_MODELS = [
+        'openai/gpt-4o',
+        'anthropic/claude-3.5-sonnet',
+        'openai/gpt-4-turbo',
+        'meta-llama/llama-3.1-70b-instruct',
+    ];
+
+    /**
+     * Default routing for standard model tier (Starter).
+     */
+    private const STANDARD_ROUTING = [
+        'content_generation'  => 'openai/gpt-4o-mini',
+        'meta_optimization'   => 'openai/gpt-4o-mini',
+        'keyword_research'    => 'deepseek/deepseek-chat',
+        'faq_generation'      => 'openai/gpt-4o-mini',
+        'content_analysis'    => 'openai/gpt-4o-mini',
+        'image_alt_text'      => 'openai/gpt-4o-mini',
+        'geo_readiness'       => 'google/gemini-flash-1.5',
+    ];
+
+    /**
+     * Default routing for premium model tier (Professional / Business).
+     */
+    private const PREMIUM_ROUTING = [
+        'content_generation'  => 'openai/gpt-4o',
+        'meta_optimization'   => 'openai/gpt-4o-mini',
+        'keyword_research'    => 'openai/gpt-4o',
+        'faq_generation'      => 'openai/gpt-4o-mini',
+        'content_analysis'    => 'openai/gpt-4o',
+        'image_alt_text'      => 'openai/gpt-4o-mini',
+        'geo_readiness'       => 'google/gemini-flash-1.5',
+    ];
+
     public function __construct(SaaSSettings $settings)
     {
         $this->settings = $settings;
@@ -310,5 +358,51 @@ class ProviderRouter
     public static function getDefaultRouting(): array
     {
         return self::DEFAULT_ROUTING;
+    }
+
+    /**
+     * Get the model tier for a given subscription tier.
+     * Returns 'standard' or 'premium'.
+     */
+    public static function getModelTierForTier(string $tier): string
+    {
+        $premiumTiers = ['professional', 'business', 'agency'];
+        return in_array($tier, $premiumTiers, true) ? 'premium' : 'standard';
+    }
+
+    /**
+     * Get routing map for a model tier ('standard' or 'premium').
+     */
+    public static function getRoutingForModelTier(string $modelTier): array
+    {
+        if ($modelTier === 'premium') {
+            $custom = get_option('sseo_ai_saas_premium_routing', []);
+            if (is_array($custom) && !empty($custom)) {
+                return array_merge(self::PREMIUM_ROUTING, $custom);
+            }
+            return self::PREMIUM_ROUTING;
+        }
+
+        $custom = get_option('sseo_ai_saas_standard_routing', []);
+        if (is_array($custom) && !empty($custom)) {
+            return array_merge(self::STANDARD_ROUTING, $custom);
+        }
+        return self::STANDARD_ROUTING;
+    }
+
+    /**
+     * Get standard tier models.
+     */
+    public static function getStandardModels(): array
+    {
+        return self::STANDARD_MODELS;
+    }
+
+    /**
+     * Get premium tier models.
+     */
+    public static function getPremiumModels(): array
+    {
+        return self::PREMIUM_MODELS;
     }
 }

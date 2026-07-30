@@ -64,7 +64,12 @@
         html += '<div id="fyndable-signup-error"></div>';
         html += '<div class="fyndable-signup-field"><label>Your Name</label><input type="text" id="fyndable-name" placeholder="John Doe"></div>';
         html += '<div class="fyndable-signup-field"><label>Email Address</label><input type="email" id="fyndable-email" placeholder="john@example.com"></div>';
-        html += '<div class="fyndable-signup-field"><label>Website URL</label><input type="url" id="fyndable-siteurl" placeholder="https://yoursite.com"></div>';
+        html += '<div class="fyndable-signup-field"><label>Street Address</label><input type="text" id="fyndable-street" placeholder="Main Street 123"></div>';
+        html += '<div class="fyndable-signup-field-row">';
+        html += '<div class="fyndable-signup-field"><label>Postal Code</label><input type="text" id="fyndable-postalcode" placeholder="1011 AB"></div>';
+        html += '<div class="fyndable-signup-field"><label>City</label><input type="text" id="fyndable-city" placeholder="Amsterdam"></div>';
+        html += '</div>';
+        html += '<div class="fyndable-signup-field"><label>Country</label><select id="fyndable-country"><option value="NL">Netherlands</option><option value="BE">Belgium</option><option value="DE">Germany</option><option value="FR">France</option><option value="GB">United Kingdom</option><option value="US">United States</option><option value="ES">Spain</option><option value="PT">Portugal</option><option value="IT">Italy</option><option value="DK">Denmark</option><option value="SE">Sweden</option><option value="FI">Finland</option><option value="NO">Norway</option><option value="AT">Austria</option><option value="CH">Switzerland</option><option value="IE">Ireland</option><option value="PL">Poland</option><option value="LU">Luxembourg</option><option value="other">Other</option></select></div>';
         html += '<button class="fyndable-signup-submit" id="fyndable-signup-submit">Create Account →</button>';
         html += '</div></div>';
 
@@ -126,13 +131,16 @@
     function submitSignup() {
         var name = document.getElementById('fyndable-name').value.trim();
         var email = document.getElementById('fyndable-email').value.trim();
-        var siteUrl = document.getElementById('fyndable-siteurl').value.trim();
+        var street = document.getElementById('fyndable-street').value.trim();
+        var postalCode = document.getElementById('fyndable-postalcode').value.trim();
+        var city = document.getElementById('fyndable-city').value.trim();
+        var country = document.getElementById('fyndable-country').value;
         var errorEl = document.getElementById('fyndable-signup-error');
         var submitBtn = document.getElementById('fyndable-signup-submit');
 
         errorEl.innerHTML = '';
 
-        if (!name || !email || !siteUrl) {
+        if (!name || !email || !street || !postalCode || !city) {
             errorEl.innerHTML = '<div class="fyndable-signup-error">Please fill in all fields.</div>';
             return;
         }
@@ -149,7 +157,10 @@
             body: JSON.stringify({
                 name: name,
                 email: email,
-                site_url: siteUrl,
+                street: street,
+                postal_code: postalCode,
+                city: city,
+                country: country,
                 tier: selectedTier,
                 interval: selectedInterval,
             }),
