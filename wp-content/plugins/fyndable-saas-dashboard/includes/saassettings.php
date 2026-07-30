@@ -29,6 +29,8 @@ class SaaSSettings
      */
     public function addSettingsMenu(): void
     {
+        add_action('admin_init', [$this, 'handleClientVersionsPost'], 20);
+
         // Checkout is accessed via the SaaS dashboard shell, not as a standalone WP menu item.
         add_submenu_page(
             'sseo-ai-licenses',
@@ -64,6 +66,15 @@ class SaaSSettings
             'manage_options',
             'sseo-ai-models',
             [$this, 'renderAiModelsPage']
+        );
+
+        add_submenu_page(
+            'sseo-ai-licenses',
+            __('Client Versions', 'sseo-ai-saas'),
+            __('Client Versions', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-client-versions',
+            [$this, 'renderClientVersionsPage']
         );
 
     }
@@ -1531,6 +1542,265 @@ class SaaSSettings
 
                 <?php submit_button(__('Save AI Models', 'sseo-ai-saas')); ?>
             </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Process the Client Versions form (settings + zip upload).
+     */
+    public function handleClientVersionsPost(): void
+    {
+        if (
+            $_SERVER['REQUEST_METHOD'] !== 'POST'
+            || empty($_GET['page'])
+            || $_GET['page'] !== 'sseo-ai-client-versions'
+            || empty($_POST['sseo_ai_client_versions_nonce'])
+        ) {
+            return;
+        }
+
+        if (!check_admin_referer('sseo_ai_client_versions_save', 'sseo_ai_client_versions_nonce')) {
+            return;
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to manage client versions.', 'sseo-ai-saas'));
+        }
+
+        update_option('sseo_ai_saas_latest_version', sanitize_text_field($_POST['sseo_ai_saas_latest_version'] ?? ''));
+        update_option('sseo_ai_saas_download_url', sanitize_text_field($_POST['sseo_ai_saas_download_url'] ?? ''));
+        update_option('sseo_ai_saas_min_wp_version', sanitize_text_field($_POST['sseo_ai_saas_min_wp_version'] ?? '6.0'));
+        update_option('sseo_ai_saas_update_changelog', wp_kses_post($_POST['sseo_ai_saas_update_changelog'] ?? ''));
+
+        update_option('sseo_ai_saas_beta_enabled', !empty($_POST['sseo_ai_saas_beta_enabled']) ? '1' : '0');
+        update_option('sseo_ai_saas_beta_version', sanitize_text_field($_POST['sseo_ai_saas_beta_version'] ?? ''));
+        update_option('sseo_ai_saas_beta_download_url', sanitize_text_field($_POST['sseo_ai_saas_beta_download_url'] ?? ''));
+        update_option('sseo_ai_saas_beta_changelog', wp_kses_post($_POST['sseo_ai_saas_beta_changelog'] ?? ''));
+
+        if (!empty($_FILES['client_plugin_zip']['tmp_name']) && is_uploaded_file($_FILES['client_plugin_zip']['tmp_name'])) {
+            $version = sanitize_text_field($_POST['upload_version'] ?? '');
+            $result = $this->handleClientPluginZipUpload($_FILES['client_plugin_zip'], $version);
+            if (is_wp_error($result)) {
+                set_transient('sseo_ai_client_versions_notice', ['error', $result->get_error_message()], 60);
+            } else {
+                set_transient('sseo_ai_client_versions_notice', ['success', sprintf(__('Uploaded client plugin zip: %s', 'sseo-ai-saas'), basename($result))], 60);
+            }
+        }
+
+        wp_safe_redirect(admin_url('admin.php?page=sseo-ai-client-versions&saved=1'));
+        exit;
+    }
+
+    /**
+     * Store an uploaded client plugin zip.
+     */
+    private function handleClientPluginZipUpload(array $file, string $version): string|\WP_Error
+    {
+        $fileInfo = wp_check_filetype($file['name']);
+        if (empty($fileInfo['ext']) || $fileInfo['ext'] !== 'zip') {
+            return new \WP_Error('invalid_type', __('Please upload a .zip file.', 'sseo-ai-saas'));
+        }
+
+        $uploadDir = SSEO_AI_SAAS_PLUGIN_DIR . 'versions/';
+        if (!wp_mkdir_p($uploadDir)) {
+            return new \WP_Error('mkdir_failed', __('Could not create the versions directory.', 'sseo-ai-saas'));
+        }
+
+        if (!is_writable($uploadDir)) {
+            return new \WP_Error('not_writable', __('The versions directory is not writable.', 'sseo-ai-saas'));
+        }
+
+        $version = sanitize_file_name($version);
+        if (empty($version)) {
+            $version = 'latest';
+        }
+        $filename = 'fyndable-client_v' . $version . '.zip';
+        $destination = $uploadDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+            return new \WP_Error('move_failed', __('Could not move uploaded file.', 'sseo-ai-saas'));
+        }
+
+        if (class_exists('ZipArchive')) {
+            $zip = new \ZipArchive();
+            if ($zip->open($destination) === true) {
+                $hasPhp = false;
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    if (substr($zip->getNameIndex($i), -4) === '.php') {
+                        $hasPhp = true;
+                        break;
+                    }
+                }
+                $zip->close();
+                if (!$hasPhp) {
+                    unlink($destination);
+                    return new \WP_Error('invalid_zip', __('The uploaded zip does not appear to contain a WordPress plugin.', 'sseo-ai-saas'));
+                }
+            }
+        }
+
+        return $destination;
+    }
+
+    /**
+     * Render the Client Versions admin page.
+     */
+    public function renderClientVersionsPage(): void
+    {
+        if (!empty($_GET['saved'])) {
+            add_settings_error(
+                'sseo_ai_client_versions',
+                'client_versions_saved',
+                __('Client version settings saved.', 'sseo-ai-saas'),
+                'success'
+            );
+        }
+
+        $notice = get_transient('sseo_ai_client_versions_notice');
+        if (is_array($notice)) {
+            delete_transient('sseo_ai_client_versions_notice');
+            add_settings_error(
+                'sseo_ai_client_versions',
+                'client_versions_' . sanitize_key($notice[0]),
+                $notice[1],
+                $notice[0]
+            );
+        }
+
+        $latestVersion = get_option('sseo_ai_saas_latest_version', SSEO_AI_SAAS_VERSION);
+        $downloadUrl = get_option('sseo_ai_saas_download_url', '');
+        $minWpVersion = get_option('sseo_ai_saas_min_wp_version', '6.0');
+        $changelog = get_option('sseo_ai_saas_update_changelog', '');
+        $betaEnabled = get_option('sseo_ai_saas_beta_enabled', '0') === '1';
+        $betaVersion = get_option('sseo_ai_saas_beta_version', '');
+        $betaDownloadUrl = get_option('sseo_ai_saas_beta_download_url', '');
+        $betaChangelog = get_option('sseo_ai_saas_beta_changelog', '');
+
+        $versionsDir = SSEO_AI_SAAS_PLUGIN_DIR . 'versions/';
+        $versionFiles = [];
+        if (is_dir($versionsDir)) {
+            $files = glob($versionsDir . '*.zip');
+            if (is_array($files)) {
+                rsort($files);
+                $versionFiles = $files;
+            }
+        }
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Client Versions', 'sseo-ai-saas'); ?></h1>
+            <?php settings_errors('sseo_ai_client_versions'); ?>
+
+            <form method="post" enctype="multipart/form-data">
+                <?php wp_nonce_field('sseo_ai_client_versions_save', 'sseo_ai_client_versions_nonce'); ?>
+
+                <div class="sseo-ai-card" style="margin-bottom: 20px;">
+                    <h2><?php esc_html_e('Stable Release', 'sseo-ai-saas'); ?></h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_latest_version"><?php esc_html_e('Latest Version', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="sseo_ai_saas_latest_version" id="sseo_ai_saas_latest_version" value="<?php echo esc_attr($latestVersion); ?>" class="regular-text" placeholder="1.5.1">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_download_url"><?php esc_html_e('Download URL', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="url" name="sseo_ai_saas_download_url" id="sseo_ai_saas_download_url" value="<?php echo esc_attr($downloadUrl); ?>" class="regular-text" placeholder="https://.../fyndable-client_v1.5.1.zip">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_min_wp_version"><?php esc_html_e('Minimum WordPress Version', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="sseo_ai_saas_min_wp_version" id="sseo_ai_saas_min_wp_version" value="<?php echo esc_attr($minWpVersion); ?>" class="regular-text" placeholder="6.0">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_update_changelog"><?php esc_html_e('Changelog', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <textarea name="sseo_ai_saas_update_changelog" id="sseo_ai_saas_update_changelog" rows="5" cols="50" class="large-text"><?php echo esc_textarea($changelog); ?></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-card" style="margin-bottom: 20px;">
+                    <h2><?php esc_html_e('Beta Release', 'sseo-ai-saas'); ?></h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_beta_enabled"><?php esc_html_e('Enable Beta Channel', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="checkbox" name="sseo_ai_saas_beta_enabled" id="sseo_ai_saas_beta_enabled" value="1" <?php checked($betaEnabled); ?>>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_beta_version"><?php esc_html_e('Beta Version', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="sseo_ai_saas_beta_version" id="sseo_ai_saas_beta_version" value="<?php echo esc_attr($betaVersion); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_beta_download_url"><?php esc_html_e('Beta Download URL', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="url" name="sseo_ai_saas_beta_download_url" id="sseo_ai_saas_beta_download_url" value="<?php echo esc_attr($betaDownloadUrl); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_beta_changelog"><?php esc_html_e('Beta Changelog', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <textarea name="sseo_ai_saas_beta_changelog" id="sseo_ai_saas_beta_changelog" rows="5" cols="50" class="large-text"><?php echo esc_textarea($betaChangelog); ?></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-card" style="margin-bottom: 20px;">
+                    <h2><?php esc_html_e('Upload Client Plugin', 'sseo-ai-saas'); ?></h2>
+                    <p class="description"><?php esc_html_e('Upload a .zip to the versions folder. The version is used for the file name.', 'sseo-ai-saas'); ?></p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="upload_version"><?php esc_html_e('Version for upload', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="text" name="upload_version" id="upload_version" class="regular-text" placeholder="1.5.1">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="client_plugin_zip"><?php esc_html_e('Plugin .zip', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="file" name="client_plugin_zip" id="client_plugin_zip" accept=".zip">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <?php submit_button(__('Save Client Versions', 'sseo-ai-saas')); ?>
+            </form>
+
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Uploaded Versions', 'sseo-ai-saas'); ?></h2>
+                <?php if (empty($versionFiles)): ?>
+                    <p class="description"><?php esc_html_e('No client plugin zips found in the versions folder.', 'sseo-ai-saas'); ?></p>
+                <?php else: ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('File', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Size', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($versionFiles as $file): ?>
+                                <tr>
+                                    <td><code><?php echo esc_html(basename($file)); ?></code></td>
+                                    <td><?php echo esc_html(size_format(filesize($file), 2)); ?></td>
+                                    <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), (int) filemtime($file))); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
     }

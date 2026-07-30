@@ -101,7 +101,11 @@ class WhiteLabelPackageBuilder
         }
 
         // Fallback to packaged version zip (extract to temp).
+        $latestVersion = \get_option('sseo_ai_saas_latest_version', '1.4');
         $versionZips = [
+            ABSPATH . 'versions/fyndable-client_v' . $latestVersion . '.zip',
+            SSEO_AI_SAAS_PLUGIN_DIR . 'versions/fyndable-client_v' . $latestVersion . '.zip',
+            SSEO_AI_SAAS_PLUGIN_DIR . '../versions/fyndable-client_v' . $latestVersion . '.zip',
             ABSPATH . 'versions/fyndable-client_v1.4.zip',
             SSEO_AI_SAAS_PLUGIN_DIR . 'versions/fyndable-client_v1.4.zip',
             SSEO_AI_SAAS_PLUGIN_DIR . '../versions/fyndable-client_v1.4.zip',

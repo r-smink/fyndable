@@ -151,6 +151,11 @@ class SaaSDashboardShell
                 'icon' => '&#9881;',
             ],
             [
+                'slug' => 'sseo-ai-client-versions',
+                'label' => __('Client Versions', 'sseo-ai-saas'),
+                'icon' => '&#128230;',
+            ],
+            [
                 'slug' => 'sseo-ai-agency-accounts',
                 'label' => __('Agency Accounts', 'sseo-ai-saas'),
                 'icon' => '&#127970;',
