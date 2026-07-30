@@ -76,40 +76,44 @@ class EmailTemplateAdmin
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Email Templates', 'sseo-ai-saas'); ?></h1>
-            <p><?php esc_html_e('Edit the content, colours and logo for every email the SaaS plugin sends.', 'sseo-ai-saas'); ?></p>
-            <p>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=layouts')); ?>" class="button">
-                    <?php esc_html_e('Manage Layouts', 'sseo-ai-saas'); ?>
-                </a>
-            </p>
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e('Template', 'sseo-ai-saas'); ?></th>
-                        <th><?php esc_html_e('Layout', 'sseo-ai-saas'); ?></th>
-                        <th><?php esc_html_e('Active', 'sseo-ai-saas'); ?></th>
-                        <th><?php esc_html_e('Last updated', 'sseo-ai-saas'); ?></th>
-                        <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($templates)): ?>
-                        <tr><td colspan="5"><?php esc_html_e('No templates found.', 'sseo-ai-saas'); ?></td></tr>
-                    <?php else: ?>
-                        <?php foreach ($templates as $template): ?>
-                            <tr>
-                                <td><strong><?php echo esc_html($template['name']); ?></strong><br><code><?php echo esc_html($template['template_key']); ?></code></td>
-                                <td><?php echo esc_html($this->repository->getLayouts()[$template['layout']] ?? $template['layout']); ?></td>
-                                <td><?php echo !empty($template['is_active']) ? '✓' : '—'; ?></td>
-                                <td><?php echo esc_html($template['updated_at']); ?></td>
-                                <td>
-                                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=edit&template=' . $template['template_key'])); ?>" class="button button-small"><?php esc_html_e('Edit', 'sseo-ai-saas'); ?></a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+            <div class="sseo-ai-card">
+                <p class="description" style="margin:0 0 15px;"><?php esc_html_e('Edit the content, colours and logo for every email the SaaS plugin sends.', 'sseo-ai-saas'); ?></p>
+                <p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=layouts')); ?>" class="button button-primary">
+                        <?php esc_html_e('Manage Layouts', 'sseo-ai-saas'); ?>
+                    </a>
+                </p>
+            </div>
+            <div class="sseo-ai-card" style="padding:0;overflow:hidden;">
+                <table class="wp-list-table widefat fixed striped" style="border:none;">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Template', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Layout', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Active', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Last updated', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($templates)): ?>
+                            <tr><td colspan="5"><?php esc_html_e('No templates found.', 'sseo-ai-saas'); ?></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($templates as $template): ?>
+                                <tr>
+                                    <td><strong><?php echo esc_html($template['name']); ?></strong><br><code><?php echo esc_html($template['template_key']); ?></code></td>
+                                    <td><?php echo esc_html($this->repository->getLayouts()[$template['layout']] ?? $template['layout']); ?></td>
+                                    <td><?php echo !empty($template['is_active']) ? '✓' : '—'; ?></td>
+                                    <td><?php echo esc_html($template['updated_at']); ?></td>
+                                    <td>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=edit&template=' . $template['template_key'])); ?>" class="button button-small"><?php esc_html_e('Edit', 'sseo-ai-saas'); ?></a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php
     }
