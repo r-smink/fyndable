@@ -329,6 +329,13 @@ class FyndableLogin
         ob_start();
         ?>
         <style>
+            @font-face {
+                font-family: 'Outfit';
+                src: url('<?php echo SSEO_AI_SAAS_PLUGIN_URL . 'assets/fonts/outfit/Outfit-Variable.ttf'; ?>') format('truetype');
+                font-weight: 100 900;
+                font-style: normal;
+                font-display: swap;
+            }
             .fyndable-login-wrap {
                 min-height: 100vh;
                 display: flex;
@@ -341,7 +348,7 @@ class FyndableLogin
                 width: 100%;
                 margin: 0;
                 color: #fff;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
             .fyndable-login-wrap h2 {
                 margin: 0 0 8px 0;
