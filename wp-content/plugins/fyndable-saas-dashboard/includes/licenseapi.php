@@ -325,7 +325,7 @@ class LicenseAPI
             'success' => true,
             'valid' => true,
             'license' => $result,
-            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'free'),
+            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => match ($settings->getImageApiProvider()) {
@@ -392,7 +392,7 @@ class LicenseAPI
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
-            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'free'),
+            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),
                 'key' => match ($settings->getImageApiProvider()) {

@@ -338,7 +338,7 @@ class CustomerPortal
         return new \WP_REST_Response([
             'success' => true,
             'license_key' => $tenant['license_key'] ?? '',
-            'tier' => $tenant['tier'] ?? 'free',
+            'tier' => $tenant['tier'] ?? 'starter',
             'status' => $tenant['status'] ?? 'active',
             'expires_at' => $tenant['expires_at'] ?? null,
             'max_sites' => (int)($tenant['max_sites'] ?? 1),

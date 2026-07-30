@@ -50,7 +50,7 @@ if (!defined('SSEO_AI_LICENSE_TYPES')) {
 
 // License Tiers
 if (!defined('SSEO_AI_LICENSE_TIERS')) {
-    define('SSEO_AI_LICENSE_TIERS', ['free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency', 'dev']);
+    define('SSEO_AI_LICENSE_TIERS', ['trial', 'starter', 'early_adopters', 'professional', 'business', 'agency', 'dev']);
 }
 
 // Tenant Status

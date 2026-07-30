@@ -17,7 +17,6 @@ class LicenseKeyGenerator
      * Default rate limits (requests per hour) per tier
      */
     private const TIER_RATE_LIMITS = [
-        'free'         => 30,
         'starter'      => 60,
         'early_adopters' => 60,
         'trial'        => 200,
@@ -31,7 +30,6 @@ class LicenseKeyGenerator
      * Default API call limits (per month) per tier
      */
     private const TIER_API_LIMITS = [
-        'free'         => 500,
         'starter'      => 1000,
         'early_adopters' => 1000,
         'trial'        => 5000,
@@ -68,7 +66,7 @@ class LicenseKeyGenerator
      * Generate a new license key
      * 
      * @param array $options License options
-     *   - tier: free|trial|starter|professional|business|agency
+     *   - tier: trial|starter|early_adopters|professional|business|agency
      *   - type: test|free|paid|lifetime|trial
      *   - max_sites: int
      *   - rate_limit: int (per hour)

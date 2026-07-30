@@ -17,24 +17,24 @@ class LicenseFeatureManager
     // All available features in the system
     public const ALL_FEATURES = [
         // Core SEO (All tiers)
-        'truseo' => ['name' => 'TruSEO Score', 'tier' => 'free', 'category' => 'Core SEO'],
-        'smart_tags' => ['name' => 'Smart Meta Tags', 'tier' => 'free', 'category' => 'Core SEO'],
-        'sitemap' => ['name' => 'XML Sitemap', 'tier' => 'free', 'category' => 'Core SEO'],
-        'robots_txt' => ['name' => 'Robots.txt Editor', 'tier' => 'free', 'category' => 'Core SEO'],
-        'open_graph' => ['name' => 'Open Graph', 'tier' => 'free', 'category' => 'Core SEO'],
-        'canonical' => ['name' => 'Canonical URLs', 'tier' => 'free', 'category' => 'Core SEO'],
-        'breadcrumbs' => ['name' => 'Breadcrumbs', 'tier' => 'free', 'category' => 'Core SEO'],
-        'hreflang' => ['name' => 'Hreflang', 'tier' => 'free', 'category' => 'Core SEO'],
-        'lsi_keywords' => ['name' => 'LSI Keywords', 'tier' => 'free', 'category' => 'Core SEO'],
-        'page_speed' => ['name' => 'PageSpeed Insights', 'tier' => 'free', 'category' => 'Core SEO'],
-        'readability' => ['name' => 'Readability Score', 'tier' => 'free', 'category' => 'Core SEO'],
-        'index_now' => ['name' => 'IndexNow', 'tier' => 'free', 'category' => 'Core SEO'],
-        'content_calendar' => ['name' => 'Content Calendar', 'tier' => 'free', 'category' => 'Core SEO'],
-        'smart_linking' => ['name' => 'Smart Internal Linking', 'tier' => 'free', 'category' => 'Core SEO'],
-        'eeat_validator' => ['name' => 'E-E-A-T Validator', 'tier' => 'free', 'category' => 'Core SEO'],
-        'video_seo' => ['name' => 'Video SEO', 'tier' => 'free', 'category' => 'Core SEO'],
-        'faq_schema' => ['name' => 'FAQ Schema', 'tier' => 'free', 'category' => 'Core SEO'],
-        'ai_image_gen' => ['name' => 'AI Image Generator', 'tier' => 'free', 'category' => 'Core SEO'],
+        'truseo' => ['name' => 'TruSEO Score', 'tier' => 'base', 'category' => 'Core SEO'],
+        'smart_tags' => ['name' => 'Smart Meta Tags', 'tier' => 'base', 'category' => 'Core SEO'],
+        'sitemap' => ['name' => 'XML Sitemap', 'tier' => 'base', 'category' => 'Core SEO'],
+        'robots_txt' => ['name' => 'Robots.txt Editor', 'tier' => 'base', 'category' => 'Core SEO'],
+        'open_graph' => ['name' => 'Open Graph', 'tier' => 'base', 'category' => 'Core SEO'],
+        'canonical' => ['name' => 'Canonical URLs', 'tier' => 'base', 'category' => 'Core SEO'],
+        'breadcrumbs' => ['name' => 'Breadcrumbs', 'tier' => 'base', 'category' => 'Core SEO'],
+        'hreflang' => ['name' => 'Hreflang', 'tier' => 'base', 'category' => 'Core SEO'],
+        'lsi_keywords' => ['name' => 'LSI Keywords', 'tier' => 'base', 'category' => 'Core SEO'],
+        'page_speed' => ['name' => 'PageSpeed Insights', 'tier' => 'base', 'category' => 'Core SEO'],
+        'readability' => ['name' => 'Readability Score', 'tier' => 'base', 'category' => 'Core SEO'],
+        'index_now' => ['name' => 'IndexNow', 'tier' => 'base', 'category' => 'Core SEO'],
+        'content_calendar' => ['name' => 'Content Calendar', 'tier' => 'base', 'category' => 'Core SEO'],
+        'smart_linking' => ['name' => 'Smart Internal Linking', 'tier' => 'base', 'category' => 'Core SEO'],
+        'eeat_validator' => ['name' => 'E-E-A-T Validator', 'tier' => 'base', 'category' => 'Core SEO'],
+        'video_seo' => ['name' => 'Video SEO', 'tier' => 'base', 'category' => 'Core SEO'],
+        'faq_schema' => ['name' => 'FAQ Schema', 'tier' => 'base', 'category' => 'Core SEO'],
+        'ai_image_gen' => ['name' => 'AI Image Generator', 'tier' => 'base', 'category' => 'Core SEO'],
         
         // Starter+ Features
         'link_assistant' => ['name' => 'Link Assistant', 'tier' => 'starter', 'category' => 'Content Tools'],
@@ -107,7 +107,7 @@ class LicenseFeatureManager
      */
     public function getFeaturesForTier(string $tier): array
     {
-        $tierLevels = ['free' => 0, 'starter' => 1, 'early_adopters' => 1, 'professional' => 2, 'business' => 3, 'agency' => 4, 'dev' => 5];
+        $tierLevels = ['starter' => 1, 'early_adopters' => 1, 'professional' => 2, 'business' => 3, 'agency' => 4, 'dev' => 5];
         $tierLevel = $tierLevels[$tier] ?? 0;
         
         $available = [];

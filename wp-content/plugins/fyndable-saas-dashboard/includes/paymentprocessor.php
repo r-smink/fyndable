@@ -87,7 +87,6 @@ class PaymentProcessor
     public function getTierPricing(string $tier, string $interval = 'month'): array|\WP_Error
     {
         $defaultMonthly = [
-            'free' => 0.00,
             'trial' => 0.00,
             'starter' => 29.00,
             'early_adopters' => 14.50,

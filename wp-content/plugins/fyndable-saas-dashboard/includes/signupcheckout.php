@@ -253,7 +253,7 @@ class SignupCheckout
         }
 
         // Self-serve checkout is disabled by default for the beta
-        if ($tier !== 'free' && !get_option('sseo_ai_saas_self_serve_enabled', false)) {
+        if (!get_option('sseo_ai_saas_self_serve_enabled', false)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Self-serve checkout is currently disabled. Please contact us for a license key.',
@@ -295,11 +295,11 @@ class SignupCheckout
             'email' => $email,
             'tier' => $tier,
             'license_key' => $licenseKey,
-            'status' => $tier === 'free' ? 'active' : 'pending_payment',
+            'status' => 'pending_payment',
             'max_sites' => $limits['max_sites'],
             'rate_limit' => $limits['rate_limit'],
             'api_calls_limit' => $limits['api_calls_limit'],
-            'expires_at' => $tier === 'free' ? null : gmdate('Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS),
+            'expires_at' => gmdate('Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS),
         ];
 
         $tenantResult = $this->tenants->createTenant($tenantData);
@@ -326,23 +326,6 @@ class SignupCheckout
         }
         if (!empty($country)) {
             $this->tenants->setTenantSetting($tenantKey, 'address_country', $country);
-        }
-
-        // For free tier, activate immediately
-        if ($tier === 'free') {
-            $this->emailAutomation->sendWelcomeEmail($tenantKey, [
-                'email' => $email,
-                'tier' => 'free',
-                'license_key' => $licenseKey,
-            ]);
-
-            return new \WP_REST_Response([
-                'success' => true,
-                'tenant_key' => $tenantKey,
-                'license_key' => $licenseKey,
-                'requires_payment' => false,
-                'redirect_url' => $this->getSuccessUrl($licenseKey),
-            ], 200);
         }
 
         // For paid tiers, create checkout session
@@ -392,9 +375,7 @@ class SignupCheckout
             && ($tenant['payment_status'] ?? '') === 'active';
 
         // Free tier is always active without payment.
-        $isFree = ($tenant['tier'] ?? '') === 'free';
-
-        if (!$isActive && !$isFree) {
+        if (!$isActive) {
             $verified = $this->verifyPaymentInline($tenant, $paymentId);
             if (!$verified) {
                 // Do not activate — payment not confirmed yet.
@@ -475,7 +456,6 @@ class SignupCheckout
     private function getTierLimits(string $tier): array
     {
         $limits = [
-            'free' => ['max_sites' => 1, 'rate_limit' => 30, 'api_calls_limit' => 30, 'geo_scan_limit' => 0],
             'starter' => ['max_sites' => 1, 'rate_limit' => 60, 'api_calls_limit' => 500, 'geo_scan_limit' => 5],
             'professional' => ['max_sites' => 1, 'rate_limit' => 120, 'api_calls_limit' => 2000, 'geo_scan_limit' => 35],
             'business' => ['max_sites' => 3, 'rate_limit' => 300, 'api_calls_limit' => 5000, 'geo_scan_limit' => 90],
@@ -484,7 +464,7 @@ class SignupCheckout
 
         $limits['early_adopters'] = $limits['starter'];
 
-        return $limits[$tier] ?? $limits['free'];
+        return $limits[$tier] ?? $limits['starter'];
     }
 
     /**

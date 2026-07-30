@@ -40,7 +40,7 @@ class TenantRepository
             domain varchar(255) DEFAULT NULL,
             email varchar(255) NOT NULL,
             status enum('active', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
-            tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'free',
+            tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
             license_key varchar(255) DEFAULT NULL,
             max_sites int(11) NOT NULL DEFAULT 1,
             rate_limit int(11) NOT NULL DEFAULT 60,
@@ -250,7 +250,7 @@ class TenantRepository
             'domain' => !empty($data['domain']) ? sanitize_text_field($data['domain']) : null,
             'email' => sanitize_email($data['email']),
             'status' => $data['status'] ?? 'active',
-            'tier' => $data['tier'] ?? 'free',
+            'tier' => $data['tier'] ?? 'starter',
             'license_key' => !empty($data['license_key']) ? $data['license_key'] : null,
             'max_sites' => (int)($data['max_sites'] ?? 1),
             'rate_limit' => (int)($data['rate_limit'] ?? 60),
@@ -857,7 +857,7 @@ class TenantRepository
             $tenantsTable
         ));
         if ($tenantsEnum && strpos($tenantsEnum, 'early_adopters') === false) {
-            $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'free'");
+            $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter'");
         }
         $licenseEnum = $wpdb->get_var($wpdb->prepare(
             "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'tier'",

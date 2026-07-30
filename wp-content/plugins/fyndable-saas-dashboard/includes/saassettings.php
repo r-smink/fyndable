@@ -57,14 +57,7 @@ class SaaSSettings
             [$this, 'renderCostDashboard']
         );
 
-        add_submenu_page(
-            'sseo-ai-licenses',
-            __('AI Models', 'sseo-ai-saas'),
-            __('AI Models', 'sseo-ai-saas'),
-            'manage_options',
-            'sseo-ai-models',
-            [$this, 'renderAiModelsPage']
-        );
+
     }
     
     /**
@@ -92,39 +85,39 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openart_api_key');
         
         // Usage limits per tier
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_api_calls', ['default' => 50]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_api_calls', ['default' => 200]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_early_adopters_api_calls', ['default' => 200]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_api_calls', ['default' => 1000]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_api_calls', ['default' => 5000]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_api_calls', ['default' => 20000]);
         
         // Cost limits per tier (in USD)
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_cost_limit', ['default' => 5]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_cost_limit', ['default' => 20]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_early_adopters_cost_limit', ['default' => 20]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_cost_limit', ['default' => 50]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_cost_limit', ['default' => 100]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_cost_limit', ['default' => 500]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_cost_limit', ['default' => 2000]);
 
         // Monthly subscription price per tier (in EUR)
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_price', ['default' => 0]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_price', ['default' => 29]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_early_adopters_price', ['default' => 14.5]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_price', ['default' => 0]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_price', ['default' => 79]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_price', ['default' => 199]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_price', ['default' => 499]);
 
         // Monthly auto-scheduled post limits per tier
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_auto_posts', ['default' => 0]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_auto_posts', ['default' => 15]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_early_adopters_auto_posts', ['default' => 15]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_auto_posts', ['default' => 10]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_auto_posts', ['default' => 35]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_auto_posts', ['default' => 150]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_agency_auto_posts', ['default' => 999999]);
 
         // Monthly GEO scan/audit limits per tier
-        register_setting('ai_seo_saas_limits', 'ai_seo_saas_free_geo_scans', ['default' => 0]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_starter_geo_scans', ['default' => 5]);
+        register_setting('ai_seo_saas_limits', 'ai_seo_saas_early_adopters_geo_scans', ['default' => 5]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_trial_geo_scans', ['default' => 5]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_professional_geo_scans', ['default' => 35]);
         register_setting('ai_seo_saas_limits', 'ai_seo_saas_business_geo_scans', ['default' => 90]);
@@ -388,7 +381,6 @@ class SaaSSettings
     private function getDefaultApiLimit(string $tier): int
     {
         $defaults = [
-            'free' => 50,
             'starter' => 200,
             'early_adopters' => 200,
             'trial' => 500,
@@ -405,7 +397,6 @@ class SaaSSettings
     private function getDefaultCostLimit(string $tier): float
     {
         $defaults = [
-            'free' => 5,
             'starter' => 20,
             'early_adopters' => 20,
             'trial' => 50,
@@ -431,7 +422,6 @@ class SaaSSettings
     private function getDefaultAutoPostLimit(string $tier): int
     {
         $defaults = [
-            'free' => 0,
             'starter' => 15,
             'early_adopters' => 15,
             'trial' => 10,
@@ -457,7 +447,6 @@ class SaaSSettings
     private function getDefaultGeoScanLimit(string $tier): int
     {
         $defaults = [
-            'free' => 0,
             'starter' => 5,
             'early_adopters' => 5,
             'trial' => 5,
@@ -483,7 +472,6 @@ class SaaSSettings
     private function getDefaultPrice(string $tier): float
     {
         $defaults = [
-            'free' => 0,
             'starter' => 29,
             'early_adopters' => 14.5,
             'trial' => 0,
@@ -499,7 +487,7 @@ class SaaSSettings
      */
     public function getAllTiers(): array
     {
-        $tiers = ['free', 'starter', 'early_adopters', 'trial', 'professional', 'business', 'agency'];
+        $tiers = ['starter', 'early_adopters', 'trial', 'professional', 'business', 'agency'];
         $result = [];
         foreach ($tiers as $tier) {
             $result[$tier] = [
@@ -894,8 +882,8 @@ class SaaSSettings
                         <tbody>
                             <?php
                             $tiers = [
-                                'free' => __('Free', 'sseo-ai-saas'),
                                 'starter' => __('Starter', 'sseo-ai-saas'),
+                                'early_adopters' => __('Early Adopters', 'sseo-ai-saas'),
                                 'trial' => __('Trial', 'sseo-ai-saas'),
                                 'professional' => __('Professional', 'sseo-ai-saas'),
                                 'business' => __('Business', 'sseo-ai-saas'),

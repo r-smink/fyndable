@@ -52,7 +52,6 @@ class RevenueDashboard
         $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
 
         $tierPricing = [
-            'free' => 0,
             'trial' => 0,
             'starter' => 19,
             'early_adopters' => 9.5,

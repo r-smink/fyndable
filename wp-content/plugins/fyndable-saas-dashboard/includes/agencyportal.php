@@ -288,7 +288,7 @@ class AgencyPortal
         $tierCounts = [];
         $statusCounts = ['active' => 0, 'suspended' => 0, 'cancelled' => 0];
         foreach ($recentTenants as $t) {
-            $tier = $t['tier'] ?? 'free';
+            $tier = $t['tier'] ?? 'starter';
             $tierCounts[$tier] = ($tierCounts[$tier] ?? 0) + 1;
             $status = $t['status'] ?? 'active';
             if (isset($statusCounts[$status])) {

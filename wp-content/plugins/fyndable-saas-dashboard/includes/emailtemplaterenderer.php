@@ -119,8 +119,8 @@ class EmailTemplateRenderer
             'tenant_domain' => $tenant['domain'] ?? '',
             'tenant_key' => $tenant['tenant_key'] ?? '',
             'license_key' => $tenant['license_key'] ?? '',
-            'tier' => ucfirst($tenant['tier'] ?? 'free'),
-            'current_tier' => ucfirst($tenant['tier'] ?? 'free'),
+            'tier' => ucfirst($tenant['tier'] ?? 'starter'),
+            'current_tier' => ucfirst($tenant['tier'] ?? 'starter'),
         ];
     }
 

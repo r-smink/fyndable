@@ -180,11 +180,6 @@ class CustomerRoleManager
             return;
         }
 
-        // Skip free tier — no account needed
-        if (($tenant['tier'] ?? '') === 'free') {
-            return;
-        }
-
         $email = $tenant['email'] ?? '';
         if (empty($email) || !is_email($email)) {
             return;
