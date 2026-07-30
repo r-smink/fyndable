@@ -313,7 +313,7 @@ class FyndableLogin
 
         if (is_user_logged_in()) {
             $dashboardUrl = admin_url('admin.php?page=sseo-ai-shell');
-            return '<div class="fyndable-login-message" style="max-width:420px;margin:0 auto;padding:24px;background:#f0f9ff;border-radius:12px;text-align:center;">' .
+            return '<div class="fyndable-login-message" style="max-width:420px;margin:0 auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);text-align:center;">' .
                 sprintf(
                     __('You are already logged in. <a href="%s" style="color:#379fd3;font-weight:600;">Go to dashboard</a>', 'sseo-ai-saas'),
                     esc_url($dashboardUrl)
@@ -330,25 +330,45 @@ class FyndableLogin
         ?>
         <style>
             .fyndable-login-wrap {
-                max-width: 420px;
-                margin: 0 auto;
-                padding: 40px;
-                background: #fff;
-                border-radius: 16px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                padding: 40px 20px;
                 box-sizing: border-box;
+                width: 100%;
+                margin: 0;
+                color: #fff;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
             .fyndable-login-wrap h2 {
                 margin: 0 0 8px 0;
-                font-size: 24px;
+                font-size: 28px;
                 font-weight: 700;
-                color: #111827;
+                color: #fff;
+                text-align: center;
+            }
+            .fyndable-login-wrap h2 span {
+                font-weight: 400;
+                opacity: 0.85;
             }
             .fyndable-login-wrap .subtitle {
-                color: #6b7280;
+                color: rgba(255,255,255,0.85);
                 margin: 0 0 30px 0;
                 font-size: 14px;
+                text-align: center;
+            }
+            .fyndable-login-wrap form {
+                width: 420px;
+                max-width: 90vw;
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                padding: 40px;
+                box-sizing: border-box;
+                margin: 0 auto;
             }
             .fyndable-login-field {
                 margin-bottom: 20px;
@@ -401,16 +421,21 @@ class FyndableLogin
             @media screen and (max-width: 480px) {
                 .fyndable-login-wrap {
                     padding: 24px 16px;
-                    width: 100%;
-                    max-width: calc(100% - 32px);
                 }
-                .fyndable-login-wrap h2 { font-size: 20px; }
-                .fyndable-login-field input { font-size: 16px; }
+                .fyndable-login-wrap form {
+                    padding: 24px;
+                }
+                .fyndable-login-wrap h2 {
+                    font-size: 20px;
+                }
+                .fyndable-login-field input {
+                    font-size: 16px;
+                }
             }
         </style>
         <div class='fyndable-login-wrap'>
-            <h2><?php echo esc_html(sprintf(__('Sign in to %s', 'sseo-ai-saas'), $brandName)); ?></h2>
-            <p class='subtitle'><?php echo esc_html(__('Enter your credentials to access your dashboard.', 'sseo-ai-saas')); ?></p>
+            <h2><?php echo esc_html($brandName); ?> <span><?php echo esc_html(__('Smart SEO', 'sseo-ai-saas')); ?></span></h2>
+            <p class='subtitle'><?php echo esc_html(sprintf(__('Welcome to %s — sign in to your dashboard', 'sseo-ai-saas'), $brandName)); ?></p>
             <form action='<?php echo $action; ?>' method='post'>
                 <p class='fyndable-login-field'>
                     <label for='fyndable_log'><?php echo esc_html(__('Email or username', 'sseo-ai-saas')); ?></label>
