@@ -666,6 +666,9 @@ class AgencyPortal
                                     <option value="free"><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
                                     <option value="trial"><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
                                     <option value="starter" selected><?php esc_html_e('Starter', 'sseo-ai-saas'); ?></option>
+                                    <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
+                                        <option value="early_adopters"><?php esc_html_e('Early Adopters', 'sseo-ai-saas'); ?></option>
+                                    <?php endif; ?>
                                     <option value="professional"><?php esc_html_e('Professional', 'sseo-ai-saas'); ?></option>
                                     <option value="business"><?php esc_html_e('Business', 'sseo-ai-saas'); ?></option>
                                 </select>

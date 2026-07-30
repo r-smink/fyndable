@@ -141,9 +141,9 @@ class SaaSDashboardShell
                 'icon' => '&#128176;',
             ],
             [
-                'slug' => 'sseo-ai-google-costs',
-                'label' => __('Google Costs', 'sseo-ai-saas'),
-                'icon' => '&#127907;',
+                'slug' => 'sseo-ai-models',
+                'label' => __('AI Models', 'sseo-ai-saas'),
+                'icon' => '&#129302;',
             ],
             [
                 'slug' => 'sseo-ai-settings',

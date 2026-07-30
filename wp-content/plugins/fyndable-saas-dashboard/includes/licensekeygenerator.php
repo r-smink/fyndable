@@ -19,6 +19,7 @@ class LicenseKeyGenerator
     private const TIER_RATE_LIMITS = [
         'free'         => 30,
         'starter'      => 60,
+        'early_adopters' => 60,
         'trial'        => 200,
         'professional' => 200,
         'business'     => 500,
@@ -32,6 +33,7 @@ class LicenseKeyGenerator
     private const TIER_API_LIMITS = [
         'free'         => 500,
         'starter'      => 1000,
+        'early_adopters' => 1000,
         'trial'        => 5000,
         'professional' => 10000,
         'business'     => 50000,

@@ -33,7 +33,7 @@
         html += '<input type="checkbox" id="fyndable-billing-toggle" ' + (selectedInterval === 'year' ? 'checked' : '') + '>';
         html += '<span class="fyndable-signup-toggle-slider"></span>';
         html += '</label>';
-        html += '<span class="fyndable-signup-billing-label">Yearly ' + (yearSavings ? '<span class="fyndable-signup-savings">' + escapeHtml(yearSavings) + '</span>' : '') + '</span>';
+        html += '<span class="fyndable-signup-billing-label">Yearly <span class="fyndable-signup-savings">2 maanden gratis</span></span>';
         html += '</div>';
         html += '<div class="fyndable-signup-plans">';
 

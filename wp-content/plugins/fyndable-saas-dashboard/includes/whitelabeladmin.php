@@ -966,6 +966,9 @@ class WhiteLabelAdmin
                 case 'professional':
                     $totalRevenue += 199;
                     break;
+                case 'early_adopters':
+                    $totalRevenue += 14.5;
+                    break;
                 case 'basic':
                 case 'starter':
                 default:

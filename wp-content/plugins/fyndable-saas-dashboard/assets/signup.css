@@ -114,6 +114,7 @@
 .fyndable-signup-plan.popular {
     border-color: #379fd3;
     box-shadow: 0 4px 12px rgba(55, 159, 211, 0.15);
+    padding-top: 44px;
 }
 .fyndable-signup-plan .badge {
     position: absolute;
@@ -177,8 +178,9 @@
     background: #f3f4f6;
     color: #374151;
 }
-.fyndable-signup-plan button:hover {
-    background: #e5e7eb;
+.fyndable-signup-plan:hover button {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
 }
 .fyndable-signup-plan.popular button,
 .fyndable-signup-plan button.selected {

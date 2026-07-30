@@ -59,11 +59,11 @@ class SaaSSettings
 
         add_submenu_page(
             'sseo-ai-licenses',
-            __('Google API Costs', 'sseo-ai-saas'),
-            __('Google API Costs', 'sseo-ai-saas'),
+            __('AI Models', 'sseo-ai-saas'),
+            __('AI Models', 'sseo-ai-saas'),
             'manage_options',
-            'sseo-ai-google-costs',
-            [$this, 'renderGoogleCostDashboard']
+            'sseo-ai-models',
+            [$this, 'renderAiModelsPage']
         );
     }
     
@@ -150,7 +150,7 @@ class SaaSSettings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_trial_enabled', ['default' => '1']);
 
         // Custom tier pricing (overrides defaults in PaymentProcessor)
-        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_pricing', ['default' => []]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_pricing', ['default' => []]);
 
         // Google OAuth credentials (central, used by all client sites)
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_client_id');
@@ -186,6 +186,9 @@ class SaaSSettings
         // Model tier routing overrides
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_standard_routing', ['default' => []]);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_premium_routing', ['default' => []]);
+
+        // Early Adopters tier toggle
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_early_adopters_enabled', ['default' => false, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
     }
     
     /**
@@ -387,6 +390,7 @@ class SaaSSettings
         $defaults = [
             'free' => 50,
             'starter' => 200,
+            'early_adopters' => 200,
             'trial' => 500,
             'professional' => 1000,
             'business' => 5000,
@@ -403,6 +407,7 @@ class SaaSSettings
         $defaults = [
             'free' => 5,
             'starter' => 20,
+            'early_adopters' => 20,
             'trial' => 50,
             'professional' => 100,
             'business' => 500,
@@ -428,6 +433,7 @@ class SaaSSettings
         $defaults = [
             'free' => 0,
             'starter' => 15,
+            'early_adopters' => 15,
             'trial' => 10,
             'professional' => 35,
             'business' => 150,
@@ -453,6 +459,7 @@ class SaaSSettings
         $defaults = [
             'free' => 0,
             'starter' => 5,
+            'early_adopters' => 5,
             'trial' => 5,
             'professional' => 35,
             'business' => 90,
@@ -478,6 +485,7 @@ class SaaSSettings
         $defaults = [
             'free' => 0,
             'starter' => 29,
+            'early_adopters' => 14.5,
             'trial' => 0,
             'professional' => 79,
             'business' => 199,
@@ -491,7 +499,7 @@ class SaaSSettings
      */
     public function getAllTiers(): array
     {
-        $tiers = ['free', 'starter', 'trial', 'professional', 'business', 'agency'];
+        $tiers = ['free', 'starter', 'early_adopters', 'trial', 'professional', 'business', 'agency'];
         $result = [];
         foreach ($tiers as $tier) {
             $result[$tier] = [
@@ -1074,6 +1082,16 @@ class SaaSSettings
                     </tr>
                 </table>
 
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="early_adopters_enabled"><?php esc_html_e('Enable Early Adopters', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="checkbox" name="sseo_ai_saas_early_adopters_enabled" id="early_adopters_enabled" value="1" <?php checked(get_option('sseo_ai_saas_early_adopters_enabled', false)); ?>>
+                            <p class="description"><?php esc_html_e('Make the Early Adopters tier available for signup and license generation. It is a copy of Starter at half price.', 'sseo-ai-saas'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
                 <h3><?php esc_html_e('Custom Tier Pricing', 'sseo-ai-saas'); ?></h3>
                 <p class="description"><?php esc_html_e('Set the monthly and yearly prices for each tier. Leave blank to use defaults.', 'sseo-ai-saas'); ?></p>
                 <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
@@ -1088,9 +1106,9 @@ class SaaSSettings
                     <?php
                     $customPricing = get_option('sseo_ai_saas_pricing', []);
                     if (!is_array($customPricing)) $customPricing = [];
-                    $tiers = ['starter', 'professional', 'business', 'agency'];
-                    $defaultsMonthly = ['starter' => 29, 'professional' => 79, 'business' => 199, 'agency' => 499];
-                    $defaultsYearly = ['starter' => 290, 'professional' => 790, 'business' => 1990, 'agency' => 4990];
+                    $tiers = ['starter', 'early_adopters', 'professional', 'business', 'agency'];
+                    $defaultsMonthly = ['starter' => 29, 'early_adopters' => 14.5, 'professional' => 79, 'business' => 199, 'agency' => 499];
+                    $defaultsYearly = ['starter' => 290, 'early_adopters' => 145, 'professional' => 790, 'business' => 1990, 'agency' => 4990];
                     foreach ($tiers as $tier):
                         $currentMonthly = $customPricing[$tier]['monthly_amount'] ?? ($customPricing[$tier]['amount'] ?? '');
                         $currentYearly = $customPricing[$tier]['yearly_amount'] ?? '';
@@ -1290,6 +1308,7 @@ class SaaSSettings
             </div>
         </div>
         <?php
+        $this->renderGoogleCostDashboard();
     }
 
     /**
@@ -1358,7 +1377,7 @@ class SaaSSettings
             <h1><?php esc_html_e('Google API Costs per Klant', 'sseo-ai-saas'); ?></h1>
 
             <form method="get" action="" style="margin-bottom: 15px;">
-                <input type="hidden" name="page" value="sseo-ai-google-costs">
+                <input type="hidden" name="page" value="sseo-ai-costs">
                 <label for="month"><?php esc_html_e('Maand:', 'sseo-ai-saas'); ?></label>
                 <select name="month" id="month" onchange="this.form.submit()">
                     <?php foreach ($availableMonths as $m): ?>
@@ -1529,6 +1548,70 @@ class SaaSSettings
                     </table>
                 </div>
             </div>
+        </div>
+        <?php
+    }
+
+    public function renderAiModelsPage(): void
+    {
+        $useCases = \SSEOAISaaS\ProviderRouter::getUseCases();
+        $standardModels = array_intersect_key(
+            \SSEOAISaaS\ProviderRouter::getAvailableModels(),
+            array_flip(\SSEOAISaaS\ProviderRouter::getStandardModels())
+        );
+        $premiumModels = array_intersect_key(
+            \SSEOAISaaS\ProviderRouter::getAvailableModels(),
+            array_flip(\SSEOAISaaS\ProviderRouter::getPremiumModels())
+        );
+        $standardRouting = get_option('sseo_ai_saas_standard_routing', []);
+        $premiumRouting = get_option('sseo_ai_saas_premium_routing', []);
+        $standardDefaults = \SSEOAISaaS\ProviderRouter::getRoutingForModelTier('standard');
+        $premiumDefaults = \SSEOAISaaS\ProviderRouter::getRoutingForModelTier('premium');
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('AI Models', 'sseo-ai-saas'); ?></h1>
+            <form method="post" action="options.php">
+                <?php settings_fields('ai_seo_saas_settings'); ?>
+                <p class="description"><?php esc_html_e('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas'); ?></p>
+
+                <h2><?php esc_html_e('Standard Tier Models', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Used for Starter / standard subscriptions.', 'sseo-ai-saas'); ?></p>
+                <table class="form-table">
+                    <?php foreach ($useCases as $key => $label): ?>
+                        <?php $current = $standardRouting[$key] ?? $standardDefaults[$key] ?? 'openai/gpt-4o-mini'; ?>
+                        <tr>
+                            <th scope="row"><label for="standard_routing_<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></label></th>
+                            <td>
+                                <select name="sseo_ai_saas_standard_routing[<?php echo esc_attr($key); ?>]" id="standard_routing_<?php echo esc_attr($key); ?>">
+                                    <?php foreach ($standardModels as $modelKey => $modelLabel): ?>
+                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($current, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+
+                <h2><?php esc_html_e('Premium Tier Models', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Used for Professional, Business and Agency subscriptions.', 'sseo-ai-saas'); ?></p>
+                <table class="form-table">
+                    <?php foreach ($useCases as $key => $label): ?>
+                        <?php $current = $premiumRouting[$key] ?? $premiumDefaults[$key] ?? 'openai/gpt-4o'; ?>
+                        <tr>
+                            <th scope="row"><label for="premium_routing_<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></label></th>
+                            <td>
+                                <select name="sseo_ai_saas_premium_routing[<?php echo esc_attr($key); ?>]" id="premium_routing_<?php echo esc_attr($key); ?>">
+                                    <?php foreach ($premiumModels as $modelKey => $modelLabel): ?>
+                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($current, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+
+                <?php submit_button(__('Save AI Models', 'sseo-ai-saas')); ?>
+            </form>
         </div>
         <?php
     }

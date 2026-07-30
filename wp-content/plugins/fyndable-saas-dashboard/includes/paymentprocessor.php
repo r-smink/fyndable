@@ -90,6 +90,7 @@ class PaymentProcessor
             'free' => 0.00,
             'trial' => 0.00,
             'starter' => 29.00,
+            'early_adopters' => 14.50,
             'professional' => 79.00,
             'business' => 199.00,
             'agency' => 499.00,

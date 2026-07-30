@@ -374,6 +374,9 @@ class LicenseAdmin
                                     <option value="free"><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
                                     <option value="trial"><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
                                     <option value="starter" selected><?php esc_html_e('Starter - €99/month', 'sseo-ai-saas'); ?></option>
+                                    <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
+                                        <option value="early_adopters"><?php esc_html_e('Early Adopters', 'sseo-ai-saas'); ?></option>
+                                    <?php endif; ?>
                                     <option value="professional"><?php esc_html_e('Professional - €199/month', 'sseo-ai-saas'); ?></option>
                                     <option value="business"><?php esc_html_e('Business - €299/month', 'sseo-ai-saas'); ?></option>
                                     <option value="agency"><?php esc_html_e('Agency - €499/month', 'sseo-ai-saas'); ?></option>
@@ -440,6 +443,7 @@ class LicenseAdmin
                         'rate_limits' => [
                             'free' => LicenseKeyGenerator::getDefaultRateLimit('free'),
                             'starter' => LicenseKeyGenerator::getDefaultRateLimit('starter'),
+                            'early_adopters' => LicenseKeyGenerator::getDefaultRateLimit('early_adopters'),
                             'trial' => LicenseKeyGenerator::getDefaultRateLimit('trial'),
                             'professional' => LicenseKeyGenerator::getDefaultRateLimit('professional'),
                             'business' => LicenseKeyGenerator::getDefaultRateLimit('business'),
@@ -449,6 +453,7 @@ class LicenseAdmin
                         'api_limits' => [
                             'free' => LicenseKeyGenerator::getDefaultApiLimit('free'),
                             'starter' => LicenseKeyGenerator::getDefaultApiLimit('starter'),
+                            'early_adopters' => LicenseKeyGenerator::getDefaultApiLimit('early_adopters'),
                             'trial' => LicenseKeyGenerator::getDefaultApiLimit('trial'),
                             'professional' => LicenseKeyGenerator::getDefaultApiLimit('professional'),
                             'business' => LicenseKeyGenerator::getDefaultApiLimit('business'),
@@ -456,7 +461,7 @@ class LicenseAdmin
                             'dev' => LicenseKeyGenerator::getDefaultApiLimit('dev'),
                         ],
                         'max_sites' => [
-                            'free' => 1, 'starter' => 1, 'trial' => 3,
+                            'free' => 1, 'starter' => 1, 'early_adopters' => 1, 'trial' => 3,
                             'professional' => 5, 'business' => 15, 'agency' => 50, 'dev' => 100,
                         ],
                     ]); ?>;
@@ -541,6 +546,9 @@ class LicenseAdmin
                         <option value="free" <?php selected($filters['tier'], 'free'); ?>><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
                         <option value="trial" <?php selected($filters['tier'], 'trial'); ?>><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
                         <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php esc_html_e('Starter - €99', 'sseo-ai-saas'); ?></option>
+                        <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
+                            <option value="early_adopters" <?php selected($filters['tier'], 'early_adopters'); ?>><?php esc_html_e('Early Adopters', 'sseo-ai-saas'); ?></option>
+                        <?php endif; ?>
                         <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional - €199', 'sseo-ai-saas'); ?></option>
                         <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business - €299', 'sseo-ai-saas'); ?></option>
                         <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency - €499', 'sseo-ai-saas'); ?></option>

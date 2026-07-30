@@ -267,6 +267,7 @@ class CustomerRoleManager
     {
         $map = [
             'starter'      => 'fyndable_starter',
+            'early_adopters' => 'fyndable_starter',
             'professional' => 'fyndable_professional',
             'business'     => 'fyndable_business',
         ];

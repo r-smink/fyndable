@@ -107,7 +107,7 @@ class LicenseFeatureManager
      */
     public function getFeaturesForTier(string $tier): array
     {
-        $tierLevels = ['free' => 0, 'starter' => 1, 'professional' => 2, 'business' => 3, 'agency' => 4, 'dev' => 5];
+        $tierLevels = ['free' => 0, 'starter' => 1, 'early_adopters' => 1, 'professional' => 2, 'business' => 3, 'agency' => 4, 'dev' => 5];
         $tierLevel = $tierLevels[$tier] ?? 0;
         
         $available = [];

@@ -40,7 +40,7 @@ class TenantRepository
             domain varchar(255) DEFAULT NULL,
             email varchar(255) NOT NULL,
             status enum('active', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
-            tier enum('free', 'trial', 'starter', 'professional', 'business', 'agency') NOT NULL DEFAULT 'free',
+            tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'free',
             license_key varchar(255) DEFAULT NULL,
             max_sites int(11) NOT NULL DEFAULT 1,
             rate_limit int(11) NOT NULL DEFAULT 60,
@@ -96,7 +96,7 @@ class TenantRepository
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             license_key varchar(255) NOT NULL,
             license_type enum('test', 'free', 'paid', 'lifetime', 'trial') NOT NULL DEFAULT 'paid',
-            tier enum('free', 'trial', 'starter', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
+            tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
             status enum('active', 'used', 'revoked', 'expired') NOT NULL DEFAULT 'active',
             max_sites int(11) NOT NULL DEFAULT 1,
             rate_limit int(11) NOT NULL DEFAULT 60,
@@ -624,7 +624,7 @@ class TenantRepository
     /**
      * Get tenant usage for period
      */
-    public function getTenantUsage(string $tenantKey, string $period = null): array
+    public function getTenantUsage(string $tenantKey, ?string $period = null): array
     {
         global $wpdb;
         $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
@@ -848,6 +848,24 @@ class TenantRepository
                 $wpdb->query("ALTER TABLE $fullTable ADD KEY tenant_id (tenant_id)");
             }
         }
+
+        // Ensure early_adopters tier is present in tier enum columns
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+        $licenseTable = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        $tenantsEnum = $wpdb->get_var($wpdb->prepare(
+            "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'tier'",
+            $tenantsTable
+        ));
+        if ($tenantsEnum && strpos($tenantsEnum, 'early_adopters') === false) {
+            $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'free'");
+        }
+        $licenseEnum = $wpdb->get_var($wpdb->prepare(
+            "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'tier'",
+            $licenseTable
+        ));
+        if ($licenseEnum && strpos($licenseEnum, 'early_adopters') === false) {
+            $wpdb->query("ALTER TABLE $licenseTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter'");
+        }
     }
     
     /**
@@ -895,7 +913,7 @@ class TenantRepository
     /**
      * Get Google API usage for a tenant in a period
      */
-    public function getGoogleApiUsage(string $tenantKey, string $period = null): array
+    public function getGoogleApiUsage(string $tenantKey, ?string $period = null): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
@@ -914,7 +932,7 @@ class TenantRepository
     /**
      * Get Google API usage for all tenants in a period (for admin overview)
      */
-    public function getAllGoogleApiUsage(string $period = null): array
+    public function getAllGoogleApiUsage(?string $period = null): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
@@ -937,7 +955,7 @@ class TenantRepository
     /**
      * Get Google API usage summary aggregated by service for a period
      */
-    public function getGoogleApiUsageSummary(string $period = null): array
+    public function getGoogleApiUsageSummary(?string $period = null): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;

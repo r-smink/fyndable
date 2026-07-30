@@ -167,6 +167,24 @@ class SignupCheckout
             ],
         ];
 
+        if (get_option('sseo_ai_saas_early_adopters_enabled', false)) {
+            $tiers['early_adopters'] = [
+                'name' => 'Early Adopters',
+                'features' => [
+                    '1 site',
+                    '15 auto-posts/month',
+                    '5 GEO audits/month',
+                    '500 AI calls/month',
+                    'All SEO features',
+                    'Schema markup',
+                    'Social previews',
+                    'Email support',
+                ],
+                'popular' => false,
+                'cta' => 'Choose Early Adopters',
+            ];
+        }
+
         $plans = [];
         foreach ($tiers as $key => $tier) {
             $monthly = $this->paymentProcessor->getTierPricing($key, 'month');
@@ -176,7 +194,7 @@ class SignupCheckout
 
             $savingsLabel = '';
             if ($monthlyAmount > 0 && $yearlyAmount > 0 && $yearlyAmount < $monthlyAmount * 12) {
-                $savingsLabel = __('2 maanden korting', 'sseo-ai-saas');
+                $savingsLabel = __('2 maanden gratis', 'sseo-ai-saas');
             }
 
             $plans[$key] = [
@@ -463,6 +481,8 @@ class SignupCheckout
             'business' => ['max_sites' => 3, 'rate_limit' => 300, 'api_calls_limit' => 5000, 'geo_scan_limit' => 90],
             'agency' => ['max_sites' => 5, 'rate_limit' => 600, 'api_calls_limit' => 20000, 'geo_scan_limit' => 999999],
         ];
+
+        $limits['early_adopters'] = $limits['starter'];
 
         return $limits[$tier] ?? $limits['free'];
     }
