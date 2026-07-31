@@ -17,6 +17,7 @@ class SaaSSettings
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addSettingsMenu']);
+        add_action('admin_init', [$this, 'maybeMigrateClientVersions'], 5);
         add_action('admin_init', [$this, 'registerSettings']);
 
         add_action('phpmailer_init', [$this, 'configureMailer']);
@@ -200,7 +201,7 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_premium_routing', ['default' => []]);
 
         // Early Adopters tier toggle
-        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_early_adopters_enabled', ['default' => false, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_early_adopters_enabled', ['default' => false, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
     }
     
     /**
@@ -1067,6 +1068,19 @@ class SaaSSettings
 
     public function renderCostDashboard(): void
     {
+        $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'cost';
+        $this->renderCostDashboardTabs($tab);
+
+        if ($tab === 'google') {
+            $this->renderGoogleCostDashboard();
+            return;
+        }
+
+        if ($tab === 'revenue') {
+            $this->renderRevenueDashboard();
+            return;
+        }
+
         global $wpdb;
         
         // Get current month's usage
@@ -1238,7 +1252,31 @@ class SaaSSettings
             </div>
         </div>
         <?php
-        $this->renderGoogleCostDashboard();
+    }
+
+    /**
+     * Render cost dashboard tab navigation.
+     */
+    private function renderCostDashboardTabs(string $tab): void
+    {
+        ?>
+        <div class="wrap sseo-ai-license-admin" style="margin-bottom: 0;">
+            <h2 class="nav-tab-wrapper">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-costs&tab=cost')); ?>" class="nav-tab <?php echo $tab === 'cost' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?></a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-costs&tab=google')); ?>" class="nav-tab <?php echo $tab === 'google' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Google API Costs per Klant', 'sseo-ai-saas'); ?></a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-costs&tab=revenue')); ?>" class="nav-tab <?php echo $tab === 'revenue' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Revenue', 'sseo-ai-saas'); ?></a>
+            </h2>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render revenue tab content.
+     */
+    public function renderRevenueDashboard(): void
+    {
+        $revenue = new RevenueDashboard(new TenantRepository());
+        $revenue->renderPage();
     }
 
     /**
@@ -1308,6 +1346,10 @@ class SaaSSettings
 
             <form method="get" action="" style="margin-bottom: 15px;">
                 <input type="hidden" name="page" value="sseo-ai-costs">
+                <input type="hidden" name="tab" value="google">
+                <?php if (isset($_GET['saas_shell'])): ?>
+                    <input type="hidden" name="saas_shell" value="1">
+                <?php endif; ?>
                 <label for="month"><?php esc_html_e('Maand:', 'sseo-ai-saas'); ?></label>
                 <select name="month" id="month" onchange="this.form.submit()">
                     <?php foreach ($availableMonths as $m): ?>
@@ -1584,7 +1626,14 @@ class SaaSSettings
             if (is_wp_error($result)) {
                 set_transient('sseo_ai_client_versions_notice', ['error', $result->get_error_message()], 60);
             } else {
-                set_transient('sseo_ai_client_versions_notice', ['success', sprintf(__('Uploaded client plugin zip: %s', 'sseo-ai-saas'), basename($result))], 60);
+                $filename = basename($result);
+                $uploads = wp_upload_dir();
+                $fileUrl = $uploads['baseurl'] . '/fyndable-versions/' . $filename;
+                update_option('sseo_ai_saas_download_url', $fileUrl);
+                if (!empty($version)) {
+                    update_option('sseo_ai_saas_latest_version', $version);
+                }
+                set_transient('sseo_ai_client_versions_notice', ['success', sprintf(__('Uploaded client plugin zip: %s', 'sseo-ai-saas'), $filename)], 60);
             }
         }
 
@@ -1602,13 +1651,21 @@ class SaaSSettings
             return new \WP_Error('invalid_type', __('Please upload a .zip file.', 'sseo-ai-saas'));
         }
 
-        $uploadDir = SSEO_AI_SAAS_PLUGIN_DIR . 'versions/';
+        $uploads = wp_upload_dir();
+        if (!empty($uploads['error'])) {
+            error_log('SSEO AI SaaS: wp_upload_dir error: ' . $uploads['error']);
+            return new \WP_Error('upload_dir_error', sprintf(__('WordPress uploads directory is unavailable: %s', 'sseo-ai-saas'), $uploads['error']));
+        }
+
+        $uploadDir = $uploads['basedir'] . '/fyndable-versions/';
         if (!wp_mkdir_p($uploadDir)) {
-            return new \WP_Error('mkdir_failed', __('Could not create the versions directory.', 'sseo-ai-saas'));
+            error_log('SSEO AI SaaS: Could not create client versions directory: ' . $uploadDir);
+            return new \WP_Error('mkdir_failed', sprintf(__('Could not create the client versions directory: %s', 'sseo-ai-saas'), $uploadDir));
         }
 
         if (!is_writable($uploadDir)) {
-            return new \WP_Error('not_writable', __('The versions directory is not writable.', 'sseo-ai-saas'));
+            error_log('SSEO AI SaaS: Client versions directory is not writable: ' . $uploadDir);
+            return new \WP_Error('not_writable', sprintf(__('The client versions directory is not writable: %s', 'sseo-ai-saas'), $uploadDir));
         }
 
         $version = sanitize_file_name($version);
@@ -1619,7 +1676,8 @@ class SaaSSettings
         $destination = $uploadDir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
-            return new \WP_Error('move_failed', __('Could not move uploaded file.', 'sseo-ai-saas'));
+            error_log('SSEO AI SaaS: Could not move uploaded file to: ' . $destination);
+            return new \WP_Error('move_failed', sprintf(__('Could not move uploaded file to %s', 'sseo-ai-saas'), $destination));
         }
 
         if (class_exists('ZipArchive')) {
@@ -1677,7 +1735,11 @@ class SaaSSettings
         $betaDownloadUrl = get_option('sseo_ai_saas_beta_download_url', '');
         $betaChangelog = get_option('sseo_ai_saas_beta_changelog', '');
 
-        $versionsDir = SSEO_AI_SAAS_PLUGIN_DIR . 'versions/';
+        $uploads = wp_upload_dir();
+        $versionsDir = $uploads['basedir'] . '/fyndable-versions/';
+        if (!is_dir($versionsDir)) {
+            wp_mkdir_p($versionsDir);
+        }
         $versionFiles = [];
         if (is_dir($versionsDir)) {
             $files = glob($versionsDir . '*.zip');
@@ -1803,5 +1865,76 @@ class SaaSSettings
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Migrate client plugin zips from the plugin directory to wp-content/uploads.
+     */
+    public function maybeMigrateClientVersions(): void
+    {
+        if (get_option('sseo_ai_saas_client_versions_migrated')) {
+            return;
+        }
+
+        $oldDir = SSEO_AI_SAAS_PLUGIN_DIR . 'versions/';
+        $uploads = wp_upload_dir();
+        if (!empty($uploads['error'])) {
+            error_log('SSEO AI SaaS: Migration wp_upload_dir error: ' . $uploads['error']);
+            return;
+        }
+        if (!is_dir($oldDir)) {
+            update_option('sseo_ai_saas_client_versions_migrated', true);
+            return;
+        }
+
+        $newDir = $uploads['basedir'] . '/fyndable-versions/';
+        if (!wp_mkdir_p($newDir)) {
+            error_log('SSEO AI SaaS: Migration could not create client versions directory: ' . $newDir);
+            return;
+        }
+        error_log('SSEO AI SaaS: Migrated client versions to: ' . $newDir);
+
+        $files = glob($oldDir . '*.zip');
+        $latestVersion = '';
+        $latestFile = '';
+
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                if (!is_file($file)) {
+                    continue;
+                }
+                $filename = basename($file);
+                $newPath = $newDir . $filename;
+                if (file_exists($newPath)) {
+                    unlink($file);
+                } elseif (copy($file, $newPath)) {
+                    unlink($file);
+                }
+
+                if (preg_match('/fyndable-client_v([0-9.]+)\.zip$/', $filename, $matches)) {
+                    $v = $matches[1];
+                    if (empty($latestVersion) || version_compare($v, $latestVersion, '>')) {
+                        $latestVersion = $v;
+                        $latestFile = $filename;
+                    }
+                }
+            }
+        }
+
+        $downloadUrl = get_option('sseo_ai_saas_download_url', '');
+        $latestVersionOption = get_option('sseo_ai_saas_latest_version', '');
+        $baseUrl = $uploads['baseurl'] . '/fyndable-versions/';
+
+        if (!empty($latestFile)) {
+            $newFileUrl = $baseUrl . $latestFile;
+            if (empty($downloadUrl) || strpos($downloadUrl, '/fyndable-saas-dashboard/versions/') !== false) {
+                update_option('sseo_ai_saas_download_url', $newFileUrl);
+            }
+            if (empty($latestVersionOption)) {
+                update_option('sseo_ai_saas_latest_version', $latestVersion);
+            }
+        }
+
+        update_option('sseo_ai_saas_client_versions_migrated', true);
     }
 }

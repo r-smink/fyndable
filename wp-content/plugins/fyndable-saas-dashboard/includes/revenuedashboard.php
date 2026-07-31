@@ -19,7 +19,6 @@ class RevenueDashboard
 
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
 
@@ -37,7 +36,9 @@ class RevenueDashboard
 
     public function enqueueAssets(string $hook): void
     {
-        if ($hook !== 'saaS-ai_page_sseo-ai-revenue') {
+        $isRevenuePage = $hook === 'saaS-ai_page_sseo-ai-revenue';
+        $isRevenueTab = isset($_GET['page']) && $_GET['page'] === 'sseo-ai-costs' && isset($_GET['tab']) && $_GET['tab'] === 'revenue';
+        if (!$isRevenuePage && !$isRevenueTab) {
             return;
         }
         wp_enqueue_style('fyndable-revenue', SSEO_AI_SAAS_PLUGIN_URL . 'assets/revenue.css', [], SSEO_AI_SAAS_VERSION);

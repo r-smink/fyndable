@@ -102,10 +102,14 @@ class WhiteLabelPackageBuilder
 
         // Fallback to packaged version zip (extract to temp).
         $latestVersion = \get_option('sseo_ai_saas_latest_version', '1.4');
+        $uploads = wp_upload_dir();
+        $uploadBase = empty($uploads['error']) ? $uploads['basedir'] : '';
         $versionZips = [
+            $uploadBase . '/fyndable-versions/fyndable-client_v' . $latestVersion . '.zip',
             ABSPATH . 'versions/fyndable-client_v' . $latestVersion . '.zip',
             SSEO_AI_SAAS_PLUGIN_DIR . 'versions/fyndable-client_v' . $latestVersion . '.zip',
             SSEO_AI_SAAS_PLUGIN_DIR . '../versions/fyndable-client_v' . $latestVersion . '.zip',
+            $uploadBase . '/fyndable-versions/fyndable-client_v1.4.zip',
             ABSPATH . 'versions/fyndable-client_v1.4.zip',
             SSEO_AI_SAAS_PLUGIN_DIR . 'versions/fyndable-client_v1.4.zip',
             SSEO_AI_SAAS_PLUGIN_DIR . '../versions/fyndable-client_v1.4.zip',
