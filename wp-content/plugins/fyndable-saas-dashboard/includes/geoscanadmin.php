@@ -24,6 +24,8 @@ class GeoScanAdmin
         $this->geoScanner = $geoScanner;
         $this->repository = $repository;
         $this->report = $report;
+
+        add_action('wp_ajax_sseo_geo_scan_run', [$this, 'ajaxRun']);
     }
 
     /**
@@ -33,7 +35,6 @@ class GeoScanAdmin
     {
         $this->registerMenu();
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
-        add_action('wp_ajax_sseo_geo_scan_run', [$this, 'ajaxRun']);
     }
 
     public function registerMenu(): void

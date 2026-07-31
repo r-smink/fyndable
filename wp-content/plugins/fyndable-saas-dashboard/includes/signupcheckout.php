@@ -86,6 +86,7 @@ class SignupCheckout
      */
     public function restGetPlans(): \WP_REST_Response
     {
+        nocache_headers();
         return new \WP_REST_Response([
             'success' => true,
             'plans' => $this->getPlans(),
@@ -504,8 +505,9 @@ class SignupCheckout
      */
     public function renderSignupShortcode(): string
     {
-        wp_enqueue_style('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.css', [], SSEO_AI_SAAS_VERSION);
-        wp_enqueue_script('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.js', ['wp-api-fetch'], SSEO_AI_SAAS_VERSION, true);
+        $jsVersion = filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/signup.js') ?: SSEO_AI_SAAS_VERSION;
+        wp_enqueue_style('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.css', [], $jsVersion);
+        wp_enqueue_script('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.js', ['wp-api-fetch'], $jsVersion, true);
 
         wp_localize_script('fyndable-signup', 'FyndableSignup', [
             'restUrl' => esc_url_raw(rest_url('ai-seo-saas/v1')),
