@@ -5,11 +5,14 @@ namespace SSEOAIClient;
 /**
  * Onboarding Wizard
  *
- * 4-step guided setup shown on first activation:
+ * 7-step guided setup shown on first activation:
  * 1. License connect (or skip for free tier)
- * 2. Basic SEO config (title templates, social profiles)
- * 3. Content type selection (which post types to enable SEO for)
- * 4. Optional Google integrations (GSC, GA4, PageSpeed)
+ * 2. Company branding (name, logo, description, industry)
+ * 3. Tone of voice (brand voice, target audience, writing style)
+ * 4. Basic SEO config (title templates, social profiles)
+ * 5. Content type selection (which post types to enable SEO for)
+ * 6. Google integrations (GSC, GA4, PageSpeed)
+ * 7. Final setup & review
  *
  * After completion, redirects to the dashboard.
  */
@@ -106,6 +109,15 @@ class OnboardingWizard
                 break;
             case 4:
                 $this->saveStep4();
+                break;
+            case 5:
+                $this->saveStep5();
+                break;
+            case 6:
+                $this->saveStep6();
+                break;
+            case 7:
+                $this->saveStep7();
                 update_option(self::COMPLETED_OPTION, '1');
                 wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
                 exit;
@@ -167,8 +179,25 @@ class OnboardingWizard
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
 
-        if (!empty($result['white_label'])) {
+        if (!empty($result['white_label']) && is_array($result['white_label'])) {
             update_option('sseo_ai_white_label', $result['white_label']);
+            
+            // Extract individual white-label settings
+            if (isset($result['white_label']['fynable_login_enabled'])) {
+                update_option('sseo_ai_fynable_login_enabled', $result['white_label']['fynable_login_enabled']);
+            }
+            if (isset($result['white_label']['company_name'])) {
+                update_option('sseo_ai_wl_company_name', $result['white_label']['company_name']);
+            }
+            if (isset($result['white_label']['company_logo'])) {
+                update_option('sseo_ai_wl_company_logo', $result['white_label']['company_logo']);
+            }
+            if (isset($result['white_label']['primary_color'])) {
+                update_option('sseo_ai_wl_primary_color', $result['white_label']['primary_color']);
+            }
+            if (isset($result['white_label']['secondary_color'])) {
+                update_option('sseo_ai_wl_secondary_color', $result['white_label']['secondary_color']);
+            }
         }
 
         if (!empty($result['image_api'])) {
@@ -190,9 +219,86 @@ class OnboardingWizard
     }
 
     /**
-     * Step 2: Basic SEO configuration.
+     * Step 2: Company branding.
      */
     private function saveStep2(): void
+    {
+        // Company name (if not set by white-label)
+        $companyName = sanitize_text_field($_POST['company_name'] ?? '');
+        if ($companyName && !get_option('sseo_ai_wl_company_name')) {
+            update_option('sseo_ai_wl_company_name', $companyName);
+        }
+        
+        // Company logo upload
+        if (isset($_FILES['company_logo']) && !empty($_FILES['company_logo']['tmp_name'])) {
+            $logo = $this->handleLogoUpload($_FILES['company_logo']);
+            if ($logo && !get_option('sseo_ai_wl_company_logo')) {
+                update_option('sseo_ai_wl_company_logo', $logo);
+            }
+        }
+        
+        // Website description
+        $description = sanitize_textarea_field($_POST['website_description'] ?? '');
+        update_option('sseo_ai_website_description', $description);
+        
+        // Industry/category
+        $industry = sanitize_text_field($_POST['industry'] ?? '');
+        update_option('sseo_ai_industry', $industry);
+    }
+
+    /**
+     * Handle logo upload.
+     */
+    private function handleLogoUpload(array $file): string|false
+    {
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        
+        $upload = wp_handle_upload($file, ['test_form' => false]);
+        if (isset($upload['error'])) {
+            return false;
+        }
+        
+        return $upload['url'] ?? false;
+    }
+
+    /**
+     * Step 3: Tone of voice.
+     */
+    private function saveStep3(): void
+    {
+        // Brand voice selection - save in BrandVoice format
+        $brandVoice = sanitize_text_field($_POST['brand_voice'] ?? 'professional');
+        $targetAudience = sanitize_textarea_field($_POST['target_audience'] ?? '');
+        $writingStyle = sanitize_text_field($_POST['writing_style'] ?? 'conversational');
+        $brandValues = sanitize_textarea_field($_POST['brand_values'] ?? '');
+        
+        // Save in BrandVoice class format for compatibility
+        $brandVoiceSettings = [
+            'enabled' => true,
+            'brand_name' => get_option('sseo_ai_wl_company_name', ''),
+            'tone' => $brandVoice,
+            'style' => $writingStyle,
+            'audience' => $targetAudience,
+            'voice_description' => $brandValues,
+            'preferred_terms' => '',
+            'forbidden_terms' => '',
+            'example_good' => '',
+            'example_bad' => '',
+            'language' => 'en',
+        ];
+        
+        update_option('sseo_ai_brand_voice', $brandVoiceSettings);
+        
+        // Also save individual options for fallback/compatibility
+        update_option('sseo_ai_target_audience', $targetAudience);
+        update_option('sseo_ai_writing_style', $writingStyle);
+        update_option('sseo_ai_brand_values', $brandValues);
+    }
+
+    /**
+     * Step 4: Basic SEO configuration.
+     */
+    private function saveStep4(): void
     {
         $titleTemplate = sanitize_text_field($_POST['title_template'] ?? '%title% %separator% %sitename%');
         $descriptionTemplate = sanitize_text_field($_POST['description_template'] ?? '%excerpt%');
@@ -210,9 +316,9 @@ class OnboardingWizard
     }
 
     /**
-     * Step 3: Content type selection.
+     * Step 5: Content type selection.
      */
-    private function saveStep3(): void
+    private function saveStep5(): void
     {
         $postTypes = get_post_types(['public' => true], 'names');
         $enabled = [];
@@ -239,9 +345,36 @@ class OnboardingWizard
     }
 
     /**
-     * Step 4: Optional Google integrations (skip for now, just mark complete).
+     * Step 6: Google integrations.
      */
-    private function saveStep4(): void
+    private function saveStep6(): void
+    {
+        // PageSpeed API key (existing)
+        $pagespeedKey = sanitize_text_field($_POST['pagespeed_api_key'] ?? '');
+        if ($pagespeedKey) {
+            update_option('sseo_ai_pagespeed_api_key', $pagespeedKey);
+        }
+        
+        // GSC connection status (if OAuth flow completed)
+        $gscConnected = isset($_POST['gsc_connected']) && $_POST['gsc_connected'] === '1';
+        update_option('sseo_ai_gsc_connected', $gscConnected ? '1' : '0');
+        
+        // GA4 connection status
+        $ga4Connected = isset($_POST['ga4_connected']) && $_POST['ga4_connected'] === '1';
+        update_option('sseo_ai_ga4_connected', $ga4Connected ? '1' : '0');
+    }
+
+    /**
+     * Step 7: Final setup & review.
+     */
+    private function saveStep7(): void
+    {
+        // Just mark as complete - this is a review step
+        update_option(self::COMPLETED_OPTION, '1');
+        
+        // Log onboarding completion for analytics
+        update_option('sseo_ai_onboarding_completed_at', current_time('mysql'));
+    }
     {
         $pagespeedKey = sanitize_text_field($_POST['pagespeed_api_key'] ?? '');
         if ($pagespeedKey) {
@@ -255,7 +388,7 @@ class OnboardingWizard
     public function renderPage(): void
     {
         $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : (int) get_option(self::STEP_OPTION, 1);
-        $currentStep = max(1, min(4, $currentStep));
+        $currentStep = max(1, min(7, $currentStep));
 
         $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
         $onboardingError = isset($_GET['onboarding_error']) ? sanitize_text_field(urldecode($_GET['onboarding_error'])) : '';
@@ -266,9 +399,12 @@ class OnboardingWizard
 
         $steps = [
             1 => __('Connect', 'ai-seo-client'),
-            2 => __('SEO Setup', 'ai-seo-client'),
-            3 => __('Content Types', 'ai-seo-client'),
-            4 => __('Integrations', 'ai-seo-client'),
+            2 => __('Branding', 'ai-seo-client'),
+            3 => __('Tone of Voice', 'ai-seo-client'),
+            4 => __('SEO Setup', 'ai-seo-client'),
+            5 => __('Content Types', 'ai-seo-client'),
+            6 => __('Integrations', 'ai-seo-client'),
+            7 => __('Review', 'ai-seo-client'),
         ];
 
         $primaryColor = '#379fd3';
@@ -312,7 +448,7 @@ class OnboardingWizard
             </div>
 
             <div class="sseo-onboarding-progress">
-                <?php for ($i = 1; $i <= 4; $i++): ?>
+                <?php for ($i = 1; $i <= 7; $i++): ?>
                     <div class="sseo-onboarding-progress-step <?php echo $i < $currentStep ? 'completed' : ($i === $currentStep ? 'active' : ''); ?>">
                         <div class="sseo-onboarding-progress-circle">
                             <?php echo $i < $currentStep ? 'âœ“' : $i; ?>
@@ -329,7 +465,7 @@ class OnboardingWizard
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
                     <?php wp_nonce_field('sseo_ai_onboarding'); ?>
                     <input type="hidden" name="action" value="sseo_ai_onboarding_save">
                     <input type="hidden" name="step" value="<?php echo esc_attr($currentStep); ?>">
@@ -365,6 +501,93 @@ class OnboardingWizard
                             <?php break;
 
                         case 2: ?>
+                            <h2><?php esc_html_e('Company Branding', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Tell us about your company to personalize your SEO experience.', 'ai-seo-client'); ?></p>
+
+                            <div class="sseo-onboarding-field">
+                                <label for="company_name"><?php esc_html_e('Company Name', 'ai-seo-client'); ?></label>
+                                <input type="text" id="company_name" name="company_name" placeholder="Your Company Name" value="<?php echo esc_attr(get_option('sseo_ai_wl_company_name', '')); ?>">
+                                <div class="hint"><?php esc_html_e('Leave empty if already set by your license provider.', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="sseo-onboarding-field">
+                                <label for="company_logo"><?php esc_html_e('Company Logo (optional)', 'ai-seo-client'); ?></label>
+                                <input type="file" id="company_logo" name="company_logo" accept="image/*">
+                                <div class="hint"><?php esc_html_e('Upload your company logo for branded reports and dashboards.', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="sseo-onboarding-field">
+                                <label for="website_description"><?php esc_html_e('Website Description', 'ai-seo-client'); ?></label>
+                                <textarea id="website_description" name="website_description" rows="3" placeholder="Brief description of your website or business..."><?php echo esc_textarea(get_option('sseo_ai_website_description', '')); ?></textarea>
+                            </div>
+                            <div class="sseo-onboarding-field">
+                                <label for="industry"><?php esc_html_e('Industry/Category', 'ai-seo-client'); ?></label>
+                                <select id="industry" name="industry">
+                                    <option value=""><?php esc_html_e('Select your industry...', 'ai-seo-client'); ?></option>
+                                    <option value="technology" <?php selected(get_option('sseo_ai_industry'), 'technology'); ?>><?php esc_html_e('Technology', 'ai-seo-client'); ?></option>
+                                    <option value="healthcare" <?php selected(get_option('sseo_ai_industry'), 'healthcare'); ?>><?php esc_html_e('Healthcare', 'ai-seo-client'); ?></option>
+                                    <option value="finance" <?php selected(get_option('sseo_ai_industry'), 'finance'); ?>><?php esc_html_e('Finance', 'ai-seo-client'); ?></option>
+                                    <option value="retail" <?php selected(get_option('sseo_ai_industry'), 'retail'); ?>><?php esc_html_e('Retail/E-commerce', 'ai-seo-client'); ?></option>
+                                    <option value="education" <?php selected(get_option('sseo_ai_industry'), 'education'); ?>><?php esc_html_e('Education', 'ai-seo-client'); ?></option>
+                                    <option value="travel" <?php selected(get_option('sseo_ai_industry'), 'travel'); ?>><?php esc_html_e('Travel/Hospitality', 'ai-seo-client'); ?></option>
+                                    <option value="realestate" <?php selected(get_option('sseo_ai_industry'), 'realestate'); ?>><?php esc_html_e('Real Estate', 'ai-seo-client'); ?></option>
+                                    <option value="other" <?php selected(get_option('sseo_ai_industry'), 'other'); ?>><?php esc_html_e('Other', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+
+                            <div class="sseo-onboarding-actions">
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                            </div>
+                            <?php break;
+
+                        case 3: ?>
+                            <?php 
+                            $brandVoiceSettings = get_option('sseo_ai_brand_voice', []);
+                            $currentTone = is_array($brandVoiceSettings) ? ($brandVoiceSettings['tone'] ?? 'professional') : 'professional';
+                            $currentStyle = is_array($brandVoiceSettings) ? ($brandVoiceSettings['style'] ?? 'conversational') : 'conversational';
+                            $currentAudience = is_array($brandVoiceSettings) ? ($brandVoiceSettings['audience'] ?? '') : '';
+                            $currentDescription = is_array($brandVoiceSettings) ? ($brandVoiceSettings['voice_description'] ?? '') : '';
+                            ?>
+                            <h2><?php esc_html_e('Tone of Voice', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Configure how AI-generated content should sound for your brand.', 'ai-seo-client'); ?></p>
+
+                            <div class="sseo-onboarding-field">
+                                <label for="brand_voice"><?php esc_html_e('Brand Voice', 'ai-seo-client'); ?></label>
+                                <select id="brand_voice" name="brand_voice">
+                                    <option value="professional" <?php selected($currentTone, 'professional'); ?>><?php esc_html_e('Professional', 'ai-seo-client'); ?></option>
+                                    <option value="casual" <?php selected($currentTone, 'casual'); ?>><?php esc_html_e('Casual', 'ai-seo-client'); ?></option>
+                                    <option value="friendly" <?php selected($currentTone, 'friendly'); ?>><?php esc_html_e('Friendly', 'ai-seo-client'); ?></option>
+                                    <option value="authoritative" <?php selected($currentTone, 'authoritative'); ?>><?php esc_html_e('Authoritative', 'ai-seo-client'); ?></option>
+                                    <option value="humorous" <?php selected($currentTone, 'humorous'); ?>><?php esc_html_e('Humorous', 'ai-seo-client'); ?></option>
+                                    <option value="technical" <?php selected($currentTone, 'technical'); ?>><?php esc_html_e('Technical', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+                            <div class="sseo-onboarding-field">
+                                <label for="target_audience"><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></label>
+                                <textarea id="target_audience" name="target_audience" rows="3" placeholder="Describe your target audience (e.g., small business owners, developers, parents...)"><?php echo esc_textarea($currentAudience); ?></textarea>
+                            </div>
+                            <div class="sseo-onboarding-field">
+                                <label for="writing_style"><?php esc_html_e('Writing Style', 'ai-seo-client'); ?></label>
+                                <select id="writing_style" name="writing_style">
+                                    <option value="conversational" <?php selected($currentStyle, 'conversational'); ?>><?php esc_html_e('Conversational', 'ai-seo-client'); ?></option>
+                                    <option value="formal" <?php selected($currentStyle, 'formal'); ?>><?php esc_html_e('Formal', 'ai-seo-client'); ?></option>
+                                    <option value="technical" <?php selected($currentStyle, 'technical'); ?>><?php esc_html_e('Technical', 'ai-seo-client'); ?></option>
+                                    <option value="persuasive" <?php selected($currentStyle, 'persuasive'); ?>><?php esc_html_e('Persuasive', 'ai-seo-client'); ?></option>
+                                    <option value="educational" <?php selected($currentStyle, 'educational'); ?>><?php esc_html_e('Educational', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+                            <div class="sseo-onboarding-field">
+                                <label for="brand_values"><?php esc_html_e('Key Brand Values/Phrases (optional)', 'ai-seo-client'); ?></label>
+                                <textarea id="brand_values" name="brand_values" rows="3" placeholder="Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)"><?php echo esc_textarea($currentDescription); ?></textarea>
+                                <div class="hint"><?php esc_html_e('These will help AI content align with your brand messaging.', 'ai-seo-client'); ?></div>
+                            </div>
+
+                            <div class="sseo-onboarding-actions">
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                            </div>
+                            <?php break;
+
+                        case 4: ?>
                             <h2><?php esc_html_e('Basic SEO Configuration', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Set up your default title and meta description templates.', 'ai-seo-client'); ?></p>
 
@@ -392,12 +615,12 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
                             </div>
                             <?php break;
 
-                        case 3: ?>
+                        case 5: ?>
                             <h2><?php esc_html_e('Content Types & Features', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Select which content types should have SEO features enabled.', 'ai-seo-client'); ?></p>
 
@@ -431,12 +654,12 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=4')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
                             </div>
                             <?php break;
 
-                        case 4: ?>
+                        case 6: ?>
                             <h2><?php esc_html_e('Google Integrations (Optional)', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Connect Google services for enhanced SEO insights. You can always do this later.', 'ai-seo-client'); ?></p>
 
@@ -456,8 +679,40 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Finish Setup', 'ai-seo-client'); ?> âœ“</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=5')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                            </div>
+                            <?php break;
+
+                        case 7: ?>
+                            <h2><?php esc_html_e('Setup Complete!', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('You're all set. Here's a summary of your configuration:', 'ai-seo-client'); ?></p>
+
+                            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                                <h3 style="margin-top: 0; font-size: 16px; color: #111827;"><?php esc_html_e('Configuration Summary', 'ai-seo-client'); ?></h3>
+                                <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
+                                    <li><?php esc_html_e('License: Connected', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Company Branding: Configured', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Tone of Voice: Set', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('SEO Settings: Configured', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Content Types: Selected', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Integrations: Optional (can be done later)', 'ai-seo-client'); ?></li>
+                                </ul>
+                            </div>
+
+                            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                                <h3 style="margin-top: 0; font-size: 16px; color: #065f46;"><?php esc_html_e('Quick Start Tips', 'ai-seo-client'); ?></h3>
+                                <ul style="margin: 0; padding-left: 20px; color: #047857; font-size: 14px;">
+                                    <li><?php esc_html_e('Check your SEO Dashboard for site health overview', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Use the Content Writer to generate SEO-optimized articles', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Connect Google Search Console for search performance data', 'ai-seo-client'); ?></li>
+                                    <li><?php esc_html_e('Review your SEO settings in Settings > Fyndable', 'ai-seo-client'); ?></li>
+                                </ul>
+                            </div>
+
+                            <div class="sseo-onboarding-actions">
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=6')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?> âœ“</button>
                             </div>
                             <?php break;
                     endswitch; ?>

@@ -269,7 +269,13 @@ class WhiteLabelManager
      */
     private function isFynableLoginEnabled(): bool
     {
-        return (bool) get_option('sseo_ai_fynable_login_enabled', false);
+        // Only enable Fyndable login if explicitly set AND this is a SaaS dashboard installation
+        $isEnabled = (bool) get_option('sseo_ai_fynable_login_enabled', false);
+        
+        // Check if this is the SaaS dashboard plugin (vs client plugin)
+        $isSaaSDashboard = defined('SSEO_AI_SAAS_VERSION');
+        
+        return $isEnabled && $isSaaSDashboard;
     }
 
     /**

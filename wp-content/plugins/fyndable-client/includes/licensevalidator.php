@@ -111,6 +111,23 @@ class LicenseValidator
         // Store white-label settings from SaaS dashboard
         if (!empty($body['white_label']) && is_array($body['white_label'])) {
             update_option('sseo_ai_white_label', $body['white_label']);
+            
+            // Extract individual settings
+            if (isset($body['white_label']['fynable_login_enabled'])) {
+                update_option('sseo_ai_fynable_login_enabled', $body['white_label']['fynable_login_enabled']);
+            }
+            if (isset($body['white_label']['company_name'])) {
+                update_option('sseo_ai_wl_company_name', $body['white_label']['company_name']);
+            }
+            if (isset($body['white_label']['company_logo'])) {
+                update_option('sseo_ai_wl_company_logo', $body['white_label']['company_logo']);
+            }
+            if (isset($body['white_label']['primary_color'])) {
+                update_option('sseo_ai_wl_primary_color', $body['white_label']['primary_color']);
+            }
+            if (isset($body['white_label']['secondary_color'])) {
+                update_option('sseo_ai_wl_secondary_color', $body['white_label']['secondary_color']);
+            }
         }
 
         // Store enabled features from SaaS dashboard (feature overrides)
