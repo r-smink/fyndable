@@ -101,30 +101,58 @@ class GeoScanReport
             </div>
 
             <div class="sseo-geo-report-card">
-                <h2><?php esc_html_e('Score Breakdown', 'sseo-ai-saas'); ?></h2>
+                <h2><?php esc_html_e('Scoreverdeling', 'sseo-ai-saas'); ?></h2>
                 <div class="sseo-geo-breakdown">
                     <?php
                     $metricLabels = [
-                        'direct_answer'       => __('Direct Answer', 'sseo-ai-saas'),
-                        'structure'           => __('Structure', 'sseo-ai-saas'),
-                        'schema_markup'       => __('Schema Markup', 'sseo-ai-saas'),
-                        'entities'            => __('Entities', 'sseo-ai-saas'),
-                        'citation_worthiness' => __('Citation Worthiness', 'sseo-ai-saas'),
-                        'readability'         => __('Readability', 'sseo-ai-saas'),
+                        'direct_answer'       => __('Direct antwoord', 'sseo-ai-saas'),
+                        'structure'           => __('Structuur', 'sseo-ai-saas'),
+                        'schema_markup'       => __('Schema markup', 'sseo-ai-saas'),
+                        'entities'            => __('Entiteiten', 'sseo-ai-saas'),
+                        'citation_worthiness' => __('Citeerwaardigheid', 'sseo-ai-saas'),
+                        'readability'         => __('Leesbaarheid', 'sseo-ai-saas'),
                         'eeat'                => __('E-E-A-T', 'sseo-ai-saas'),
-                        'content_freshness'   => __('Content Freshness', 'sseo-ai-saas'),
-                        'mobile_friendly'     => __('Mobile Friendly', 'sseo-ai-saas'),
-                        'internal_linking'    => __('Internal Linking', 'sseo-ai-saas'),
-                        'page_metadata'       => __('Page Metadata', 'sseo-ai-saas'),
-                        'entity_coverage'     => __('Entity Coverage', 'sseo-ai-saas'),
-                        'competitive_gap'     => __('Competitive Gap', 'sseo-ai-saas'),
+                        'content_freshness'   => __('Actualiteit', 'sseo-ai-saas'),
+                        'mobile_friendly'     => __('Mobiel vriendelijk', 'sseo-ai-saas'),
+                        'internal_linking'    => __('Interne links', 'sseo-ai-saas'),
+                        'page_metadata'       => __('Metadata', 'sseo-ai-saas'),
+                        'entity_coverage'     => __('Entiteitsdekking', 'sseo-ai-saas'),
+                        'competitive_gap'     => __('Concurrentieverschil', 'sseo-ai-saas'),
                     ];
-                    foreach ($metricLabels as $key => $label) :
+                    $metricTooltips = [
+                        'direct_answer'       => __("Geeft je pagina meteen een duidelijk antwoord op de vraag van de bezoeker? AI-zoekmachines geven de voorkeur aan pagina's die de vraag direct beantwoorden.", 'sseo-ai-saas'),
+                        'structure'           => __("Is de tekst overzichtelijk opgebouwd met duidelijke koppen, paragrafen en lijsten?", 'sseo-ai-saas'),
+                        'schema_markup'       => __("Gebruik je gestructureerde gegevens (schema) waardoor zoekmachines de inhoud beter begrijpen?", 'sseo-ai-saas'),
+                        'entities'            => __("Noemt je tekst belangrijke personen, plaatsen, merken of begrippen die relevant zijn voor het onderwerp?", 'sseo-ai-saas'),
+                        'citation_worthiness' => __("Is je pagina een betrouwbare bron die andere websites of AI-systemen zouden willen citeren?", 'sseo-ai-saas'),
+                        'readability'         => __("Is de tekst makkelijk te lezen en te begrijpen voor een breed publiek?", 'sseo-ai-saas'),
+                        'eeat'                => __("Laat je pagina zien dat je expertise, autoriteit en betrouwbaarheid hebt over dit onderwerp. Zoekmachines vertrouwen content van betrouwbare bronnen meer.", 'sseo-ai-saas'),
+                        'content_freshness'   => __("Is de informatie recent en up-to-date? Verse content scoort vaak beter.", 'sseo-ai-saas'),
+                        'mobile_friendly'     => __("Is de pagina goed te gebruiken op een mobiele telefoon?", 'sseo-ai-saas'),
+                        'internal_linking'    => __("Linkt de pagina naar andere relevante pagina's binnen je eigen website?", 'sseo-ai-saas'),
+                        'page_metadata'       => __("Zijn titel, omschrijving en andere meta-informatie aanwezig en relevant?", 'sseo-ai-saas'),
+                        'entity_coverage'     => __("Hoe goed dekt je tekst de belangrijkste entiteiten en onderwerpen rond het zoekwoord af?", 'sseo-ai-saas'),
+                        'competitive_gap'     => __("In welke opzichten komt jouw inhoud tekort ten opzichte van concurrenten die wel geciteerd worden?", 'sseo-ai-saas'),
+                    ];
+                    $importantMetrics = [
+                        'direct_answer',
+                        'eeat',
+                        'schema_markup',
+                        'entities',
+                        'citation_worthiness',
+                        'content_freshness',
+                        'structure',
+                        'readability',
+                    ];
+                    foreach ($importantMetrics as $key) :
                         $value = (int)($breakdown[$key] ?? 0);
+                        $label = $metricLabels[$key] ?? ucwords(str_replace('_', ' ', $key));
+                        $tooltip = $metricTooltips[$key] ?? '';
                     ?>
                     <div class="sseo-geo-metric" data-value="<?php echo esc_attr($value); ?>">
                         <div class="value"><?php echo esc_html($value); ?></div>
                         <div class="label"><?php echo esc_html($label); ?></div>
+                        <div class="sseo-geo-metric-tooltip"><?php echo esc_html($tooltip); ?></div>
                     </div>
                     <?php endforeach; ?>
                 </div>
