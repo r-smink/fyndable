@@ -96,8 +96,10 @@ class GeoScanAdmin
         <div class="wrap sseo-ai-license-admin sseo-geo-admin">
             <h1><?php esc_html_e('GEO Readiness Scan', 'sseo-ai-saas'); ?></h1>
 
-            <form id="sseo-geo-scan-form" class="sseo-geo-form">
+            <form id="sseo-geo-scan-form" class="sseo-geo-form sseo-geo-form-card">
                 <?php wp_nonce_field('sseo_geo_scan', 'sseo_geo_scan_nonce'); ?>
+                <h2><?php esc_html_e('Start een nieuwe scan', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Voer een prospect-URL en 1 tot 10 zoekwoorden in om een GEO Readiness rapport te genereren.', 'sseo-ai-saas'); ?></p>
                 <table class="form-table">
                     <tr>
                         <th scope="row"><label for="sseo_geo_url"><?php esc_html_e('Prospect URL', 'sseo-ai-saas'); ?></label></th>
@@ -123,7 +125,7 @@ class GeoScanAdmin
                     </tr>
                 </table>
                 <p class="submit">
-                    <button type="submit" class="button button-primary" id="sseo-geo-scan-submit">
+                    <button type="submit" class="button button-hero" id="sseo-geo-scan-submit">
                         <?php esc_html_e('Start Scan', 'sseo-ai-saas'); ?>
                     </button>
                     <span class="sseo-geo-spinner" style="display:none;"><?php esc_html_e('Scanning, please wait...', 'sseo-ai-saas'); ?></span>

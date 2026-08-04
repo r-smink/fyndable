@@ -98,7 +98,7 @@ class GeoScanner
         $lang = 'nl';
         $prompt = "Analyseer onderstaande webpagina op GEO-readiness (Generative Engine Optimization). 
 Beoordeel of de pagina geschikt is om door AI-zoekmachines als bron te worden geciteerd.
-Geef de output uitsluitend in geldig JSON, geen markdown code blocks, geen extra tekst.
+Schrijf de output in het Nederlands, in geldig JSON, zonder markdown code blocks, zonder extra tekst buiten de JSON.
 
 Vereiste JSON-structuur:
 {
@@ -108,11 +108,29 @@ Vereiste JSON-structuur:
     \"structure\": 0-100,
     \"schema_markup\": 0-100,
     \"entities\": 0-100,
-    \"citation_worthiness\": 0-100
+    \"citation_worthiness\": 0-100,
+    \"readability\": 0-100,
+    \"eeat\": 0-100,
+    \"content_freshness\": 0-100,
+    \"mobile_friendly\": 0-100,
+    \"internal_linking\": 0-100,
+    \"page_metadata\": 0-100,
+    \"entity_coverage\": 0-100,
+    \"competitive_gap\": 0-100
   },
   \"findings\": [\"...\", \"...\"],
-  \"recommendations\": [\"...\", \"...\"]
+  \"recommendations\": [\"...\", \"...\"],
+  \"strengths\": [\"...\", \"...\"],
+  \"weaknesses\": [\"...\", \"...\"],
+  \"priority_ranked_recommendations\": [\"...\", \"...\"]
 }
+
+Richtlijnen:
+- Genereer minimaal 8 findings met korte, concrete observaties.
+- Genereer minimaal 8 recommendations die direct actiegericht en geprioriteerd zijn.
+- Geef ook 3-5 strengths en 3-5 weaknesses.
+- priority_ranked_recommendations bevat de top 5 recommendations, van hoogste naar laagste prioriteit.
+- Zorg dat de tekst geschikt is om aan een prospect te presenteren: professioneel, duidelijk en commercieel vriendelijk.
 
 Paginatekst ( eerste 12000 tekens ):
 " . $truncated . "
@@ -209,20 +227,29 @@ AI Overview context:
         }
 
         return [
-            'url'              => $url,
-            'keywords'         => $keywords,
-            'language'         => $language,
-            'scanned_at'       => current_time('mysql'),
-            'score'            => (int)($llmResult['score'] ?? 0),
-            'breakdown'        => $llmResult['breakdown'] ?? [],
-            'findings'         => $llmResult['findings'] ?? [],
-            'recommendations'  => $llmResult['recommendations'] ?? [],
-            'strengths'        => $llmResult['strengths'] ?? [],
-            'weaknesses'       => $llmResult['weaknesses'] ?? [],
-            'keywords_analysis'=> $keywordsAnalysis,
-            'page_text_preview'=> mb_substr($htmlResult['text'] ?? '', 0, 500),
-            'html_source'      => $htmlResult['source'] ?? 'unknown',
-            'usage'            => $llmResult['usage'] ?? [],
+            'url'                           => $url,
+            'keywords'                      => $keywords,
+            'language'                      => $language,
+            'scanned_at'                    => current_time('mysql'),
+            'score'                         => (int)($llmResult['score'] ?? 0),
+            'breakdown'                     => $llmResult['breakdown'] ?? [],
+            'findings'                      => $llmResult['findings'] ?? [],
+            'recommendations'               => $llmResult['recommendations'] ?? [],
+            'priority_ranked_recommendations'=> $llmResult['priority_ranked_recommendations'] ?? [],
+            'strengths'                     => $llmResult['strengths'] ?? [],
+            'weaknesses'                    => $llmResult['weaknesses'] ?? [],
+            'readability'                   => (int)($llmResult['breakdown']['readability'] ?? 0),
+            'eeat'                          => (int)($llmResult['breakdown']['eeat'] ?? 0),
+            'content_freshness'             => (int)($llmResult['breakdown']['content_freshness'] ?? 0),
+            'mobile_friendly'               => (int)($llmResult['breakdown']['mobile_friendly'] ?? 0),
+            'internal_linking'              => (int)($llmResult['breakdown']['internal_linking'] ?? 0),
+            'page_metadata'                 => (int)($llmResult['breakdown']['page_metadata'] ?? 0),
+            'entity_coverage'               => (int)($llmResult['breakdown']['entity_coverage'] ?? 0),
+            'competitive_gap'               => (int)($llmResult['breakdown']['competitive_gap'] ?? 0),
+            'keywords_analysis'             => $keywordsAnalysis,
+            'page_text_preview'             => mb_substr($htmlResult['text'] ?? '', 0, 500),
+            'html_source'                   => $htmlResult['source'] ?? 'unknown',
+            'usage'                         => $llmResult['usage'] ?? [],
         ];
     }
 }
