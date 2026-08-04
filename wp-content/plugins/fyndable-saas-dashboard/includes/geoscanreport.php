@@ -24,7 +24,7 @@ class GeoScanReport
         $scan = $this->repository->getById($scanId);
 
         if (!$scan) {
-            echo '<div class="wrap"><p>' . esc_html__('Scan not found.', 'sseo-ai-saas') . '</p></div>';
+            echo '<div class="wrap"><p>' . esc_html__('Scan niet gevonden.', 'sseo-ai-saas') . '</p></div>';
             return;
         }
 
@@ -43,6 +43,7 @@ class GeoScanReport
                 .sseo-geo-report-print-header { display: block; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #379fd3; }
                 .sseo-geo-report-print-header img { max-width: 180px; height: auto; }
             }
+            .sseo-geo-keywords-legend { color: #6b7280; font-size: 14px; line-height: 1.5; margin: -8px 0 18px 0; }
         </style>
 
         <div class="wrap sseo-geo-report">
@@ -51,17 +52,17 @@ class GeoScanReport
             </div>
 
             <div class="sseo-geo-actions">
-                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-geo-scan')); ?>" class="button button-secondary"><?php esc_html_e('Back to scans', 'sseo-ai-saas'); ?></a>
-                <button type="button" class="button button-primary" onclick="window.print();"><?php esc_html_e('Print / Save as PDF', 'sseo-ai-saas'); ?></button>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-geo-scan')); ?>" class="button button-secondary"><?php esc_html_e('Terug naar scans', 'sseo-ai-saas'); ?></a>
+                <button type="button" class="button button-primary" onclick="window.print();"><?php esc_html_e('Printen / Opslaan als PDF', 'sseo-ai-saas'); ?></button>
                 <span class="sseo-geo-print-hint"><?php esc_html_e('Kies in het printvenster "Opslaan als PDF".', 'sseo-ai-saas'); ?></span>
             </div>
 
             <div class="sseo-geo-report-card sseo-geo-report-hero">
-                <h1><?php esc_html_e('GEO Readiness Scan Report', 'sseo-ai-saas'); ?></h1>
+                <h1><?php esc_html_e('GEO-scanrapport', 'sseo-ai-saas'); ?></h1>
                 <p class="report-meta">
-                    <strong><?php esc_html_e('URL:', 'sseo-ai-saas'); ?></strong> <?php echo esc_url($data['url'] ?? ''); ?><br>
-                    <strong><?php esc_html_e('Date:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($data['scanned_at'] ?? ''); ?><br>
-                    <strong><?php esc_html_e('Language:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(strtoupper($data['language'] ?? 'nl')); ?>
+                    <strong><?php esc_html_e('Webadres:', 'sseo-ai-saas'); ?></strong> <?php echo esc_url($data['url'] ?? ''); ?><br>
+                    <strong><?php esc_html_e('Datum:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($data['scanned_at'] ?? ''); ?><br>
+                    <strong><?php esc_html_e('Taal:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(strtoupper($data['language'] ?? 'nl')); ?>
                 </p>
             </div>
 
@@ -160,7 +161,7 @@ class GeoScanReport
 
             <div class="sseo-geo-report-grid sseo-geo-report-grid-2">
                 <div class="sseo-geo-report-card">
-                    <h2><?php esc_html_e('Findings', 'sseo-ai-saas'); ?></h2>
+                    <h2><?php esc_html_e('Bevindingen', 'sseo-ai-saas'); ?></h2>
                     <ul class="sseo-geo-list sseo-geo-list--findings">
                         <?php foreach ((array)($data['findings'] ?? []) as $finding) : ?>
                             <li><?php echo esc_html($finding); ?></li>
@@ -169,7 +170,7 @@ class GeoScanReport
                 </div>
 
                 <div class="sseo-geo-report-card">
-                    <h2><?php esc_html_e('Recommendations', 'sseo-ai-saas'); ?></h2>
+                    <h2><?php esc_html_e('Aanbevelingen', 'sseo-ai-saas'); ?></h2>
                     <ul class="sseo-geo-list sseo-geo-list--recommendations">
                         <?php foreach ((array)($data['recommendations'] ?? []) as $rec) : ?>
                             <li><?php echo esc_html($rec); ?></li>
@@ -181,7 +182,7 @@ class GeoScanReport
             <?php $priority = (array)($data['priority_ranked_recommendations'] ?? []); ?>
             <?php if ($priority) : ?>
             <div class="sseo-geo-report-card sseo-geo-report-card--priority">
-                <h2><?php esc_html_e('Prioriteitacties', 'sseo-ai-saas'); ?></h2>
+                <h2><?php esc_html_e('Prioriteitsacties', 'sseo-ai-saas'); ?></h2>
                 <ol class="sseo-geo-priority-list">
                     <?php foreach ($priority as $i => $p) : ?>
                         <li>
@@ -194,15 +195,16 @@ class GeoScanReport
             <?php endif; ?>
 
             <div class="sseo-geo-report-card">
-                <h2><?php esc_html_e('Keyword Analysis', 'sseo-ai-saas'); ?></h2>
+                <h2><?php esc_html_e('Zoekwoordanalyse', 'sseo-ai-saas'); ?></h2>
+                <p class="sseo-geo-keywords-legend"><?php esc_html_e('Deze tabel laat per zoekwoord zien of er een AI-overzicht beschikbaar is, of jouw bedrijf daarin wordt vermeld en welke concurrenten wél worden genoemd. Let op: Ja bij AI-overzicht betekent dat er een AI-samenvatting bestaat; Ja bij Jouw bedrijf vermeld betekent dat jouw website daadwerkelijk in die samenvatting staat.', 'sseo-ai-saas'); ?></p>
                 <div class="sseo-geo-keywords-table-wrap">
                     <table class="sseo-geo-keywords-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Keyword', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('AI Overview', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Target Cited', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Competitor Citations', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Zoekwoord', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('AI-overzicht', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Jouw bedrijf vermeld', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Concurrenten vermeld', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -211,16 +213,16 @@ class GeoScanReport
                                     <td><?php echo esc_html($kw['keyword']); ?></td>
                                     <td>
                                         <?php if ($kw['has_ai_overview']) : ?>
-                                            <span class="sseo-geo-status yes"><?php esc_html_e('Yes', 'sseo-ai-saas'); ?></span>
+                                            <span class="sseo-geo-status yes"><?php esc_html_e('Ja', 'sseo-ai-saas'); ?></span>
                                         <?php else : ?>
-                                            <span class="sseo-geo-status no"><?php esc_html_e('No', 'sseo-ai-saas'); ?></span>
+                                            <span class="sseo-geo-status no"><?php esc_html_e('Nee', 'sseo-ai-saas'); ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($kw['target_cited']) : ?>
-                                            <span class="sseo-geo-status yes"><?php esc_html_e('Yes', 'sseo-ai-saas'); ?></span>
+                                            <span class="sseo-geo-status yes"><?php esc_html_e('Ja', 'sseo-ai-saas'); ?></span>
                                         <?php else : ?>
-                                            <span class="sseo-geo-status no"><?php esc_html_e('No', 'sseo-ai-saas'); ?></span>
+                                            <span class="sseo-geo-status no"><?php esc_html_e('Nee', 'sseo-ai-saas'); ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -233,7 +235,7 @@ class GeoScanReport
                                             }
                                             echo '</ul>';
                                         else :
-                                            esc_html_e('No competitors found', 'sseo-ai-saas');
+                                            esc_html_e('Geen concurrenten gevonden', 'sseo-ai-saas');
                                         endif;
                                         ?>
                                     </td>
