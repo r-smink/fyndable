@@ -549,7 +549,7 @@ class LicenseKeyGenerator
         global $wpdb;
         $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
         
-        $keyPrefix = $prefix ? $prefix . '-AI' : 'SSEO-AI';
+        $keyPrefix = $prefix ? $prefix . '-AI' : 'FYN-SSAI';
         
         $attempts = 0;
         do {

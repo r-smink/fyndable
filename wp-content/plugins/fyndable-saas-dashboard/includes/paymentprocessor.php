@@ -233,6 +233,14 @@ class PaymentProcessor
             return new \WP_Error('mollie_not_configured', __('Mollie API key is not configured', 'sseo-ai-saas'));
         }
 
+        $expectedPrefix = $this->mollieMode === 'test' ? 'test_' : 'live_';
+        if (strpos($this->mollieApiKey, $expectedPrefix) !== 0) {
+            return new \WP_Error(
+                'mollie_key_mismatch',
+                sprintf(__('Mollie is set to %s mode but the API key does not start with "%s".', 'sseo-ai-saas'), $this->mollieMode, $expectedPrefix)
+            );
+        }
+
         $customer = $this->createMollieCustomer($tenant);
         if (is_wp_error($customer)) {
             return $customer;
@@ -537,17 +545,26 @@ class PaymentProcessor
         }
 
         if (is_wp_error($response)) {
-            return $response;
+            error_log('Mollie API connection error: ' . $response->get_error_message());
+            return new \WP_Error(
+                'mollie_request_failed',
+                __('Mollie API connection failed: ', 'sseo-ai-saas') . $response->get_error_message()
+            );
         }
 
         $statusCode = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $rawBody = wp_remote_retrieve_body($response);
+        $body = json_decode($rawBody, true);
         if (!is_array($body)) {
             $body = [];
         }
 
-        if ($statusCode >= 400 || (!empty($body['status']) && $body['status'] >= 400) || !empty($body['detail'])) {
-            $message = $body['detail'] ?? ($body['title'] ?? __('Mollie API request failed', 'sseo-ai-saas'));
+        if ($statusCode >= 400 || (!empty($body['status']) && is_numeric($body['status']) && $body['status'] >= 400) || !empty($body['detail'])) {
+            $message = $body['detail'] ?? ($body['title'] ?? null);
+            if (empty($message)) {
+                error_log(sprintf('Mollie API error: HTTP %d %s', $statusCode, $rawBody ?: '(empty body)'));
+                $message = sprintf(__('Mollie API request failed (HTTP %d): %s', 'sseo-ai-saas'), $statusCode, $rawBody ?: '(empty response)');
+            }
             return new \WP_Error('mollie_request_failed', $message, ['status' => $statusCode]);
         }
 

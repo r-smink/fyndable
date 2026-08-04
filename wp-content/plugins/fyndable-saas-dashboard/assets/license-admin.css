@@ -321,11 +321,14 @@ body[class*="sseo-ai"] {
    8. WP-LIST-TABLE STYLING
    ================================================ */
 .sseo-ai-license-admin .wp-list-table {
+    width: calc(100% - 80px);
     border: none;
     border-radius: var(--sseo-radius);
     overflow: hidden;
     box-shadow: var(--sseo-shadow-md);
     background: #fff;
+    box-sizing: border-box;
+    margin: 0 40px 20px;
 }
 
 .sseo-ai-license-admin .wp-list-table thead th {
@@ -351,6 +354,94 @@ body[class*="sseo-ai"] {
 
 .sseo-ai-license-admin .wp-list-table tbody tr:hover {
     background: var(--sseo-gray-50);
+}
+
+/* Filter + table action bar */
+.sseo-ai-license-admin .tablenav {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--sseo-radius);
+    margin: 20px 40px;
+    padding: 20px;
+    box-shadow: var(--sseo-shadow-md);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    min-height: auto;
+}
+
+.sseo-ai-license-admin .tablenav.top {
+    margin-bottom: 20px;
+}
+
+.sseo-ai-license-admin .tablenav .alignleft,
+.sseo-ai-license-admin .tablenav .alignright {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    float: none;
+}
+
+.sseo-ai-license-admin .tablenav form,
+.sseo-ai-license-admin .tablenav .actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+.sseo-ai-license-admin .tablenav select,
+.sseo-ai-license-admin .tablenav input[type="text"] {
+    height: 40px;
+    border: 1px solid var(--sseo-gray-200);
+    border-radius: var(--sseo-radius-sm);
+    padding: 0 12px;
+    font-size: 14px;
+    color: var(--sseo-gray-700);
+    background: #fff;
+    min-width: 140px;
+    box-sizing: border-box;
+}
+
+.sseo-ai-license-admin .tablenav input[type="text"] {
+    min-width: 220px;
+}
+
+.sseo-ai-license-admin .tablenav input[type="submit"],
+.sseo-ai-license-admin .tablenav .button {
+    height: 40px;
+    padding: 0 20px;
+    border-radius: var(--sseo-radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.sseo-ai-license-admin .wp-list-table .button-small {
+    padding: 6px 12px !important;
+    font-size: 13px;
+    height: auto !important;
+    line-height: 1.4 !important;
+    border-radius: var(--sseo-radius-sm);
+}
+
+.sseo-ai-license-admin .wp-list-table .license-key {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    background: var(--sseo-gray-100);
+    padding: 6px 10px;
+    border-radius: var(--sseo-radius-sm);
+    color: var(--sseo-gray-700);
+}
+
+.sseo-ai-license-admin .tablenav.bottom .tablenav-pages {
+    float: right;
+    margin-left: auto;
 }
 
 /* ================================================

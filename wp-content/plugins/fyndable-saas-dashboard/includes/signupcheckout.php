@@ -38,6 +38,7 @@ class SignupCheckout
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_shortcode('fyndable_signup', [$this, 'renderSignupShortcode']);
         add_action('wp_enqueue_scripts', [$this, 'maybeEnqueueAssets']);
+        add_action('template_redirect', [$this, 'handlePaymentReturn']);
     }
 
     /**
@@ -261,14 +262,18 @@ class SignupCheckout
             ], 400);
         }
 
-        // Check if email already exists
+        // Check if email already exists; allow retrying a failed/cancelled pending payment
         $existingTenants = $this->tenants->getAllTenants(500);
         foreach ($existingTenants as $existing) {
             if (($existing['email'] ?? '') === $email) {
-                return new \WP_REST_Response([
-                    'success' => false,
-                    'message' => 'An account with this email already exists. Please log in or use a different email.',
-                ], 409);
+                if (($existing['status'] ?? '') === 'pending_payment') {
+                    $this->cleanupPendingSignup($existing);
+                } else {
+                    return new \WP_REST_Response([
+                        'success' => false,
+                        'message' => 'An account with this email already exists. Please log in or use a different email.',
+                    ], 409);
+                }
             }
         }
 
@@ -333,11 +338,16 @@ class SignupCheckout
         $checkoutResult = $this->paymentProcessor->createSubscription($tenantKey, $tier, $interval);
 
         if (is_wp_error($checkoutResult)) {
+            $this->cleanupPendingSignup([
+                'tenant_key' => $tenantKey,
+                'id' => $tenantResult['id'] ?? 0,
+                'license_key' => $licenseKey,
+                'status' => 'pending_payment',
+            ]);
+
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => $checkoutResult->get_error_message(),
-                'tenant_key' => $tenantKey,
-                'license_key' => $licenseKey,
             ], 500);
         }
 
@@ -449,6 +459,146 @@ class SignupCheckout
 
         // Unknown/unsupported payment reference — refuse to activate.
         return false;
+    }
+
+    /**
+     * Handle Mollie/Stripe return URLs after a payment attempt.
+     * Cleans up pending signups on failed/cancelled payments and,
+     * on successful Mollie payments, creates the customer account
+     * and redirects them to set their password.
+     */
+    public function handlePaymentReturn(): void
+    {
+        if (is_admin() || wp_doing_ajax() || empty($_GET['fyndable_payment']) || empty($_GET['tenant_key'])) {
+            return;
+        }
+
+        $state = sanitize_text_field($_GET['fyndable_payment']);
+        $tenantKey = sanitize_text_field($_GET['tenant_key']);
+        $provider = isset($_GET['provider']) ? sanitize_text_field($_GET['provider']) : '';
+        $paymentId = isset($_GET['paymentId'])
+            ? sanitize_text_field($_GET['paymentId'])
+            : (isset($_GET['payment_id'])
+                ? sanitize_text_field($_GET['payment_id'])
+                : (isset($_GET['id']) ? sanitize_text_field($_GET['id']) : ''));
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant) {
+            wp_redirect(home_url('/pricing/'));
+            exit;
+        }
+
+        $pricingUrl = home_url('/pricing/');
+
+        if (in_array($state, ['cancel', 'failed', 'expired'], true)) {
+            $this->cleanupPendingSignup($tenant);
+            wp_redirect(add_query_arg('fyndable_checkout', 'cancelled', $pricingUrl));
+            exit;
+        }
+
+        if ($state !== 'success' || $provider !== 'mollie' || empty($paymentId)) {
+            return;
+        }
+
+        $payment = $this->paymentProcessor->fetchMolliePayment($paymentId);
+        if (is_wp_error($payment) || !is_array($payment) || ($payment['status'] ?? '') !== 'paid') {
+            $this->cleanupPendingSignup($tenant);
+            wp_redirect(add_query_arg('fyndable_checkout', 'failed', $pricingUrl));
+            exit;
+        }
+
+        $metaTenant = $payment['metadata']['tenant_key'] ?? '';
+        if ($metaTenant !== $tenantKey) {
+            $this->cleanupPendingSignup($tenant);
+            wp_redirect(add_query_arg('fyndable_checkout', 'failed', $pricingUrl));
+            exit;
+        }
+
+        // Activate the tenant if the webhook has not already done so.
+        if (($tenant['status'] ?? '') !== 'active' || ($tenant['payment_status'] ?? '') !== 'active') {
+            $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+            $period = $interval === 'year' ? '+1 year' : '+1 month';
+            $this->tenants->updateTenant($tenantKey, [
+                'status' => 'active',
+                'payment_status' => 'active',
+                'last_payment_at' => current_time('mysql'),
+                'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
+            ]);
+
+            do_action('sseo_ai_payment_success', $tenantKey, $this->getCurrencySymbol(strtoupper($payment['amount']['currency'] ?? 'EUR')) . ($payment['amount']['value'] ?? '0'), [
+                'tier' => $tenant['tier'],
+                'date' => current_time('mysql'),
+                'payment_id' => $paymentId,
+            ]);
+        }
+
+        $roleManager = new CustomerRoleManager($this->tenants);
+        $user = get_user_by('email', $tenant['email']);
+        if (!$user || !$roleManager->isCustomerUser($user)) {
+            $userId = $roleManager->createCustomerUser(
+                $tenant['email'],
+                $tenant['name'] ?? '',
+                (int) $tenant['id'],
+                $tenant['tier'] ?? 'starter'
+            );
+            if (is_wp_error($userId)) {
+                wp_redirect(add_query_arg('fyndable_checkout', 'failed', $pricingUrl));
+                exit;
+            }
+            $user = get_user_by('ID', $userId);
+        }
+
+        if (!$user) {
+            wp_redirect(add_query_arg('fyndable_checkout', 'failed', $pricingUrl));
+            exit;
+        }
+
+        $key = get_password_reset_key($user);
+        if (is_wp_error($key)) {
+            wp_redirect(wp_login_url($roleManager->getPortalUrl()));
+            exit;
+        }
+
+        $resetUrl = network_site_url(
+            "wp-login.php?action=rp&key=" . rawurlencode($key)
+            . "&login=" . rawurlencode($user->user_login)
+            . "&redirect_to=" . rawurlencode($roleManager->getPortalUrl())
+        );
+
+        wp_redirect($resetUrl);
+        exit;
+    }
+
+    /**
+     * Remove a pending tenant/license that was created for a failed/cancelled payment.
+     */
+    private function cleanupPendingSignup(array $tenant): void
+    {
+        global $wpdb;
+
+        $tenantKey = $tenant['tenant_key'] ?? '';
+        $licenseKey = $tenant['license_key'] ?? '';
+        $tenantId = (int) ($tenant['id'] ?? 0);
+
+        if (empty($tenantKey)) {
+            return;
+        }
+
+        // Never clean up an already active paid customer
+        if (($tenant['status'] ?? '') === 'active' && ($tenant['payment_status'] ?? '') === 'active') {
+            return;
+        }
+
+        if ($licenseKey) {
+            $this->licenseGenerator->revokeLicense($licenseKey, 'Payment failed or cancelled during checkout');
+            $wpdb->delete($wpdb->prefix . 'sseo_ai_license_keys', ['license_key' => $licenseKey]);
+        }
+
+        if ($tenantId) {
+            $wpdb->delete($wpdb->prefix . 'sseo_ai_tenant_settings', ['tenant_id' => $tenantId]);
+        }
+
+        $wpdb->delete($wpdb->prefix . 'sseo_ai_tenants', ['tenant_key' => $tenantKey]);
     }
 
     /**

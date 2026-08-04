@@ -375,12 +375,6 @@ class OnboardingWizard
         // Log onboarding completion for analytics
         update_option('sseo_ai_onboarding_completed_at', current_time('mysql'));
     }
-    {
-        $pagespeedKey = sanitize_text_field($_POST['pagespeed_api_key'] ?? '');
-        if ($pagespeedKey) {
-            update_option('sseo_ai_pagespeed_api_key', $pagespeedKey);
-        }
-    }
 
     /**
      * Render the onboarding wizard page.
@@ -686,7 +680,7 @@ class OnboardingWizard
 
                         case 7: ?>
                             <h2><?php esc_html_e('Setup Complete!', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('You're all set. Here's a summary of your configuration:', 'ai-seo-client'); ?></p>
+                            <p class="description"><?php esc_html_e("You're all set. Here's a summary of your configuration:", 'ai-seo-client'); ?></p>
 
                             <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
                                 <h3 style="margin-top: 0; font-size: 16px; color: #111827;"><?php esc_html_e('Configuration Summary', 'ai-seo-client'); ?></h3>

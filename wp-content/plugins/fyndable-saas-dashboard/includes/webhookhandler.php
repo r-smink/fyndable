@@ -449,6 +449,16 @@ class WebhookHandler
         }
 
         if ($status !== 'paid') {
+            $isFirst = ($payment['sequenceType'] ?? '') === 'first'
+                || ($tenant['status'] ?? '') !== 'active'
+                || ($tenant['payment_status'] ?? '') !== 'active';
+
+            if ($isFirst) {
+                $this->cleanupPendingSignup($tenant);
+                error_log("SSEO AI SaaS: Deleted pending tenant {$tenantKey} due to Mollie payment status: {$status}");
+                return ['received' => true, 'processed' => true, 'tenant_key' => $tenantKey, 'status' => $status, 'cleanup' => true];
+            }
+
             $this->tenants->updateTenant($tenantKey, [
                 'payment_status' => $status,
             ]);
@@ -794,5 +804,31 @@ This is an automated message from %s", 'sseo-ai-saas'),
         $symbol = $symbols[$currency] ?? ($currency . ' ');
 
         return $symbol . number_format_i18n($amount, 2);
+    }
+
+    /**
+     * Delete a pending tenant/license that was created for a first payment that failed.
+     */
+    private function cleanupPendingSignup(array $tenant): void
+    {
+        global $wpdb;
+
+        $tenantId = (int) ($tenant['id'] ?? 0);
+        $tenantKey = $tenant['tenant_key'] ?? '';
+        $licenseKey = $tenant['license_key'] ?? '';
+
+        if (empty($tenantKey)) {
+            return;
+        }
+
+        if ($tenantId) {
+            $wpdb->delete($wpdb->prefix . 'sseo_ai_tenant_settings', ['tenant_id' => $tenantId]);
+        }
+
+        if ($licenseKey) {
+            $wpdb->delete($wpdb->prefix . 'sseo_ai_license_keys', ['license_key' => $licenseKey]);
+        }
+
+        $wpdb->delete($wpdb->prefix . 'sseo_ai_tenants', ['tenant_key' => $tenantKey]);
     }
 }
