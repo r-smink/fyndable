@@ -80,6 +80,27 @@ body[class*="sseo-ai"] {
     border-radius: 0;
 }
 
+/* Align nav-tab bars with the 20px container padding used throughout */
+.nav-tab-wrapper, .wrap h2.nav-tab-wrapper, h1.nav-tab-wrapper{
+    margin:0 20px!important;
+}
+
+/* Cost Dashboard — match Bookkeeping header/tab layout */
+.wrap.sseo-ai-license-admin.sseo-ai-cost-wrap > h1 {
+    padding: 20px;
+    font-size: 26px;
+}
+
+.wrap.sseo-ai-license-admin.sseo-ai-cost-wrap .sseo-ai-settings-tabs {
+    margin: 0 20px 20px;
+    padding: 15px 20px 0;
+    width: auto;
+}
+
+.sseo-ai-cost-wrap .sseo-ai-cost-content {
+    padding: 0 20px;
+}
+
 /* Fyndable branded content background */
 .wrap.sseo-ai-license-admin {
     background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);

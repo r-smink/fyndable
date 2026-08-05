@@ -501,6 +501,17 @@ class SignupCheckout
             exit;
         }
 
+        // Fallback: als Mollie het payment ID niet in de redirect URL heeft meegegeven,
+        // haal het op uit de tenant settings (opgeslagen tijdens checkout creatie).
+        if (empty($paymentId) && $provider === 'mollie' && $state === 'success') {
+            $paymentId = $this->tenants->getTenantSetting($tenantKey, 'mollie_payment_id', '');
+        }
+
+        error_log(sprintf(
+            'SSEO AI SaaS: handlePaymentReturn — state=%s provider=%s tenant=%s paymentId=%s',
+            $state, $provider, $tenantKey, $paymentId ?: '(empty)'
+        ));
+
         $pricingUrl = home_url('/pricing/');
 
         if (in_array($state, ['cancel', 'failed', 'expired'], true)) {

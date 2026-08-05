@@ -144,14 +144,26 @@ class RevenueDashboard
 
     public function renderPage(): void
     {
+        ?>
+        <div class="wrap fyndable-revenue-wrap">
+            <h1>💰 Revenue Dashboard</h1>
+            <?php $this->renderContent(); ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render the revenue dashboard content (cards + tables + chart).
+     * Excludes the outer .wrap and <h1> so it can be embedded inside
+     * a parent page that already provides the header (e.g. Cost Dashboard tabs).
+     */
+    public function renderContent(): void
+    {
         $stats = $this->getStats();
         $currency = $stats['currency'];
         $symbol = $this->getCurrencySymbol($currency);
 
         ?>
-        <div class="wrap fyndable-revenue-wrap">
-            <h1>💰 Revenue Dashboard</h1>
-
             <div class="fyndable-revenue-cards">
                 <div class="fyndable-revenue-card">
                     <div class="card-label">Monthly Recurring Revenue</div>
@@ -242,7 +254,6 @@ class RevenueDashboard
                     <?php endforeach; ?>
                 </div>
             </div>
-        </div>
         <?php
     }
 
