@@ -59,7 +59,7 @@ class PaymentProcessor
     /**
      * Create a subscription checkout for a tenant
      */
-    public function createSubscription(string $tenantKey, string $tier, string $interval = 'month'): array|\WP_Error
+    public function createSubscription(string $tenantKey, string $tier, string $interval = 'month', ?string $paymentMethod = null): array|\WP_Error
     {
         $tenant = $this->tenants->getTenant($tenantKey);
         if (!$tenant) {
@@ -75,7 +75,7 @@ class PaymentProcessor
             case 'stripe':
                 return $this->createStripeSubscription($tenant, $tier, $pricing);
             case 'mollie':
-                return $this->createMollieCheckout($tenant, $tier, $pricing);
+                return $this->createMollieCheckout($tenant, $tier, $pricing, $paymentMethod);
             default:
                 return new \WP_Error('invalid_provider', __('Invalid payment provider', 'sseo-ai-saas'));
         }
@@ -227,7 +227,7 @@ class PaymentProcessor
     /**
      * Create Mollie checkout for the first recurring payment
      */
-    private function createMollieCheckout(array $tenant, string $tier, array $pricing): array|\WP_Error
+    private function createMollieCheckout(array $tenant, string $tier, array $pricing, ?string $paymentMethod = null): array|\WP_Error
     {
         if (empty($this->mollieApiKey)) {
             return new \WP_Error('mollie_not_configured', __('Mollie API key is not configured', 'sseo-ai-saas'));
@@ -249,7 +249,7 @@ class PaymentProcessor
         $customerId = $customer['id'];
         $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_customer_id', $customerId);
 
-        $payment = $this->mollieRequest('payments', [
+        $paymentParams = [
             'amount' => $this->mollieAmount($pricing['amount']),
             'customerId' => $customerId,
             'sequenceType' => 'first',
@@ -262,7 +262,13 @@ class PaymentProcessor
                 'interval' => $pricing['interval'] ?? 'month',
                 'mollie_interval' => $pricing['mollie_interval'] ?? '1 month',
             ],
-        ]);
+        ];
+
+        if (!empty($paymentMethod)) {
+            $paymentParams['method'] = $paymentMethod;
+        }
+
+        $payment = $this->mollieRequest('payments', $paymentParams);
 
         if (is_wp_error($payment)) {
             return $payment;

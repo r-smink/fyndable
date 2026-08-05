@@ -140,6 +140,20 @@ class Client
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
+        // Custom menu icon styling
+        $printIconStyles = function (): void {
+            echo '<style>
+            #toplevel_page_fyndable-dashboard .wp-menu-image img,
+            #toplevel_page_fyndable-network .wp-menu-image img {
+                padding: 6px 0 0;
+                opacity: 1;
+                width: 22px;
+            }
+            </style>';
+        };
+        add_action('admin_head', $printIconStyles);
+        add_action('network_admin_head', $printIconStyles);
+
         // Network admin menu (multisite)
         add_action('network_admin_menu', [$this, 'registerNetworkMenu']);
 
@@ -688,6 +702,7 @@ class Client
     {
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $menuName = $this->getBrandName();
+        $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
 
         add_menu_page(
             $menuName,
@@ -695,7 +710,7 @@ class Client
             'manage_network_options',
             'fyndable-network',
             [$this, 'renderNetworkPage'],
-            'dashicons-analytics',
+            $iconUrl,
             3
         );
     }
@@ -749,6 +764,7 @@ class Client
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $menuName = $this->getBrandName();
+        $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
 
         // Initialize dashboard shell
         $this->dashboardShell = new DashboardShell($this);
@@ -761,7 +777,7 @@ class Client
             'manage_options',
             'fyndable-dashboard',
             [$this, 'renderDashboardShell'],
-            'dashicons-chart-line',
+            $iconUrl,
             30
         );
 

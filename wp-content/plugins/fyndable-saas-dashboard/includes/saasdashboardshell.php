@@ -117,7 +117,7 @@ class SaaSDashboardShell
             ],
             [
                 'slug' => 'sseo-ai-billing',
-                'label' => __('Billing', 'sseo-ai-saas'),
+                'label' => __('Bookkeeping', 'sseo-ai-saas'),
                 'icon' => '&#128179;',
             ],
             [

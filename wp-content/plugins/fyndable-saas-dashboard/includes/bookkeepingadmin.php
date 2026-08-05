@@ -35,18 +35,6 @@ class BookkeepingAdmin
         add_action('wp_ajax_bookkeeping_preview_invoice', [$this, 'handlePreviewInvoice']);
     }
 
-    public function addMenu(): void
-    {
-        add_submenu_page(
-            'sseo-ai-licenses',
-            __('Bookkeeping', 'sseo-ai-saas'),
-            __('Bookkeeping', 'sseo-ai-saas'),
-            'manage_options',
-            'sseo-ai-bookkeeping',
-            [$this, 'renderPage']
-        );
-    }
-
     public function enqueueAssets(string $hook): void
     {
         if (strpos($hook, 'sseo-ai-billing') === false) {
@@ -77,10 +65,10 @@ class BookkeepingAdmin
         $tabs = ['invoices' => __('Invoices', 'sseo-ai-saas'), 'profit' => __('Profit', 'sseo-ai-saas'), 'template' => __('Invoice Template', 'sseo-ai-saas')];
         $base = admin_url('admin.php?page=sseo-ai-billing');
         ?>
-        <div class="wrap sseo-ai-bookkeeping-wrap">
+        <div class="wrap sseo-ai-license-admin sseo-ai-bookkeeping-wrap">
             <h1><?php esc_html_e('Bookkeeping', 'sseo-ai-saas'); ?></h1>
 
-            <h2 class="nav-tab-wrapper">
+            <h2 class="nav-tab-wrapper sseo-ai-settings-tabs">
                 <?php foreach ($tabs as $key => $label): ?>
                     <a href="<?php echo esc_url(add_query_arg('tab', $key, $base)); ?>"
                        class="nav-tab <?php echo $tab === $key ? 'nav-tab-active' : ''; ?>">
@@ -89,20 +77,22 @@ class BookkeepingAdmin
                 <?php endforeach; ?>
             </h2>
 
-            <?php
-            switch ($tab) {
-                case 'profit':
-                    $this->renderProfitTab();
-                    break;
-                case 'template':
-                    $this->renderTemplateTab();
-                    break;
-                case 'invoices':
-                default:
-                    $this->renderInvoicesTab();
-                    break;
-            }
-            ?>
+            <div class="sseo-ai-bk-content">
+                <?php
+                switch ($tab) {
+                    case 'profit':
+                        $this->renderProfitTab();
+                        break;
+                    case 'template':
+                        $this->renderTemplateTab();
+                        break;
+                    case 'invoices':
+                    default:
+                        $this->renderInvoicesTab();
+                        break;
+                }
+                ?>
+            </div>
         </div>
         <?php
     }

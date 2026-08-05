@@ -67,6 +67,7 @@ class SignupCheckout
                 'country' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'tier' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'interval' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'payment_method' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
             ],
         ]);
 
@@ -88,10 +89,21 @@ class SignupCheckout
     public function restGetPlans(): \WP_REST_Response
     {
         nocache_headers();
+        $provider = get_option('sseo_ai_saas_payment_provider', 'stripe');
+        $paymentMethods = [];
+        if ($provider === 'mollie') {
+            $paymentMethods = [
+                'ideal' => 'iDEAL',
+                'creditcard' => 'Credit Card',
+            ];
+        }
         return new \WP_REST_Response([
             'success' => true,
             'plans' => $this->getPlans(),
             'currency' => get_option('sseo_ai_saas_currency', 'EUR'),
+            'provider' => $provider,
+            'payment_methods' => $paymentMethods,
+            'trial_enabled' => !empty(get_option('sseo_ai_saas_trial_enabled', '1')),
         ], 200);
     }
 
@@ -237,6 +249,7 @@ class SignupCheckout
         $tier = $request->get_param('tier');
         $interval = $request->get_param('interval') ?: 'month';
         $interval = in_array($interval, ['month', 'year'], true) ? $interval : 'month';
+        $paymentMethod = $request->get_param('payment_method') ?: null;
 
         $plans = $this->getPlans();
         if (!isset($plans[$tier])) {
@@ -335,7 +348,7 @@ class SignupCheckout
         }
 
         // For paid tiers, create checkout session
-        $checkoutResult = $this->paymentProcessor->createSubscription($tenantKey, $tier, $interval);
+        $checkoutResult = $this->paymentProcessor->createSubscription($tenantKey, $tier, $interval, $paymentMethod);
 
         if (is_wp_error($checkoutResult)) {
             $this->cleanupPendingSignup([

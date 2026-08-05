@@ -65,7 +65,6 @@ class Dashboard
         add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
         $this->providerRouter = new ProviderRouter($this->saasSettings);
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter);
-        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants, $this->bookkeepingAdmin);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->emailTemplateRepository = new EmailTemplateRepository();
@@ -104,6 +103,7 @@ class Dashboard
 
         // Bookkeeping admin (invoices, profit, template)
         $this->bookkeepingAdmin = new BookkeepingAdmin($this->pluginFile, $this->tenants, $this->invoiceManager);
+        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants, $this->bookkeepingAdmin);
 
         $this->geoScanRepository = new GeoScanRepository();
         $this->htmlFetcher = new HtmlFetcher($this->saasSettings);
@@ -126,6 +126,15 @@ class Dashboard
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
         add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
+        add_action('admin_head', function (): void {
+            echo '<style>
+            #toplevel_page_sseo-ai-shell .wp-menu-image img {
+                padding: 6px 0 0;
+                opacity: 1;
+                width: 22px;
+            }
+            </style>';
+        });
 
         // Register admin menu (existing submenus under sseo-ai-licenses)
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
@@ -205,8 +214,9 @@ class Dashboard
             }
         }
 
-        $menuName = $companyName ? $companyName . ' SaaS' : 'Fyndable SaaS';
+        $menuName = 'Fyndable Portal';
         $capability = $isAgency ? 'agency_view_dashboard' : 'manage_options';
+        $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
 
         add_menu_page(
             $menuName,
@@ -214,7 +224,7 @@ class Dashboard
             $capability,
             'sseo-ai-shell',
             [$this->dashboardShell, 'render'],
-            'dashicons-analytics',
+            $iconUrl,
             3
         );
     }

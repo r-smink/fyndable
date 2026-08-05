@@ -6,6 +6,10 @@
     var nonce = window.FyndableSignup?.nonce || '';
     var selectedTier = null;
     var selectedInterval = 'month';
+    var selectedPaymentMethod = '';
+    var paymentProvider = 'stripe';
+    var availablePaymentMethods = {};
+    var trialEnabled = true;
     var plans = {};
 
     function init() {
@@ -13,7 +17,9 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.success) {
-                    renderPlans(data.plans);
+                    paymentProvider = data.provider || 'stripe';
+                    trialEnabled = !!data.trial_enabled;
+                    renderPlans(data.plans, data.provider, data.payment_methods, data.trial_enabled);
                 }
             })
             .catch(function () {
@@ -21,10 +27,23 @@
             });
     }
 
-    function renderPlans(plansData) {
+    function renderPlans(plansData, provider, paymentMethods, trial_enabled) {
         plans = plansData;
+        if (typeof provider !== 'undefined') {
+            paymentProvider = provider;
+        }
+        if (typeof paymentMethods !== 'undefined') {
+            availablePaymentMethods = paymentMethods;
+        }
+        if (typeof trial_enabled !== 'undefined') {
+            trialEnabled = !!trial_enabled;
+        }
+        var paymentMethodOptions = '';
+        Object.keys(availablePaymentMethods).forEach(function (key) {
+            paymentMethodOptions += '<option value="' + escapeHtml(key) + '"' + (selectedPaymentMethod === key ? ' selected' : '') + '>' + escapeHtml(availablePaymentMethods[key]) + '</option>';
+        });
         var html = '<div class="fyndable-signup-container">';
-        html += '<div class="fyndable-signup-header"><h1>Choose Your Plan</h1><p>Start free, upgrade anytime. No credit card required.</p></div>';
+        html += '<div class="fyndable-signup-header"><h1>Choose Your Plan</h1>' + (trialEnabled ? '<p>Start free, upgrade anytime. No credit card required.</p>' : '') + '</div>';
         var firstPlan = plans[Object.keys(plans)[0]];
         var yearSavings = (firstPlan && firstPlan.intervals && firstPlan.intervals.year && firstPlan.intervals.year.savings_label) || '';
         html += '<div class="fyndable-signup-billing">';
@@ -70,6 +89,10 @@
         html += '<div class="fyndable-signup-field"><label>City</label><input type="text" id="fyndable-city" placeholder="Amsterdam"></div>';
         html += '</div>';
         html += '<div class="fyndable-signup-field"><label>Country</label><select id="fyndable-country"><option value="NL">Netherlands</option><option value="BE">Belgium</option><option value="DE">Germany</option><option value="FR">France</option><option value="GB">United Kingdom</option><option value="US">United States</option><option value="ES">Spain</option><option value="PT">Portugal</option><option value="IT">Italy</option><option value="DK">Denmark</option><option value="SE">Sweden</option><option value="FI">Finland</option><option value="NO">Norway</option><option value="AT">Austria</option><option value="CH">Switzerland</option><option value="IE">Ireland</option><option value="PL">Poland</option><option value="LU">Luxembourg</option><option value="other">Other</option></select></div>';
+        html += '<div class="fyndable-signup-field fyndable-signup-payment-method" id="fyndable-payment-method-field" style="display: ' + (paymentProvider === 'mollie' ? 'block' : 'none') + ';">'
+            + '<label>Betaalmethode</label>'
+            + '<select id="fyndable-payment-method">' + paymentMethodOptions + '</select>'
+            + '</div>';
         html += '<button class="fyndable-signup-submit" id="fyndable-signup-submit">Create Account →</button>';
         html += '</div></div>';
 
@@ -85,6 +108,15 @@
             if (selectedPlanEl) {
                 selectedPlanEl.textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
             }
+        }
+
+        // Bind payment method selection
+        var paymentMethodSelect = document.getElementById('fyndable-payment-method');
+        if (paymentMethodSelect) {
+            selectedPaymentMethod = paymentMethodSelect.value;
+            paymentMethodSelect.addEventListener('change', function () {
+                selectedPaymentMethod = paymentMethodSelect.value;
+            });
         }
 
         // Bind plan selection
@@ -163,6 +195,7 @@
                 country: country,
                 tier: selectedTier,
                 interval: selectedInterval,
+                payment_method: paymentProvider === 'mollie' ? selectedPaymentMethod : '',
             }),
         })
             .then(function (r) { return r.json(); })

@@ -223,9 +223,20 @@
     font-size: 15px;
     box-sizing: border-box;
 }
-.fyndable-signup-field input:focus {
+.fyndable-signup-field input:focus,
+.fyndable-signup-field select:focus {
     border-color: #379fd3;
     outline: none;
+}
+.fyndable-signup-field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    background: #fff;
+    color: #374151;
 }
 .fyndable-signup-submit {
     width: 100%;
