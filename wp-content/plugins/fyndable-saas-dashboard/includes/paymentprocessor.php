@@ -274,6 +274,16 @@ class PaymentProcessor
             return $payment;
         }
 
+        error_log(sprintf(
+            'SSEO AI SaaS: Mollie first payment created — tenant=%s customer=%s payment=%s method=%s amount=%s %s',
+            $tenant['tenant_key'],
+            $customerId,
+            $payment['id'] ?? '',
+            $paymentMethod ?: '(default)',
+            $pricing['amount'],
+            strtoupper($this->currency)
+        ));
+
         $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_payment_id', $payment['id']);
 
         return [
@@ -342,13 +352,27 @@ class PaymentProcessor
             return new \WP_Error('mollie_no_customer', __('Mollie payment does not have a customer ID', 'sseo-ai-saas'));
         }
 
-        // If no mandateId in payment response, fetch mandates for the customer
+        // If no mandateId in payment response, fetch mandates for the customer.
+        // Mollie may not register the mandate immediately after a first payment,
+        // so we retry a few times before giving up.
         if (empty($mandateId)) {
-            $mandateId = $this->fetchValidMandateId($customerId);
+            $mandateMethod = $payment['method'] ?? '';
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $mandateId = $this->fetchValidMandateId($customerId, $mandateMethod);
+                if (!empty($mandateId)) {
+                    break;
+                }
+                if ($attempt < 2) {
+                    sleep(2);
+                }
+            }
             if (empty($mandateId)) {
+                error_log('SSEO AI SaaS: No valid Mollie mandate found for customer ' . $customerId . ' after 3 attempts (tenant ' . $tenantKey . ')');
                 return new \WP_Error('mollie_no_mandate', __('No valid mandate found for Mollie customer. The payment method may not support recurring payments.', 'sseo-ai-saas'));
             }
         }
+
+        error_log('SSEO AI SaaS: Creating Mollie subscription for tenant ' . $tenantKey . ' with mandate ' . $mandateId . ' (customer ' . $customerId . ', interval ' . $mollieInterval . ')');
 
         $pricing = $this->getTierPricing($tier, $interval);
         if (is_wp_error($pricing)) {
@@ -676,21 +700,55 @@ class PaymentProcessor
     /**
      * Fetch a valid mandate ID for a Mollie customer.
      * Returns the first valid mandate, or empty string if none found.
+     * When $preferredMethod is given (e.g. 'ideal' or 'creditcard'), mandates
+     * whose method matches are preferred — iDEAL first payments yield
+     * 'directdebit' mandates, creditcard payments yield 'creditcard' mandates.
      */
-    public function fetchValidMandateId(string $customerId): string
+    public function fetchValidMandateId(string $customerId, string $preferredMethod = ''): string
     {
         $mandates = $this->mollieRequest('customers/' . $customerId . '/mandates', [], 'GET');
-        if (is_wp_error($mandates) || empty($mandates['_embedded']['mandates'])) {
+        if (is_wp_error($mandates)) {
+            error_log('SSEO AI SaaS: Failed to fetch Mollie mandates for customer ' . $customerId . ': ' . $mandates->get_error_message());
+            return '';
+        }
+        if (empty($mandates['_embedded']['mandates'])) {
+            error_log('SSEO AI SaaS: No Mollie mandates found for customer ' . $customerId);
             return '';
         }
 
-        foreach ($mandates['_embedded']['mandates'] as $mandate) {
-            if (($mandate['status'] ?? '') === 'valid') {
-                return $mandate['id'] ?? '';
+        $allMandates = $mandates['_embedded']['mandates'];
+        $validMandates = array_filter($allMandates, function ($m) {
+            return ($m['status'] ?? '') === 'valid';
+        });
+
+        if (empty($validMandates)) {
+            $statuses = array_map(function ($m) { return $m['status'] ?? 'unknown'; }, $allMandates);
+            error_log('SSEO AI SaaS: No valid Mollie mandate for customer ' . $customerId . ' (statuses: ' . implode(',', $statuses) . ')');
+            return '';
+        }
+
+        // Prefer mandates matching the original payment method.
+        // iDEAL → directdebit, creditcard → creditcard
+        $expectedMethod = '';
+        if ($preferredMethod === 'ideal') {
+            $expectedMethod = 'directdebit';
+        } elseif ($preferredMethod === 'creditcard') {
+            $expectedMethod = 'creditcard';
+        }
+
+        if (!empty($expectedMethod)) {
+            foreach ($validMandates as $mandate) {
+                if (($mandate['method'] ?? '') === $expectedMethod) {
+                    error_log('SSEO AI SaaS: Selected Mollie mandate ' . ($mandate['id'] ?? '') . ' (method: ' . $expectedMethod . ') for customer ' . $customerId);
+                    return $mandate['id'] ?? '';
+                }
             }
         }
 
-        return '';
+        // Fall back to the first valid mandate.
+        $first = reset($validMandates);
+        error_log('SSEO AI SaaS: Selected first valid Mollie mandate ' . ($first['id'] ?? '') . ' (method: ' . ($first['method'] ?? 'unknown') . ') for customer ' . $customerId);
+        return $first['id'] ?? '';
     }
 
     /**
@@ -723,6 +781,110 @@ class PaymentProcessor
             'limit' => $limit,
             'sort' => 'desc',
         ], 'GET');
+    }
+
+    /**
+     * Get the full Mollie recurring status for a tenant — customer, mandates,
+     * subscription and last payment. Used by the admin diagnostics endpoint.
+     */
+    public function getMollieSubscriptionStatus(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        $storedMandateId = $this->tenants->getTenantSetting($tenantKey, 'mollie_mandate_id', '');
+
+        if (empty($customerId)) {
+            return new \WP_Error('not_configured', __('Mollie customer not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $status = [
+            'customer_id' => $customerId,
+            'subscription_id' => $subscriptionId,
+            'stored_mandate_id' => $storedMandateId,
+            'subscription' => null,
+            'mandates' => [],
+            'last_payment' => null,
+        ];
+
+        // Subscription
+        if (!empty($subscriptionId)) {
+            $sub = $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+            if (!is_wp_error($sub)) {
+                $status['subscription'] = [
+                    'id' => $sub['id'] ?? '',
+                    'status' => $sub['status'] ?? '',
+                    'amount' => $sub['amount'] ?? null,
+                    'interval' => $sub['interval'] ?? '',
+                    'nextPaymentDate' => $sub['nextPaymentDate'] ?? '',
+                    'startDate' => $sub['startDate'] ?? '',
+                    'mandateId' => $sub['mandateId'] ?? '',
+                    'times' => $sub['times'] ?? null,
+                    'timesRemaining' => $sub['timesRemaining'] ?? null,
+                ];
+            }
+        }
+
+        // Mandates
+        $mandatesResp = $this->mollieRequest('customers/' . $customerId . '/mandates', [], 'GET');
+        if (!is_wp_error($mandatesResp) && !empty($mandatesResp['_embedded']['mandates'])) {
+            foreach ($mandatesResp['_embedded']['mandates'] as $mandate) {
+                $status['mandates'][] = [
+                    'id' => $mandate['id'] ?? '',
+                    'status' => $mandate['status'] ?? '',
+                    'method' => $mandate['method'] ?? '',
+                    'mandateReference' => $mandate['mandateReference'] ?? '',
+                    'signatureDate' => $mandate['signatureDate'] ?? '',
+                ];
+            }
+        }
+
+        // Last payment
+        $paymentsResp = $this->mollieRequest('customers/' . $customerId . '/payments', [
+            'limit' => 1,
+            'sort' => 'desc',
+        ], 'GET');
+        if (!is_wp_error($paymentsResp) && !empty($paymentsResp['_embedded']['payments'][0])) {
+            $last = $paymentsResp['_embedded']['payments'][0];
+            $status['last_payment'] = [
+                'id' => $last['id'] ?? '',
+                'status' => $last['status'] ?? '',
+                'sequenceType' => $last['sequenceType'] ?? '',
+                'method' => $last['method'] ?? '',
+                'amount' => $last['amount'] ?? null,
+                'paidAt' => $last['paidAt'] ?? '',
+                'subscriptionId' => $last['subscriptionId'] ?? '',
+            ];
+        }
+
+        return $status;
+    }
+
+    /**
+     * Create a Mollie subscription from the last successful first payment.
+     * Admin fallback for when the webhook/return-URL both failed to create one.
+     */
+    public function createMollieSubscriptionFromLastPayment(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        if (empty($customerId)) {
+            return new \WP_Error('not_configured', __('Mollie customer not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $paymentsResp = $this->mollieRequest('customers/' . $customerId . '/payments', [
+            'limit' => 50,
+            'sort' => 'desc',
+        ], 'GET');
+        if (is_wp_error($paymentsResp) || empty($paymentsResp['_embedded']['payments'])) {
+            return new \WP_Error('no_payments', __('No Mollie payments found for this customer', 'sseo-ai-saas'));
+        }
+
+        foreach ($paymentsResp['_embedded']['payments'] as $payment) {
+            if (($payment['status'] ?? '') === 'paid' && ($payment['sequenceType'] ?? '') === 'first') {
+                return $this->createMollieSubscription($tenantKey, $payment);
+            }
+        }
+
+        return new \WP_Error('no_first_payment', __('No successful first payment found to base a subscription on', 'sseo-ai-saas'));
     }
 
     /**

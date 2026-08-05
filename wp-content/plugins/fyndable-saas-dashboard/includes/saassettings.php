@@ -1031,8 +1031,44 @@ class SaaSSettings
                         <td>
                             <input type="password" name="sseo_ai_saas_mollie_test_api_key" id="mollie_test_api_key" value="<?php echo esc_attr(get_option('sseo_ai_saas_mollie_test_api_key', '')); ?>" class="regular-text" placeholder="test_...">
                             <p class="description">
-                                <?php esc_html_e('Webhook URL:', 'sseo-ai-saas'); ?> <code><?php echo esc_url(rest_url('ai-seo-saas/v1/webhooks/mollie')); ?></code>
+                                <?php esc_html_e('Webhook URL:', 'sseo-ai-saas'); ?> <code id="mollie-webhook-url"><?php echo esc_url(rest_url('ai-seo-saas/v1/webhooks/mollie')); ?></code>
+                                <br><button type="button" class="button button-secondary" id="mollie-test-webhook-btn" style="margin-top:6px;"><?php esc_html_e('Test webhook bereikbaarheid', 'sseo-ai-saas'); ?></button>
+                                <span id="mollie-webhook-test-result" style="display:block;margin-top:6px;"></span>
                             </p>
+                            <script>
+                            (function(){
+                                var btn = document.getElementById('mollie-test-webhook-btn');
+                                if (!btn) return;
+                                btn.addEventListener('click', function(){
+                                    var resultEl = document.getElementById('mollie-webhook-test-result');
+                                    var urlEl = document.getElementById('mollie-webhook-url');
+                                    var url = urlEl ? urlEl.textContent : '';
+                                    resultEl.textContent = 'Testen...';
+                                    resultEl.style.color = '#6b7280';
+                                    btn.disabled = true;
+                                    fetch(url, {
+                                        method: 'POST',
+                                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                        body: 'id=test_webhook_check'
+                                    })
+                                    .then(function(r){ return r.text().then(function(t){ return {status: r.status, body: t}; }); })
+                                    .then(function(res){
+                                        if (res.status === 200 || res.status === 400) {
+                                            resultEl.textContent = '✓ Webhook endpoint is bereikbaar (HTTP ' + res.status + ')';
+                                            resultEl.style.color = '#10b981';
+                                        } else {
+                                            resultEl.textContent = '⚠ Webhook reageert met HTTP ' + res.status;
+                                            resultEl.style.color = '#f59e0b';
+                                        }
+                                    })
+                                    .catch(function(err){
+                                        resultEl.textContent = '✗ Webhook niet bereikbaar: ' + err;
+                                        resultEl.style.color = '#dc2626';
+                                    })
+                                    .finally(function(){ btn.disabled = false; });
+                                });
+                            })();
+                            </script>
                         </td>
                     </tr>
                     <tr>

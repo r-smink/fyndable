@@ -545,6 +545,20 @@ class SignupCheckout
             ]);
         }
 
+        // Fallback: ensure a Mollie subscription exists for recurring payments.
+        // The webhook normally creates this, but if the webhook was delayed or
+        // failed, we create it here from the first payment so recurring SEPA
+        // incasso charges will still be scheduled.
+        $existingSubId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        if (empty($existingSubId) && ($payment['sequenceType'] ?? '') === 'first') {
+            $subscription = $this->paymentProcessor->createMollieSubscription($tenantKey, $payment);
+            if (is_wp_error($subscription)) {
+                error_log('SSEO AI SaaS: Fallback Mollie subscription creation failed for tenant ' . $tenantKey . ': ' . $subscription->get_error_message());
+            } else {
+                error_log('SSEO AI SaaS: Fallback Mollie subscription created for tenant ' . $tenantKey . ': ' . ($subscription['id'] ?? ''));
+            }
+        }
+
         $roleManager = new CustomerRoleManager($this->tenants);
         $user = get_user_by('email', $tenant['email']);
         if (!$user || !$roleManager->isCustomerUser($user)) {

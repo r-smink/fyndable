@@ -57,6 +57,24 @@ class WebhookHandler
                 return current_user_can('manage_options');
             },
         ]);
+
+        // Mollie subscription diagnostics for a tenant (admin)
+        register_rest_route($this->namespace, '/diagnostics/mollie/(?P<tenant_key>[a-zA-Z0-9_-]+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getMollieDiagnostics'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+        ]);
+
+        // Manually create a Mollie subscription from the last first payment (admin fallback)
+        register_rest_route($this->namespace, '/diagnostics/mollie/(?P<tenant_key>[a-zA-Z0-9_-]+)/create-subscription', [
+            'methods' => 'POST',
+            'callback' => [$this, 'createMollieSubscriptionFallback'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+        ]);
     }
 
     /**
@@ -467,13 +485,28 @@ class WebhookHandler
 
         $sequenceType = $payment['sequenceType'] ?? '';
         $subscriptionId = $payment['subscriptionId'] ?? '';
+        $paymentAmount = (float)($payment['amount']['value'] ?? 0);
+        $paymentCurrency = $payment['amount']['currency'] ?? 'eur';
+        $paymentMethod = $payment['method'] ?? '';
+
+        error_log(sprintf(
+            'SSEO AI SaaS: Mollie payment %s paid — tenant=%s sequence=%s method=%s amount=%s %s subscriptionId=%s',
+            $paymentId,
+            $tenantKey,
+            $sequenceType,
+            $paymentMethod,
+            $paymentAmount,
+            $paymentCurrency,
+            $subscriptionId ?: '(none)'
+        ));
 
         if ($sequenceType === 'first') {
             $subscription = $this->paymentProcessor->createMollieSubscription($tenantKey, $payment);
             if (is_wp_error($subscription)) {
-                error_log('SSEO AI SaaS: Mollie subscription creation failed: ' . $subscription->get_error_message());
+                error_log('SSEO AI SaaS: Mollie subscription creation failed for tenant ' . $tenantKey . ': ' . $subscription->get_error_message());
                 return ['received' => true, 'processed' => false, 'reason' => $subscription->get_error_message()];
             }
+            error_log('SSEO AI SaaS: Mollie subscription created via webhook for tenant ' . $tenantKey . ': ' . ($subscription['id'] ?? ''));
         } else {
             if (!empty($subscriptionId)) {
                 $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_id', $subscriptionId);
@@ -490,8 +523,6 @@ class WebhookHandler
         }
 
         // Create invoice record for this Mollie payment
-        $paymentAmount = (float)($payment['amount']['value'] ?? 0);
-        $paymentCurrency = $payment['amount']['currency'] ?? 'eur';
         $this->createInvoiceRecord($tenantKey, 'mollie', $paymentAmount, $paymentCurrency, $payment['id'] ?? '');
 
         do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount($paymentAmount, $paymentCurrency), [
@@ -543,6 +574,72 @@ class WebhookHandler
                 'stripe' => 'Add this URL to your Stripe Dashboard → Developers → Webhooks',
                 'mollie' => 'Add this URL to your Mollie Dashboard → Settings → Webhooks',
             ],
+        ], 200);
+    }
+
+    /**
+     * Get Mollie subscription diagnostics for a tenant (admin).
+     */
+    public function getMollieDiagnostics(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Tenant not found.',
+            ], 404);
+        }
+
+        $status = $this->paymentProcessor->getMollieSubscriptionStatus($tenantKey);
+        if (is_wp_error($status)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => $status->get_error_message(),
+            ], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'tenant_key' => $tenantKey,
+            'status' => $status,
+        ], 200);
+    }
+
+    /**
+     * Manually create a Mollie subscription from the last first payment (admin fallback).
+     */
+    public function createMollieSubscriptionFallback(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Tenant not found.',
+            ], 404);
+        }
+
+        $existingSubId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        if (!empty($existingSubId)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'A Mollie subscription already exists for this tenant (' . $existingSubId . '). Cancel it first if you want to recreate.',
+            ], 409);
+        }
+
+        $result = $this->paymentProcessor->createMollieSubscriptionFromLastPayment($tenantKey);
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => $result->get_error_message(),
+            ], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'message' => 'Mollie subscription created successfully.',
+            'subscription_id' => $result['id'] ?? '',
         ], 200);
     }
 
