@@ -351,3 +351,354 @@ msgstr "Ongeldig antwoord van dashboard - geen tenant sleutel"
 
 msgid "You do not have permission to access this page."
 msgstr "Je hebt geen toestemming om deze pagina te bekijken."
+
+# Missing menu labels from fyndabledashboard.php
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Ideas"
+msgstr "Ideeën"
+
+msgid "Created Posts"
+msgstr "Aangemaakte berichten"
+
+msgid "Keywords"
+msgstr "Zoekwoorden"
+
+msgid "Link Manager"
+msgstr "Linkbeheer"
+
+msgid "Competitors"
+msgstr "Concurrenten"
+
+msgid "Sitemaps"
+msgstr "Sitemaps"
+
+msgid "Bulk Optimizer"
+msgstr "Bulkoptimalisatie"
+
+msgid "SEO Data"
+msgstr "SEO-data"
+
+msgid "LLM Tracker"
+msgstr "LLM-tracker"
+
+msgid "A/B Testing"
+msgstr "A/B-testen"
+
+msgid "Google Data"
+msgstr "Google-data"
+
+msgid "Rank Tracker"
+msgstr "Ranktracker"
+
+msgid "Topic Clusters"
+msgstr "Onderwerpgroepen"
+
+msgid "Support"
+msgstr "Ondersteuning"
+
+# Post meta box groups and panels
+msgid "Content & Keywords"
+msgstr "Content & zoekwoorden"
+
+msgid "Technical SEO"
+msgstr "Technische SEO"
+
+msgid "Social & Schema"
+msgstr "Social & schema"
+
+msgid "AI Tools"
+msgstr "AI-hulpmiddelen"
+
+msgid "Advanced"
+msgstr "Geavanceerd"
+
+msgid "SEO Score"
+msgstr "SEO-score"
+
+msgid "Smart Tags"
+msgstr "Slimme tags"
+
+msgid "Internal Links"
+msgstr "Interne links"
+
+msgid "E-E-A-T"
+msgstr "E-E-A-T"
+
+msgid "Performance"
+msgstr "Prestaties"
+
+msgid "Workflow"
+msgstr "Workflow"
+
+msgid "Canonical URL"
+msgstr "Canonical URL"
+
+msgid "Hreflang"
+msgstr "Hreflang"
+
+msgid "International"
+msgstr "Internationaal"
+
+msgid "SERP Features"
+msgstr "SERP-functies"
+
+msgid "Position Trends"
+msgstr "Positietrends"
+
+msgid "SEO Revisions"
+msgstr "SEO-revisies"
+
+msgid "Social Preview"
+msgstr "Social preview"
+
+msgid "Social Sharing"
+msgstr "Social sharing"
+
+msgid "Schema"
+msgstr "Schema"
+
+msgid "FAQ Schema"
+msgstr "FAQ-schema"
+
+msgid "Video SEO"
+msgstr "Video-SEO"
+
+msgid "Local SEO"
+msgstr "Lokale SEO"
+
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+msgid "AI Content"
+msgstr "AI-content"
+
+msgid "AI Image"
+msgstr "AI-afbeelding"
+
+msgid "AI Repurpose"
+msgstr "AI-hergebruik"
+
+msgid "Originality"
+msgstr "Originaliteit"
+
+msgid "Alt Text"
+msgstr "Alt-tekst"
+
+msgid "Every 2 minutes (Fyndable Queue)"
+msgstr "Elke 2 minuten (Fyndable-wachtrij)"
+
+# Client page titles / post meta box
+msgid "Competitor Research"
+msgstr "Concurrentieonderzoek"
+
+msgid "Link Genius"
+msgstr "Linkgenie"
+
+msgid "Redirect Manager"
+msgstr "Redirectbeheer"
+
+msgid "SEO Data Dashboard"
+msgstr "SEO-datadashboard"
+
+msgid "AI Search Visibility"
+msgstr "AI-zichtbaarheid"
+
+msgid "Automation"
+msgstr "Automatisering"
+
+msgid "Search Console"
+msgstr "Search Console"
+
+msgid "Post Optimization"
+msgstr "Postoptimalisatie"
+
+msgid "No SEO options available."
+msgstr "Geen SEO-opties beschikbaar."
+
+msgid "AI is generating... Please wait."
+msgstr "AI is aan het genereren... Even geduld."
+
+# License / activation
+msgid "License activated successfully!"
+msgstr "Licentie succesvol geactiveerd!"
+
+msgid "License deactivated."
+msgstr "Licentie gedeactiveerd."
+
+msgid "Activation Error:"
+msgstr "Activeerfout:"
+
+msgid "Your license has expired. Please renew to continue using AI SEO features."
+msgstr "Je licentie is verlopen. Vernieuw om AI SEO-functies te blijven gebruiken."
+
+msgid "Your license has been revoked. Please contact support."
+msgstr "Je licentie is ingetrokken. Neem contact op met support."
+
+msgid "Activate Your License"
+msgstr "Activeer je licentie"
+
+msgid "Enter your license key to activate AI SEO features on this site."
+msgstr "Voer je licentiesleutel in om AI SEO-functies op deze site te activeren."
+
+msgid "SaaS Dashboard URL"
+msgstr "SaaS Dashboard URL"
+
+msgid "The URL where your AI SEO SaaS Dashboard is hosted"
+msgstr "De URL waar je AI SEO SaaS-dashboard wordt gehost"
+
+msgid "Bulk generate meta titles and descriptions"
+msgstr "Genereer meta-titels en -omschrijvingen in bulk"
+
+msgid "Available in post editor sidebar"
+msgstr "Beschikbaar in de zijbalk van de berichteditor"
+
+# XML Sitemaps
+msgid "XML Sitemaps"
+msgstr "XML-sitemaps"
+
+msgid "Sitemap Status"
+msgstr "Sitemap-status"
+
+msgid "Loading sitemap status..."
+msgstr "Sitemap-status laden..."
+
+msgid "Run Full Sitemap Health Check"
+msgstr "Volledige sitemap-gezondheidscheck uitvoeren"
+
+msgid "Sitemap Index Found"
+msgstr "Sitemap-index gevonden"
+
+msgid "XML Sitemap Found"
+msgstr "XML-sitemap gevonden"
+
+msgid "Sitemap size:"
+msgstr "Sitemap-grootte:"
+
+msgid "No Sitemap Found"
+msgstr "Geen sitemap gevonden"
+
+msgid "Neither sitemap.xml nor sitemap_index.xml could be found."
+msgstr "sitemap.xml en sitemap_index.xml zijn niet gevonden."
+
+msgid "Open Sitemap Settings"
+msgstr "Open sitemap-instellingen"
+
+msgid "Error loading sitemap status"
+msgstr "Fout bij laden sitemap-status"
+
+msgid "Unknown error"
+msgstr "Onbekende fout"
+
+msgid "Running sitemap health check..."
+msgstr "Sitemap-gezondheidscheck wordt uitgevoerd..."
+
+msgid "Sitemap Health Check Results"
+msgstr "Resultaten sitemap-gezondheidscheck"
+
+msgid "Sitemap URL:"
+msgstr "Sitemap-URL:"
+
+msgid "Total URLs"
+msgstr "Totaal aantal URL's"
+
+msgid "Valid URLs"
+msgstr "Geldige URL's"
+
+msgid "Invalid URLs"
+msgstr "Ongeldige URL's"
+
+msgid "Issues Found"
+msgstr "Problemen gevonden"
+
+msgid "No issues found! Your sitemap is healthy."
+msgstr "Geen problemen gevonden! Je sitemap is gezond."
+
+# Client / Dashboard / Connection
+msgid "License is active!"
+msgstr "Licentie is actief!"
+
+msgid "Your license key: %s"
+msgstr "Jouw licentiesleutel: %s"
+
+msgid "Tenant Key: %s"
+msgstr "Tenant-sleutel: %s"
+
+msgid "Limit resets in %d minutes"
+msgstr "Limiet wordt over %d minuten hersteld"
+
+msgid "Your current plan: %s"
+msgstr "Jouw huidige plan: %s"
+
+# Alerts
+msgid "Content Decay Alert:"
+msgstr "Contentverval alert:"
+
+msgid "\"%1$s\" dropped %2$d positions for \"%3$s\""
+msgstr "\"%1$s\" is %2$d posities gezakt voor \"%3$s\""
+
+msgid "Fix now"
+msgstr "Nu oplossen"
+
+msgid "View All Decay Alerts"
+msgstr "Bekijk alle vervalwaarschuwingen"
+
+msgid "Content Decay Warning:"
+msgstr "Contentverval waarschuwing:"
+
+msgid "%d post is losing rankings"
+msgid_plural "%d posts are losing rankings"
+msgstr[0] "%d bericht verliest rankings"
+msgstr[1] "%d berichten verliezen rankings"
+
+msgid "\"%s\" dropped %d positions"
+msgstr "\"%s\" is %d posities gezakt"
+
+msgid "Position trend (last 30 days)"
+msgstr "Positietrend (laatste 30 dagen)"
+
+msgid "No trend data available yet. Track keywords to see position trends."
+msgstr "Nog geen trenddata beschikbaar. Volg zoekwoorden om positietrends te zien."
+
+# Demo
+msgid "Demo Mode"
+msgstr "Demo-modus"
+
+msgid "Demo mode is active — all data is fictitious"
+msgstr "Demo-modus is actief — alle data is fictief"
+
+msgid "Demo Data"
+msgstr "Demodata"
+
+# Direct Index
+msgid "Submit this URL to Google Indexing API"
+msgstr "Dien deze URL in bij de Google Indexing API"
+
+msgid "Index Now"
+msgstr "Nu indexeren"
+
+msgid "Connected"
+msgstr "Verbonden"
+
+msgid "Not connected / missing indexing scope"
+msgstr "Niet verbonden / ontbrekende indexeringsscoop"
+
+msgid "Quota remaining today: %d / %d"
+msgstr "Resterende quota vandaag: %d / %d"
+
+msgid "Index Now is available after publishing."
+msgstr "Nu indexeren is beschikbaar na publiceren."
+
+# Integrations / Site Audit
+msgid "Critical issues"
+msgstr "Kritieke problemen"
+
+msgid "Opportunities & action items"
+msgstr "Kansen & actiepunten"
+
+msgid "Missing SEO titles:"
+msgstr "Ontbrekende SEO-titels:"
+
+msgid "posts"
+msgstr "berichten"
