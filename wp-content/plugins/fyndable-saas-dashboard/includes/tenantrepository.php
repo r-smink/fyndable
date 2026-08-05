@@ -190,6 +190,33 @@ class TenantRepository
             KEY tenant_id (tenant_id)
         ) $charsetCollate;";
         dbDelta($sql8);
+
+        // Invoices table (also created lazily by WebhookHandler, but ensure it exists on activation
+        // so the Bookkeeping admin page works before any payment is received).
+        $sql9 = "CREATE TABLE IF NOT EXISTS {$prefix}sseo_ai_invoices (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tenant_key varchar(64) NOT NULL,
+            provider varchar(20) NOT NULL,
+            amount decimal(10,2) NOT NULL,
+            currency varchar(3) NOT NULL DEFAULT 'EUR',
+            external_id varchar(255) DEFAULT NULL,
+            status enum('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
+            invoice_number varchar(50) DEFAULT NULL,
+            tier varchar(20) DEFAULT NULL,
+            billing_interval varchar(10) DEFAULT NULL,
+            description varchar(255) DEFAULT NULL,
+            mollie_subscription_id varchar(255) DEFAULT NULL,
+            pdf_path varchar(500) DEFAULT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            paid_at datetime DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY tenant_key (tenant_key),
+            KEY provider (provider),
+            KEY status (status),
+            KEY created_at (created_at),
+            KEY invoice_number (invoice_number)
+        ) $charsetCollate;";
+        dbDelta($sql9);
     }
     
     /**
@@ -1059,6 +1086,238 @@ class TenantRepository
             "SELECT COUNT(*) FROM $table WHERE tenant_key = %s",
             $tenantKey
         ));
+    }
+
+    // -------------------------------------------------------------------------
+    // Bookkeeping: admin invoice queries & profit aggregation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Get all invoices (admin view) with optional filters and tenant join.
+     *
+     * Supported filters:
+     *  - status   : paid|pending|failed|refunded
+     *  - provider : stripe|mollie
+     *  - tenant   : partial match on tenant name/email/domain
+     *  - period   : YYYY-MM (matches created_at)
+     *  - from / to: ISO date strings (inclusive)
+     */
+    public function getAllInvoices(array $filters = [], int $limit = 100, int $offset = 0): array
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $where = [];
+        $args = [];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'i.status = %s';
+            $args[] = sanitize_text_field($filters['status']);
+        }
+        if (!empty($filters['provider'])) {
+            $where[] = 'i.provider = %s';
+            $args[] = sanitize_text_field($filters['provider']);
+        }
+        if (!empty($filters['period'])) {
+            $where[] = 'DATE_FORMAT(i.created_at, %s) = %s';
+            $args[] = '%Y-%m';
+            $args[] = sanitize_text_field($filters['period']);
+        }
+        if (!empty($filters['from'])) {
+            $where[] = 'i.created_at >= %s';
+            $args[] = sanitize_text_field($filters['from']) . ' 00:00:00';
+        }
+        if (!empty($filters['to'])) {
+            $where[] = 'i.created_at <= %s';
+            $args[] = sanitize_text_field($filters['to']) . ' 23:59:59';
+        }
+        if (!empty($filters['tenant'])) {
+            $like = '%' . $wpdb->esc_like(sanitize_text_field($filters['tenant'])) . '%';
+            $where[] = '(t.name LIKE %s OR t.email LIKE %s OR t.domain LIKE %s OR i.tenant_key LIKE %s)';
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+        }
+
+        $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $args[] = $limit;
+        $args[] = $offset;
+
+        $sql = "SELECT i.*, t.name AS tenant_name, t.email AS tenant_email, t.domain AS tenant_domain
+                FROM $invTable AS i
+                LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key
+                $whereSql
+                ORDER BY i.created_at DESC, i.id DESC
+                LIMIT %d OFFSET %d";
+
+        return $wpdb->get_results($wpdb->prepare($sql, ...$args), ARRAY_A) ?: [];
+    }
+
+    /**
+     * Count all invoices matching the given filters.
+     */
+    public function countAllInvoices(array $filters = []): int
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $where = [];
+        $args = [];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'i.status = %s';
+            $args[] = sanitize_text_field($filters['status']);
+        }
+        if (!empty($filters['provider'])) {
+            $where[] = 'i.provider = %s';
+            $args[] = sanitize_text_field($filters['provider']);
+        }
+        if (!empty($filters['period'])) {
+            $where[] = 'DATE_FORMAT(i.created_at, %s) = %s';
+            $args[] = '%Y-%m';
+            $args[] = sanitize_text_field($filters['period']);
+        }
+        if (!empty($filters['from'])) {
+            $where[] = 'i.created_at >= %s';
+            $args[] = sanitize_text_field($filters['from']) . ' 00:00:00';
+        }
+        if (!empty($filters['to'])) {
+            $where[] = 'i.created_at <= %s';
+            $args[] = sanitize_text_field($filters['to']) . ' 23:59:59';
+        }
+        if (!empty($filters['tenant'])) {
+            $like = '%' . $wpdb->esc_like(sanitize_text_field($filters['tenant'])) . '%';
+            $where[] = '(t.name LIKE %s OR t.email LIKE %s OR t.domain LIKE %s OR i.tenant_key LIKE %s)';
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+        }
+
+        $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $sql = "SELECT COUNT(*) FROM $invTable AS i LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key $whereSql";
+
+        return (int) ($whereSql === '' ? $wpdb->get_var($sql) : $wpdb->get_var($wpdb->prepare($sql, ...$args)));
+    }
+
+    /**
+     * Get a single invoice joined with its tenant row (admin view).
+     */
+    public function getInvoiceWithTenant(int $invoiceId): ?array
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT i.*, t.name AS tenant_name, t.email AS tenant_email, t.domain AS tenant_domain
+             FROM $invTable AS i
+             LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key
+             WHERE i.id = %d",
+            $invoiceId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Sum invoice revenue per tenant_key within a date range.
+     *
+     * Returns: [ ['tenant_key' => ..., 'tenant_name' => ..., 'tenant_email' => ...,
+     *             'tier' => ..., 'revenue' => float, 'currency' => 'EUR'], ... ]
+     */
+    public function getRevenueByTenant(string $from, string $to): array
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT i.tenant_key,
+                    MAX(t.name) AS tenant_name,
+                    MAX(t.email) AS tenant_email,
+                    MAX(t.domain) AS tenant_domain,
+                    MAX(i.tier) AS tier,
+                    SUM(i.amount) AS revenue,
+                    MAX(i.currency) AS currency
+             FROM $invTable AS i
+             LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key
+             WHERE i.status = 'paid'
+               AND i.created_at >= %s
+               AND i.created_at <= %s
+             GROUP BY i.tenant_key
+             ORDER BY revenue DESC",
+            $from . ' 00:00:00',
+            $to . ' 23:59:59'
+        ), ARRAY_A) ?: [];
+
+        foreach ($rows as &$row) {
+            $row['revenue'] = (float) $row['revenue'];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Sum AI API cost per tenant within a date range.
+     *
+     * Combines sseo_ai_tenant_usage and sseo_ai_google_api_usage (both USD).
+     * Returns: [ tenant_id => float, ... ]
+     */
+    public function getCostByTenant(string $from, string $to): array
+    {
+        global $wpdb;
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $googleTable = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+
+        $fromPeriod = substr($from, 0, 7);
+        $toPeriod = substr($to, 0, 7);
+
+        // tenant_usage tracks per YYYY-MM period
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT tenant_id, SUM(api_cost) AS cost
+             FROM $usageTable
+             WHERE period >= %s AND period <= %s
+             GROUP BY tenant_id",
+            $fromPeriod,
+            $toPeriod
+        ), ARRAY_A) ?: [];
+
+        $googleRows = $wpdb->get_results($wpdb->prepare(
+            "SELECT tenant_id, SUM(api_cost) AS cost
+             FROM $googleTable
+             WHERE period >= %s AND period <= %s
+             GROUP BY tenant_id",
+            $fromPeriod,
+            $toPeriod
+        ), ARRAY_A) ?: [];
+
+        $costs = [];
+        foreach ($rows as $row) {
+            $costs[(int) $row['tenant_id']] = (float) $row['cost'];
+        }
+        foreach ($googleRows as $row) {
+            $id = (int) $row['tenant_id'];
+            $costs[$id] = ($costs[$id] ?? 0) + (float) $row['cost'];
+        }
+
+        return $costs;
+    }
+
+    /**
+     * Total cost of GEO scans in a date range (currently unallocated per tenant,
+     * because sseo_ai_geo_scans has no tenant_id/cost columns yet).
+     *
+     * Returns 0.0 until per-scan cost tracking is added.
+     */
+    public function getTotalGeoScanCost(string $from, string $to): float
+    {
+        // Placeholder: sseo_ai_geo_scans has no cost column yet.
+        // Follow-up: add tenant_id + api_cost columns and book costs in geoscanner.php.
+        return 0.0;
     }
 
     // -------------------------------------------------------------------------

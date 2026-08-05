@@ -202,6 +202,34 @@ class SaaSSettings
 
         // Early Adopters tier toggle
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_early_adopters_enabled', ['default' => false, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
+
+        // Invoice template (Bookkeeping tab 3)
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_logo_id', ['default' => 0, 'sanitize_callback' => 'absint']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_bg_id', ['default' => 0, 'sanitize_callback' => 'absint']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_bg_mode', ['default' => 'none']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_header_color', ['default' => '']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_accent_color', ['default' => '#379fd3']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_text_color', ['default' => '#111827']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_name');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_address');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_vat');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_kvk');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_iban');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_email');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_company_website');
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_prefix', ['default' => 'FYND-']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_footer_text', ['default' => 'Bedankt voor uw vertrouwen.']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_from', ['default' => 'Van']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_to', ['default' => 'Factuur aan']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_description', ['default' => 'Omschrijving']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_period', ['default' => 'Periode']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_amount', ['default' => 'Bedrag']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_subtotal', ['default' => 'Subtotaal']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_vat', ['default' => 'BTW']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_total', ['default' => 'Totaal']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_paid_on', ['default' => 'Betaald op']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_label_invoice', ['default' => 'Factuur']);
+        register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_cost_usd_eur_rate', ['default' => '0.92', 'sanitize_callback' => 'floatval']);
     }
     
     /**
@@ -887,9 +915,50 @@ class SaaSSettings
 
     public function renderCheckoutPage(): void
     {
+        // Revenue stats (moved here from the old Billing page).
+        $tenants = $this->getAllTenantsForStats();
+        $totalRevenue = 0;
+        $activeSubscriptions = 0;
+        $paidTenants = array_filter($tenants, fn($t) => ($t['status'] ?? '') === 'active');
+        foreach ($paidTenants as $tenant) {
+            $activeSubscriptions++;
+            switch ($tenant['tier'] ?? 'starter') {
+                case 'agency':           $totalRevenue += 499; break;
+                case 'business':         $totalRevenue += 199; break;
+                case 'professional':     $totalRevenue += 79; break;
+                case 'early_adopters':   $totalRevenue += 14.5; break;
+                case 'starter':
+                default:                 $totalRevenue += 29;
+            }
+        }
+
+        $webhookUrls = [
+            'stripe' => rest_url('ai-seo-saas/v1/webhooks/stripe'),
+            'mollie' => rest_url('ai-seo-saas/v1/webhooks/mollie'),
+        ];
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Checkout', 'sseo-ai-saas'); ?></h1>
+
+            <!-- Stats Cards (moved from Billing page) -->
+            <div class="sseo-ai-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #00a32a;">€<?php echo number_format($totalRevenue, 0); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Monthly Revenue (MRR)', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #379fd3;"><?php echo number_format($activeSubscriptions); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Active Subscriptions', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo number_format(count($tenants)); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Total Clients', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">€<?php echo number_format($totalRevenue * 12, 0); ?></div>
+                    <div class="stat-label"><?php esc_html_e('Est. Annual Revenue', 'sseo-ai-saas'); ?></div>
+                </div>
+            </div>
 
             <form method="post" action="options.php">
                 <?php settings_fields('sseo_ai_saas_billing'); ?>
@@ -1061,8 +1130,73 @@ class SaaSSettings
 
                 <?php submit_button(__('Save Checkout Settings', 'sseo-ai-saas')); ?>
             </form>
+
+            <!-- Webhook URLs & Setup Guide (moved from Billing page) -->
+            <div class="sseo-ai-card" style="margin-top: 25px;">
+                <h2><?php esc_html_e('Webhook URLs', 'sseo-ai-saas'); ?></h2>
+                <p style="margin-bottom: 20px; color: #646970;"><?php esc_html_e('Add these URLs to your payment provider dashboards to receive payment notifications.', 'sseo-ai-saas'); ?></p>
+
+                <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Stripe Webhook URL', 'sseo-ai-saas'); ?></h4>
+                    <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
+                        <?php echo esc_url($webhookUrls['stripe']); ?>
+                    </code>
+                    <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
+                        <?php esc_html_e('Add this in Stripe Dashboard → Developers → Webhooks', 'sseo-ai-saas'); ?><br>
+                        <?php esc_html_e('Events to listen for:', 'sseo-ai-saas'); ?> <code>invoice.payment_succeeded</code>, <code>invoice.payment_failed</code>, <code>customer.subscription.deleted</code>
+                    </p>
+                </div>
+
+                <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Mollie Webhook URL', 'sseo-ai-saas'); ?></h4>
+                    <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
+                        <?php echo esc_url($webhookUrls['mollie']); ?>
+                    </code>
+                    <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
+                        <?php esc_html_e('Add this in Mollie Dashboard → Settings → Webhooks', 'sseo-ai-saas'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <div class="sseo-ai-card" style="background: #f0f6fc; border-color: #2271b1; margin-top: 25px;">
+                <h3>💡 <?php esc_html_e('Payment Integration Guide', 'sseo-ai-saas'); ?></h3>
+                <div class="sseo-ai-grid-2" style="margin-top: 20px;">
+                    <div>
+                        <h4><?php esc_html_e('Stripe Setup', 'sseo-ai-saas'); ?></h4>
+                        <ol>
+                            <li><?php esc_html_e('Sign up at stripe.com', 'sseo-ai-saas'); ?></li>
+                            <li><?php esc_html_e('Get API keys from Dashboard', 'sseo-ai-saas'); ?></li>
+                            <li><?php esc_html_e('Add webhook URL above', 'sseo-ai-saas'); ?></li>
+                            <li><?php esc_html_e('Create subscription products', 'sseo-ai-saas'); ?></li>
+                        </ol>
+                        <p><strong><?php esc_html_e('Best for:', 'sseo-ai-saas'); ?></strong> <?php esc_html_e('Global credit card payments', 'sseo-ai-saas'); ?></p>
+                    </div>
+                    <div>
+                        <h4><?php esc_html_e('Mollie Setup', 'sseo-ai-saas'); ?></h4>
+                        <ol>
+                            <li><?php esc_html_e('Sign up at mollie.com', 'sseo-ai-saas'); ?></li>
+                            <li><?php esc_html_e('Complete business verification', 'sseo-ai-saas'); ?></li>
+                            <li><?php esc_html_e('Get API key from Dashboard', 'sseo-ai-saas'); ?></li>
+                            <li><?php esc_html_e('Add webhook URL above', 'sseo-ai-saas'); ?></li>
+                        </ol>
+                        <p><strong><?php esc_html_e('Best for:', 'sseo-ai-saas'); ?></strong> <?php esc_html_e('European payments (iDEAL, Bancontact)', 'sseo-ai-saas'); ?></p>
+                    </div>
+                </div>
+            </div>
         </div>
         <?php
+    }
+
+    /**
+     * Helper for the Checkout stats cards. Uses TenantRepository when available,
+     * falls back to a direct query if not injected.
+     */
+    private function getAllTenantsForStats(): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_tenants';
+        $rows = $wpdb->get_results("SELECT * FROM {$table} WHERE status != 'deleted'", ARRAY_A);
+        return $rows ?: [];
     }
 
 

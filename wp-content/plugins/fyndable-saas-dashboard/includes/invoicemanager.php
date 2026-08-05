@@ -5,8 +5,12 @@ namespace SSEOAISaaS;
 /**
  * Invoice Manager
  *
- * Handles invoice generation, PDF rendering, and management.
+ * Handles invoice generation, HTML/PDF rendering, and management.
  * Works with the sseo_ai_invoices table created by WebhookHandler.
+ *
+ * Rendering is driven by the configurable invoice template stored in
+ * the sseo_ai_saas_invoice_template option group (managed on the
+ * Bookkeeping admin page, tab 3).
  */
 class InvoiceManager
 {
@@ -60,15 +64,30 @@ class InvoiceManager
     }
 
     /**
-     * Render an invoice as HTML (for display or print-to-PDF).
+     * Build the placeholder values used by the invoice template.
+     *
+     * @param array $invoice   Row from sseo_ai_invoices.
+     * @param array|null $tenant Optional tenant row; loaded if not provided.
      */
-    public function renderInvoiceHtml(array $invoice): string
+    private function buildPlaceholders(array $invoice, ?array $tenant = null): array
     {
-        $tenant = $this->tenants->getTenant($invoice['tenant_key']);
-        $companyName = 'Fyndable';
-        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
-        if ($enabled) {
-            $companyName = get_option('sseo_ai_saas_wl_company_name', '') ?: $companyName;
+        if ($tenant === null) {
+            $tenant = $this->tenants->getTenant($invoice['tenant_key']) ?: [];
+        }
+
+        // Company identity — fall back to white-label options then to defaults.
+        $wlEnabled = (bool) get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = get_option('sseo_ai_saas_inv_company_name', '');
+        if ($companyName === '') {
+            $companyName = $wlEnabled ? (get_option('sseo_ai_saas_wl_company_name', '') ?: 'Fyndable') : 'Fyndable';
+        }
+        $companyAddress = get_option('sseo_ai_saas_inv_company_address', '');
+        if ($companyAddress === '') {
+            $companyAddress = get_option('sseo_ai_saas_wl_company_address', '');
+        }
+        $companyEmail = get_option('sseo_ai_saas_inv_company_email', '');
+        if ($companyEmail === '') {
+            $companyEmail = get_option('admin_email', '');
         }
 
         $amount = (float) $invoice['amount'];
@@ -83,22 +102,115 @@ class InvoiceManager
         $invoiceDate = !empty($invoice['created_at']) ? date_i18n(get_option('date_format'), strtotime($invoice['created_at'])) : '';
         $paidDate = !empty($invoice['paid_at']) ? date_i18n(get_option('date_format'), strtotime($invoice['paid_at'])) : '';
 
+        return [
+            'company_name'      => $companyName,
+            'company_address'   => $companyAddress,
+            'company_vat'       => get_option('sseo_ai_saas_inv_company_vat', ''),
+            'company_kvk'       => get_option('sseo_ai_saas_inv_company_kvk', ''),
+            'company_iban'      => get_option('sseo_ai_saas_inv_company_iban', ''),
+            'company_email'     => $companyEmail,
+            'company_website'   => get_option('sseo_ai_saas_inv_company_website', ''),
+            'invoice_number'    => $invoice['invoice_number'] ?? '',
+            'invoice_date'      => $invoiceDate,
+            'paid_date'         => $paidDate,
+            'customer_name'     => $tenant['name'] ?? '',
+            'customer_email'    => $tenant['email'] ?? '',
+            'customer_domain'   => $tenant['domain'] ?? '',
+            'tier'              => ucfirst($invoice['tier'] ?? ''),
+            'billing_interval'  => ucfirst($invoice['billing_interval'] ?? 'month'),
+            'description'       => $invoice['description'] ?? 'Fyndable SmartSEO Subscription',
+            'subtotal'          => $symbol . number_format($subtotal, 2),
+            'vat_rate'          => $vatRate,
+            'vat_amount'        => $symbol . number_format($vatAmount, 2),
+            'total'             => $symbol . number_format($amount, 2),
+            'currency_symbol'   => $symbol,
+            'amount_raw'        => $amount,
+            'subtotal_raw'      => $subtotal,
+            'vat_amount_raw'    => $vatAmount,
+            'status'            => $invoice['status'] ?? 'paid',
+            'footer_text'       => get_option('sseo_ai_saas_inv_footer_text', 'Bedankt voor uw vertrouwen.'),
+            // Labels
+            'label_invoice'     => get_option('sseo_ai_saas_inv_label_invoice', 'Factuur'),
+            'label_from'        => get_option('sseo_ai_saas_inv_label_from', 'Van'),
+            'label_to'          => get_option('sseo_ai_saas_inv_label_to', 'Factuur aan'),
+            'label_description' => get_option('sseo_ai_saas_inv_label_description', 'Omschrijving'),
+            'label_period'      => get_option('sseo_ai_saas_inv_label_period', 'Periode'),
+            'label_amount'      => get_option('sseo_ai_saas_inv_label_amount', 'Bedrag'),
+            'label_subtotal'    => get_option('sseo_ai_saas_inv_label_subtotal', 'Subtotaal'),
+            'label_vat'         => get_option('sseo_ai_saas_inv_label_vat', 'BTW'),
+            'label_total'       => get_option('sseo_ai_saas_inv_label_total', 'Totaal'),
+            'label_paid_on'     => get_option('sseo_ai_saas_inv_label_paid_on', 'Betaald op'),
+        ];
+    }
+
+    /**
+     * Resolve an attachment ID to a URL (or empty string).
+     */
+    private function attachmentUrl(int $attachmentId): string
+    {
+        if ($attachmentId <= 0) {
+            return '';
+        }
+        $url = wp_get_attachment_url($attachmentId);
+        return $url ?: '';
+    }
+
+    /**
+     * Replace {{placeholder}} tokens in a string with values from the map.
+     */
+    private function fillPlaceholders(string $template, array $values): string
+    {
+        return preg_replace_callback('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', function ($m) use ($values) {
+            $key = $m[1];
+            return isset($values[$key]) ? (string) $values[$key] : '';
+        }, $template);
+    }
+
+    /**
+     * Render an invoice as HTML (for display in modal or print-to-PDF).
+     */
+    public function renderInvoiceHtml(array $invoice, ?array $tenant = null): string
+    {
+        $p = $this->buildPlaceholders($invoice, $tenant);
+
+        $logoUrl = $this->attachmentUrl((int) get_option('sseo_ai_saas_inv_logo_id', 0));
+        $bgUrl = $this->attachmentUrl((int) get_option('sseo_ai_saas_inv_bg_id', 0));
+        $bgMode = get_option('sseo_ai_saas_inv_bg_mode', 'none');
+        $headerColor = get_option('sseo_ai_saas_inv_header_color', '');
+        $accentColor = get_option('sseo_ai_saas_inv_accent_color', '#379fd3');
+        $textColor = get_option('sseo_ai_saas_inv_text_color', '#111827');
+
+        // Default header gradient uses the accent color when no explicit header color set.
+        $headerStyle = $headerColor !== ''
+            ? 'background:' . esc_attr($headerColor) . ';'
+            : 'background:linear-gradient(135deg, ' . esc_attr($accentColor) . ' 0%, #8f39ac 100%);';
+
+        $bodyBgStyle = '';
+        if ($bgMode === 'cover' && $bgUrl !== '') {
+            $bodyBgStyle = 'background:url(' . esc_url($bgUrl) . ') center/cover no-repeat fixed;';
+        } elseif ($bgMode === 'repeat' && $bgUrl !== '') {
+            $bodyBgStyle = 'background:url(' . esc_url($bgUrl) . ') repeat;';
+        }
+
+        $logoHtml = $logoUrl !== ''
+            ? '<img src="' . esc_url($logoUrl) . '" alt="' . esc_attr($p['company_name']) . '" style="max-height:48px;max-width:220px;display:block;">'
+            : '<h1>' . esc_html($p['company_name']) . '</h1>';
+
         ob_start();
         ?>
         <!DOCTYPE html>
         <html lang="nl">
         <head>
             <meta charset="utf-8">
-            <title>Factuur <?php echo esc_html($invoice['invoice_number']); ?></title>
+            <title><?php echo esc_html($p['label_invoice']); ?> <?php echo esc_html($p['invoice_number']); ?></title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111827; background: #f9fafb; padding: 40px 20px; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: <?php echo esc_attr($textColor); ?>; background: #f9fafb; padding: 40px 20px; <?php echo $bodyBgStyle; ?> }
                 .invoice { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
-                .invoice-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; }
+                .invoice-header { <?php echo $headerStyle; ?> color: #fff; padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; }
                 .invoice-header h1 { font-size: 28px; font-weight: 700; }
                 .invoice-header .invoice-meta { text-align: right; font-size: 14px; opacity: 0.95; }
                 .invoice-body { padding: 40px; }
-                .invoice-section { margin-bottom: 32px; }
                 .invoice-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 8px; }
                 .invoice-from, .invoice-to { display: flex; gap: 60px; margin-bottom: 32px; }
                 .invoice-from > div, .invoice-to > div { flex: 1; }
@@ -115,81 +227,129 @@ class InvoiceManager
                 .status-paid { background: #d1fae5; color: #065f46; }
                 .status-pending { background: #fef3c7; color: #92400e; }
                 .status-failed { background: #fee2e2; color: #991b1b; }
-                @media print { body { background: #fff; padding: 0; } .invoice { box-shadow: none; } }
+                .status-refunded { background: #e0e7ff; color: #3730a3; }
+                .company-meta { font-size: 12px; color: #6b7280; margin-top: 6px; line-height: 1.5; }
+                @media print { body { background: #fff; padding: 0; } .invoice { box-shadow: none; } .no-print { display: none; } }
             </style>
         </head>
         <body>
             <div class="invoice">
                 <div class="invoice-header">
-                    <h1><?php echo esc_html($companyName); ?></h1>
+                    <div class="invoice-brand"><?php echo $logoHtml; ?></div>
                     <div class="invoice-meta">
-                        <div><strong>Factuur</strong> <?php echo esc_html($invoice['invoice_number']); ?></div>
-                        <div><?php echo esc_html($invoiceDate); ?></div>
+                        <div><strong><?php echo esc_html($p['label_invoice']); ?></strong> <?php echo esc_html($p['invoice_number']); ?></div>
+                        <div><?php echo esc_html($p['invoice_date']); ?></div>
                         <div style="margin-top:8px;">
-                            <span class="status-badge status-<?php echo esc_attr($invoice['status']); ?>">
-                                <?php echo esc_html(ucfirst($invoice['status'])); ?>
+                            <span class="status-badge status-<?php echo esc_attr($p['status']); ?>">
+                                <?php echo esc_html(ucfirst($p['status'])); ?>
                             </span>
                         </div>
                     </div>
                 </div>
                 <div class="invoice-body">
                     <div class="invoice-from">
-                        <div>
-                            <h3>Van</h3>
-                            <p><strong><?php echo esc_html($companyName); ?></strong><br>
-                            <?php echo esc_html(get_option('sseo_ai_saas_wl_company_address', '')); ?><br>
-                            <?php echo esc_html(get_option('admin_email', '')); ?></p>
+                        <div class="invoice-section">
+                            <h3><?php echo esc_html($p['label_from']); ?></h3>
+                            <p><strong><?php echo esc_html($p['company_name']); ?></strong><br>
+                            <?php if ($p['company_address'] !== ''): ?><?php echo esc_html($p['company_address']); ?><br><?php endif; ?>
+                            <?php if ($p['company_email'] !== ''): ?><?php echo esc_html($p['company_email']); ?><br><?php endif; ?>
+                            <?php if ($p['company_website'] !== ''): ?><?php echo esc_html($p['company_website']); ?><?php endif; ?>
+                            </p>
+                            <?php if ($p['company_vat'] !== '' || $p['company_kvk'] !== '' || $p['company_iban'] !== ''): ?>
+                            <p class="company-meta">
+                                <?php if ($p['company_vat'] !== ''): ?>BTW: <?php echo esc_html($p['company_vat']); ?><br><?php endif; ?>
+                                <?php if ($p['company_kvk'] !== ''): ?>KvK: <?php echo esc_html($p['company_kvk']); ?><br><?php endif; ?>
+                                <?php if ($p['company_iban'] !== ''): ?>IBAN: <?php echo esc_html($p['company_iban']); ?><?php endif; ?>
+                            </p>
+                            <?php endif; ?>
                         </div>
-                        <div>
-                            <h3>Factuur aan</h3>
-                            <p><strong><?php echo esc_html($tenant['name'] ?? ''); ?></strong><br>
-                            <?php echo esc_html($tenant['email'] ?? ''); ?><br>
-                            <?php echo esc_html($tenant['domain'] ?? ''); ?></p>
+                        <div class="invoice-section">
+                            <h3><?php echo esc_html($p['label_to']); ?></h3>
+                            <p><strong><?php echo esc_html($p['customer_name']); ?></strong><br>
+                            <?php echo esc_html($p['customer_email']); ?><br>
+                            <?php echo esc_html($p['customer_domain']); ?></p>
                         </div>
                     </div>
                     <table class="invoice-table">
                         <thead>
                             <tr>
-                                <th>Omschrijving</th>
-                                <th>Periode</th>
-                                <th class="amount">Bedrag</th>
+                                <th><?php echo esc_html($p['label_description']); ?></th>
+                                <th><?php echo esc_html($p['label_period']); ?></th>
+                                <th class="amount"><?php echo esc_html($p['label_amount']); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo esc_html($invoice['description'] ?? 'Fyndable SmartSEO Subscription'); ?></td>
-                                <td><?php echo esc_html(ucfirst($invoice['billing_interval'] ?? 'month')); ?></td>
-                                <td class="amount"><?php echo esc_html($symbol . number_format($amount, 2)); ?></td>
+                                <td><?php echo esc_html($p['description']); ?></td>
+                                <td><?php echo esc_html($p['billing_interval']); ?></td>
+                                <td class="amount"><?php echo esc_html($p['total']); ?></td>
                             </tr>
                         </tbody>
                     </table>
                     <div class="invoice-totals">
                         <div class="row">
-                            <span>Subtotaal</span>
-                            <span><?php echo esc_html($symbol . number_format($subtotal, 2)); ?></span>
+                            <span><?php echo esc_html($p['label_subtotal']); ?></span>
+                            <span><?php echo esc_html($p['subtotal']); ?></span>
                         </div>
                         <div class="row">
-                            <span>BTW (<?php echo esc_html($vatRate); ?>%)</span>
-                            <span><?php echo esc_html($symbol . number_format($vatAmount, 2)); ?></span>
+                            <span><?php echo esc_html($p['label_vat']); ?> (<?php echo esc_html($p['vat_rate']); ?>%)</span>
+                            <span><?php echo esc_html($p['vat_amount']); ?></span>
                         </div>
                         <div class="row total">
-                            <span>Totaal</span>
-                            <span><?php echo esc_html($symbol . number_format($amount, 2)); ?></span>
+                            <span><?php echo esc_html($p['label_total']); ?></span>
+                            <span><?php echo esc_html($p['total']); ?></span>
                         </div>
                     </div>
-                    <?php if (!empty($paidDate)): ?>
+                    <?php if ($p['paid_date'] !== ''): ?>
                     <p style="margin-top:24px;font-size:14px;color:#065f46;">
-                        Betaald op <?php echo esc_html($paidDate); ?>
+                        <?php echo esc_html($p['label_paid_on']); ?> <?php echo esc_html($p['paid_date']); ?>
                     </p>
                     <?php endif; ?>
                 </div>
                 <div class="invoice-footer">
-                    <?php echo esc_html($companyName); ?> — Bedankt voor uw vertrouwen.
+                    <?php echo esc_html($p['company_name']); ?> — <?php echo esc_html($p['footer_text']); ?>
                 </div>
             </div>
         </body>
         </html>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Render an invoice as a full standalone HTML document that auto-prints.
+     * Used by the customer portal "Download PDF" button (browser print-to-PDF).
+     */
+    public function renderInvoicePrintHtml(array $invoice, ?array $tenant = null): string
+    {
+        $html = $this->renderInvoiceHtml($invoice, $tenant);
+        // Inject auto-print script right before </body>.
+        $printScript = "<script>window.onload=function(){setTimeout(function(){window.print();},250);};</script>";
+        return str_replace('</body>', $printScript . '</body>', $html);
+    }
+
+    /**
+     * Render a preview invoice using dummy data (for the template editor).
+     */
+    public function renderPreviewHtml(): string
+    {
+        $dummy = [
+            'tenant_key'       => 'preview',
+            'invoice_number'   => get_option('sseo_ai_saas_inv_prefix', 'FYND-') . date('Y') . '-0001',
+            'amount'           => 49,
+            'currency'         => get_option('sseo_ai_saas_currency', 'EUR'),
+            'status'           => 'paid',
+            'tier'             => 'professional',
+            'billing_interval' => 'month',
+            'description'      => 'Fyndable SmartSEO Professional - month subscription',
+            'created_at'       => current_time('mysql'),
+            'paid_at'          => current_time('mysql'),
+        ];
+        $dummyTenant = [
+            'name'   => 'Voorbeeld Klant B.V.',
+            'email'  => 'info@voorbeeldklant.nl',
+            'domain' => 'voorbeeldklant.nl',
+        ];
+        return $this->renderInvoiceHtml($dummy, $dummyTenant);
     }
 }

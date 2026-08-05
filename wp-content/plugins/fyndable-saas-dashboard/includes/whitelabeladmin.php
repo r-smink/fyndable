@@ -9,10 +9,12 @@ namespace SSEOAISaaS;
 class WhiteLabelAdmin
 {
     private TenantRepository $tenants;
+    private BookkeepingAdmin $bookkeeping;
 
-    public function __construct(TenantRepository $tenants)
+    public function __construct(TenantRepository $tenants, BookkeepingAdmin $bookkeeping)
     {
         $this->tenants = $tenants;
+        $this->bookkeeping = $bookkeeping;
         add_action('admin_post_sseo_ai_download_whitelabel_client', [$this, 'handleDownloadWhiteLabelClient']);
     }
 
@@ -53,13 +55,14 @@ class WhiteLabelAdmin
             [$this, 'renderTeamManagement']
         );
 
+        // Bookkeeping (invoices, profit, invoice template) — replaces old Billing page.
         add_submenu_page(
             'sseo-ai-licenses',
-            __('Billing & Invoicing', 'sseo-ai-saas'),
-            __('Billing', 'sseo-ai-saas'),
+            __('Bookkeeping', 'sseo-ai-saas'),
+            __('Bookkeeping', 'sseo-ai-saas'),
             'manage_options',
             'sseo-ai-billing',
-            [$this, 'renderBilling']
+            [$this->bookkeeping, 'renderPage']
         );
 
         // Global White-Label settings
@@ -925,279 +928,6 @@ class WhiteLabelAdmin
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-        <?php
-    }
-
-    public function renderBilling(): void
-    {
-        $providers = PaymentProcessor::getProviders();
-        $currentProvider = get_option('sseo_ai_saas_payment_provider', 'stripe');
-        $stripeKey = get_option('sseo_ai_saas_stripe_key', '');
-        $stripeSecret = get_option('sseo_ai_saas_stripe_secret', '');
-        $stripeWebhookSecret = get_option('sseo_ai_saas_stripe_webhook_secret', '');
-        $mollieApiKey = get_option('sseo_ai_saas_mollie_api_key', '');
-        $mollieWebhookSecret = get_option('sseo_ai_saas_mollie_webhook_secret', '');
-        $currency = get_option('sseo_ai_saas_currency', 'EUR');
-        
-        // Get webhook URLs
-        $webhookUrls = [
-            'stripe' => rest_url('ai-seo-saas/v1/webhooks/stripe'),
-            'mollie' => rest_url('ai-seo-saas/v1/webhooks/mollie'),
-        ];
-        
-        // Get revenue stats
-        $tenants = $this->tenants->getAllTenants();
-        $totalRevenue = 0;
-        $activeSubscriptions = 0;
-        $paidTenants = array_filter($tenants, fn($t) => $t['status'] === 'active');
-        
-        foreach ($paidTenants as $tenant) {
-            $activeSubscriptions++;
-            switch ($tenant['tier'] ?? 'basic') {
-                case 'agency':
-                    $totalRevenue += 499;
-                    break;
-                case 'business':
-                    $totalRevenue += 299;
-                    break;
-                case 'professional':
-                    $totalRevenue += 199;
-                    break;
-                case 'early_adopters':
-                    $totalRevenue += 14.5;
-                    break;
-                case 'basic':
-                case 'starter':
-                default:
-                    $totalRevenue += 99;
-            }
-        }
-        ?>
-        <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Billing & Invoicing', 'sseo-ai-saas'); ?></h1>
-            
-            <!-- Stats Cards -->
-            <div class="sseo-ai-stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" style="color: #00a32a;">€<?php echo number_format($totalRevenue, 0); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Monthly Revenue (MRR)', 'sseo-ai-saas'); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: #379fd3;"><?php echo number_format($activeSubscriptions); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Active Subscriptions', 'sseo-ai-saas'); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value"><?php echo number_format(count($tenants)); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Total Clients', 'sseo-ai-saas'); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">€<?php echo number_format($totalRevenue * 12, 0); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Est. Annual Revenue', 'sseo-ai-saas'); ?></div>
-                </div>
-            </div>
-            
-            <div class="sseo-ai-grid-2">
-                <!-- Payment Provider Settings -->
-                <div class="sseo-ai-card">
-                    <h2><?php esc_html_e('Payment Provider Settings', 'sseo-ai-saas'); ?></h2>
-                    <p style="margin-bottom: 20px; color: #646970;"><?php esc_html_e('Choose your payment provider and configure API credentials.', 'sseo-ai-saas'); ?></p>
-                    
-                    <form method="post" action="options.php">
-                        <?php settings_fields('sseo_ai_saas_billing'); ?>
-                        
-                        <table class="form-table">
-                            <tr>
-                                <th scope="row"><label for="payment_provider"><?php esc_html_e('Payment Provider', 'sseo-ai-saas'); ?></label></th>
-                                <td>
-                                    <select id="payment_provider" name="sseo_ai_saas_payment_provider" style="width: 100%;">
-                                        <?php foreach ($providers as $key => $provider): ?>
-                                            <option value="<?php echo esc_attr($key); ?>" <?php selected($currentProvider, $key); ?>>
-                                                <?php echo esc_html($provider['name']); ?> - <?php echo esc_html($provider['description']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <p class="description">
-                                        <?php esc_html_e('Select the payment provider for automatic billing.', 'sseo-ai-saas'); ?><br>
-                                        <strong>Stripe:</strong> <?php esc_html_e('Credit cards, global coverage', 'sseo-ai-saas'); ?><br>
-                                        <strong>Mollie:</strong> <?php esc_html_e('iDEAL, Bancontact, SEPA - Best for Europe', 'sseo-ai-saas'); ?>
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="currency"><?php esc_html_e('Currency', 'sseo-ai-saas'); ?></label></th>
-                                <td>
-                                    <select id="currency" name="sseo_ai_saas_currency">
-                                        <option value="EUR" <?php selected($currency, 'EUR'); ?>>EUR (€) - Europe</option>
-                                        <option value="USD" <?php selected($currency, 'USD'); ?>>USD ($) - United States</option>
-                                        <option value="GBP" <?php selected($currency, 'GBP'); ?>>GBP (£) - United Kingdom</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        </table>
-                        
-                        <hr style="margin: 25px 0;">
-                        
-                        <h3><?php esc_html_e('Stripe Configuration', 'sseo-ai-saas'); ?></h3>
-                        <table class="form-table">
-                            <tr>
-                                <th scope="row"><label for="stripe_key"><?php esc_html_e('Publishable Key', 'sseo-ai-saas'); ?></label></th>
-                                <td>
-                                    <input type="text" id="stripe_key" name="sseo_ai_saas_stripe_key" 
-                                           value="<?php echo esc_attr($stripeKey); ?>" class="regular-text">
-                                    <p class="description"><?php esc_html_e('pk_live_... or pk_test_...', 'sseo-ai-saas'); ?></p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="stripe_secret"><?php esc_html_e('Secret Key', 'sseo-ai-saas'); ?></label></th>
-                                <td>
-                                    <input type="password" id="stripe_secret" name="sseo_ai_saas_stripe_secret" 
-                                           value="<?php echo $stripeSecret ? '••••••••••••' : ''; ?>" class="regular-text" 
-                                           placeholder="<?php esc_attr_e('Enter to update', 'sseo-ai-saas'); ?>">
-                                    <p class="description"><?php esc_html_e('sk_live_... or sk_test_... Keep this secure!', 'sseo-ai-saas'); ?></p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="stripe_webhook_secret"><?php esc_html_e('Webhook Secret', 'sseo-ai-saas'); ?></label></th>
-                                <td>
-                                    <input type="password" id="stripe_webhook_secret" name="sseo_ai_saas_stripe_webhook_secret" 
-                                           value="<?php echo $stripeWebhookSecret ? '••••••••••••' : ''; ?>" class="regular-text"
-                                           placeholder="<?php esc_attr_e('Enter to update', 'sseo-ai-saas'); ?>">
-                                    <p class="description"><?php esc_html_e('whsec_... for webhook verification', 'sseo-ai-saas'); ?></p>
-                                </td>
-                            </tr>
-                        </table>
-                        
-                        <hr style="margin: 25px 0;">
-                        
-                        <h3><?php esc_html_e('Mollie Configuration', 'sseo-ai-saas'); ?></h3>
-                        <table class="form-table">
-                            <tr>
-                                <th scope="row"><label for="mollie_api_key"><?php esc_html_e('API Key', 'sseo-ai-saas'); ?></label></th>
-                                <td>
-                                    <input type="password" id="mollie_api_key" name="sseo_ai_saas_mollie_api_key" 
-                                           value="<?php echo $mollieApiKey ? '••••••••••••' : ''; ?>" class="regular-text"
-                                           placeholder="<?php esc_attr_e('Enter to update', 'sseo-ai-saas'); ?>">
-                                    <p class="description"><?php esc_html_e('live_... or test_... from Mollie Dashboard', 'sseo-ai-saas'); ?></p>
-                                </td>
-                            </tr>
-                        </table>
-                        
-                        <?php submit_button(__('Save Billing Settings', 'sseo-ai-saas'), 'primary', 'submit', true, ['style' => 'font-size: 16px; padding: 10px 30px; height: auto; margin-top: 20px;']); ?>
-                    </form>
-                </div>
-                
-                <!-- Webhook URLs & Instructions -->
-                <div class="sseo-ai-card">
-                    <h2><?php esc_html_e('Webhook URLs', 'sseo-ai-saas'); ?></h2>
-                    <p style="margin-bottom: 20px; color: #646970;"><?php esc_html_e('Add these URLs to your payment provider dashboards to receive payment notifications.', 'sseo-ai-saas'); ?></p>
-                    
-                    <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                        <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Stripe Webhook URL', 'sseo-ai-saas'); ?></h4>
-                        <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
-                            <?php echo esc_url($webhookUrls['stripe']); ?>
-                        </code>
-                        <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
-                            <?php esc_html_e('Add this in Stripe Dashboard → Developers → Webhooks', 'sseo-ai-saas'); ?><br>
-                            <?php esc_html_e('Events to listen for:', 'sseo-ai-saas'); ?> <code>invoice.payment_succeeded</code>, <code>invoice.payment_failed</code>, <code>customer.subscription.deleted</code>
-                        </p>
-                    </div>
-                    
-                    <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                        <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Mollie Webhook URL', 'sseo-ai-saas'); ?></h4>
-                        <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
-                            <?php echo esc_url($webhookUrls['mollie']); ?>
-                        </code>
-                        <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
-                            <?php esc_html_e('Add this in Mollie Dashboard → Settings → Webhooks', 'sseo-ai-saas'); ?>
-                        </p>
-                    </div>
-                    
-                    <div style="background: #fcf9e8; border: 1px solid #dba617; padding: 15px; border-radius: 4px;">
-                        <h4 style="margin-top: 0; color: #dba617;">⚠️ <?php esc_html_e('Important', 'sseo-ai-saas'); ?></h4>
-                        <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
-                            <li><?php esc_html_e('Webhooks allow automatic subscription management', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Without webhooks, you must manually verify payments', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Keep your webhook secrets secure', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Test webhooks in sandbox mode first', 'sseo-ai-saas'); ?></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Pricing Tiers', 'sseo-ai-saas'); ?></h2>
-                <p style="margin-bottom: 20px; color: #646970;"><?php esc_html_e('Current pricing structure and client distribution.', 'sseo-ai-saas'); ?></p>
-                
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Price/Month', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('AI Requests', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Rate Limit', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Clients', 'sseo-ai-saas'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="badge badge-basic">Basic</span></td>
-                            <td><strong>€99/month</strong> <small>(excl. BTW)</small></td>
-                            <td>5,000 requests</td>
-                            <td>60/min</td>
-                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'basic' || ($t['tier'] ?? '') === 'starter'))); ?></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-professional">Professional</span></td>
-                            <td><strong>€199/month</strong> <small>(excl. BTW)</small></td>
-                            <td>15,000 requests</td>
-                            <td>120/min</td>
-                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'professional'))); ?></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-business">Business</span></td>
-                            <td><strong>€299/month</strong> <small>(excl. BTW)</small></td>
-                            <td>30,000 requests</td>
-                            <td>200/min</td>
-                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'business'))); ?></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-agency">Agency</span></td>
-                            <td><strong>€499/month</strong> <small>(excl. BTW)</small></td>
-                            <td>Unlimited</td>
-                            <td>300/min</td>
-                            <td><?php echo number_format(count(array_filter($tenants, fn($t) => ($t['tier'] ?? '') === 'agency'))); ?></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="sseo-ai-card" style="background: #f0f6fc; border-color: #2271b1;">
-                <h3>💡 <?php esc_html_e('Payment Integration Guide', 'sseo-ai-saas'); ?></h3>
-                
-                <div class="sseo-ai-grid-2" style="margin-top: 20px;">
-                    <div>
-                        <h4><?php esc_html_e('Stripe Setup', 'sseo-ai-saas'); ?></h4>
-                        <ol>
-                            <li><?php esc_html_e('Sign up at stripe.com', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Get API keys from Dashboard', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Add webhook URL above', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Create subscription products', 'sseo-ai-saas'); ?></li>
-                        </ol>
-                        <p><strong><?php esc_html_e('Best for:', 'sseo-ai-saas'); ?></strong> <?php esc_html_e('Global credit card payments', 'sseo-ai-saas'); ?></p>
-                    </div>
-                    <div>
-                        <h4><?php esc_html_e('Mollie Setup', 'sseo-ai-saas'); ?></h4>
-                        <ol>
-                            <li><?php esc_html_e('Sign up at mollie.com', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Complete business verification', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Get API key from Dashboard', 'sseo-ai-saas'); ?></li>
-                            <li><?php esc_html_e('Add webhook URL above', 'sseo-ai-saas'); ?></li>
-                        </ol>
-                        <p><strong><?php esc_html_e('Best for:', 'sseo-ai-saas'); ?></strong> <?php esc_html_e('European payments (iDEAL, Bancontact)', 'sseo-ai-saas'); ?></p>
-                    </div>
                 </div>
             </div>
         </div>

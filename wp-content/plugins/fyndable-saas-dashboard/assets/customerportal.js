@@ -290,7 +290,10 @@
                 html += '<td>' + (inv.description || 'Subscription') + '</td>';
                 html += '<td>' + formatCurrency(inv.amount, inv.currency) + '</td>';
                 html += '<td>' + statusBadge(inv.status) + '</td>';
-                html += '<td><button class="fyndable-portal-btn fyndable-portal-btn-secondary view-invoice-btn" data-id="' + inv.id + '">View</button></td>';
+                html += '<td class="fyndable-portal-invoice-actions">';
+                html += '<button class="fyndable-portal-btn fyndable-portal-btn-secondary view-invoice-btn" data-id="' + inv.id + '">View</button> ';
+                html += '<button class="fyndable-portal-btn fyndable-portal-btn-secondary download-invoice-btn" data-id="' + inv.id + '">Download PDF</button>';
+                html += '</td>';
                 html += '</tr>';
             });
 
@@ -324,6 +327,32 @@
     // Close modal on overlay click
     $(document).on('click', '.fyndable-portal-modal-overlay', function () {
         $('#invoice-modal').hide();
+    });
+
+    // Download invoice as PDF (browser print-to-PDF in a new window)
+    $(document).on('click', '.download-invoice-btn', function () {
+        var id = $(this).data('id');
+        var $btn = $(this);
+        $btn.prop('disabled', true);
+
+        apiRequest('/portal/invoice/' + id + '/print').done(function (res) {
+            if (res.success && res.html) {
+                var w = window.open('', '_blank');
+                if (!w) {
+                    alert('Please allow pop-ups to download the invoice as PDF.');
+                    return;
+                }
+                w.document.open();
+                w.document.write(res.html);
+                w.document.close();
+            } else {
+                alert((res && res.message) || 'Error loading invoice');
+            }
+        }).fail(function () {
+            alert(FyndablePortal.i18n.error || 'Error loading invoice');
+        }).always(function () {
+            $btn.prop('disabled', false);
+        });
     });
 
     // --- Account ---

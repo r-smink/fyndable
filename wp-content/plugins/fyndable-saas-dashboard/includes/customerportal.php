@@ -70,6 +70,13 @@ class CustomerPortal
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
+        // Print/download a specific invoice as a standalone HTML document (auto-print).
+        register_rest_route($this->namespace, '/portal/invoice/(?P<id>\d+)/print', [
+            'methods' => 'GET',
+            'callback' => [$this, 'printInvoice'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
         // Cancel subscription
         register_rest_route($this->namespace, '/portal/cancel', [
             'methods' => 'POST',
@@ -253,6 +260,32 @@ class CustomerPortal
             'success' => true,
             'invoice' => $invoice,
             'html' => $this->invoiceManager->renderInvoiceHtml($invoice),
+        ], 200);
+    }
+
+    /**
+     * Print/download a specific invoice as a standalone HTML document.
+     * Opens with auto-print so the browser's "Save as PDF" can be used.
+     */
+    public function printInvoice(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $invoiceId = (int) $request->get_param('id');
+        $tenant = $this->roleManager->getCustomerTenant();
+
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+        }
+
+        $invoice = $this->invoiceManager->getInvoice($invoiceId, $tenant['tenant_key']);
+        if (!$invoice) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Invoice not found'], 404);
+        }
+
+        $html = $this->invoiceManager->renderInvoicePrintHtml($invoice);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'html' => $html,
         ], 200);
     }
 

@@ -36,6 +36,7 @@ class Dashboard
     private CustomerRoleManager $customerRoleManager;
     private CustomerPortal $customerPortal;
     private InvoiceManager $invoiceManager;
+    private BookkeepingAdmin $bookkeepingAdmin;
     private GeoScanRepository $geoScanRepository;
     private HtmlFetcher $htmlFetcher;
     private AiOverviewExtractor $aiOverviewExtractor;
@@ -64,7 +65,7 @@ class Dashboard
         add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
         $this->providerRouter = new ProviderRouter($this->saasSettings);
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter);
-        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
+        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants, $this->bookkeepingAdmin);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->emailTemplateRepository = new EmailTemplateRepository();
@@ -100,6 +101,9 @@ class Dashboard
             $this->customerRoleManager,
             $this->invoiceManager
         );
+
+        // Bookkeeping admin (invoices, profit, template)
+        $this->bookkeepingAdmin = new BookkeepingAdmin($this->pluginFile, $this->tenants, $this->invoiceManager);
 
         $this->geoScanRepository = new GeoScanRepository();
         $this->htmlFetcher = new HtmlFetcher($this->saasSettings);
@@ -155,6 +159,9 @@ class Dashboard
         $this->customerRoleManager->register();
         $this->customerPortal->register();
         $this->invoiceManager->register();
+
+        // Register bookkeeping admin
+        $this->bookkeepingAdmin->register();
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
