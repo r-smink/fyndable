@@ -115,6 +115,9 @@ window.FyndableI18n = (function () {
             cancel_subscription_desc: 'Cancelling will stop future payments. You retain access until the end of your current billing period.',
             monthly_label: 'Monthly',
             yearly_label: 'Yearly',
+            upgrade_subscription: 'Upgrade Subscription',
+            upgrade_subscription_desc: 'Choose a higher plan to upgrade your subscription.',
+            confirm_upgrade: 'Are you sure you want to upgrade to the %s plan?',
 
             // Customer portal — usage tab
             usage_for: 'Usage for',
@@ -270,6 +273,9 @@ window.FyndableI18n = (function () {
             cancel_subscription_desc: 'Opzeggen stopt toekomstige betalingen. Je behoudt toegang tot het einde van de huidige factureringsperiode.',
             monthly_label: 'Maandelijks',
             yearly_label: 'Jaarlijks',
+            upgrade_subscription: 'Abonnement upgraden',
+            upgrade_subscription_desc: 'Kies een hoger abonnement om te upgraden.',
+            confirm_upgrade: 'Weet je zeker dat je wilt upgraden naar het %s abonnement?',
 
             // Customer portal — usage tab
             usage_for: 'Gebruik voor',

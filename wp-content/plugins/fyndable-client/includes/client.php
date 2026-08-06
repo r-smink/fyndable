@@ -1325,7 +1325,7 @@ class Client
                                     <input type="text" name="license_key" id="license_key" 
                                            value="<?php echo esc_attr($licenseKey); ?>" 
                                            class="regular-text" 
-                                           placeholder="SSEO-AI-XXXX-XXXX-XXXX" required>
+                                           placeholder="FYN-SSAI-XXXX-XXXX-XXXX" required>
                                 </td>
                             </tr>
                         </table>
@@ -2445,7 +2445,7 @@ class Client
                             <div class="form-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
                                 <input type="text" name="license_key" id="license_key" 
-                                       placeholder="SSEO-AI-XXXX-XXXX-XXXX" required>
+                                       placeholder="FYN-SSAI-XXXX-XXXX-XXXX" required>
                             </div>
                             
                             <button type="submit" class="button button-primary">

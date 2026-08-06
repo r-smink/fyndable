@@ -479,7 +479,7 @@ class OnboardingWizard
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
-                                <input type="text" id="license_key" name="license_key" placeholder="SSEO-AI-XXXX-XXXX-XXXX" value="">
+                                <input type="text" id="license_key" name="license_key" placeholder="FYN-SSAI-XXXX-XXXX-XXXX" value="">
                                 <?php if ($freeTierEnabled): ?>
                                     <div class="hint"><?php esc_html_e('Skip this step to use the free tier with limited features.', 'ai-seo-client'); ?></div>
                                 <?php endif; ?>

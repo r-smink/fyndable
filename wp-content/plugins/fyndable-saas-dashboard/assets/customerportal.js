@@ -202,11 +202,65 @@
                 html += '</div>';
             }
 
+            html += '<div class="fyndable-portal-card" id="fyndable-portal-upgrade-card" style="display:none;"></div>';
+
             $(panel).html(html);
+            loadUpgradeOptions();
         }).fail(function () {
             $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
         });
     }
+
+    // --- Upgrade options ---
+    function loadUpgradeOptions() {
+        var $card = $('#fyndable-portal-upgrade-card');
+        $card.html('<div class="fyndable-portal-loading">' + t('loading') + '</div>').show();
+
+        apiRequest('/portal/tiers').done(function (res) {
+            if (!res.success || !res.tiers || !res.tiers.length) {
+                $card.hide();
+                return;
+            }
+
+            var html = '<h3>' + t('upgrade_subscription') + '</h3>';
+            html += '<p style="color:#6b7280;font-size:14px;margin-bottom:16px;">' + t('upgrade_subscription_desc') + '</p>';
+            html += '<div class="fyndable-portal-form-group">';
+            html += '<select id="fyndable-portal-upgrade-tier" class="fyndable-portal-form-select">';
+            res.tiers.forEach(function (tier) {
+                html += '<option value="' + tier.key + '">' + tier.label + ' — ' + formatCurrency(tier.amount, tier.currency) + ' / ' + (res.interval === 'year' ? t('yearly_label') : t('monthly_label')) + '</option>';
+            });
+            html += '</select>';
+            html += '</div>';
+            html += '<button class="fyndable-portal-btn fyndable-portal-btn-primary" id="fyndable-portal-upgrade-btn">' + t('upgrade_subscription') + '</button>';
+            $card.html(html);
+        }).fail(function () {
+            $card.hide();
+        });
+    }
+
+    // Upgrade subscription
+    $(document).on('click', '#fyndable-portal-upgrade-btn', function () {
+        var tier = $('#fyndable-portal-upgrade-tier').val();
+        if (!tier) return;
+        if (!confirm(t('confirm_upgrade', { s: tier }))) return;
+
+        var btn = $(this);
+        btn.prop('disabled', true).text(t('loading'));
+
+        apiRequest('/portal/upgrade', 'POST', { tier: tier }).done(function (res) {
+            if (res.success) {
+                showAlert('panel-subscription', 'success', res.message);
+                loaded.subscription = false;
+                setTimeout(loadSubscription, 1500);
+            } else {
+                showAlert('panel-subscription', 'error', res.message || t('error_generic'));
+                btn.prop('disabled', false).text(t('upgrade_subscription'));
+            }
+        }).fail(function () {
+            showAlert('panel-subscription', 'error', t('error_generic'));
+            btn.prop('disabled', false).text(t('upgrade_subscription'));
+        });
+    });
 
     // Cancel subscription
     $(document).on('click', '#cancel-subscription-btn', function () {

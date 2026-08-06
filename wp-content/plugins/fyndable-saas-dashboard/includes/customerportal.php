@@ -35,6 +35,7 @@ class CustomerPortal
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_shortcode('fyndable_customer_portal', [$this, 'renderPortalShortcode']);
         add_action('wp_enqueue_scripts', [$this, 'maybeEnqueueAssets']);
+        add_filter('show_admin_bar', [$this, 'shouldShowAdminBar']);
     }
 
     /**
@@ -110,6 +111,23 @@ class CustomerPortal
             'methods' => 'POST',
             'callback' => [$this, 'updateAccount'],
             'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        // Get available upgrade tiers
+        register_rest_route($this->namespace, '/portal/tiers', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getUpgradeTiers'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        // Upgrade subscription
+        register_rest_route($this->namespace, '/portal/upgrade', [
+            'methods' => 'POST',
+            'callback' => [$this, 'upgradeSubscription'],
+            'permission_callback' => [$this, 'checkPermission'],
+            'args' => [
+                'tier' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_key'],
+            ],
         ]);
 
         // Set language preference
@@ -190,6 +208,67 @@ class CustomerPortal
             ],
             'provider_details' => $subscriptionDetails,
         ], 200);
+    }
+
+    /**
+     * Get available upgrade tiers for the current customer.
+     */
+    public function getUpgradeTiers(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->roleManager->getCustomerTenant();
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+        }
+
+        $interval = $this->tenants->getTenantSetting($tenant['tenant_key'], 'subscription_interval', 'month');
+        $currentPricing = $this->paymentProcessor->getTierPricing($tenant['tier'], $interval);
+        $currentAmount = is_wp_error($currentPricing) ? 0 : $currentPricing['amount'];
+
+        $allTiers = ['trial', 'starter', 'early_adopters', 'professional', 'business', 'agency'];
+        $tiers = [];
+        foreach ($allTiers as $tier) {
+            if ($tier === $tenant['tier']) {
+                continue;
+            }
+            $pricing = $this->paymentProcessor->getTierPricing($tier, $interval);
+            if (is_wp_error($pricing)) {
+                continue;
+            }
+            if ($pricing['amount'] <= $currentAmount) {
+                continue;
+            }
+            $tiers[] = [
+                'key' => $tier,
+                'label' => ucwords(str_replace(['_', '-'], ' ', $tier)),
+                'amount' => $pricing['amount'],
+                'currency' => get_option('sseo_ai_saas_currency', 'EUR'),
+            ];
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'interval' => $interval,
+            'tiers' => $tiers,
+        ], 200);
+    }
+
+    /**
+     * Upgrade the current customer's subscription to a higher tier.
+     */
+    public function upgradeSubscription(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->roleManager->getCustomerTenant();
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+        }
+
+        $newTier = sanitize_key($request->get_param('tier') ?? '');
+        $result = $this->paymentProcessor->changeTier($tenant['tenant_key'], $newTier);
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 500);
+        }
+
+        return new \WP_REST_Response($result, 200);
     }
 
     /**
@@ -365,7 +444,7 @@ class CustomerPortal
             'download_url' => $downloadUrl,
             'version' => $latestVersion,
             'license_key' => $tenant['license_key'],
-            'dashboard_url' => $this->roleManager->getPortalUrl(),
+            'dashboard_url' => home_url('/'),
             'instructions' => '1. Download the zip file. 2. In your WordPress admin, go to Plugins > Add New > Upload Plugin. 3. Upload the zip and activate. 4. Enter your license key in the plugin settings.',
         ], 200);
     }
@@ -498,6 +577,18 @@ class CustomerPortal
     }
 
     /**
+     * Hide the WordPress admin bar for customer users.
+     */
+    public function shouldShowAdminBar(bool $show): bool
+    {
+        if ($this->roleManager->isCustomerUser()) {
+            return false;
+        }
+
+        return $show;
+    }
+
+    /**
      * Render the customer portal shortcode.
      */
     public function renderPortalShortcode(): string
@@ -563,7 +654,7 @@ class CustomerPortal
             <!-- Header -->
             <div class="fyndable-portal-header">
                 <div class="fyndable-portal-brand">
-                    <img src="<?php echo esc_url(SSEO_AI_SAAS_PLUGIN_URL . 'assets/logo-white.png'); ?>" alt="Fyndable" class="fyndable-portal-logo-img" />
+                    <img src="<?php echo esc_url(SSEO_AI_SAAS_PLUGIN_URL . 'assets/FYN_dashlogo.png'); ?>" alt="Fyndable" class="fyndable-portal-logo-img" />
                 </div>
                 <div class="fyndable-portal-user">
                     <div class="fyndable-portal-lang-toggle">
