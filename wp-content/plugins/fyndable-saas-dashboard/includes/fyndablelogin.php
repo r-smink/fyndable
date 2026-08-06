@@ -164,8 +164,8 @@ class FyndableLogin
                         return $url;
                     }
                 }
-                // No portal page configured — redirect to homepage instead of a 404.
-                return home_url('/');
+                // No portal page configured — redirect to /dashboard.
+                return home_url('/dashboard/');
             }
             if (in_array('agency_partner', (array)$user->roles, true)) {
                 return admin_url('admin.php?page=sseo-ai-shell');
@@ -294,7 +294,17 @@ class FyndableLogin
         wp_set_current_user($user->ID, $user->user_login);
         wp_set_auth_cookie($user->ID, true);
 
-        $redirect = admin_url('admin.php?page=sseo-ai-shell');
+        // Redirect based on role: customers go to /dashboard, others to the admin shell.
+        if (in_array('fyndable_customer', (array)$user->roles, true)) {
+            $portalPageId = (int) get_option('sseo_ai_saas_customer_portal_page', 0);
+            if ($portalPageId > 0) {
+                $redirect = get_permalink($portalPageId) ?: home_url('/dashboard/');
+            } else {
+                $redirect = home_url('/dashboard/');
+            }
+        } else {
+            $redirect = admin_url('admin.php?page=sseo-ai-shell');
+        }
         wp_redirect($redirect);
         exit;
     }
@@ -313,7 +323,17 @@ class FyndableLogin
         $redirect = esc_url_raw($atts['redirect']);
 
         if (is_user_logged_in()) {
-            $dashboardUrl = admin_url('admin.php?page=sseo-ai-shell');
+            $currentUser = wp_get_current_user();
+            if (in_array('fyndable_customer', (array)$currentUser->roles, true)) {
+                $portalPageId = (int) get_option('sseo_ai_saas_customer_portal_page', 0);
+                if ($portalPageId > 0) {
+                    $dashboardUrl = get_permalink($portalPageId) ?: home_url('/dashboard/');
+                } else {
+                    $dashboardUrl = home_url('/dashboard/');
+                }
+            } else {
+                $dashboardUrl = admin_url('admin.php?page=sseo-ai-shell');
+            }
             return '<div class="fyndable-login-message" style="max-width:420px;margin:0 auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);text-align:center;">' .
                 sprintf(
                     __('You are already logged in. <a href="%s" style="color:#379fd3;font-weight:600;">Go to dashboard</a>', 'sseo-ai-saas'),

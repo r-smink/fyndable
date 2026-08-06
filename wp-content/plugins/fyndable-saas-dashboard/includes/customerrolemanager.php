@@ -317,7 +317,7 @@ If you have any questions, feel free to reply to this email.
                 return $url;
             }
         }
-        // No portal page configured — fall back to homepage.
-        return home_url('/');
+        // No portal page configured — fall back to /dashboard.
+        return home_url('/dashboard/');
     }
 }

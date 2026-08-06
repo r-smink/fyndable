@@ -486,3 +486,153 @@
     margin-top: 12px;
     line-height: 1.5;
 }
+
+/* SaaS Dashboard Theme Overrides */
+.fyndable-portal {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    max-width: none;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: #111827;
+    min-height: 100vh;
+}
+
+.fyndable-portal-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 30px;
+}
+
+.fyndable-portal-header {
+    border-bottom: none;
+    padding: 16px 0 24px;
+    margin-bottom: 8px;
+}
+
+.fyndable-portal-logo-img {
+    height: 36px;
+    width: auto;
+    display: block;
+}
+
+.fyndable-portal-brand {
+    align-items: center;
+}
+
+.fyndable-portal-user-name,
+.fyndable-portal-logout,
+.fyndable-portal-logout:hover {
+    color: #fff !important;
+}
+
+.fyndable-portal-lang-toggle button {
+    color: rgba(255,255,255,.85);
+    border-radius: 6px;
+}
+
+.fyndable-portal-lang-toggle button:hover {
+    color: #fff;
+    background: rgba(255,255,255,.12);
+}
+
+.fyndable-portal-lang-toggle button.active {
+    color: #fff;
+    background: rgba(255,255,255,.2);
+}
+
+.fyndable-portal-lang-sep {
+    color: rgba(255,255,255,.5);
+}
+
+.fyndable-portal-tabs {
+    background: rgba(255,255,255,.95);
+    border-bottom: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.04);
+    gap: 8px;
+}
+
+.fyndable-portal-tab {
+    border-bottom: none;
+    margin-bottom: 0;
+    border-radius: 8px;
+    padding: 10px 16px;
+}
+
+.fyndable-portal-tab:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.fyndable-portal-tab.active {
+    color: #fff;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    box-shadow: 0 2px 4px rgba(55,159,211,.2);
+}
+
+.fyndable-portal-card {
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -2px rgba(0,0,0,.04);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.fyndable-portal-card h3 {
+    color: #111827;
+}
+
+.fyndable-portal-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.fyndable-portal-table tr:hover {
+    background: #f3f4f6;
+}
+
+.fyndable-portal-form-group input {
+    border: 2px solid #e5e7eb;
+}
+
+.fyndable-portal-form-group input:focus {
+    border-color: #379fd3;
+    box-shadow: 0 0 0 3px rgba(55,159,211,.1);
+}
+
+.fyndable-portal-modal-content {
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,.25);
+}
+
+.fyndable-portal-login-card,
+.fyndable-portal-notice {
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(10px);
+}
+
+.fyndable-portal-loading {
+    color: rgba(255,255,255,.9);
+}
+
+.fyndable-portal-form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+    font-family: inherit;
+}
+
+.fyndable-portal-form-group textarea:focus {
+    border-color: #379fd3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(55,159,211,.1);
+}

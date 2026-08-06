@@ -411,19 +411,22 @@
         var panel = '#panel-account';
         showLoading('panel-account');
 
-        apiRequest('/portal/subscription').done(function (res) {
+        apiRequest('/portal/account').done(function (res) {
             loaded.account = true;
             if (!res.success) {
                 $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + res.message + '</div>');
                 return;
             }
 
-            var s = res.subscription;
+            var a = res.account;
             var html = '<div class="fyndable-portal-card">';
             html += '<h3>' + t('account_settings') + '</h3>';
             html += '<form id="account-form">';
-            html += '<div class="fyndable-portal-form-group"><label>' + t('name') + '</label><input type="text" name="name" value="" placeholder="' + t('name_placeholder') + '" /></div>';
-            html += '<div class="fyndable-portal-form-group"><label>' + t('domain') + '</label><input type="text" name="domain" value="' + (s.domain || '') + '" placeholder="' + t('domain_placeholder') + '" /></div>';
+            html += '<div class="fyndable-portal-form-group"><label>' + t('name') + '</label><input type="text" name="name" value="' + (a.name || '') + '" placeholder="' + t('name_placeholder') + '" /></div>';
+            html += '<div class="fyndable-portal-form-group"><label>' + t('email_address') + '</label><input type="email" name="email" value="' + (a.email || '') + '" placeholder="' + t('email_placeholder') + '" /></div>';
+            html += '<div class="fyndable-portal-form-group"><label>' + t('phone') + '</label><input type="tel" name="phone" value="' + (a.phone || '') + '" placeholder="' + t('phone_placeholder') + '" /></div>';
+            html += '<div class="fyndable-portal-form-group"><label>' + t('address') + '</label><textarea name="address" rows="3" placeholder="' + t('address_placeholder') + '">' + (a.address || '') + '</textarea></div>';
+            html += '<div class="fyndable-portal-form-group"><label>' + t('domain') + '</label><input type="text" name="domain" value="' + (a.domain || '') + '" placeholder="' + t('domain_placeholder') + '" /></div>';
             html += '<button type="submit" class="fyndable-portal-btn fyndable-portal-btn-primary">' + t('save_changes') + '</button>';
             html += '</form>';
             html += '</div>';
@@ -443,9 +446,13 @@
     // Save account form
     $(document).on('submit', '#account-form', function (e) {
         e.preventDefault();
+        var $form = $(this);
         var data = {
-            name: $(this).find('input[name="name"]').val(),
-            domain: $(this).find('input[name="domain"]').val(),
+            name: $form.find('input[name="name"]').val(),
+            email: $form.find('input[name="email"]').val(),
+            phone: $form.find('input[name="phone"]').val(),
+            address: $form.find('textarea[name="address"]').val(),
+            domain: $form.find('input[name="domain"]').val(),
         };
 
         apiRequest('/portal/account', 'POST', data).done(function (res) {

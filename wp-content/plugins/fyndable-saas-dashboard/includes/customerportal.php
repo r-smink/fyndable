@@ -98,6 +98,13 @@ class CustomerPortal
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
+        // Get account info
+        register_rest_route($this->namespace, '/portal/account', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getAccount'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
         // Update account info
         register_rest_route($this->namespace, '/portal/account', [
             'methods' => 'POST',
@@ -358,7 +365,7 @@ class CustomerPortal
             'download_url' => $downloadUrl,
             'version' => $latestVersion,
             'license_key' => $tenant['license_key'],
-            'dashboard_url' => home_url(),
+            'dashboard_url' => $this->roleManager->getPortalUrl(),
             'instructions' => '1. Download the zip file. 2. In your WordPress admin, go to Plugins > Add New > Upload Plugin. 3. Upload the zip and activate. 4. Enter your license key in the plugin settings.',
         ], 200);
     }
@@ -391,7 +398,32 @@ class CustomerPortal
     }
 
     /**
-     * Update customer account info (name, domain).
+     * Get customer account info (name, domain, email, phone, address).
+     */
+    public function getAccount(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->roleManager->getCustomerTenant();
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+        }
+
+        $userId = get_current_user_id();
+        $user = get_userdata($userId);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'account' => [
+                'name' => $tenant['name'] ?? '',
+                'domain' => $tenant['domain'] ?? '',
+                'email' => $user ? $user->user_email : '',
+                'phone' => (string) get_user_meta($userId, 'fyndable_phone', true),
+                'address' => (string) get_user_meta($userId, 'fyndable_address', true),
+            ],
+        ], 200);
+    }
+
+    /**
+     * Update customer account info (name, domain, email, phone, address).
      */
     public function updateAccount(\WP_REST_Request $request): \WP_REST_Response
     {
@@ -402,6 +434,9 @@ class CustomerPortal
 
         $name = sanitize_text_field($request->get_param('name') ?? '');
         $domain = esc_url_raw($request->get_param('domain') ?? '');
+        $email = sanitize_email($request->get_param('email') ?? '');
+        $phone = sanitize_text_field($request->get_param('phone') ?? '');
+        $address = sanitize_textarea_field($request->get_param('address') ?? '');
 
         $update = [];
         if (!empty($name)) {
@@ -411,14 +446,26 @@ class CustomerPortal
             $update['domain'] = $domain;
         }
 
-        if (empty($update)) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'No fields to update'], 400);
+        if (!empty($update)) {
+            $result = $this->tenants->updateTenant($tenant['tenant_key'], $update);
+            if (is_wp_error($result)) {
+                return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 500);
+            }
         }
 
-        $result = $this->tenants->updateTenant($tenant['tenant_key'], $update);
-        if (is_wp_error($result)) {
-            return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 500);
+        $userId = get_current_user_id();
+        if (!empty($email)) {
+            $existingId = email_exists($email);
+            if ($existingId && (int) $existingId !== (int) $userId) {
+                return new \WP_REST_Response(['success' => false, 'message' => 'Email address is already in use.'], 409);
+            }
+            $userUpdate = wp_update_user(['ID' => $userId, 'user_email' => $email]);
+            if (is_wp_error($userUpdate)) {
+                return new \WP_REST_Response(['success' => false, 'message' => $userUpdate->get_error_message()], 500);
+            }
         }
+        update_user_meta($userId, 'fyndable_phone', $phone);
+        update_user_meta($userId, 'fyndable_address', $address);
 
         return new \WP_REST_Response([
             'success' => true,
@@ -512,11 +559,11 @@ class CustomerPortal
         ob_start();
         ?>
         <div id="fyndable-customer-portal" class="fyndable-portal">
+            <div class="fyndable-portal-inner">
             <!-- Header -->
             <div class="fyndable-portal-header">
                 <div class="fyndable-portal-brand">
-                    <span class="fyndable-portal-logo">Fyndable</span>
-                    <span class="fyndable-portal-tagline">Smart SEO</span>
+                    <img src="<?php echo esc_url(SSEO_AI_SAAS_PLUGIN_URL . 'assets/logo-white.png'); ?>" alt="Fyndable" class="fyndable-portal-logo-img" />
                 </div>
                 <div class="fyndable-portal-user">
                     <div class="fyndable-portal-lang-toggle">
@@ -569,6 +616,7 @@ class CustomerPortal
                 <div class="fyndable-portal-loading" data-i18n="loading_account">Loading account...</div>
             </div>
 
+            </div>
             <!-- Invoice Modal -->
             <div class="fyndable-portal-modal" id="invoice-modal" style="display:none;">
                 <div class="fyndable-portal-modal-overlay"></div>
