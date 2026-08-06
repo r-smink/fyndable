@@ -104,6 +104,16 @@ class CustomerPortal
             'callback' => [$this, 'updateAccount'],
             'permission_callback' => [$this, 'checkPermission'],
         ]);
+
+        // Set language preference
+        register_rest_route($this->namespace, '/portal/language', [
+            'methods' => 'POST',
+            'callback' => [$this, 'setLanguage'],
+            'permission_callback' => [$this, 'checkPermission'],
+            'args' => [
+                'lang' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_key'],
+            ],
+        ]);
     }
 
     /**
@@ -417,6 +427,22 @@ class CustomerPortal
     }
 
     /**
+     * Set the customer's language preference (EN/NL).
+     */
+    public function setLanguage(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $lang = sanitize_key($request->get_param('lang') ?? '');
+        if (!in_array($lang, ['en', 'nl'], true)) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Invalid language.'], 400);
+        }
+
+        $userId = get_current_user_id();
+        update_user_meta($userId, 'fyndable_lang', $lang);
+
+        return new \WP_REST_Response(['success' => true, 'lang' => $lang], 200);
+    }
+
+    /**
      * Maybe enqueue portal assets.
      */
     public function maybeEnqueueAssets(): void
@@ -429,13 +455,31 @@ class CustomerPortal
      */
     public function renderPortalShortcode(): string
     {
-        wp_enqueue_style('fyndable-customer-portal', SSEO_AI_SAAS_PLUGIN_URL . 'assets/customerportal.css', [], SSEO_AI_SAAS_VERSION);
-        wp_enqueue_script('fyndable-customer-portal', SSEO_AI_SAAS_PLUGIN_URL . 'assets/customerportal.js', ['jquery'], SSEO_AI_SAAS_VERSION, true);
+        $jsVersion = filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/customerportal.js') ?: SSEO_AI_SAAS_VERSION;
+        $i18nVersion = filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/i18n.js') ?: SSEO_AI_SAAS_VERSION;
+        wp_enqueue_style('fyndable-customer-portal', SSEO_AI_SAAS_PLUGIN_URL . 'assets/customerportal.css', [], $jsVersion);
+        wp_enqueue_script('fyndable-i18n', SSEO_AI_SAAS_PLUGIN_URL . 'assets/i18n.js', [], $i18nVersion, true);
+        wp_enqueue_script('fyndable-customer-portal', SSEO_AI_SAAS_PLUGIN_URL . 'assets/customerportal.js', ['jquery', 'fyndable-i18n'], $jsVersion, true);
+
+        // Determine user language preference.
+        $userLang = '';
+        if (is_user_logged_in()) {
+            $userLang = get_user_meta(get_current_user_id(), 'fyndable_lang', true);
+            if ($userLang !== 'nl' && $userLang !== 'en') {
+                $userLang = '';
+            }
+        }
+
+        wp_localize_script('fyndable-i18n', 'FyndableI18nConfig', [
+            'userLang' => $userLang,
+        ]);
 
         wp_localize_script('fyndable-customer-portal', 'FyndablePortal', [
             'restUrl' => esc_url_raw(rest_url('ai-seo-saas/v1')),
             'nonce' => wp_create_nonce('wp_rest'),
-            'loginUrl' => esc_url(wp_login_url(home_url('/customer-portal/'))),
+            'loginUrl' => esc_url(wp_login_url($this->roleManager->getPortalUrl())),
+            'lang' => $userLang,
+            // i18n kept for backward-compat — JS now uses FyndableI18n.t() instead.
             'i18n' => [
                 'loading' => __('Loading...', 'sseo-ai-saas'),
                 'error' => __('Something went wrong. Please try again.', 'sseo-ai-saas'),
@@ -452,17 +496,17 @@ class CustomerPortal
         if (!$this->roleManager->isCustomerUser()) {
             $user = wp_get_current_user();
             if (in_array('administrator', (array)$user->roles, true)) {
-                return '<div class="fyndable-portal-notice">You are logged in as an administrator. <a href="' . esc_url(admin_url('admin.php?page=sseo-ai-shell')) . '">Go to SaaS Dashboard</a></div>';
+                return '<div class="fyndable-portal-notice" data-i18n="admin_notice">You are logged in as an administrator. <a href="' . esc_url(admin_url('admin.php?page=sseo-ai-shell')) . '" data-i18n-link="go_to_dashboard">Go to SaaS Dashboard</a></div>';
             }
             if (in_array('agency_partner', (array)$user->roles, true)) {
-                return '<div class="fyndable-portal-notice">You are logged in as an agency partner. <a href="' . esc_url(admin_url('admin.php?page=sseo-ai-shell')) . '">Go to Agency Portal</a></div>';
+                return '<div class="fyndable-portal-notice" data-i18n="agency_notice">You are logged in as an agency partner. <a href="' . esc_url(admin_url('admin.php?page=sseo-ai-shell')) . '" data-i18n-link="go_to_agency">Go to Agency Portal</a></div>';
             }
-            return '<div class="fyndable-portal-notice">You do not have access to the customer portal.</div>';
+            return '<div class="fyndable-portal-notice" data-i18n="no_access">You do not have access to the customer portal.</div>';
         }
 
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return '<div class="fyndable-portal-notice">No subscription found for your account. Please contact support.</div>';
+            return '<div class="fyndable-portal-notice" data-i18n="no_subscription">No subscription found for your account. Please contact support.</div>';
         }
 
         ob_start();
@@ -475,49 +519,54 @@ class CustomerPortal
                     <span class="fyndable-portal-tagline">Smart SEO</span>
                 </div>
                 <div class="fyndable-portal-user">
+                    <div class="fyndable-portal-lang-toggle">
+                        <button type="button" data-lang="en">EN</button>
+                        <span class="fyndable-portal-lang-sep">|</span>
+                        <button type="button" data-lang="nl">NL</button>
+                    </div>
                     <span class="fyndable-portal-user-name"><?php echo esc_html($tenant['name']); ?></span>
-                    <a href="<?php echo esc_url(wp_logout_url(home_url('/customer-portal/'))); ?>" class="fyndable-portal-logout"><?php esc_html_e('Sign out', 'sseo-ai-saas'); ?></a>
+                    <a href="<?php echo esc_url(wp_logout_url($this->roleManager->getPortalUrl())); ?>" class="fyndable-portal-logout" data-i18n="sign_out">Sign out</a>
                 </div>
             </div>
 
             <!-- Tab Navigation -->
             <div class="fyndable-portal-tabs">
-                <button class="fyndable-portal-tab active" data-tab="subscription"><?php esc_html_e('Subscription', 'sseo-ai-saas'); ?></button>
-                <button class="fyndable-portal-tab" data-tab="license"><?php esc_html_e('License', 'sseo-ai-saas'); ?></button>
-                <button class="fyndable-portal-tab" data-tab="usage"><?php esc_html_e('Usage', 'sseo-ai-saas'); ?></button>
-                <button class="fyndable-portal-tab" data-tab="download"><?php esc_html_e('Plugin', 'sseo-ai-saas'); ?></button>
-                <button class="fyndable-portal-tab" data-tab="invoices"><?php esc_html_e('Invoices', 'sseo-ai-saas'); ?></button>
-                <button class="fyndable-portal-tab" data-tab="account"><?php esc_html_e('Account', 'sseo-ai-saas'); ?></button>
+                <button class="fyndable-portal-tab active" data-tab="subscription" data-i18n="tab_subscription">Subscription</button>
+                <button class="fyndable-portal-tab" data-tab="license" data-i18n="tab_license">License</button>
+                <button class="fyndable-portal-tab" data-tab="usage" data-i18n="tab_usage">Usage</button>
+                <button class="fyndable-portal-tab" data-tab="download" data-i18n="tab_download">Plugin</button>
+                <button class="fyndable-portal-tab" data-tab="invoices" data-i18n="tab_invoices">Invoices</button>
+                <button class="fyndable-portal-tab" data-tab="account" data-i18n="tab_account">Account</button>
             </div>
 
             <!-- Tab: Subscription -->
             <div class="fyndable-portal-panel active" id="panel-subscription">
-                <div class="fyndable-portal-loading"><?php esc_html_e('Loading subscription...', 'sseo-ai-saas'); ?></div>
+                <div class="fyndable-portal-loading" data-i18n="loading_subscription">Loading subscription...</div>
             </div>
 
             <!-- Tab: License -->
             <div class="fyndable-portal-panel" id="panel-license">
-                <div class="fyndable-portal-loading"><?php esc_html_e('Loading license...', 'sseo-ai-saas'); ?></div>
+                <div class="fyndable-portal-loading" data-i18n="loading_license">Loading license...</div>
             </div>
 
             <!-- Tab: Usage -->
             <div class="fyndable-portal-panel" id="panel-usage">
-                <div class="fyndable-portal-loading"><?php esc_html_e('Loading usage...', 'sseo-ai-saas'); ?></div>
+                <div class="fyndable-portal-loading" data-i18n="loading_usage">Loading usage...</div>
             </div>
 
             <!-- Tab: Download -->
             <div class="fyndable-portal-panel" id="panel-download">
-                <div class="fyndable-portal-loading"><?php esc_html_e('Loading...', 'sseo-ai-saas'); ?></div>
+                <div class="fyndable-portal-loading" data-i18n="loading">Loading...</div>
             </div>
 
             <!-- Tab: Invoices -->
             <div class="fyndable-portal-panel" id="panel-invoices">
-                <div class="fyndable-portal-loading"><?php esc_html_e('Loading invoices...', 'sseo-ai-saas'); ?></div>
+                <div class="fyndable-portal-loading" data-i18n="loading_invoices">Loading invoices...</div>
             </div>
 
             <!-- Tab: Account -->
             <div class="fyndable-portal-panel" id="panel-account">
-                <div class="fyndable-portal-loading"><?php esc_html_e('Loading account...', 'sseo-ai-saas'); ?></div>
+                <div class="fyndable-portal-loading" data-i18n="loading_account">Loading account...</div>
             </div>
 
             <!-- Invoice Modal -->
@@ -538,7 +587,7 @@ class CustomerPortal
      */
     private function renderLoginPrompt(): string
     {
-        $loginUrl = esc_url(wp_login_url(home_url('/customer-portal/')));
+        $loginUrl = esc_url(wp_login_url($this->roleManager->getPortalUrl()));
         $enabled = get_option('sseo_ai_saas_wl_enabled', false);
         $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $brandName = $companyName ?: 'Fyndable';
@@ -546,11 +595,16 @@ class CustomerPortal
         ob_start();
         ?>
         <div class="fyndable-portal-login-prompt">
+            <div class="fyndable-portal-lang-toggle" style="position:absolute;top:16px;right:16px;">
+                <button type="button" data-lang="en">EN</button>
+                <span class="fyndable-portal-lang-sep">|</span>
+                <button type="button" data-lang="nl">NL</button>
+            </div>
             <div class="fyndable-portal-login-card">
-                <h2><?php echo esc_html(sprintf(__('Welcome to %s', 'sseo-ai-saas'), $brandName)); ?></h2>
-                <p><?php esc_html_e('Sign in to manage your subscription, view invoices, and download the plugin.', 'sseo-ai-saas'); ?></p>
-                <a href="<?php echo $loginUrl; ?>" class="fyndable-portal-login-btn">
-                    <?php esc_html_e('Sign in', 'sseo-ai-saas'); ?>
+                <h2 data-i18n="welcome_to" data-i18n-arg="<?php echo esc_attr($brandName); ?>">Welcome to <?php echo esc_html($brandName); ?></h2>
+                <p data-i18n="sign_in_subtitle">Sign in to manage your subscription, view invoices, and download the plugin.</p>
+                <a href="<?php echo $loginUrl; ?>" class="fyndable-portal-login-btn" data-i18n="sign_in">
+                    Sign in
                 </a>
             </div>
         </div>

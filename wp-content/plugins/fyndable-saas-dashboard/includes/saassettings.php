@@ -193,7 +193,7 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_language', ['default' => 'nl']);
 
         // Customer portal settings
-        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_customer_portal_page', ['default' => 0, 'sanitize_callback' => 'absint']);
+        register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_customer_portal_page', ['default' => 0, 'sanitize_callback' => 'absint']);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_vat_rate', ['default' => 21, 'sanitize_callback' => function($v) { return (float) $v; }]);
 
         // Model tier routing overrides
@@ -1082,6 +1082,35 @@ class SaaSSettings
                         <th scope="row"><label for="trial_days"><?php esc_html_e('Trial Days', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <input type="number" name="sseo_ai_saas_trial_days" id="trial_days" value="<?php echo esc_attr(get_option('sseo_ai_saas_trial_days', 14)); ?>" style="width: 120px;">
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Customer Portal Page -->
+                <h3><?php esc_html_e('Customer Portal Page', 'sseo-ai-saas'); ?></h3>
+                <p class="description">
+                    <?php
+                    echo wp_kses_post(sprintf(
+                        /* translators: %s: shortcode */
+                        __('Create a WordPress page and add the shortcode %s to it, then select that page here. Paying customers are redirected to this page after login. If no page is selected, customers will be redirected to the homepage instead of getting a 404.', 'sseo-ai-saas'),
+                        '<code>[fyndable_customer_portal]</code>'
+                    ));
+                    ?>
+                </p>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="customer_portal_page"><?php esc_html_e('Portal Page', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <?php
+                            wp_dropdown_pages([
+                                'name' => 'sseo_ai_saas_customer_portal_page',
+                                'id' => 'customer_portal_page',
+                                'selected' => (int) get_option('sseo_ai_saas_customer_portal_page', 0),
+                                'show_option_none' => __('— Select a page —', 'sseo-ai-saas'),
+                                'option_none_value' => 0,
+                            ]);
+                            ?>
+                            <p class="description"><?php esc_html_e('The page must contain the [fyndable_customer_portal] shortcode.', 'sseo-ai-saas'); ?></p>
                         </td>
                     </tr>
                 </table>

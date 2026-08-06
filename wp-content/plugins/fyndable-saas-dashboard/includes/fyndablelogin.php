@@ -164,7 +164,8 @@ class FyndableLogin
                         return $url;
                     }
                 }
-                return home_url('/customer-portal/');
+                // No portal page configured — redirect to homepage instead of a 404.
+                return home_url('/');
             }
             if (in_array('agency_partner', (array)$user->roles, true)) {
                 return admin_url('admin.php?page=sseo-ai-shell');

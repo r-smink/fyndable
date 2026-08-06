@@ -317,6 +317,7 @@ If you have any questions, feel free to reply to this email.
                 return $url;
             }
         }
-        return home_url('/customer-portal/');
+        // No portal page configured — fall back to homepage.
+        return home_url('/');
     }
 }

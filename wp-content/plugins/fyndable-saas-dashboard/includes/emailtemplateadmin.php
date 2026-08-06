@@ -60,7 +60,222 @@ class EmailTemplateAdmin
             return;
         }
 
+        if ($action === 'brand') {
+            $this->renderBrandPage();
+            return;
+        }
+
         $this->renderListPage();
+    }
+
+    /**
+     * Register the global email brand settings.
+     */
+    public function registerSettings(): void
+    {
+        $settings = [
+            'sseo_ai_saas_email_brand_logo',
+            'sseo_ai_saas_email_brand_company_name',
+            'sseo_ai_saas_email_brand_company_address',
+            'sseo_ai_saas_email_brand_company_postal_code',
+            'sseo_ai_saas_email_brand_company_city',
+            'sseo_ai_saas_email_brand_company_country',
+            'sseo_ai_saas_email_brand_company_vat',
+            'sseo_ai_saas_email_brand_company_kvk',
+            'sseo_ai_saas_email_brand_company_iban',
+            'sseo_ai_saas_email_brand_company_email',
+            'sseo_ai_saas_email_brand_company_website',
+            'sseo_ai_saas_email_brand_primary_color',
+            'sseo_ai_saas_email_brand_secondary_color',
+            'sseo_ai_saas_email_brand_button_color',
+            'sseo_ai_saas_email_brand_footer_text',
+        ];
+        foreach ($settings as $name) {
+            register_setting('sseo_ai_saas_email_brand', $name);
+        }
+    }
+
+    /**
+     * Render the global brand settings page.
+     */
+    private function renderBrandPage(): void
+    {
+        wp_enqueue_media();
+        $saved = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('sseo_ai_email_brand_save')) {
+            $logoId = (int) ($_POST['brand_logo_id'] ?? 0);
+            update_option('sseo_ai_saas_email_brand_logo', $logoId);
+            update_option('sseo_ai_saas_email_brand_company_name', sanitize_text_field($_POST['company_name'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_address', sanitize_textarea_field($_POST['company_address'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_postal_code', sanitize_text_field($_POST['company_postal_code'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_city', sanitize_text_field($_POST['company_city'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_country', sanitize_text_field($_POST['company_country'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_vat', sanitize_text_field($_POST['company_vat'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_kvk', sanitize_text_field($_POST['company_kvk'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_iban', sanitize_text_field($_POST['company_iban'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_email', sanitize_email($_POST['company_email'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_company_website', esc_url_raw($_POST['company_website'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_primary_color', sanitize_hex_color($_POST['primary_color'] ?? '#379fd3'));
+            update_option('sseo_ai_saas_email_brand_secondary_color', sanitize_hex_color($_POST['secondary_color'] ?? '#8f39ac'));
+            update_option('sseo_ai_saas_email_brand_button_color', sanitize_hex_color($_POST['button_color'] ?? ''));
+            update_option('sseo_ai_saas_email_brand_footer_text', sanitize_textarea_field($_POST['footer_text'] ?? ''));
+            $saved = true;
+        }
+
+        $logoId = (int) get_option('sseo_ai_saas_email_brand_logo', 0);
+        $logoUrl = $logoId > 0 ? wp_get_attachment_url($logoId) : '';
+        $companyName = get_option('sseo_ai_saas_email_brand_company_name', '');
+        $companyAddress = get_option('sseo_ai_saas_email_brand_company_address', '');
+        $companyPostalCode = get_option('sseo_ai_saas_email_brand_company_postal_code', '');
+        $companyCity = get_option('sseo_ai_saas_email_brand_company_city', '');
+        $companyCountry = get_option('sseo_ai_saas_email_brand_company_country', '');
+        $companyVat = get_option('sseo_ai_saas_email_brand_company_vat', '');
+        $companyKvk = get_option('sseo_ai_saas_email_brand_company_kvk', '');
+        $companyIban = get_option('sseo_ai_saas_email_brand_company_iban', '');
+        $companyEmail = get_option('sseo_ai_saas_email_brand_company_email', '');
+        $companyWebsite = get_option('sseo_ai_saas_email_brand_company_website', '');
+        $primaryColor = get_option('sseo_ai_saas_email_brand_primary_color', '#379fd3');
+        $secondaryColor = get_option('sseo_ai_saas_email_brand_secondary_color', '#8f39ac');
+        $buttonColor = get_option('sseo_ai_saas_email_brand_button_color', '');
+        $footerText = get_option('sseo_ai_saas_email_brand_footer_text', '');
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Global Email Brand', 'sseo-ai-saas'); ?></h1>
+            <p><a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates')); ?>">← <?php esc_html_e('Back to templates', 'sseo-ai-saas'); ?></a></p>
+
+            <?php if ($saved): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('Brand settings saved. These apply to all email templates unless a template overrides them.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+
+            <p class="description" style="margin:0 0 15px;max-width:640px;">
+                <?php esc_html_e('Set your logo, company details and colours once here. Every email template will use these values automatically. Individual templates can still override the logo and colours if you fill them in on the template edit page.', 'sseo-ai-saas'); ?>
+            </p>
+
+            <form method="post" action="">
+                <?php wp_nonce_field('sseo_ai_email_brand_save'); ?>
+                <div class="sseo-ai-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div class="sseo-ai-card">
+                        <h2><?php esc_html_e('Logo & Colours', 'sseo-ai-saas'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th><label for="brand_logo"><?php esc_html_e('Logo', 'sseo-ai-saas'); ?></label></th>
+                                <td>
+                                    <div id="brand-logo-preview" style="margin-bottom:8px;">
+                                        <?php if ($logoUrl): ?>
+                                            <img src="<?php echo esc_url($logoUrl); ?>" style="max-height:60px;max-width:200px;border:1px solid #e5e7eb;border-radius:4px;padding:4px;background:#fff;">
+                                        <?php endif; ?>
+                                    </div>
+                                    <input type="hidden" id="brand_logo_id" name="brand_logo_id" value="<?php echo esc_attr($logoId); ?>">
+                                    <button type="button" class="button" id="brand_logo_upload"><?php esc_html_e('Choose Logo', 'sseo-ai-saas'); ?></button>
+                                    <button type="button" class="button" id="brand_logo_remove" <?php echo $logoId ? '' : 'style="display:none;"'; ?>><?php esc_html_e('Remove', 'sseo-ai-saas'); ?></button>
+                                    <p class="description"><?php esc_html_e('Upload a logo image. Used in the email header when a template has no logo of its own.', 'sseo-ai-saas'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label for="primary_color"><?php esc_html_e('Primary colour', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="color" id="primary_color" name="primary_color" value="<?php echo esc_attr($primaryColor); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="secondary_color"><?php esc_html_e('Secondary colour', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="color" id="secondary_color" name="secondary_color" value="<?php echo esc_attr($secondaryColor); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="button_color"><?php esc_html_e('Button colour', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="color" id="button_color" name="button_color" value="<?php echo esc_attr($buttonColor ?: $primaryColor); ?>"></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="sseo-ai-card">
+                        <h2><?php esc_html_e('Company Details', 'sseo-ai-saas'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th><label for="company_name"><?php esc_html_e('Company name', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_name" name="company_name" value="<?php echo esc_attr($companyName); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_address"><?php esc_html_e('Street address', 'sseo-ai-saas'); ?></label></th>
+                                <td><textarea id="company_address" name="company_address" rows="2" class="large-text"><?php echo esc_textarea($companyAddress); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_postal_code"><?php esc_html_e('Postal code', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_postal_code" name="company_postal_code" value="<?php echo esc_attr($companyPostalCode); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_city"><?php esc_html_e('City', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_city" name="company_city" value="<?php echo esc_attr($companyCity); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_country"><?php esc_html_e('Country', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_country" name="company_country" value="<?php echo esc_attr($companyCountry); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_vat"><?php esc_html_e('VAT number', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_vat" name="company_vat" value="<?php echo esc_attr($companyVat); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_kvk"><?php esc_html_e('Chamber of Commerce (KvK)', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_kvk" name="company_kvk" value="<?php echo esc_attr($companyKvk); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_iban"><?php esc_html_e('IBAN', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="text" id="company_iban" name="company_iban" value="<?php echo esc_attr($companyIban); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_email"><?php esc_html_e('Contact email', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="email" id="company_email" name="company_email" value="<?php echo esc_attr($companyEmail); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="company_website"><?php esc_html_e('Website', 'sseo-ai-saas'); ?></label></th>
+                                <td><input type="url" id="company_website" name="company_website" value="<?php echo esc_attr($companyWebsite); ?>" class="regular-text"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="sseo-ai-card" style="margin-top:20px;">
+                    <h2><?php esc_html_e('Footer text', 'sseo-ai-saas'); ?></h2>
+                    <p class="description"><?php esc_html_e('Optional extra text shown in the email footer (e.g. a tagline or legal note). Company details above are shown automatically.', 'sseo-ai-saas'); ?></p>
+                    <textarea name="footer_text" rows="3" class="large-text"><?php echo esc_textarea($footerText); ?></textarea>
+                </div>
+
+                <p class="submit">
+                    <?php submit_button(__('Save Brand Settings', 'sseo-ai-saas'), 'primary', 'submit', false); ?>
+                </p>
+            </form>
+
+            <script>
+            (function() {
+                var frame;
+                document.getElementById('brand_logo_upload').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (frame) { frame.open(); return; }
+                    frame = wp.media({
+                        title: '<?php echo esc_js(__('Choose Logo', 'sseo-ai-saas')); ?>',
+                        button: { text: '<?php echo esc_js(__('Use as logo', 'sseo-ai-saas')); ?>' },
+                        library: { type: 'image' },
+                        multiple: false
+                    });
+                    frame.on('select', function() {
+                        var att = frame.state().get('selection').first().toJSON();
+                        document.getElementById('brand_logo_id').value = att.id;
+                        var prev = document.getElementById('brand_logo_preview');
+                        prev.innerHTML = '<img src="' + att.url + '" style="max-height:60px;max-width:200px;border:1px solid #e5e7eb;border-radius:4px;padding:4px;background:#fff;">';
+                        document.getElementById('brand_logo_remove').style.display = '';
+                    });
+                    frame.open();
+                });
+                document.getElementById('brand_logo_remove').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('brand_logo_id').value = '0';
+                    document.getElementById('brand_logo_preview').innerHTML = '';
+                    this.style.display = 'none';
+                });
+            })();
+            </script>
+        </div>
+        <?php
     }
 
     /**
@@ -81,6 +296,9 @@ class EmailTemplateAdmin
                 <p>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=layouts')); ?>" class="button button-primary">
                         <?php esc_html_e('Manage Layouts', 'sseo-ai-saas'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=brand')); ?>" class="button">
+                        <?php esc_html_e('Global Brand Settings', 'sseo-ai-saas'); ?>
                     </a>
                 </p>
             </div>
@@ -283,7 +501,7 @@ class EmailTemplateAdmin
      */
     private function getPlaceholderGuide(string $templateKey): string
     {
-        $common = '{{site_name}}, {{admin_email}}, {{company_name}}, {{support_email}}, {{support_url}}, {{current_date}}, {{year}}';
+        $common = '{{site_name}}, {{admin_email}}, {{company_name}}, {{company_address}}, {{company_postal_code}}, {{company_city}}, {{company_country}}, {{company_vat}}, {{company_kvk}}, {{company_iban}}, {{company_email}}, {{company_website}}, {{support_email}}, {{support_url}}, {{current_date}}, {{year}}';
 
         $specific = [
             'welcome' => '{{tenant_name}}, {{tenant_email}}, {{tenant_domain}}, {{license_key}}, {{tier}}, {{dashboard_url}}, {{support_url}}',

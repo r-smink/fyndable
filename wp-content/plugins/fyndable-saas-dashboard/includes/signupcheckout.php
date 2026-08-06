@@ -694,8 +694,23 @@ class SignupCheckout
     public function renderSignupShortcode(): string
     {
         $jsVersion = filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/signup.js') ?: SSEO_AI_SAAS_VERSION;
+        $i18nVersion = filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/i18n.js') ?: SSEO_AI_SAAS_VERSION;
         wp_enqueue_style('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.css', [], $jsVersion);
-        wp_enqueue_script('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.js', ['wp-api-fetch'], $jsVersion, true);
+        wp_enqueue_script('fyndable-i18n', SSEO_AI_SAAS_PLUGIN_URL . 'assets/i18n.js', [], $i18nVersion, true);
+        wp_enqueue_script('fyndable-signup', SSEO_AI_SAAS_PLUGIN_URL . 'assets/signup.js', ['wp-api-fetch', 'fyndable-i18n'], $jsVersion, true);
+
+        // Determine user language for logged-in users
+        $userLang = '';
+        if (is_user_logged_in()) {
+            $userLang = get_user_meta(get_current_user_id(), 'fyndable_lang', true);
+            if ($userLang !== 'nl' && $userLang !== 'en') {
+                $userLang = '';
+            }
+        }
+
+        wp_localize_script('fyndable-i18n', 'FyndableI18nConfig', [
+            'userLang' => $userLang,
+        ]);
 
         wp_localize_script('fyndable-signup', 'FyndableSignup', [
             'restUrl' => esc_url_raw(rest_url('ai-seo-saas/v1')),

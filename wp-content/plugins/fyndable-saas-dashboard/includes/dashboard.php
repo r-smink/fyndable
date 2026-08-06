@@ -175,6 +175,7 @@ class Dashboard
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
         add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
+        add_action('admin_init', [$this->emailTemplateAdmin, 'registerSettings']);
         add_action('admin_init', [$this->geoScanRepository, 'maybeCreateTables']);
 
         // Register email automation

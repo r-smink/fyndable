@@ -36,6 +36,36 @@
     align-items: center;
     gap: 16px;
 }
+.fyndable-portal-lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.fyndable-portal-lang-toggle button {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 0.15s, background 0.15s;
+}
+.fyndable-portal-lang-toggle button:hover {
+    color: #379fd3;
+    background: rgba(55, 159, 211, 0.08);
+}
+.fyndable-portal-lang-toggle button.active {
+    color: #fff;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+}
+.fyndable-portal-lang-sep {
+    color: #d1d5db;
+    font-size: 13px;
+}
 .fyndable-portal-user-name {
     font-size: 14px;
     font-weight: 600;

@@ -23,8 +23,25 @@
                 }
             })
             .catch(function () {
-                container.innerHTML = '<div class="fyndable-signup-loading">Failed to load plans. Please refresh.</div>';
+                container.innerHTML = '<div class="fyndable-signup-loading">' + FyndableI18n.t('failed_to_load_plans') + '</div>';
             });
+    }
+
+    function renderLangToggle() {
+        var lang = FyndableI18n.getLang();
+        return '<div class="fyndable-signup-lang-toggle">'
+            + '<button type="button" data-lang="en"' + (lang === 'en' ? ' class="active"' : '') + '>' + FyndableI18n.t('lang_en') + '</button>'
+            + '<span class="fyndable-signup-lang-sep">|</span>'
+            + '<button type="button" data-lang="nl"' + (lang === 'nl' ? ' class="active"' : '') + '>' + FyndableI18n.t('lang_nl') + '</button>'
+            + '</div>';
+    }
+
+    function bindLangToggle() {
+        container.querySelectorAll('.fyndable-signup-lang-toggle button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                FyndableI18n.setLang(btn.dataset.lang);
+            });
+        });
     }
 
     function renderPlans(plansData, provider, paymentMethods, trial_enabled) {
@@ -43,16 +60,20 @@
             paymentMethodOptions += '<option value="' + escapeHtml(key) + '"' + (selectedPaymentMethod === key ? ' selected' : '') + '>' + escapeHtml(availablePaymentMethods[key]) + '</option>';
         });
         var html = '<div class="fyndable-signup-container">';
-        html += '<div class="fyndable-signup-header"><h1>Choose Your Plan</h1>' + (trialEnabled ? '<p>Start free, upgrade anytime. No credit card required.</p>' : '') + '</div>';
-        var firstPlan = plans[Object.keys(plans)[0]];
-        var yearSavings = (firstPlan && firstPlan.intervals && firstPlan.intervals.year && firstPlan.intervals.year.savings_label) || '';
+        html += '<div class="fyndable-signup-header">';
+        html += renderLangToggle();
+        html += '<h1>' + escapeHtml(FyndableI18n.t('choose_your_plan')) + '</h1>';
+        if (trialEnabled) {
+            html += '<p>' + escapeHtml(FyndableI18n.t('trial_subtitle')) + '</p>';
+        }
+        html += '</div>';
         html += '<div class="fyndable-signup-billing">';
-        html += '<span class="fyndable-signup-billing-label">Monthly</span>';
+        html += '<span class="fyndable-signup-billing-label">' + escapeHtml(FyndableI18n.t('monthly')) + '</span>';
         html += '<label class="fyndable-signup-toggle">';
         html += '<input type="checkbox" id="fyndable-billing-toggle" ' + (selectedInterval === 'year' ? 'checked' : '') + '>';
         html += '<span class="fyndable-signup-toggle-slider"></span>';
         html += '</label>';
-        html += '<span class="fyndable-signup-billing-label">Yearly <span class="fyndable-signup-savings">2 maanden gratis</span></span>';
+        html += '<span class="fyndable-signup-billing-label">' + escapeHtml(FyndableI18n.t('yearly')) + ' <span class="fyndable-signup-savings">' + escapeHtml(FyndableI18n.t('months_free')) + '</span></span>';
         html += '</div>';
         html += '<div class="fyndable-signup-plans">';
 
@@ -60,7 +81,7 @@
             var plan = plans[key];
             var interval = plan.intervals[selectedInterval];
             html += '<div class="fyndable-signup-plan' + (plan.popular ? ' popular' : '') + '" data-tier="' + key + '">';
-            if (plan.popular) html += '<span class="badge">Most Popular</span>';
+            if (plan.popular) html += '<span class="badge">' + escapeHtml(FyndableI18n.t('most_popular')) + '</span>';
             html += '<h3>' + escapeHtml(plan.name) + '</h3>';
             html += '<div class="price">' + escapeHtml(interval.price_display) + '<span class="period">' + escapeHtml(interval.period) + '</span></div>';
             html += '<ul>';
@@ -77,23 +98,23 @@
         // Form step (hidden initially)
         html += '<div class="fyndable-signup-step" id="fyndable-signup-form-step">';
         html += '<div class="fyndable-signup-form">';
-        html += '<a class="fyndable-signup-back" id="fyndable-signup-back">← Back to plans</a>';
-        html += '<h2>Create Your Account</h2>';
-        html += '<p class="subtitle">You selected: <strong id="fyndable-selected-plan"></strong></p>';
+        html += '<a class="fyndable-signup-back" id="fyndable-signup-back">' + escapeHtml(FyndableI18n.t('back_to_plans')) + '</a>';
+        html += '<h2>' + escapeHtml(FyndableI18n.t('create_your_account')) + '</h2>';
+        html += '<p class="subtitle">' + escapeHtml(FyndableI18n.t('you_selected')) + ' <strong id="fyndable-selected-plan"></strong></p>';
         html += '<div id="fyndable-signup-error"></div>';
-        html += '<div class="fyndable-signup-field"><label>Your Name</label><input type="text" id="fyndable-name" placeholder="John Doe"></div>';
-        html += '<div class="fyndable-signup-field"><label>Email Address</label><input type="email" id="fyndable-email" placeholder="john@example.com"></div>';
-        html += '<div class="fyndable-signup-field"><label>Street Address</label><input type="text" id="fyndable-street" placeholder="Main Street 123"></div>';
+        html += '<div class="fyndable-signup-field"><label>' + escapeHtml(FyndableI18n.t('your_name')) + '</label><input type="text" id="fyndable-name" placeholder="' + escapeHtml(FyndableI18n.t('name_placeholder')) + '"></div>';
+        html += '<div class="fyndable-signup-field"><label>' + escapeHtml(FyndableI18n.t('email_address')) + '</label><input type="email" id="fyndable-email" placeholder="' + escapeHtml(FyndableI18n.t('email_placeholder')) + '"></div>';
+        html += '<div class="fyndable-signup-field"><label>' + escapeHtml(FyndableI18n.t('street_address')) + '</label><input type="text" id="fyndable-street" placeholder="' + escapeHtml(FyndableI18n.t('street_placeholder')) + '"></div>';
         html += '<div class="fyndable-signup-field-row">';
-        html += '<div class="fyndable-signup-field"><label>Postal Code</label><input type="text" id="fyndable-postalcode" placeholder="1011 AB"></div>';
-        html += '<div class="fyndable-signup-field"><label>City</label><input type="text" id="fyndable-city" placeholder="Amsterdam"></div>';
+        html += '<div class="fyndable-signup-field"><label>' + escapeHtml(FyndableI18n.t('postal_code')) + '</label><input type="text" id="fyndable-postalcode" placeholder="' + escapeHtml(FyndableI18n.t('postal_placeholder')) + '"></div>';
+        html += '<div class="fyndable-signup-field"><label>' + escapeHtml(FyndableI18n.t('city')) + '</label><input type="text" id="fyndable-city" placeholder="' + escapeHtml(FyndableI18n.t('city_placeholder')) + '"></div>';
         html += '</div>';
-        html += '<div class="fyndable-signup-field"><label>Country</label><select id="fyndable-country"><option value="NL">Netherlands</option><option value="BE">Belgium</option><option value="DE">Germany</option><option value="FR">France</option><option value="GB">United Kingdom</option><option value="US">United States</option><option value="ES">Spain</option><option value="PT">Portugal</option><option value="IT">Italy</option><option value="DK">Denmark</option><option value="SE">Sweden</option><option value="FI">Finland</option><option value="NO">Norway</option><option value="AT">Austria</option><option value="CH">Switzerland</option><option value="IE">Ireland</option><option value="PL">Poland</option><option value="LU">Luxembourg</option><option value="other">Other</option></select></div>';
+        html += '<div class="fyndable-signup-field"><label>' + escapeHtml(FyndableI18n.t('country')) + '</label><select id="fyndable-country"><option value="NL">Netherlands</option><option value="BE">Belgium</option><option value="DE">Germany</option><option value="FR">France</option><option value="GB">United Kingdom</option><option value="US">United States</option><option value="ES">Spain</option><option value="PT">Portugal</option><option value="IT">Italy</option><option value="DK">Denmark</option><option value="SE">Sweden</option><option value="FI">Finland</option><option value="NO">Norway</option><option value="AT">Austria</option><option value="CH">Switzerland</option><option value="IE">Ireland</option><option value="PL">Poland</option><option value="LU">Luxembourg</option><option value="other">Other</option></select></div>';
         html += '<div class="fyndable-signup-field fyndable-signup-payment-method" id="fyndable-payment-method-field" style="display: ' + (paymentProvider === 'mollie' ? 'block' : 'none') + ';">'
-            + '<label>Betaalmethode</label>'
+            + '<label>' + escapeHtml(FyndableI18n.t('payment_method')) + '</label>'
             + '<select id="fyndable-payment-method">' + paymentMethodOptions + '</select>'
             + '</div>';
-        html += '<button class="fyndable-signup-submit" id="fyndable-signup-submit">Create Account →</button>';
+        html += '<button class="fyndable-signup-submit" id="fyndable-signup-submit">' + escapeHtml(FyndableI18n.t('create_account_btn')) + '</button>';
         html += '</div></div>';
 
         // Success step (hidden initially)
@@ -109,6 +130,9 @@
                 selectedPlanEl.textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
             }
         }
+
+        // Bind language toggle
+        bindLangToggle();
 
         // Bind payment method selection
         var paymentMethodSelect = document.getElementById('fyndable-payment-method');
@@ -173,12 +197,12 @@
         errorEl.innerHTML = '';
 
         if (!name || !email || !street || !postalCode || !city) {
-            errorEl.innerHTML = '<div class="fyndable-signup-error">Please fill in all fields.</div>';
+            errorEl.innerHTML = '<div class="fyndable-signup-error">' + escapeHtml(FyndableI18n.t('fill_all_fields')) + '</div>';
             return;
         }
 
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating account...';
+        submitBtn.textContent = FyndableI18n.t('creating_account');
 
         fetch(restUrl + '/signup/register', {
             method: 'POST',
@@ -201,9 +225,9 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (!data.success) {
-                    errorEl.innerHTML = '<div class="fyndable-signup-error">' + (data.message || 'Signup failed.') + '</div>';
+                    errorEl.innerHTML = '<div class="fyndable-signup-error">' + escapeHtml(data.message || FyndableI18n.t('signup_failed')) + '</div>';
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Create Account →';
+                    submitBtn.textContent = FyndableI18n.t('create_account_btn');
                     return;
                 }
 
@@ -216,9 +240,9 @@
                 }
             })
             .catch(function () {
-                errorEl.innerHTML = '<div class="fyndable-signup-error">Network error. Please try again.</div>';
+                errorEl.innerHTML = '<div class="fyndable-signup-error">' + escapeHtml(FyndableI18n.t('network_error')) + '</div>';
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Create Account →';
+                submitBtn.textContent = FyndableI18n.t('create_account_btn');
             });
     }
 
@@ -226,14 +250,28 @@
         var successEl = document.getElementById('fyndable-signup-success-step');
         successEl.innerHTML = '<div class="fyndable-signup-success">' +
             '<div class="icon">🎉</div>' +
-            '<h2>Welcome to Fyndable!</h2>' +
-            '<p class="instructions">Your account is ready. Copy your license key below and paste it into the Fyndable plugin on your WordPress site.</p>' +
-            '<div class="license-key">' + licenseKey + '</div>' +
-            '<p class="instructions"><strong>Next steps:</strong><br>1. Install the Fyndable plugin on your WordPress site<br>2. Go to Settings → Fyndable<br>3. Paste your license key and click Activate</p>' +
-            '<button class="fyndable-signup-submit" onclick="navigator.clipboard.writeText(\'' + licenseKey + '\');this.textContent=\'✓ Copied!\';">Copy License Key</button>' +
+            '<h2>' + escapeHtml(FyndableI18n.t('welcome_to_fyndable')) + '</h2>' +
+            '<p class="instructions">' + escapeHtml(FyndableI18n.t('account_ready')) + '</p>' +
+            '<div class="license-key">' + escapeHtml(licenseKey) + '</div>' +
+            '<p class="instructions"><strong>' + escapeHtml(FyndableI18n.t('next_steps')) + '</strong><br>' + escapeHtml(FyndableI18n.t('next_step_1')) + '<br>' + escapeHtml(FyndableI18n.t('next_step_2')) + '<br>' + escapeHtml(FyndableI18n.t('next_step_3')) + '</p>' +
+            '<button class="fyndable-signup-submit" id="fyndable-copy-license">' + escapeHtml(FyndableI18n.t('copy_license_key')) + '</button>' +
             '</div>';
+        var copyBtn = document.getElementById('fyndable-copy-license');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function () {
+                navigator.clipboard.writeText(licenseKey);
+                copyBtn.textContent = FyndableI18n.t('copied');
+            });
+        }
         showStep('success');
     }
+
+    // Re-render on language change
+    document.addEventListener('langchange', function () {
+        if (plans && Object.keys(plans).length > 0) {
+            renderPlans(plans);
+        }
+    });
 
     init();
 })();
