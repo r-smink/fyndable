@@ -26,6 +26,7 @@ class EmailTemplateRepository
             name varchar(255) NOT NULL,
             subject varchar(255) NOT NULL,
             body_html longtext NOT NULL,
+            body_blocks longtext DEFAULT NULL,
             layout varchar(32) NOT NULL DEFAULT 'default',
             brand_logo varchar(255) DEFAULT NULL,
             primary_color varchar(7) DEFAULT '#379fd3',
@@ -43,6 +44,13 @@ class EmailTemplateRepository
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
+
+        // dbDelta does not always add new columns to existing tables, so
+        // add body_blocks explicitly when missing (upgrade path).
+        $columns = $wpdb->get_col("SHOW COLUMNS FROM {$table} LIKE 'body_blocks'");
+        if (empty($columns)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN body_blocks longtext DEFAULT NULL AFTER body_html");
+        }
     }
 
     /**
@@ -50,7 +58,7 @@ class EmailTemplateRepository
      */
     public function seedDefaults(): void
     {
-        $seedVersion = 1;
+        $seedVersion = 2;
         if ((int)get_option('sseo_ai_email_templates_seed_version', 0) >= $seedVersion) {
             return;
         }
@@ -248,6 +256,7 @@ class EmailTemplateRepository
             'name' => sanitize_text_field($data['name'] ?? ''),
             'subject' => sanitize_text_field($data['subject'] ?? ''),
             'body_html' => wp_kses_post($data['body_html'] ?? ''),
+            'body_blocks' => $this->sanitizeBodyBlocks($data['body_blocks'] ?? null),
             'layout' => sanitize_key($data['layout'] ?? 'default'),
             'brand_logo' => esc_url_raw($data['brand_logo'] ?? ''),
             'primary_color' => sanitize_hex_color($data['primary_color'] ?? '#379fd3'),
@@ -282,6 +291,7 @@ class EmailTemplateRepository
             'name' => $data['name'] ?? '',
             'subject' => $data['subject'] ?? '',
             'body_html' => $data['body_html'] ?? '',
+            'body_blocks' => $data['body_blocks'] ?? null,
             'layout' => $data['layout'] ?? 'default',
             'brand_logo' => $data['brand_logo'] ?? null,
             'primary_color' => $data['primary_color'] ?? '#379fd3',
@@ -291,5 +301,71 @@ class EmailTemplateRepository
             'is_active' => $data['is_active'] ?? 1,
             'is_default' => $data['is_default'] ?? 0,
         ]);
+    }
+
+    /**
+     * Sanitize and JSON-encode the body_blocks payload from the editor.
+     *
+     * Accepts either a JSON string (from a hidden input) or a decoded array.
+     * Returns a JSON string or null when empty/invalid.
+     */
+    public function sanitizeBodyBlocks($raw): ?string
+    {
+        if (empty($raw)) {
+            return null;
+        }
+
+        $blocks = is_string($raw) ? json_decode($raw, true) : $raw;
+        if (!is_array($blocks)) {
+            return null;
+        }
+
+        $allowedTypes = ['heading', 'text', 'button', 'image', 'spacer', 'divider'];
+        $clean = [];
+
+        foreach ($blocks as $block) {
+            if (!is_array($block) || empty($block['type'])) {
+                continue;
+            }
+            $type = sanitize_key($block['type']);
+            if (!in_array($type, $allowedTypes, true)) {
+                continue;
+            }
+            $cleanBlock = ['type' => $type];
+
+            switch ($type) {
+                case 'heading':
+                    $cleanBlock['text'] = sanitize_text_field($block['text'] ?? '');
+                    $cleanBlock['level'] = in_array(($block['level'] ?? 'h2'), ['h1', 'h2', 'h3'], true) ? $block['level'] : 'h2';
+                    $cleanBlock['align'] = in_array(($block['align'] ?? 'left'), ['left', 'center', 'right'], true) ? $block['align'] : 'left';
+                    break;
+                case 'text':
+                    $cleanBlock['text'] = wp_kses_post($block['text'] ?? '');
+                    $cleanBlock['align'] = in_array(($block['align'] ?? 'left'), ['left', 'center', 'right'], true) ? $block['align'] : 'left';
+                    break;
+                case 'button':
+                    $cleanBlock['text'] = sanitize_text_field($block['text'] ?? '');
+                    $cleanBlock['url'] = esc_url_raw($block['url'] ?? '');
+                    $cleanBlock['align'] = in_array(($block['align'] ?? 'center'), ['left', 'center', 'right'], true) ? $block['align'] : 'center';
+                    $cleanBlock['color'] = sanitize_hex_color($block['color'] ?? '') ?: null;
+                    break;
+                case 'image':
+                    $cleanBlock['src'] = esc_url_raw($block['src'] ?? '');
+                    $cleanBlock['alt'] = sanitize_text_field($block['alt'] ?? '');
+                    $cleanBlock['width'] = sanitize_text_field($block['width'] ?? '100%');
+                    $cleanBlock['align'] = in_array(($block['align'] ?? 'center'), ['left', 'center', 'right'], true) ? $block['align'] : 'center';
+                    break;
+                case 'spacer':
+                    $cleanBlock['height'] = max(8, min(80, (int) ($block['height'] ?? 24)));
+                    break;
+                case 'divider':
+                    $cleanBlock['color'] = sanitize_hex_color($block['color'] ?? '#e5e7eb') ?: '#e5e7eb';
+                    break;
+            }
+
+            $clean[] = $cleanBlock;
+        }
+
+        return empty($clean) ? null : wp_json_encode($clean);
     }
 }

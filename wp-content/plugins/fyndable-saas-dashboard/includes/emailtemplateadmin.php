@@ -11,11 +11,13 @@ class EmailTemplateAdmin
 {
     private EmailTemplateRepository $repository;
     private EmailTemplateRenderer $renderer;
+    private EmailBlockRenderer $blockRenderer;
 
     public function __construct(EmailTemplateRepository $repository, EmailTemplateRenderer $renderer)
     {
         $this->repository = $repository;
         $this->renderer = $renderer;
+        $this->blockRenderer = new EmailBlockRenderer();
     }
 
     /**
@@ -31,6 +33,55 @@ class EmailTemplateAdmin
             'sseo-ai-email-templates',
             [$this, 'renderPage']
         );
+    }
+
+    /**
+     * Enqueue block editor assets on the email template edit page.
+     */
+    public function enqueueAssets(string $hook): void
+    {
+        if (strpos($hook, 'sseo-ai-email-templates') === false) {
+            return;
+        }
+        wp_enqueue_style(
+            'sseo-ai-email-block-editor',
+            SSEO_AI_SAAS_PLUGIN_URL . 'assets/email-block-editor.css',
+            [],
+            filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/email-block-editor.css')
+        );
+        wp_enqueue_script(
+            'sseo-ai-email-block-editor',
+            SSEO_AI_SAAS_PLUGIN_URL . 'assets/email-block-editor.js',
+            [],
+            filemtime(SSEO_AI_SAAS_PLUGIN_DIR . 'assets/email-block-editor.js'),
+            true
+        );
+        wp_localize_script('sseo-ai-email-block-editor', 'SSEOEmailBlockEditor', [
+            'i18n' => [
+                'heading' => __('Heading', 'sseo-ai-saas'),
+                'text' => __('Text', 'sseo-ai-saas'),
+                'button' => __('Button', 'sseo-ai-saas'),
+                'image' => __('Image', 'sseo-ai-saas'),
+                'spacer' => __('Spacer', 'sseo-ai-saas'),
+                'divider' => __('Divider', 'sseo-ai-saas'),
+                'empty' => __('No blocks yet. Add one from the palette above.', 'sseo-ai-saas'),
+                'moveUp' => __('Move up', 'sseo-ai-saas'),
+                'moveDown' => __('Move down', 'sseo-ai-saas'),
+                'remove' => __('Remove block', 'sseo-ai-saas'),
+                'level' => __('Level', 'sseo-ai-saas'),
+                'align' => __('Alignment', 'sseo-ai-saas'),
+                'left' => __('Left', 'sseo-ai-saas'),
+                'center' => __('Center', 'sseo-ai-saas'),
+                'right' => __('Right', 'sseo-ai-saas'),
+                'buttonText' => __('Button text', 'sseo-ai-saas'),
+                'url' => __('URL', 'sseo-ai-saas'),
+                'color' => __('Color', 'sseo-ai-saas'),
+                'imageUrl' => __('Image URL', 'sseo-ai-saas'),
+                'altText' => __('Alt text', 'sseo-ai-saas'),
+                'width' => __('Width', 'sseo-ai-saas'),
+                'height' => __('Height (px)', 'sseo-ai-saas'),
+            ],
+        ]);
     }
 
     /**
@@ -365,6 +416,7 @@ class EmailTemplateAdmin
                     'name' => sanitize_text_field($_POST['name'] ?? $template['name']),
                     'subject' => sanitize_text_field($_POST['subject'] ?? $template['subject']),
                     'body_html' => wp_kses_post($_POST['body_html'] ?? ''),
+                    'body_blocks' => $_POST['body_blocks_json'] ?? null,
                     'layout' => sanitize_key($_POST['layout'] ?? 'default'),
                     'brand_logo' => esc_url_raw($_POST['brand_logo'] ?? ''),
                     'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#379fd3'),
@@ -415,8 +467,31 @@ class EmailTemplateAdmin
                                 <td><input type="text" id="subject" name="subject" value="<?php echo esc_attr($template['subject'] ?? ''); ?>" class="regular-text"></td>
                             </tr>
                             <tr>
-                                <th><label for="body_html"><?php esc_html_e('Body HTML', 'sseo-ai-saas'); ?></label></th>
-                                <td><textarea id="body_html" name="body_html" rows="14" class="large-text code"><?php echo esc_textarea($template['body_html'] ?? ''); ?></textarea></td>
+                                <th><?php esc_html_e('Body', 'sseo-ai-saas'); ?></th>
+                                <td>
+                                    <div class="sseo-email-editor-tabs">
+                                        <button type="button" class="sseo-email-editor-tab active" data-tab="blocks"><?php esc_html_e('Block Editor', 'sseo-ai-saas'); ?></button>
+                                        <button type="button" class="sseo-email-editor-tab" data-tab="html"><?php esc_html_e('HTML', 'sseo-ai-saas'); ?></button>
+                                    </div>
+                                    <div class="sseo-email-editor-panel active" data-panel="blocks">
+                                        <div id="sseo-email-block-editor" class="sseo-email-block-editor">
+                                            <div class="sseo-block-palette">
+                                                <button type="button" class="sseo-block-palette-btn" data-block-type="heading"><span class="sseo-block-icon">H</span> <?php esc_html_e('Heading', 'sseo-ai-saas'); ?></button>
+                                                <button type="button" class="sseo-block-palette-btn" data-block-type="text"><span class="sseo-block-icon">¶</span> <?php esc_html_e('Text', 'sseo-ai-saas'); ?></button>
+                                                <button type="button" class="sseo-block-palette-btn" data-block-type="button"><span class="sseo-block-icon">▢</span> <?php esc_html_e('Button', 'sseo-ai-saas'); ?></button>
+                                                <button type="button" class="sseo-block-palette-btn" data-block-type="image"><span class="sseo-block-icon">🖼</span> <?php esc_html_e('Image', 'sseo-ai-saas'); ?></button>
+                                                <button type="button" class="sseo-block-palette-btn" data-block-type="spacer"><span class="sseo-block-icon">↕</span> <?php esc_html_e('Spacer', 'sseo-ai-saas'); ?></button>
+                                                <button type="button" class="sseo-block-palette-btn" data-block-type="divider"><span class="sseo-block-icon">―</span> <?php esc_html_e('Divider', 'sseo-ai-saas'); ?></button>
+                                            </div>
+                                            <div id="sseo-email-block-list" class="sseo-email-block-list"></div>
+                                            <input type="hidden" id="body_blocks_json" name="body_blocks_json" value="<?php echo esc_attr($template['body_blocks'] ?? ''); ?>">
+                                        </div>
+                                    </div>
+                                    <div class="sseo-email-editor-panel" data-panel="html">
+                                        <textarea id="body_html" name="body_html" rows="14" class="large-text code"><?php echo esc_textarea($template['body_html'] ?? ''); ?></textarea>
+                                        <p class="description"><?php esc_html_e('The HTML tab is used as a fallback when no blocks are defined.', 'sseo-ai-saas'); ?></p>
+                                    </div>
+                                </td>
                             </tr>
                             <tr>
                                 <th><label for="footer_text"><?php esc_html_e('Footer text', 'sseo-ai-saas'); ?></label></th>
@@ -472,6 +547,25 @@ class EmailTemplateAdmin
                     <?php submit_button(__('Save & Preview', 'sseo-ai-saas'), 'secondary', 'preview_template', false); ?>
                 </p>
             </form>
+
+            <script>
+            // Tab switcher for Block Editor / HTML panels.
+            (function () {
+                var tabs = document.querySelectorAll('.sseo-email-editor-tab');
+                for (var i = 0; i < tabs.length; i++) {
+                    tabs[i].addEventListener('click', function () {
+                        var target = this.getAttribute('data-tab');
+                        for (var j = 0; j < tabs.length; j++) {
+                            tabs[j].classList.toggle('active', tabs[j] === this);
+                        }
+                        var panels = document.querySelectorAll('.sseo-email-editor-panel');
+                        for (var k = 0; k < panels.length; k++) {
+                            panels[k].classList.toggle('active', panels[k].getAttribute('data-panel') === target);
+                        }
+                    });
+                }
+            })();
+            </script>
 
             <?php if ($preview): ?>
                 <div class="sseo-ai-card" style="margin-top:20px;">

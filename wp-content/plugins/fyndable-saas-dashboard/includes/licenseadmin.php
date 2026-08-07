@@ -556,7 +556,7 @@ class LicenseAdmin
                 </form>
                 
                 <div class="alignright">
-                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button">
+                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button button-export">
                         <?php esc_html_e('Export CSV', 'sseo-ai-saas'); ?>
                     </a>
                 </div>

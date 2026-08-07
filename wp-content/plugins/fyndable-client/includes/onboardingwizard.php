@@ -141,6 +141,13 @@ class OnboardingWizard
         $licenseKey = sanitize_text_field($_POST['license_key'] ?? '');
         $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
 
+        // Fall back to the baked-in default dashboard URL when none is submitted
+        // (the field is hidden in the onboarding UI).
+        if (empty($dashboardUrl)) {
+            $settings = new Settings();
+            $dashboardUrl = $settings->getDashboardUrl();
+        }
+
         if ($dashboardUrl) {
             update_option('sseo_ai_client_dashboard_url', $dashboardUrl);
         }
@@ -473,10 +480,13 @@ class OnboardingWizard
                                     : esc_html__('Enter your license key to unlock all features.', 'ai-seo-client'); ?>
                             </p>
 
-                            <div class="sseo-onboarding-field">
-                                <label for="dashboard_url"><?php esc_html_e('SaaS Dashboard URL', 'ai-seo-client'); ?></label>
-                                <input type="url" id="dashboard_url" name="dashboard_url" placeholder="https://dashboard.example.com" value="<?php echo esc_attr(get_option('sseo_ai_client_dashboard_url', '')); ?>">
-                            </div>
+                            <?php
+                            // Dashboard URL is baked in as a default; only render a hidden
+                            // field so customers just paste their license key.
+                            $settings = new Settings();
+                            $dashboardUrl = $settings->getDashboardUrl();
+                            ?>
+                            <input type="hidden" id="dashboard_url" name="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
                             <div class="sseo-onboarding-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
                                 <input type="text" id="license_key" name="license_key" placeholder="FYN-SSAI-XXXX-XXXX-XXXX" value="">

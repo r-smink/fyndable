@@ -229,7 +229,14 @@ class InvoiceManager
                 .status-failed { background: #fee2e2; color: #991b1b; }
                 .status-refunded { background: #e0e7ff; color: #3730a3; }
                 .company-meta { font-size: 12px; color: #6b7280; margin-top: 6px; line-height: 1.5; }
-                @media print { body { background: #fff; padding: 0; } .invoice { box-shadow: none; } .no-print { display: none; } }
+                @media print {
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    body { background: #fff; padding: 0; }
+                    .invoice { box-shadow: none; }
+                    .no-print { display: none; }
+                    .invoice-header { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .status-paid, .status-pending, .status-failed, .status-refunded { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
             </style>
         </head>
         <body>

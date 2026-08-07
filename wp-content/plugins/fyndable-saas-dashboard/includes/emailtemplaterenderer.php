@@ -12,11 +12,13 @@ class EmailTemplateRenderer
 {
     private EmailTemplateRepository $repository;
     private TenantRepository $tenants;
+    private EmailBlockRenderer $blockRenderer;
 
     public function __construct(EmailTemplateRepository $repository, TenantRepository $tenants)
     {
         $this->repository = $repository;
         $this->tenants = $tenants;
+        $this->blockRenderer = new EmailBlockRenderer();
     }
 
     /**
@@ -28,7 +30,7 @@ class EmailTemplateRenderer
     {
         $template = $this->repository->getTemplate($templateKey);
 
-        if (!$template || empty($template['body_html'])) {
+        if (!$template || (empty($template['body_html']) && empty($template['body_blocks']))) {
             $fallback = $this->renderFallback($templateKey, $tenantKey, $context);
             $fallback['is_active'] = true;
             return $fallback;
@@ -46,7 +48,15 @@ class EmailTemplateRenderer
         $fullContext = array_merge($brand, $this->getGlobalPlaceholders(), $this->getTenantPlaceholders($tenantKey), $context);
 
         $subject = $this->replacePlaceholders($template['subject'], $fullContext, true);
-        $bodyHtml = $this->replacePlaceholders($template['body_html'], $fullContext, false);
+
+        // Prefer block-based body when blocks are defined; fall back to raw HTML.
+        if (!empty($template['body_blocks'])) {
+            $blockHtml = $this->blockRenderer->render($template['body_blocks']);
+            $bodyHtml = $this->replacePlaceholders($blockHtml, $fullContext, false);
+        } else {
+            $bodyHtml = $this->replacePlaceholders($template['body_html'], $fullContext, false);
+        }
+
         $body = $this->wrapLayout($bodyHtml, $template['layout'] ?? 'default', $fullContext);
 
         return [

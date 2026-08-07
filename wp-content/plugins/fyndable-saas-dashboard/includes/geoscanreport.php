@@ -36,12 +36,14 @@ class GeoScanReport
         <style>
             .sseo-geo-report-print-header { display: none; }
             @media print {
-                body { background: #fff !important; }
+                * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                body { background: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 #wpadminbar, #adminmenumain, #adminmenuwrap, #adminmenu, #wpfooter, .sseo-geo-actions { display: none !important; }
                 #wpcontent, #wpbody, #wpbody-content { margin-left: 0 !important; padding-left: 0 !important; }
                 .sseo-geo-report { box-shadow: none; max-width: none; margin: 0; border-radius: 0; }
                 .sseo-geo-report-print-header { display: block; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #379fd3; }
                 .sseo-geo-report-print-header img { max-width: 180px; height: auto; }
+                .sseo-geo-score, .sseo-geo-status.yes, .sseo-geo-status.no, .sseo-geo-report-hero, .sseo-geo-report-card { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
             .sseo-geo-keywords-legend { color: #6b7280; font-size: 14px; line-height: 1.5; margin: -8px 0 18px 0; }
         </style>

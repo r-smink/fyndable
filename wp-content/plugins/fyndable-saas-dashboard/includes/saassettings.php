@@ -1362,8 +1362,8 @@ class SaaSSettings
             </div>
         </div>
 
-        <div style="display: flex; gap: 20px;">
-            <div class="card" style="flex: 1;">
+        <div style="display: block; gap: 20px;">
+            <div class="card" style="width: 100%; margin-bottom: 20px;">
                 <h3><?php esc_html_e('Top 10 Customers by Cost', 'sseo-ai-saas'); ?></h3>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
@@ -1389,7 +1389,7 @@ class SaaSSettings
                 </table>
             </div>
 
-            <div class="card" style="width: 350px;">
+            <div class="card" style="width: 100%;">
                 <h3><?php esc_html_e('Tier Distribution', 'sseo-ai-saas'); ?></h3>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
@@ -1584,8 +1584,8 @@ class SaaSSettings
                 </div>
             </div>
 
-            <div style="display: flex; gap: 20px;">
-                <div class="card" style="flex: 1;">
+            <div style="display: block; gap: 20px;">
+                <div class="card" style="width: 100%; margin-bottom: 20px;">
                     <h3><?php esc_html_e('Kosten per Klant', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
@@ -1694,7 +1694,7 @@ class SaaSSettings
                     </table>
                 </div>
 
-                <div class="card" style="width: 320px;">
+                <div class="card" style="width: 100%;">
                     <h3><?php esc_html_e('Kosten per Service', 'sseo-ai-saas'); ?></h3>
                     <table class="wp-list-table widefat fixed striped">
                         <thead>

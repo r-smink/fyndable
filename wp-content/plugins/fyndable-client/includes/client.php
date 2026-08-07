@@ -1228,7 +1228,7 @@ class Client
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $licenseStatus = get_option('sseo_ai_client_license_status', 'inactive');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $dashboardUrl = $this->settings->getDashboardUrl();
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = $this->getBrandName();
@@ -1307,29 +1307,20 @@ class Client
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
                         <?php wp_nonce_field('activate_license'); ?>
                         <input type="hidden" name="action" value="ai_seo_activate_license">
-                        
+                        <input type="hidden" name="dashboard_url" id="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
+
                         <table class="form-table">
-                            <tr>
-                                <th scope="row"><label for="dashboard_url"><?php esc_html_e('SaaS Dashboard URL', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <input type="url" name="dashboard_url" id="dashboard_url" 
-                                           value="<?php echo esc_attr($dashboardUrl); ?>" 
-                                           class="regular-text" 
-                                           placeholder="https://your-saas-domain.com" required>
-                                    <p class="description"><?php esc_html_e('The URL where your AI SEO SaaS Dashboard is hosted', 'ai-seo-client'); ?></p>
-                                </td>
-                            </tr>
                             <tr>
                                 <th scope="row"><label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label></th>
                                 <td>
-                                    <input type="text" name="license_key" id="license_key" 
-                                           value="<?php echo esc_attr($licenseKey); ?>" 
-                                           class="regular-text" 
+                                    <input type="text" name="license_key" id="license_key"
+                                           value="<?php echo esc_attr($licenseKey); ?>"
+                                           class="regular-text"
                                            placeholder="FYN-SSAI-XXXX-XXXX-XXXX" required>
                                 </td>
                             </tr>
                         </table>
-                        
+
                         <?php submit_button(__('Activate License', 'ai-seo-client'), 'primary', 'submit', false); ?>
                     </form>
                 </div>
@@ -2317,7 +2308,7 @@ class Client
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $tier = get_option('sseo_ai_client_license_tier', 'free');
         $licenseType = get_option('sseo_ai_client_license_type', 'paid');
-        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $dashboardUrl = $this->settings->getDashboardUrl();
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = $this->getBrandName();
@@ -2435,19 +2426,14 @@ class Client
                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="connection-form">
                             <input type="hidden" name="action" value="ai_seo_activate_license">
                             <?php wp_nonce_field('activate_license'); ?>
-                            
-                            <div class="form-field">
-                                <label for="dashboard_url"><?php esc_html_e('Dashboard URL', 'ai-seo-client'); ?></label>
-                                <input type="url" name="dashboard_url" id="dashboard_url" 
-                                       placeholder="https://your-saas-domain.com" required>
-                            </div>
-                            
+                            <input type="hidden" name="dashboard_url" id="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
+
                             <div class="form-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
-                                <input type="text" name="license_key" id="license_key" 
+                                <input type="text" name="license_key" id="license_key"
                                        placeholder="FYN-SSAI-XXXX-XXXX-XXXX" required>
                             </div>
-                            
+
                             <button type="submit" class="button button-primary">
                                 <?php esc_html_e('Connect', 'ai-seo-client'); ?>
                             </button>
@@ -2480,6 +2466,12 @@ class Client
 
         $licenseKey = sanitize_text_field($_POST['license_key'] ?? '');
         $dashboardUrl = esc_url_raw($_POST['dashboard_url'] ?? '');
+
+        // Fall back to the baked-in default dashboard URL when none is submitted
+        // (the field is hidden in the activation UI).
+        if (empty($dashboardUrl)) {
+            $dashboardUrl = $this->settings->getDashboardUrl();
+        }
 
         if (empty($licenseKey) || empty($dashboardUrl)) {
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Missing license key or dashboard URL')));
