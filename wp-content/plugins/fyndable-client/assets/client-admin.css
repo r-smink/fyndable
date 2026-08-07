@@ -1559,3 +1559,104 @@ a.ai-tool-card p {
     padding: 8px;
     color: var(--sseo-gray-500);
 }
+
+/* Mobile Responsive Refinements */
+@media (max-width: 782px) {
+    body #wpcontent .sseo-ai-header,
+    body #wpcontent .aiseo-header {
+        padding: 20px 24px !important;
+        margin: 0 !important;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    body #wpcontent .sseo-ai-header h1,
+    body #wpcontent .aiseo-header h1 {
+        font-size: 22px !important;
+    }
+    body #wpcontent .sseo-ai-content,
+    body #wpcontent .aiseo-modern {
+        padding: 24px !important;
+    }
+    #wpcontent .sseo-ai-dashboard-card,
+    #wpcontent .sseo-ai-connection-card,
+    #wpcontent .sseo-ai-settings-card {
+        padding: 24px !important;
+    }
+    #wpcontent .sseo-ai-connection-card {
+        padding: 32px 24px !important;
+    }
+    #wpcontent .sseo-ai-connection-card .connection-status h2,
+    #wpcontent .sseo-ai-connection-card h2 {
+        font-size: 24px !important;
+    }
+    .sseo-two-columns,
+    .aiseo-grid-2,
+    .aiseo-grid-3,
+    .aiseo-grid-4,
+    .aiseo-stats-grid,
+    [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+    .ai-tool-card {
+        padding: 18px;
+    }
+    .sseo-ai-notice {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    #wpcontent .connection-form .button-primary,
+    #wpcontent .sseo-ai-dashboard-card .button-primary,
+    #wpcontent .sseo-ai-settings-form .button-primary,
+    #wpcontent .sseo-ai-connection-card .button-primary {
+        width: 100% !important;
+        text-align: center;
+    }
+    .aiseo-modern .wp-list-table,
+    .ai-seo-client .wp-list-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    body #wpcontent .sseo-ai-header,
+    body #wpcontent .aiseo-header {
+        padding: 16px 16px !important;
+    }
+    body #wpcontent .sseo-ai-header h1,
+    body #wpcontent .aiseo-header h1 {
+        font-size: 20px !important;
+    }
+    body #wpcontent .sseo-ai-content,
+    body #wpcontent .aiseo-modern {
+        padding: 16px !important;
+    }
+    #wpcontent .sseo-ai-dashboard-card,
+    #wpcontent .sseo-ai-connection-card,
+    #wpcontent .sseo-ai-settings-card {
+        padding: 20px 16px !important;
+    }
+    #wpcontent .sseo-ai-connection-card {
+        padding: 24px 16px !important;
+    }
+    #wpcontent .sseo-ai-connection-card .connection-status h2,
+    #wpcontent .sseo-ai-connection-card h2 {
+        font-size: 20px !important;
+    }
+    .ai-tool-card {
+        padding: 16px;
+    }
+    .ai-tool-card h3 {
+        font-size: 16px;
+    }
+    .aiseo-stat-card .stat-value {
+        font-size: 24px;
+    }
+    .aiseo-stat-card .stat-label {
+        font-size: 10px;
+    }
+    .sseo-ai-notice {
+        padding: 12px;
+    }
+}

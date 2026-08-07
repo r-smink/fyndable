@@ -658,3 +658,81 @@
     outline: none;
     box-shadow: 0 0 0 3px rgba(55,159,211,.1);
 }
+
+/* Mobile Responsive Refinements */
+@media (max-width: 640px) {
+    .fyndable-portal-inner {
+        padding: 16px;
+    }
+    .fyndable-portal-header {
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 16px 0 20px;
+    }
+    .fyndable-portal-brand {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .fyndable-portal-logo-img {
+        max-width: 160px;
+        max-height: 44px;
+    }
+    .fyndable-portal-user {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .fyndable-portal-tabs {
+        gap: 4px;
+        margin-bottom: 16px;
+    }
+    .fyndable-portal-tab {
+        flex: 1 1 auto;
+        padding: 10px 12px;
+        font-size: 12px;
+        text-align: center;
+    }
+    .fyndable-portal-card {
+        padding: 16px;
+        overflow-x: auto;
+    }
+    .fyndable-portal-detail-grid {
+        gap: 12px;
+    }
+    .fyndable-portal-modal-content {
+        margin: 20px 16px;
+        max-height: calc(100vh - 40px);
+        max-width: none;
+        width: auto;
+    }
+    .fyndable-portal-license-key-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .fyndable-portal-license-key {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .fyndable-portal-info-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .fyndable-portal-info-table td:first-child {
+        width: 100%;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    .fyndable-portal-table,
+    .fyndable-portal-info-table {
+        min-width: 100%;
+    }
+    .fyndable-portal-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+}
