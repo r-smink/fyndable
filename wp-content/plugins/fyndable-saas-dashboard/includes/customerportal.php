@@ -156,7 +156,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $tenantKey = $tenant['tenant_key'];
@@ -217,7 +217,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $interval = $this->tenants->getTenantSetting($tenant['tenant_key'], 'subscription_interval', 'month');
@@ -259,13 +259,13 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $newTier = sanitize_key($request->get_param('tier') ?? '');
         $result = $this->paymentProcessor->changeTier($tenant['tenant_key'], $newTier);
         if (is_wp_error($result)) {
-            return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 500);
+            return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 200);
         }
 
         return new \WP_REST_Response($result, 200);
@@ -278,7 +278,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $currentPeriod = date('Y-m');
@@ -310,7 +310,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $invoices = $this->invoiceManager->getInvoices($tenant['tenant_key']);
@@ -344,12 +344,12 @@ class CustomerPortal
         $tenant = $this->roleManager->getCustomerTenant();
 
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $invoice = $this->invoiceManager->getInvoice($invoiceId, $tenant['tenant_key']);
         if (!$invoice) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Invoice not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Invoice not found'], 200);
         }
 
         return new \WP_REST_Response([
@@ -369,12 +369,12 @@ class CustomerPortal
         $tenant = $this->roleManager->getCustomerTenant();
 
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $invoice = $this->invoiceManager->getInvoice($invoiceId, $tenant['tenant_key']);
         if (!$invoice) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Invoice not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Invoice not found'], 200);
         }
 
         $html = $this->invoiceManager->renderInvoicePrintHtml($invoice);
@@ -392,7 +392,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $result = $this->paymentProcessor->cancelSubscription($tenant['tenant_key']);
@@ -418,7 +418,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         // Check if tenant is active
@@ -426,7 +426,7 @@ class CustomerPortal
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Your subscription is not active. Please renew to download the plugin.',
-            ], 403);
+            ], 200);
         }
 
         $downloadUrl = get_option('sseo_ai_saas_download_url', '');
@@ -436,7 +436,7 @@ class CustomerPortal
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Plugin download is not available yet. Please contact support.',
-            ], 404);
+            ], 200);
         }
 
         return new \WP_REST_Response([
@@ -456,12 +456,12 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         // Don't show license tab for agency tier
         if (($tenant['tier'] ?? '') === 'agency') {
-            return new \WP_REST_Response(['success' => false, 'message' => 'License tab not available for agency accounts'], 403);
+            return new \WP_REST_Response(['success' => false, 'message' => 'License tab not available for agency accounts'], 200);
         }
 
         return new \WP_REST_Response([
@@ -483,7 +483,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $userId = get_current_user_id();
@@ -508,7 +508,7 @@ class CustomerPortal
     {
         $tenant = $this->roleManager->getCustomerTenant();
         if (!$tenant) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 404);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
         }
 
         $name = sanitize_text_field($request->get_param('name') ?? '');
@@ -528,7 +528,7 @@ class CustomerPortal
         if (!empty($update)) {
             $result = $this->tenants->updateTenant($tenant['tenant_key'], $update);
             if (is_wp_error($result)) {
-                return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 500);
+                return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 200);
             }
         }
 
@@ -536,11 +536,11 @@ class CustomerPortal
         if (!empty($email)) {
             $existingId = email_exists($email);
             if ($existingId && (int) $existingId !== (int) $userId) {
-                return new \WP_REST_Response(['success' => false, 'message' => 'Email address is already in use.'], 409);
+                return new \WP_REST_Response(['success' => false, 'message' => 'Email address is already in use.'], 200);
             }
             $userUpdate = wp_update_user(['ID' => $userId, 'user_email' => $email]);
             if (is_wp_error($userUpdate)) {
-                return new \WP_REST_Response(['success' => false, 'message' => $userUpdate->get_error_message()], 500);
+                return new \WP_REST_Response(['success' => false, 'message' => $userUpdate->get_error_message()], 200);
             }
         }
         update_user_meta($userId, 'fyndable_phone', $phone);
@@ -559,7 +559,7 @@ class CustomerPortal
     {
         $lang = sanitize_key($request->get_param('lang') ?? '');
         if (!in_array($lang, ['en', 'nl'], true)) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Invalid language.'], 400);
+            return new \WP_REST_Response(['success' => false, 'message' => 'Invalid language.'], 200);
         }
 
         $userId = get_current_user_id();

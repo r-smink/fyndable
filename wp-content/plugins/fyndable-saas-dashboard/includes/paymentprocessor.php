@@ -86,40 +86,23 @@ class PaymentProcessor
      */
     public function getTierPricing(string $tier, string $interval = 'month'): array|\WP_Error
     {
-        $defaultMonthly = [
-            'trial' => 0.00,
-            'starter' => 29.00,
-            'early_adopters' => 14.50,
-            'professional' => 79.00,
-            'business' => 199.00,
-            'agency' => 499.00,
-        ];
+        // Canonical monthly price comes from the "Tier Pricing & Limits"
+        // admin page (ai_seo_saas_{tier}_price option) so checkout always
+        // matches what is configured there.
+        $monthlyAmount = SaaSSettings::tierPrice($tier);
 
-        // Custom monthly pricing override
+        // Optional explicit yearly_amount override (legacy custom pricing),
+        // kept for backwards compatibility. Monthly is always taken from the
+        // admin tier price option above.
         $customPricing = get_option('sseo_ai_saas_pricing', []);
-        $monthlyAmount = null;
-        if (is_array($customPricing) && !empty($customPricing[$tier])) {
-            $custom = $customPricing[$tier];
-            if (is_array($custom)) {
-                if (isset($custom['monthly_amount'])) {
-                    $monthlyAmount = (float) $custom['monthly_amount'];
-                } elseif (isset($custom['amount'])) {
-                    $monthlyAmount = (float) $custom['amount'];
-                }
-            }
-        }
-
-        if ($monthlyAmount === null) {
-            $monthlyAmount = $defaultMonthly[$tier] ?? null;
-        }
-        if ($monthlyAmount === null) {
-            return new \WP_Error('invalid_tier', __('Invalid subscription tier', 'sseo-ai-saas'));
-        }
-
-        // Yearly amount: use explicit yearly_amount from custom pricing, otherwise monthly * 12
         $customYearly = null;
         if (is_array($customPricing[$tier] ?? null) && isset($customPricing[$tier]['yearly_amount'])) {
             $customYearly = (float) $customPricing[$tier]['yearly_amount'];
+        }
+
+        if ($monthlyAmount === 0.0 && $tier !== 'trial') {
+            // Unknown tier returned the 0 default -> invalid (trial is legitimately free)
+            return new \WP_Error('invalid_tier', __('Invalid subscription tier', 'sseo-ai-saas'));
         }
 
         if ($interval === 'year') {

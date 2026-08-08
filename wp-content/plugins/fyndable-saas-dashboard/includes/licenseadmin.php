@@ -372,13 +372,13 @@ class LicenseAdmin
                             <td>
                                 <select name="license_tier" id="license_tier">
                                     <option value="trial"><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
-                                    <option value="starter" selected><?php esc_html_e('Starter - €99/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="starter" selected><?php echo esc_html(sprintf(__('Starter - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('starter'), 0, ',', '.'))); ?></option>
                                     <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
-                                        <option value="early_adopters"><?php esc_html_e('Early Adopters', 'sseo-ai-saas'); ?></option>
+                                        <option value="early_adopters"><?php echo esc_html(sprintf(__('Early Adopters - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('early_adopters'), 0, ',', '.'))); ?></option>
                                     <?php endif; ?>
-                                    <option value="professional"><?php esc_html_e('Professional - €199/month', 'sseo-ai-saas'); ?></option>
-                                    <option value="business"><?php esc_html_e('Business - €299/month', 'sseo-ai-saas'); ?></option>
-                                    <option value="agency"><?php esc_html_e('Agency - €499/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="professional"><?php echo esc_html(sprintf(__('Professional - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('professional'), 0, ',', '.'))); ?></option>
+                                    <option value="business"><?php echo esc_html(sprintf(__('Business - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('business'), 0, ',', '.'))); ?></option>
+                                    <option value="agency"><?php echo esc_html(sprintf(__('Agency - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('agency'), 0, ',', '.'))); ?></option>
                                     <option value="dev"><?php esc_html_e('DEV - All Features (Internal Use Only)', 'sseo-ai-saas'); ?></option>
                                 </select>
                                 <p class="description"><?php esc_html_e('DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients.', 'sseo-ai-saas'); ?></p>
@@ -541,13 +541,13 @@ class LicenseAdmin
                     <select name="tier">
                         <option value=""><?php esc_html_e('All Tiers', 'sseo-ai-saas'); ?></option>
                         <option value="trial" <?php selected($filters['tier'], 'trial'); ?>><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
-                        <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php esc_html_e('Starter - €99', 'sseo-ai-saas'); ?></option>
+                        <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php echo esc_html(sprintf(__('Starter - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('starter'), 0, ',', '.'))); ?></option>
                         <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
-                            <option value="early_adopters" <?php selected($filters['tier'], 'early_adopters'); ?>><?php esc_html_e('Early Adopters', 'sseo-ai-saas'); ?></option>
+                            <option value="early_adopters" <?php selected($filters['tier'], 'early_adopters'); ?>><?php echo esc_html(sprintf(__('Early Adopters - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('early_adopters'), 0, ',', '.'))); ?></option>
                         <?php endif; ?>
-                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional - €199', 'sseo-ai-saas'); ?></option>
-                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business - €299', 'sseo-ai-saas'); ?></option>
-                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency - €499', 'sseo-ai-saas'); ?></option>
+                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php echo esc_html(sprintf(__('Professional - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('professional'), 0, ',', '.'))); ?></option>
+                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php echo esc_html(sprintf(__('Business - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('business'), 0, ',', '.'))); ?></option>
+                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php echo esc_html(sprintf(__('Agency - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('agency'), 0, ',', '.'))); ?></option>
                     </select>
                     
                     <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="Search...">

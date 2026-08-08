@@ -18,6 +18,7 @@ class SaaSSettings
     {
         add_action('admin_menu', [$this, 'addSettingsMenu']);
         add_action('admin_init', [$this, 'maybeMigrateClientVersions'], 5);
+        add_action('admin_init', [$this, 'autoDetectClientVersion'], 6);
         add_action('admin_init', [$this, 'registerSettings']);
 
         add_action('phpmailer_init', [$this, 'configureMailer']);
@@ -506,12 +507,34 @@ class SaaSSettings
     }
 
     /**
-     * Get monthly subscription price for tier (EUR)
+     * Get monthly subscription price for tier (EUR).
+     *
+     * Single source of truth for tier pricing: reads the
+     * `ai_seo_saas_{tier}_price` option that is managed on the
+     * "Tier Pricing & Limits" admin page. Use this everywhere a
+     * tier price is needed (checkout, revenue, license labels, ...).
      */
     public function getPriceForTier(string $tier): float
     {
-        $optionName = "ai_seo_saas_{$tier}_price";
-        return (float)get_option($optionName, $this->getDefaultPrice($tier));
+        return self::tierPrice($tier);
+    }
+
+    /**
+     * Static helper so classes without a SaaSSettings instance
+     * (PaymentProcessor, RevenueDashboard, LicenseAdmin, ...) can
+     * resolve the canonical tier price from the same option.
+     */
+    public static function tierPrice(string $tier): float
+    {
+        $defaults = [
+            'starter' => 29,
+            'early_adopters' => 14.5,
+            'trial' => 0,
+            'professional' => 79,
+            'business' => 199,
+            'agency' => 499,
+        ];
+        return (float) get_option("ai_seo_saas_{$tier}_price", $defaults[$tier] ?? 0);
     }
 
     /**
@@ -922,14 +945,7 @@ class SaaSSettings
         $paidTenants = array_filter($tenants, fn($t) => ($t['status'] ?? '') === 'active');
         foreach ($paidTenants as $tenant) {
             $activeSubscriptions++;
-            switch ($tenant['tier'] ?? 'starter') {
-                case 'agency':           $totalRevenue += 499; break;
-                case 'business':         $totalRevenue += 199; break;
-                case 'professional':     $totalRevenue += 79; break;
-                case 'early_adopters':   $totalRevenue += 14.5; break;
-                case 'starter':
-                default:                 $totalRevenue += 29;
-            }
+            $totalRevenue += $this->getPriceForTier($tenant['tier'] ?? 'starter');
         }
 
         $webhookUrls = [
@@ -2137,5 +2153,88 @@ class SaaSSettings
         }
 
         update_option('sseo_ai_saas_client_versions_migrated', true);
+    }
+
+    /**
+     * Auto-detect the latest client plugin zip in the uploads folder.
+     *
+     * Runs on every admin_init to recover the download URL after a SaaS
+     * plugin update (which wipes the plugin's own versions/ directory).
+     * Scans wp-content/uploads/fyndable-versions/ for the highest-version
+     * zip and updates the download_url / latest_version options when they
+     * are empty or point to a file that no longer exists.
+     */
+    public function autoDetectClientVersion(): void
+    {
+        $uploads = wp_upload_dir();
+        if (!empty($uploads['error'])) {
+            return;
+        }
+
+        $dir = $uploads['basedir'] . '/fyndable-versions/';
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $files = glob($dir . 'fyndable-client_v*.zip');
+        if (!is_array($files) || empty($files)) {
+            return;
+        }
+
+        $latestVersion = '';
+        $latestFile = '';
+
+        foreach ($files as $file) {
+            if (!is_file($file)) {
+                continue;
+            }
+            $filename = basename($file);
+            if (preg_match('/fyndable-client_v([0-9.]+)\.zip$/', $filename, $matches)) {
+                $v = $matches[1];
+                if (empty($latestVersion) || version_compare($v, $latestVersion, '>')) {
+                    $latestVersion = $v;
+                    $latestFile = $filename;
+                }
+            }
+        }
+
+        if (empty($latestFile)) {
+            return;
+        }
+
+        $baseUrl = $uploads['baseurl'] . '/fyndable-versions/';
+        $newUrl = $baseUrl . $latestFile;
+
+        $currentUrl = get_option('sseo_ai_saas_download_url', '');
+        $currentVersion = get_option('sseo_ai_saas_latest_version', '');
+
+        // Update when the URL is empty, points to a non-existent file, or
+        // when a newer zip is available than what's stored.
+        $needsUpdate = false;
+
+        if (empty($currentUrl)) {
+            $needsUpdate = true;
+        } elseif (strpos($currentUrl, '/fyndable-saas-dashboard/versions/') !== false) {
+            // Old URL pointing into the plugin directory (wiped on update)
+            $needsUpdate = true;
+        } else {
+            // Check if the currently stored URL points to an existing file
+            $currentPath = str_replace($uploads['baseurl'], $uploads['basedir'], $currentUrl);
+            if (!file_exists($currentPath)) {
+                $needsUpdate = true;
+            } elseif (!empty($latestVersion) && (!empty($currentVersion) && version_compare($latestVersion, $currentVersion, '>'))) {
+                $needsUpdate = true;
+            }
+        }
+
+        if ($needsUpdate) {
+            update_option('sseo_ai_saas_download_url', $newUrl);
+            if (empty($currentVersion) || version_compare($latestVersion, $currentVersion, '>')) {
+                update_option('sseo_ai_saas_latest_version', $latestVersion);
+            }
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('SSEO AI SaaS: Auto-detected client plugin version ' . $latestVersion . ' at ' . $newUrl);
+            }
+        }
     }
 }

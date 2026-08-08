@@ -343,7 +343,7 @@ class InvoiceManager
         $dummy = [
             'tenant_key'       => 'preview',
             'invoice_number'   => get_option('sseo_ai_saas_inv_prefix', 'FYND-') . date('Y') . '-0001',
-            'amount'           => 49,
+            'amount'           => SaaSSettings::tierPrice('professional'),
             'currency'         => get_option('sseo_ai_saas_currency', 'EUR'),
             'status'           => 'paid',
             'tier'             => 'professional',

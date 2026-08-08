@@ -53,12 +53,12 @@ class RevenueDashboard
         $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
 
         $tierPricing = [
-            'trial' => 0,
-            'starter' => 19,
-            'early_adopters' => 9.5,
-            'professional' => 49,
-            'business' => 99,
-            'agency' => 199,
+            'trial' => SaaSSettings::tierPrice('trial'),
+            'starter' => SaaSSettings::tierPrice('starter'),
+            'early_adopters' => SaaSSettings::tierPrice('early_adopters'),
+            'professional' => SaaSSettings::tierPrice('professional'),
+            'business' => SaaSSettings::tierPrice('business'),
+            'agency' => SaaSSettings::tierPrice('agency'),
         ];
 
         // Active tenants by tier

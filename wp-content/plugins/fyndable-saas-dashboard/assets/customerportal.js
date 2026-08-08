@@ -36,6 +36,25 @@
         }, 5000);
     }
 
+    // Extract a specific error message from a failed AJAX response.
+    // Falls back to the generic i18n 'error_generic' string when no
+    // parseable message is found.
+    function failMessage(jqXHR) {
+        var msg = '';
+        if (jqXHR) {
+            // jQuery may have already parsed the JSON body
+            if (jqXHR.responseJSON) {
+                msg = jqXHR.responseJSON.message || '';
+            } else if (jqXHR.responseText) {
+                try {
+                    var parsed = JSON.parse(jqXHR.responseText);
+                    msg = (parsed && parsed.message) ? parsed.message : '';
+                } catch (e) { /* not JSON */ }
+            }
+        }
+        return msg || t('error_generic');
+    }
+
     function formatCurrency(amount, currency) {
         var symbols = { EUR: '€', USD: '$', GBP: '£' };
         var symbol = symbols[(currency || 'EUR').toUpperCase()] || (currency + ' ');
@@ -156,8 +175,8 @@
 
             $(panel).html(html);
             loaded.license = true;
-        }).fail(function () {
-            $(panel).html('<div class="fyndable-portal-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            $(panel).html('<div class="fyndable-portal-error">' + failMessage(jqXHR) + '</div>');
         });
     }
 
@@ -206,8 +225,8 @@
 
             $(panel).html(html);
             loadUpgradeOptions();
-        }).fail(function () {
-            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + failMessage(jqXHR) + '</div>');
         });
     }
 
@@ -256,8 +275,8 @@
                 showAlert('panel-subscription', 'error', res.message || t('error_generic'));
                 btn.prop('disabled', false).text(t('upgrade_subscription'));
             }
-        }).fail(function () {
-            showAlert('panel-subscription', 'error', t('error_generic'));
+        }).fail(function (jqXHR) {
+            showAlert('panel-subscription', 'error', failMessage(jqXHR));
             btn.prop('disabled', false).text(t('upgrade_subscription'));
         });
     });
@@ -279,8 +298,8 @@
                 showAlert('panel-subscription', 'error', res.message || t('error_generic'));
                 btn.prop('disabled', false).text(t('cancel_subscription'));
             }
-        }).fail(function () {
-            showAlert('panel-subscription', 'error', t('error_generic'));
+        }).fail(function (jqXHR) {
+            showAlert('panel-subscription', 'error', failMessage(jqXHR));
             btn.prop('disabled', false).text(t('cancel_subscription'));
         });
     });
@@ -318,8 +337,8 @@
             html += '</div>';
 
             $(panel).html(html);
-        }).fail(function () {
-            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + failMessage(jqXHR) + '</div>');
         });
     }
 
@@ -362,8 +381,8 @@
             html += '</div>';
 
             $(panel).html(html);
-        }).fail(function () {
-            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + failMessage(jqXHR) + '</div>');
         });
     }
 
@@ -404,8 +423,8 @@
 
             html += '</tbody></table></div>';
             $(panel).html(html);
-        }).fail(function () {
-            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + failMessage(jqXHR) + '</div>');
         });
     }
 
@@ -424,8 +443,8 @@
             } else {
                 body.html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + (res.message || t('error_generic')) + '</div>');
             }
-        }).fail(function () {
-            body.html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            body.html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + failMessage(jqXHR) + '</div>');
         });
     });
 
@@ -492,8 +511,8 @@
             html += '</div>';
 
             $(panel).html(html);
-        }).fail(function () {
-            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + t('error_generic') + '</div>');
+        }).fail(function (jqXHR) {
+            $(panel).html('<div class="fyndable-portal-alert fyndable-portal-alert-error">' + failMessage(jqXHR) + '</div>');
         });
     }
 
@@ -515,8 +534,8 @@
             } else {
                 showAlert('panel-account', 'error', res.message || t('error_generic'));
             }
-        }).fail(function () {
-            showAlert('panel-account', 'error', t('error_generic'));
+        }).fail(function (jqXHR) {
+            showAlert('panel-account', 'error', failMessage(jqXHR));
         });
     });
 
