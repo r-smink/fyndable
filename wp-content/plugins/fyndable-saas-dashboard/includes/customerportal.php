@@ -99,6 +99,13 @@ class CustomerPortal
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
+        // Disconnect license from connected domain
+        register_rest_route($this->namespace, '/portal/license/disconnect', [
+            'methods' => 'POST',
+            'callback' => [$this, 'disconnectLicense'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
         // Get account info
         register_rest_route($this->namespace, '/portal/account', [
             'methods' => 'GET',
@@ -464,6 +471,9 @@ class CustomerPortal
             return new \WP_REST_Response(['success' => false, 'message' => 'License tab not available for agency accounts'], 200);
         }
 
+        $domain = $tenant['domain'] ?? '';
+        $domainHost = $domain ? parse_url($domain, PHP_URL_HOST) : '';
+
         return new \WP_REST_Response([
             'success' => true,
             'license_key' => $tenant['license_key'] ?? '',
@@ -473,6 +483,30 @@ class CustomerPortal
             'max_sites' => (int)($tenant['max_sites'] ?? 1),
             'rate_limit' => (int)($tenant['rate_limit'] ?? 60),
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?? 1000),
+            'domain' => $domain,
+            'domain_host' => $domainHost ?: $domain,
+            'connected' => ($tenant['status'] ?? 'active') === 'active' && !empty($domain),
+        ], 200);
+    }
+
+    /**
+     * Disconnect the license from its currently connected domain.
+     */
+    public function disconnectLicense(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->roleManager->getCustomerTenant();
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Tenant not found'], 200);
+        }
+
+        $result = $this->tenants->deactivateTenant($tenant['tenant_key']);
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 200);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'message' => 'License disconnected successfully.',
         ], 200);
     }
 

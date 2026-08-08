@@ -570,9 +570,9 @@ class LicenseAPI
         }
 
         // Set tenant to inactive (not suspended â€” suspended is only for revoked licenses)
-        $this->tenants->updateTenant($tenantKey, [
-            'status' => 'inactive',
-        ]);
+        // Set tenant to inactive and clear the connected domain so the
+        // license can be re-activated on a different URL.
+        $this->tenants->deactivateTenant($tenant['tenant_key']);
 
         return new \WP_REST_Response([
             'success' => true,

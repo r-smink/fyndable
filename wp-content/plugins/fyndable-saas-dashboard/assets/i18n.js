@@ -101,6 +101,12 @@ window.FyndableI18n = (function () {
             api_calls_limit_unit: '/month',
             expires: 'Expires',
             license_help: 'Use this license key to activate the Fyndable plugin on your WordPress site. Go to Settings → Fyndable, paste the key, and click Activate.',
+            connection_status: 'Connection',
+            connected: 'Connected',
+            not_connected: 'Not connected',
+            disconnect: 'Disconnect',
+            confirm_disconnect: 'Are you sure you want to disconnect this license from the current domain? You can re-activate it on another WordPress site.',
+            disconnected_success: 'License disconnected successfully.',
 
             // Customer portal — subscription tab
             subscription_details: 'Subscription Details',
@@ -259,6 +265,12 @@ window.FyndableI18n = (function () {
             api_calls_limit_unit: '/maand',
             expires: 'Verloopt',
             license_help: 'Gebruik deze licentiesleutel om de Fyndable-plugin te activeren op je WordPress-site. Ga naar Instellingen → Fyndable, plak de sleutel en klik op Activeren.',
+            connection_status: 'Koppeling',
+            connected: 'Verbonden',
+            not_connected: 'Niet verbonden',
+            disconnect: 'Loskoppelen',
+            confirm_disconnect: 'Weet je zeker dat je deze licentie wilt loskoppelen van het huidige domein? Je kunt deze opnieuw activeren op een andere WordPress-site.',
+            disconnected_success: 'Licentie succesvol losgekoppeld.',
 
             // Customer portal — subscription tab
             subscription_details: 'Abonnementsgegevens',

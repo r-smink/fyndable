@@ -72,6 +72,13 @@
         return '<span class="fyndable-portal-badge ' + cls + '">' + (status || 'unknown') + '</span>';
     }
 
+    function connectionBadge(connected, domain) {
+        var cls = 'fyndable-portal-badge-' + (connected ? 'connected' : 'unconnected');
+        var label = connected ? t('connected') : t('not_connected');
+        var domainHtml = connected && domain ? ' <span class="fyndable-portal-domain">(' + domain + ')</span>' : '';
+        return '<span class="fyndable-portal-badge ' + cls + '">' + label + '</span>' + domainHtml;
+    }
+
     // --- Apply data-i18n attributes to static HTML elements ---
     function applyDataI18n() {
         $('[data-i18n]').each(function () {
@@ -163,6 +170,7 @@
             html += '<button class="button fyndable-portal-copy-btn" data-key="' + res.license_key + '">' + t('copy') + '</button>';
             html += '</div></div>';
             html += '<table class="fyndable-portal-info-table">';
+            html += '<tr><td>' + t('connection_status') + '</td><td>' + connectionBadge(res.connected, res.domain_host) + '</td></tr>';
             html += '<tr><td>' + t('status') + '</td><td>' + statusBadge(res.status) + '</td></tr>';
             html += '<tr><td>' + t('tier') + '</td><td>' + (res.tier || '—') + '</td></tr>';
             html += '<tr><td>' + t('max_sites') + '</td><td>' + (res.max_sites || 1) + '</td></tr>';
@@ -170,6 +178,11 @@
             html += '<tr><td>' + t('api_calls_limit') + '</td><td>' + (res.api_calls_limit || 1000) + ' ' + t('api_calls_limit_unit') + '</td></tr>';
             html += '<tr><td>' + t('expires') + '</td><td>' + formatDate(res.expires_at) + '</td></tr>';
             html += '</table>';
+            if (res.connected) {
+                html += '<div class="fyndable-portal-license-actions">';
+                html += '<button class="fyndable-portal-btn fyndable-portal-btn-danger" id="fyndable-portal-disconnect-btn">' + t('disconnect') + '</button>';
+                html += '</div>';
+            }
             html += '<p class="fyndable-portal-help">' + t('license_help') + '</p>';
             html += '</div>';
 
@@ -301,6 +314,29 @@
         }).fail(function (jqXHR) {
             showAlert('panel-subscription', 'error', failMessage(jqXHR));
             btn.prop('disabled', false).text(t('cancel_subscription'));
+        });
+    });
+
+    // Disconnect license from connected domain
+    $(document).on('click', '#fyndable-portal-disconnect-btn', function () {
+        if (!confirm(t('confirm_disconnect'))) {
+            return;
+        }
+        var btn = $(this);
+        btn.prop('disabled', true).text(t('loading'));
+
+        apiRequest('/portal/license/disconnect', 'POST').done(function (res) {
+            if (res.success) {
+                showAlert('panel-license', 'success', t('disconnected_success'));
+                loaded.license = false;
+                loadLicense();
+            } else {
+                showAlert('panel-license', 'error', res.message || t('error_generic'));
+                btn.prop('disabled', false).text(t('disconnect'));
+            }
+        }).fail(function (jqXHR) {
+            showAlert('panel-license', 'error', failMessage(jqXHR));
+            btn.prop('disabled', false).text(t('disconnect'));
         });
     });
 

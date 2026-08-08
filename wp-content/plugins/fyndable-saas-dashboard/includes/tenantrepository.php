@@ -39,7 +39,7 @@ class TenantRepository
             name varchar(255) NOT NULL,
             domain varchar(255) DEFAULT NULL,
             email varchar(255) NOT NULL,
-            status enum('active', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
+            status enum('active', 'inactive', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
             tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
             license_key varchar(255) DEFAULT NULL,
             max_sites int(11) NOT NULL DEFAULT 1,
@@ -402,6 +402,18 @@ class TenantRepository
         );
         
         return $result !== false;
+    }
+
+    /**
+     * Deactivate a tenant by clearing its domain and marking it inactive.
+     * This allows the license to be re-activated on a different URL.
+     */
+    public function deactivateTenant(string $tenantKey): bool
+    {
+        return $this->updateTenant($tenantKey, [
+            'status' => 'inactive',
+            'domain' => '',
+        ]);
     }
     
     /**
@@ -810,6 +822,19 @@ class TenantRepository
             if (empty($parentCol)) {
                 $wpdb->query("ALTER TABLE $tenantsTable ADD COLUMN parent_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant ID for sub-tenants' AFTER metadata");
                 $wpdb->query("ALTER TABLE $tenantsTable ADD KEY parent_tenant_id (parent_tenant_id)");
+            }
+
+            // Allow 'inactive' status value for disconnected licenses
+            $statusCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = %s
+                AND COLUMN_NAME = 'status'",
+                $tenantsTable
+            ));
+            if (!empty($statusCol) && strpos($statusCol[0]->COLUMN_TYPE, "'inactive'") === false) {
+                $charsetCollate = $wpdb->get_charset_collate();
+                $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN status enum('active','inactive','suspended','cancelled') NOT NULL DEFAULT 'active' $charsetCollate");
             }
         }
         

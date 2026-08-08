@@ -176,6 +176,9 @@
 .fyndable-portal-badge-suspended { background: #fef3c7; color: #92400e; }
 .fyndable-portal-badge-cancelled { background: #fee2e2; color: #991b1b; }
 .fyndable-portal-badge-pending { background: #e0e7ff; color: #3730a3; }
+.fyndable-portal-badge-inactive { background: #fee2e2; color: #991b1b; }
+.fyndable-portal-badge-connected { background: #d1fae5; color: #065f46; }
+.fyndable-portal-badge-unconnected { background: #f3f4f6; color: #4b5563; }
 
 /* Usage bars */
 .fyndable-portal-usage-bar {
@@ -486,6 +489,14 @@
     font-size: 13px;
     margin-top: 12px;
     line-height: 1.5;
+}
+.fyndable-portal-license-actions {
+    margin-top: 16px;
+    margin-bottom: 12px;
+}
+.fyndable-portal-domain {
+    color: #6b7280;
+    font-weight: 500;
 }
 
 /* SaaS Dashboard Theme Overrides */
