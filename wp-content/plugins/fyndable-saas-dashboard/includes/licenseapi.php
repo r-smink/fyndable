@@ -71,6 +71,38 @@ class LicenseAPI
             ],
         ]);
 
+        // Report onboarding status from client
+        register_rest_route($this->namespace, '/tenant/onboarding', [
+            'methods' => 'POST',
+            'callback' => [$this, 'updateOnboardingStatus'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'tenant_key' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'completed' => [
+                    'required' => true,
+                    'type' => 'integer',
+                ],
+                'current_step' => [
+                    'required' => true,
+                    'type' => 'integer',
+                ],
+                'completed_at' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+
         // Get tenant limits/status
         register_rest_route($this->namespace, '/tenant/status', [
             'methods' => 'POST',
@@ -386,6 +418,7 @@ class LicenseAPI
             'activated' => true,
             'tenant_key' => $result['tenant_key'],
             'tier' => $result['tier'],
+            'email' => $result['email'] ?? null,
             'expires_at' => $result['expires_at'],
             'max_sites' => $result['max_sites'],
             'rate_limit' => $result['rate_limit'],
@@ -501,6 +534,8 @@ class LicenseAPI
             'valid' => $limits['valid'],
             'tier' => $tenant['tier'],
             'status' => $tenant['status'],
+            'email' => $tenant['email'] ?? null,
+            'domain' => $tenant['domain'] ?? null,
             'limits' => $limits['checks'] ?? [],
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
@@ -518,6 +553,41 @@ class LicenseAPI
                 },
                 'model' => $settings->getImageApiModel(),
             ],
+        ], 200);
+    }
+
+    /**
+     * Update client onboarding status for a tenant.
+     */
+    public function updateOnboardingStatus(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $licenseKey = $request->get_param('license_key');
+
+        // Verify tenant belongs to this license
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_tenant',
+                'message' => 'Tenant not found or license mismatch',
+            ], 403);
+        }
+
+        $completed = (int) $request->get_param('completed');
+        $currentStep = (int) $request->get_param('current_step');
+        $completedAt = sanitize_text_field($request->get_param('completed_at') ?? '');
+
+        $this->tenants->setTenantSetting($tenantKey, 'onboarding_completed', $completed ? '1' : '0');
+        $this->tenants->setTenantSetting($tenantKey, 'onboarding_current_step', (string) $currentStep);
+        if ($completed && $completedAt) {
+            $this->tenants->setTenantSetting($tenantKey, 'onboarding_completed_at', $completedAt);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'onboarding_completed' => $completed ? 1 : 0,
+            'onboarding_current_step' => $currentStep,
         ], 200);
     }
 

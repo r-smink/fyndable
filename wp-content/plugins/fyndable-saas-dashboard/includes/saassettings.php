@@ -1841,7 +1841,7 @@ class SaaSSettings
             $version = sanitize_text_field($_POST['upload_version'] ?? '');
             $result = $this->handleClientPluginZipUpload($_FILES['client_plugin_zip'], $version);
             if (is_wp_error($result)) {
-                set_transient('sseo_ai_client_versions_notice', ['error', $result->get_error_message()], 60);
+                set_transient('sseo_ai_client_versions_notice', ['error', (string) $result->get_error_message()], 60);
             } else {
                 $filename = basename($result);
                 $uploads = wp_upload_dir();
@@ -1935,12 +1935,16 @@ class SaaSSettings
         $notice = get_transient('sseo_ai_client_versions_notice');
         if (is_array($notice)) {
             delete_transient('sseo_ai_client_versions_notice');
-            add_settings_error(
-                'sseo_ai_client_versions',
-                'client_versions_' . sanitize_key($notice[0]),
-                $notice[1],
-                $notice[0]
-            );
+            $noticeType = (string) $notice[0];
+            $noticeMessage = (string) ($notice[1] ?? '');
+            if ($noticeMessage !== '') {
+                add_settings_error(
+                    'sseo_ai_client_versions',
+                    'client_versions_' . sanitize_key($noticeType),
+                    $noticeMessage,
+                    $noticeType
+                );
+            }
         }
 
         $latestVersion = get_option('sseo_ai_saas_latest_version', SSEO_AI_SAAS_VERSION);

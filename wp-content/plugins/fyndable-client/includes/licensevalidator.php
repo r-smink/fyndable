@@ -84,6 +84,9 @@ class LicenseValidator
         update_option('sseo_ai_client_license_status', 'active');
         update_option('sseo_ai_client_license_tier', $body['tier'] ?? 'free');
         update_option('sseo_ai_client_license_type', $body['type'] ?? 'paid');
+        if (!empty($body['email'])) {
+            update_option('sseo_ai_client_license_email', $body['email']);
+        }
         if (!empty($body['expires_at'])) {
             update_option('sseo_ai_client_license_expires', $body['expires_at']);
         }
