@@ -772,6 +772,32 @@ class LicenseAdmin
             wp_die(__('License not found', 'sseo-ai-saas'));
         }
 
+        $noticeMessage = '';
+        $noticeType = 'info';
+
+        // Handle license e-mail assignment updates on this page.
+        if (
+            $_SERVER['REQUEST_METHOD'] === 'POST'
+            && !empty($_POST['sseo_ai_update_license_email'])
+            && check_admin_referer('sseo_ai_update_license_email')
+        ) {
+            $newEmail = sanitize_email($_POST['assigned_to'] ?? '');
+            if (!empty($newEmail) && is_email($newEmail)) {
+                $update = $this->licenseGenerator->updateLicense($licenseKey, ['assigned_to' => $newEmail]);
+                if (is_wp_error($update)) {
+                    $noticeMessage = $update->get_error_message();
+                    $noticeType = 'error';
+                } else {
+                    $noticeMessage = __('License email updated successfully.', 'sseo-ai-saas');
+                    $noticeType = 'success';
+                    $license = $this->licenseGenerator->getLicense($licenseKey);
+                }
+            } else {
+                $noticeMessage = __('Please enter a valid email address.', 'sseo-ai-saas');
+                $noticeType = 'error';
+            }
+        }
+
         $featureManager = new LicenseFeatureManager($this->tenants, $this->licenseGenerator);
         $featureData = $featureManager->getFeatureToggleData($licenseKey);
         
@@ -781,7 +807,37 @@ class LicenseAdmin
         ?>
         <div class="wrap sseo-ai-admin">
             <h1><?php echo esc_html(sprintf(__('Manage Features for License: %s', 'sseo-ai-saas'), substr($licenseKey, 0, 20) . '...')); ?></h1>
-            
+
+            <?php if ($noticeMessage): ?>
+                <div class="sseo-ai-notice <?php echo esc_attr($noticeType); ?>">
+                    <p><?php echo esc_html($noticeMessage); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <div class="sseo-ai-license-assign">
+                <h2><?php esc_html_e('License Assignment', 'sseo-ai-saas'); ?></h2>
+                <p class="description">
+                    <?php esc_html_e('Assign or update the customer email address for this license.', 'sseo-ai-saas'); ?>
+                </p>
+                <form method="post" action="">
+                    <?php wp_nonce_field('sseo_ai_update_license_email'); ?>
+                    <input type="hidden" name="sseo_ai_update_license_email" value="1">
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="assigned_to"><?php esc_html_e('Assigned To (Email)', 'sseo-ai-saas'); ?></label>
+                            </th>
+                            <td>
+                                <input type="email" name="assigned_to" id="assigned_to"
+                                       value="<?php echo esc_attr($license['assigned_to'] ?? ''); ?>"
+                                       class="regular-text" placeholder="customer@example.com">
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Update Assignment', 'sseo-ai-saas'), 'primary', 'sseo_ai_update_license_email_submit'); ?>
+                </form>
+            </div>
+
             <div class="sseo-ai-notice info">
                 <p><strong><?php esc_html_e('Tier:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(ucfirst($license['tier'] ?? 'starter')); ?></p>
                 <p><?php esc_html_e('Features with default tier access are pre-enabled. You can override these to enable/disable individual features.', 'sseo-ai-saas'); ?></p>
@@ -905,12 +961,35 @@ class LicenseAdmin
             </script>
 
             <style>
+            .wrap.sseo-ai-admin {
+                padding: 0 20px 20px;
+                max-width: 1200px;
+            }
+            .sseo-ai-license-assign {
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+            .sseo-ai-license-assign h2 {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
             .sseo-ai-admin .feature-category {
                 margin-bottom: 30px;
                 background: #fff;
                 border: 1px solid #c3c4c7;
                 border-radius: 4px;
                 padding: 15px;
+            }
+            .sseo-ai-admin .sseo-ai-notice.success {
+                border-left-color: #00a32a;
+                background: #edfaef;
+            }
+            .sseo-ai-admin .sseo-ai-notice.error {
+                border-left-color: #d63638;
+                background: #fcf0f1;
             }
             .sseo-ai-admin .category-title {
                 margin-top: 0;
