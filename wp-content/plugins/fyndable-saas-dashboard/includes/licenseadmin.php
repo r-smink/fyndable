@@ -962,15 +962,25 @@ class LicenseAdmin
 
             <style>
             .wrap.sseo-ai-admin {
-                padding: 0 20px 20px;
+                padding: 0 0 20px;
                 max-width: 1200px;
+            }
+            .sseo-ai-admin h1 {
+                color: #fff;
+                font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                margin: 0 20px 20px;
+                padding: 20px 0 10px;
+            }
+            #feature-toggle-container,
+            .sseo-ai-notice,
+            .sseo-ai-license-assign {
+                margin: 0 20px;
             }
             .sseo-ai-license-assign {
                 background: #fff;
                 border: 1px solid #c3c4c7;
                 border-radius: 4px;
                 padding: 20px;
-                margin-bottom: 30px;
             }
             .sseo-ai-license-assign h2 {
                 margin-top: 0;
@@ -983,9 +993,14 @@ class LicenseAdmin
                 border-radius: 4px;
                 padding: 15px;
             }
-            .sseo-ai-admin .sseo-ai-notice.success {
-                border-left-color: #00a32a;
-                background: #edfaef;
+            .sseo-ai-admin .sseo-ai-notice {
+                padding: 12px 15px;
+                border-left: 4px solid #2271b1;
+                background: #f0f6fc;
+            }
+            .sseo-ai-admin .sseo-ai-notice.info {
+                border-left-color: #2271b1;
+                background: #f0f6fc;
             }
             .sseo-ai-admin .sseo-ai-notice.error {
                 border-left-color: #d63638;
