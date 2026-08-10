@@ -1031,6 +1031,9 @@ class DashboardAPI
         $body .= $fileContent . "\r\n";
         $body .= "--{$boundary}--\r\n";
 
+        return $body;
+    }
+
     /**
      * Report onboarding completion / current step to the SaaS dashboard.
      * Fails silently so the wizard flow is never interrupted.
