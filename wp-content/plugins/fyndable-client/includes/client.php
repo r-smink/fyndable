@@ -2325,6 +2325,7 @@ class Client
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $tier = get_option('sseo_ai_client_license_tier', 'free');
         $licenseType = get_option('sseo_ai_client_license_type', 'paid');
+        $licenseEmail = get_option('sseo_ai_client_license_email') ?: wp_get_current_user()->user_email;
         $dashboardUrl = $this->settings->getDashboardUrl();
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
@@ -2373,7 +2374,7 @@ class Client
                         <div class="connection-details">
                             <div class="detail-item">
                                 <label><?php esc_html_e('Your connection e-mail:', 'ai-seo-client'); ?></label>
-                                <div class="detail-value"><?php echo esc_html(wp_get_current_user()->user_email); ?></div>
+                                <div class="detail-value"><?php echo esc_html($licenseEmail); ?></div>
                             </div>
                             
                             <div class="detail-item">
@@ -2521,6 +2522,7 @@ class Client
         update_option('sseo_ai_client_license_tier', $result['tier']);
         update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_license_email', $result['email'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
         

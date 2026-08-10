@@ -663,12 +663,14 @@ class DashboardAPI
                     'name' => $siteName,
                 ]);
                 $tenantKey = $existingTenant['tenant_key'];
+                $tenantEmail = $existingTenant['email'];
             } else {
                 // Create new tenant
+                $tenantEmail = get_option('admin_email') ?: 'unknown@example.com';
                 $tenantResult = $tenants->createTenant([
                     'name' => $siteName,
                     'domain' => $domain,
-                    'email' => get_option('admin_email'),
+                    'email' => $tenantEmail,
                     'license_key' => $licenseKey,
                     'tier' => $license['tier'],
                     'max_sites' => $license['max_sites'],
@@ -696,6 +698,7 @@ class DashboardAPI
                 'success' => true,
                 'tenant_key' => $tenantKey,
                 'tier' => $license['tier'],
+                'email' => $tenantEmail,
                 'expires_at' => $license['expires_at'],
                 'rate_limit' => $license['rate_limit'],
                 'api_calls_limit' => $license['api_calls_limit'],

@@ -327,6 +327,7 @@ class OnboardingWizard
         update_option('sseo_ai_client_license_tier', $result['tier'] ?? 'paid');
         update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_license_email', $result['email'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
 
