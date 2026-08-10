@@ -564,8 +564,13 @@ class OnboardingWizard
         <style>
             .sseo-onboarding { max-width: 700px; margin: 40px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-onboarding-header { text-align: center; margin-bottom: 40px; }
-            .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 8px 0; }
+            .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 8px 0; line-height: 1.3; padding: 4px 0; }
             .sseo-onboarding-header p { color: #6b7280; font-size: 16px; margin: 0; }
+            .sseo-onboarding-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+            .sseo-onboarding-loader.active { display: flex; }
+            .sseo-onboarding-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: <?php echo esc_attr($primaryColor); ?>; border-radius: 50%; animation: sseo-spin 1s linear infinite; }
+            .sseo-onboarding-loader p { margin-top: 20px; color: #374151; font-size: 16px; font-weight: 500; }
+            @keyframes sseo-spin { to { transform: rotate(360deg); } }
             .sseo-onboarding-progress { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
             .sseo-onboarding-progress::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background: #e5e7eb; z-index: 0; }
             .sseo-onboarding-progress-step { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; flex: 1; }
@@ -616,7 +621,7 @@ class OnboardingWizard
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+                <form id="sseo-onboarding-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
                     <?php wp_nonce_field('sseo_ai_onboarding'); ?>
                     <input type="hidden" name="action" value="sseo_ai_onboarding_save">
                     <input type="hidden" name="step" value="<?php echo esc_attr($currentStep); ?>">
@@ -872,6 +877,33 @@ class OnboardingWizard
                     endswitch; ?>
                 </form>
             </div>
+
+            <div id="sseo-onboarding-loader" class="sseo-onboarding-loader">
+                <div class="spinner"></div>
+                <p><?php esc_html_e('Connecting your license, please wait...', 'ai-seo-client'); ?></p>
+            </div>
+
+            <script>
+                (function () {
+                    var form = document.getElementById('sseo-onboarding-form');
+                    var loader = document.getElementById('sseo-onboarding-loader');
+                    var stepInput = form.querySelector('input[name="step"]');
+                    if (!form || !loader || !stepInput) return;
+
+                    form.addEventListener('submit', function (e) {
+                        // Show loader only when activating license on step 1
+                        if (stepInput.value === '1') {
+                            var action = document.activeElement ? document.activeElement.getAttribute('value') : 'activate';
+                            if (action !== 'skip') {
+                                loader.classList.add('active');
+                            }
+                        } else {
+                            loader.querySelector('p').textContent = '<?php echo esc_js(__('Saving...', 'ai-seo-client')); ?>';
+                            loader.classList.add('active');
+                        }
+                    });
+                })();
+            </script>
         </div>
         <?php
     }
