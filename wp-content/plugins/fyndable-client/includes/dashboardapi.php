@@ -688,12 +688,14 @@ class DashboardAPI
                     'name' => $siteName,
                 ]);
                 $tenantKey = $existingTenant['tenant_key'];
+                $tenantEmail = $existingTenant['email'];
             } else {
                 // Create new tenant
+                $tenantEmail = $license['assigned_to'] ?: get_option('admin_email') ?: 'unknown@example.com';
                 $tenantResult = $tenants->createTenant([
                     'name' => $siteName,
                     'domain' => $domain,
-                    'email' => get_option('admin_email'),
+                    'email' => $tenantEmail,
                     'license_key' => $licenseKey,
                     'tier' => $license['tier'],
                     'max_sites' => $license['max_sites'],
@@ -721,6 +723,7 @@ class DashboardAPI
                 'success' => true,
                 'tenant_key' => $tenantKey,
                 'tier' => $license['tier'],
+                'email' => $tenantEmail,
                 'expires_at' => $license['expires_at'],
                 'rate_limit' => $license['rate_limit'],
                 'api_calls_limit' => $license['api_calls_limit'],
@@ -1060,5 +1063,45 @@ class DashboardAPI
         $body .= "--{$boundary}--\r\n";
 
         return $body;
+    }
+
+    /**
+     * Report onboarding completion / current step to the SaaS dashboard.
+     * Fails silently so the wizard flow is never interrupted.
+     */
+    public function reportOnboardingStatus(int $completed, int $currentStep, ?string $completedAt): bool
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return false;
+        }
+
+        $url = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/tenant/onboarding';
+
+        $response = wp_remote_post(
+            $url,
+            [
+                'body' => [
+                    'license_key' => $licenseKey,
+                    'tenant_key' => $tenantKey,
+                    'completed' => $completed,
+                    'current_step' => $currentStep,
+                    'completed_at' => $completedAt ?: '',
+                ],
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: onboarding status sync failed: ' . $response->get_error_message());
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        return !empty($body['success']);
     }
 }

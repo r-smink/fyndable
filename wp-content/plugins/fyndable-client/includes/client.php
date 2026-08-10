@@ -206,6 +206,9 @@ class Client
         // Create brand visibility table
         BrandVisibilityTracker::createTable();
 
+        // Create onboarding status table
+        OnboardingWizard::createTable();
+
         // Ensure sitemap rewrite rules are registered immediately
         flush_rewrite_rules();
     }
@@ -2070,6 +2073,20 @@ class Client
                             <strong>âœ“</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
                         </div>
                     <?php endif; ?>
+
+                    <div class="settings-section" style="background:#f0f6ff;border-radius:8px;padding:20px;">
+                        <h2><?php esc_html_e('Setup Wizard', 'ai-seo-client'); ?></h2>
+                        <p class="description">
+                            <?php esc_html_e('Re-run the Fyndable setup wizard to review or change your onboarding settings.', 'ai-seo-client'); ?>
+                        </p>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:15px;">
+                            <input type="hidden" name="action" value="sseo_ai_onboarding_restart">
+                            <?php wp_nonce_field('sseo_ai_onboarding_restart'); ?>
+                            <button type="submit" class="button button-primary">
+                                <?php esc_html_e('Start Wizard', 'ai-seo-client'); ?>
+                            </button>
+                        </form>
+                    </div>
                     
                     <?php if ($rateLimitStatus['limit'] > 0): ?>
                     <div class="settings-section">
@@ -2308,6 +2325,19 @@ class Client
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $tier = get_option('sseo_ai_client_license_tier', 'free');
         $licenseType = get_option('sseo_ai_client_license_type', 'paid');
+        $licenseEmail = get_option('sseo_ai_client_license_email', '');
+
+        // Backfill email from the SaaS dashboard if not stored locally yet.
+        if (empty($licenseEmail) && !empty($licenseKey) && !empty($tenantKey)) {
+            delete_transient('ai_seo_license_check_' . md5($licenseKey));
+            $this->licenseValidator->validateStoredLicense();
+            $licenseEmail = get_option('sseo_ai_client_license_email', '');
+        }
+
+        if (empty($licenseEmail)) {
+            $licenseEmail = __('Unknown', 'ai-seo-client');
+        }
+
         $dashboardUrl = $this->settings->getDashboardUrl();
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
@@ -2356,7 +2386,7 @@ class Client
                         <div class="connection-details">
                             <div class="detail-item">
                                 <label><?php esc_html_e('Your connection e-mail:', 'ai-seo-client'); ?></label>
-                                <div class="detail-value"><?php echo esc_html(wp_get_current_user()->user_email); ?></div>
+                                <div class="detail-value"><?php echo esc_html($licenseEmail); ?></div>
                             </div>
                             
                             <div class="detail-item">
@@ -2504,6 +2534,7 @@ class Client
         update_option('sseo_ai_client_license_tier', $result['tier']);
         update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_license_email', $result['email'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
         
@@ -2520,8 +2551,8 @@ class Client
         // Set a transient to show success message on next page load
         set_transient('sseo_ai_activation_success', true, 30);
         
-        // Redirect to dashboard instead of license page
-        wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
+        // Redirect to onboarding wizard instead of dashboard
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding'));
         exit;
     }
 

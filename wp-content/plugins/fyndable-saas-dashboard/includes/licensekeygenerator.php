@@ -197,12 +197,27 @@ class LicenseKeyGenerator
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
         
         if ($existingTenant) {
+<<<<<<< HEAD
             // Re-activation - restore to active, update last active and refresh domain/name
             $this->tenants->updateTenant($existingTenant['tenant_key'], [
                 'status' => 'active',
                 'last_active' => current_time('mysql'),
                 'domain' => $activationData['site_url'] ?? $existingTenant['domain'],
                 'name' => $activationData['site_name'] ?? $existingTenant['name'],
+=======
+            // Re-activation - restore to active, update last active and domain
+            $metadata = is_array($existingTenant['metadata'] ?? null) ? $existingTenant['metadata'] : [];
+            $metadata['activated_from'] = $activationData['site_url'] ?? 'unknown';
+            $metadata['ip_address'] = $activationData['ip_address'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $metadata['reactivated_at'] = current_time('mysql');
+            $metadata['license_type'] = $license['license_type'] ?? ($metadata['license_type'] ?? 'paid');
+
+            $this->tenants->updateTenant($existingTenant['tenant_key'], [
+                'status' => 'active',
+                'last_active' => current_time('mysql'),
+                'domain' => $activationData['site_url'] ?? $existingTenant['domain'] ?? null,
+                'metadata' => $metadata,
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
             ]);
             
             return [
@@ -210,6 +225,7 @@ class LicenseKeyGenerator
                 'reactivation' => true,
                 'tenant_key' => $existingTenant['tenant_key'],
                 'tier' => $existingTenant['tier'],
+                'email' => $existingTenant['email'] ?: null,
                 'expires_at' => $existingTenant['expires_at'],
                 'max_sites' => $existingTenant['max_sites'] ?? 1,
                 'rate_limit' => $existingTenant['rate_limit'] ?? 60,
@@ -257,6 +273,7 @@ class LicenseKeyGenerator
             'success' => true,
             'tenant_key' => $tenantResult['tenant_key'],
             'tier' => $license['tier'],
+            'email' => $license['assigned_to'] ?: 'unknown@example.com',
             'expires_at' => $expiresAt,
             'max_sites' => $license['max_sites'],
             'rate_limit' => $license['rate_limit'],

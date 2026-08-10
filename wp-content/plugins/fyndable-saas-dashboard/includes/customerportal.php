@@ -523,6 +523,9 @@ class CustomerPortal
         $userId = get_current_user_id();
         $user = get_userdata($userId);
 
+        $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
+        $onboardingCompletedAt = $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed_at', '');
+
         return new \WP_REST_Response([
             'success' => true,
             'account' => [
@@ -531,6 +534,8 @@ class CustomerPortal
                 'email' => $user ? $user->user_email : '',
                 'phone' => (string) get_user_meta($userId, 'fyndable_phone', true),
                 'address' => (string) get_user_meta($userId, 'fyndable_address', true),
+                'onboarding_completed' => $onboardingCompleted,
+                'onboarding_completed_at' => $onboardingCompletedAt,
             ],
         ], 200);
     }

@@ -55,7 +55,7 @@ if (!defined('SSEO_AI_LICENSE_TIERS')) {
 
 // Tenant Status
 if (!defined('SSEO_AI_TENANT_STATUS')) {
-    define('SSEO_AI_TENANT_STATUS', ['active', 'suspended', 'cancelled']);
+    define('SSEO_AI_TENANT_STATUS', ['active', 'inactive', 'suspended', 'cancelled']);
 }
 
 // License Status

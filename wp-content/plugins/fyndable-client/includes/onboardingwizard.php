@@ -20,11 +20,120 @@ class OnboardingWizard
 {
     private const COMPLETED_OPTION = 'sseo_ai_onboarding_completed';
     private const STEP_OPTION      = 'sseo_ai_onboarding_step';
+    private const TABLE_NAME       = 'sseo_ai_onboarding';
 
+    /**
+     * Create the onboarding status table.
+     */
+    public static function createTable(): void
+    {
+        global $wpdb;
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        $charsetCollate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            completed tinyint(1) NOT NULL DEFAULT 0,
+            current_step tinyint(3) unsigned NOT NULL DEFAULT 1,
+            started_at datetime DEFAULT NULL,
+            completed_at datetime DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) $charsetCollate;";
+
+        dbDelta($sql);
+
+        // Seed one row for this site if it does not exist, so we always have a record to update.
+        $existing = $wpdb->get_row("SELECT id FROM $table LIMIT 1");
+        if (!$existing) {
+            $legacyCompleted = get_option(self::COMPLETED_OPTION) ? 1 : 0;
+            $legacyStep = max(1, (int) get_option(self::STEP_OPTION, 1));
+            $completedAt = $legacyCompleted ? current_time('mysql') : null;
+            $wpdb->insert($table, [
+                'completed'    => $legacyCompleted,
+                'current_step' => $legacyStep,
+                'started_at'   => current_time('mysql'),
+                'completed_at' => $completedAt,
+            ], ['%d', '%d', '%s', '%s']);
+        }
+    }
+
+    /**
+     * Get the single onboarding record for this site.
+     */
+    private static function getRecord(): ?object
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        return $wpdb->get_row("SELECT * FROM $table LIMIT 1");
+    }
+
+    /**
+     * Ensure a single onboarding record exists.
+     */
+    private static function ensureRecord(): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        $existing = $wpdb->get_row("SELECT id FROM $table LIMIT 1");
+        if (!$existing) {
+            $legacyCompleted = get_option(self::COMPLETED_OPTION) ? 1 : 0;
+            $legacyStep = max(1, (int) get_option(self::STEP_OPTION, 1));
+            $wpdb->insert($table, [
+                'completed'    => $legacyCompleted,
+                'current_step' => $legacyStep,
+                'started_at'   => current_time('mysql'),
+                'completed_at' => $legacyCompleted ? current_time('mysql') : null,
+            ], ['%d', '%d', '%s', '%s']);
+        }
+    }
+
+    /**
+     * Update the single onboarding record.
+     */
+    private static function updateStatus(array $data): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        self::ensureRecord();
+        $record = $wpdb->get_row("SELECT id FROM $table LIMIT 1");
+        if ($record) {
+            $wpdb->update($table, $data, ['id' => $record->id], null, ['%d']);
+        }
+    }
+
+    /**
+     * Check whether the onboarding wizard is completed.
+     */
+    public static function isCompleted(): bool
+    {
+        $record = self::getRecord();
+        if ($record) {
+            return (bool) $record->completed;
+        }
+        return (bool) get_option(self::COMPLETED_OPTION);
+    }
+
+    /**
+     * Get the current wizard step.
+     */
+    public static function getCurrentStep(): int
+    {
+        $record = self::getRecord();
+        if ($record) {
+            return (int) $record->current_step;
+        }
+        return max(1, (int) get_option(self::STEP_OPTION, 1));
+    }
+    /**
+     * Register the onboarding page and handlers.
+     */
     public function register(): void
     {
         add_action('admin_menu', [$this, 'registerPage']);
         add_action('admin_post_sseo_ai_onboarding_save', [$this, 'handleSave']);
+        add_action('admin_post_sseo_ai_onboarding_restart', [$this, 'handleRestart']);
         add_action('admin_init', [$this, 'maybeRedirect']);
     }
 
@@ -43,16 +152,26 @@ class OnboardingWizard
         );
     }
 
+    public static function maybeCreateTable(): void
+    {
+        if (get_option('sseo_ai_onboarding_table_version')) {
+            return;
+        }
+        self::createTable();
+        update_option('sseo_ai_onboarding_table_version', '1.0');
+    }
+
     /**
      * Redirect to onboarding on first activation if not completed.
      */
     public function maybeRedirect(): void
     {
+        self::maybeCreateTable();
         if (!is_admin() || wp_doing_ajax()) {
             return;
         }
 
-        if (get_option(self::COMPLETED_OPTION)) {
+        if (self::isCompleted()) {
             return;
         }
 
@@ -67,9 +186,14 @@ class OnboardingWizard
             return;
         }
 
+<<<<<<< HEAD
         if (isset($_GET['fyndable_shell'])) {
             return;
         }
+=======
+        // Do not auto-complete onboarding when license becomes active;
+        // the user must finish all 7 steps first.
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
 
         // Only nudge the user into the wizard from the actual Fyndable dashboard
         // pages; don't hijack unrelated WP admin screens.
@@ -98,6 +222,8 @@ class OnboardingWizard
             wp_die(__('Unauthorized', 'ai-seo-client'));
         }
 
+        self::maybeCreateTable();
+
         $step = (int) ($_POST['step'] ?? 1);
         $nextStep = $step + 1;
 
@@ -122,18 +248,48 @@ class OnboardingWizard
                 break;
             case 7:
                 $this->saveStep7();
+<<<<<<< HEAD
                 update_option(self::COMPLETED_OPTION, '1');
                 // Send the user back to the full dashboard shell, not the bare
                 // ai-seo-dashboard content page, so the Fyndable menu is shown.
                 wp_redirect(admin_url('admin.php?page=fyndable-dashboard'));
+=======
+                wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                 exit;
             default:
                 break;
         }
 
-        update_option(self::STEP_OPTION, (string) $nextStep);
+        self::updateStatus(['current_step' => $nextStep]);
 
         wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=' . $nextStep));
+        exit;
+    }
+
+    /**
+     * Restart the onboarding wizard from the client settings page.
+     * Existing wizard data is preserved; only the status is reset to in-progress.
+     */
+    public function handleRestart(): void
+    {
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_onboarding_restart')) {
+            wp_die(__('Security check failed', 'ai-seo-client'));
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+
+        self::maybeCreateTable();
+        self::updateStatus([
+            'completed'    => 0,
+            'completed_at' => null,
+            'current_step' => 1,
+            'started_at'   => current_time('mysql'),
+        ]);
+
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=1'));
         exit;
     }
 
@@ -193,6 +349,7 @@ class OnboardingWizard
         update_option('sseo_ai_client_license_tier', $result['tier'] ?? 'paid');
         update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_license_email', $result['email'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
 
@@ -322,7 +479,11 @@ class OnboardingWizard
     {
         $titleTemplate = sanitize_text_field($_POST['title_template'] ?? '%title% %separator% %sitename%');
         $descriptionTemplate = sanitize_text_field($_POST['description_template'] ?? '%excerpt%');
+<<<<<<< HEAD
         $separator = sanitize_text_field($_POST['separator'] ?? '–');
+=======
+        $separator = sanitize_text_field($_POST['separator'] ?? '-');
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
         $socialFacebook = esc_url_raw($_POST['social_facebook'] ?? '');
         $socialTwitter = esc_url_raw($_POST['social_twitter'] ?? '');
         $socialLinkedIn = esc_url_raw($_POST['social_linkedin'] ?? '');
@@ -389,11 +550,15 @@ class OnboardingWizard
      */
     private function saveStep7(): void
     {
-        // Just mark as complete - this is a review step
-        update_option(self::COMPLETED_OPTION, '1');
-        
-        // Log onboarding completion for analytics
-        update_option('sseo_ai_onboarding_completed_at', current_time('mysql'));
+        // Mark as complete and record the timestamp in the dedicated table.
+        self::updateStatus([
+            'completed'    => 1,
+            'completed_at' => current_time('mysql'),
+        ]);
+
+        // Report completion back to the SaaS dashboard (best-effort).
+        $api = new DashboardAPI(new Settings());
+        $api->reportOnboardingStatus(1, 7, current_time('mysql'));
     }
 
     /**
@@ -401,7 +566,8 @@ class OnboardingWizard
      */
     public function renderPage(): void
     {
-        $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : (int) get_option(self::STEP_OPTION, 1);
+        self::maybeCreateTable();
+        $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : self::getCurrentStep();
         $currentStep = max(1, min(7, $currentStep));
 
         $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
@@ -428,8 +594,18 @@ class OnboardingWizard
             #wpcontent, #wpbody, #wpbody-content { background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%) !important; }
             .sseo-onboarding { max-width: 760px; margin: 0 auto; padding: 60px 20px; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-onboarding-header { text-align: center; margin-bottom: 40px; }
+<<<<<<< HEAD
             .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; color: #fff; margin: 0 0 8px 0; }
             .sseo-onboarding-header p { color: rgba(255,255,255,0.85); font-size: 16px; margin: 0; }
+=======
+            .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 8px 0; line-height: 1.3; padding: 4px 0; }
+            .sseo-onboarding-header p { color: #6b7280; font-size: 16px; margin: 0; }
+            .sseo-onboarding-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+            .sseo-onboarding-loader.active { display: flex; }
+            .sseo-onboarding-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: <?php echo esc_attr($primaryColor); ?>; border-radius: 50%; animation: sseo-spin 1s linear infinite; }
+            .sseo-onboarding-loader p { margin-top: 20px; color: #374151; font-size: 16px; font-weight: 500; }
+            @keyframes sseo-spin { to { transform: rotate(360deg); } }
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
             .sseo-onboarding-progress { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
             .sseo-onboarding-progress::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.3); z-index: 0; }
             .sseo-onboarding-progress-step { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; flex: 1; }
@@ -466,7 +642,11 @@ class OnboardingWizard
                 <?php for ($i = 1; $i <= 7; $i++): ?>
                     <div class="sseo-onboarding-progress-step <?php echo $i < $currentStep ? 'completed' : ($i === $currentStep ? 'active' : ''); ?>">
                         <div class="sseo-onboarding-progress-circle">
+<<<<<<< HEAD
                             <?php echo $i < $currentStep ? '&check;' : $i; ?>
+=======
+                            <?php echo $i < $currentStep ? '&#10003;' : $i; ?>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                         </div>
                         <div class="sseo-onboarding-progress-label"><?php echo esc_html($steps[$i]); ?></div>
                     </div>
@@ -480,7 +660,7 @@ class OnboardingWizard
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+                <form id="sseo-onboarding-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
                     <?php wp_nonce_field('sseo_ai_onboarding'); ?>
                     <input type="hidden" name="action" value="sseo_ai_onboarding_save">
                     <input type="hidden" name="step" value="<?php echo esc_attr($currentStep); ?>">
@@ -512,9 +692,15 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <?php if ($freeTierEnabled): ?>
+<<<<<<< HEAD
                                     <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now', 'ai-seo-client'); ?> &rarr;</button>
                                 <?php endif; ?>
                                 <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
+=======
+                                    <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now', 'ai-seo-client'); ?>&rarr;</button>
+                                <?php endif; ?>
+                                <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
 
@@ -553,7 +739,11 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+<<<<<<< HEAD
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
+=======
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
 
@@ -601,7 +791,11 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+<<<<<<< HEAD
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
+=======
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
 
@@ -617,7 +811,11 @@ class OnboardingWizard
                             <div class="sseo-onboarding-field">
                                 <label for="separator"><?php esc_html_e('Title Separator', 'ai-seo-client'); ?></label>
                                 <select id="separator" name="separator">
+<<<<<<< HEAD
                                     <?php $seps = ['–', '—', '|', '·', '•', '»', '«', ':']; $current = get_option('sseo_ai_separator', '–'); ?>
+=======
+                                    <?php $seps = ['-', '--', '|', '.', '*', '>>', '<<', ':']; $current = get_option('sseo_ai_separator', '-'); ?>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                                     <?php foreach ($seps as $sep): ?>
                                         <option value="<?php echo esc_attr($sep); ?>" <?php selected($current, $sep); ?>><?php echo esc_html($sep); ?></option>
                                     <?php endforeach; ?>
@@ -634,7 +832,11 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+<<<<<<< HEAD
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
+=======
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
 
@@ -673,7 +875,11 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=4')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+<<<<<<< HEAD
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
+=======
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
 
@@ -698,7 +904,11 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=5')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+<<<<<<< HEAD
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
+=======
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
 
@@ -730,12 +940,43 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=6')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+<<<<<<< HEAD
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?> &check;</button>
+=======
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?>&#10003;</button>
+>>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
                             </div>
                             <?php break;
                     endswitch; ?>
                 </form>
             </div>
+
+            <div id="sseo-onboarding-loader" class="sseo-onboarding-loader">
+                <div class="spinner"></div>
+                <p><?php esc_html_e('Connecting your license, please wait...', 'ai-seo-client'); ?></p>
+            </div>
+
+            <script>
+                (function () {
+                    var form = document.getElementById('sseo-onboarding-form');
+                    var loader = document.getElementById('sseo-onboarding-loader');
+                    var stepInput = form.querySelector('input[name="step"]');
+                    if (!form || !loader || !stepInput) return;
+
+                    form.addEventListener('submit', function (e) {
+                        // Show loader only when activating license on step 1
+                        if (stepInput.value === '1') {
+                            var action = document.activeElement ? document.activeElement.getAttribute('value') : 'activate';
+                            if (action !== 'skip') {
+                                loader.classList.add('active');
+                            }
+                        } else {
+                            loader.querySelector('p').textContent = '<?php echo esc_js(__('Saving...', 'ai-seo-client')); ?>';
+                            loader.classList.add('active');
+                        }
+                    });
+                })();
+            </script>
         </div>
         <?php
     }
