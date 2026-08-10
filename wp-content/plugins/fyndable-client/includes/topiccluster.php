@@ -139,7 +139,7 @@ class TopicCluster
             'permission_callback' => fn() => current_user_can('publish_posts'),
         ]);
 
-        // Internal linking endpoint â€” re-link cluster posts after new content is added
+        // Internal linking endpoint — re-link cluster posts after new content is added
         register_rest_route('sseo-ai/v1', '/clusters/(?P<cluster_id>\d+)/interlink', [
             'methods' => 'POST',
             'callback' => [$this, 'restInterlinkCluster'],
@@ -167,7 +167,7 @@ class TopicCluster
             return new \WP_Error('missing_params', __('Title and keyword are required', 'ai-seo-client'), ['status' => 400]);
         }
 
-        // 1.4 â€” Anti-cannibalisatie check
+        // 1.4 — Anti-cannibalisatie check
         if (!$skipCannibalismCheck) {
             $cannibalism = $this->checkCannibalism($keyword);
             if ($cannibalism !== null) {
@@ -184,11 +184,11 @@ class TopicCluster
             }
         }
 
-        // 1.3 â€” Use Content Brief for SERP-driven content generation
+        // 1.3 — Use Content Brief for SERP-driven content generation
         $briefData = null;
         if ($this->contentBrief) {
             $briefData = $this->contentBrief->generateBrief($keyword);
-            // Don't fail if brief generation fails â€” fall back to simple prompt
+            // Don't fail if brief generation fails — fall back to simple prompt
         }
 
         // Generate content using LLM (with brief data if available)
@@ -226,7 +226,7 @@ class TopicCluster
             return $postId;
         }
 
-        // 1.1 â€” Track cluster relationships in post meta
+        // 1.1 — Track cluster relationships in post meta
         if ($clusterId > 0) {
             update_post_meta($postId, '_sseo_ai_cluster_id', $clusterId);
             update_post_meta($postId, '_sseo_ai_cluster_role', $clusterRole);
@@ -240,7 +240,7 @@ class TopicCluster
             wp_set_post_tags($postId, $content['tags']);
         }
 
-        // 1.1 â€” Inject internal links to other cluster posts that already exist
+        // 1.1 — Inject internal links to other cluster posts that already exist
         if ($clusterId > 0) {
             $this->injectInternalLinks($postId, $clusterId, $keyword);
         }
@@ -253,7 +253,7 @@ class TopicCluster
             $imageAttachmentId = $generator->generateFeaturedImage($postId, 'photorealistic', $title, 100);
         }
 
-        // 1.5 â€” Post-generation quality pipeline
+        // 1.5 — Post-generation quality pipeline
         $qualityScores = $this->runPostGenerationPipeline($postId, $keyword, $content['content']);
 
         $result = [
@@ -302,13 +302,13 @@ class TopicCluster
             $entitiesStr = !empty($entities) ? implode(', ', array_slice($entities, 0, 15)) : '';
             $lsiStr = !empty($lsi) ? implode(', ', array_slice($lsi, 0, 15)) : '';
 
-            // 3.1 â€” Research-backed citations from SERP sources
+            // 3.1 — Research-backed citations from SERP sources
             $sources = $briefData['sources'] ?? [];
             $sourcesStr = '';
             if (!empty($sources)) {
                 $sourceLines = [];
                 foreach (array_slice($sources, 0, 5) as $src) {
-                    $sourceLines[] = "- {$src['title']} ({$src['domain']}) â€” {$src['url']}";
+                    $sourceLines[] = "- {$src['title']} ({$src['domain']}) — {$src['url']}";
                 }
                 $sourcesStr = implode("\n", $sourceLines);
             }
@@ -376,7 +376,7 @@ PROMPT;
     }
 
     /**
-     * 1.4 â€” Check for keyword cannibalism: is there already a post targeting this keyword?
+     * 1.4 — Check for keyword cannibalism: is there already a post targeting this keyword?
      * Returns existing post data if found, null otherwise.
      */
     private function checkCannibalism(string $keyword): ?array
@@ -417,7 +417,7 @@ PROMPT;
     }
 
     /**
-     * 1.1 â€” Get all posts belonging to a cluster
+     * 1.1 — Get all posts belonging to a cluster
      */
     private function getClusterPosts(int $clusterId, int $excludePostId = 0): array
     {
@@ -449,7 +449,7 @@ PROMPT;
     }
 
     /**
-     * 1.1 â€” Inject internal links into a post's content, linking to other cluster posts.
+     * 1.1 — Inject internal links into a post's content, linking to other cluster posts.
      * Scans for mentions of other cluster posts' keywords/titles and converts them to links.
      */
     private function injectInternalLinks(int $postId, int $clusterId, string $currentKeyword): void
@@ -497,7 +497,7 @@ PROMPT;
     }
 
     /**
-     * 1.5 â€” Post-generation quality pipeline
+     * 1.5 — Post-generation quality pipeline
      * Runs TruSEO scoring, Smart Tags, FAQ Schema extraction, and OG meta generation.
      */
     private function runPostGenerationPipeline(int $postId, string $keyword, string $content): array
@@ -744,7 +744,7 @@ PROMPT;
     }
 
     /**
-     * 1.2 â€” Process queue items via WP-Cron callback.
+     * 1.2 — Process queue items via WP-Cron callback.
      * Processes a limited number of items per run to avoid timeouts.
      */
     public function processQueueItems(): void
@@ -955,7 +955,7 @@ Create a pillar-cluster content architecture. Return JSON only (no markdown):
 Requirements:
 - Generate {$subtopicCount} subtopic clusters
 - Each cluster should have 1 hub page and {$supportingCount} supporting pages
-- Cover the topic comprehensively â€” leave no major subtopic unaddressed
+- Cover the topic comprehensively — leave no major subtopic unaddressed
 - Include a mix of search intents (informational, transactional, commercial)
 - Include a mix of content types
 - Prioritize by search volume potential and strategic importance
@@ -1075,7 +1075,7 @@ PROMPT;
         ];
     }
 
-    // Persistence â€” save/load clusters in options
+    // Persistence — save/load clusters in options
     public function restSaveCluster(\WP_REST_Request $request): array
     {
         $cluster = $request->get_param('cluster');
@@ -1169,10 +1169,10 @@ PROMPT;
                                 <option value="nl">Nederlands</option>
                                 <option value="en" selected>English</option>
                                 <option value="de">Deutsch</option>
-                                <option value="fr">FranÃ§ais</option>
-                                <option value="es">EspaÃ±ol</option>
+                                <option value="fr">Français</option>
+                                <option value="es">Español</option>
                                 <option value="it">Italiano</option>
-                                <option value="pt">PortuguÃªs</option>
+                                <option value="pt">Português</option>
                                 <option value="pl">Polski</option>
                             </select>
                         </div>
@@ -1234,7 +1234,7 @@ PROMPT;
                     <!-- Review & Bulk Generate Section -->
                     <div class="postbox" style="padding:20px;margin-top:20px;background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);border:2px solid #16a34a;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                            <h3 style="margin:0;color:#166534;">ðŸ“‹ <?php esc_html_e('Review & Generate Content', 'ai-seo-client'); ?></h3>
+                            <h3 style="margin:0;color:#166534;">📋 <?php esc_html_e('Review & Generate Content', 'ai-seo-client'); ?></h3>
                             <div>
                                 <button type="button" class="button" id="tc-toggle-review" style="margin-right:10px;">
                                     <?php esc_html_e('Review All Pages', 'ai-seo-client'); ?>
@@ -1258,7 +1258,7 @@ PROMPT;
                     <div id="tc-review-section" style="display:none;margin-top:20px;">
                         <div class="postbox" style="padding:20px;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-                                <h3 style="margin:0;">ðŸ“„ <?php esc_html_e('All Pages in Cluster', 'ai-seo-client'); ?></h3>
+                                <h3 style="margin:0;">📄 <?php esc_html_e('All Pages in Cluster', 'ai-seo-client'); ?></h3>
                                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                                     <div style="display:flex;gap:8px;align-items:center;">
                                         <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Start date', 'ai-seo-client'); ?></label>
@@ -1316,8 +1316,8 @@ PROMPT;
 
                             <!-- Bulk Progress -->
                             <div id="tc-bulk-progress" style="display:none;margin-top:20px;padding:20px;background:#f0fdf4;border-radius:8px;">
-                                <h4 style="margin:0 0 15px 0;color:#166534;">â³ <?php esc_html_e('Generating Content in Background...', 'ai-seo-client'); ?></h4>
-                                <p style="margin:0 0 10px 0;font-size:12px;color:#166534;"><?php esc_html_e('Content is generated via WP-Cron. You can close this page â€” check back later or view your drafts/scheduled posts.', 'ai-seo-client'); ?></p>
+                                <h4 style="margin:0 0 15px 0;color:#166534;">⏳ <?php esc_html_e('Generating Content in Background...', 'ai-seo-client'); ?></h4>
+                                <p style="margin:0 0 10px 0;font-size:12px;color:#166534;"><?php esc_html_e('Content is generated via WP-Cron. You can close this page — check back later or view your drafts/scheduled posts.', 'ai-seo-client'); ?></p>
                                 <div style="background:#e2e8f0;border-radius:10px;height:24px;overflow:hidden;margin-bottom:10px;">
                                     <div id="tc-progress-bar" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;width:0%;transition:width 0.3s ease;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;">0%</div>
                                 </div>
@@ -1354,10 +1354,10 @@ PROMPT;
                     }
                     var html = '<table class="wp-list-table widefat striped" style="font-size:13px;"><thead><tr><th>Topic</th><th>Pages</th><th>Clusters</th><th>Date</th><th style="width:120px;"></th></tr></thead><tbody>';
                     list.forEach(function(c) {
-                        html += '<tr><td><strong>' + (c.topic || 'â€”') + '</strong></td>' +
-                            '<td>' + (c.total_pages || 'â€”') + '</td>' +
+                        html += '<tr><td><strong>' + (c.topic || '—') + '</strong></td>' +
+                            '<td>' + (c.total_pages || '—') + '</td>' +
                             '<td>' + ((c.clusters||[]).length) + '</td>' +
-                            '<td>' + (c.saved_at || c.generated_at || 'â€”') + '</td>' +
+                            '<td>' + (c.saved_at || c.generated_at || '—') + '</td>' +
                             '<td>' +
                             '<button class="button button-small tc-view-saved" data-id="' + c.id + '" style="margin-right:5px;">View</button>' +
                             '<button class="button button-small tc-delete-saved" data-id="' + c.id + '">Delete</button>' +
@@ -1437,7 +1437,7 @@ PROMPT;
                         '<div style="text-align:center;padding:10px;background:#f0f7ff;border-radius:6px;"><div style="font-size:24px;font-weight:bold;">' + s.total_pages + '</div><div style="font-size:11px;color:#666;">Pages Found</div></div>' +
                         '<div style="text-align:center;padding:10px;background:#ecfdf5;border-radius:6px;"><div style="font-size:24px;font-weight:bold;">' + s.total_words.toLocaleString() + '</div><div style="font-size:11px;color:#666;">Total Words</div></div>' +
                         '<div style="text-align:center;padding:10px;background:#fef3c7;border-radius:6px;"><div style="font-size:24px;font-weight:bold;">' + s.avg_seo_score + '</div><div style="font-size:11px;color:#666;">Avg SEO Score</div></div>' +
-                        '<div style="text-align:center;padding:10px;background:' + (s.has_pillar ? '#ecfdf5' : '#fcf0f1') + ';border-radius:6px;"><div style="font-size:24px;font-weight:bold;">' + (s.has_pillar ? 'âœ“' : 'âœ•') + '</div><div style="font-size:11px;color:#666;">Has Pillar Page</div></div>' +
+                        '<div style="text-align:center;padding:10px;background:' + (s.has_pillar ? '#ecfdf5' : '#fcf0f1') + ';border-radius:6px;"><div style="font-size:24px;font-weight:bold;">' + (s.has_pillar ? '✓' : '✕') + '</div><div style="font-size:11px;color:#666;">Has Pillar Page</div></div>' +
                         '</div>';
 
                     if (data.existing_content.length) {
@@ -1445,8 +1445,8 @@ PROMPT;
                         data.existing_content.forEach(function(p) {
                             html += '<tr><td><a href="' + (p.edit_url||'#') + '">' + p.title + '</a></td>' +
                                 '<td>' + p.word_count + '</td>' +
-                                '<td>' + (p.seo_score !== null ? p.seo_score : 'â€”') + '</td>' +
-                                '<td>' + (p.focus_keyphrase || 'â€”') + '</td></tr>';
+                                '<td>' + (p.seo_score !== null ? p.seo_score : '—') + '</td>' +
+                                '<td>' + (p.focus_keyphrase || '—') + '</td></tr>';
                         });
                         html += '</tbody></table>';
                     } else {
@@ -1493,7 +1493,7 @@ PROMPT;
                     method: 'POST',
                     data: payload
                 }).then(function(res) {
-                    var statusLabel = scheduleDate ? 'âœ“ <?php echo esc_js(__('Scheduled', 'ai-seo-client')); ?>' : 'âœ“ <?php echo esc_js(__('Created Draft', 'ai-seo-client')); ?>';
+                    var statusLabel = scheduleDate ? '✓ <?php echo esc_js(__('Scheduled', 'ai-seo-client')); ?>' : '✓ <?php echo esc_js(__('Created Draft', 'ai-seo-client')); ?>';
                     btn.prop('disabled', false).html(statusLabel);
                     btn.after(' <a href="' + res.edit_url + '" class="button button-small" style="margin-left:5px;"><?php echo esc_js(__('Edit', 'ai-seo-client')); ?></a>');
                     if (res.quality_scores) {
@@ -1523,12 +1523,12 @@ PROMPT;
                 $('#tc-pillar').html(
                     '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
                     '<div>' +
-                    '<h2 style="margin-top:0;color:#379fd3;">ðŸ›ï¸ ' + (p.title || 'Pillar Page') + '</h2>' +
+                    '<h2 style="margin-top:0;color:#379fd3;">🏛️ ' + (p.title || 'Pillar Page') + '</h2>' +
                     '<p>' + (p.description || '') + '</p>' +
                     '<div style="display:flex;gap:15px;font-size:13px;color:#666;">' +
-                    '<span>ðŸŽ¯ ' + (p.target_keyword || '') + '</span>' +
-                    '<span>ðŸ“ ' + (p.target_word_count || 3000) + ' words</span>' +
-                    '<span>ðŸ” ' + (p.search_intent || '') + '</span></div>' +
+                    '<span>🎯 ' + (p.target_keyword || '') + '</span>' +
+                    '<span>📝 ' + (p.target_word_count || 3000) + ' words</span>' +
+                    '<span>🔍 ' + (p.search_intent || '') + '</span></div>' +
                     '</div>' +
                     '<button type="button" class="button button-primary tc-generate-content" ' +
                     'data-title="' + escapeHtml(p.title || '') + '" ' +
@@ -1543,7 +1543,7 @@ PROMPT;
                 var priorityColors = {high:'#dc2626',medium:'#d97706',low:'#059669'};
                 (data.clusters || []).forEach(function(cl, idx) {
                     gridHtml += '<div class="postbox" style="padding:15px;margin-bottom:15px;">' +
-                        '<h3 style="margin-top:0;">ðŸ“‚ ' + cl.name + '</h3>' +
+                        '<h3 style="margin-top:0;">📂 ' + cl.name + '</h3>' +
                         '<p style="font-size:12px;color:#666;">' + (cl.description || '') + '</p>';
 
                     // Hub with generate button
@@ -1552,7 +1552,7 @@ PROMPT;
                         '<div>' +
                         '<strong>Hub: ' + (h.title || '') + '</strong>' +
                         '<div style="font-size:11px;color:#666;margin-top:4px;">' +
-                        'ðŸŽ¯ ' + (h.target_keyword || '') + ' Â· ' + (h.target_word_count || 0) + ' words Â· ' +
+                        '🎯 ' + (h.target_keyword || '') + ' · ' + (h.target_word_count || 0) + ' words · ' +
                         '<span style="color:' + (priorityColors[h.priority]||'#999') + ';">' + (h.priority || '') + '</span></div>' +
                         '</div>' +
                         '<button type="button" class="button tc-generate-content" ' +
@@ -1567,7 +1567,7 @@ PROMPT;
                         gridHtml += '<div style="padding:8px 10px;margin:4px 0 4px 20px;background:#f9f9f9;border-left:2px solid #93c5fd;border-radius:0 4px 4px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;">' +
                             '<div>' + sp.title +
                             '<div style="font-size:11px;color:#666;">' +
-                            'ðŸŽ¯ ' + (sp.target_keyword || '') + ' Â· ' + (sp.target_word_count || 0) + 'w Â· ' +
+                            '🎯 ' + (sp.target_keyword || '') + ' · ' + (sp.target_word_count || 0) + 'w · ' +
                             '<span style="background:#e0e7ff;padding:1px 4px;border-radius:2px;font-size:10px;">' + (sp.content_type || '') + '</span>' +
                             '</div></div>' +
                             '<button type="button" class="button button-small tc-generate-content" ' +
@@ -1596,7 +1596,7 @@ PROMPT;
                 // Linking
                 var linkHtml = '';
                 (data.internal_linking_strategy || []).forEach(function(rule) {
-                    linkHtml += '<li style="padding:6px 10px;margin:3px 0;background:#ecfdf5;border-left:3px solid #059669;border-radius:0 4px 4px 0;font-size:13px;">ðŸ”— ' + rule + '</li>';
+                    linkHtml += '<li style="padding:6px 10px;margin:3px 0;background:#ecfdf5;border-left:3px solid #059669;border-radius:0 4px 4px 0;font-size:13px;">🔗 ' + rule + '</li>';
                 });
                 $('#tc-linking').html(linkHtml);
 
@@ -1764,7 +1764,7 @@ PROMPT;
                 updateReviewStats();
             });
             
-            // Bulk Generate â€” Queue-based background processing
+            // Bulk Generate — Queue-based background processing
             $('#tc-bulk-generate').on('click', function() {
                 var selectedIds = [];
                 $('.tc-page-checkbox:checked').each(function() {
@@ -1788,7 +1788,7 @@ PROMPT;
                     startDateInput = yyyy + '-' + mm + '-' + dd;
                 }
 
-                if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages in the background? You can close this page â€” content will be generated and scheduled automatically.', 'ai-seo-client')); ?>')) {
+                if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages in the background? You can close this page — content will be generated and scheduled automatically.', 'ai-seo-client')); ?>')) {
                     return;
                 }
 
@@ -1831,13 +1831,13 @@ PROMPT;
                         gap_days: gapDays
                     }
                 }).then(function(res) {
-                    log('âœ… <?php echo esc_js(__('Queue created with', 'ai-seo-client')); ?> ' + res.total_items + ' <?php echo esc_js(__('items', 'ai-seo-client')); ?>');
-                    $('#tc-progress-text').text('<?php echo esc_js(__('Queue active â€” generating in background...', 'ai-seo-client')); ?>');
+                    log('✅ <?php echo esc_js(__('Queue created with', 'ai-seo-client')); ?> ' + res.total_items + ' <?php echo esc_js(__('items', 'ai-seo-client')); ?>');
+                    $('#tc-progress-text').text('<?php echo esc_js(__('Queue active — generating in background...', 'ai-seo-client')); ?>');
 
                     // Mark all selected rows as queued
                     selectedIds.forEach(function(pageId) {
                         var $row = $('tr[data-page-id="' + pageId + '"]');
-                        $row.find('.tc-status-cell').html('<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:12px;font-size:11px;">â³ <?php echo esc_js(__('Queued', 'ai-seo-client')); ?></span>');
+                        $row.find('.tc-status-cell').html('<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:12px;font-size:11px;">⏳ <?php echo esc_js(__('Queued', 'ai-seo-client')); ?></span>');
                     });
 
                     // Poll for status
@@ -1861,11 +1861,11 @@ PROMPT;
                                 var $row = $('tr[data-page-id="' + pageId + '"]');
 
                                 if (item.status === 'completed') {
-                                    $row.find('.tc-status-cell').html('<a href="' + (item.edit_url || '#') + '" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:11px;text-decoration:none;">âœ“ <?php echo esc_js(__('Done', 'ai-seo-client')); ?></a>');
+                                    $row.find('.tc-status-cell').html('<a href="' + (item.edit_url || '#') + '" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:11px;text-decoration:none;">✓ <?php echo esc_js(__('Done', 'ai-seo-client')); ?></a>');
                                 } else if (item.status === 'failed') {
-                                    $row.find('.tc-status-cell').html('<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:12px;font-size:11px;">âŒ <?php echo esc_js(__('Failed', 'ai-seo-client')); ?></span>');
+                                    $row.find('.tc-status-cell').html('<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:12px;font-size:11px;">❌ <?php echo esc_js(__('Failed', 'ai-seo-client')); ?></span>');
                                 } else if (item.status === 'processing') {
-                                    $row.find('.tc-status-cell').html('<span style="background:#e8f4fa;color:#8f39ac;padding:3px 10px;border-radius:12px;font-size:11px;">â³ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
+                                    $row.find('.tc-status-cell').html('<span style="background:#e8f4fa;color:#8f39ac;padding:3px 10px;border-radius:12px;font-size:11px;">⏳ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
                                 }
                             });
 
@@ -1875,17 +1875,17 @@ PROMPT;
                                 $('#tc-bulk-generate').prop('disabled', false);
 
                                 var resultsHtml = '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:20px;">' +
-                                    '<h4 style="margin:0 0 15px 0;color:#166534;">âœ… <?php echo esc_js(__('Content Generation Complete!', 'ai-seo-client')); ?></h4>' +
+                                    '<h4 style="margin:0 0 15px 0;color:#166534;">✅ <?php echo esc_js(__('Content Generation Complete!', 'ai-seo-client')); ?></h4>' +
                                     '<p><?php echo esc_js(__('Generated', 'ai-seo-client')); ?> ' + status.completed + ' <?php echo esc_js(__('posts', 'ai-seo-client')); ?>' +
                                     (status.failed > 0 ? ', ' + status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>' : '') + '.</p>' +
                                     '<a href="<?php echo esc_url(admin_url('edit.php?post_status=future&post_type=post')); ?>" class="button button-primary" style="background:#16a34a;border-color:#16a34a;margin-right:10px;"><?php echo esc_js(__('View Scheduled Posts', 'ai-seo-client')); ?></a>' +
                                     '<a href="<?php echo esc_url(admin_url('edit.php?post_status=draft&post_type=post')); ?>" class="button"><?php echo esc_js(__('View Drafts', 'ai-seo-client')); ?></a>' +
                                     '</div>';
                                 $('#tc-bulk-results').html(resultsHtml).show();
-                                log('âœ… <?php echo esc_js(__('Queue completed', 'ai-seo-client')); ?>: ' + status.completed + ' <?php echo esc_js(__('done', 'ai-seo-client')); ?>, ' + status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>');
+                                log('✅ <?php echo esc_js(__('Queue completed', 'ai-seo-client')); ?>: ' + status.completed + ' <?php echo esc_js(__('done', 'ai-seo-client')); ?>, ' + status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>');
                             }
                         }).catch(function(err) {
-                            log('âŒ <?php echo esc_js(__('Polling error', 'ai-seo-client')); ?>: ' + (err.message || 'unknown'));
+                            log('❌ <?php echo esc_js(__('Polling error', 'ai-seo-client')); ?>: ' + (err.message || 'unknown'));
                         });
                     }, 5000); // Poll every 5 seconds
                 }).catch(function(err) {

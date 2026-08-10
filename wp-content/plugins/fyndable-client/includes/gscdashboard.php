@@ -241,7 +241,7 @@ class GscDashboard
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO â†’ Settings to enable.', 'ai-seo-client'); ?></p>
+                <p><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO → Settings to enable.', 'ai-seo-client'); ?></p>
             </div>
             <div class="sseo-ai-content">
                 <div class="sseo-ai-dashboard-card">

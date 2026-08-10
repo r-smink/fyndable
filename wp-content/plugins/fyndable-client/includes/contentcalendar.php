@@ -130,7 +130,7 @@ class ContentCalendar
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth - 1) . '&year=' . $currentYear); ?>" 
                            class="button">
-                            â† <?php esc_html_e('Previous', 'ai-seo-client'); ?>
+                            ← <?php esc_html_e('Previous', 'ai-seo-client'); ?>
                         </a>
                         
                         <h2 style="margin: 0;">
@@ -139,7 +139,7 @@ class ContentCalendar
                         
                         <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth + 1) . '&year=' . $currentYear); ?>" 
                            class="button">
-                            <?php esc_html_e('Next', 'ai-seo-client'); ?> â†’
+                            <?php esc_html_e('Next', 'ai-seo-client'); ?> →
                         </a>
                     </div>
                 </div>
@@ -232,7 +232,7 @@ class ContentCalendar
                                     if (in_array($dateKey, $contentGaps)):
                                     ?>
                                     <div style="color: #d63638; font-size: 11px; margin-top: 5px;">
-                                        âš  <?php esc_html_e('Gap', 'ai-seo-client'); ?>
+                                        ⚠ <?php esc_html_e('Gap', 'ai-seo-client'); ?>
                                     </div>
                                     <?php endif; ?>
                                     
@@ -276,7 +276,7 @@ class ContentCalendar
                     <?php endforeach; ?>
                 </ul>
                 <?php else: ?>
-                <p style="color: #00a32a;">âœ“ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
+                <p style="color: #00a32a;">✓ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
                     </div>
                     

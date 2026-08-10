@@ -163,7 +163,7 @@ Template Outline (use as a guide, but generate unique content):
 {$contentTemplate}
 
 Requirements:
-1. Write unique, valuable content â€” do NOT just fill in blanks
+1. Write unique, valuable content — do NOT just fill in blanks
 2. Include the target keyword naturally (1-2% density)
 3. Use proper H2/H3 headings
 4. Include an introduction and conclusion
@@ -309,7 +309,7 @@ PROMPT;
         <div class="wrap pseo-wrap">
             <div class="pseo-card">
                 <div class="pseo-header">
-                    <h1>âš¡ <?php esc_html_e('Programmatic SEO', 'ai-seo-client'); ?></h1>
+                    <h1>⚡ <?php esc_html_e('Programmatic SEO', 'ai-seo-client'); ?></h1>
                     <p><?php esc_html_e('Generate hundreds of unique SEO-optimized pages from templates and datasets.', 'ai-seo-client'); ?></p>
                 </div>
 
@@ -371,7 +371,7 @@ PROMPT;
                     </div>
                     <button class="button button-primary" id="pseo-save-tpl"><?php esc_html_e('Save Template', 'ai-seo-client'); ?></button>
                     <select id="pseo-load-tpl" style="margin-left:10px;">
-                        <option value=""><?php esc_html_e('â€” Load Template â€”', 'ai-seo-client'); ?></option>
+                        <option value=""><?php esc_html_e('— Load Template —', 'ai-seo-client'); ?></option>
                         <?php foreach ($templates as $tpl): ?>
                             <option value="<?php echo esc_attr($tpl['id']); ?>"><?php echo esc_html($tpl['name']); ?></option>
                         <?php endforeach; ?>
@@ -503,10 +503,10 @@ PROMPT;
                     res.results.forEach(function(r) {
                         if (r.success) {
                             success++;
-                            html += '<tr><td>' + r.title + '</td><td style="color:#16a34a;">âœ“ Draft created</td><td>' + (r.edit_url ? '<a href="' + r.edit_url + '">Edit</a>' : '') + '</td></tr>';
+                            html += '<tr><td>' + r.title + '</td><td style="color:#16a34a;">✓ Draft created</td><td>' + (r.edit_url ? '<a href="' + r.edit_url + '">Edit</a>' : '') + '</td></tr>';
                         } else {
                             failed++;
-                            html += '<tr><td>â€”</td><td style="color:#dc2626;">âœ— ' + r.error + '</td><td></td></tr>';
+                            html += '<tr><td>—</td><td style="color:#dc2626;">✗ ' + r.error + '</td><td></td></tr>';
                         }
                     });
                     html += '</tbody></table>';

@@ -181,7 +181,7 @@ class OpenGraph
         $title = $ogTitle ?: $seoTitle ?: get_the_title($postId);
         $description = $ogDesc ?: $seoDesc ?: $this->generateExcerpt($postId);
 
-        // Image fallback chain: OG image â†’ Featured image â†’ Default image
+        // Image fallback chain: OG image → Featured image → Default image
         $image = $ogImage;
         $imageWidth = '';
         $imageHeight = '';
@@ -454,7 +454,7 @@ class OpenGraph
                 <button type="button" class="button aiseo-og-upload-btn" data-target="aiseo_og_image">
                     <?php esc_html_e('Upload Image', 'ai-seo-client'); ?>
                 </button>
-                <p class="description"><?php esc_html_e('Recommended: 1200Ã—630px. Leave empty to use featured image.', 'ai-seo-client'); ?></p>
+                <p class="description"><?php esc_html_e('Recommended: 1200×630px. Leave empty to use featured image.', 'ai-seo-client'); ?></p>
             </div>
 
             <button type="button" class="button aiseo-og-generate-btn" id="aiseo-generate-og" data-post="<?php echo $post->ID; ?>">
@@ -731,6 +731,6 @@ Return ONLY the JSON, nothing else.";
         if ($lastSpace !== false && $lastSpace > $max * 0.5) {
             $text = mb_substr($text, 0, $lastSpace);
         }
-        return $text . 'â€¦';
+        return $text . '…';
     }
 }

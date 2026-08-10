@@ -12,6 +12,15 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 global $wpdb;
 
+// WordPress only loads uninstall.php on deletion, not the main plugin file,
+// so the constants used below may not be defined yet. Define fallbacks here.
+if (!defined('SSEO_AI_CLIENT_LICENSE_OPTION')) {
+    define('SSEO_AI_CLIENT_LICENSE_OPTION', 'sseo_ai_client_license');
+}
+if (!defined('SSEO_AI_CLIENT_TENANT_OPTION')) {
+    define('SSEO_AI_CLIENT_TENANT_OPTION', 'sseo_ai_client_tenant');
+}
+
 // ── 1. Delete all options ───────────────────────────────────────────
 
 $optionPatterns = [
@@ -153,5 +162,11 @@ foreach ($metaKeys as $metaKey) {
 
 // ── 6. Clear any cached data ────────────────────────────────────────
 
-wp_cache_flush_group('sseo_ai');
-wp_cache_flush_group('ai_seo');
+// wp_cache_flush_group() is only available since WP 6.4; fall back to a full
+// object-cache flush to avoid undefined-function fatals on older installs.
+if (function_exists('wp_cache_flush_group')) {
+    wp_cache_flush_group('sseo_ai');
+    wp_cache_flush_group('ai_seo');
+} else {
+    wp_cache_flush();
+}

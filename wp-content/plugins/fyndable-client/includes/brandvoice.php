@@ -267,11 +267,11 @@ Return ONLY the JSON.";
         <div class="wrap bv-wrap">
             <div class="bv-card">
                 <div class="bv-header">
-                    <h1>ðŸŽ™ï¸ <?php esc_html_e('Brand Voice Engine', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Define your brand voice once â€” all AI-generated content will follow it automatically.', 'ai-seo-client'); ?></p>
+                    <h1>🎙️ <?php esc_html_e('Brand Voice Engine', 'ai-seo-client'); ?></h1>
+                    <p><?php esc_html_e('Define your brand voice once — all AI-generated content will follow it automatically.', 'ai-seo-client'); ?></p>
                 </div>
 
-                <div id="bv-saved-msg" class="bv-saved">âœ… <?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></div>
+                <div id="bv-saved-msg" class="bv-saved">✅ <?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></div>
 
                 <div class="bv-toggle">
                     <input type="checkbox" id="bv-enabled" <?php checked($settings['enabled']); ?>>
@@ -371,7 +371,7 @@ Return ONLY the JSON.";
                 wp.apiFetch({ path: '/sseo-ai/v1/brand-voice' }).then(function(s) {
                     var parts = [];
                     if (!s.enabled) {
-                        $('#bv-preview').text('(Brand Voice is disabled â€” no prompt snippet injected)');
+                        $('#bv-preview').text('(Brand Voice is disabled — no prompt snippet injected)');
                         $('#bv-preview-wrap').show();
                         return;
                     }

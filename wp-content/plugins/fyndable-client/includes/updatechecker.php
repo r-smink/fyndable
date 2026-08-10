@@ -104,6 +104,8 @@ class UpdateChecker
             return new \WP_Error('not_configured', 'Dashboard not configured');
         }
 
+        // Normalize URL and disable auto-redirect to prevent POST->GET conversion
+        $dashboardUrl = str_replace('http://', 'https://', rtrim($dashboardUrl, '/'));
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/updates/check',
             [
@@ -114,7 +116,7 @@ class UpdateChecker
                 ],
                 'timeout' => 15,
                 'sslverify' => $this->settings->sslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 

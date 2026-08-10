@@ -702,3 +702,280 @@ msgstr "Ontbrekende SEO-titels:"
 
 msgid "posts"
 msgstr "berichten"
+
+# Onboarding wizard
+msgid "Welcome to Fyndable"
+msgstr "Welkom bij Fyndable"
+
+msgid "Unauthorized"
+msgstr "Niet geautoriseerd"
+
+msgid "Free tier is not available. Please activate a license key."
+msgstr "Gratis versie is niet beschikbaar. Activeer een licentiesleutel."
+
+msgid "Please enter a valid license key and dashboard URL."
+msgstr "Voer een geldige licentiesleutel en dashboard-URL in."
+
+msgid "Invalid response from dashboard. No tenant key received."
+msgstr "Ongeldig antwoord van dashboard. Geen tenant-sleutel ontvangen."
+
+msgid "Branding"
+msgstr "Branding"
+
+msgid "Tone of Voice"
+msgstr "Tone of Voice"
+
+msgid "SEO Setup"
+msgstr "SEO Setup"
+
+msgid "Content Types"
+msgstr "Contenttypen"
+
+msgid "Review"
+msgstr "Review"
+
+msgid "Welcome to %s"
+msgstr "Welkom bij %s"
+
+msgid "Let's get your site SEO-ready in 4 quick steps."
+msgstr "Zet je site SEO-klaar in 4 snelle stappen."
+
+msgid "Connect Your License"
+msgstr "Verbind je licentie"
+
+msgid "Enter your license key to unlock all features, or skip to use the free tier."
+msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen, of sla over om de gratis versie te gebruiken."
+
+msgid "Enter your license key to unlock all features."
+msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen."
+
+msgid "Skip this step to use the free tier with limited features."
+msgstr "Sla deze stap over om de gratis versie met beperkte functies te gebruiken."
+
+msgid "Skip for now"
+msgstr "Sla over voor nu"
+
+msgid "Continue"
+msgstr "Doorgaan"
+
+msgid "Company Branding"
+msgstr "Bedrijfsbranding"
+
+msgid "Tell us about your company to personalize your SEO experience."
+msgstr "Vertel ons over je bedrijf om je SEO-ervaring te personaliseren."
+
+msgid "Company Name"
+msgstr "Bedrijfsnaam"
+
+msgid "Your Company Name"
+msgstr "Jouw bedrijfsnaam"
+
+msgid "Leave empty if already set by your license provider."
+msgstr "Laat leeg als deze al door je licentieprovider is ingesteld."
+
+msgid "Company Logo (optional)"
+msgstr "Bedrijfslogo (optioneel)"
+
+msgid "Upload your company logo for branded reports and dashboards."
+msgstr "Upload je bedrijfslogo voor gepersonaliseerde rapporten en dashboards."
+
+msgid "Website Description"
+msgstr "Websitebeschrijving"
+
+msgid "Brief description of your website or business..."
+msgstr "Korte beschrijving van je website of bedrijf..."
+
+msgid "Industry/Category"
+msgstr "Industrie/Categorie"
+
+msgid "Select your industry..."
+msgstr "Selecteer je industrie..."
+
+msgid "Technology"
+msgstr "Technologie"
+
+msgid "Healthcare"
+msgstr "Gezondheidszorg"
+
+msgid "Finance"
+msgstr "Financiën"
+
+msgid "Retail/E-commerce"
+msgstr "Detailhandel/E-commerce"
+
+msgid "Education"
+msgstr "Onderwijs"
+
+msgid "Travel/Hospitality"
+msgstr "Reizen/Horeca"
+
+msgid "Real Estate"
+msgstr "Vastgoed"
+
+msgid "Other"
+msgstr "Anders"
+
+msgid "Back"
+msgstr "Terug"
+
+msgid "Configure how AI-generated content should sound for your brand."
+msgstr "Stel in hoe door AI gegenereerde content moet klinken voor je merk."
+
+msgid "Brand Voice"
+msgstr "Merkstem"
+
+msgid "Professional"
+msgstr "Professioneel"
+
+msgid "Casual"
+msgstr "Informeel"
+
+msgid "Friendly"
+msgstr "Vriendelijk"
+
+msgid "Authoritative"
+msgstr "Autoritair"
+
+msgid "Humorous"
+msgstr "Humoristisch"
+
+msgid "Technical"
+msgstr "Technisch"
+
+msgid "Target Audience"
+msgstr "Doelgroep"
+
+msgid "Describe your target audience (e.g., small business owners, developers, parents...)"
+msgstr "Beschrijf je doelgroep (bijv. kleine ondernemers, ontwikkelaars, ouders...)"
+
+msgid "Writing Style"
+msgstr "Schrijfstijl"
+
+msgid "Conversational"
+msgstr "Gesprekstijl"
+
+msgid "Formal"
+msgstr "Formeel"
+
+msgid "Persuasive"
+msgstr "Overtuigend"
+
+msgid "Educational"
+msgstr "Educatief"
+
+msgid "Key Brand Values/Phrases (optional)"
+msgstr "Belangrijke merkwaarden/zinnen (optioneel)"
+
+msgid "Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)"
+msgstr "Belangrijke woorden of waarden voor AI-content (bijv. innovatie, klantgericht, duurzaamheid...)"
+
+msgid "These will help AI content align with your brand messaging."
+msgstr "Dit helpt AI-content af te stemmen op je merkboodschap."
+
+msgid "Basic SEO Configuration"
+msgstr "Basis SEO-configuratie"
+
+msgid "Set up your default title and meta description templates."
+msgstr "Stel je standaard titel- en metabeschrijvingsjablonen in."
+
+msgid "Title Template"
+msgstr "Titelsjabloon"
+
+msgid "Available variables: %title%, %separator%, %sitename%"
+msgstr "Beschikbare variabelen: %title%, %separator%, %sitename%"
+
+msgid "Title Separator"
+msgstr "Titelscheidingsteken"
+
+msgid "Facebook URL (optional)"
+msgstr "Facebook URL (optioneel)"
+
+msgid "https://facebook.com/yourpage"
+msgstr "https://facebook.com/jouw-pagina"
+
+msgid "Twitter/X URL (optional)"
+msgstr "Twitter/X URL (optioneel)"
+
+msgid "https://twitter.com/yourhandle"
+msgstr "https://twitter.com/jouwhandle"
+
+msgid "Content Types & Features"
+msgstr "Contenttypen & functies"
+
+msgid "Select which content types should have SEO features enabled."
+msgstr "Selecteer welke contenttypen SEO-functies moeten krijgen."
+
+msgid "Enable XML Sitemap"
+msgstr "XML-sitemap inschakelen"
+
+msgid "Enable robots.txt editor"
+msgstr "robots.txt-editor inschakelen"
+
+msgid "Enable Schema Markup"
+msgstr "Schema Markup inschakelen"
+
+msgid "Google Integrations (Optional)"
+msgstr "Google-integraties (optioneel)"
+
+msgid "Connect Google services for enhanced SEO insights. You can always do this later."
+msgstr "Verbind Google-diensten voor extra SEO-inzichten. Je kunt dit later altijd doen."
+
+msgid "Google PageSpeed API Key (optional)"
+msgstr "Google PageSpeed API-sleutel (optioneel)"
+
+msgid "AIza..."
+msgstr "AIza..."
+
+msgid "Get a free API key from <a href=\"%s\" target=\"_blank\">Google Cloud Console</a>. Free tier: 25 requests/day."
+msgstr "Haal een gratis API-sleutel op via de <a href=\"%s\" target=\"_blank\">Google Cloud Console</a>. Gratis versie: 25 verzoeken/dag."
+
+msgid "You can connect GSC later from the Integrations page after setup."
+msgstr "Je kunt GSC later verbinden via de Integraties-pagina na de setup."
+
+msgid "Setup Complete!"
+msgstr "Setup voltooid!"
+
+msgid "You're all set. Here's a summary of your configuration:"
+msgstr "Je bent helemaal klaar. Hier is een samenvatting van je configuratie:"
+
+msgid "Configuration Summary"
+msgstr "Configuratiesamenvatting"
+
+msgid "License: Connected"
+msgstr "Licentie: Verbonden"
+
+msgid "Company Branding: Configured"
+msgstr "Bedrijfsbranding: Ingesteld"
+
+msgid "Tone of Voice: Set"
+msgstr "Tone of Voice: Ingesteld"
+
+msgid "SEO Settings: Configured"
+msgstr "SEO-instellingen: Ingesteld"
+
+msgid "Content Types: Selected"
+msgstr "Contenttypen: Geselecteerd"
+
+msgid "Integrations: Optional (can be done later)"
+msgstr "Integraties: Optioneel (kan later)"
+
+msgid "Quick Start Tips"
+msgstr "Snelle starttips"
+
+msgid "Check your SEO Dashboard for site health overview"
+msgstr "Bekijk je SEO-dashboard voor een overzicht van je sitegezondheid"
+
+msgid "Use the Content Writer to generate SEO-optimized articles"
+msgstr "Gebruik de Content Writer om SEO-geoptimaliseerde artikelen te genereren"
+
+msgid "Connect Google Search Console for search performance data"
+msgstr "Verbind Google Search Console voor zoekprestatiedata"
+
+msgid "Review your SEO settings in Settings > Fyndable"
+msgstr "Bekijk je SEO-instellingen in Instellingen > Fyndable"
+
+msgid "Go to Dashboard"
+msgstr "Naar dashboard"
+
+msgid "FYN-SSAI-XXXX-XXXX-XXXX"
+msgstr "FYN-SSAI-XXXX-XXXX-XXXX"

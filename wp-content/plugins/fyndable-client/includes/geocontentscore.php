@@ -218,7 +218,7 @@ class GeoContentScore
                 $suggestions[] = [
                     'factor' => $key,
                     'priority' => $factor['score'] < 30 ? 'high' : 'medium',
-                    'message' => sprintf('%s: %d/100 â€” %s', $factor['label'], $factor['score'], $factor['detail'] ?? ''),
+                    'message' => sprintf('%s: %d/100 — %s', $factor['label'], $factor['score'], $factor['detail'] ?? ''),
                 ];
             }
         }
@@ -302,14 +302,14 @@ class GeoContentScore
         <div class="wrap geo-wrap">
             <div class="geo-card">
                 <div class="geo-header">
-                    <h1>ðŸ¤– <?php esc_html_e('GEO Content Score', 'ai-seo-client'); ?></h1>
+                    <h1>🤖 <?php esc_html_e('GEO Content Score', 'ai-seo-client'); ?></h1>
                     <p><?php esc_html_e('Score your content for citability by AI search engines (ChatGPT, Perplexity, Gemini).', 'ai-seo-client'); ?></p>
                 </div>
                 <div style="display:flex;gap:20px;align-items:start;flex-wrap:wrap;">
                     <div style="flex:1;min-width:300px;">
                         <label style="font-weight:600;display:block;margin-bottom:6px;"><?php esc_html_e('Select Post to Score', 'ai-seo-client'); ?></label>
                         <select id="geo-post-select" style="width:100%;">
-                            <option value=""><?php esc_html_e('â€” Choose a post â€”', 'ai-seo-client'); ?></option>
+                            <option value=""><?php esc_html_e('— Choose a post —', 'ai-seo-client'); ?></option>
                             <?php
                             $posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'draft'], 'posts_per_page' => 100]);
                             foreach ($posts as $p) {
@@ -321,8 +321,8 @@ class GeoContentScore
                         <button class="button" id="geo-batch-btn" style="margin-top:10px;margin-left:8px;"><?php esc_html_e('Score All Posts', 'ai-seo-client'); ?></button>
                     </div>
                     <div id="geo-result" style="flex:2;min-width:300px;display:none;">
-                        <div class="geo-score-big" id="geo-score-num">â€”</div>
-                        <div class="geo-grade" id="geo-grade">â€”</div>
+                        <div class="geo-score-big" id="geo-score-num">—</div>
+                        <div class="geo-grade" id="geo-grade">—</div>
                         <div id="geo-factors" style="margin-top:20px;"></div>
                         <div id="geo-suggestions" style="margin-top:20px;"></div>
                     </div>

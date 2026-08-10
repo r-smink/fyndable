@@ -5,7 +5,7 @@
     font-style: normal;
     font-display: swap;
 }
-/* SEO AI Client â€” Modern Admin Design System */
+/* SEO AI Client — Modern Admin Design System */
 
 /* ================================================
    0. WP CONTENT PADDING FIX
@@ -640,7 +640,7 @@ a.ai-tool-card p {
 }
 
 .ai-seo-client .feature-list li:before {
-    content: "âœ“";
+    content: "✓";
     color: var(--aiseo-success);
     font-weight: bold;
     margin-right: 10px;

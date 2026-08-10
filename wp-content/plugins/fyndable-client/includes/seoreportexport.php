@@ -184,7 +184,7 @@ class SeoReportExport
         <html>
         <head>
             <meta charset="UTF-8">
-            <title><?php echo esc_html($data['site_name']); ?> â€” SEO Report</title>
+            <title><?php echo esc_html($data['site_name']); ?> — SEO Report</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body { font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1d2327; padding: 40px; max-width: 1000px; margin: 0 auto; font-size: 14px; }
@@ -214,7 +214,7 @@ class SeoReportExport
 
             <h1><?php echo esc_html($data['site_name']); ?></h1>
             <p class="meta">
-                <?php esc_html_e('SEO Audit Report', 'ai-seo-client'); ?> â€” <?php echo esc_html($data['date']); ?><br>
+                <?php esc_html_e('SEO Audit Report', 'ai-seo-client'); ?> — <?php echo esc_html($data['date']); ?><br>
                 <?php echo esc_url($data['site_url']); ?>
             </p>
 
@@ -262,7 +262,7 @@ class SeoReportExport
                                     <?php echo $row['score']; ?>
                                 </strong>
                             <?php else: ?>
-                                <span style="color:#999;">â€”</span>
+                                <span style="color:#999;">—</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -271,7 +271,7 @@ class SeoReportExport
                                     <span class="issue-badge"><?php echo esc_html($issue); ?></span>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <span class="ok-badge">âœ“ OK</span>
+                                <span class="ok-badge">✓ OK</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -312,7 +312,7 @@ class SeoReportExport
                             <?php wp_nonce_field('aiseo_export_csv'); ?>
                             <input type="hidden" name="action" value="aiseo_export_csv">
                             <button type="submit" class="button button-primary" style="padding:8px 24px; height:auto;">
-                                <span style="font-size:18px; vertical-align:middle;">ðŸ“Š</span>
+                                <span style="font-size:18px; vertical-align:middle;">📊</span>
                                 <?php esc_html_e('Download CSV', 'ai-seo-client'); ?>
                             </button>
                             <p class="description" style="margin-top:5px;"><?php esc_html_e('Open in Excel, Google Sheets, etc.', 'ai-seo-client'); ?></p>
@@ -322,7 +322,7 @@ class SeoReportExport
                             <?php wp_nonce_field('aiseo_export_pdf'); ?>
                             <input type="hidden" name="action" value="aiseo_export_pdf">
                             <button type="submit" class="button" style="padding:8px 24px; height:auto;">
-                                <span style="font-size:18px; vertical-align:middle;">ðŸ“„</span>
+                                <span style="font-size:18px; vertical-align:middle;">📄</span>
                                 <?php esc_html_e('Open PDF Report', 'ai-seo-client'); ?>
                             </button>
                             <p class="description" style="margin-top:5px;"><?php esc_html_e('Print or Save as PDF from browser.', 'ai-seo-client'); ?></p>

@@ -7,7 +7,7 @@ namespace SSEOAIClient;
  *
  * Replaces the WordPress admin chrome with a branded dashboard experience.
  * Existing admin pages are loaded inside an iframe within the shell.
- * An exit button (Ã—) returns the user to the standard WordPress admin.
+ * An exit button (×) returns the user to the standard WordPress admin.
  */
 class DashboardShell
 {
@@ -214,7 +214,7 @@ class DashboardShell
             echo '<script>
             (function() {
                 if (window.self !== window.top) {
-                    // We are inside an iframe â€” hide all WP chrome
+                    // We are inside an iframe — hide all WP chrome
                     var style = document.createElement("style");
                     style.textContent = "\
                         #wpadminbar, #adminmenumain, #adminmenuwrap, #adminmenu,\
@@ -334,6 +334,13 @@ class DashboardShell
 
         // Determine which page to load in the iframe
         $currentPage = isset($_GET['fyndable_page']) ? sanitize_key($_GET['fyndable_page']) : 'ai-seo-dashboard';
+
+        // Never load the shell page inside the shell; that would create a
+        // shell-in-shell loop. Fall back to the dashboard content page.
+        if (empty($currentPage) || $currentPage === 'fyndable-dashboard') {
+            $currentPage = 'ai-seo-dashboard';
+        }
+
         $licenseValid = $this->client->licenseValidator->isLicenseValid();
 
         // If not licensed, force connection page
@@ -346,8 +353,9 @@ class DashboardShell
         $iframeUrl = add_query_arg('page', $currentPage, $iframeUrl);
         $iframeUrl = add_query_arg('fyndable_shell', '1', $iframeUrl);
 
-        // Pass through relevant query parameters (e.g. keyword) to the iframe
-        $passThroughParams = ['keyword'];
+        // Pass through relevant query parameters (e.g. keyword, error messages)
+        // to the iframe so the loaded page can display them.
+        $passThroughParams = ['keyword', 'error', 'activated', 'deactivated', 'validated'];
         foreach ($passThroughParams as $param) {
             if (isset($_GET[$param]) && $_GET[$param] !== '') {
                 $iframeUrl = add_query_arg($param, sanitize_text_field($_GET[$param]), $iframeUrl);
@@ -689,6 +697,10 @@ class DashboardShell
 
             // Restore state from hash on load
             var hash = window.location.hash.replace('#', '');
+            // Never restore the shell page itself inside the iframe.
+            if (hash === 'fyndable-dashboard' || !hash) {
+                hash = 'ai-seo-dashboard';
+            }
             if (hash) {
                 navLinks.forEach(function(link) {
                     if (link.getAttribute('data-slug') === hash) {

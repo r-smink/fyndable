@@ -33,7 +33,7 @@ class TranslationHelper
             if (empty($line) || $line[0] === '#') {
                 // Save previous entry
                 if ($currentMsgid !== '' && $currentMsgstr !== '') {
-                    $entries[$currentMsgid] = $currentMsgstr;
+                    $entries[stripslashes($currentMsgid)] = stripslashes($currentMsgstr);
                 }
                 $currentMsgid = '';
                 $currentMsgstr = '';
@@ -65,7 +65,7 @@ class TranslationHelper
         
         // Save last entry
         if ($currentMsgid !== '' && $currentMsgstr !== '') {
-            $entries[$currentMsgid] = $currentMsgstr;
+            $entries[stripslashes($currentMsgid)] = stripslashes($currentMsgstr);
         }
         
         // Remove empty msgid (header)

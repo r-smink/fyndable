@@ -6,7 +6,7 @@ namespace SSEOAIClient;
  * AI SEO Agent
  *
  * A conversational interface that orchestrates the full SEO workflow:
- * research â†’ cluster â†’ brief â†’ write â†’ score â†’ publish.
+ * research → cluster → brief → write → score → publish.
  *
  * The agent chains steps together, checking in with the user between major actions.
  * Supports auto-publish per content type once trust is established.
@@ -104,7 +104,7 @@ class AISeoAgent
     }
 
     /**
-     * Main chat endpoint â€” processes user message and executes actions.
+     * Main chat endpoint — processes user message and executes actions.
      */
     public function restChat(\WP_REST_Request $request): array|\WP_Error
     {
@@ -284,7 +284,7 @@ class AISeoAgent
         $pillarTitle = $result['pillar_page']['title'] ?? '';
 
         $message = sprintf(
-            __("I've created a topic cluster map for \"%s\". Here's the overview:\n\nâ€¢ Pillar page: %s\nâ€¢ %d cluster hubs with supporting pages\nâ€¢ %d total pages to create\nâ€¢ Estimated timeline: %d months\nâ€¢ Authority potential: %d/100\n\nWhat would you like to do next?", 'ai-seo-client'),
+            __("I've created a topic cluster map for \"%s\". Here's the overview:\n\n• Pillar page: %s\n• %d cluster hubs with supporting pages\n• %d total pages to create\n• Estimated timeline: %d months\n• Authority potential: %d/100\n\nWhat would you like to do next?", 'ai-seo-client'),
             $topic,
             $pillarTitle,
             $clusterCount,
@@ -407,9 +407,9 @@ Return as JSON array.";
                 "%d. %s (Volume: %s, Difficulty: %s, Intent: %s)\n",
                 $count,
                 $kw['keyword'] ?? 'Unknown',
-                $kw['estimated_monthly_search_volume'] ?? $kw['volume'] ?? 'â€”',
-                $kw['keyword_difficulty'] ?? $kw['difficulty'] ?? 'â€”',
-                $kw['search_intent'] ?? $kw['intent'] ?? 'â€”'
+                $kw['estimated_monthly_search_volume'] ?? $kw['volume'] ?? '—',
+                $kw['keyword_difficulty'] ?? $kw['difficulty'] ?? '—',
+                $kw['search_intent'] ?? $kw['intent'] ?? '—'
             );
             if ($count >= 15) break;
         }
@@ -464,7 +464,7 @@ Return as JSON array.";
         $message = '';
 
         if (empty($activeQueues)) {
-            $message = __("No active background tasks. Here's what I can help with:\nâ€¢ Generate a topic cluster\nâ€¢ Write an article\nâ€¢ Research keywords\nâ€¢ Run a site audit", 'ai-seo-client');
+            $message = __("No active background tasks. Here's what I can help with:\n• Generate a topic cluster\n• Write an article\n• Research keywords\n• Run a site audit", 'ai-seo-client');
         } else {
             $message = __("Active background tasks:\n\n", 'ai-seo-client');
             foreach ($activeQueues as $queue) {
@@ -472,7 +472,7 @@ Return as JSON array.";
                 $failed = $queue['failed'] ?? 0;
                 $total = $queue['total'] ?? 0;
                 $message .= sprintf(
-                    "â€¢ Queue #%d: %d/%d completed, %d failed (%s)\n",
+                    "• Queue #%d: %d/%d completed, %d failed (%s)\n",
                     $queue['id'] ?? 0,
                     $completed,
                     $total,
@@ -502,11 +502,11 @@ Return as JSON array.";
     private function handleHelp(string $message, array $context): array
     {
         $help = __("I'm your AI SEO Agent. I can help you with:\n\n");
-        $help .= __("â€¢ **Generate topic clusters** â€” \"Create a cluster about WordPress SEO\"\n");
-        $help .= __("â€¢ **Write articles** â€” \"Write an article about email marketing\"\n");
-        $help .= __("â€¢ **Research keywords** â€” \"Find keywords for a fitness blog\"\n");
-        $help .= __("â€¢ **Audit your site** â€” \"Run a site audit\"\n");
-        $help .= __("â€¢ **Check status** â€” \"What's the status of my queue?\"\n\n");
+        $help .= __("• **Generate topic clusters** — \"Create a cluster about WordPress SEO\"\n");
+        $help .= __("• **Write articles** — \"Write an article about email marketing\"\n");
+        $help .= __("• **Research keywords** — \"Find keywords for a fitness blog\"\n");
+        $help .= __("• **Audit your site** — \"Run a site audit\"\n");
+        $help .= __("• **Check status** — \"What's the status of my queue?\"\n\n");
         $help .= __("Just tell me what you need in plain language!");
 
         return [
@@ -520,7 +520,7 @@ Return as JSON array.";
      */
     private function executeApprovedAction(string $actionId, array $context): array
     {
-        // Parse action ID â€” may contain params like "write_article_approved:keyword=email marketing"
+        // Parse action ID — may contain params like "write_article_approved:keyword=email marketing"
         $parts = explode(':', $actionId, 2);
         $action = $parts[0];
         $params = [];
@@ -557,7 +557,7 @@ Return as JSON array.";
     {
         if (!$this->contentWriter || empty($keyword)) {
             return [
-                'message' => __('Cannot write article â€” Content Writer not available or no keyword specified.', 'ai-seo-client'),
+                'message' => __('Cannot write article — Content Writer not available or no keyword specified.', 'ai-seo-client'),
                 'actions' => [],
             ];
         }
@@ -575,7 +575,7 @@ Return as JSON array.";
         }
 
         $message = sprintf(
-            __("âœ… Article written and saved as draft!\n\nâ€¢ Title: %s\nâ€¢ Word count: %d\nâ€¢ Keyword: %s\n\nYou can edit it now or publish it directly.", 'ai-seo-client'),
+            __("✅ Article written and saved as draft!\n\n• Title: %s\n• Word count: %d\n• Keyword: %s\n\nYou can edit it now or publish it directly.", 'ai-seo-client'),
             $result['title'] ?? 'Untitled',
             $result['word_count'] ?? 0,
             $keyword
@@ -675,7 +675,7 @@ Return as JSON array.";
         }
 
         $message = sprintf(
-            __("âœ… Queued %d pages for background generation!\n\nâ€¢ Start date: %s\nâ€¢ Gap between posts: %d days\nâ€¢ Queue ID: #%d\n\nContent will be generated via WP-Cron. You can close this page â€” I'll check the status when you return.", 'ai-seo-client'),
+            __("✅ Queued %d pages for background generation!\n\n• Start date: %s\n• Gap between posts: %d days\n• Queue ID: #%d\n\nContent will be generated via WP-Cron. You can close this page — I'll check the status when you return.", 'ai-seo-client'),
             $result['total_items'] ?? count($pages),
             $startDate,
             $gapDays,
@@ -828,12 +828,12 @@ Return as JSON array.";
         <div class="wrap agent-wrap">
             <div class="agent-chat">
                 <div class="agent-header">
-                    <h1>ðŸ¤– <?php esc_html_e('AI SEO Agent', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Your conversational SEO assistant â€” research, plan, write, and publish in one chat.', 'ai-seo-client'); ?></p>
+                    <h1>🤖 <?php esc_html_e('AI SEO Agent', 'ai-seo-client'); ?></h1>
+                    <p><?php esc_html_e('Your conversational SEO assistant — research, plan, write, and publish in one chat.', 'ai-seo-client'); ?></p>
                 </div>
                 <div class="agent-messages" id="agent-messages">
                     <div class="agent-msg agent-msg-assistant">
-                        <div class="agent-bubble"><?php esc_html_e("Hi! I'm your AI SEO Agent. I can help you with:\nâ€¢ Generate topic clusters\nâ€¢ Write SEO articles\nâ€¢ Research keywords\nâ€¢ Run site audits\n\nWhat would you like to do?", 'ai-seo-client'); ?></div>
+                        <div class="agent-bubble"><?php esc_html_e("Hi! I'm your AI SEO Agent. I can help you with:\n• Generate topic clusters\n• Write SEO articles\n• Research keywords\n• Run site audits\n\nWhat would you like to do?", 'ai-seo-client'); ?></div>
                     </div>
                 </div>
                 <div class="agent-input-area">
@@ -881,7 +881,7 @@ Return as JSON array.";
                 if (message) addMessage('user', message);
 
                 $('#agent-send').prop('disabled', true);
-                $('#agent-messages').append('<div class="agent-msg agent-msg-assistant"><div class="agent-typing">ðŸ¤” ' + '<?php echo esc_js(__("Thinking...", "ai-seo-client")); ?>' + '</div></div>');
+                $('#agent-messages').append('<div class="agent-msg agent-msg-assistant"><div class="agent-typing">🤔 ' + '<?php echo esc_js(__("Thinking...", "ai-seo-client")); ?>' + '</div></div>');
                 $('#agent-messages').scrollTop($('#agent-messages')[0].scrollHeight);
 
                 var data = {};
@@ -899,7 +899,7 @@ Return as JSON array.";
                     addMessage('assistant', res.message, res.actions);
                 }).catch(function(err) {
                     $('.agent-typing').parent().remove();
-                    addMessage('assistant', 'âŒ ' + (err.message || '<?php echo esc_js(__("Error occurred", "ai-seo-client")); ?>'));
+                    addMessage('assistant', '❌ ' + (err.message || '<?php echo esc_js(__("Error occurred", "ai-seo-client")); ?>'));
                 }).finally(function() {
                     $('#agent-send').prop('disabled', false);
                 });

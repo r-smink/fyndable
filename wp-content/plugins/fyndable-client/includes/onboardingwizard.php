@@ -61,25 +61,29 @@ class OnboardingWizard
             return;
         }
 
-        if (isset($_GET['page']) && $_GET['page'] === 'ai-seo-onboarding') {
+        // Don't trap the user on the standalone license activation page,
+        // the onboarding wizard itself, or while a page is inside the shell iframe.
+        if (isset($_GET['page']) && in_array($_GET['page'], ['ai-seo-onboarding', 'ai-seo-client'], true)) {
             return;
         }
 
-        if (get_option('sseo_ai_client_license_status') === 'active') {
-            update_option(self::COMPLETED_OPTION, '1');
+        if (isset($_GET['fyndable_shell'])) {
             return;
         }
 
-        $firstActivation = (int) get_option('sseo_ai_client_first_activation', 0);
-        if (!$firstActivation) {
+        // Only nudge the user into the wizard from the actual Fyndable dashboard
+        // pages; don't hijack unrelated WP admin screens.
+        if (!isset($_GET['page']) || !in_array($_GET['page'], ['fyndable-dashboard', 'ai-seo-dashboard'], true)) {
             return;
         }
 
-        if (time() - $firstActivation < 5 * MINUTE_IN_SECONDS) {
-            return;
+        // Make sure the activation timestamp exists so the timer logic elsewhere
+        // has a sane value, then send the user to the wizard.
+        if (!get_option('sseo_ai_client_first_activation')) {
+            update_option('sseo_ai_client_first_activation', time());
         }
 
-        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding'));
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=' . (int) get_option(self::STEP_OPTION, 1)));
         exit;
     }
 
@@ -119,7 +123,9 @@ class OnboardingWizard
             case 7:
                 $this->saveStep7();
                 update_option(self::COMPLETED_OPTION, '1');
-                wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
+                // Send the user back to the full dashboard shell, not the bare
+                // ai-seo-dashboard content page, so the Fyndable menu is shown.
+                wp_redirect(admin_url('admin.php?page=fyndable-dashboard'));
                 exit;
             default:
                 break;
@@ -137,8 +143,8 @@ class OnboardingWizard
     private function saveStep1(): void
     {
         $action = sanitize_text_field($_POST['license_action'] ?? 'activate');
-        $dashboardUrl = esc_url_raw($_POST['dashboard_url'] ?? '');
-        $licenseKey = sanitize_text_field($_POST['license_key'] ?? '');
+        $dashboardUrl = esc_url_raw(trim($_POST['dashboard_url'] ?? ''));
+        $licenseKey = strtoupper(trim(sanitize_text_field($_POST['license_key'] ?? '')));
         $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
 
         // Fall back to the baked-in default dashboard URL when none is submitted
@@ -148,7 +154,12 @@ class OnboardingWizard
             $dashboardUrl = $settings->getDashboardUrl();
         }
 
+        // Normalize the dashboard URL (force HTTPS, strip trailing slash) before
+        // storing it, so later API calls don't hit http->https 301 redirects
+        // that silently turn POST into GET and break the REST endpoints.
+        $api = new DashboardAPI(new Settings());
         if ($dashboardUrl) {
+            $dashboardUrl = $api->normalizeDashboardUrl($dashboardUrl);
             update_option('sseo_ai_client_dashboard_url', $dashboardUrl);
         }
 
@@ -166,7 +177,6 @@ class OnboardingWizard
             $this->redirectWithError(__('Please enter a valid license key and dashboard URL.', 'ai-seo-client'));
         }
 
-        $api = new DashboardAPI(new Settings());
         $result = $api->activateLicense($licenseKey, $dashboardUrl);
 
         if (is_wp_error($result)) {
@@ -185,6 +195,9 @@ class OnboardingWizard
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
+
+        // Record activation timestamp for the validator grace period.
+        update_option('sseo_ai_client_last_activation', time());
 
         if (!empty($result['white_label']) && is_array($result['white_label'])) {
             update_option('sseo_ai_white_label', $result['white_label']);
@@ -309,7 +322,7 @@ class OnboardingWizard
     {
         $titleTemplate = sanitize_text_field($_POST['title_template'] ?? '%title% %separator% %sitename%');
         $descriptionTemplate = sanitize_text_field($_POST['description_template'] ?? '%excerpt%');
-        $separator = sanitize_text_field($_POST['separator'] ?? 'â€“');
+        $separator = sanitize_text_field($_POST['separator'] ?? '–');
         $socialFacebook = esc_url_raw($_POST['social_facebook'] ?? '');
         $socialTwitter = esc_url_raw($_POST['social_twitter'] ?? '');
         $socialLinkedIn = esc_url_raw($_POST['social_linkedin'] ?? '');
@@ -412,34 +425,35 @@ class OnboardingWizard
         $secondaryColor = '#8f39ac';
         ?>
         <style>
-            .sseo-onboarding { max-width: 700px; margin: 40px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            #wpcontent, #wpbody, #wpbody-content { background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%) !important; }
+            .sseo-onboarding { max-width: 760px; margin: 0 auto; padding: 60px 20px; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-onboarding-header { text-align: center; margin-bottom: 40px; }
-            .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 8px 0; }
-            .sseo-onboarding-header p { color: #6b7280; font-size: 16px; margin: 0; }
+            .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; color: #fff; margin: 0 0 8px 0; }
+            .sseo-onboarding-header p { color: rgba(255,255,255,0.85); font-size: 16px; margin: 0; }
             .sseo-onboarding-progress { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
-            .sseo-onboarding-progress::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background: #e5e7eb; z-index: 0; }
+            .sseo-onboarding-progress::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.3); z-index: 0; }
             .sseo-onboarding-progress-step { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; flex: 1; }
-            .sseo-onboarding-progress-circle { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; color: #9ca3af; margin-bottom: 8px; }
-            .sseo-onboarding-progress-step.active .sseo-onboarding-progress-circle { border-color: <?php echo esc_attr($primaryColor); ?>; background: <?php echo esc_attr($primaryColor); ?>; color: #fff; }
+            .sseo-onboarding-progress-circle { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; color: #fff; margin-bottom: 8px; }
+            .sseo-onboarding-progress-step.active .sseo-onboarding-progress-circle { border-color: #fff; background: #fff; color: <?php echo esc_attr($primaryColor); ?>; }
             .sseo-onboarding-progress-step.completed .sseo-onboarding-progress-circle { border-color: #10b981; background: #10b981; color: #fff; }
-            .sseo-onboarding-progress-label { font-size: 13px; color: #6b7280; }
-            .sseo-onboarding-progress-step.active .sseo-onboarding-progress-label { color: <?php echo esc_attr($primaryColor); ?>; font-weight: 600; }
-            .sseo-onboarding-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+            .sseo-onboarding-progress-label { font-size: 13px; color: rgba(255,255,255,0.85); }
+            .sseo-onboarding-progress-step.active .sseo-onboarding-progress-label { color: #fff; font-weight: 600; }
+            .sseo-onboarding-card { background: #fff; border-radius: 16px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
             .sseo-onboarding-card h2 { font-size: 22px; font-weight: 700; margin: 0 0 8px 0; color: #111827; }
             .sseo-onboarding-card .description { color: #6b7280; margin-bottom: 30px; }
             .sseo-onboarding-field { margin-bottom: 20px; }
             .sseo-onboarding-field label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
-            .sseo-onboarding-field input, .sseo-onboarding-field select { width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .sseo-onboarding-field input:focus, .sseo-onboarding-field select:focus { border-color: <?php echo esc_attr($primaryColor); ?>; outline: none; }
+            .sseo-onboarding-field input, .sseo-onboarding-field select, .sseo-onboarding-field textarea { width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
+            .sseo-onboarding-field input:focus, .sseo-onboarding-field select:focus, .sseo-onboarding-field textarea:focus { border-color: <?php echo esc_attr($primaryColor); ?>; outline: none; }
             .sseo-onboarding-field .hint { font-size: 13px; color: #9ca3af; margin-top: 4px; }
             .sseo-onboarding-checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
             .sseo-onboarding-checkbox-item { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; }
             .sseo-onboarding-checkbox-item:hover { border-color: <?php echo esc_attr($primaryColor); ?>; }
             .sseo-onboarding-checkbox-item input { margin: 0; }
             .sseo-onboarding-actions { display: flex; justify-content: space-between; margin-top: 30px; }
-            .sseo-onboarding-actions .button-primary { background: <?php echo esc_attr($primaryColor); ?>; border-color: <?php echo esc_attr($primaryColor); ?>; padding: 8px 24px; font-size: 15px; }
-            .sseo-onboarding-actions .button-secondary { padding: 8px 24px; font-size: 15px; }
-            .sseo-onboarding-skip { color: #9ca3af; text-decoration: none; font-size: 14px; line-height: 34px; }
+            .sseo-onboarding-actions .button-primary { background: <?php echo esc_attr($primaryColor); ?>; border-color: <?php echo esc_attr($primaryColor); ?>; padding: 8px 24px; font-size: 15px; color: #fff; }
+            .sseo-onboarding-actions .button-secondary { background: #f3f4f6; color: #374151; border-color: #e5e7eb; padding: 8px 24px; font-size: 15px; }
+            .sseo-onboarding-skip { color: #fff; text-decoration: none; font-size: 14px; line-height: 34px; }
         </style>
 
         <div class="sseo-onboarding">
@@ -452,7 +466,7 @@ class OnboardingWizard
                 <?php for ($i = 1; $i <= 7; $i++): ?>
                     <div class="sseo-onboarding-progress-step <?php echo $i < $currentStep ? 'completed' : ($i === $currentStep ? 'active' : ''); ?>">
                         <div class="sseo-onboarding-progress-circle">
-                            <?php echo $i < $currentStep ? 'âœ“' : $i; ?>
+                            <?php echo $i < $currentStep ? '&check;' : $i; ?>
                         </div>
                         <div class="sseo-onboarding-progress-label"><?php echo esc_html($steps[$i]); ?></div>
                     </div>
@@ -489,7 +503,7 @@ class OnboardingWizard
                             <input type="hidden" id="dashboard_url" name="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
                             <div class="sseo-onboarding-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
-                                <input type="text" id="license_key" name="license_key" placeholder="FYN-SSAI-XXXX-XXXX-XXXX" value="">
+                                <input type="text" id="license_key" name="license_key" placeholder="<?php echo esc_attr__('FYN-SSAI-XXXX-XXXX-XXXX', 'ai-seo-client'); ?>" value="">
                                 <?php if ($freeTierEnabled): ?>
                                     <div class="hint"><?php esc_html_e('Skip this step to use the free tier with limited features.', 'ai-seo-client'); ?></div>
                                 <?php endif; ?>
@@ -498,9 +512,9 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <?php if ($freeTierEnabled): ?>
-                                    <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now â†’', 'ai-seo-client'); ?></button>
+                                    <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now', 'ai-seo-client'); ?> &rarr;</button>
                                 <?php endif; ?>
-                                <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
                             </div>
                             <?php break;
 
@@ -510,7 +524,7 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-field">
                                 <label for="company_name"><?php esc_html_e('Company Name', 'ai-seo-client'); ?></label>
-                                <input type="text" id="company_name" name="company_name" placeholder="Your Company Name" value="<?php echo esc_attr(get_option('sseo_ai_wl_company_name', '')); ?>">
+                                <input type="text" id="company_name" name="company_name" placeholder="<?php echo esc_attr__('Your Company Name', 'ai-seo-client'); ?>" value="<?php echo esc_attr(get_option('sseo_ai_wl_company_name', '')); ?>">
                                 <div class="hint"><?php esc_html_e('Leave empty if already set by your license provider.', 'ai-seo-client'); ?></div>
                             </div>
                             <div class="sseo-onboarding-field">
@@ -520,7 +534,7 @@ class OnboardingWizard
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="website_description"><?php esc_html_e('Website Description', 'ai-seo-client'); ?></label>
-                                <textarea id="website_description" name="website_description" rows="3" placeholder="Brief description of your website or business..."><?php echo esc_textarea(get_option('sseo_ai_website_description', '')); ?></textarea>
+                                <textarea id="website_description" name="website_description" rows="3" placeholder="<?php echo esc_attr__('Brief description of your website or business...', 'ai-seo-client'); ?>"><?php echo esc_textarea(get_option('sseo_ai_website_description', '')); ?></textarea>
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="industry"><?php esc_html_e('Industry/Category', 'ai-seo-client'); ?></label>
@@ -538,8 +552,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
                             </div>
                             <?php break;
 
@@ -567,7 +581,7 @@ class OnboardingWizard
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="target_audience"><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></label>
-                                <textarea id="target_audience" name="target_audience" rows="3" placeholder="Describe your target audience (e.g., small business owners, developers, parents...)"><?php echo esc_textarea($currentAudience); ?></textarea>
+                                <textarea id="target_audience" name="target_audience" rows="3" placeholder="<?php echo esc_attr__('Describe your target audience (e.g., small business owners, developers, parents...)', 'ai-seo-client'); ?>"><?php echo esc_textarea($currentAudience); ?></textarea>
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="writing_style"><?php esc_html_e('Writing Style', 'ai-seo-client'); ?></label>
@@ -581,13 +595,13 @@ class OnboardingWizard
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="brand_values"><?php esc_html_e('Key Brand Values/Phrases (optional)', 'ai-seo-client'); ?></label>
-                                <textarea id="brand_values" name="brand_values" rows="3" placeholder="Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)"><?php echo esc_textarea($currentDescription); ?></textarea>
+                                <textarea id="brand_values" name="brand_values" rows="3" placeholder="<?php echo esc_attr__('Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)', 'ai-seo-client'); ?>"><?php echo esc_textarea($currentDescription); ?></textarea>
                                 <div class="hint"><?php esc_html_e('These will help AI content align with your brand messaging.', 'ai-seo-client'); ?></div>
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
                             </div>
                             <?php break;
 
@@ -603,7 +617,7 @@ class OnboardingWizard
                             <div class="sseo-onboarding-field">
                                 <label for="separator"><?php esc_html_e('Title Separator', 'ai-seo-client'); ?></label>
                                 <select id="separator" name="separator">
-                                    <?php $seps = ['â€“', 'â€”', '|', 'Â·', 'â€¢', 'Â»', 'Â«', ':']; $current = get_option('sseo_ai_separator', 'â€“'); ?>
+                                    <?php $seps = ['–', '—', '|', '·', '•', '»', '«', ':']; $current = get_option('sseo_ai_separator', '–'); ?>
                                     <?php foreach ($seps as $sep): ?>
                                         <option value="<?php echo esc_attr($sep); ?>" <?php selected($current, $sep); ?>><?php echo esc_html($sep); ?></option>
                                     <?php endforeach; ?>
@@ -611,16 +625,16 @@ class OnboardingWizard
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="social_facebook"><?php esc_html_e('Facebook URL (optional)', 'ai-seo-client'); ?></label>
-                                <input type="url" id="social_facebook" name="social_facebook" placeholder="https://facebook.com/yourpage" value="<?php echo esc_attr(get_option('sseo_ai_social_facebook', '')); ?>">
+                                <input type="url" id="social_facebook" name="social_facebook" placeholder="<?php echo esc_attr__('https://facebook.com/yourpage', 'ai-seo-client'); ?>" value="<?php echo esc_attr(get_option('sseo_ai_social_facebook', '')); ?>">
                             </div>
                             <div class="sseo-onboarding-field">
                                 <label for="social_twitter"><?php esc_html_e('Twitter/X URL (optional)', 'ai-seo-client'); ?></label>
-                                <input type="url" id="social_twitter" name="social_twitter" placeholder="https://twitter.com/yourhandle" value="<?php echo esc_attr(get_option('sseo_ai_social_twitter', '')); ?>">
+                                <input type="url" id="social_twitter" name="social_twitter" placeholder="<?php echo esc_attr__('https://twitter.com/yourhandle', 'ai-seo-client'); ?>" value="<?php echo esc_attr(get_option('sseo_ai_social_twitter', '')); ?>">
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
                             </div>
                             <?php break;
 
@@ -658,8 +672,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=4')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=4')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
                             </div>
                             <?php break;
 
@@ -669,7 +683,7 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-field">
                                 <label for="pagespeed_api_key"><?php esc_html_e('Google PageSpeed API Key (optional)', 'ai-seo-client'); ?></label>
-                                <input type="text" id="pagespeed_api_key" name="pagespeed_api_key" placeholder="AIza..." value="<?php echo esc_attr(get_option('sseo_ai_pagespeed_api_key', '')); ?>">
+                                <input type="text" id="pagespeed_api_key" name="pagespeed_api_key" placeholder="<?php echo esc_attr__('AIza...', 'ai-seo-client'); ?>" value="<?php echo esc_attr(get_option('sseo_ai_pagespeed_api_key', '')); ?>">
                                 <div class="hint">
                                     <?php echo wp_kses_post(sprintf(__('Get a free API key from <a href="%s" target="_blank">Google Cloud Console</a>. Free tier: 25 requests/day.', 'ai-seo-client'), 'https://console.cloud.google.com/apis/library/pagespeedapi.googleapis.com')); ?>
                                 </div>
@@ -683,8 +697,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=5')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=5')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> &rarr;</button>
                             </div>
                             <?php break;
 
@@ -715,8 +729,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=6')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?> âœ“</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=6')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?> &check;</button>
                             </div>
                             <?php break;
                     endswitch; ?>

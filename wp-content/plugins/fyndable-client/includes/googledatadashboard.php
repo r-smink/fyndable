@@ -342,18 +342,18 @@ class GoogleDataDashboard
                     <h2><?php esc_html_e('Google Services Status', 'ai-seo-client'); ?></h2>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
                         <span class="google-service-badge <?php echo $gscConnected ? 'connected' : 'disconnected'; ?>">
-                            <?php echo $gscConnected ? 'âœ“' : 'âœ—'; ?> Search Console
+                            <?php echo $gscConnected ? '✓' : '✗'; ?> Search Console
                         </span>
                         <span class="google-service-badge <?php echo $ga4Connected ? 'connected' : 'disconnected'; ?>">
-                            <?php echo $ga4Connected ? 'âœ“' : 'âœ—'; ?> Analytics 4
+                            <?php echo $ga4Connected ? '✓' : '✗'; ?> Analytics 4
                         </span>
                         <span class="google-service-badge <?php echo $adsConnected ? 'connected' : 'disconnected'; ?>">
-                            <?php echo $adsConnected ? 'âœ“' : 'âœ—'; ?> Google Ads
+                            <?php echo $adsConnected ? '✓' : '✗'; ?> Google Ads
                         </span>
                     </div>
 
                     <?php if (!$anyConnected): ?>
-                        <p><?php esc_html_e('Connect your Google account via AI SEO â†’ Integrations to see data here.', 'ai-seo-client'); ?></p>
+                        <p><?php esc_html_e('Connect your Google account via AI SEO → Integrations to see data here.', 'ai-seo-client'); ?></p>
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="button button-primary">
                             <?php esc_html_e('Go to Integrations', 'ai-seo-client'); ?>
                         </a>
@@ -366,7 +366,7 @@ class GoogleDataDashboard
                                 <?php esc_html_e('List Available Properties', 'ai-seo-client'); ?>
                             </button>
                             <select id="ga4-property-select" style="display:none; margin-left: 10px; max-width: 300px;"></select>
-                            <p class="description"><?php esc_html_e('Numeric property ID from GA4 (found in Admin â†’ Property Settings).', 'ai-seo-client'); ?></p>
+                            <p class="description"><?php esc_html_e('Numeric property ID from GA4 (found in Admin → Property Settings).', 'ai-seo-client'); ?></p>
                         </div>
 
                         <!-- Google Ads config -->

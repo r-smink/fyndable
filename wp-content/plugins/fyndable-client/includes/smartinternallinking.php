@@ -160,7 +160,7 @@ class SmartInternalLinking
                     </tbody>
                 </table>
                 <?php else: ?>
-                <p style="color: #00a32a;">âœ“ <?php esc_html_e('No orphan pages detected!', 'ai-seo-client'); ?></p>
+                <p style="color: #00a32a;">✓ <?php esc_html_e('No orphan pages detected!', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
             </div>
             

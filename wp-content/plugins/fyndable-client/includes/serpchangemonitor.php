@@ -392,7 +392,7 @@ PROMPT;
         <div class="wrap sm-wrap">
             <div class="sm-card">
                 <div class="sm-header">
-                    <h1>ðŸ“Š <?php esc_html_e('SERP Change Monitor', 'ai-seo-client'); ?></h1>
+                    <h1>📊 <?php esc_html_e('SERP Change Monitor', 'ai-seo-client'); ?></h1>
                     <p><?php esc_html_e('Monitor ranking changes and auto-update content when positions drop.', 'ai-seo-client'); ?></p>
                 </div>
 
@@ -427,10 +427,10 @@ PROMPT;
 
                     var html = '';
                     if (!data.changes.length) {
-                        html = '<p style="color:#666;">ðŸŽ‰ <?php echo esc_js(__("No significant changes detected.", "ai-seo-client")); ?></p>';
+                        html = '<p style="color:#666;">🎉 <?php echo esc_js(__("No significant changes detected.", "ai-seo-client")); ?></p>';
                     } else {
                         data.changes.forEach(function(c) {
-                            var statusLabel = c.status === 'auto_updated' ? 'âœ… <?php echo esc_js(__("Auto-updated", "ai-seo-client")); ?>' : (c.status === 'acknowledged' ? 'ðŸ‘ï¸ Acknowledged' : 'âš ï¸ New');
+                            var statusLabel = c.status === 'auto_updated' ? '✅ <?php echo esc_js(__("Auto-updated", "ai-seo-client")); ?>' : (c.status === 'acknowledged' ? '👁️ Acknowledged' : '⚠️ New');
                             html += '<div class="sm-change ' + c.status + '">';
                             html += '<div><strong>' + c.keyword + '</strong><div style="font-size:12px;color:#64748b;">' + c.detected_at + '</div></div>';
                             html += '<div style="text-align:center;"><span style="font-size:18px;font-weight:700;color:#dc2626;">#' + c.current_position + '</span> <span style="color:#64748b;">was #' + c.previous_position + '</span></div>';

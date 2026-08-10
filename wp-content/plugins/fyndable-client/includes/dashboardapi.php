@@ -29,6 +29,11 @@ class DashboardAPI
      */
     public function activateLicense(string $licenseKey, string $dashboardUrl): array|\WP_Error
     {
+        // Normalize the license key before sending it to the dashboard.
+        // Keys are generated in uppercase; trimming avoids leading/trailing
+        // spaces that cause "License key not found" errors.
+        $licenseKey = strtoupper(trim($licenseKey));
+
         $siteUrl = get_site_url();
         $siteName = get_bloginfo('name');
         
@@ -155,16 +160,27 @@ class DashboardAPI
     }
 
     /**
-     * Normalize dashboard URL to prevent 301 redirects
+     * Normalize dashboard URL to prevent 301 redirects.
+     *
+     * Made public so callers (handleLicenseActivation, onboarding, validator)
+     * can store the same normalized URL that the API client uses internally,
+     * avoiding http->https 301 redirects on subsequent API calls.
      */
-    private function normalizeDashboardUrl(string $url): string
+    public function normalizeDashboardUrl(string $url): string
     {
-        // Force HTTPS
-        $url = str_replace('http://', 'https://', $url);
-        
+        $url = trim($url);
+
+        // Prepend a protocol when the user only types the domain.
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . $url;
+        } else {
+            // Force HTTPS if an HTTP protocol is present.
+            $url = str_replace('http://', 'https://', $url);
+        }
+
         // Remove trailing slash
         $url = rtrim($url, '/');
-        
+
         return $url;
     }
 
@@ -228,6 +244,7 @@ class DashboardAPI
      */
     public function deactivateLicense(string $licenseKey, string $tenantKey, string $dashboardUrl): bool
     {
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/deactivate',
             [
@@ -237,7 +254,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -250,6 +267,7 @@ class DashboardAPI
     public function validateLicense(string $licenseKey, string $dashboardUrl): array|\WP_Error
     {
         $siteUrl = get_site_url();
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
 
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/validate',
@@ -260,7 +278,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -293,6 +311,7 @@ class DashboardAPI
             return false;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/usage/report',
             [
@@ -305,7 +324,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -325,6 +344,7 @@ class DashboardAPI
             return false;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/google/report-usage',
             [
@@ -337,7 +357,7 @@ class DashboardAPI
                 ],
                 'timeout' => 10,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -349,6 +369,7 @@ class DashboardAPI
      */
     public function checkTenantStatus(string $tenantKey, string $licenseKey, string $dashboardUrl): array|\WP_Error
     {
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/tenant/status',
             [
@@ -358,7 +379,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -396,6 +417,7 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/ai/generate',
             [
@@ -413,7 +435,7 @@ class DashboardAPI
                 ]),
                 'timeout' => 90,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -457,6 +479,7 @@ class DashboardAPI
             return $cached;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_get(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/usage/check',
             [
@@ -466,7 +489,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -506,6 +529,8 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+
         // Map client-side endpoint names to SaaS dashboard REST routes
         $endpointMap = [
             'serp/search'  => '/serp/query',
@@ -524,7 +549,7 @@ class DashboardAPI
             'body' => json_encode($params),
             'timeout' => 60,
             'sslverify' => $this->getSslVerify(),
-            'redirection' => 5,
+            'redirection' => 0,
         ]);
 
         if (is_wp_error($response)) {
@@ -594,11 +619,11 @@ class DashboardAPI
         // If URLs match but SaaS not loaded, try to load it
         if (!$saasAvailable && $urlsMatch) {
             // Check if the SaaS plugin file exists
-            $saasPluginFile = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/ai-seo-saas-dashboard.php';
-            if (file_exists($saasPluginFile) && is_plugin_active('ai-seo-saas-dashboard/ai-seo-saas-dashboard.php')) {
+            $saasPluginFile = WP_PLUGIN_DIR . '/fyndable-saas-dashboard/ai-seo-saas-dashboard.php';
+            if (file_exists($saasPluginFile) && is_plugin_active('fyndable-saas-dashboard/ai-seo-saas-dashboard.php')) {
                 if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: SaaS plugin exists and is active, attempting to load classes');
                 // Include the necessary files
-                $saasDir = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/includes/';
+                $saasDir = WP_PLUGIN_DIR . '/fyndable-saas-dashboard/includes/';
                 if (file_exists($saasDir . 'tenantrepository.php')) {
                     require_once $saasDir . 'tenantrepository.php';
                 }
@@ -769,6 +794,7 @@ class DashboardAPI
             return;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/tenant/status',
             [
@@ -778,7 +804,7 @@ class DashboardAPI
                 ],
                 'timeout' => 15,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -814,6 +840,7 @@ class DashboardAPI
             return $cached;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_get(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
             [
@@ -823,7 +850,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -849,6 +876,7 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
             [
@@ -865,7 +893,7 @@ class DashboardAPI
                 ]),
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -892,6 +920,7 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_get(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/ticket/' . $ticketId,
             [
@@ -901,7 +930,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -921,6 +950,7 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/reply',
             [
@@ -936,7 +966,7 @@ class DashboardAPI
                 ]),
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -960,6 +990,7 @@ class DashboardAPI
             return new \WP_Error('no_file', __('No screenshot uploaded.', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $url = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/upload';
 
         $boundary = wp_generate_password(24, false);
@@ -976,7 +1007,7 @@ class DashboardAPI
                 'body' => $body,
                 'timeout' => 60,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
