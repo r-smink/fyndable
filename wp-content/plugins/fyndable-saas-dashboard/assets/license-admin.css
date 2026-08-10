@@ -342,14 +342,14 @@ body[class*="sseo-ai"] {
    8. WP-LIST-TABLE STYLING
    ================================================ */
 .sseo-ai-license-admin .wp-list-table {
-    width: calc(100%);
+    width: calc(100% - 40px);
     border: none;
     border-radius: var(--sseo-radius);
     overflow: hidden;
     box-shadow: var(--sseo-shadow-md);
     background: #fff;
     box-sizing: border-box;
-    margin: 0px;
+    margin: 20px;
 }
 
 .sseo-ai-license-admin .wp-list-table thead th {
@@ -381,7 +381,7 @@ body[class*="sseo-ai"] {
 .sseo-ai-license-admin .tablenav {
     background: rgba(255, 255, 255, 0.95);
     border-radius: var(--sseo-radius);
-    margin: 20px 0px;
+    margin: 20px;
     padding: 20px;
     box-shadow: var(--sseo-shadow-md);
     border: none;
@@ -390,7 +390,7 @@ body[class*="sseo-ai"] {
     justify-content: space-between;
     gap: 20px;
     flex-wrap: wrap;
-    min-height: auto;
+    min-height: 110px;
 }
 
 /* Configurator: form margin override (top-level forms, not tablenav inner forms) */

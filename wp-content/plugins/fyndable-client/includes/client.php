@@ -206,6 +206,9 @@ class Client
         // Create brand visibility table
         BrandVisibilityTracker::createTable();
 
+        // Create onboarding status table
+        OnboardingWizard::createTable();
+
         // Ensure sitemap rewrite rules are registered immediately
         flush_rewrite_rules();
     }
@@ -2070,6 +2073,20 @@ class Client
                             <strong>âœ“</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
                         </div>
                     <?php endif; ?>
+
+                    <div class="settings-section" style="background:#f0f6ff;border-radius:8px;padding:20px;">
+                        <h2><?php esc_html_e('Setup Wizard', 'ai-seo-client'); ?></h2>
+                        <p class="description">
+                            <?php esc_html_e('Re-run the Fyndable setup wizard to review or change your onboarding settings.', 'ai-seo-client'); ?>
+                        </p>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:15px;">
+                            <input type="hidden" name="action" value="sseo_ai_onboarding_restart">
+                            <?php wp_nonce_field('sseo_ai_onboarding_restart'); ?>
+                            <button type="submit" class="button button-primary">
+                                <?php esc_html_e('Start Wizard', 'ai-seo-client'); ?>
+                            </button>
+                        </form>
+                    </div>
                     
                     <?php if ($rateLimitStatus['limit'] > 0): ?>
                     <div class="settings-section">
@@ -2520,8 +2537,8 @@ class Client
         // Set a transient to show success message on next page load
         set_transient('sseo_ai_activation_success', true, 30);
         
-        // Redirect to dashboard instead of license page
-        wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
+        // Redirect to onboarding wizard instead of dashboard
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding'));
         exit;
     }
 

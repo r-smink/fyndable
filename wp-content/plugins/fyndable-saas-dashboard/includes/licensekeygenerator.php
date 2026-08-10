@@ -197,10 +197,18 @@ class LicenseKeyGenerator
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
         
         if ($existingTenant) {
-            // Re-activation - restore to active and update last active
+            // Re-activation - restore to active, update last active and domain
+            $metadata = is_array($existingTenant['metadata'] ?? null) ? $existingTenant['metadata'] : [];
+            $metadata['activated_from'] = $activationData['site_url'] ?? 'unknown';
+            $metadata['ip_address'] = $activationData['ip_address'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $metadata['reactivated_at'] = current_time('mysql');
+            $metadata['license_type'] = $license['license_type'] ?? ($metadata['license_type'] ?? 'paid');
+
             $this->tenants->updateTenant($existingTenant['tenant_key'], [
                 'status' => 'active',
                 'last_active' => current_time('mysql'),
+                'domain' => $activationData['site_url'] ?? $existingTenant['domain'] ?? null,
+                'metadata' => $metadata,
             ]);
             
             return [

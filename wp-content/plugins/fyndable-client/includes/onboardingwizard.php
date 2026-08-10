@@ -20,11 +20,120 @@ class OnboardingWizard
 {
     private const COMPLETED_OPTION = 'sseo_ai_onboarding_completed';
     private const STEP_OPTION      = 'sseo_ai_onboarding_step';
+    private const TABLE_NAME       = 'sseo_ai_onboarding';
 
+    /**
+     * Create the onboarding status table.
+     */
+    public static function createTable(): void
+    {
+        global $wpdb;
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        $charsetCollate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            completed tinyint(1) NOT NULL DEFAULT 0,
+            current_step tinyint(3) unsigned NOT NULL DEFAULT 1,
+            started_at datetime DEFAULT NULL,
+            completed_at datetime DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) $charsetCollate;";
+
+        dbDelta($sql);
+
+        // Seed one row for this site if it does not exist, so we always have a record to update.
+        $existing = $wpdb->get_row("SELECT id FROM $table LIMIT 1");
+        if (!$existing) {
+            $legacyCompleted = get_option(self::COMPLETED_OPTION) ? 1 : 0;
+            $legacyStep = max(1, (int) get_option(self::STEP_OPTION, 1));
+            $completedAt = $legacyCompleted ? current_time('mysql') : null;
+            $wpdb->insert($table, [
+                'completed'    => $legacyCompleted,
+                'current_step' => $legacyStep,
+                'started_at'   => current_time('mysql'),
+                'completed_at' => $completedAt,
+            ], ['%d', '%d', '%s', '%s']);
+        }
+    }
+
+    /**
+     * Get the single onboarding record for this site.
+     */
+    private static function getRecord(): ?object
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        return $wpdb->get_row("SELECT * FROM $table LIMIT 1");
+    }
+
+    /**
+     * Ensure a single onboarding record exists.
+     */
+    private static function ensureRecord(): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        $existing = $wpdb->get_row("SELECT id FROM $table LIMIT 1");
+        if (!$existing) {
+            $legacyCompleted = get_option(self::COMPLETED_OPTION) ? 1 : 0;
+            $legacyStep = max(1, (int) get_option(self::STEP_OPTION, 1));
+            $wpdb->insert($table, [
+                'completed'    => $legacyCompleted,
+                'current_step' => $legacyStep,
+                'started_at'   => current_time('mysql'),
+                'completed_at' => $legacyCompleted ? current_time('mysql') : null,
+            ], ['%d', '%d', '%s', '%s']);
+        }
+    }
+
+    /**
+     * Update the single onboarding record.
+     */
+    private static function updateStatus(array $data): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+        self::ensureRecord();
+        $record = $wpdb->get_row("SELECT id FROM $table LIMIT 1");
+        if ($record) {
+            $wpdb->update($table, $data, ['id' => $record->id], null, ['%d']);
+        }
+    }
+
+    /**
+     * Check whether the onboarding wizard is completed.
+     */
+    public static function isCompleted(): bool
+    {
+        $record = self::getRecord();
+        if ($record) {
+            return (bool) $record->completed;
+        }
+        return (bool) get_option(self::COMPLETED_OPTION);
+    }
+
+    /**
+     * Get the current wizard step.
+     */
+    public static function getCurrentStep(): int
+    {
+        $record = self::getRecord();
+        if ($record) {
+            return (int) $record->current_step;
+        }
+        return max(1, (int) get_option(self::STEP_OPTION, 1));
+    }
+    /**
+     * Register the onboarding page and handlers.
+     */
     public function register(): void
     {
         add_action('admin_menu', [$this, 'registerPage']);
         add_action('admin_post_sseo_ai_onboarding_save', [$this, 'handleSave']);
+        add_action('admin_post_sseo_ai_onboarding_restart', [$this, 'handleRestart']);
         add_action('admin_init', [$this, 'maybeRedirect']);
     }
 
@@ -43,16 +152,26 @@ class OnboardingWizard
         );
     }
 
+    public static function maybeCreateTable(): void
+    {
+        if (get_option('sseo_ai_onboarding_table_version')) {
+            return;
+        }
+        self::createTable();
+        update_option('sseo_ai_onboarding_table_version', '1.0');
+    }
+
     /**
      * Redirect to onboarding on first activation if not completed.
      */
     public function maybeRedirect(): void
     {
+        self::maybeCreateTable();
         if (!is_admin() || wp_doing_ajax()) {
             return;
         }
 
-        if (get_option(self::COMPLETED_OPTION)) {
+        if (self::isCompleted()) {
             return;
         }
 
@@ -65,10 +184,8 @@ class OnboardingWizard
             return;
         }
 
-        if (get_option('sseo_ai_client_license_status') === 'active') {
-            update_option(self::COMPLETED_OPTION, '1');
-            return;
-        }
+        // Do not auto-complete onboarding when license becomes active;
+        // the user must finish all 7 steps first.
 
         $firstActivation = (int) get_option('sseo_ai_client_first_activation', 0);
         if (!$firstActivation) {
@@ -94,6 +211,8 @@ class OnboardingWizard
             wp_die(__('Unauthorized', 'ai-seo-client'));
         }
 
+        self::maybeCreateTable();
+
         $step = (int) ($_POST['step'] ?? 1);
         $nextStep = $step + 1;
 
@@ -118,16 +237,41 @@ class OnboardingWizard
                 break;
             case 7:
                 $this->saveStep7();
-                update_option(self::COMPLETED_OPTION, '1');
                 wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
                 exit;
             default:
                 break;
         }
 
-        update_option(self::STEP_OPTION, (string) $nextStep);
+        self::updateStatus(['current_step' => $nextStep]);
 
         wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=' . $nextStep));
+        exit;
+    }
+
+    /**
+     * Restart the onboarding wizard from the client settings page.
+     * Existing wizard data is preserved; only the status is reset to in-progress.
+     */
+    public function handleRestart(): void
+    {
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_onboarding_restart')) {
+            wp_die(__('Security check failed', 'ai-seo-client'));
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+
+        self::maybeCreateTable();
+        self::updateStatus([
+            'completed'    => 0,
+            'completed_at' => null,
+            'current_step' => 1,
+            'started_at'   => current_time('mysql'),
+        ]);
+
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=1'));
         exit;
     }
 
@@ -376,11 +520,15 @@ class OnboardingWizard
      */
     private function saveStep7(): void
     {
-        // Just mark as complete - this is a review step
-        update_option(self::COMPLETED_OPTION, '1');
-        
-        // Log onboarding completion for analytics
-        update_option('sseo_ai_onboarding_completed_at', current_time('mysql'));
+        // Mark as complete and record the timestamp in the dedicated table.
+        self::updateStatus([
+            'completed'    => 1,
+            'completed_at' => current_time('mysql'),
+        ]);
+
+        // Report completion back to the SaaS dashboard (best-effort).
+        $api = new DashboardAPI(new Settings());
+        $api->reportOnboardingStatus(1, 7, current_time('mysql'));
     }
 
     /**
@@ -388,7 +536,8 @@ class OnboardingWizard
      */
     public function renderPage(): void
     {
-        $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : (int) get_option(self::STEP_OPTION, 1);
+        self::maybeCreateTable();
+        $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : self::getCurrentStep();
         $currentStep = max(1, min(7, $currentStep));
 
         $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);

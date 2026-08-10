@@ -688,10 +688,22 @@ class LicenseAdmin
                 <?php foreach ($tenants as $tenant): 
                     $usage = $this->tenants->getTenantUsage($tenant['tenant_key']);
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
+                    $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
+                    $onboardingCompletedAt = $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed_at', '');
                 ?>
                 <div class="sseo-ai-card tenant-usage-card">
                     <h3><?php echo esc_html($tenant['name']); ?></h3>
                     <p class="tenant-domain"><?php echo esc_html($tenant['domain'] ?: 'No domain'); ?></p>
+                    <p class="tenant-onboarding" style="font-size:12px;color:#666;">
+                        <?php if ($onboardingCompleted): ?>
+                            <span style="color:#00a32a;">&#10003; <?php esc_html_e('Wizard completed', 'sseo-ai-saas'); ?></span>
+                            <?php if ($onboardingCompletedAt): ?>
+                                <em><?php echo esc_html(human_time_diff(strtotime($onboardingCompletedAt), current_time('timestamp')) . ' ago'); ?></em>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span style="color:#f59e0b;">&#8226; <?php esc_html_e('Wizard not completed', 'sseo-ai-saas'); ?></span>
+                        <?php endif; ?>
+                    </p>
                     
                     <div class="usage-stats">
                         <div class="usage-stat">

@@ -31,7 +31,21 @@ class TenantRepository
         
         $charsetCollate = $wpdb->get_charset_collate();
         $prefix = $wpdb->prefix;
-        
+
+        // Pre-dbDelta migration: add 'inactive' to status enum.
+        // Must run BEFORE dbDelta to avoid dbDelta's broken ALTER that appends
+        // "DEFAULT CHARACTER SET ... COLLATE ..." (invalid with a DEFAULT value clause).
+        $tenantsTablePre = $prefix . self::TENANTS_TABLE;
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $tenantsTablePre))) {
+            $statusEnum = $wpdb->get_var($wpdb->prepare(
+                "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'status'",
+                $tenantsTablePre
+            ));
+            if ($statusEnum && strpos($statusEnum, 'inactive') === false) {
+                $wpdb->query("ALTER TABLE $tenantsTablePre MODIFY COLUMN status enum('active', 'inactive', 'suspended', 'cancelled') NOT NULL DEFAULT 'active'");
+            }
+        }
+
         // Main tenants table
         $sql1 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::TENANTS_TABLE . " (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -39,7 +53,7 @@ class TenantRepository
             name varchar(255) NOT NULL,
             domain varchar(255) DEFAULT NULL,
             email varchar(255) NOT NULL,
-            status enum('active', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
+            status enum('active', 'inactive', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
             tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
             license_key varchar(255) DEFAULT NULL,
             max_sites int(11) NOT NULL DEFAULT 1,
