@@ -454,7 +454,7 @@ class OnboardingWizard
     {
         $titleTemplate = sanitize_text_field($_POST['title_template'] ?? '%title% %separator% %sitename%');
         $descriptionTemplate = sanitize_text_field($_POST['description_template'] ?? '%excerpt%');
-        $separator = sanitize_text_field($_POST['separator'] ?? 'â€“');
+        $separator = sanitize_text_field($_POST['separator'] ?? '-');
         $socialFacebook = esc_url_raw($_POST['social_facebook'] ?? '');
         $socialTwitter = esc_url_raw($_POST['social_twitter'] ?? '');
         $socialLinkedIn = esc_url_raw($_POST['social_linkedin'] ?? '');
@@ -607,7 +607,7 @@ class OnboardingWizard
                 <?php for ($i = 1; $i <= 7; $i++): ?>
                     <div class="sseo-onboarding-progress-step <?php echo $i < $currentStep ? 'completed' : ($i === $currentStep ? 'active' : ''); ?>">
                         <div class="sseo-onboarding-progress-circle">
-                            <?php echo $i < $currentStep ? 'âœ“' : $i; ?>
+                            <?php echo $i < $currentStep ? '&#10003;' : $i; ?>
                         </div>
                         <div class="sseo-onboarding-progress-label"><?php echo esc_html($steps[$i]); ?></div>
                     </div>
@@ -653,9 +653,9 @@ class OnboardingWizard
 
                             <div class="sseo-onboarding-actions">
                                 <?php if ($freeTierEnabled): ?>
-                                    <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now â†’', 'ai-seo-client'); ?></button>
+                                    <button type="submit" name="license_action" value="skip" class="button button-secondary" style="margin-right: auto;"><?php esc_html_e('Skip for now', 'ai-seo-client'); ?>&rarr;</button>
                                 <?php endif; ?>
-                                <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <button type="submit" name="license_action" value="activate" class="button button-primary" style="margin-left: auto;"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
                             </div>
                             <?php break;
 
@@ -693,8 +693,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=1')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
                             </div>
                             <?php break;
 
@@ -741,8 +741,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=2')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
                             </div>
                             <?php break;
 
@@ -758,7 +758,7 @@ class OnboardingWizard
                             <div class="sseo-onboarding-field">
                                 <label for="separator"><?php esc_html_e('Title Separator', 'ai-seo-client'); ?></label>
                                 <select id="separator" name="separator">
-                                    <?php $seps = ['â€“', 'â€”', '|', 'Â·', 'â€¢', 'Â»', 'Â«', ':']; $current = get_option('sseo_ai_separator', 'â€“'); ?>
+                                    <?php $seps = ['-', '--', '|', '.', '*', '>>', '<<', ':']; $current = get_option('sseo_ai_separator', '-'); ?>
                                     <?php foreach ($seps as $sep): ?>
                                         <option value="<?php echo esc_attr($sep); ?>" <?php selected($current, $sep); ?>><?php echo esc_html($sep); ?></option>
                                     <?php endforeach; ?>
@@ -774,8 +774,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=3')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
                             </div>
                             <?php break;
 
@@ -813,8 +813,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=4')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=4')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
                             </div>
                             <?php break;
 
@@ -838,8 +838,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=5')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?> â†’</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=5')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Continue', 'ai-seo-client'); ?>&rarr;</button>
                             </div>
                             <?php break;
 
@@ -870,8 +870,8 @@ class OnboardingWizard
                             </div>
 
                             <div class="sseo-onboarding-actions">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=6')); ?>" class="button button-secondary">â† <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
-                                <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?> âœ“</button>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-onboarding&step=6')); ?>" class="button button-secondary">&larr; <?php esc_html_e('Back', 'ai-seo-client'); ?></a>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Go to Dashboard', 'ai-seo-client'); ?>&#10003;</button>
                             </div>
                             <?php break;
                     endswitch; ?>
