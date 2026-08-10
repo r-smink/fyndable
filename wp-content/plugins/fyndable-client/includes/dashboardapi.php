@@ -666,7 +666,7 @@ class DashboardAPI
                 $tenantEmail = $existingTenant['email'];
             } else {
                 // Create new tenant
-                $tenantEmail = get_option('admin_email') ?: 'unknown@example.com';
+                $tenantEmail = $license['assigned_to'] ?: get_option('admin_email') ?: 'unknown@example.com';
                 $tenantResult = $tenants->createTenant([
                     'name' => $siteName,
                     'domain' => $domain,

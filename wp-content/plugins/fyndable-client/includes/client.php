@@ -2325,7 +2325,19 @@ class Client
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $tier = get_option('sseo_ai_client_license_tier', 'free');
         $licenseType = get_option('sseo_ai_client_license_type', 'paid');
-        $licenseEmail = get_option('sseo_ai_client_license_email') ?: wp_get_current_user()->user_email;
+        $licenseEmail = get_option('sseo_ai_client_license_email', '');
+
+        // Backfill email from the SaaS dashboard if not stored locally yet.
+        if (empty($licenseEmail) && !empty($licenseKey) && !empty($tenantKey)) {
+            delete_transient('ai_seo_license_check_' . md5($licenseKey));
+            $this->licenseValidator->validateStoredLicense();
+            $licenseEmail = get_option('sseo_ai_client_license_email', '');
+        }
+
+        if (empty($licenseEmail)) {
+            $licenseEmail = __('Unknown', 'ai-seo-client');
+        }
+
         $dashboardUrl = $this->settings->getDashboardUrl();
 
         $whiteLabel = get_option('sseo_ai_white_label', []);
