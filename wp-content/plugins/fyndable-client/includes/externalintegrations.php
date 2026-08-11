@@ -820,13 +820,15 @@ class ExternalIntegrations
                             <table class="form-table">
                                 <tr>
                                     <th scope="row">
-                                        <label for="dataforseo_api_key"><?php esc_html_e('DataForSEO API Credentials', 'ai-seo-client'); ?></label>
+                                        <?php esc_html_e('DataForSEO API Credentials', 'ai-seo-client'); ?>
                                     </th>
                                     <td>
-                                        <input type="password" id="dataforseo_api_key" name="sseo_ai_dataforseo_api_key"
-                                               value="<?php echo esc_attr($dataforseoApiKey); ?>" class="regular-text">
+                                        <p style="margin: 0;">
+                                            <span class="dashicons dashicons-yes-alt" style="color: #00a32a; vertical-align: middle;"></span>
+                                            <?php esc_html_e('Managed centrally via the Fyndable Portal.', 'ai-seo-client'); ?>
+                                        </p>
                                         <p class="description">
-                                            <?php esc_html_e('Enter login:password from your DataForSEO account.', 'ai-seo-client'); ?>
+                                            <?php esc_html_e('DataForSEO credentials are configured in the Portal/SaaS Dashboard settings. Backlink data is fetched automatically through the Portal proxy — no client-side API key required.', 'ai-seo-client'); ?>
                                         </p>
                                     </td>
                                 </tr>
@@ -836,11 +838,14 @@ class ExternalIntegrations
                                     </th>
                                     <td>
                                         <select id="backlink_provider" name="sseo_ai_backlink_provider">
-                                            <option value="dataforseo" <?php selected($backlinkProvider, 'dataforseo'); ?>><?php esc_html_e('DataForSEO (primary)', 'ai-seo-client'); ?></option>
+                                            <option value="dataforseo" <?php selected($backlinkProvider, 'dataforseo'); ?>><?php esc_html_e('DataForSEO (via Portal)', 'ai-seo-client'); ?></option>
                                             <option value="ahrefs" <?php selected($backlinkProvider, 'ahrefs'); ?>><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></option>
                                             <option value="seranking" <?php selected($backlinkProvider, 'seranking'); ?>><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></option>
                                             <option value="semrush" <?php selected($backlinkProvider, 'semrush'); ?>><?php esc_html_e('Semrush', 'ai-seo-client'); ?></option>
                                         </select>
+                                        <p class="description">
+                                            <?php esc_html_e('DataForSEO runs through the Portal proxy. Ahrefs, SE Ranking and Semrush use your own API keys configured below.', 'ai-seo-client'); ?>
+                                        </p>
                                     </td>
                                 </tr>
                             </table>

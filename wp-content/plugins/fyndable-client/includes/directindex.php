@@ -90,8 +90,13 @@ class DirectIndex
             return;
         }
 
+        $post = get_post($postId);
+        if (!$post || !$this->isPostTypeAllowed($post->post_type)) {
+            return;
+        }
+
         $url = get_permalink($postId);
-        if ($url && !is_wp_error($url)) {
+        if ($url && !is_wp_error($url) && $this->isUrlIndexable($url)) {
             $this->submitUrl($url, 'URL_DELETED');
         }
     }
@@ -249,6 +254,10 @@ class DirectIndex
             return ['success' => false, 'code' => 'no_url', 'message' => __('Could not determine post URL.', 'ai-seo-client')];
         }
 
+        if (!$this->isUrlIndexable($url)) {
+            return ['success' => false, 'code' => 'url_not_indexable', 'message' => __('URL is not indexable content (plugin/file URL).', 'ai-seo-client')];
+        }
+
         return $this->submitUrl($url, $type, $postId);
     }
 
@@ -345,6 +354,46 @@ class DirectIndex
         }
 
         return in_array($postType, $enabled, true);
+    }
+
+    /**
+     * Check whether a URL represents indexable content rather than a
+     * plugin/file/asset URL that should never be submitted to Google.
+     *
+     * Excludes:
+     *  - /wp-content/ paths (plugins, uploads, themes)
+     *  - URLs containing .zip, .tar, .gz file extensions
+     *  - Plugin update/download URLs (e.g. fyndable-client_x-y-z)
+     */
+    public function isUrlIndexable(string $url): bool
+    {
+        $path = wp_parse_url($url, PHP_URL_PATH) ?: '';
+
+        // Exclude WordPress content directories (plugins, uploads, themes)
+        if (preg_match('#/wp-content/(plugins|uploads|themes)/#i', $path)) {
+            return false;
+        }
+
+        // Exclude file download URLs
+        if (preg_match('/\.(zip|tar|gz|tar\.gz|rar|7z)$/i', $path)) {
+            return false;
+        }
+
+        // Exclude plugin update/download URL patterns (e.g. fyndable-client_1-6-2-zip)
+        if (preg_match('/fyndable-[a-z0-9_-]+_\d+-\d+-\d+(-\w+)?/i', $path)) {
+            return false;
+        }
+
+        // Exclude wp-admin, wp-includes, feed, trackback endpoints
+        if (preg_match('#/(wp-admin|wp-includes|wp-login\.php)(/|$)#i', $path)) {
+            return false;
+        }
+
+        if (preg_match('#/(feed|trackback|embed)(/|$)#i', $path)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getEnabledPostTypes(): array
