@@ -126,6 +126,17 @@ class OnboardingWizard
         }
         return max(1, (int) get_option(self::STEP_OPTION, 1));
     }
+
+    /**
+     * Check whether a license has already been activated on this site.
+     * When true, onboarding step 1 (license connect) is redundant and
+     * the wizard should start at step 2.
+     */
+    private static function isLicenseActive(): bool
+    {
+        return get_option('sseo_ai_client_license_status', 'inactive') === 'active';
+    }
+
     /**
      * Register the onboarding page and handlers.
      */
@@ -205,7 +216,12 @@ class OnboardingWizard
             update_option('sseo_ai_client_first_activation', time());
         }
 
-        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=' . (int) get_option(self::STEP_OPTION, 1)));
+        // If the license is already active, skip the license-connect step (1)
+        // and start at step 2 (Branding) unless the user previously progressed further.
+        $savedStep = (int) get_option(self::STEP_OPTION, 1);
+        $targetStep = self::isLicenseActive() ? max(2, $savedStep) : $savedStep;
+
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=' . $targetStep));
         exit;
     }
 
@@ -559,6 +575,15 @@ class OnboardingWizard
         self::maybeCreateTable();
         $currentStep = isset($_GET['step']) ? max(1, (int) $_GET['step']) : self::getCurrentStep();
         $currentStep = max(1, min(7, $currentStep));
+
+        // If the license was already activated outside the wizard (e.g. on the
+        // connection page), step 1 is redundant — skip to step 2 and persist
+        // that so the user never sees the license-connect form again.
+        if ($currentStep === 1 && self::isLicenseActive()) {
+            $currentStep = 2;
+            self::updateStatus(['current_step' => 2]);
+            update_option(self::STEP_OPTION, 2);
+        }
 
         $freeTierEnabled = (bool) get_option('sseo_ai_free_tier_enabled', false);
         $onboardingError = isset($_GET['onboarding_error']) ? sanitize_text_field(urldecode($_GET['onboarding_error'])) : '';
