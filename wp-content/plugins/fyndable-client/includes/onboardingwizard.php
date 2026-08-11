@@ -145,6 +145,7 @@ class OnboardingWizard
         add_action('admin_menu', [$this, 'registerPage']);
         add_action('admin_post_sseo_ai_onboarding_save', [$this, 'handleSave']);
         add_action('admin_post_sseo_ai_onboarding_restart', [$this, 'handleRestart']);
+        add_action('admin_post_sseo_ai_onboarding_skip', [$this, 'handleSkip']);
         add_action('admin_init', [$this, 'maybeRedirect']);
     }
 
@@ -263,9 +264,9 @@ class OnboardingWizard
             case 7:
                 $this->saveStep7();
                 update_option(self::COMPLETED_OPTION, '1');
-                // Send the user back to the full dashboard shell, not the bare
-                // ai-seo-dashboard content page, so the Fyndable menu is shown.
-                wp_redirect(admin_url('admin.php?page=fyndable-dashboard'));
+                // Break out of the shell iframe and reload the full dashboard
+                // at the top level so the Fyndable menu is visible.
+                $this->breakOutOfIframe('fyndable-dashboard');
                 exit;
             default:
                 break;
@@ -301,6 +302,47 @@ class OnboardingWizard
 
         wp_redirect(admin_url('admin.php?page=ai-seo-onboarding&step=1'));
         exit;
+    }
+
+    /**
+     * Skip / stop the onboarding wizard entirely. Marks it as completed so the
+     * user is not nudged back into it, then sends them to the dashboard.
+     */
+    public function handleSkip(): void
+    {
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_onboarding_skip')) {
+            wp_die(__('Security check failed', 'ai-seo-client'));
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+
+        self::maybeCreateTable();
+        self::updateStatus([
+            'completed'    => 1,
+            'completed_at' => current_time('mysql'),
+        ]);
+        update_option(self::COMPLETED_OPTION, '1');
+
+        $this->breakOutOfIframe('fyndable-dashboard');
+        exit;
+    }
+
+    /**
+     * Break out of the shell iframe by outputting a minimal HTML page that
+     * sets the top-level window location. A plain wp_redirect() would only
+     * navigate the iframe, causing an iframe-in-iframe situation.
+     */
+    private function breakOutOfIframe(string $page): void
+    {
+        $url = admin_url('admin.php?page=' . $page);
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            . '<meta http-equiv="refresh" content="0;url=' . esc_attr($url) . '">'
+            . '<title></title></head><body>'
+            . '<script>window.top.location.href = ' . wp_json_encode($url) . ';</script>'
+            . '</body></html>';
     }
 
     /**
@@ -607,7 +649,9 @@ class OnboardingWizard
         ?>
         <style>
             #wpcontent, #wpbody, #wpbody-content { background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%) !important; }
-            .sseo-onboarding { max-width: 760px; margin: 0 auto; padding: 60px 20px; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-onboarding { max-width: 760px; margin: 0 auto; padding: 60px 20px; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; position: relative; }
+            .sseo-onboarding-skip-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; transition: background 0.15s; }
+            .sseo-onboarding-skip-btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
             .sseo-onboarding-header { text-align: center; margin-bottom: 40px; }
             .sseo-onboarding-header h1 { font-size: 32px; font-weight: 700; color: #fff; margin: 0 0 8px 0; }
             .sseo-onboarding-header p { color: rgba(255,255,255,0.85); font-size: 16px; margin: 0; }
@@ -643,6 +687,11 @@ class OnboardingWizard
         </style>
 
         <div class="sseo-onboarding">
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+                <?php wp_nonce_field('sseo_ai_onboarding_skip'); ?>
+                <input type="hidden" name="action" value="sseo_ai_onboarding_skip">
+                <button type="submit" class="sseo-onboarding-skip-btn"><?php esc_html_e('Skip setup', 'ai-seo-client'); ?></button>
+            </form>
             <div class="sseo-onboarding-header">
                 <h1><?php echo esc_html(sprintf(__('Welcome to %s', 'ai-seo-client'), $brandName)); ?></h1>
                 <p><?php esc_html_e('Let\'s get your site SEO-ready in 4 quick steps.', 'ai-seo-client'); ?></p>
