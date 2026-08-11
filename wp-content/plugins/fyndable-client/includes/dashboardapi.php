@@ -533,8 +533,15 @@ class DashboardAPI
 
         // Map client-side endpoint names to SaaS dashboard REST routes
         $endpointMap = [
-            'serp/search'  => '/serp/query',
-            'serp/query'   => '/serp/query',
+            'serp/search'               => '/serp/query',
+            'serp/query'                => '/serp/query',
+            'ai/llm-mentions'           => '/ai/llm-mentions',
+            'ai/keyword-data'           => '/ai/keyword-data',
+            'ai/llm-response'           => '/ai/llm-response',
+            'keywords/google-trends'    => '/keywords/google-trends',
+            'keywords/dataforseo-trends'=> '/keywords/dataforseo-trends',
+            'backlinks/summary'         => '/backlinks/summary',
+            'backlinks/live'            => '/backlinks/live',
         ];
 
         $route = $endpointMap[$endpoint] ?? '/' . ltrim($endpoint, '/');

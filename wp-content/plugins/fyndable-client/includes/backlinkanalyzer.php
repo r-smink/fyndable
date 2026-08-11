@@ -17,11 +17,13 @@ namespace SSEOAIClient;
 class BacklinkAnalyzer
 {
     private Settings $settings;
+    private ?DashboardAPI $dashboardAPI = null;
     private const CACHE_TTL = DAY_IN_SECONDS;
-    
-    public function __construct(Settings $settings)
+
+    public function __construct(Settings $settings, ?DashboardAPI $dashboardAPI = null)
     {
         $this->settings = $settings;
+        $this->dashboardAPI = $dashboardAPI;
     }
     
     public function register(): void
@@ -635,10 +637,24 @@ class BacklinkAnalyzer
     }
     
     /**
-     * DataForSEO domain metrics
+     * DataForSEO domain metrics.
+     *
+     * Uses the Portal proxy (via DashboardAPI) as the primary path so that
+     * the central DataForSEO API key is used. Falls back to the legacy
+     * client-side DataForSEOBacklinksClient when the proxy is unavailable
+     * and a client-side key is configured.
      */
     private function getDataForSEODomainMetrics(string $domain): array
     {
+        // Primary: Portal proxy
+        if ($this->dashboardAPI) {
+            $response = $this->dashboardAPI->request('backlinks/summary', ['target' => $domain]);
+            if (!is_wp_error($response) && !empty($response['data'])) {
+                return $this->parseDataForSeoSummaryMetrics($response['data']);
+            }
+        }
+
+        // Fallback: client-side direct call with customer's own key
         $apiKey = get_option('sseo_ai_dataforseo_api_key', '');
         if (empty($apiKey)) {
             return $this->getDefaultMetrics();
@@ -647,12 +663,26 @@ class BacklinkAnalyzer
         $client = new DataForSEOBacklinksClient($apiKey);
         return $client->getDomainMetrics($domain);
     }
-    
+
     /**
-     * DataForSEO backlinks
+     * DataForSEO backlinks.
+     *
+     * Uses the Portal proxy as primary, with client-side fallback.
      */
     private function getDataForSEOBacklinks(string $domain): array
     {
+        // Primary: Portal proxy
+        if ($this->dashboardAPI) {
+            $response = $this->dashboardAPI->request('backlinks/live', [
+                'target' => $domain,
+                'limit'  => 1000,
+            ]);
+            if (!is_wp_error($response) && !empty($response['data'])) {
+                return $this->parseDataForSeoBacklinks($response['data']);
+            }
+        }
+
+        // Fallback: client-side direct call
         $apiKey = get_option('sseo_ai_dataforseo_api_key', '');
         if (empty($apiKey)) {
             return $this->getDefaultBacklinkProfile();
@@ -660,6 +690,77 @@ class BacklinkAnalyzer
 
         $client = new DataForSEOBacklinksClient($apiKey);
         return $client->getBacklinks($domain);
+    }
+
+    /**
+     * Parse DataForSEO summary response (from Portal proxy) into the
+     * normalized metrics shape used by this class.
+     */
+    private function parseDataForSeoSummaryMetrics(array $data): array
+    {
+        $tasks = $data['tasks'] ?? [];
+        $result = $tasks[0]['result'][0] ?? [];
+        $summary = $result['summary'] ?? $result;
+
+        return [
+            'domain_rating'    => (int) ($summary['domain_rank'] ?? $summary['domain_rating'] ?? 0),
+            'referring_domains'=> (int) ($summary['referring_domains'] ?? 0),
+            'backlinks'        => (int) ($summary['backlinks'] ?? 0),
+            'organic_traffic'  => (int) ($summary['organic_traffic'] ?? 0),
+            'organic_keywords' => (int) ($summary['organic_keywords'] ?? 0),
+        ];
+    }
+
+    /**
+     * Parse DataForSEO backlinks list response (from Portal proxy) into the
+     * normalized backlink profile shape used by this class.
+     */
+    private function parseDataForSeoBacklinks(array $data): array
+    {
+        $tasks = $data['tasks'] ?? [];
+        $items = $tasks[0]['result'][0]['items'] ?? [];
+
+        $dofollow = 0;
+        $nofollow = 0;
+        $redirect = 0;
+        $anchors = [];
+
+        foreach ($items as $link) {
+            $linkType = $link['link_type'] ?? '';
+            $isDofollow = ($linkType === 'dofollow' || ($link['dofollow'] ?? false));
+
+            if ($isDofollow) {
+                $dofollow++;
+            } else {
+                $nofollow++;
+            }
+
+            if (!empty($link['is_redirect']) || stripos($link['type'] ?? '', 'redirect') !== false) {
+                $redirect++;
+            }
+
+            $anchor = $link['anchor_text'] ?? $link['anchor'] ?? '';
+            if (!empty($anchor)) {
+                if (!isset($anchors[$anchor])) {
+                    $anchors[$anchor] = 0;
+                }
+                $anchors[$anchor]++;
+            }
+        }
+
+        arsort($anchors);
+        $topAnchors = [];
+        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
+            $topAnchors[] = ['text' => $text, 'count' => $count];
+        }
+
+        return [
+            'dofollow'    => $dofollow,
+            'nofollow'    => $nofollow,
+            'redirect'    => $redirect,
+            'top_anchors' => $topAnchors,
+            'items'       => $items,
+        ];
     }
     
     /**

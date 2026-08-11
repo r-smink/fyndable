@@ -17,11 +17,13 @@ class KeywordDifficulty
 {
     private Settings $settings;
     private LlmClient $llm;
+    private ?DashboardAPI $dashboardAPI = null;
 
-    public function __construct(Settings $settings, LlmClient $llm)
+    public function __construct(Settings $settings, LlmClient $llm, ?DashboardAPI $dashboardAPI = null)
     {
         $this->settings = $settings;
         $this->llm = $llm;
+        $this->dashboardAPI = $dashboardAPI;
     }
 
     public function register(): void
@@ -64,7 +66,10 @@ class KeywordDifficulty
         // 3. Generic difficulty estimate via AI
         $genericDifficulty = $this->estimateGenericDifficulty($keyword);
 
-        // 4. Calculate personalized score
+        // 4. AI keyword search volume from DataForSEO (via Portal proxy)
+        $aiKeywordData = $this->fetchAiKeywordData($keyword);
+
+        // 5. Calculate personalized score
         $personalizedScore = $this->calculatePersonalizedScore(
             $genericDifficulty,
             $authorityData,
@@ -79,9 +84,57 @@ class KeywordDifficulty
             'your_advantage' => $personalizedScore['advantage'],
             'topical_authority' => $authorityData,
             'content_inventory' => $inventoryData,
+            'ai_keyword_data' => $aiKeywordData,
             'recommendation' => $personalizedScore['recommendation'],
             'estimated_effort' => $personalizedScore['effort'],
         ];
+    }
+
+    /**
+     * Fetch AI keyword search volume data from DataForSEO via the Portal proxy.
+     * Returns an empty array when the proxy is unavailable (graceful fallback).
+     */
+    private function fetchAiKeywordData(string $keyword): array
+    {
+        if (!$this->dashboardAPI) {
+            return [];
+        }
+
+        $cacheKey = 'aiseo_kd_aikw_' . md5($keyword);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
+        $response = $this->dashboardAPI->request('ai/keyword-data', [
+            'keywords' => [$keyword],
+        ]);
+
+        if (is_wp_error($response) || empty($response['data'])) {
+            $empty = [];
+            set_transient($cacheKey, $empty, HOUR_IN_SECONDS);
+            return $empty;
+        }
+
+        $tasks = $response['data']['tasks'] ?? [];
+        $result = $tasks[0]['result'] ?? [];
+        $items = $result[0]['items'] ?? [];
+
+        $payload = [];
+        foreach ($items as $item) {
+            if (($item['keyword'] ?? '') === $keyword) {
+                $payload = [
+                    'search_volume'   => (int) ($item['search_volume'] ?? 0),
+                    'difficulty'      => (float) ($item['difficulty'] ?? 0),
+                    'competition'     => (int) ($item['competition'] ?? 0),
+                    'cpc'             => (float) ($item['cpc'] ?? 0),
+                ];
+                break;
+            }
+        }
+
+        set_transient($cacheKey, $payload, 6 * HOUR_IN_SECONDS);
+        return $payload;
     }
 
     /**

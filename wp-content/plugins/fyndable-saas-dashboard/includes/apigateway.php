@@ -13,7 +13,8 @@ class ApiGateway
     private TenantRepository $tenants;
     private SaaSSettings $settings;
     private ProviderRouter $providerRouter;
-    
+    private ?DataForSeoClient $dataForSeoClient = null;
+
     // SERP API pricing per request (approximate)
     private const SERP_PRICING = [
         'dataforseo' => 0.002,
@@ -32,11 +33,12 @@ class ApiGateway
     private const AI_MAX_RETRIES = 3;
     private const AI_RETRY_BASE_MS = 500000; // 0.5 seconds
 
-    public function __construct(TenantRepository $tenants, SaaSSettings $settings, ProviderRouter $providerRouter)
+    public function __construct(TenantRepository $tenants, SaaSSettings $settings, ProviderRouter $providerRouter, ?DataForSeoClient $dataForSeoClient = null)
     {
         $this->tenants = $tenants;
         $this->settings = $settings;
         $this->providerRouter = $providerRouter;
+        $this->dataForSeoClient = $dataForSeoClient;
     }
 
     /**
@@ -64,11 +66,60 @@ class ApiGateway
             'callback' => [$this, 'handleSerpRankCheck'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
-        
+
         // Usage check endpoint
         register_rest_route('ai-seo-saas/v1', '/usage/check', [
             'methods' => 'GET',
             'callback' => [$this, 'getUsageStatus'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO AI Optimization — LLM Mentions
+        register_rest_route('ai-seo-saas/v1', '/ai/llm-mentions', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleAiLlmMentions'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO AI Optimization — AI Keyword Data
+        register_rest_route('ai-seo-saas/v1', '/ai/keyword-data', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleAiKeywordData'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO AI Optimization — LLM Responses (ChatGPT/Claude/Gemini/Perplexity)
+        register_rest_route('ai-seo-saas/v1', '/ai/llm-response', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleAiLlmResponse'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO Keywords Data — Google Trends
+        register_rest_route('ai-seo-saas/v1', '/keywords/google-trends', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleGoogleTrends'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO Keywords Data — DataForSEO Trends
+        register_rest_route('ai-seo-saas/v1', '/keywords/dataforseo-trends', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleDataForSeoTrends'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO Backlinks — Summary
+        register_rest_route('ai-seo-saas/v1', '/backlinks/summary', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleBacklinksSummary'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // DataForSEO Backlinks — Live
+        register_rest_route('ai-seo-saas/v1', '/backlinks/live', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleBacklinksLive'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
     }
@@ -324,17 +375,21 @@ class ApiGateway
         $currentMonth = current_time('Y-m');
         
         $usage = $wpdb->get_row($wpdb->prepare(
-            "SELECT 
+            "SELECT
                 api_calls as calls,
                 api_cost as cost,
                 serp_requests as serp_calls,
-                content_generated
-             FROM {$tableUsage} 
+                content_generated,
+                ai_mentions,
+                llm_response_calls,
+                trends_requests,
+                backlinks_requests
+             FROM {$tableUsage}
              WHERE tenant_id = %d AND period = %s",
             $tenant['id'],
             $currentMonth
         ));
-        
+
         return new \WP_REST_Response([
             'success' => true,
             'tier' => $tier,
@@ -347,6 +402,10 @@ class ApiGateway
                 'api_cost' => (float)($usage->cost ?? 0),
                 'serp_calls' => (int)($usage->serp_calls ?? 0),
                 'content_generated' => (int)($usage->content_generated ?? 0),
+                'ai_mentions' => (int)($usage->ai_mentions ?? 0),
+                'llm_response_calls' => (int)($usage->llm_response_calls ?? 0),
+                'trends_requests' => (int)($usage->trends_requests ?? 0),
+                'backlinks_requests' => (int)($usage->backlinks_requests ?? 0),
             ],
             'remaining' => [
                 'api_calls' => max(0, $apiLimit - (int)($usage->calls ?? 0)),
@@ -374,12 +433,15 @@ class ApiGateway
 
         if ($existing) {
             // Determine which column to increment based on metric
-            $column = 'api_calls';
-            if ($metric === 'serp_query') {
-                $column = 'serp_requests';
-            } elseif ($metric === 'content_generated') {
-                $column = 'content_generated';
-            }
+            $column = match ($metric) {
+                'serp_query'        => 'serp_requests',
+                'content_generated' => 'content_generated',
+                'ai_mention'        => 'ai_mentions',
+                'llm_response'      => 'llm_response_calls',
+                'trends'            => 'trends_requests',
+                'backlinks'         => 'backlinks_requests',
+                default             => 'api_calls',
+            };
 
             $wpdb->query($wpdb->prepare(
                 "UPDATE {$tableUsage} SET {$column} = {$column} + %d, api_cost = api_cost + %f WHERE id = %d",
@@ -389,13 +451,17 @@ class ApiGateway
             ));
         } else {
             $data = [
-                'tenant_id' => $tenantId,
-                'period' => $period,
-                'api_calls' => ($metric === 'ai_generation') ? $count : 0,
-                'api_cost' => $cost,
-                'serp_requests' => ($metric === 'serp_query') ? $count : 0,
-                'content_generated' => ($metric === 'content_generated') ? $count : 0,
-                'keywords_tracked' => 0,
+                'tenant_id'           => $tenantId,
+                'period'              => $period,
+                'api_calls'           => in_array($metric, ['ai_generation', 'ai_keyword'], true) ? $count : 0,
+                'api_cost'            => $cost,
+                'serp_requests'       => ($metric === 'serp_query') ? $count : 0,
+                'content_generated'   => ($metric === 'content_generated') ? $count : 0,
+                'keywords_tracked'    => 0,
+                'ai_mentions'         => ($metric === 'ai_mention') ? $count : 0,
+                'llm_response_calls'  => ($metric === 'llm_response') ? $count : 0,
+                'trends_requests'     => ($metric === 'trends') ? $count : 0,
+                'backlinks_requests'  => ($metric === 'backlinks') ? $count : 0,
             ];
             $wpdb->insert($tableUsage, $data);
         }
@@ -431,6 +497,393 @@ class ApiGateway
         ]);
 
         set_transient($transientKey, true, MONTH_IN_SECONDS);
+    }
+
+    // -------------------------------------------------------------------------
+    // DataForSEO proxy endpoints (AI Optimization, Keywords Data, Backlinks)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Get the DataForSeoClient instance or a 503 error response.
+     */
+    private function dataForSeoOrError(): \WP_REST_Response|null
+    {
+        if (!$this->dataForSeoClient || !$this->dataForSeoClient->isConfigured()) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'dataforseo_not_configured',
+                'message' => __('DataForSEO API is not configured', 'sseo-ai-saas'),
+            ], 503);
+        }
+        return null;
+    }
+
+    /**
+     * Handle DataForSEO AI Optimization — LLM Mentions requests.
+     *
+     * Body: { action: search_mentions|target_metrics|top_domains|top_pages|top_brands|top_brand_categories|historical|timeseries_delta|timeseries_new_and_lost, ...params }
+     */
+    public function handleAiLlmMentions(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $action = sanitize_text_field($body['action'] ?? 'search_mentions');
+        $params = $body['params'] ?? [];
+
+        if (!is_array($params)) {
+            $params = [];
+        }
+
+        $result = match ($action) {
+            'search_mentions'           => $this->dataForSeoClient->aiMentionsSearchMentions($params),
+            'target_metrics'            => $this->dataForSeoClient->aiMentionsTargetMetrics($params),
+            'top_domains'               => $this->dataForSeoClient->aiMentionsTopMentionedDomains($params),
+            'top_pages'                 => $this->dataForSeoClient->aiMentionsTopMentionedPages($params),
+            'top_brands'                => $this->dataForSeoClient->aiMentionsTopMentionedBrands($params),
+            'top_brand_categories'      => $this->dataForSeoClient->aiMentionsTopMentionedBrandCategories($params),
+            'historical'                => $this->dataForSeoClient->aiMentionsHistorical($params),
+            'timeseries_delta'          => $this->dataForSeoClient->aiMentionsTimeseriesDelta($params),
+            'timeseries_new_and_lost'   => $this->dataForSeoClient->aiMentionsTimeseriesNewAndLost($params),
+            default => new \WP_Error('invalid_action', sprintf(__('Unknown LLM Mentions action: %s', 'sseo-ai-saas'), $action)),
+        };
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['ai_mentions'];
+        $this->trackUsage($tenant, 'ai_mention', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'action'  => $action,
+            'usage'   => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
+     * Handle DataForSEO AI Optimization — AI Keyword Data (search volume).
+     *
+     * Body: { keywords: [...], location_code, language_code }
+     */
+    public function handleAiKeywordData(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $params = [
+            'keywords' => array_filter(array_map('sanitize_text_field', $body['keywords'] ?? [])),
+        ];
+        if (!empty($body['location_code'])) {
+            $params['location_code'] = (int) $body['location_code'];
+        }
+        if (!empty($body['language_code'])) {
+            $params['language_code'] = sanitize_text_field($body['language_code']);
+        }
+
+        if (empty($params['keywords'])) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'missing_params',
+                'message' => __('keywords array is required', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $result = $this->dataForSeoClient->aiKeywordDataSearchVolume($params);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['ai_keyword'];
+        $this->trackUsage($tenant, 'ai_keyword', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'usage'   => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
+     * Handle DataForSEO AI Optimization — LLM Responses (ChatGPT/Claude/Gemini/Perplexity).
+     *
+     * Body: { provider: chatgpt|claude|gemini|perplexity, prompt, model?, ... }
+     */
+    public function handleAiLlmResponse(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $provider = sanitize_text_field($body['provider'] ?? 'chatgpt');
+        $prompt = sanitize_textarea_field($body['prompt'] ?? '');
+
+        if (empty($prompt)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'missing_params',
+                'message' => __('prompt is required', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $params = ['prompt' => $prompt];
+        if (!empty($body['model'])) {
+            $params['model'] = sanitize_text_field($body['model']);
+        }
+        if (!empty($body['location_code'])) {
+            $params['location_code'] = (int) $body['location_code'];
+        }
+        if (!empty($body['language_code'])) {
+            $params['language_code'] = sanitize_text_field($body['language_code']);
+        }
+
+        $result = $this->dataForSeoClient->llmResponseLive($provider, $params);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['llm_response'];
+        $this->trackUsage($tenant, 'llm_response', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'provider'=> $provider,
+            'usage'   => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
+     * Handle DataForSEO Keywords Data — Google Trends Explore.
+     *
+     * Body: { keywords: [...], time_range?, location_code?, ... }
+     */
+    public function handleGoogleTrends(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $params = [
+            'keywords' => array_filter(array_map('sanitize_text_field', $body['keywords'] ?? [])),
+        ];
+        if (!empty($body['time_range'])) {
+            $params['time_range'] = sanitize_text_field($body['time_range']);
+        }
+        if (!empty($body['location_code'])) {
+            $params['location_code'] = (int) $body['location_code'];
+        }
+        if (!empty($body['type'])) {
+            $params['type'] = sanitize_text_field($body['type']);
+        }
+
+        if (empty($params['keywords'])) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'missing_params',
+                'message' => __('keywords array is required', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $result = $this->dataForSeoClient->googleTrendsExploreLive($params);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['google_trends'];
+        $this->trackUsage($tenant, 'trends', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'usage'   => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
+     * Handle DataForSEO Keywords Data — DataForSEO Trends Explore.
+     *
+     * Body: { keywords: [...], location_code?, ... }
+     */
+    public function handleDataForSeoTrends(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $params = [
+            'keywords' => array_filter(array_map('sanitize_text_field', $body['keywords'] ?? [])),
+        ];
+        if (!empty($body['location_code'])) {
+            $params['location_code'] = (int) $body['location_code'];
+        }
+
+        if (empty($params['keywords'])) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'missing_params',
+                'message' => __('keywords array is required', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $result = $this->dataForSeoClient->dataforseoTrendsExploreLive($params);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['dfs_trends'];
+        $this->trackUsage($tenant, 'trends', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'usage'   => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
+     * Handle DataForSEO Backlinks — Summary.
+     *
+     * Body: { target: "example.com" }
+     */
+    public function handleBacklinksSummary(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $target = sanitize_text_field($body['target'] ?? '');
+
+        if (empty($target)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'missing_params',
+                'message' => __('target domain is required', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $result = $this->dataForSeoClient->backlinksSummaryLive($target);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['backlinks'];
+        $this->trackUsage($tenant, 'backlinks', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'usage'   => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
+     * Handle DataForSEO Backlinks — Live backlinks list.
+     *
+     * Body: { target: "example.com", limit?, filters?, ... }
+     */
+    public function handleBacklinksLive(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $err = $this->dataForSeoOrError();
+        if ($err) { return $err; }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $target = sanitize_text_field($body['target'] ?? '');
+
+        if (empty($target)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => 'missing_params',
+                'message' => __('target domain is required', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $params = [];
+        if (!empty($body['limit'])) {
+            $params['limit'] = (int) $body['limit'];
+        }
+        if (!empty($body['offset'])) {
+            $params['offset'] = (int) $body['offset'];
+        }
+        if (!empty($body['order_by'])) {
+            $params['order_by'] = sanitize_text_field($body['order_by']);
+        }
+        if (!empty($body['filters']) && is_array($body['filters'])) {
+            $params['filters'] = $body['filters'];
+        }
+
+        $result = $this->dataForSeoClient->backlinksLive($target, $params);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error'   => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        $cost = DataForSeoClient::PRICING['backlinks'];
+        $this->trackUsage($tenant, 'backlinks', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data'    => $result,
+            'usage'   => ['cost' => $cost],
+        ], 200);
     }
 
     /**
@@ -491,11 +944,25 @@ class ApiGateway
     }
 
     /**
-     * Fetch from DataForSEO
+     * Fetch from DataForSEO.
+     *
+     * Uses the central DataForSeoClient when available (preferred), falling
+     * back to the inline implementation for backward compatibility when the
+     * client was not injected.
      */
     private function fetchDataForSeo(string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
     {
-        // DataForSEO implementation
+        // Prefer the central DataForSeoClient when injected and configured
+        if ($this->dataForSeoClient && $this->dataForSeoClient->isConfigured()) {
+            return $this->dataForSeoClient->serpOrganicLiveAdvanced(
+                $keyword,
+                $this->getLocationCode($location),
+                'en',
+                $countryCode
+            );
+        }
+
+        // Inline fallback (legacy path)
         $response = wp_remote_post('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', [
             'headers' => [
                 'Authorization' => 'Basic ' . base64_encode($apiKey),
@@ -510,11 +977,11 @@ class ApiGateway
             ]),
             'timeout' => 60,
         ]);
-        
+
         if (is_wp_error($response)) {
             return $response;
         }
-        
+
         $body = json_decode(wp_remote_retrieve_body($response), true);
         return $body['tasks'][0]['result'][0]['items'] ?? [];
     }

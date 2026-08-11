@@ -98,6 +98,10 @@ class TenantRepository
             serp_requests int(11) NOT NULL DEFAULT 0,
             content_generated int(11) NOT NULL DEFAULT 0,
             keywords_tracked int(11) NOT NULL DEFAULT 0,
+            ai_mentions int(11) NOT NULL DEFAULT 0,
+            llm_response_calls int(11) NOT NULL DEFAULT 0,
+            trends_requests int(11) NOT NULL DEFAULT 0,
+            backlinks_requests int(11) NOT NULL DEFAULT 0,
             last_updated datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY tenant_period (tenant_id, period),
@@ -931,6 +935,32 @@ class TenantRepository
         ));
         if ($licenseEnum && strpos($licenseEnum, 'early_adopters') === false) {
             $wpdb->query("ALTER TABLE $licenseTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter'");
+        }
+
+        // Add DataForSEO usage columns to tenant_usage table
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $usageExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $usageTable));
+        if ($usageExists) {
+            $newColumns = [
+                'ai_mentions'        => "ADD COLUMN ai_mentions int(11) NOT NULL DEFAULT 0 AFTER keywords_tracked",
+                'llm_response_calls' => "ADD COLUMN llm_response_calls int(11) NOT NULL DEFAULT 0 AFTER ai_mentions",
+                'trends_requests'    => "ADD COLUMN trends_requests int(11) NOT NULL DEFAULT 0 AFTER llm_response_calls",
+                'backlinks_requests' => "ADD COLUMN backlinks_requests int(11) NOT NULL DEFAULT 0 AFTER trends_requests",
+            ];
+
+            foreach ($newColumns as $columnName => $alterSql) {
+                $colExists = $wpdb->get_results($wpdb->prepare(
+                    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = %s
+                    AND COLUMN_NAME = %s",
+                    $usageTable,
+                    $columnName
+                ));
+                if (empty($colExists)) {
+                    $wpdb->query("ALTER TABLE $usageTable $alterSql");
+                }
+            }
         }
     }
     

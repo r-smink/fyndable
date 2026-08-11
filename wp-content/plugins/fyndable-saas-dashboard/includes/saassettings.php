@@ -94,6 +94,15 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_serpapi_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_seranking_api_key');
 
+        // DataForSEO central API key (used by SERP, AI Optimization, Keywords Data, Backlinks).
+        // Falls back to the SERP-specific DataForSEO key for backward compatibility.
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_dataforseo_api_key');
+        // Toggle: use DataForSEO for AI Overview data alongside SerpApi in AiOverviewExtractor.
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_dataforseo_ai_overview_enabled', [
+            'default' => false,
+            'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1),
+        ]);
+
         // OpenRouter (multi-model gateway)
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_openrouter_api_key');
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_ai_provider', ['default' => 'openrouter']);
@@ -272,6 +281,33 @@ class SaaSSettings
     {
         $specific = get_option('ai_seo_saas_serp_' . $provider . '_api_key', '');
         return !empty($specific) ? $specific : get_option('ai_seo_saas_serp_api_key', '');
+    }
+
+    /**
+     * Get the central DataForSEO API key (email:password format).
+     *
+     * Falls back to the SERP-specific DataForSEO key, then the generic SERP
+     * key, for backward compatibility with existing installs.
+     */
+    public function getDataForSeoApiKey(): string
+    {
+        $key = get_option('ai_seo_saas_dataforseo_api_key', '');
+        if (!empty($key)) {
+            return $key;
+        }
+        $key = get_option('ai_seo_saas_serp_dataforseo_api_key', '');
+        if (!empty($key)) {
+            return $key;
+        }
+        return get_option('ai_seo_saas_serp_api_key', '');
+    }
+
+    /**
+     * Whether DataForSEO should be used for AI Overview data alongside SerpApi.
+     */
+    public function isDataForSeoAiOverviewEnabled(): bool
+    {
+        return (bool) get_option('ai_seo_saas_dataforseo_ai_overview_enabled', false);
     }
     
     /**
@@ -591,6 +627,7 @@ class SaaSSettings
 
             <h2 class="nav-tab-wrapper sseo-ai-settings-tabs">
                 <a href="#tab-api-credentials" class="nav-tab nav-tab-active" data-tab="api-credentials"><?php esc_html_e('API Credentials', 'sseo-ai-saas'); ?></a>
+                <a href="#tab-dataforseo" class="nav-tab" data-tab="dataforseo"><?php esc_html_e('DataForSEO', 'sseo-ai-saas'); ?></a>
                 <a href="#tab-image-generation" class="nav-tab" data-tab="image-generation"><?php esc_html_e('Image Generation', 'sseo-ai-saas'); ?></a>
                 <a href="#tab-integrations" class="nav-tab" data-tab="integrations"><?php esc_html_e('Integrations', 'sseo-ai-saas'); ?></a>
                 <a href="#tab-email-smtp" class="nav-tab" data-tab="email-smtp"><?php esc_html_e('Email / SMTP', 'sseo-ai-saas'); ?></a>
@@ -689,6 +726,37 @@ class SaaSSettings
                                     <option value="nl" <?php selected($this->getGeoLanguage(), 'nl'); ?>><?php esc_html_e('Dutch', 'sseo-ai-saas'); ?></option>
                                     <option value="en" <?php selected($this->getGeoLanguage(), 'en'); ?>><?php esc_html_e('English', 'sseo-ai-saas'); ?></option>
                                 </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-tab-panel" id="tab-dataforseo">
+                    <h2><?php esc_html_e('DataForSEO API', 'sseo-ai-saas'); ?></h2>
+                    <p class="description">
+                        <?php esc_html_e('Central DataForSEO API key used by SERP, AI Optimization (LLM Mentions, AI Keyword Data, LLM Responses), Keywords Data (Google Trends, DataForSEO Trends) and Backlinks proxy endpoints.', 'sseo-ai-saas'); ?>
+                    </p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="dataforseo_api_key"><?php esc_html_e('DataForSEO API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_dataforseo_api_key" id="dataforseo_api_key"
+                                       value="<?php echo esc_attr(get_option('ai_seo_saas_dataforseo_api_key', '')); ?>" class="regular-text"
+                                       placeholder="<?php esc_attr_e('login:password', 'sseo-ai-saas'); ?>">
+                                <p class="description">
+                                    <?php esc_html_e('Format: your DataForSEO login email + password (e.g. you@example.com:secret). Get credentials at', 'sseo-ai-saas'); ?>
+                                    <a href="https://app.dataforseo.com/api-access" target="_blank">dataforseo.com</a>.
+                                    <?php if (empty(get_option('ai_seo_saas_dataforseo_api_key', '')) && !empty(get_option('ai_seo_saas_serp_dataforseo_api_key', ''))): ?>
+                                        <br><strong><?php esc_html_e('Note: using the legacy SERP DataForSEO key as fallback.', 'sseo-ai-saas'); ?></strong>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="dataforseo_ai_overview_enabled"><?php esc_html_e('DataForSEO for AI Overview', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="checkbox" name="ai_seo_saas_dataforseo_ai_overview_enabled" id="dataforseo_ai_overview_enabled" value="1" <?php checked(get_option('ai_seo_saas_dataforseo_ai_overview_enabled', false)); ?>>
+                                <p class="description"><?php esc_html_e('Use DataForSEO AI Optimization API for AI Overview data in the GEO Scanner, alongside SerpApi. SerpApi remains as fallback.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                     </table>

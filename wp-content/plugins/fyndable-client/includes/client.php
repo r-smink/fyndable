@@ -60,6 +60,7 @@ class Client
     private ?GscDashboard $gscDashboard = null;
     private ?BacklinkAnalyzer $backlinkAnalyzer = null;
     private ?SerpFeatureTracker $serpFeatureTracker = null;
+    private ?AiOptimizationTracker $aiOptimizationTracker = null;
     private ?ExternalIntegrations $externalIntegrations = null;
     private ?CompetitorResearch $competitorResearch = null;
     private ?WhiteLabelManager $whiteLabelManager = null;
@@ -418,7 +419,7 @@ class Client
             $this->serpCompetitor = new SerpCompetitor($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->serpCompetitor->register();
             
-            $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient);
+            $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->keywordDifficulty->register();
             
             $this->contentBrief = new ContentBrief($this->settings, $this->llmClient, $this->dashboardAPI);
@@ -444,9 +445,13 @@ class Client
             // SERP Feature Tracker
             $this->serpFeatureTracker = new SerpFeatureTracker($this->settings, $this->llmClient);
             $this->serpFeatureTracker->register();
+
+            // AI Optimization Tracker (DataForSEO AI Optimization via Portal proxy)
+            $this->aiOptimizationTracker = new AiOptimizationTracker($this->settings, $this->dashboardAPI);
+            $this->aiOptimizationTracker->register();
             
             // Backlink Analyzer
-            $this->backlinkAnalyzer = new BacklinkAnalyzer($this->settings);
+            $this->backlinkAnalyzer = new BacklinkAnalyzer($this->settings, $this->dashboardAPI);
             $this->backlinkAnalyzer->register();
             
             // Competitor Research
@@ -1030,6 +1035,16 @@ class Client
                     'manage_options',
                     'ai-seo-ab-testing',
                     [$this, 'renderABTestingPage']
+                );
+
+                // 15. AI Optimization Tracker - Professional+
+                add_submenu_page(
+                    'fyndable-dashboard',
+                    __('AI Optimization', 'ai-seo-client'),
+                    __('ðŸ¤– AI Optimization', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-ai-optimization',
+                    [$this, 'renderAiOptimizationPage']
                 );
 
                 // 14b. Prompt Templates - Business+
@@ -1636,6 +1651,22 @@ class Client
         }
         if ($this->abTesting) {
             $this->abTesting->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render AI Optimization Tracker page - delegates to AiOptimizationTracker class
+     */
+    public function renderAiOptimizationPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->aiOptimizationTracker) {
+            $this->aiOptimizationTracker->renderDashboard();
         } else {
             $this->renderFeatureNotAvailable();
         }

@@ -30,6 +30,7 @@ class Dashboard
     private SignupCheckout $signupCheckout;
     private RevenueDashboard $revenueDashboard;
     private ProviderRouter $providerRouter;
+    private DataForSeoClient $dataForSeoClient;
     private AgencyRoleManager $agencyRoleManager;
     private AgencyPortal $agencyPortal;
     private FyndableLogin $fyndableLogin;
@@ -64,7 +65,8 @@ class Dashboard
         add_filter('wp_mail_from', [$this->saasSettings, 'getSmtpFromEmail']);
         add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
         $this->providerRouter = new ProviderRouter($this->saasSettings);
-        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter);
+        $this->dataForSeoClient = new DataForSeoClient($this->saasSettings);
+        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter, $this->dataForSeoClient);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->emailTemplateRepository = new EmailTemplateRepository();
@@ -111,7 +113,7 @@ class Dashboard
 
         $this->geoScanRepository = new GeoScanRepository();
         $this->htmlFetcher = new HtmlFetcher($this->saasSettings);
-        $this->aiOverviewExtractor = new AiOverviewExtractor($this->saasSettings);
+        $this->aiOverviewExtractor = new AiOverviewExtractor($this->saasSettings, $this->dataForSeoClient);
         $this->geoScanner = new GeoScanner(
             $this->htmlFetcher,
             $this->aiOverviewExtractor,
