@@ -29,6 +29,30 @@ class FyndableLogin
         add_filter('login_headertext', [$this, 'getLoginHeaderText']);
         add_shortcode('fyndable_login', [$this, 'renderLoginShortcode']);
         add_action('init', [$this, 'handleAutoLogin']);
+        add_action('init', [$this, 'addSetPasswordRewrite']);
+        add_action('init', [$this, 'maybeFlushRewrites']);
+    }
+
+    /**
+     * Add a clean /set-password rewrite rule that maps to the WordPress
+     * password reset handler (wp-login.php?action=rp). Query params such as
+     * key, login and redirect_to are passed through automatically.
+     */
+    public function addSetPasswordRewrite(): void
+    {
+        add_rewrite_rule('^set-password/?$', 'wp-login.php?action=rp', 'top');
+    }
+
+    /**
+     * Flush rewrite rules once after the /set-password rule is introduced,
+     * so existing installs pick it up without a manual Permalinks save.
+     */
+    public function maybeFlushRewrites(): void
+    {
+        if (!get_option('sseo_ai_set_password_rewrite_flushed')) {
+            flush_rewrite_rules();
+            update_option('sseo_ai_set_password_rewrite_flushed', true);
+        }
     }
 
     /**

@@ -77,7 +77,7 @@ class Dashboard
         $this->emailTemplateAdmin = new EmailTemplateAdmin($this->emailTemplateRepository, new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants));
         $this->emailAutomation = new EmailAutomation($this->tenants, $this->emailTemplateRepository);
         $this->updateServer = new UpdateServer($this->tenants);
-        $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation);
+        $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation, $this->emailTemplateRepository);
         $this->revenueDashboard = new RevenueDashboard($this->tenants);
 
         // Agency portal
@@ -92,7 +92,11 @@ class Dashboard
         $this->fyndableLogin = new FyndableLogin($this->tenants, $this->agencyRoleManager);
 
         // Customer portal
-        $this->customerRoleManager = new CustomerRoleManager($this->tenants);
+        $this->customerRoleManager = new CustomerRoleManager(
+            $this->tenants,
+            $this->emailTemplateRepository,
+            new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants)
+        );
         $this->invoiceManager = new InvoiceManager($this->tenants);
         $this->customerPortal = new CustomerPortal(
             $this->tenants,

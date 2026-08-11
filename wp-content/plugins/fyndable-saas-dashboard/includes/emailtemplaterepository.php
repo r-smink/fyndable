@@ -58,7 +58,7 @@ class EmailTemplateRepository
      */
     public function seedDefaults(): void
     {
-        $seedVersion = 2;
+        $seedVersion = 3;
         if ((int)get_option('sseo_ai_email_templates_seed_version', 0) >= $seedVersion) {
             return;
         }
@@ -68,7 +68,7 @@ class EmailTemplateRepository
                 'template_key' => 'welcome',
                 'name' => __('Welcome Email', 'sseo-ai-saas'),
                 'subject' => __('Welcome to {{site_name}} — Your SEO Journey Starts Here', 'sseo-ai-saas'),
-                'body_html' => "<h2>" . __('Welcome aboard!', 'sseo-ai-saas') . "</h2>\n<p>" . sprintf(__('Your <strong>{{tier}}</strong> license is now active. You\'re ready to supercharge your SEO with {{site_name}}.', 'sseo-ai-saas')) . "</p>\n<div class='license-box'>\n<p class='label'>" . __('Your License Key', 'sseo-ai-saas') . "</p>\n<p class='value'>{{license_key}}</p>\n</div>\n<a href='{{dashboard_url}}' class='button'>" . __('Go to Dashboard', 'sseo-ai-saas') . "</a>\n<p class='help'>" . __('Need help? <a href=\"{{support_url}}\">Contact support</a>', 'sseo-ai-saas') . "</p>",
+                'body_html' => "<h2>" . __('Welcome aboard!', 'sseo-ai-saas') . "</h2>\n<p>" . sprintf(__('Your <strong>{{tier}}</strong> license is now active. You\'re ready to supercharge your SEO with {{site_name}}.', 'sseo-ai-saas')) . "</p>\n<div class='license-box'>\n<p class='label'>" . __('Your License Key', 'sseo-ai-saas') . "</p>\n<p class='value'>{{license_key}}</p>\n</div>\n<p>" . __('Set your password to access your customer portal:', 'sseo-ai-saas') . "</p>\n<a href='{{set_password_url}}' class='button'>" . __('Set Your Password', 'sseo-ai-saas') . "</a>\n<p class='help'>" . __('Already have an account? <a href=\"{{portal_url}}\">Go to your portal</a>', 'sseo-ai-saas') . "</p>\n<p class='help'>" . __('Need help? <a href=\"{{support_url}}\">Contact support</a>', 'sseo-ai-saas') . "</p>",
                 'layout' => 'default',
             ],
             [
@@ -143,7 +143,46 @@ class EmailTemplateRepository
             $this->insertTemplate(array_merge($default, ['is_default' => 1, 'is_active' => 1]));
         }
 
+        // One-time upgrade: add the set_password_url placeholder to the
+        // welcome template for existing installs that already have the v2 seed.
+        $welcome = $this->getTemplate('welcome');
+        if ($welcome && strpos($welcome['body_html'], 'set_password_url') === false) {
+            $this->upgradeWelcomeTemplate($welcome);
+        }
+
         update_option('sseo_ai_email_templates_seed_version', $seedVersion, false);
+    }
+
+    /**
+     * Upgrade the welcome template to include the set-password button.
+     * Preserves custom subject and layout but replaces the body with the
+     * new default that includes {{set_password_url}} and {{portal_url}}.
+     */
+    private function upgradeWelcomeTemplate(array $existing): void
+    {
+        $newBody = "<h2>" . __('Welcome aboard!', 'sseo-ai-saas') . "</h2>\n<p>"
+            . sprintf(__('Your <strong>{{tier}}</strong> license is now active. You\'re ready to supercharge your SEO with {{site_name}}.', 'sseo-ai-saas'))
+            . "</p>\n<div class='license-box'>\n<p class='label'>" . __('Your License Key', 'sseo-ai-saas')
+            . "</p>\n<p class='value'>{{license_key}}</p>\n</div>\n<p>"
+            . __('Set your password to access your customer portal:', 'sseo-ai-saas')
+            . "</p>\n<a href='{{set_password_url}}' class='button'>" . __('Set Your Password', 'sseo-ai-saas')
+            . "</a>\n<p class='help'>" . __('Already have an account? <a href=\"{{portal_url}}\">Go to your portal</a>', 'sseo-ai-saas')
+            . "</p>\n<p class='help'>" . __('Need help? <a href=\"{{support_url}}\">Contact support</a>', 'sseo-ai-saas') . "</p>";
+
+        $this->saveTemplate([
+            'template_key' => 'welcome',
+            'name' => $existing['name'],
+            'subject' => $existing['subject'],
+            'body_html' => $newBody,
+            'body_blocks' => $existing['body_blocks'] ?? null,
+            'layout' => $existing['layout'] ?? 'default',
+            'brand_logo' => $existing['brand_logo'] ?? '',
+            'primary_color' => $existing['primary_color'] ?? '#379fd3',
+            'secondary_color' => $existing['secondary_color'] ?? '#8f39ac',
+            'button_color' => $existing['button_color'] ?? '',
+            'footer_text' => $existing['footer_text'] ?? '',
+            'is_active' => $existing['is_active'] ?? 1,
+        ]);
     }
 
     /**

@@ -598,7 +598,7 @@ class EmailTemplateAdmin
         $common = '{{site_name}}, {{admin_email}}, {{company_name}}, {{company_address}}, {{company_postal_code}}, {{company_city}}, {{company_country}}, {{company_vat}}, {{company_kvk}}, {{company_iban}}, {{company_email}}, {{company_website}}, {{support_email}}, {{support_url}}, {{current_date}}, {{year}}';
 
         $specific = [
-            'welcome' => '{{tenant_name}}, {{tenant_email}}, {{tenant_domain}}, {{license_key}}, {{tier}}, {{dashboard_url}}, {{support_url}}',
+            'welcome' => '{{tenant_name}}, {{tenant_email}}, {{tenant_domain}}, {{license_key}}, {{tier}}, {{dashboard_url}}, {{support_url}}, {{set_password_url}}, {{portal_url}}',
             'trial_expiring' => '{{days_left}}, {{expires_at}}, {{upgrade_url}}',
             'license_expired' => '{{tier}}, {{renew_url}}',
             'payment_receipt' => '{{amount}}, {{tier}}, {{payment_date}}, {{payment_id}}, {{receipt_url}}',

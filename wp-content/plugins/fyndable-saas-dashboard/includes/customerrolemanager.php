@@ -15,10 +15,17 @@ class CustomerRoleManager
     private const ROLE_NAME = 'fyndable_customer';
 
     private TenantRepository $tenants;
+    private ?EmailTemplateRepository $emailRepository;
+    private ?EmailTemplateRenderer $emailRenderer;
 
-    public function __construct(TenantRepository $tenants)
-    {
+    public function __construct(
+        TenantRepository $tenants,
+        ?EmailTemplateRepository $emailRepository = null,
+        ?EmailTemplateRenderer $emailRenderer = null
+    ) {
         $this->tenants = $tenants;
+        $this->emailRepository = $emailRepository;
+        $this->emailRenderer = $emailRenderer;
     }
 
     public function register(): void
@@ -271,19 +278,58 @@ class CustomerRoleManager
 
     /**
      * Send a welcome email with password reset link to the new customer.
+     * Uses the editable 'welcome' email template when the renderer is
+     * available; falls back to a hardcoded plain-text email otherwise.
      */
     private function sendWelcomeEmail(string $email, string $name, int $userId): void
     {
         $portalUrl = $this->getPortalUrl();
 
         // Generate a password reset key
-        $key = get_password_reset_key(get_user_by('ID', $userId));
+        $user = get_user_by('ID', $userId);
+        $key = get_password_reset_key($user);
         if (is_wp_error($key)) {
             return;
         }
 
-        $resetUrl = network_site_url("wp-login.php?action=rp&key={$key}&login=" . rawurlencode($email));
+        $setPasswordUrl = home_url('/set-password?key=' . rawurlencode($key) . '&login=' . rawurlencode($email));
 
+        // Look up the tenant for this user to enrich the email context.
+        $tenantKey = '';
+        $tenantId = (int) get_user_meta($userId, 'fyndable_tenant_id', true);
+        $licenseKey = '';
+        $tier = 'starter';
+        if ($tenantId > 0) {
+            $tenant = $this->tenants->getTenantById($tenantId);
+            if ($tenant) {
+                $tenantKey = $tenant['tenant_key'] ?? '';
+                $licenseKey = $tenant['license_key'] ?? '';
+                $tier = ucfirst($tenant['tier'] ?? 'starter');
+            }
+        }
+
+        // Prefer the editable template system when available.
+        if ($this->emailRenderer && $this->emailRepository) {
+            $rendered = $this->emailRenderer->render('welcome', $tenantKey, [
+                'set_password_url' => $setPasswordUrl,
+                'portal_url'       => $portalUrl,
+                'dashboard_url'    => $portalUrl,
+                'license_key'      => $licenseKey,
+                'tier'             => $tier,
+                'support_url'      => admin_url('admin.php?page=sseo-ai-support-tickets'),
+            ]);
+
+            if (!empty($rendered['is_active']) && !empty($rendered['body'])) {
+                $headers = [
+                    'Content-Type: text/html; charset=UTF-8',
+                    'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>',
+                ];
+                wp_mail($email, $rendered['subject'], $rendered['body'], $headers);
+                return;
+            }
+        }
+
+        // Fallback: hardcoded plain-text email (backwards compat).
         $subject = sprintf(__('Welcome to Fyndable SmartSEO — Your account is ready', 'sseo-ai-saas'));
         $message = sprintf(
             __("Hi %s,
@@ -299,7 +345,7 @@ If you have any questions, feel free to reply to this email.
 
 — The Fyndable Team", 'sseo-ai-saas'),
             $name ?: 'there',
-            $resetUrl
+            $setPasswordUrl
         );
 
         wp_mail($email, $subject, $message);

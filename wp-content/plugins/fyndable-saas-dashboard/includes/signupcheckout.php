@@ -19,18 +19,21 @@ class SignupCheckout
     private LicenseKeyGenerator $licenseGenerator;
     private PaymentProcessor $paymentProcessor;
     private EmailAutomation $emailAutomation;
+    private ?EmailTemplateRepository $emailTemplateRepository;
     private string $namespace = 'ai-seo-saas/v1';
 
     public function __construct(
         TenantRepository $tenants,
         LicenseKeyGenerator $licenseGenerator,
         PaymentProcessor $paymentProcessor,
-        EmailAutomation $emailAutomation
+        EmailAutomation $emailAutomation,
+        ?EmailTemplateRepository $emailTemplateRepository = null
     ) {
         $this->tenants = $tenants;
         $this->licenseGenerator = $licenseGenerator;
         $this->paymentProcessor = $paymentProcessor;
         $this->emailAutomation = $emailAutomation;
+        $this->emailTemplateRepository = $emailTemplateRepository;
     }
 
     public function register(): void
@@ -420,11 +423,10 @@ class SignupCheckout
                 'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
             ]);
 
-            $this->emailAutomation->sendWelcomeEmail($tenantKey, [
-                'email' => $tenant['email'],
-                'tier' => $tenant['tier'],
-                'license_key' => $tenant['license_key'],
-            ]);
+            // The welcome email is sent by CustomerRoleManager via the
+            // sseo_ai_payment_success hook below (which creates the WP user
+            // and includes the set-password link). Do not send a separate
+            // welcome email here to avoid duplicate emails.
 
             $plans = $this->getPlans();
             $plan = $plans[$tenant['tier']] ?? null;
@@ -570,7 +572,11 @@ class SignupCheckout
             }
         }
 
-        $roleManager = new CustomerRoleManager($this->tenants);
+        $roleManager = new CustomerRoleManager(
+            $this->tenants,
+            $this->emailTemplateRepository,
+            $this->emailTemplateRepository ? new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants) : null
+        );
         $user = get_user_by('email', $tenant['email']);
         if (!$user || !$roleManager->isCustomerUser($user)) {
             $userId = $roleManager->createCustomerUser(
@@ -597,8 +603,8 @@ class SignupCheckout
             exit;
         }
 
-        $resetUrl = network_site_url(
-            "wp-login.php?action=rp&key=" . rawurlencode($key)
+        $resetUrl = home_url(
+            "/set-password?key=" . rawurlencode($key)
             . "&login=" . rawurlencode($user->user_login)
             . "&redirect_to=" . rawurlencode($roleManager->getPortalUrl())
         );

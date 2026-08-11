@@ -61,9 +61,23 @@ class EmailAutomation
             return;
         }
 
+        // Build a set-password URL when a WP user exists for this email,
+        // so the welcome email can include a password-reset button.
+        $setPasswordUrl = '';
+        $portalUrl = '';
+        $user = get_user_by('email', $email);
+        if ($user) {
+            $key = get_password_reset_key($user);
+            if (!is_wp_error($key)) {
+                $setPasswordUrl = home_url('/set-password?key=' . rawurlencode($key) . '&login=' . rawurlencode($email));
+            }
+        }
+
         $rendered = $this->renderer->render('welcome', $tenantKey, [
-            'dashboard_url' => admin_url('admin.php?page=ai-seo-client'),
-            'support_url'  => admin_url('admin.php?page=ai-seo-support'),
+            'dashboard_url'    => admin_url('admin.php?page=ai-seo-client'),
+            'support_url'      => admin_url('admin.php?page=ai-seo-support'),
+            'set_password_url' => $setPasswordUrl,
+            'portal_url'       => $portalUrl,
         ]);
 
         $this->send($email, $rendered);
