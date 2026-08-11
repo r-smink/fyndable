@@ -197,15 +197,7 @@ class LicenseKeyGenerator
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
         
         if ($existingTenant) {
-<<<<<<< HEAD
-            // Re-activation - restore to active, update last active and refresh domain/name
-            $this->tenants->updateTenant($existingTenant['tenant_key'], [
-                'status' => 'active',
-                'last_active' => current_time('mysql'),
-                'domain' => $activationData['site_url'] ?? $existingTenant['domain'],
-                'name' => $activationData['site_name'] ?? $existingTenant['name'],
-=======
-            // Re-activation - restore to active, update last active and domain
+            // Re-activation - restore to active, update last active, domain, name and metadata
             $metadata = is_array($existingTenant['metadata'] ?? null) ? $existingTenant['metadata'] : [];
             $metadata['activated_from'] = $activationData['site_url'] ?? 'unknown';
             $metadata['ip_address'] = $activationData['ip_address'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -216,8 +208,8 @@ class LicenseKeyGenerator
                 'status' => 'active',
                 'last_active' => current_time('mysql'),
                 'domain' => $activationData['site_url'] ?? $existingTenant['domain'] ?? null,
+                'name' => $activationData['site_name'] ?? $existingTenant['name'] ?? null,
                 'metadata' => $metadata,
->>>>>>> daf1a67e3fb22db7f35d2688c5e4d0e06c545af5
             ]);
             
             return [

@@ -1603,7 +1603,7 @@ class SaaSSettings
             <div style="display: block; gap: 20px;">
                 <div class="card" style="width: 100%; margin-bottom: 20px;">
                     <h3><?php esc_html_e('Kosten per Klant', 'sseo-ai-saas'); ?></h3>
-                    <table class="wp-list-table widefat fixed striped">
+                    <table class="wp-list-table widefat striped">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Klant', 'sseo-ai-saas'); ?></th>
@@ -1712,7 +1712,7 @@ class SaaSSettings
 
                 <div class="card" style="width: 100%;">
                     <h3><?php esc_html_e('Kosten per Service', 'sseo-ai-saas'); ?></h3>
-                    <table class="wp-list-table widefat fixed striped">
+                    <table class="wp-list-table widefat striped">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Service', 'sseo-ai-saas'); ?></th>
