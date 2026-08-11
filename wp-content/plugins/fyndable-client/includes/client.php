@@ -2367,6 +2367,11 @@ class Client
             .connection-form label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
             .connection-form input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
             .connection-form input:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1); }
+            .sseo-ai-connection-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+            .sseo-ai-connection-loader.active { display: flex; }
+            .sseo-ai-connection-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: #379fd3; border-radius: 50%; animation: sseo-conn-spin 1s linear infinite; }
+            .sseo-ai-connection-loader p { margin-top: 20px; color: #374151; font-size: 16px; font-weight: 500; }
+            @keyframes sseo-conn-spin { to { transform: rotate(360deg); } }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -2469,6 +2474,22 @@ class Client
                             </button>
                         </form>
                     </div>
+
+                    <div id="sseo-ai-connection-loader" class="sseo-ai-connection-loader">
+                        <div class="spinner"></div>
+                        <p><?php esc_html_e('Connecting your license, please wait...', 'ai-seo-client'); ?></p>
+                    </div>
+
+                    <script>
+                        (function () {
+                            var form = document.querySelector('.connection-form');
+                            var loader = document.getElementById('sseo-ai-connection-loader');
+                            if (!form || !loader) return;
+                            form.addEventListener('submit', function () {
+                                loader.classList.add('active');
+                            });
+                        })();
+                    </script>
                 <?php endif; ?>
             </div>
         </div>
