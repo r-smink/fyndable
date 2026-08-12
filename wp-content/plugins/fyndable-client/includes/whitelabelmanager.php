@@ -88,9 +88,6 @@ class WhiteLabelManager
 
         ?>
         <style>
-        body.login {
-            background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
-        }
         <?php if ($companyLogo): ?>
         #login h1 a {
             background-image: url('<?php echo esc_url($companyLogo); ?>');

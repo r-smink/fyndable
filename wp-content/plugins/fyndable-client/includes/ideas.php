@@ -734,26 +734,26 @@ PROMPT;
                         </button>
                         
                         <div class="credits-display">
-                            <span class="credits-label"><?php esc_html_e('Credits you have:', 'ai-seo-client'); ?></span>
+                            <span class="credits-label"><?php esc_html_e('Credits used / available:', 'ai-seo-client'); ?></span>
                             <div class="credits-grid">
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['posts']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['posts'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Posts', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['ideas']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['ideas'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Ideas', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['outlines']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['outlines'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Outlines', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['keywords']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['keywords'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Keywords', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['images']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['images'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Images', 'ai-seo-client'); ?></span>
                                 </div>
                             </div>
@@ -1248,12 +1248,33 @@ PROMPT;
     }
 
     /**
+     * Render a credit value as "used" or "used / limit".
+     * Unlimited tiers (PHP_INT_MAX) show "∞" for the limit.
+     */
+    private function renderCreditValue(array $credit): string
+    {
+        $used = (int) ($credit['used'] ?? 0);
+        $limit = $credit['limit'] ?? null;
+
+        if ($limit === null) {
+            return (string) $used;
+        }
+
+        if ($limit === PHP_INT_MAX) {
+            return $used . ' / ∞';
+        }
+
+        return $used . ' / ' . (int) $limit;
+    }
+
+    /**
      * Get credit counts for the Ideas page.
      *
-     * Resolution order:
+     * Returns per-item arrays with 'used' and 'limit' (limit may be null when
+     * no tier quota applies). Resolution order:
      * 1. sseo_ai_client_credits option (e.g. set by dashboard / admin code)
      * 2. apply_filters('sseo_ai_ideas_credits', ...)
-     * 3. Dynamically computed from local data
+     * 3. Dynamically computed from local data + tier limits
      */
     private function getCredits(string $table): array
     {
@@ -1282,15 +1303,64 @@ PROMPT;
              WHERE meta_key IN ('_sseo_ai_og_image', '_sseo_ai_twitter_image')"
         ) ?: 0;
 
+        // Tier-based monthly limits (stored at license activation/validation).
+        // null = no tier quota for this item.
+        $postLimit = $this->getTierLimit('sseo_ai_client_monthly_auto_posts', self::TIER_AUTO_POST_LIMITS);
+        $apiLimit  = $this->getTierLimit('sseo_ai_client_api_limit', self::TIER_API_LIMITS);
+
         $credits = [
-            'posts'    => $aiPostsCount,
-            'ideas'    => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'active'") ?: 0,
-            'outlines' => $scheduledCount,
-            'keywords' => $keywordCount,
-            'images'   => $aiImages,
+            'posts'    => ['used' => $aiPostsCount, 'limit' => $postLimit],
+            'ideas'    => ['used' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'active'") ?: 0, 'limit' => null],
+            'outlines' => ['used' => $scheduledCount, 'limit' => null],
+            'keywords' => ['used' => $keywordCount, 'limit' => $apiLimit],
+            'images'   => ['used' => $aiImages, 'limit' => null],
         ];
 
         // Allow SaaS dashboard / custom code to override credit display values
         return apply_filters('sseo_ai_ideas_credits', $credits);
+    }
+
+    /**
+     * Default monthly auto-scheduled post limits per tier.
+     * Mirrors LicenseValidator::TIER_AUTO_POST_LIMITS to avoid coupling.
+     */
+    private const TIER_AUTO_POST_LIMITS = [
+        'free'         => 0,
+        'starter'      => 15,
+        'trial'        => 10,
+        'professional' => 35,
+        'business'     => 150,
+        'agency'       => PHP_INT_MAX,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
+     * Default API call limits per tier (per month).
+     */
+    private const TIER_API_LIMITS = [
+        'free'         => 500,
+        'starter'      => 1000,
+        'trial'        => 5000,
+        'professional' => 10000,
+        'business'     => 50000,
+        'agency'       => 200000,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
+     * Resolve a tier limit: option value if set, otherwise tier default.
+     * Returns null when the tier is unknown (no quota to show).
+     */
+    private function getTierLimit(string $optionName, array $tierDefaults): ?int
+    {
+        $tier = get_option('sseo_ai_client_license_tier', 'free');
+        if ($tier === 'dev') {
+            return PHP_INT_MAX;
+        }
+        $default = $tierDefaults[$tier] ?? null;
+        if ($default === null) {
+            return null;
+        }
+        return (int) get_option($optionName, $default);
     }
 }

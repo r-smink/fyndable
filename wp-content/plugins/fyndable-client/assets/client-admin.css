@@ -795,10 +795,11 @@ a.ai-tool-card p {
 
 #sseo-ideas-page .credit-value {
     display: block;
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--sseo-gray-900);
-    line-height: 1;
+    line-height: 1.1;
+    white-space: nowrap;
 }
 
 #sseo-ideas-page .credit-label {

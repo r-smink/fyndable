@@ -1151,7 +1151,7 @@ class Client
         wp_add_inline_style('ai-seo-client-admin', '
             #sseo-ai-loader-overlay {
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center;
+                background: rgba(0,0,0,0.6); z-index: 100001; justify-content: center; align-items: center;
                 flex-direction: column; backdrop-filter: blur(4px);
             }
             #sseo-ai-loader-overlay.active { display: flex !important; }
