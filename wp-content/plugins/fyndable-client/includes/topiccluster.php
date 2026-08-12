@@ -245,10 +245,9 @@ class TopicCluster
             $this->injectInternalLinks($postId, $clusterId, $keyword);
         }
 
-        // Generate a featured image automatically when image API credentials are configured
+        // Generate a featured image automatically when any image API key is configured
         $imageAttachmentId = null;
-        $imageApi = get_option('sseo_ai_client_image_api', []);
-        if (current_user_can('upload_files') && !empty($imageApi['provider']) && !empty($imageApi['key'])) {
+        if ($this->hasImageApiKey()) {
             $generator = new AIImageGenerator($this->settings, $this->llm);
             $imageAttachmentId = $generator->generateFeaturedImage($postId, 'photorealistic', $title, 100);
         }
@@ -355,24 +354,58 @@ IMPORTANT: Return ONLY the JSON, no markdown formatting, no code blocks.
 PROMPT;
 
         $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2), 'use_case' => 'content_generation']);
-        
+
         if (is_wp_error($response)) {
             return $response;
         }
 
-        // Parse JSON response
-        $data = json_decode(trim($response), true);
-        if (!$data || !isset($data['content'])) {
-            // Try to extract content from non-JSON response
-            return [
-                'content' => $response,
-                'meta_description' => substr(strip_tags($response), 0, 160),
-                'tags' => [$keyword],
-                'word_count' => str_word_count(strip_tags($response)),
-            ];
+        // Parse JSON response — LLMs often wrap JSON in markdown code blocks
+        $rawResponse = trim($response);
+        if (preg_match('/```(?:json)?\s*(.+?)\s*```/s', $rawResponse, $m)) {
+            $rawResponse = trim($m[1]);
         }
 
-        return $data;
+        $data = json_decode($rawResponse, true);
+
+        if ($data && isset($data['content'])) {
+            // Valid JSON received — verify content is not empty
+            if (trim(strip_tags($data['content'])) === '') {
+                return new \WP_Error('empty_content', __('AI returned empty content for this post', 'ai-seo-client'));
+            }
+            return $data;
+        }
+
+        // JSON parsing failed. If the response looks like JSON, return an error
+        // so the queue can retry instead of storing raw JSON as post content.
+        $looksLikeJson = (strpos(trim($rawResponse), '{') === 0 || strpos(trim($rawResponse), '[') === 0);
+        if ($looksLikeJson) {
+            return new \WP_Error('invalid_json', __('AI returned malformed JSON response', 'ai-seo-client'));
+        }
+
+        // Response is not JSON — treat it as HTML content directly
+        return [
+            'content' => $rawResponse,
+            'meta_description' => substr(strip_tags($rawResponse), 0, 160),
+            'tags' => [$keyword],
+            'word_count' => str_word_count(strip_tags($rawResponse)),
+        ];
+    }
+
+    /**
+     * Check whether any image generation API key is configured (generic or provider-specific).
+     * Used to decide whether to attempt featured image generation.
+     */
+    private function hasImageApiKey(): bool
+    {
+        $imageApi = get_option('sseo_ai_client_image_api', []);
+        if (!is_array($imageApi)) {
+            return false;
+        }
+        return !empty($imageApi['key'])
+            || !empty($imageApi['openrouter_key'])
+            || !empty($imageApi['openai_key'])
+            || !empty($imageApi['stability_key'])
+            || !empty($imageApi['openart_key']);
     }
 
     /**
@@ -832,9 +865,8 @@ PROMPT;
                     // Quality pipeline
                     $this->runPostGenerationPipeline($postId, $item['keyword'], $content['content']);
 
-                    // Featured image
-                    $imageApi = get_option('sseo_ai_client_image_api', []);
-                    if (!empty($imageApi['provider']) && !empty($imageApi['key'])) {
+                    // Featured image — always try to generate when any image API key is configured
+                    if ($this->hasImageApiKey()) {
                         $generator = new AIImageGenerator($this->settings, $this->llm);
                         $generator->generateFeaturedImage($postId, 'photorealistic', $item['title'], 100);
                     }
