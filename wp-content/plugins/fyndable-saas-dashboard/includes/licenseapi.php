@@ -507,6 +507,25 @@ class LicenseAPI
     }
 
     /**
+     * Get the global chatbot configuration (synced to client sites).
+     * Returns only the fields the client needs: enabled, name, avatar_url, knowledge.
+     */
+    private function getChatbotConfig(): array
+    {
+        $config = get_option('sseo_ai_saas_chatbot_config', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        return [
+            'enabled' => !empty($config['enabled']) ? 1 : 0,
+            'name' => $config['name'] ?? 'Fyndable Assistant',
+            'avatar_url' => $config['avatar_url'] ?? '',
+            'knowledge' => $config['knowledge'] ?? '',
+        ];
+    }
+
+    /**
      * Get tenant status endpoint
      */
     public function getTenantStatus(\WP_REST_Request $request): \WP_REST_Response
@@ -543,6 +562,7 @@ class LicenseAPI
             'monthly_geo_scans' => (int)$settings->getGeoScanLimitForTier($tenant['tier']),
             'expires_at' => $tenant['expires_at'],
             'white_label' => $this->getWhiteLabelData($tenantKey),
+            'chatbot_config' => $this->getChatbotConfig(),
             'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
             'image_api' => [
                 'provider' => $settings->getImageApiProvider(),

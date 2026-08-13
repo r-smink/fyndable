@@ -18,6 +18,7 @@ class Dashboard
     private SaaSSettings $saasSettings;
     private ApiGateway $apiGateway;
     private WhiteLabelAdmin $whiteLabelAdmin;
+    private ChatbotAdmin $chatbotAdmin;
     private PaymentProcessor $paymentProcessor;
     private WebhookHandler $webhookHandler;
     private SupportTickets $supportTickets;
@@ -110,6 +111,10 @@ class Dashboard
         // Bookkeeping admin (invoices, profit, template)
         $this->bookkeepingAdmin = new BookkeepingAdmin($this->pluginFile, $this->tenants, $this->invoiceManager);
         $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants, $this->bookkeepingAdmin);
+
+        // Chatbot admin (support chatbot settings: name, avatar, knowledge, history)
+        $this->chatbotAdmin = new ChatbotAdmin();
+        $this->chatbotAdmin->register();
 
         $this->geoScanRepository = new GeoScanRepository();
         $this->htmlFetcher = new HtmlFetcher($this->saasSettings);

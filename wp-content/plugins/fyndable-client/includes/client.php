@@ -100,6 +100,7 @@ class Client
     private ?ProgrammaticSEO $programmaticSEO = null;
     private ?MultiCMSPublisher $multiCMS = null;
     private ?SerpChangeMonitor $serpMonitor = null;
+    private ?SupportAssistant $supportAssistant = null;
 
     public function init(): void
     {
@@ -109,6 +110,14 @@ class Client
         $this->healthLogger = new HealthLogger(new AlertNotifier());
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
         $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
+
+        // Support Assistant (sticky chatbot widget with KB + LLM fallback + ticket escalation)
+        $this->supportAssistant = new SupportAssistant(
+            $this->llmClient,
+            $this->dashboardAPI,
+            $this->licenseValidator
+        );
+        $this->supportAssistant->register();
 
         // GDPR privacy export/erasure â€” always registered regardless of license
         $this->privacyExport = new PrivacyExport();

@@ -401,6 +401,11 @@ class DashboardAPI
             update_option('sseo_ai_white_label', $body['white_label']);
         }
 
+        // Sync chatbot configuration from the SaaS dashboard
+        if (!empty($body['chatbot_config']) && is_array($body['chatbot_config'])) {
+            update_option('sseo_ai_chatbot_config', $body['chatbot_config']);
+        }
+
         return $body;
     }
 

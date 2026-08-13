@@ -151,6 +151,11 @@ class SaaSDashboardShell
                 'icon' => '&#9881;',
             ],
             [
+                'slug' => 'sseo-ai-chatbot',
+                'label' => __('Chatbot', 'sseo-ai-saas'),
+                'icon' => '&#128172;',
+            ],
+            [
                 'slug' => 'sseo-ai-client-versions',
                 'label' => __('Client Versions', 'sseo-ai-saas'),
                 'icon' => '&#128230;',

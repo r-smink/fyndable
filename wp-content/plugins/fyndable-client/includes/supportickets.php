@@ -72,6 +72,23 @@ class Supportickets
             return;
         }
 
+        // Chatbot enable/disable toggle
+        if (isset($_POST['toggle_chatbot']) && isset($_POST['chatbot_toggle_nonce'])) {
+            if (!wp_verify_nonce($_POST['chatbot_toggle_nonce'], 'toggle_chatbot')) {
+                wp_die(__('Security check failed.', 'ai-seo-client'));
+            }
+
+            if (!current_user_can('manage_options')) {
+                wp_die(__('Insufficient permissions.', 'ai-seo-client'));
+            }
+
+            $enabled = !empty($_POST['chatbot_enabled']) ? 1 : 0;
+            update_option('sseo_ai_chatbot_disabled', $enabled ? 0 : 1);
+
+            $this->redirectWithMessage('chatbot_toggled=1');
+            return;
+        }
+
         if (isset($_POST['create_support_ticket']) && isset($_POST['support_ticket_nonce'])) {
             if (!wp_verify_nonce($_POST['support_ticket_nonce'], 'create_support_ticket')) {
                 wp_die(__('Security check failed.', 'ai-seo-client'));
@@ -236,11 +253,19 @@ class Supportickets
             </div>
         <?php endif; ?>
 
+        <?php if (isset($_GET['chatbot_toggled'])): ?>
+            <div class="sseo-support-card" style="margin-bottom: 30px; background: #d1fae5; color: #065f46;">
+                <strong><?php esc_html_e('Chatbot instelling opgeslagen.', 'ai-seo-client'); ?></strong>
+            </div>
+        <?php endif; ?>
+
         <?php if ($hasError): ?>
             <div class="sseo-support-card" style="margin-bottom: 30px; background: #fee2e2; color: #991b1b;">
                 <strong><?php echo esc_html($errorMessage); ?></strong>
             </div>
         <?php endif; ?>
+
+        <?php $this->renderChatbotToggle(); ?>
 
         <div class="sseo-support-grid">
             <div class="sseo-support-card">
@@ -301,6 +326,33 @@ class Supportickets
                     <?php submit_button(__('Submit ticket', 'ai-seo-client'), 'primary', 'create_support_ticket'); ?>
                 </form>
             </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render the chatbot on/off toggle card.
+     */
+    private function renderChatbotToggle(): void
+    {
+        $disabled = (bool) get_option('sseo_ai_chatbot_disabled', 0);
+        $enabled = !$disabled;
+        ?>
+        <div class="sseo-support-card" style="margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+            <div>
+                <h2 style="margin: 0 0 6px 0; font-size: 18px;"><?php esc_html_e('Support chatbot', 'ai-seo-client'); ?></h2>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                    <?php esc_html_e('Toon de chatbot-widget rechtsonder in het dashboard en op post-edit pagina\'s.', 'ai-seo-client'); ?>
+                </p>
+            </div>
+            <form method="post" style="flex-shrink: 0;">
+                <?php wp_nonce_field('toggle_chatbot', 'chatbot_toggle_nonce'); ?>
+                <label style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                    <span style="font-weight: 600; color: #374151;"><?php echo $enabled ? esc_html__('Aan', 'ai-seo-client') : esc_html__('Uit', 'ai-seo-client'); ?></span>
+                    <input type="checkbox" name="chatbot_enabled" value="1" <?php checked($enabled); ?> onchange="this.form.submit()" style="width: 20px; height: 20px; cursor: pointer;">
+                    <input type="hidden" name="toggle_chatbot" value="1">
+                </label>
+            </form>
         </div>
         <?php
     }
