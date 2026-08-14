@@ -15,7 +15,7 @@
     var ticketMode = false;
 
     // --- DOM ---
-    var widget, button, panel, messagesEl, inputEl, sendBtn;
+    var widget, button, panel, messagesEl, inputEl, sendBtn, ticketBtn;
 
     function init() {
         if (!restUrl) return;
@@ -70,11 +70,14 @@
             '<button class="sseo-sa-close" aria-label="Close">&times;</button>' +
         '</div>';
 
+        var ticketIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path><line x1="13" y1="5" x2="13" y2="19"></line></svg>';
+
         panel.innerHTML = headerHtml +
             '<div class="sseo-sa-messages"></div>' +
             '<div class="sseo-sa-suggestions"></div>' +
             '<div class="sseo-sa-input-wrap">' +
                 '<input type="text" class="sseo-sa-input" placeholder="' + escapeHtml(i18n.placeholder || 'Stel je vraag...') + '">' +
+                '<button class="sseo-sa-ticket-fab" aria-label="' + escapeHtml(i18n.createTicketDirect || i18n.createTicket || 'Maak support ticket') + '" title="' + escapeHtml(i18n.createTicketDirect || i18n.createTicket || 'Maak support ticket') + '" style="display:none;">' + ticketIcon + '</button>' +
                 '<button class="sseo-sa-send" aria-label="Send">' +
                     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
                 '</button>' +
@@ -85,9 +88,11 @@
         messagesEl = panel.querySelector('.sseo-sa-messages');
         inputEl = panel.querySelector('.sseo-sa-input');
         sendBtn = panel.querySelector('.sseo-sa-send');
+        ticketBtn = panel.querySelector('.sseo-sa-ticket-fab');
 
         panel.querySelector('.sseo-sa-close').addEventListener('click', closePanel);
         sendBtn.addEventListener('click', sendMessage);
+        ticketBtn.addEventListener('click', showDirectTicketForm);
         inputEl.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -162,12 +167,81 @@
             messagesEl.appendChild(div);
         });
         messagesEl.scrollTop = messagesEl.scrollHeight;
+        updateTicketFabVisibility();
         renderSuggestions();
+    }
+
+    /**
+     * Show the direct-ticket FAB only once the user has asked at least one
+     * question (i.e. there is a user message in the history). Hide while a
+     * ticket form is already open.
+     */
+    function updateTicketFabVisibility() {
+        if (!ticketBtn) return;
+        var hasUserMessage = messages.some(function (m) { return m.role === 'user'; });
+        var shouldShow = hasUserMessage && !ticketMode;
+        ticketBtn.style.display = shouldShow ? '' : 'none';
+        ticketBtn.disabled = ticketMode;
+    }
+
+    /**
+     * Open the inline ticket form directly (not tied to a specific assistant
+     * message). Prefills the message with the conversation history and the
+     * subject with the last user question.
+     */
+    function showDirectTicketForm() {
+        if (ticketMode) return;
+        ticketMode = true;
+        updateTicketFabVisibility();
+
+        var lastUserQuestion = '';
+        for (var i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'user') {
+                lastUserQuestion = messages[i].content;
+                break;
+            }
+        }
+
+        var form = document.createElement('div');
+        form.className = 'sseo-sa-ticket-form';
+        form.innerHTML =
+            '<input type="text" class="sseo-sa-ticket-subject" placeholder="' + escapeHtml(i18n.ticketSubject || 'Onderwerp') + '" value="' + escapeHtml(lastUserQuestion.substring(0, 80)) + '">' +
+            '<textarea class="sseo-sa-ticket-message" placeholder="' + escapeHtml(i18n.ticketMessage || 'Bericht') + '" rows="4">' + escapeHtml(buildTicketMessage()) + '</textarea>' +
+            '<button class="sseo-sa-ticket-submit">' + escapeHtml(i18n.ticketSubmit || 'Verstuur ticket') + '</button>';
+
+        messagesEl.appendChild(form);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        form.querySelector('.sseo-sa-ticket-submit').addEventListener('click', function () {
+            var subject = form.querySelector('.sseo-sa-ticket-subject').value.trim();
+            var message = form.querySelector('.sseo-sa-ticket-message').value.trim();
+            if (!subject || !message) return;
+
+            form.querySelector('.sseo-sa-ticket-submit').disabled = true;
+            form.querySelector('.sseo-sa-ticket-submit').textContent = i18n.loading || '...';
+
+            submitTicket(subject, message, function (result) {
+                ticketMode = false;
+                form.remove();
+                updateTicketFabVisibility();
+
+                if (result && result.success) {
+                    addMessage('assistant', (i18n.ticketSuccess || 'Ticket aangemaakt! Ticket #%d').replace('%d', result.ticket_id || ''), { source: 'none' });
+                    var last = messages[messages.length - 1];
+                    last.ticketCreated = true;
+                    last.ticketUrl = result.support_url;
+                } else {
+                    addMessage('assistant', i18n.ticketError || 'Kon ticket niet aanmaken.', { source: 'none' });
+                }
+                renderMessages();
+            });
+        });
     }
 
     function showTicketForm(assistantMsg) {
         if (ticketMode) return;
         ticketMode = true;
+        updateTicketFabVisibility();
 
         var form = document.createElement('div');
         form.className = 'sseo-sa-ticket-form';
@@ -190,6 +264,7 @@
             submitTicket(subject, message, function (result) {
                 ticketMode = false;
                 form.remove();
+                updateTicketFabVisibility();
 
                 if (result && result.success) {
                     assistantMsg.ticketCreated = true;

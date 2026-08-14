@@ -23,12 +23,24 @@ class ChatbotAdmin
 
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenu']);
+        add_action('admin_menu', [$this, 'addMenu'], 20);
+        add_action('admin_init', [$this, 'checkPagePermission'], 5);
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('admin_post_sseo_ai_chatbot_upload_avatar', [$this, 'handleAvatarUpload']);
         add_action('admin_post_sseo_ai_chatbot_upload_knowledge', [$this, 'handleKnowledgeUpload']);
         add_action('admin_post_sseo_ai_chatbot_clear_history', [$this, 'handleClearHistory']);
+    }
+
+    public function checkPagePermission(): void
+    {
+        if (!isset($_GET['page']) || $_GET['page'] !== 'sseo-ai-chatbot') {
+            return;
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission.', 'sseo-ai-saas'));
+        }
     }
 
     public function enqueueAssets(string $hook): void
@@ -312,7 +324,7 @@ class ChatbotAdmin
         $enabled = $config['enabled'];
 
         ?>
-        <div class="wrap sseo-ai-chatbot-admin">
+        <div class="wrap sseo-ai-license-admin sseo-ai-chatbot-admin">
             <h1><?php echo esc_html__('Chatbot Settings', 'sseo-ai-saas'); ?></h1>
             <p><?php echo esc_html__('Configureer de support-chatbot die aan client-sites wordt gesynchroniseerd.', 'sseo-ai-saas'); ?></p>
 

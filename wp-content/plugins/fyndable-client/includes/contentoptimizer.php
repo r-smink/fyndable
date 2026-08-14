@@ -664,7 +664,7 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
                 <div>
                     <div class="postbox" style="padding:20px; text-align:center;" id="opt-score-panel">
                         <div id="opt-score-display" style="margin-bottom:15px;">
-                            <div style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px;"><?php esc_html_e('Content Score', 'ai-seo-client'); ?></div>
+                            <div style="font-size:12px;color:#666;letter-spacing:1px;"><?php esc_html_e('Content Score', 'ai-seo-client'); ?></div>
                             <div id="opt-score-circle" style="width:120px;height:120px;margin:15px auto;position:relative;">
                                 <svg viewBox="0 0 36 36" width="120" height="120" style="transform:rotate(-90deg);">
                                     <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e0e0e0" stroke-width="2.5"/>

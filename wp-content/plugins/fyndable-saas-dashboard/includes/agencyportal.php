@@ -102,7 +102,7 @@ class AgencyPortal
             .fyndable-agency-topbar .agency-badge {
                 font-size: 11px;
                 font-weight: 600;
-                text-transform: uppercase;
+                
                 letter-spacing: 0.5px;
                 padding: 4px 12px;
                 border-radius: 20px;
@@ -641,7 +641,7 @@ class AgencyPortal
                         <tr>
                             <th scope="row"><label for="key_prefix"><?php esc_html_e('License Key Prefix', 'sseo-ai-saas'); ?></label></th>
                             <td>
-                                <input type="text" name="key_prefix" id="key_prefix" value="<?php echo esc_attr($defaultPrefix); ?>" maxlength="6" class="small-text" style="text-transform:uppercase;" pattern="[A-Za-z0-9]{1,6}" required>
+                                <input type="text" name="key_prefix" id="key_prefix" value="<?php echo esc_attr($defaultPrefix); ?>" maxlength="6" class="small-text" style="" pattern="[A-Za-z0-9]{1,6}" required>
                                 <p class="description"><?php esc_html_e('1-6 alphanumeric characters. Will be uppercased. Example: ACME produces ACME-AI-XXXX-XXXX-XXXX', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>

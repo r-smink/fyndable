@@ -780,7 +780,7 @@ class ContentDecay
                                 border-radius: 4px;
                                 font-size: 12px;
                                 font-weight: bold;
-                                text-transform: uppercase;
+                                
                                 <?php echo $this->getSeverityStyle($alert['severity']); ?>
                             ">
                                 <?php echo esc_html($alert['severity']); ?>
@@ -914,7 +914,7 @@ class ContentDecay
                         a.proposed_changes.forEach(function(c) {
                             var pColor = c.priority === 'high' ? '#dc2626' : (c.priority === 'medium' ? '#d97706' : '#6c757d');
                             html += '<div style="padding:8px;margin:4px 0;background:#fff;border-radius:4px;font-size:13px;">';
-                            html += '<span style="color:' + pColor + ';font-weight:600;text-transform:uppercase;font-size:11px;">' + c.priority + '</span> ';
+                            html += '<span style="color:' + pColor + ';font-weight:600;font-size:11px;">' + c.priority + '</span> ';
                             html += '<strong>' + c.section + ':</strong> ' + c.change;
                             html += '</div>';
                         });

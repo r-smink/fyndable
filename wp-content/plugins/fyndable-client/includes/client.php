@@ -30,6 +30,7 @@ class Client
     private ?RedirectionManager $redirectManager = null;
     private ?NotFoundMonitor $notFoundMonitor = null;
     private ?RobotsTxt $robotsTxt = null;
+    private ?LlmsTxt $llmsTxt = null;
     private ?SeoRevisions $seoRevisions = null;
     private ?OpenGraph $openGraph = null;
     private ?CanonicalUrl $canonicalUrl = null;
@@ -119,7 +120,7 @@ class Client
         );
         $this->supportAssistant->register();
 
-        // GDPR privacy export/erasure â€” always registered regardless of license
+        // GDPR privacy export/erasure — always registered regardless of license
         $this->privacyExport = new PrivacyExport();
         $this->privacyExport->register();
 
@@ -281,6 +282,10 @@ class Client
         
         $this->robotsTxt = new RobotsTxt($this->settings);
         $this->robotsTxt->register();
+
+        // llms.txt generator — serves /llms.txt for large language models
+        $this->llmsTxt = new LlmsTxt($this->settings);
+        $this->llmsTxt->register();
         
         $this->openGraph = new OpenGraph($this->settings, $this->llmClient);
         $this->openGraph->register();
@@ -434,7 +439,7 @@ class Client
             $this->contentBrief = new ContentBrief($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->contentBrief->register();
 
-            // AI SEO Agent placeholder â€” instantiated after Business+ features so ContentWriter is available
+            // AI SEO Agent placeholder — instantiated after Business+ features so ContentWriter is available
             
             $this->keywordExplorer = new KeywordExplorer($this->settings, $this->dashboardAPI, $this->llmClient);
             $this->keywordExplorer->register();
@@ -506,7 +511,7 @@ class Client
             $this->auditService = new AuditService();
         }
 
-        // AI SEO Agent â€” conversational interface (after all features are loaded)
+        // AI SEO Agent — conversational interface (after all features are loaded)
         $this->aiAgent = new AISeoAgent(
             $this->llmClient,
             $this->settings,
@@ -519,27 +524,27 @@ class Client
         );
         $this->aiAgent->register();
 
-        // Brand Voice Engine â€” injects voice into all LLM prompts
+        // Brand Voice Engine — injects voice into all LLM prompts
         $this->brandVoice = new BrandVoice($this->settings);
         $this->brandVoice->register();
 
-        // GEO Content Score â€” AI search citability scoring
+        // GEO Content Score — AI search citability scoring
         $this->geoScore = new GeoContentScore($this->llmClient, $this->settings);
         $this->geoScore->register();
 
-        // Programmatic SEO â€” template-led page generation at scale
+        // Programmatic SEO — template-led page generation at scale
         $this->programmaticSEO = new ProgrammaticSEO($this->llmClient, $this->settings);
         $this->programmaticSEO->register();
 
-        // Multi-CMS Publishing â€” Webflow/Shopify API integration
+        // Multi-CMS Publishing — Webflow/Shopify API integration
         $this->multiCMS = new MultiCMSPublisher($this->settings);
         $this->multiCMS->register();
 
-        // SERP Change Monitor â€” auto-update content on ranking drops
+        // SERP Change Monitor — auto-update content on ranking drops
         $this->serpMonitor = new SerpChangeMonitor($this->settings, $this->llmClient);
         $this->serpMonitor->register();
 
-        // TopicCluster â€” instantiated once after all dependencies are available
+        // TopicCluster — instantiated once after all dependencies are available
         if (in_array($tier, ['professional', 'business', 'agency', 'trial', 'dev'])) {
             $this->topicCluster = new TopicCluster(
                 $this->settings,
@@ -587,7 +592,7 @@ class Client
         // Dashboard card drag-and-drop ordering
         DashboardSorter::register();
 
-        // Unified Post Meta Box with tabs â€” replaces individual meta boxes
+        // Unified Post Meta Box with tabs — replaces individual meta boxes
         $this->initPostMetaBox();
     }
 
@@ -741,7 +746,7 @@ class Client
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $menuName = $this->getBrandName();
 
-        echo '<div class="wrap"><h1>' . esc_html($menuName) . ' â€” Network Overview</h1>';
+        echo '<div class="wrap"><h1>' . esc_html($menuName) . ' — Network Overview</h1>';
         echo '<p>Manage plugin settings across all sites in your network.</p>';
 
         echo '<table class="wp-list-table widefat fixed striped"><thead><tr>';
@@ -787,7 +792,7 @@ class Client
         $this->dashboardShell = new DashboardShell($this);
         $this->dashboardShell->register();
 
-        // Main menu â€” renders the full-page dashboard shell
+        // Main menu — renders the full-page dashboard shell
         add_menu_page(
             $menuName,
             $menuName,
@@ -804,7 +809,7 @@ class Client
         add_submenu_page(
             'fyndable-dashboard',
             __('Dashboard', 'ai-seo-client'),
-            __('ðŸ“Š Dashboard', 'ai-seo-client'),
+            __('📊 Dashboard', 'ai-seo-client'),
             'manage_options',
             'ai-seo-dashboard',
             [$this, 'renderDashboardPage']
@@ -814,7 +819,7 @@ class Client
         add_submenu_page(
             'fyndable-dashboard',
             __('Connection', 'ai-seo-client'),
-            __('ðŸ”— Connection', 'ai-seo-client'),
+            __('🔗 Connection', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
             [$this, 'renderConnectionPage']
@@ -827,7 +832,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Content Calendar', 'ai-seo-client'),
-                __('ðŸ“… Content Calendar', 'ai-seo-client'),
+                __('📅 Content Calendar', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-content-calendar',
                 [$this, 'renderContentCalendarPage']
@@ -837,7 +842,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('AI Tools', 'ai-seo-client'),
-                __('ðŸ¤– AI Tools', 'ai-seo-client'),
+                __('🤖 AI Tools', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-ai-tools',
                 [$this, 'renderAIToolsPage']
@@ -847,7 +852,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Ideas', 'ai-seo-client'),
-                __('ðŸ’¡ Ideas', 'ai-seo-client'),
+                __('💡 Ideas', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-ideas',
                 [$this, 'renderIdeasPage']
@@ -857,7 +862,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Created Posts', 'ai-seo-client'),
-                __('ðŸ“ Created Posts', 'ai-seo-client'),
+                __('📝 Created Posts', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-created-posts',
                 [$this, 'renderCreatedPostsPage']
@@ -867,7 +872,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Keywords', 'ai-seo-client'),
-                __('ðŸŽ¯ Keywords', 'ai-seo-client'),
+                __('🎯 Keywords', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-keywords',
                 [$this, 'renderKeywordsPage']
@@ -877,7 +882,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Link Manager', 'ai-seo-client'),
-                __('ðŸ”— Link Manager', 'ai-seo-client'),
+                __('🔗 Link Manager', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-link-manager',
                 [$this, 'renderLinkManagerPage']
@@ -887,7 +892,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Competitor Research', 'ai-seo-client'),
-                __('ðŸ” Competitor Research', 'ai-seo-client'),
+                __('🔍 Competitor Research', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-competitor-research',
                 [$this, 'renderCompetitorResearchPage']
@@ -897,7 +902,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Link Genius', 'ai-seo-client'),
-                __('âœ¨ Link Genius', 'ai-seo-client'),
+                __('✨ Link Genius', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-link-genius',
                 [$this, 'renderLinkGeniusPage']
@@ -907,7 +912,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Sitemaps', 'ai-seo-client'),
-                __('ðŸ—ºï¸ Sitemaps', 'ai-seo-client'),
+                __('🗺️ Sitemaps', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-sitemaps',
                 [$this, 'renderSitemapsPage']
@@ -917,7 +922,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Bulk Optimizer', 'ai-seo-client'),
-                __('âœ… Bulk Optimizer', 'ai-seo-client'),
+                __('✅ Bulk Optimizer', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-bulk',
                 [$this, 'renderBulkOptimizerPage']
@@ -927,7 +932,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Redirect Manager', 'ai-seo-client'),
-                __('â†©ï¸ Redirect Manager', 'ai-seo-client'),
+                __('↩️ Redirect Manager', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-redirects',
                 [$this, 'renderRedirectManagerPage']
@@ -937,7 +942,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Integrations', 'ai-seo-client'),
-                __('ðŸ”Œ Integrations', 'ai-seo-client'),
+                __('🔌 Integrations', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-integrations',
                 [$this, 'renderIntegrationsPage']
@@ -947,7 +952,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Support', 'ai-seo-client'),
-                __('ðŸ’¬ Support', 'ai-seo-client'),
+                __('💬 Support', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-support',
                 [$this, 'renderSupportPage']
@@ -957,7 +962,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('SEO Data Dashboard', 'ai-seo-client'),
-                __('ðŸ“ˆ SEO Data', 'ai-seo-client'),
+                __('📈 SEO Data', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-data-dashboard',
                 [$this, 'renderSEODataDashboardPage']
@@ -967,7 +972,7 @@ class Client
             add_submenu_page(
                 'fyndable-dashboard',
                 __('AI Search Visibility', 'ai-seo-client'),
-                __('ðŸ‘ï¸ AI Search Visibility', 'ai-seo-client'),
+                __('👁️ AI Search Visibility', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-llm-tracker',
                 [$this, 'renderBrandVisibilityPage']
@@ -980,7 +985,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('Topic Clusters', 'ai-seo-client'),
-                    __('ðŸŽ¯ Topic Clusters', 'ai-seo-client'),
+                    __('🎯 Topic Clusters', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-topic-clusters',
                     [$this, 'renderTopicClusterPage']
@@ -1000,7 +1005,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('Site Audit', 'ai-seo-client'),
-                    __('ðŸ” Site Audit', 'ai-seo-client'),
+                    __('🔍 Site Audit', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-site-audit',
                     [$this, 'renderSiteAuditPage']
@@ -1010,7 +1015,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('Rank Tracker', 'ai-seo-client'),
-                    __('ðŸ“ˆ Rank Tracker', 'ai-seo-client'),
+                    __('📈 Rank Tracker', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-rank-tracker',
                     [$this, 'renderRankTrackerPage']
@@ -1020,7 +1025,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('Search Console', 'ai-seo-client'),
-                    __('ðŸ“Š Search Console', 'ai-seo-client'),
+                    __('📊 Search Console', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-gsc',
                     [$this, 'renderGscDashboardPage']
@@ -1030,7 +1035,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('Google Data', 'ai-seo-client'),
-                    __('ðŸ“ˆ Google Data', 'ai-seo-client'),
+                    __('📈 Google Data', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-google-data',
                     [$this, 'renderGoogleDataPage']
@@ -1040,7 +1045,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('A/B Testing', 'ai-seo-client'),
-                    __('ðŸ§ª A/B Testing', 'ai-seo-client'),
+                    __('🧪 A/B Testing', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-ab-testing',
                     [$this, 'renderABTestingPage']
@@ -1050,7 +1055,7 @@ class Client
                 add_submenu_page(
                     'fyndable-dashboard',
                     __('AI Optimization', 'ai-seo-client'),
-                    __('ðŸ¤– AI Optimization', 'ai-seo-client'),
+                    __('🤖 AI Optimization', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-ai-optimization',
                     [$this, 'renderAiOptimizationPage']
@@ -1061,7 +1066,7 @@ class Client
                     add_submenu_page(
                         'fyndable-dashboard',
                         __('Prompt Templates', 'ai-seo-client'),
-                        __('ðŸ“ Prompt Templates', 'ai-seo-client'),
+                        __('📝 Prompt Templates', 'ai-seo-client'),
                         'manage_options',
                         'ai-seo-prompt-templates',
                         [$this, 'renderPromptTemplatesPage']
@@ -1074,17 +1079,17 @@ class Client
         add_submenu_page(
             'fyndable-dashboard',
             __('Settings', 'ai-seo-client'),
-            __('âš™ï¸ Settings', 'ai-seo-client'),
+            __('⚙️ Settings', 'ai-seo-client'),
             'manage_options',
             'ai-seo-settings',
             [$this, 'renderSettingsPage']
         );
 
-        // Import (always visible â€” useful even before license activation)
+        // Import (always visible — useful even before license activation)
         add_submenu_page(
             'fyndable-dashboard',
             __('Import SEO Data', 'ai-seo-client'),
-            __('ðŸ“¥ Import', 'ai-seo-client'),
+            __('📥 Import', 'ai-seo-client'),
             'manage_options',
             'ai-seo-import',
             [$this, 'renderImportPage']
@@ -1475,42 +1480,42 @@ class Client
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
                         
                         <div class="ai-tool-card">
-                            <h3>ðŸ¤– <?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
+                            <h3>🤖 <?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content generation for blog posts and articles', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>âœï¸ <?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></h3>
+                            <h3>✍️ <?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Bulk generate meta titles and descriptions', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>ðŸŽ¨ <?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
+                            <h3>🎨 <?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate featured images and graphics', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>ðŸ–¼ï¸ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
+                            <h3>🖼️ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Available in post editor sidebar', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>â“ <?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
+                            <h3>❓ <?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Generate FAQ schema from content', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>ðŸŽ¥ <?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
+                            <h3>🎥 <?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Video transcript generation and optimization', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>ðŸ”„ <?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
+                            <h3>🔄 <?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <div class="ai-tool-card">
-                            <h3>ðŸ“Š <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
+                            <h3>📊 <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
                             <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
                         </div>
                         
@@ -1856,7 +1861,7 @@ class Client
                                     var html = '';
                                     if (data.index_exists) {
                                         html += '<div class="sitemap-status ok">';
-                                        html += '<span style="font-size: 24px;">âœ…</span>';
+                                        html += '<span style="font-size: 24px;">✅</span>';
                                         html += '<div>';
                                         html += '<strong><?php echo esc_js(__('Sitemap Index Found', 'ai-seo-client')); ?></strong>';
                                         html += '<div class="sitemap-url"><a href="' + data.sitemap_index_url + '" target="_blank">' + data.sitemap_index_url + '</a></div>';
@@ -1864,7 +1869,7 @@ class Client
                                     }
                                     if (data.sitemap_exists) {
                                         html += '<div class="sitemap-status ok">';
-                                        html += '<span style="font-size: 24px;">âœ…</span>';
+                                        html += '<span style="font-size: 24px;">✅</span>';
                                         html += '<div>';
                                         html += '<strong><?php echo esc_js(__('XML Sitemap Found', 'ai-seo-client')); ?></strong>';
                                         html += '<div class="sitemap-url"><a href="' + data.sitemap_url + '" target="_blank">' + data.sitemap_url + '</a></div>';
@@ -1873,7 +1878,7 @@ class Client
                                     }
                                     if (!data.sitemap_exists && !data.index_exists) {
                                         html += '<div class="sitemap-status error">';
-                                        html += '<span style="font-size: 24px;">âŒ</span>';
+                                        html += '<span style="font-size: 24px;">❌</span>';
                                         html += '<div>';
                                         html += '<strong><?php echo esc_js(__('No Sitemap Found', 'ai-seo-client')); ?></strong>';
                                         html += '<p><?php echo esc_js(__('Neither sitemap.xml nor sitemap_index.xml could be found.', 'ai-seo-client')); ?></p>';
@@ -1882,7 +1887,7 @@ class Client
                                     }
                                     container.html(html);
                                 }).catch(function(error) {
-                                    container.html('<div class="sitemap-status error"><span style="font-size: 24px;">âŒ</span><div><strong><?php echo esc_js(__('Error loading sitemap status', 'ai-seo-client')); ?></strong><p>' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</p></div></div>');
+                                    container.html('<div class="sitemap-status error"><span style="font-size: 24px;">❌</span><div><strong><?php echo esc_js(__('Error loading sitemap status', 'ai-seo-client')); ?></strong><p>' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</p></div></div>');
                                 });
                             }
                             
@@ -1937,7 +1942,7 @@ class Client
                                             html += '</ul>';
                                         } else {
                                             html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
-                                            html += '<strong>âœ“</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
+                                            html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
                                             html += '</div>';
                                         }
                                         
@@ -2110,7 +2115,7 @@ class Client
                     
                     <?php if ($success): ?>
                         <div class="sseo-ai-notice sseo-ai-notice-success">
-                            <strong>âœ“</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
+                            <strong>✓</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
                         </div>
                     <?php endif; ?>
 
@@ -2227,6 +2232,14 @@ class Client
                                           placeholder="e.g., Always include actionable tips, use bullet points for readability, focus on practical examples..."><?php echo esc_textarea($promptSettings); ?></textarea>
                                 <p class="field-description"><?php esc_html_e('Additional instructions that will be included in all AI prompts', 'ai-seo-client'); ?></p>
                             </div>
+
+                            <div class="form-field">
+                                <label for="default_include_faq">
+                                    <input type="checkbox" name="default_include_faq" id="default_include_faq" value="1" <?php checked($this->settings->get('default_include_faq', true), true); ?>>
+                                    <?php esc_html_e('Generate FAQ section by default', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('When enabled, the Content Writer will include an FAQ section in generated articles by default. This can be overridden per article in the Content Writer.', 'ai-seo-client'); ?></p>
+                            </div>
                         </div>
                         
                         <div class="settings-section">
@@ -2246,7 +2259,7 @@ class Client
                             <h2>
                                 <?php esc_html_e('Demo Mode', 'ai-seo-client'); ?>
                                 <?php if ($demoMode): ?>
-                                    <span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
+                                    <span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;letter-spacing:0.5px;margin-left:8px;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
                                 <?php endif; ?>
                             </h2>
                             <p class="description"><?php esc_html_e('When enabled, the plugin uses fictitious data and bypasses license validation for demo purposes.', 'ai-seo-client'); ?></p>
@@ -2294,6 +2307,7 @@ class Client
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
+        $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
         update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
 
@@ -2400,7 +2414,7 @@ class Client
             .sseo-ai-connection-card .highlight { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .connection-details { text-align: left; margin-top: 40px; padding-top: 30px; border-top: 2px solid #f3f4f6; }
             .detail-item { margin-bottom: 20px; }
-            .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 6px; }
+            .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280;  margin-bottom: 6px; }
             .detail-item .detail-value { font-size: 16px; color: #111827; font-family: 'Courier New', monospace; background: #f9fafb; padding: 12px 16px; border-radius: 6px; border: 1px solid #e5e7eb; }
             .connection-form { text-align: left; margin-top: 30px; }
             .connection-form .form-field { margin-bottom: 20px; }
@@ -2467,7 +2481,7 @@ class Client
                         
                         <?php if (isset($_GET['validated'])): ?>
                             <div style="background:#d1fae5;color:#10b981;padding:12px 16px;border-radius:6px;margin-top:20px;border-left:4px solid #10b981;">
-                                <strong>âœ“</strong> <?php esc_html_e('License validated successfully! Image API credentials refreshed.', 'ai-seo-client'); ?>
+                                <strong>✓</strong> <?php esc_html_e('License validated successfully! Image API credentials refreshed.', 'ai-seo-client'); ?>
                             </div>
                         <?php endif; ?>
                         
@@ -2790,7 +2804,7 @@ class Client
                 border-bottom: none;
             }
             .sseo-benefits-list li:before {
-                content: "âœ“";
+                content: "✓";
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -2834,7 +2848,7 @@ class Client
         </style>
         <div class="wrap sseo-upgrade-wrap">
             <div class="sseo-upgrade-header">
-                <h1>ðŸš€ <?php esc_html_e('Unlock More SEO Power', 'ai-seo-client'); ?></h1>
+                <h1>🚀 <?php esc_html_e('Unlock More SEO Power', 'ai-seo-client'); ?></h1>
                 <p><?php esc_html_e('This feature is available with a higher tier. Upgrade to unlock advanced capabilities and grow your traffic faster.', 'ai-seo-client'); ?></p>
             </div>
             <div class="sseo-upgrade-content">
@@ -2847,7 +2861,7 @@ class Client
                         <?php endforeach; ?>
                     </ul>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="sseo-upgrade-cta">
-                        <?php esc_html_e('Upgrade Now â†’', 'ai-seo-client'); ?>
+                        <?php esc_html_e('Upgrade Now →', 'ai-seo-client'); ?>
                     </a>
                     <div class="sseo-current-tier">
                         <?php printf(esc_html__('Your current plan: %s', 'ai-seo-client'), '<strong>' . esc_html(ucfirst($currentTier)) . '</strong>'); ?>
@@ -3164,7 +3178,7 @@ class Client
                                     </td>
                                     <td><?php echo $m['mention_position'] > 0 ? esc_html('#' . $m['mention_position']) : '&mdash;'; ?></td>
                                     <td class="bv-sentiment-<?php echo esc_attr($m['sentiment']); ?>"><?php echo esc_html(ucfirst($m['sentiment'])); ?></td>
-                                    <td style="max-width: 150px; font-size: 12px;"><?php echo esc_html($m['competitors_mentioned'] ?: 'â€”'); ?></td>
+                                    <td style="max-width: 150px; font-size: 12px;"><?php echo esc_html($m['competitors_mentioned'] ?: '—'); ?></td>
                                     <td class="bv-excerpt" title="<?php echo esc_attr($m['mention_excerpt']); ?>"><?php echo esc_html($m['mention_excerpt'] ?? ''); ?></td>
                                 </tr>
                                 <?php endforeach; ?>

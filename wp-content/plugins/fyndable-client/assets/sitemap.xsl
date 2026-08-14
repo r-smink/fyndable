@@ -99,7 +99,7 @@
 						padding: 14px 15px;
 						font-size: 13px;
 						font-weight: 600;
-						text-transform: uppercase;
+						
 						letter-spacing: 0.5px;
 					}
 					td {

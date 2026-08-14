@@ -2,21 +2,35 @@
 .sseo-ai-chatbot-admin .sseo-ai-chatbot-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 16px;
+    gap: 24px;
+    margin: 0;
+}
+
+.sseo-ai-chatbot-admin > p {
+    color: #fff;
+    padding: 0 40px 30px;
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
 }
 
 .sseo-ai-chatbot-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: var(--sseo-radius);
+    padding: 30px;
+    margin: 16px 20px;
+    box-shadow: var(--sseo-shadow-lg);
 }
 
 .sseo-ai-chatbot-card h2 {
     margin-top: 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--sseo-gray-100);
+    color: var(--sseo-gray-900);
+    font-weight: 700;
+    font-size: 20px;
 }
 
 .sseo-ai-chatbot-card-wide {
@@ -45,7 +59,7 @@
     color: #fff;
     font-size: 28px;
     font-weight: 600;
-    text-transform: uppercase;
+    
 }
 
 #sseo-ai-chatbot-knowledge {

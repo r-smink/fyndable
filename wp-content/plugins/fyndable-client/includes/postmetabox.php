@@ -246,7 +246,7 @@ class PostMetaBox
 .fyndable-seo-logo strong { font-weight: 700; }
 .fyndable-seo-logo img { display: inline-block; vertical-align: middle; }
 .fyndable-seo-badge {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    font-size: 11px; font-weight: 600; 
     letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px;
     background: rgba(255,255,255,0.2); color: #fff;
 }

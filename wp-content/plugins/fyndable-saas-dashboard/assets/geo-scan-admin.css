@@ -181,11 +181,34 @@
     padding: 18px 12px;
     text-align: center;
     transition: transform .2s ease;
+    position: relative;
 }
 
 .sseo-geo-metric:hover {
     transform: translateY(-2px);
     border-color: #379fd3;
+}
+
+/* Transparent gradient fill that rises with the pillar score (0-100%). */
+.sseo-geo-metric::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 10px;
+    background: linear-gradient(
+        to top,
+        rgba(55, 159, 211, 0.28) 0%,
+        rgba(143, 57, 172, 0.28) var(--value, 0%),
+        transparent var(--value, 0%)
+    );
+}
+
+.sseo-geo-metric .value,
+.sseo-geo-metric .label {
+    position: relative;
+    z-index: 1;
 }
 
 .sseo-geo-metric .value {
@@ -212,6 +235,7 @@
     position: absolute;
     top: 6px;
     right: 6px;
+    z-index: 2;
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -333,7 +357,7 @@
     background: #f9fafb;
     color: #6b7280;
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: .05em;
     font-weight: 600;
 }

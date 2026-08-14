@@ -1245,6 +1245,16 @@ PROMPT;
                         </div>
                     </div>
 
+                    <!-- Priority Legend -->
+                    <div class="postbox" style="padding:15px;margin-bottom:20px;">
+                        <h3 style="margin:0 0 10px 0;font-size:16px;"><?php esc_html_e('Priority Legend', 'ai-seo-client'); ?></h3>
+                        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:13px;">
+                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#16a34a;"></span> <?php esc_html_e('High — high search volume or strong strategic value', 'ai-seo-client'); ?></span>
+                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#d97706;"></span> <?php esc_html_e('Medium — moderate priority', 'ai-seo-client'); ?></span>
+                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#6b7280;"></span> <?php esc_html_e('Low — lower priority / nice to have', 'ai-seo-client'); ?></span>
+                        </div>
+                    </div>
+
                     <!-- Pillar Page -->
                     <div id="tc-pillar" class="postbox" style="padding:20px;border-left:4px solid #379fd3;"></div>
 
@@ -1349,7 +1359,18 @@ PROMPT;
                             <!-- Bulk Progress -->
                             <div id="tc-bulk-progress" style="display:none;margin-top:20px;padding:20px;background:#f0fdf4;border-radius:8px;">
                                 <h4 style="margin:0 0 15px 0;color:#166534;">⏳ <?php esc_html_e('Generating Content in Background...', 'ai-seo-client'); ?></h4>
-                                <p style="margin:0 0 10px 0;font-size:12px;color:#166534;"><?php esc_html_e('Content is generated via WP-Cron. You can close this page — check back later or view your drafts/scheduled posts.', 'ai-seo-client'); ?></p>
+                                <p style="margin:0 0 10px 0;font-size:13px;color:#166534;"><?php esc_html_e('Content is generated via WP-Cron. You can close this page — check back later or view your drafts/scheduled posts.', 'ai-seo-client'); ?></p>
+                                <div style="margin:0 0 15px 0;padding:15px;background:rgba(22,163,74,0.08);border-radius:8px;border:1px solid #16a34a;">
+                                    <p style="margin:0 0 10px 0;font-size:14px;color:#166534;font-style:italic;">
+                                        🏝️ <?php esc_html_e('Sit back and relax or book your next vacation to Bora Bora', 'ai-seo-client'); ?>
+                                    </p>
+                                    <a href="https://www.booking.com/searchresults.nl.html?ss=Bora+Bora%2C+Frans-Polynesi%C3%AB&efdco=1&label=gen173nr-10CAEoggI46AdIM1gEaKkBiAEBmAEzuAEXyAEM2AED6AEB-AEBiAIBqAIBuALu2PvTBsACAdICJGQ0ZmUxYWQ4LWFjNGYtNGYwOS05ODYzLWYyYjAxYmRkZDM4ONgCAeACAQ&aid=304142&lang=nl&sb=1&src_elem=sb&src=index&dest_id=3978&dest_type=region&ac_position=0&ac_click_type=b&ac_langcode=nl&ac_suggestion_list_length=5&search_selected=true&search_pageview_id=a33848f7b86208f0&ac_meta=GhBhMzM4NDhmN2I4NjIwOGYwIAAoATICbmw6CWJvcmEgYm9yYQ%3D%3D&group_adults=2&no_rooms=1&group_children=0"
+                                       target="_blank" rel="noopener noreferrer"
+                                       class="button button-primary"
+                                       style="background:#16a34a;border-color:#16a34a;text-decoration:none;">
+                                        <?php esc_html_e('Book your Bora Bora trip', 'ai-seo-client'); ?> →
+                                    </a>
+                                </div>
                                 <div style="background:#e2e8f0;border-radius:10px;height:24px;overflow:hidden;margin-bottom:10px;">
                                     <div id="tc-progress-bar" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;width:0%;transition:width 0.3s ease;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;">0%</div>
                                 </div>
@@ -1572,7 +1593,12 @@ PROMPT;
 
                 // Clusters with generate buttons
                 var gridHtml = '';
-                var priorityColors = {high:'#dc2626',medium:'#d97706',low:'#059669'};
+                var priorityColors = {high:'#16a34a',medium:'#d97706',low:'#6b7280'};
+                var priorityTooltips = {
+                    high: '<?php echo esc_js(__('High priority: high search volume or strong strategic value', 'ai-seo-client')); ?>',
+                    medium: '<?php echo esc_js(__('Medium priority: moderate priority for your content plan', 'ai-seo-client')); ?>',
+                    low: '<?php echo esc_js(__('Low priority: lower search volume / nice to have', 'ai-seo-client')); ?>'
+                };
                 (data.clusters || []).forEach(function(cl, idx) {
                     gridHtml += '<div class="postbox" style="padding:15px;margin-bottom:15px;">' +
                         '<h3 style="margin-top:0;">📂 ' + cl.name + '</h3>' +
@@ -1585,7 +1611,7 @@ PROMPT;
                         '<strong>Hub: ' + (h.title || '') + '</strong>' +
                         '<div style="font-size:11px;color:#666;margin-top:4px;">' +
                         '🎯 ' + (h.target_keyword || '') + ' · ' + (h.target_word_count || 0) + ' words · ' +
-                        '<span style="color:' + (priorityColors[h.priority]||'#999') + ';">' + (h.priority || '') + '</span></div>' +
+                        '<span style="color:' + (priorityColors[h.priority]||'#999') + ';" title="' + (priorityTooltips[h.priority] || '') + '">' + (h.priority || '') + '</span></div>' +
                         '</div>' +
                         '<button type="button" class="button tc-generate-content" ' +
                         'data-title="' + escapeHtml(h.title || '') + '" ' +
@@ -1724,7 +1750,12 @@ PROMPT;
             
             function renderReviewTable(pages) {
                 var html = '';
-                var priorityColors = {high:'#dc2626',medium:'#d97706',low:'#059669'};
+                var priorityColors = {high:'#16a34a',medium:'#d97706',low:'#6b7280'};
+                var priorityTooltips = {
+                    high: '<?php echo esc_js(__('High priority: high search volume or strong strategic value', 'ai-seo-client')); ?>',
+                    medium: '<?php echo esc_js(__('Medium priority: moderate priority for your content plan', 'ai-seo-client')); ?>',
+                    low: '<?php echo esc_js(__('Low priority: lower search volume / nice to have', 'ai-seo-client')); ?>'
+                };
                 var priorityLabels = {high:'<?php echo esc_js(__('High', 'ai-seo-client')); ?>',medium:'<?php echo esc_js(__('Medium', 'ai-seo-client')); ?>',low:'<?php echo esc_js(__('Low', 'ai-seo-client')); ?>'};
                 
                 pages.forEach(function(page) {
@@ -1739,7 +1770,7 @@ PROMPT;
                         '<td>' + typeBadge + '</td>' +
                         '<td><code style="background:#f3f4f6;padding:2px 6px;border-radius:3px;font-size:11px;">' + escapeHtml(page.keyword || '-') + '</code></td>' +
                         '<td style="text-align:center;">' + page.words.toLocaleString() + '</td>' +
-                        '<td style="text-align:center;"><span style="color:' + priorityColors[page.priority] + ';font-weight:600;font-size:12px;">' + priorityLabels[page.priority] + '</span></td>' +
+                        '<td style="text-align:center;"><span style="color:' + priorityColors[page.priority] + ';font-weight:600;font-size:12px;" title="' + (priorityTooltips[page.priority] || '') + '">' + priorityLabels[page.priority] + '</span></td>' +
                         '<td style="text-align:center;" class="tc-status-cell"><span class="tc-status-pending" style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:12px;font-size:11px;"><?php echo esc_js(__('Pending', 'ai-seo-client')); ?></span></td>' +
                         '</tr>';
                 });

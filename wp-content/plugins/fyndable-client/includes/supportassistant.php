@@ -189,6 +189,7 @@ class SupportAssistant
                 'sourceManual' => __('Uit handleiding', 'ai-seo-client'),
                 'sourceAi' => __('AI-assistent', 'ai-seo-client'),
                 'createTicket' => __('Maak support ticket', 'ai-seo-client'),
+                'createTicketDirect' => __('Maak direct een support ticket', 'ai-seo-client'),
                 'ticketSubject' => __('Onderwerp', 'ai-seo-client'),
                 'ticketMessage' => __('Bericht', 'ai-seo-client'),
                 'ticketSubmit' => __('Verstuur ticket', 'ai-seo-client'),

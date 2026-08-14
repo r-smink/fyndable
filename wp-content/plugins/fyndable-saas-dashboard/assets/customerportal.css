@@ -151,7 +151,7 @@
 }
 .fyndable-portal-detail-label {
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: 0.5px;
     color: #6b7280;
     margin-bottom: 4px;
@@ -169,7 +169,7 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    text-transform: uppercase;
+    
     letter-spacing: 0.5px;
 }
 .fyndable-portal-badge-active { background: #d1fae5; color: #065f46; }
@@ -242,7 +242,7 @@
 .fyndable-portal-table th {
     text-align: left;
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: 0.5px;
     color: #6b7280;
     padding: 12px 16px;

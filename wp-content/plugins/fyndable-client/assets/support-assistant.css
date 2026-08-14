@@ -396,6 +396,33 @@
     background: var(--sseo-sa-secondary);
 }
 
+/* Direct ticket FAB (next to send button) */
+.sseo-sa-ticket-fab {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--sseo-sa-border);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--sseo-sa-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sseo-sa-ticket-fab:hover:not(:disabled) {
+    background: var(--sseo-sa-secondary);
+    color: #fff;
+    border-color: var(--sseo-sa-secondary);
+}
+
+.sseo-sa-ticket-fab:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Typing indicator */
 .sseo-sa-typing {
     display: inline-flex;

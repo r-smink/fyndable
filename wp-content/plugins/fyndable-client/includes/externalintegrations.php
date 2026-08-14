@@ -1369,7 +1369,7 @@ class ExternalIntegrations
                 $scores = $data['technical']['scores'];
                 $out = '<div style="display:flex; gap:16px; flex-wrap:wrap;">';
                 foreach ($scores as $label => $value) {
-                    $out .= '<div style="text-align:center; min-width:120px;"><strong style="font-size:22px;">' . esc_html($value) . '</strong><br><span style="font-size:12px; text-transform:uppercase;">' . esc_html($label) . '</span></div>';
+                    $out .= '<div style="text-align:center; min-width:120px;"><strong style="font-size:22px;">' . esc_html($value) . '</strong><br><span style="font-size:12px; ">' . esc_html($label) . '</span></div>';
                 }
                 $out .= '</div>';
                 if (!empty($data['technical']['critical_issues'])) {

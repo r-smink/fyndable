@@ -357,7 +357,7 @@ body[class*="sseo-ai"] {
     color: var(--sseo-gray-500);
     font-weight: 600;
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: .05em;
     padding: 15px;
     border-bottom: 1px solid var(--sseo-gray-200);
@@ -517,7 +517,7 @@ body[class*="sseo-ai"] {
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    text-transform: uppercase;
+    
     letter-spacing: 0.5px;
 }
 

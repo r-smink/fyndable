@@ -445,20 +445,52 @@ class SmartInternalLinking
                 return;
             }
 
+            const escapedAnchor = anchorText.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&');
+            // Match anchor text that is NOT already inside a link tag (pattern from topiccluster.php)
+            const anchorRegex = new RegExp('\\b(' + escapedAnchor + ')\\b(?![^<]*>|[^<>]*<\\/a>)', 'i');
             const link = '<a href="' + url + '">' + anchorText + '</a>';
 
             // Insert into editor
             if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor')) {
-                // Gutenberg: update raw content by replacing the first occurrence of the anchor text
+                // Gutenberg: find relevant anchor text in content and replace it
                 const content = wp.data.select('core/editor').getEditedPostContent();
-                const regex = new RegExp('\\b' + anchorText.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&') + '\\b', 'i');
-                const newContent = content.replace(regex, link);
-                wp.data.dispatch('core/editor').editPost({
-                    content: newContent !== content ? newContent : content + ' ' + link
-                });
-            } else if (typeof tinymce !== 'undefined') {
-                // Classic editor
-                tinymce.activeEditor.insertContent(link);
+                let newContent;
+                const match = content.match(anchorRegex);
+                if (match) {
+                    // Replace the first occurrence of the anchor text with the link
+                    newContent = content.replace(anchorRegex, link);
+                } else {
+                    // Anchor text not found — add a relevant sentence with the link after the first paragraph
+                    const fallbackPara = '<p>' + anchorText + ' — <a href="' + url + '">' + anchorText + '</a></p>';
+                    const firstParaEnd = content.indexOf('</p>');
+                    if (firstParaEnd !== -1) {
+                        newContent = content.slice(0, firstParaEnd + 4) + '\n\n' + fallbackPara + content.slice(firstParaEnd + 4);
+                    } else {
+                        newContent = content + '\n\n' + fallbackPara;
+                    }
+                }
+                wp.data.dispatch('core/editor').editPost({ content: newContent });
+            } else if (typeof tinymce !== 'undefined' && tinymce.activeEditor) {
+                // Classic editor: find relevant anchor text in content and replace it
+                const editor = tinymce.activeEditor;
+                const content = editor.getContent();
+                let newContent;
+                const match = content.match(anchorRegex);
+                if (match) {
+                    newContent = content.replace(anchorRegex, link);
+                } else {
+                    // Anchor text not found — add a relevant sentence with the link after the first paragraph
+                    const fallbackPara = '<p>' + anchorText + ' — <a href="' + url + '">' + anchorText + '</a></p>';
+                    const firstParaEnd = content.indexOf('</p>');
+                    if (firstParaEnd !== -1) {
+                        newContent = content.slice(0, firstParaEnd + 4) + '\n\n' + fallbackPara + content.slice(firstParaEnd + 4);
+                    } else {
+                        newContent = content + '\n\n' + fallbackPara;
+                    }
+                }
+                // Preserve undo history
+                editor.undoManager.add();
+                editor.setContent(newContent);
             }
 
             alert('<?php echo esc_js(__('Link inserted!', 'ai-seo-client')); ?>');
@@ -1004,17 +1036,19 @@ Provide only the anchor text (2-5 words), no explanation.";
         $link = '<a href="' . esc_url($toUrl) . '">' . esc_html($anchorText) . '</a>';
         $content = $fromPost->post_content;
 
-        // Try to insert the link near the first occurrence of the anchor text
-        $pos = stripos($content, $anchorText);
-        if ($pos !== false) {
-            $content = substr($content, 0, $pos) . $link . substr($content, $pos + strlen($anchorText));
+        // Try to insert the link at the first occurrence of the anchor text that is NOT already inside a link
+        $escapedAnchor = preg_quote($anchorText, '/');
+        $pattern = '/\b(' . $escapedAnchor . ')\b(?![^<]*>|[^<>]*<\/a>)/i';
+        if (preg_match($pattern, $content)) {
+            $content = preg_replace($pattern, $link, $content, 1);
         } else {
-            // Append at end of first paragraph
+            // Anchor text not found — add a relevant sentence with the link after the first paragraph
+            $fallbackPara = '<p>' . esc_html($anchorText) . ' — ' . $link . '</p>';
             $firstParaEnd = strpos($content, '</p>');
             if ($firstParaEnd !== false) {
-                $content = substr($content, 0, $firstParaEnd + 4) . "\n\n" . $link . substr($content, $firstParaEnd + 4);
+                $content = substr($content, 0, $firstParaEnd + 4) . "\n\n" . $fallbackPara . substr($content, $firstParaEnd + 4);
             } else {
-                $content .= "\n\n" . $link;
+                $content .= "\n\n" . $fallbackPara;
             }
         }
 

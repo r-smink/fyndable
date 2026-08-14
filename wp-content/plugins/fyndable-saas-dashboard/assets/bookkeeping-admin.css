@@ -109,7 +109,7 @@
     border-radius: 20px;
     font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
+    
     letter-spacing: 0.4px;
 }
 
@@ -145,7 +145,7 @@
 
 .sseo-ai-bk-stat .label {
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: 0.6px;
     color: #6b7280;
     margin-bottom: 8px;

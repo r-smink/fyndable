@@ -320,7 +320,7 @@ class GoogleDataDashboard
             .google-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
             .google-stat-card { background: #f8fafc; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e2e8f0; }
             .google-stat-value { font-size: 28px; font-weight: 700; color: #1e293b; }
-            .google-stat-label { font-size: 12px; color: #64748b; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+            .google-stat-label { font-size: 12px; color: #64748b; margin-top: 5px;  letter-spacing: 0.5px; }
             .google-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
             .google-tab { padding: 10px 20px; cursor: pointer; background: none; border: none; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 14px; }
             .google-tab.active { color: #379fd3; border-bottom-color: #379fd3; }

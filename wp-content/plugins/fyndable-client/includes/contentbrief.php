@@ -369,9 +369,9 @@ PROMPT;
     private function buildSerpOverview(array $results): array
     {
         $overview = [];
-        foreach (array_slice($results, 0, 10) as $i => $result) {
+        foreach (array_values(array_slice($results, 0, 10)) as $i => $result) {
             $overview[] = [
-                'position' => $result['position'] ?? ($i + 1),
+                'position' => (int)($result['position'] ?? ($i + 1)),
                 'title' => $result['title'] ?? '',
                 'url' => $result['link'] ?? $result['url'] ?? '',
                 'snippet' => $result['snippet'] ?? $result['description'] ?? '',

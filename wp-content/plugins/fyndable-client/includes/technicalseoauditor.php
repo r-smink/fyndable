@@ -90,7 +90,7 @@ class TechnicalSEOAuditor
                 font-size: 12px; 
                 font-weight: 600; 
                 color: #64748b; 
-                text-transform: uppercase; 
+                 
                 letter-spacing: 0.5px; 
             }
         </style>

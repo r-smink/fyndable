@@ -59,6 +59,7 @@ class ContentWriter
                 'brief_id' => ['type' => 'string', 'required' => false],
                 'template_id' => ['type' => 'string', 'required' => false],
                 'create_draft' => ['type' => 'boolean', 'required' => false],
+                'include_faq' => ['type' => 'boolean', 'required' => false],
             ],
         ]);
 
@@ -90,6 +91,7 @@ class ContentWriter
         $outline = $options['outline'] ?? '';
         $briefId = $options['brief_id'] ?? '';
         $templateId = $options['template_id'] ?? '';
+        $includeFaq = $options['include_faq'] ?? (bool) $this->settings->get('default_include_faq', true);
 
         // Get brief data if available
         $brief = null;
@@ -132,11 +134,16 @@ class ContentWriter
             return $conclusion;
         }
 
-        // Generate FAQ section if brief has questions
+        // Generate FAQ section if enabled
         $faq = '';
-        $questions = $brief['recommended_questions'] ?? [];
-        if (!empty($questions)) {
-            $faq = $this->generateFAQ($keyword, $questions, $tone, $templateId);
+        if ($includeFaq) {
+            $questions = $brief['recommended_questions'] ?? [];
+            if (!empty($questions)) {
+                $faq = $this->generateFAQ($keyword, $questions, $tone, $templateId);
+            } else {
+                // No brief questions available — auto-generate FAQ questions
+                $faq = $this->generateAutoFAQ($keyword, $tone, $templateId);
+            }
         }
 
         // Assemble the full article
@@ -192,6 +199,12 @@ Requirements:
 - Do NOT include the heading itself — I will add it separately
 - Use HTML formatting (paragraphs in <p> tags, lists in <ul>/<li>, bold with <strong>)
 - Do NOT wrap in unnecessary divs or extra HTML
+
+LLM citability (GEO) guidelines — make this content easy for AI assistants to cite:
+- Lead with a clear, factual definition or key statement in the first sentence of the section
+- Include specific numbers, statistics, or concrete examples where possible
+- Write concise, quotable sentences (max 20 words) that can be cited verbatim
+- Use an authoritative, declarative tone — avoid hedging language (\"maybe\", \"might be\")
 
 Write the section content:";
 
@@ -274,6 +287,9 @@ Requirements:
 - Use HTML <p> tags for paragraphs
 - Do NOT include the title
 
+LLM citability (GEO) guideline:
+- Open with a direct, citable summary statement that defines the topic in one clear sentence
+
 Write the introduction:";
 
         if ($templateId && $this->templates) {
@@ -311,6 +327,9 @@ Requirements:
 - Include the keyword once naturally
 - Use HTML <p> tags
 - Do NOT include a heading
+
+LLM citability (GEO) guideline:
+- End with a concise, citable takeaway statement that summarizes the article's core point
 
 Write the conclusion:";
 
@@ -350,6 +369,11 @@ Format each as:
 <h3>Question?</h3>
 <p>Answer.</p>
 
+LLM citability (GEO) guidelines — make answers easy for AI assistants to extract and cite:
+- Answers must be self-contained, factual, and directly quotable
+- Lead with the core answer in the first sentence, then add context
+- Use a declarative, authoritative tone — avoid hedging
+
 Write the FAQ:";
 
         if ($templateId && $this->templates) {
@@ -372,6 +396,32 @@ Write the FAQ:";
     }
 
     /**
+     * Auto-generate FAQ questions for a keyword when no content brief is available.
+     * Generates 5 relevant questions via LLM, then generates answers via generateFAQ().
+     */
+    private function generateAutoFAQ(string $keyword, string $tone, ?string $templateId = null): string
+    {
+        $questionPrompt = "Generate 5 common FAQ questions about \"{$keyword}\".
+The questions should be the kind a reader would naturally ask about this topic.
+Return ONLY the questions, one per line, without numbering or prefixes.";
+
+        $questionResult = $this->llm->call($questionPrompt, null, 500);
+        if (is_wp_error($questionResult)) {
+            return '';
+        }
+
+        $questions = array_filter(array_map('trim', preg_split('/\n+/', $questionResult['text'])));
+        if (empty($questions)) {
+            return '';
+        }
+
+        // Limit to 5 questions
+        $questions = array_slice($questions, 0, 5);
+
+        return $this->generateFAQ($keyword, $questions, $tone, $templateId);
+    }
+
+    /**
      * Generate meta description.
      */
     private function generateMetaDescription(string $keyword, string $title, ?string $templateId = null): string|\WP_Error
@@ -379,6 +429,7 @@ Write the FAQ:";
         $prompt = "Write a meta description (max 155 characters) for an article titled: \"{$title}\"
 Include the keyword: \"{$keyword}\"
 Make it compelling with a call-to-action.
+Write a factual, declarative summary suitable for AI extraction — avoid vague or clickbait phrasing.
 Return ONLY the meta description, nothing else.";
 
         if ($templateId && $this->templates) {
@@ -537,7 +588,67 @@ Requirements:
         update_post_meta($postId, '_sseo_ai_generated', true);
         update_post_meta($postId, '_sseo_ai_generated_at', current_time('mysql'));
 
+        // Set schema type so SchemaMarkup outputs BlogPosting JSON-LD automatically.
+        // We do NOT set _sseo_ai_custom_schema because outputSchema() gives that
+        // precedence with a return, which would suppress WebSite/Org/Breadcrumb.
+        update_post_meta($postId, '_sseo_ai_schema_type', 'BlogPosting');
+
+        // Parse FAQ Q&A from the generated content and store as a separate
+        // FAQPage schema entry (output by SchemaMarkup alongside BlogPosting).
+        $faqSchema = $this->buildFaqEntities($articleData['content'] ?? '');
+        if ($faqSchema) {
+            update_post_meta($postId, '_sseo_ai_faq_schema', wp_json_encode($faqSchema));
+        }
+
         return $postId;
+    }
+
+    /**
+     * Parse FAQ Q&A pairs from generated article HTML and build a schema.org
+     * FAQPage JSON-LD array. Returns null when no FAQ pairs are found.
+     */
+    private function buildFaqEntities(string $content): ?array
+    {
+        if (empty($content)) {
+            return null;
+        }
+
+        // Match <h3>Question</h3><p>Answer</p> pairs (the format generateFAQ uses).
+        // Allow optional whitespace/attributes and multiple <p> blocks per answer.
+        $pattern = '/<h3[^>]*>(.*?)<\/h3>\s*(<p[^>]*>.*?<\/p>(?:\s*<p[^>]*>.*?<\/p>)*)/is';
+        if (!preg_match_all($pattern, $content, $matches, PREG_SET_ORDER)) {
+            return null;
+        }
+
+        $entities = [];
+        foreach ($matches as $match) {
+            $question = trim(wp_strip_all_tags($match[1]));
+            $answerHtml = trim($match[2]);
+            $answerText = trim(wp_strip_all_tags($answerHtml));
+
+            if ($question === '' || $answerText === '') {
+                continue;
+            }
+
+            $entities[] = [
+                '@type' => 'Question',
+                'name' => $question,
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => $answerText,
+                ],
+            ];
+        }
+
+        if (empty($entities)) {
+            return null;
+        }
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => $entities,
+        ];
     }
 
     /**
@@ -578,6 +689,7 @@ Requirements:
             'brief_id' => sanitize_text_field($request->get_param('brief_id') ?? ''),
             'template_id' => sanitize_text_field($request->get_param('template_id') ?? ''),
             'create_draft' => (bool)$request->get_param('create_draft'),
+            'include_faq' => $request->get_param('include_faq') === null ? null : (bool)$request->get_param('include_faq'),
         ]);
     }
 
@@ -660,8 +772,13 @@ Requirements:
                             <th><label><?php esc_html_e('Options', 'ai-seo-client'); ?></label></th>
                             <td>
                                 <label>
-                                    <input type="checkbox" id="writer-create-draft" checked> 
+                                    <input type="checkbox" id="writer-create-draft" checked>
                                     <?php esc_html_e('Create WordPress draft automatically', 'ai-seo-client'); ?>
+                                </label>
+                                <br>
+                                <label>
+                                    <input type="checkbox" id="writer-include-faq" <?php echo $this->settings->get('default_include_faq', true) ? 'checked' : ''; ?>>
+                                    <?php esc_html_e('Include FAQ section', 'ai-seo-client'); ?>
                                 </label>
                             </td>
                         </tr>
@@ -723,7 +840,8 @@ Requirements:
                         tone: $('#writer-tone').val(),
                         word_count: parseInt($('#writer-words').val()),
                         outline: $('#writer-outline').val().trim(),
-                        create_draft: $('#writer-create-draft').is(':checked')
+                        create_draft: $('#writer-create-draft').is(':checked'),
+                        include_faq: $('#writer-include-faq').is(':checked')
                     }
                 }).then(function(result) {
                     $('#writer-result-title').text(result.title);

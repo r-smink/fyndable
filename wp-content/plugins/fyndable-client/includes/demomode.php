@@ -57,7 +57,7 @@ class DemoMode
     public function getBadgeHtml(string $label = 'DEMO'): string
     {
         return sprintf(
-            '<span class="sseo-demo-badge" style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;margin-left:6px;">%s</span>',
+            '<span class="sseo-demo-badge" style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;letter-spacing:0.5px;margin-left:6px;">%s</span>',
             esc_html($label)
         );
     }

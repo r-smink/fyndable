@@ -344,7 +344,35 @@ class AIImageGenerator
         }
 
         function sseoRegenerateFeatured(postId) {
-            sseoGenerateFeatured(postId);
+            const style = jQuery('#image-style-' + postId).val() || 'photorealistic';
+            const context = jQuery('#image-context-' + postId).val() || '';
+            const wordCount = jQuery('#image-word-count-' + postId).val() || 100;
+
+            if (!confirm('<?php esc_html_e('Regenerate AI featured image?', 'ai-seo-client'); ?>')) {
+                return;
+            }
+
+            if (typeof sseoShowLoader === 'function') sseoShowLoader();
+            jQuery.post(ajaxurl, {
+                action: 'sseo_ai_generate_featured_image',
+                post_id: postId,
+                style: style,
+                context: context,
+                word_count: wordCount,
+                use_stored_prompt: 'true',
+                nonce: '<?php echo wp_create_nonce('sseo_images'); ?>'
+            }, function(response) {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                if (response.success) {
+                    alert('<?php esc_html_e('Featured image regenerated!', 'ai-seo-client'); ?>');
+                    location.reload();
+                } else {
+                    alert(response.data.message || 'Error regenerating image');
+                }
+            }).fail(function() {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                alert('<?php esc_html_e('Request failed. Please try again.', 'ai-seo-client'); ?>');
+            });
         }
 
         function sseoGenerateSocialImages(postId) {
@@ -384,27 +412,40 @@ class AIImageGenerator
     /**
      * Generate featured image
      */
-    public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100): ?int
+    public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100, bool $useStoredPrompt = false): ?int
     {
         $post = get_post($postId);
-        
-        // Generate image prompt from content
-        $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
-        
+
+        // On regenerate, reuse the stored prompt from the original generation when no new context is provided
+        if ($useStoredPrompt && empty($context)) {
+            $storedPrompt = get_post_meta($postId, '_sseo_ai_image_prompt', true);
+            if (!empty($storedPrompt)) {
+                $prompt = $storedPrompt;
+            } else {
+                $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
+            }
+        } else {
+            // Generate image prompt from content
+            $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
+        }
+
         // Generate image using AI (DALL-E, Midjourney, Stable Diffusion, etc.)
         $imageUrl = $this->generateImageFromPrompt($prompt);
-        
+
         if (!$imageUrl) {
             return null;
         }
-        
+
         // Download and attach image
         $attachmentId = $this->downloadAndAttachImage($imageUrl, $post->ID, $post->post_title);
-        
+
         if ($attachmentId) {
             set_post_thumbnail($postId, $attachmentId);
+            // Store the prompt so regenerate can reuse it
+            update_post_meta($postId, '_sseo_ai_image_prompt', $prompt);
+            update_post_meta($postId, '_sseo_ai_image_prompt_date', current_time('mysql'));
         }
-        
+
         return $attachmentId;
     }
     
@@ -1077,12 +1118,13 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
         $context = sanitize_text_field($_POST['context'] ?? '');
         $wordCount = (int)($_POST['word_count'] ?? 100);
-        
+        $useStoredPrompt = isset($_POST['use_stored_prompt']) && $_POST['use_stored_prompt'] === 'true';
+
         if (!$postId) {
             wp_send_json_error(['message' => 'Post ID required']);
         }
-        
-        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount);
+
+        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount, $useStoredPrompt);
         
         if (!$attachmentId) {
             wp_send_json_error(['message' => 'Failed to generate image']);

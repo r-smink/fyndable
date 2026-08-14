@@ -54,6 +54,16 @@
 
         bindPalette();
         render();
+
+        // Ensure the hidden input is always in sync before the form submits.
+        // Some browsers fire no final 'input' event when a field still has
+        // focus at submit time, which previously caused blocks to be lost.
+        var form = SSEO.container.closest('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                serialize();
+            });
+        }
     }
 
     function bindPalette() {

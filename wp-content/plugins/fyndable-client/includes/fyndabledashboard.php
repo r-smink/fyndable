@@ -42,25 +42,12 @@ class DashboardShell
         ];
 
         if ($isLicenseValid) {
+            // Workflow order: research first, then plan, then create, then
+            // measure, then optimise, then utilities.
             $this->menuItems[] = [
                 'slug' => 'ai-seo-dashboard',
                 'label' => __('Dashboard', 'ai-seo-client'),
                 'icon' => '&#128202;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-content-calendar',
-                'label' => __('Content Calendar', 'ai-seo-client'),
-                'icon' => '&#128197;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-ideas',
-                'label' => __('Ideas', 'ai-seo-client'),
-                'icon' => '&#128161;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-created-posts',
-                'label' => __('Created Posts', 'ai-seo-client'),
-                'icon' => '&#9999;',
             ];
             $this->menuItems[] = [
                 'slug' => 'ai-seo-keywords',
@@ -68,19 +55,55 @@ class DashboardShell
                 'icon' => '&#127919;',
             ];
             $this->menuItems[] = [
-                'slug' => 'ai-seo-link-manager',
-                'label' => __('Link Manager', 'ai-seo-client'),
-                'icon' => '&#128279;',
+                'slug' => 'ai-seo-ideas',
+                'label' => __('Ideas', 'ai-seo-client'),
+                'icon' => '&#128161;',
+            ];
+
+            $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
+            $isPro = in_array($tier, $professionalTiers, true);
+
+            if ($isPro) {
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-topic-clusters',
+                    'label' => __('Topic Clusters', 'ai-seo-client'),
+                    'icon' => '&#127919;',
+                ];
+            }
+
+            $this->menuItems[] = [
+                'slug' => 'ai-seo-content-calendar',
+                'label' => __('Content Calendar', 'ai-seo-client'),
+                'icon' => '&#128197;',
+            ];
+            $this->menuItems[] = [
+                'slug' => 'ai-seo-created-posts',
+                'label' => __('Created Posts', 'ai-seo-client'),
+                'icon' => '&#9999;',
             ];
             $this->menuItems[] = [
                 'slug' => 'ai-seo-competitor-research',
                 'label' => __('Competitors', 'ai-seo-client'),
                 'icon' => '&#128269;',
             ];
+
+            if ($isPro) {
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-rank-tracker',
+                    'label' => __('Rank Tracker', 'ai-seo-client'),
+                    'icon' => '&#128200;',
+                ];
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-site-audit',
+                    'label' => __('Site Audit', 'ai-seo-client'),
+                    'icon' => '&#128269;',
+                ];
+            }
+
             $this->menuItems[] = [
-                'slug' => 'ai-seo-sitemaps',
-                'label' => __('Sitemaps', 'ai-seo-client'),
-                'icon' => '&#128506;',
+                'slug' => 'ai-seo-link-manager',
+                'label' => __('Link Manager', 'ai-seo-client'),
+                'icon' => '&#128279;',
             ];
             $this->menuItems[] = [
                 'slug' => 'ai-seo-bulk',
@@ -88,48 +111,39 @@ class DashboardShell
                 'icon' => '&#9989;',
             ];
             $this->menuItems[] = [
+                'slug' => 'ai-seo-sitemaps',
+                'label' => __('Sitemaps', 'ai-seo-client'),
+                'icon' => '&#128506;',
+            ];
+            $this->menuItems[] = [
                 'slug' => 'ai-seo-data-dashboard',
                 'label' => __('SEO Data', 'ai-seo-client'),
                 'icon' => '&#128200;',
             ];
+
+            if ($isPro) {
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-google-data',
+                    'label' => __('Google Data', 'ai-seo-client'),
+                    'icon' => '&#128202;',
+                ];
+            }
+
             $this->menuItems[] = [
                 'slug' => 'ai-seo-llm-tracker',
                 'label' => __('LLM Tracker', 'ai-seo-client'),
                 'icon' => '&#129504;',
             ];
 
-            $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
-            if (in_array($tier, $professionalTiers)) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-topic-clusters',
-                    'label' => __('Topic Clusters', 'ai-seo-client'),
-                    'icon' => '&#127919;',
-                ];
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-site-audit',
-                    'label' => __('Site Audit', 'ai-seo-client'),
-                    'icon' => '&#128269;',
-                ];
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-rank-tracker',
-                    'label' => __('Rank Tracker', 'ai-seo-client'),
-                    'icon' => '&#128200;',
-                ];
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-google-data',
-                    'label' => __('Google Data', 'ai-seo-client'),
-                    'icon' => '&#128202;',
-                ];
+            if ($isPro) {
                 $this->menuItems[] = [
                     'slug' => 'ai-seo-ab-testing',
                     'label' => __('A/B Testing', 'ai-seo-client'),
                     'icon' => '&#129514;',
                 ];
             }
-        }
 
-        // Utility items at the bottom of the sidebar
-        if ($isLicenseValid) {
+            // Utility items at the bottom of the sidebar
             $this->menuItems[] = [
                 'slug' => 'ai-seo-ai-tools',
                 'label' => __('AI Tools', 'ai-seo-client'),
@@ -427,7 +441,7 @@ class DashboardShell
             .fyndable-topbar-badge {
                 font-size: 10px;
                 font-weight: 600;
-                text-transform: uppercase;
+                
                 letter-spacing: 0.5px;
                 padding: 3px 10px;
                 border-radius: 20px;

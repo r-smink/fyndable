@@ -1230,6 +1230,41 @@ PROMPT;
             </div>
         </div>
 
+        <!-- Generate Keyword Ideas Modal -->
+        <div class="sseo-modal" id="modal-generate-keyword-ideas" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Generate keyword-based ideas', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <div class="form-group">
+                        <label><?php esc_html_e('Keyword', 'ai-seo-client'); ?> *</label>
+                        <input type="text" id="generate-ideas-keyword" class="sseo-input" placeholder="<?php esc_attr_e('Enter keyword to generate ideas for...', 'ai-seo-client'); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Number of ideas', 'ai-seo-client'); ?></label>
+                        <select id="generate-ideas-count" class="sseo-select">
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                        </select>
+                    </div>
+                    <p class="description" style="margin-bottom: 0;">
+                        <?php esc_html_e('Generates blog post ideas for the keyword using AI and saves them to the Ideas page.', 'ai-seo-client'); ?>
+                    </p>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="sseo-btn-primary" id="btn-confirm-generate-ideas">
+                        <span class="spinner" style="display: none;"></span>
+                        <?php esc_html_e('Generate ideas', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Clusters Modal -->
         <div class="sseo-modal" id="modal-clusters" style="display: none;">
             <div class="sseo-modal-overlay"></div>
@@ -1337,6 +1372,49 @@ PROMPT;
             // Generate keywords button
             $('#btn-generate-keywords').on('click', function() {
                 $('#modal-generate-keywords').show();
+            });
+
+            // Generate keyword-based ideas button
+            $('#btn-generate-keyword-ideas').on('click', function() {
+                const kw = $('#keyword-input').val().trim();
+                if (!kw) {
+                    alert('<?php echo esc_js(__('Enter a keyword in the search field first', 'ai-seo-client')); ?>');
+                    $('#keyword-input').focus();
+                    return;
+                }
+                $('#generate-ideas-keyword').val(kw);
+                $('#modal-generate-keyword-ideas').show();
+            });
+
+            // Confirm generate keyword ideas
+            $('#btn-confirm-generate-ideas').on('click', function() {
+                const keyword = $('#generate-ideas-keyword').val().trim();
+                const count = parseInt($('#generate-ideas-count').val(), 10) || 5;
+                const btn = $(this);
+
+                if (!keyword) {
+                    alert('<?php echo esc_js(__('Please enter a keyword', 'ai-seo-client')); ?>');
+                    return;
+                }
+
+                btn.prop('disabled', true);
+                btn.find('.spinner').show();
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/keywords/generate-ideas',
+                    method: 'POST',
+                    data: { keyword: keyword, count: count }
+                }).then(function(response) {
+                    const generated = response.ideas_generated || 0;
+                    const msg = generated + ' <?php echo esc_js(__('ideas generated and saved to the Ideas page.', 'ai-seo-client')); ?>';
+                    $('#modal-generate-keyword-ideas').hide();
+                    alert(msg);
+                }).catch(function(error) {
+                    alert(error.message || '<?php echo esc_js(__('Failed to generate ideas', 'ai-seo-client')); ?>');
+                }).finally(function() {
+                    btn.prop('disabled', false);
+                    btn.find('.spinner').hide();
+                });
             });
 
             // Explorer button
@@ -1678,6 +1756,27 @@ PROMPT;
                     $('#edit-keyword-difficulty').val(difficulty);
                     $('#edit-keyword-notes').val('');
                     $('#modal-edit-keyword').show();
+                });
+
+                // Set cluster (inline "+ set cluster" button in the cluster column).
+                // Opens the edit-keyword modal focused on the cluster select so the
+                // existing save handler can PUT the new cluster_id.
+                $(document).off('click.setcluster').on('click.setcluster', '.btn-set-cluster', function() {
+                    const row = $(this).closest('tr');
+                    const id = row.data('id');
+                    const keyword = row.find('.col-keyword strong').text();
+                    const intent = row.find('.col-intent .intent-badge').attr('class').replace('intent-badge ', '').trim() || 'informational';
+                    const difficulty = (row.find('.difficulty-badge').text() || 'LOW').toUpperCase();
+
+                    $('#edit-keyword-id').val(id);
+                    $('#edit-keyword-input').val(keyword);
+                    $('#edit-keyword-cluster').val('');
+                    $('#edit-keyword-intent').val(intent);
+                    $('#edit-keyword-difficulty').val(difficulty);
+                    $('#edit-keyword-notes').val('');
+                    $('#modal-edit-keyword').show();
+                    // Focus the cluster select so the user can pick immediately.
+                    setTimeout(function() { $('#edit-keyword-cluster').focus(); }, 50);
                 });
 
                 // Save edit

@@ -305,28 +305,38 @@ Return ONLY the JSON.";
             return;
         }
 
-        $seoTitle = get_post_meta($postId, '_sseo_ai_title', true);
-        $seoDesc = get_post_meta($postId, '_sseo_ai_description', true);
-        $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+        // Show the numeric SEO score (0-100) from _sseo_ai_score if available
+        $seoScore = get_post_meta($postId, '_sseo_ai_score', true);
 
-        $score = 0;
-        if ($seoTitle) $score++;
-        if ($seoDesc) $score++;
-        if ($keyphrase) $score++;
+        if ($seoScore !== '' && $seoScore !== null && $seoScore !== false) {
+            $score = (int) $seoScore;
+            if ($score < 0) {
+                $score = 0;
+            } elseif ($score > 100) {
+                $score = 100;
+            }
 
-        $colors = ['#d63638', '#dba617', '#dba617', '#00a32a'];
-        $labels = [
-            __('Missing', 'ai-seo-client'),
-            __('Basic', 'ai-seo-client'),
-            __('Good', 'ai-seo-client'),
-            __('Complete', 'ai-seo-client'),
-        ];
+            // Color code: red (0-40), orange (41-70), green (71-100)
+            if ($score <= 40) {
+                $color = '#d63638';
+            } elseif ($score <= 70) {
+                $color = '#dba617';
+            } else {
+                $color = '#00a32a';
+            }
 
-        printf(
-            '<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:%s;color:#fff;font-size:11px;font-weight:600;">%s</span>',
-            esc_attr($colors[$score]),
-            esc_html($labels[$score])
-        );
+            printf(
+                '<span style="display:inline-block;padding:2px 10px;border-radius:10px;background:%s;color:#fff;font-size:11px;font-weight:600;min-width:32px;text-align:center;">%d</span>',
+                esc_attr($color),
+                $score
+            );
+        } else {
+            // No score calculated yet — show a neutral placeholder
+            printf(
+                '<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:#cbd5e1;color:#fff;font-size:11px;font-weight:600;">%s</span>',
+                esc_html__('—', 'ai-seo-client')
+            );
+        }
     }
 
     /**

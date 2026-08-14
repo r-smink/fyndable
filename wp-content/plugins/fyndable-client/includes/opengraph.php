@@ -392,7 +392,7 @@ class OpenGraph
             .aiseo-og-preview-image { width: 100%; height: 260px; background: #e4e6eb; display: flex; align-items: center; justify-content: center; overflow: hidden; }
             .aiseo-og-preview-image img { width: 100%; height: 100%; object-fit: cover; }
             .aiseo-og-preview-body { padding: 12px 16px; }
-            .aiseo-og-preview-domain { font-size: 12px; color: #65676b; text-transform: uppercase; }
+            .aiseo-og-preview-domain { font-size: 12px; color: #65676b;  }
             .aiseo-og-preview-title { font-size: 16px; font-weight: 600; color: #1c1e21; margin: 3px 0; line-height: 1.3; }
             .aiseo-og-preview-desc { font-size: 14px; color: #65676b; line-height: 1.3; }
             .aiseo-twitter-preview { background: #fff; border: 1px solid #e1e8ed; border-radius: 14px; overflow: hidden; max-width: 500px; margin: 15px 0; }

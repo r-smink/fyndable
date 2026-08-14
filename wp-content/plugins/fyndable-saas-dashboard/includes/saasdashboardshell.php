@@ -416,7 +416,7 @@ class SaaSDashboardShell
             .saas-topbar-logo .saas-saas-suffix {
                 font-size: 11px;
                 font-weight: 600;
-                text-transform: uppercase;
+                
                 letter-spacing: 0.5px;
                 opacity: 0.85;
                 margin-left: 6px;
@@ -428,7 +428,7 @@ class SaaSDashboardShell
             .saas-topbar-badge {
                 font-size: 10px;
                 font-weight: 600;
-                text-transform: uppercase;
+                
                 letter-spacing: 0.5px;
                 padding: 3px 10px;
                 border-radius: 20px;

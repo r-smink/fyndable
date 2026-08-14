@@ -211,19 +211,19 @@ class InvoiceManager
                 .invoice-header h1 { font-size: 28px; font-weight: 700; }
                 .invoice-header .invoice-meta { text-align: right; font-size: 14px; opacity: 0.95; }
                 .invoice-body { padding: 40px; }
-                .invoice-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 8px; }
+                .invoice-section h3 { font-size: 12px;  letter-spacing: 0.5px; color: #6b7280; margin-bottom: 8px; }
                 .invoice-from, .invoice-to { display: flex; gap: 60px; margin-bottom: 32px; }
                 .invoice-from > div, .invoice-to > div { flex: 1; }
                 .invoice-from p, .invoice-to p { font-size: 14px; line-height: 1.6; color: #374151; }
                 .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-                .invoice-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; padding: 12px 16px; border-bottom: 2px solid #e5e7eb; }
+                .invoice-table th { text-align: left; font-size: 12px;  letter-spacing: 0.5px; color: #6b7280; padding: 12px 16px; border-bottom: 2px solid #e5e7eb; }
                 .invoice-table td { padding: 16px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
                 .invoice-table .amount { text-align: right; font-variant-numeric: tabular-nums; }
                 .invoice-totals { margin-left: auto; width: 280px; }
                 .invoice-totals .row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
                 .invoice-totals .row.total { border-top: 2px solid #e5e7eb; margin-top: 8px; padding-top: 16px; font-weight: 700; font-size: 18px; }
                 .invoice-footer { padding: 24px 40px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; text-align: center; }
-                .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+                .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;  letter-spacing: 0.5px; }
                 .status-paid { background: #d1fae5; color: #065f46; }
                 .status-pending { background: #fef3c7; color: #92400e; }
                 .status-failed { background: #fee2e2; color: #991b1b; }

@@ -233,7 +233,7 @@ class Supportickets
             .sseo-ticket-item a { text-decoration: none; color: #111827; }
             .sseo-ticket-item a:hover { color: #379fd3; }
             .sseo-ticket-meta { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
-            .sseo-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+            .sseo-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;  }
             .sseo-badge.status-open { background: #e8f4fa; color: #8f39ac; }
             .sseo-badge.status-reaction { background: #fef3c7; color: #92400e; }
             .sseo-badge.status-closed { background: #d1fae5; color: #065f46; }
