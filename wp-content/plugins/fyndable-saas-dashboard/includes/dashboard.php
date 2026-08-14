@@ -83,6 +83,8 @@ class Dashboard
         $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation, $this->emailTemplateRepository);
         $this->revenueDashboard = new RevenueDashboard($this->tenants);
 
+        $this->invoiceManager = new InvoiceManager($this->tenants);
+
         // Agency portal
         $this->agencyRoleManager = new AgencyRoleManager($this->tenants);
         $this->agencyPortal = new AgencyPortal(
@@ -102,7 +104,6 @@ class Dashboard
             $this->emailTemplateRepository,
             new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants)
         );
-        $this->invoiceManager = new InvoiceManager($this->tenants);
         $this->customerPortal = new CustomerPortal(
             $this->tenants,
             $this->paymentProcessor,
