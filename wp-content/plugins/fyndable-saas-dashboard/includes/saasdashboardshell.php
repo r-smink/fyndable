@@ -70,6 +70,21 @@ class SaaSDashboardShell
                     'label' => __('White-Label', 'sseo-ai-saas'),
                     'icon' => '&#127912;',
                 ],
+                [
+                    'slug' => 'sseo-ai-agency-account',
+                    'label' => __('My Account', 'sseo-ai-saas'),
+                    'icon' => '&#128100;',
+                ],
+                [
+                    'slug' => 'sseo-ai-agency-invoices',
+                    'label' => __('Invoices', 'sseo-ai-saas'),
+                    'icon' => '&#128179;',
+                ],
+                [
+                    'slug' => 'sseo-ai-agency-add-licenses',
+                    'label' => __('Extra Licenses', 'sseo-ai-saas'),
+                    'icon' => '&#10133;',
+                ],
             ];
             return;
         }
