@@ -75,6 +75,9 @@ class AgencyRoleManager
             'agency-portal_page_sseo-ai-agency-tenants',
             'agency-portal_page_sseo-ai-agency-support',
             'agency-portal_page_sseo-ai-agency-tenant-detail',
+            'agency-portal_page_sseo-ai-agency-account',
+            'agency-portal_page_sseo-ai-agency-invoices',
+            'agency-portal_page_sseo-ai-agency-add-licenses',
         ];
 
         $allowedPatterns = ['sseo-ai-agency', 'sseo-ai-shell'];

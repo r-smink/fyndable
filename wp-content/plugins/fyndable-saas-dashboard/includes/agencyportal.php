@@ -15,6 +15,8 @@ class AgencyPortal
     private LicenseKeyGenerator $licenseGenerator;
     private SupportTickets $supportTickets;
     private AgencyRoleManager $roleManager;
+    private InvoiceManager $invoiceManager;
+    private PaymentProcessor $paymentProcessor;
     private string $pluginFile;
 
     public function __construct(
@@ -22,13 +24,17 @@ class AgencyPortal
         TenantRepository $tenants,
         LicenseKeyGenerator $licenseGenerator,
         SupportTickets $supportTickets,
-        AgencyRoleManager $roleManager
+        AgencyRoleManager $roleManager,
+        InvoiceManager $invoiceManager,
+        PaymentProcessor $paymentProcessor
     ) {
         $this->pluginFile = $pluginFile;
         $this->tenants = $tenants;
         $this->licenseGenerator = $licenseGenerator;
         $this->supportTickets = $supportTickets;
         $this->roleManager = $roleManager;
+        $this->invoiceManager = $invoiceManager;
+        $this->paymentProcessor = $paymentProcessor;
     }
 
     public function register(): void
@@ -37,6 +43,9 @@ class AgencyPortal
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('admin_head', [$this, 'injectAgencyHeaderStyle']);
         add_action('admin_post_sseo_ai_agency_save_wl', [$this, 'handleSaveWhiteLabel']);
+        add_action('admin_post_sseo_ai_agency_download_wl_client', [$this, 'handleDownloadWhiteLabelClient']);
+        add_action('admin_post_sseo_ai_agency_add_licenses', [$this, 'handleAddLicenses']);
+        add_action('admin_post_sseo_ai_agency_print_invoice', [$this, 'handlePrintInvoice']);
     }
 
     public function enqueueAssets(string $hook): void
@@ -51,155 +60,49 @@ class AgencyPortal
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
         );
         wp_enqueue_media();
+
+        $wl = $this->getWhiteLabelSettings();
+        $primary = sanitize_hex_color($wl['primary_color'] ?? '') ?: '#379fd3';
+        $secondary = sanitize_hex_color($wl['secondary_color'] ?? '') ?: '#8f39ac';
+
+        $css = ':root {
+            --sseo-primary: ' . $primary . ';
+            --sseo-blue: ' . $primary . ';
+        }
+        body[class*="sseo-ai"] {
+            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
+        }
+        .wrap.sseo-ai-license-admin,
+        .wrap.sseo-ai-license-admin > h1 {
+            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
+        }
+        .sseo-ai-license-admin .button-primary,
+        .sseo-ai-license-admin .button-primary:hover,
+        .sseo-ai-upgrade-cta,
+        .tenant-login-btn,
+        .tenant-login-btn:hover {
+            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
+        }';
+
+        wp_add_inline_style('sseo-ai-license-admin', $css);
     }
 
     /**
      * Inject the Fyndable gradient topbar header on agency pages.
      */
+    /**
+     * Inner agency header styling is no longer used; the SaaSDashboardShell topbar
+     * handles all branding and navigation for agency users.
+     */
     public function injectAgencyHeaderStyle(): void
     {
-        $screen = get_current_screen();
-        if (!$screen || strpos($screen->id, 'sseo-ai-agency') === false) {
-            return;
-        }
-
-        $account = $this->roleManager->getAgencyAccount();
-        $agencyName = '';
-        if ($account) {
-            $tenant = $this->tenants->getTenantById((int)$account['tenant_id']);
-            if ($tenant) {
-                $agencyName = $tenant['name'];
-            }
-        }
-
-        $user = wp_get_current_user();
-        ?>
-        <style>
-            .fyndable-agency-topbar {
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
-                color: #fff;
-                padding: 16px 30px;
-                margin: -10px -20px 0 -10px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            }
-            .fyndable-agency-topbar .brand {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .fyndable-agency-topbar .brand-logo {
-                font-size: 22px;
-                font-weight: 700;
-                letter-spacing: -0.5px;
-            }
-            .fyndable-agency-topbar .brand-logo span {
-                font-weight: 400;
-                opacity: 0.85;
-            }
-            .fyndable-agency-topbar .agency-badge {
-                font-size: 11px;
-                font-weight: 600;
-                
-                letter-spacing: 0.5px;
-                padding: 4px 12px;
-                border-radius: 20px;
-                background: rgba(255,255,255,0.2);
-            }
-            .fyndable-agency-topbar .user-info {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                font-size: 13px;
-            }
-            .fyndable-agency-topbar .user-info .avatar {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                border: 2px solid rgba(255,255,255,0.3);
-            }
-            .fyndable-agency-content {
-                padding: 0;
-            }
-            .fyndable-agency-content h1 {
-                display: none !important;
-            }
-            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-stats-grid,
-            .sseo-ai-license-admin .fyndable-agency-content .sseo-ai-card {
-                margin-top: 20px;
-            }
-            .fyndable-agency-topbar .user-info .account-link,
-            .fyndable-agency-topbar .user-info .logout-link {
-                color: #fff;
-                text-decoration: none;
-                background: rgba(255,255,255,0.15);
-                border: 1px solid rgba(255,255,255,0.3);
-                border-radius: 8px;
-                padding: 6px 14px;
-                font-size: 13px;
-                font-weight: 500;
-                transition: background 0.15s;
-            }
-            .fyndable-agency-topbar .user-info .account-link:hover,
-            .fyndable-agency-topbar .user-info .logout-link:hover {
-                background: rgba(255,255,255,0.25);
-            }
-            .tenant-login-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                font-size: 12px;
-                font-weight: 600;
-                padding: 4px 10px;
-                border-radius: 6px;
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
-                color: #fff !important;
-                text-decoration: none;
-                border: none;
-                cursor: pointer;
-                transition: transform 0.15s, box-shadow 0.15s;
-            }
-            .tenant-login-btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(55,159,211,0.3);
-                color: #fff !important;
-            }
-        </style>
-        <?php
     }
 
     /**
-     * Render the shared agency topbar header.
+     * Inner agency topbar is no longer rendered; the SaaSDashboardShell provides the header.
      */
     private function renderAgencyHeader(): void
     {
-        $account = $this->roleManager->getAgencyAccount();
-        $agencyName = '';
-        if ($account) {
-            $tenant = $this->tenants->getTenantById((int)$account['tenant_id']);
-            if ($tenant) {
-                $agencyName = $tenant['name'];
-            }
-        }
-
-        $wl = $this->getWhiteLabelSettings();
-        $companyName = !empty($wl['company_name']) ? $wl['company_name'] : $agencyName;
-        $primaryColor = $wl['primary_color'] ?? '#379fd3';
-        $secondaryColor = $wl['secondary_color'] ?? '#8f39ac';
-        ?>
-        <div class="fyndable-agency-topbar" style="background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%);">
-            <div class="brand">
-                <div class="brand-logo">Fyndable Smart SEO</div>
-                <div class="agency-badge"><?php echo esc_html($companyName ?: __('Agency', 'sseo-ai-saas')); ?></div>
-            </div>
-            <div class="user-info">
-                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency')); ?>" class="account-link"><?php esc_html_e('Agency account', 'sseo-ai-saas'); ?></a>
-                <a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>" class="logout-link"><?php esc_html_e('Logout', 'sseo-ai-saas'); ?></a>
-            </div>
-        </div>
-        <?php
     }
 
     /**
@@ -246,6 +149,9 @@ class AgencyPortal
         add_submenu_page('sseo-ai-agency', __('Usage & Costs', 'sseo-ai-saas'), __('Usage & Costs', 'sseo-ai-saas'), 'agency_view_tenants', 'sseo-ai-agency-usage', [$this, 'renderUsagePage']);
         add_submenu_page('sseo-ai-agency', __('Support', 'sseo-ai-saas'), __('Support', 'sseo-ai-saas'), 'agency_view_support', 'sseo-ai-agency-support', [$this, 'renderSupportPage']);
         add_submenu_page('sseo-ai-agency', __('White-Label', 'sseo-ai-saas'), __('White-Label', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-wl', [$this, 'renderWhiteLabelSettings']);
+        add_submenu_page('sseo-ai-agency', __('My Account', 'sseo-ai-saas'), __('My Account', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-account', [$this, 'renderAccountPage']);
+        add_submenu_page('sseo-ai-agency', __('Invoices', 'sseo-ai-saas'), __('Invoices', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-invoices', [$this, 'renderInvoicesPage']);
+        add_submenu_page('sseo-ai-agency', __('Extra Licenses', 'sseo-ai-saas'), __('Extra Licenses', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-add-licenses', [$this, 'renderAddLicensesPage']);
     }
 
     private function getAgencyContext(): array
@@ -1314,6 +1220,23 @@ class AgencyPortal
                 </table>
                 <?php submit_button(__('Save White-Label Settings', 'sseo-ai-saas'), 'primary'); ?>
             </form>
+
+            <div class="sseo-ai-card" style="margin-top: 20px;">
+                <h2><?php esc_html_e('Your White-Label Client Plugin', 'sseo-ai-saas'); ?></h2>
+                <p style="color: #646970;">
+                    <?php esc_html_e('Download a ready-to-install, re-branded client plugin for your customers. Your company name is used as the plugin name.', 'sseo-ai-saas'); ?>
+                </p>
+                <?php if (!empty($wl['company_name'])): ?>
+                    <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_download_wl_client&_wpnonce=' . wp_create_nonce('sseo_ai_agency_wl_download'))); ?>"
+                       class="button button-primary button-hero" style="margin-top: 10px;">
+                        <?php esc_html_e('Download White-Label Client (.zip)', 'sseo-ai-saas'); ?>
+                    </a>
+                <?php else: ?>
+                    <p style="margin-top: 10px; color: #d63638;">
+                        <?php esc_html_e('Set a Company Name above and save your settings to enable the plugin download.', 'sseo-ai-saas'); ?>
+                    </p>
+                <?php endif; ?>
+            </div>
             </div>
         </div>
         <script>
@@ -1367,6 +1290,383 @@ class AgencyPortal
         update_user_meta(get_current_user_id(), 'sseo_ai_agency_wl', $wl);
 
         wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&message=saved'));
+        exit;
+    }
+
+    /**
+     * Build and serve a white-labeled client plugin .zip download for the
+     * current agency, using the agency's own company name as branding.
+     */
+    public function handleDownloadWhiteLabelClient(): void
+    {
+        if (!check_admin_referer('sseo_ai_agency_wl_download')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        if (!$this->roleManager->isAgencyUser()) {
+            wp_die(__('You do not have permission to download packages.', 'sseo-ai-saas'));
+        }
+
+        $wl = $this->getWhiteLabelSettings();
+        $companyName = $wl['company_name'] ?? '';
+        if (empty($companyName)) {
+            wp_die(__('Please set a Company Name on the White-Label settings page first.', 'sseo-ai-saas'));
+        }
+
+        $builder = new WhiteLabelPackageBuilder();
+        $zipPath = $builder->buildClientZip($companyName);
+
+        if (is_wp_error($zipPath)) {
+            wp_die(esc_html($zipPath->get_error_message()));
+        }
+
+        $companySlug = sanitize_title($companyName);
+        $companySlug = preg_replace('/[^a-z0-9-]/', '', $companySlug) ?: 'agency';
+        $zipName = $companySlug . '-client.zip';
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $zipName . '"');
+        header('Content-Length: ' . filesize($zipPath));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        readfile($zipPath);
+        @unlink($zipPath);
+        exit;
+    }
+
+    public function renderAccountPage(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $account = $ctx['account'];
+        $tenant = $ctx['tenant'];
+        $user = wp_get_current_user();
+        $message = '';
+        $error = '';
+
+        if (isset($_POST['agency_update_account']) && wp_verify_nonce($_POST['_wpnonce'], 'agency_update_account')) {
+            $name = sanitize_text_field($_POST['company_name'] ?? '');
+            $domain = esc_url_raw($_POST['domain'] ?? '');
+            $email = sanitize_email($_POST['email'] ?? '');
+            $firstName = sanitize_text_field($_POST['first_name'] ?? '');
+            $lastName = sanitize_text_field($_POST['last_name'] ?? '');
+            $phone = sanitize_text_field($_POST['phone'] ?? '');
+            $address = sanitize_textarea_field($_POST['address'] ?? '');
+            $postal = sanitize_text_field($_POST['postal_code'] ?? '');
+            $city = sanitize_text_field($_POST['city'] ?? '');
+            $country = sanitize_text_field($_POST['country'] ?? '');
+
+            $tenantUpdates = [];
+            if (!empty($name)) {
+                $tenantUpdates['name'] = $name;
+            }
+            if (!empty($domain)) {
+                $tenantUpdates['domain'] = $domain;
+            }
+            if (!empty($tenantUpdates)) {
+                $res = $this->tenants->updateTenant($tenant['tenant_key'], $tenantUpdates);
+                if (is_wp_error($res)) {
+                    $error = $res->get_error_message();
+                } else {
+                    $tenant = $this->tenants->getTenantById((int)$account['tenant_id']) ?: $tenant;
+                }
+            }
+
+            if (empty($error) && !empty($email) && $email !== $user->user_email) {
+                $existingId = email_exists($email);
+                if ($existingId && (int) $existingId !== (int) $user->ID) {
+                    $error = __('This email is already in use.', 'sseo-ai-saas');
+                } else {
+                    $updateResult = wp_update_user([
+                        'ID' => $user->ID,
+                        'user_email' => $email,
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                    ]);
+                    if (is_wp_error($updateResult)) {
+                        $error = $updateResult->get_error_message();
+                    } else {
+                        $user = get_userdata($user->ID) ?: $user;
+                    }
+                }
+            } else {
+                wp_update_user([
+                    'ID' => $user->ID,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                ]);
+            }
+
+            update_user_meta($user->ID, 'fyndable_phone', $phone);
+            update_user_meta($user->ID, 'fyndable_address', $address);
+            update_user_meta($user->ID, 'fyndable_postal_code', $postal);
+            update_user_meta($user->ID, 'fyndable_city', $city);
+            update_user_meta($user->ID, 'fyndable_country', $country);
+
+            if (empty($error)) {
+                $message = __('Account updated successfully.', 'sseo-ai-saas');
+            }
+        }
+
+        $firstName = $user->first_name ?: get_user_meta($user->ID, 'first_name', true);
+        $lastName = $user->last_name ?: get_user_meta($user->ID, 'last_name', true);
+        $phone = get_user_meta($user->ID, 'fyndable_phone', true);
+        $address = get_user_meta($user->ID, 'fyndable_address', true);
+        $postal = get_user_meta($user->ID, 'fyndable_postal_code', true);
+        $city = get_user_meta($user->ID, 'fyndable_city', true);
+        $country = get_user_meta($user->ID, 'fyndable_country', true);
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('My Account', 'sseo-ai-saas'); ?></h1>
+            <?php if ($message): ?>
+                <div class="notice notice-success"><p><?php echo esc_html($message); ?></p></div>
+            <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
+            <?php endif; ?>
+            <div class="sseo-ai-card">
+                <form method="post">
+                    <?php wp_nonce_field('agency_update_account'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="company_name"><?php esc_html_e('Company Name', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="company_name" id="company_name" value="<?php echo esc_attr($tenant['name'] ?? ''); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="email"><?php esc_html_e('Email', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="email" name="email" id="email" value="<?php echo esc_attr($user->user_email); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="domain"><?php esc_html_e('Domain', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="url" name="domain" id="domain" value="<?php echo esc_attr($tenant['domain'] ?? ''); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="first_name"><?php esc_html_e('First Name', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="first_name" id="first_name" value="<?php echo esc_attr($firstName); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="last_name"><?php esc_html_e('Last Name', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="last_name" id="last_name" value="<?php echo esc_attr($lastName); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="phone"><?php esc_html_e('Phone', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="address"><?php esc_html_e('Address', 'sseo-ai-saas'); ?></label></th>
+                            <td><textarea name="address" id="address" rows="3" class="large-text"><?php echo esc_textarea($address); ?></textarea></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="postal_code"><?php esc_html_e('Postal Code', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="postal_code" id="postal_code" value="<?php echo esc_attr($postal); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="city"><?php esc_html_e('City', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="city" id="city" value="<?php echo esc_attr($city); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="country"><?php esc_html_e('Country', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" class="regular-text"></td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Save Account', 'sseo-ai-saas'), 'primary', 'agency_update_account'); ?>
+                </form>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function renderInvoicesPage(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $tenant = $ctx['tenant'];
+        $invoices = $this->invoiceManager->getInvoices($tenant['tenant_key']);
+        $viewInvoiceId = isset($_GET['view']) ? (int) $_GET['view'] : 0;
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Invoices', 'sseo-ai-saas'); ?></h1>
+            <div class="sseo-ai-card">
+                <?php if (empty($invoices)): ?>
+                    <p><?php esc_html_e('No invoices found.', 'sseo-ai-saas'); ?></p>
+                <?php else: ?>
+                    <table class="wp-list-table widefat striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Invoice #', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Description', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Amount', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($invoices as $invoice): ?>
+                                <tr>
+                                    <td><?php echo esc_html($invoice['invoice_number']); ?></td>
+                                    <td><?php echo esc_html($invoice['description']); ?></td>
+                                    <td><?php echo esc_html(number_format((float) ($invoice['amount'] ?? 0), 2)); ?></td>
+                                    <td><?php echo esc_html(ucfirst($invoice['status'] ?? '')); ?></td>
+                                    <td><?php echo esc_html($invoice['created_at']); ?></td>
+                                    <td>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-invoices&view=' . (int) $invoice['id'])); ?>" class="button button-small">
+                                            <?php esc_html_e('View', 'sseo-ai-saas'); ?>
+                                        </a>
+                                        <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_print_invoice&invoice_id=' . (int) $invoice['id'] . '&_wpnonce=' . wp_create_nonce('sseo_ai_agency_print_invoice_' . $invoice['id']))); ?>" class="button button-small" target="_blank">
+                                            <?php esc_html_e('Print', 'sseo-ai-saas'); ?>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+        if ($viewInvoiceId > 0) {
+            $this->renderInvoiceViewPage($viewInvoiceId);
+        }
+    }
+
+    private function renderInvoiceViewPage(int $invoiceId): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            return;
+        }
+        $invoice = $this->invoiceManager->getInvoice($invoiceId, $ctx['tenant']['tenant_key']);
+        if (!$invoice) {
+            echo '<div class="wrap sseo-ai-license-admin"><div class="notice notice-error"><p>' . esc_html__('Invoice not found or not part of your account.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+        echo '<div class="wrap sseo-ai-license-admin"><div class="sseo-ai-card">' . $this->invoiceManager->renderInvoiceHtml($invoice, $ctx['tenant']) . '</div></div>';
+    }
+
+    public function handlePrintInvoice(): void
+    {
+        if (!isset($_GET['invoice_id'], $_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'sseo_ai_agency_print_invoice_' . $_GET['invoice_id'])) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+        if (!$this->roleManager->isAgencyUser()) {
+            wp_die(__('You do not have permission to view invoices.', 'sseo-ai-saas'));
+        }
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            wp_die(__('Agency account not found.', 'sseo-ai-saas'));
+        }
+        $invoice = $this->invoiceManager->getInvoice((int) $_GET['invoice_id'], $ctx['tenant']['tenant_key']);
+        if (!$invoice) {
+            wp_die(__('Invoice not found.', 'sseo-ai-saas'));
+        }
+        echo $this->invoiceManager->renderInvoicePrintHtml($invoice, $ctx['tenant']);
+        exit;
+    }
+
+    public function renderAddLicensesPage(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $account = $ctx['account'];
+        $agencyTenantId = (int) $account['tenant_id'];
+        $maxSubLicenses = (int) $account['max_sub_licenses'];
+        $licenseCount = $this->licenseGenerator->countLicensesByAgency($agencyTenantId);
+        $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Extra Licenses', 'sseo-ai-saas'); ?></h1>
+            <p class="description" style="margin: 0 20px; color: #fff;">
+                <?php
+                printf(
+                    esc_html__('Current plan: %1$d / %2$d sub-licenses used.', 'sseo-ai-saas'),
+                    $licenseCount,
+                    $maxSubLicenses
+                );
+                ?>
+            </p>
+            <?php if ($error): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
+            <?php endif; ?>
+            <div class="sseo-ai-card" style="margin-top: 20px;">
+                <h2><?php esc_html_e('Add more sub-licenses', 'sseo-ai-saas'); ?></h2>
+                <p style="color: #646970;">
+                    <?php esc_html_e('Additional licenses cost €49,99 each for the first 10 extra licenses (up to 20 total) and €34,99 each thereafter.', 'sseo-ai-saas'); ?><br>
+                    <?php esc_html_e('The extra amount is charged immediately if you are within 15 days of the last collection, otherwise it will be added to the next direct debit.', 'sseo-ai-saas'); ?>
+                </p>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_add_licenses')); ?>">
+                    <?php wp_nonce_field('sseo_ai_agency_add_licenses'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="extra_licenses"><?php esc_html_e('Number of extra licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="extra_licenses" id="extra_licenses" value="1" min="1" max="100" class="small-text" required>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Proceed to payment', 'sseo-ai-saas'), 'primary', 'agency_add_licenses'); ?>
+                </form>
+            </div>
+            <div class="sseo-ai-card">
+                <p style="color: #646970;">
+                    <?php esc_html_e('To reduce the number of licenses, please contact support.', 'sseo-ai-saas'); ?>
+                </p>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function handleAddLicenses(): void
+    {
+        if (!isset($_POST['agency_add_licenses'], $_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sseo_ai_agency_add_licenses')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+        if (!$this->roleManager->isAgencyUser()) {
+            wp_die(__('You do not have permission to add licenses.', 'sseo-ai-saas'));
+        }
+
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=no_account'));
+            exit;
+        }
+
+        $quantity = (int) ($_POST['extra_licenses'] ?? 0);
+        if ($quantity < 1) {
+            wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=invalid_quantity'));
+            exit;
+        }
+
+        $account = $this->roleManager->getAgencyAccount();
+        if (!$account) {
+            wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=no_account'));
+            exit;
+        }
+
+        $result = $this->paymentProcessor->createExtraLicensesCheckout($account, $quantity);
+        if (is_wp_error($result)) {
+            wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=' . urlencode($result->get_error_message())));
+            exit;
+        }
+
+        wp_safe_redirect($result['checkout_url'] ?? admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=missing_url'));
         exit;
     }
 }

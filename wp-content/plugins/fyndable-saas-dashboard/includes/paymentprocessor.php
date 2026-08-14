@@ -905,4 +905,109 @@ class PaymentProcessor
             wp_mail($adminEmail, $subject, $message);
         }
     }
+
+    /**
+     * Create a one-time checkout for extra agency licenses.
+     *
+     * Pricing: additional licenses up to 20 total cost €49.99 each,
+     *          any license above 20 total costs €34.99 each.
+     *          The current plan includes 10 licenses.
+     *
+     * @param array $agencyAccount Agency account row (id, tenant_id, max_sub_licenses, ...).
+     * @param int   $quantity      Number of extra licenses to purchase.
+     * @return array|\WP_Error Checkout result with checkout_url, or WP_Error.
+     */
+    public function createExtraLicensesCheckout(array $agencyAccount, int $quantity): array|\WP_Error
+    {
+        if ($quantity < 1) {
+            return new \WP_Error('invalid_quantity', __('Invalid number of extra licenses.', 'sseo-ai-saas'));
+        }
+
+        $tenant = $this->tenants->getTenantById((int) $agencyAccount['tenant_id']);
+        if (!$tenant) {
+            return new \WP_Error('tenant_not_found', __('Agency tenant not found.', 'sseo-ai-saas'));
+        }
+
+        $tenantKey = $tenant['tenant_key'];
+        $currentTotal = (int) ($agencyAccount['max_sub_licenses'] ?? 10);
+        $start = max($currentTotal, 10);
+        $totalAmount = 0.0;
+        for ($i = 1; $i <= $quantity; $i++) {
+            $licenseNumber = $start + $i;
+            $totalAmount += $licenseNumber <= 20 ? 49.99 : 34.99;
+        }
+
+        $mollieCustomerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        if (!empty($mollieCustomerId)) {
+            $payment = $this->mollieRequest('payments', [
+                'amount' => $this->mollieAmount($totalAmount),
+                'customerId' => $mollieCustomerId,
+                'sequenceType' => 'oneoff',
+                'description' => sprintf(__('Extra agency licenses x%d', 'sseo-ai-saas'), $quantity),
+                'redirectUrl' => admin_url('admin.php?page=sseo-ai-agency-add-licenses&extra_status=success'),
+                'webhookUrl' => $this->getWebhookUrl('mollie'),
+                'metadata' => [
+                    'tenant_key' => $tenantKey,
+                    'agency_account_id' => (int) $agencyAccount['id'],
+                    'extra_licenses' => $quantity,
+                    'type' => 'extra_licenses',
+                ],
+            ]);
+
+            if (is_wp_error($payment)) {
+                return $payment;
+            }
+
+            $checkoutUrl = $payment['_links']['checkout']['href'] ?? '';
+            if (empty($checkoutUrl)) {
+                return new \WP_Error('no_checkout_url', __('Could not retrieve a checkout URL from Mollie.', 'sseo-ai-saas'));
+            }
+
+            return [
+                'provider' => 'mollie',
+                'checkout_url' => $checkoutUrl,
+                'amount' => $totalAmount,
+                'quantity' => $quantity,
+                'payment_id' => $payment['id'] ?? '',
+            ];
+        }
+
+        return new \WP_Error(
+            'payment_not_configured',
+            __('Extra license checkout is currently only available via Mollie. Please contact support to add licenses.', 'sseo-ai-saas')
+        );
+    }
+
+    /**
+     * Increase the Mollie subscription amount for a tenant so the next recurring
+     * payment includes the new monthly cost of extra licenses.
+     *
+     * @param string $tenantKey The agency tenant key.
+     * @param float  $addAmount Amount to add to the current monthly subscription amount.
+     * @return array|\WP_Error Updated subscription or WP_Error.
+     */
+    public function updateMollieSubscriptionAmount(string $tenantKey, float $addAmount): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $subscription = $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+        if (is_wp_error($subscription)) {
+            return $subscription;
+        }
+
+        $currentValue = (float) ($subscription['amount']['value'] ?? 0);
+        $currency = $subscription['amount']['currency'] ?? $this->currency;
+        $newAmount = $currentValue + $addAmount;
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [
+            'amount' => [
+                'currency' => $currency,
+                'value' => number_format($newAmount, 2, '.', ''),
+            ],
+        ], 'PATCH');
+    }
 }

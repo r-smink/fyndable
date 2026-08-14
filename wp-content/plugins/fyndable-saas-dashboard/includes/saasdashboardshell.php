@@ -581,9 +581,10 @@ class SaaSDashboardShell
         <div class="saas-shell-wrap">
             <div class="saas-topbar" style="background: <?php echo esc_attr($topbarGradient); ?>;">
                 <div class="saas-topbar-brand">
-                    <div class="saas-topbar-logo">
+                    <div class="saas-topbar-logo" style="display: flex; align-items: center; gap: 8px;">
                         <?php if ($companyLogo): ?>
-                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName . ' Smart SEO'); ?>" style="max-height: 36px; max-width: 180px; display: block;">
+                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName . ' Smart SEO'); ?>" style="max-height: 36px; max-width: 180px; display: inline-block;">
+                            <span>Smart SEO</span><span class="saas-saas-suffix">SaaS</span>
                         <?php else: ?>
                             <?php echo esc_html($companyName); ?> <span>Smart SEO</span><span class="saas-saas-suffix">SaaS</span>
                         <?php endif; ?>

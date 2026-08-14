@@ -500,6 +500,12 @@ class WebhookHandler
             $subscriptionId ?: '(none)'
         ));
 
+        $paymentType = $payment['metadata']['type'] ?? '';
+        $extraLicenses = (int) ($payment['metadata']['extra_licenses'] ?? 0);
+        if ($paymentType === 'extra_licenses' && $extraLicenses > 0) {
+            return $this->handleMollieExtraLicenses($payment, $tenantKey, $tenant);
+        }
+
         if ($sequenceType === 'first') {
             $subscription = $this->paymentProcessor->createMollieSubscription($tenantKey, $payment);
             if (is_wp_error($subscription)) {
@@ -927,5 +933,50 @@ This is an automated message from %s", 'sseo-ai-saas'),
         }
 
         $wpdb->delete($wpdb->prefix . 'sseo_ai_tenants', ['tenant_key' => $tenantKey]);
+    }
+
+    /**
+     * Handle a one-off Mollie payment for extra agency licenses.
+     */
+    private function handleMollieExtraLicenses(array $payment, string $tenantKey, array $tenant): array
+    {
+        $quantity = (int) ($payment['metadata']['extra_licenses'] ?? 0);
+        $paymentAmount = (float) ($payment['amount']['value'] ?? 0);
+        $paymentCurrency = $payment['amount']['currency'] ?? 'eur';
+        $externalId = $payment['id'] ?? '';
+
+        $agencyAccount = $this->tenants->getAgencyAccountByTenant((int) $tenant['id']);
+        if (!$agencyAccount) {
+            error_log('SSEO AI SaaS: No agency account found for tenant ' . $tenantKey);
+            return ['received' => true, 'processed' => false, 'reason' => 'Agency account not found'];
+        }
+
+        $currentMax = (int) ($agencyAccount['max_sub_licenses'] ?? 10);
+        $newMax = $currentMax + $quantity;
+        $this->tenants->updateAgencyAccount((int) $agencyAccount['id'], ['max_sub_licenses' => $newMax]);
+
+        // Increase the Mollie subscription amount for the next recurring charge.
+        $monthlyExtra = 0.0;
+        for ($i = 1; $i <= $quantity; $i++) {
+            $licenseNumber = max($currentMax, 10) + $i;
+            $monthlyExtra += $licenseNumber <= 20 ? 49.99 : 34.99;
+        }
+        $this->paymentProcessor->updateMollieSubscriptionAmount($tenantKey, $monthlyExtra);
+
+        $this->createInvoiceRecord($tenantKey, 'mollie', $paymentAmount, $paymentCurrency, $externalId);
+
+        do_action('sseo_ai_payment_success', $tenantKey, $this->formatAmount($paymentAmount, $paymentCurrency), [
+            'description' => sprintf('Extra agency licenses x%d', $quantity),
+            'date' => current_time('mysql'),
+            'payment_id' => $externalId,
+        ]);
+
+        return [
+            'received' => true,
+            'processed' => true,
+            'tenant_key' => $tenantKey,
+            'payment_id' => $externalId,
+            'extra_licenses' => $quantity,
+        ];
     }
 }

@@ -90,7 +90,9 @@ class Dashboard
             $this->tenants,
             $this->licenseGenerator,
             $this->supportTickets,
-            $this->agencyRoleManager
+            $this->agencyRoleManager,
+            $this->invoiceManager,
+            $this->paymentProcessor
         );
         $this->fyndableLogin = new FyndableLogin($this->tenants, $this->agencyRoleManager);
 
