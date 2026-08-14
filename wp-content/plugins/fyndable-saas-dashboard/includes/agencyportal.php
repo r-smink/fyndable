@@ -76,6 +76,12 @@ class AgencyPortal
         .wrap.sseo-ai-license-admin > h1 {
             background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
         }
+        .wrap.sseo-ai-license-admin > h1 {
+            color: #fff !important;
+            margin: 16px 20px !important;
+            padding: 24px 30px !important;
+            border-radius: 12px !important;
+        }
         .sseo-ai-license-admin .button-primary,
         .sseo-ai-license-admin .button-primary:hover,
         .sseo-ai-upgrade-cta,
