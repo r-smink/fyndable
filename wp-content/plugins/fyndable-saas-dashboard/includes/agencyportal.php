@@ -1597,7 +1597,6 @@ class AgencyPortal
         $licenseCount = $this->licenseGenerator->countLicensesByAgency($agencyTenantId);
         $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
         $success = isset($_GET['success']) ? sanitize_text_field($_GET['success']) : '';
-        $extraStatus = isset($_GET['extra_status']) ? sanitize_text_field($_GET['extra_status']) : '';
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Extra Licenses', 'sseo-ai-saas'); ?></h1>
@@ -1616,14 +1615,11 @@ class AgencyPortal
             <?php if ($success === 'scheduled'): ?>
                 <div class="notice notice-success"><p><?php esc_html_e('Licenses added successfully. The extra amount will be included in the next direct debit.', 'sseo-ai-saas'); ?></p></div>
             <?php endif; ?>
-            <?php if ($extraStatus === 'success'): ?>
-                <div class="notice notice-success"><p><?php esc_html_e('Payment successful. Your extra licenses are now active.', 'sseo-ai-saas'); ?></p></div>
-            <?php endif; ?>
             <div class="sseo-ai-card" style="margin-top: 20px;">
                 <h2><?php esc_html_e('Add more sub-licenses', 'sseo-ai-saas'); ?></h2>
                 <p style="color: #646970;">
                     <?php esc_html_e('Additional licenses cost €49,99 each for the first 10 extra licenses (up to 20 total) and €34,99 each thereafter.', 'sseo-ai-saas'); ?><br>
-                    <?php esc_html_e('The extra amount is charged immediately if you are within 7 days of the last collection, otherwise it will be added to the next direct debit.', 'sseo-ai-saas'); ?>
+                    <?php esc_html_e('The extra amount will be added to the next direct debit. You can use the licenses right away.', 'sseo-ai-saas'); ?>
                 </p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_add_licenses')); ?>">
                     <?php wp_nonce_field('sseo_ai_agency_add_licenses'); ?>
@@ -1635,7 +1631,7 @@ class AgencyPortal
                             </td>
                         </tr>
                     </table>
-                    <?php submit_button(__('Proceed to payment', 'sseo-ai-saas'), 'primary', 'agency_add_licenses'); ?>
+                    <?php submit_button(__('Add licenses', 'sseo-ai-saas'), 'primary', 'agency_add_licenses'); ?>
                 </form>
             </div>
             <div class="sseo-ai-card">
@@ -1675,21 +1671,8 @@ class AgencyPortal
         }
 
         $tenant = $ctx['tenant'];
-        $lastPayment = $tenant['last_payment_at'] ?? '';
-        $withinOneWeek = !empty($lastPayment) && strtotime($lastPayment) > strtotime('-7 days', current_time('timestamp'));
 
-        if ($withinOneWeek) {
-            $result = $this->paymentProcessor->createExtraLicensesCheckout($account, $quantity);
-            if (is_wp_error($result)) {
-                wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=' . urlencode($result->get_error_message())));
-                exit;
-            }
-
-            wp_safe_redirect($result['checkout_url'] ?? admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=missing_url'));
-            exit;
-        }
-
-        // Beyond one week: add to the next direct debit and update the license limit.
+        // Add the extra licenses to the next direct debit for this agency account.
         $newMax = (int) $account['max_sub_licenses'] + $quantity;
         $this->tenants->updateAgencyAccount((int) $account['id'], ['max_sub_licenses' => $newMax]);
 
