@@ -23,7 +23,7 @@ class DataForSeoClient
     private const CIRCUIT_BREAKER_WINDOW = 900; // 15 minutes
     private const MAX_RETRIES = 3;
 
-    // Approximate pricing per request (USD) for cost tracking.
+    // Approximate external cost per request used for cost tracking (converted to EUR for display).
     public const PRICING = [
         'serp'           => 0.002,
         'ai_mentions'    => 0.01,

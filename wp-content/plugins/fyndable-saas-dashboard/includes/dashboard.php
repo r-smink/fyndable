@@ -58,6 +58,11 @@ class Dashboard
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
 
+        // Force currency to EUR; all prices, invoices and cost caps are shown in Euro.
+        if (get_option('sseo_ai_saas_currency') !== 'EUR') {
+            update_option('sseo_ai_saas_currency', 'EUR');
+        }
+
         $this->licenseGenerator = new LicenseKeyGenerator($this->tenants);
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);

@@ -259,7 +259,7 @@ class RevenueDashboard
 
     private function getCurrencySymbol(string $currency): string
     {
-        $symbols = ['EUR' => '€', 'USD' => '$', 'GBP' => '£'];
+        $symbols = ['EUR' => '€'];
         return $symbols[$currency] ?? '€';
     }
 }

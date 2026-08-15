@@ -901,10 +901,8 @@ This is an automated message from %s", 'sseo-ai-saas'),
         $currency = strtoupper($currency);
         $symbols = [
             'EUR' => '€',
-            'USD' => '$',
-            'GBP' => '£',
         ];
-        $symbol = $symbols[$currency] ?? ($currency . ' ');
+        $symbol = $symbols[$currency] ?? '€';
 
         return $symbol . number_format_i18n($amount, 2);
     }

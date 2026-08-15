@@ -56,8 +56,8 @@
     }
 
     function formatCurrency(amount, currency) {
-        var symbols = { EUR: '€', USD: '$', GBP: '£' };
-        var symbol = symbols[(currency || 'EUR').toUpperCase()] || (currency + ' ');
+        var symbols = { EUR: '€' };
+        var symbol = symbols[(currency || 'EUR').toUpperCase()] || '€';
         return symbol + parseFloat(amount).toFixed(2);
     }
 

@@ -680,8 +680,6 @@ class SignupCheckout
     {
         $symbols = [
             'EUR' => '€',
-            'USD' => '$',
-            'GBP' => '£',
         ];
         return $symbols[$currency] ?? '€';
     }

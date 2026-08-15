@@ -96,8 +96,8 @@ class InvoiceManager
         $vatAmount = $amount * ($vatRate / (100 + $vatRate));
         $subtotal = $amount - $vatAmount;
 
-        $symbols = ['EUR' => '€', 'USD' => '$', 'GBP' => '£'];
-        $symbol = $symbols[strtoupper($currency)] ?? ($currency . ' ');
+        $symbols = ['EUR' => '€'];
+        $symbol = $symbols[strtoupper($currency)] ?? '€';
 
         $invoiceDate = !empty($invoice['created_at']) ? date_i18n(get_option('date_format'), strtotime($invoice['created_at'])) : '';
         $paidDate = !empty($invoice['paid_at']) ? date_i18n(get_option('date_format'), strtotime($invoice['paid_at'])) : '';

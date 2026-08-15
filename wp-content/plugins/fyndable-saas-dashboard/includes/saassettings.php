@@ -121,7 +121,7 @@ class SaaSSettings
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_business_api_calls', ['default' => 5000]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_agency_api_calls', ['default' => 20000]);
         
-        // Cost limits per tier (in USD)
+        // Cost limits per tier (in EUR)
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_starter_cost_limit', ['default' => 20]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_early_adopters_cost_limit', ['default' => 20]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_trial_cost_limit', ['default' => 50]);
@@ -452,7 +452,7 @@ class SaaSSettings
     }
     
     /**
-     * Get cost limit for tier (USD)
+     * Get cost limit for tier (EUR)
      */
     public function getCostLimitForTier(string $tier): float
     {
@@ -477,7 +477,7 @@ class SaaSSettings
     }
     
     /**
-     * Default cost limits (USD)
+     * Default cost limits (EUR)
      */
     private function getDefaultCostLimit(string $tier): float
     {
@@ -1072,11 +1072,11 @@ class SaaSSettings
                     <tr>
                         <th scope="row"><label for="payment_currency"><?php esc_html_e('Currency', 'sseo-ai-saas'); ?></label></th>
                         <td>
-                            <select name="sseo_ai_saas_currency" id="payment_currency">
-                                <option value="EUR" <?php selected(get_option('sseo_ai_saas_currency', 'EUR'), 'EUR'); ?>><?php esc_html_e('EUR', 'sseo-ai-saas'); ?></option>
-                                <option value="USD" <?php selected(get_option('sseo_ai_saas_currency', 'EUR'), 'USD'); ?>><?php esc_html_e('USD', 'sseo-ai-saas'); ?></option>
-                                <option value="GBP" <?php selected(get_option('sseo_ai_saas_currency', 'EUR'), 'GBP'); ?>><?php esc_html_e('GBP', 'sseo-ai-saas'); ?></option>
+                            <input type="hidden" name="sseo_ai_saas_currency" value="EUR">
+                            <select id="payment_currency" disabled style="pointer-events: none; background-color: #eee; color: #555;">
+                                <option value="EUR" selected><?php esc_html_e('EUR', 'sseo-ai-saas'); ?></option>
                             </select>
+                            <p class="description"><?php esc_html_e('All prices and cost caps are managed in Euro.', 'sseo-ai-saas'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -1210,7 +1210,7 @@ class SaaSSettings
                 </table>
 
                 <h3><?php esc_html_e('Tier Pricing & Limits', 'sseo-ai-saas'); ?></h3>
-                <p class="description"><?php esc_html_e('Set the monthly subscription price (EUR), API call limit and cost cap (USD) for each tier.', 'sseo-ai-saas'); ?></p>
+                <p class="description"><?php esc_html_e('Set the monthly subscription price (EUR), API call limit and cost cap (EUR) for each tier.', 'sseo-ai-saas'); ?></p>
 
                 <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
                     <thead>
@@ -1218,7 +1218,7 @@ class SaaSSettings
                             <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
-                            <th style="width: 150px;"><?php esc_html_e('Cost Cap (USD)', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Cost Cap (EUR)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Auto Posts/mo', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('GEO Scans/mo', 'sseo-ai-saas'); ?></th>
                         </tr>

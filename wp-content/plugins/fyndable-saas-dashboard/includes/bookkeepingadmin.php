@@ -342,7 +342,7 @@ class BookkeepingAdmin
                     'cost'    => 0.0,
                 ];
             }
-            // Convert USD cost to EUR using configured rate.
+            // Convert external API cost to EUR using the configured conversion rate.
             $byKey[$key]['cost'] += (float) $costUsd * $rate;
         }
 
@@ -585,10 +585,10 @@ class BookkeepingAdmin
                     <h3><?php esc_html_e('Profit calculation', 'sseo-ai-saas'); ?></h3>
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><label for="inv_cost_usd_eur_rate"><?php esc_html_e('USD → EUR rate', 'sseo-ai-saas'); ?></label></th>
+                            <th scope="row"><label for="inv_cost_usd_eur_rate"><?php esc_html_e('API cost conversion rate', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <input type="number" step="0.0001" min="0" id="inv_cost_usd_eur_rate" name="sseo_ai_saas_inv_cost_usd_eur_rate" value="<?php echo esc_attr(get_option('sseo_ai_saas_inv_cost_usd_eur_rate', 0.92)); ?>" style="width:120px;">
-                                <p class="description"><?php esc_html_e('Used on the Profit tab to convert USD API costs to EUR.', 'sseo-ai-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Used on the Profit tab to convert external API costs to EUR.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                     </table>

@@ -1333,7 +1333,7 @@ class TenantRepository
     /**
      * Sum AI API cost per tenant within a date range.
      *
-     * Combines sseo_ai_tenant_usage and sseo_ai_google_api_usage (both USD).
+     * Combines sseo_ai_tenant_usage and sseo_ai_google_api_usage.
      * Returns: [ tenant_id => float, ... ]
      */
     public function getCostByTenant(string $from, string $to): array
