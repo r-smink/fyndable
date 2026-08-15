@@ -32,6 +32,9 @@ class AgencyRoleManager
     {
         $role = get_role(self::ROLE_NAME);
         if ($role) {
+            if (!$role->has_cap('agency_upload_logo')) {
+                $role->add_cap('agency_upload_logo', true);
+            }
             return;
         }
 
@@ -44,6 +47,7 @@ class AgencyRoleManager
                 'agency_generate_licenses' => true,
                 'agency_view_tenants' => true,
                 'agency_view_support' => true,
+                'agency_upload_logo' => true,
             ]
         );
     }

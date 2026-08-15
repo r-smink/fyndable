@@ -59,7 +59,6 @@ class AgencyPortal
             [],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
         );
-        wp_enqueue_media();
 
         $wl = $this->getWhiteLabelSettings();
         $primary = sanitize_hex_color($wl['primary_color'] ?? '') ?: '#379fd3';
@@ -1162,6 +1161,7 @@ class AgencyPortal
 
         $wl = $this->getWhiteLabelSettings();
         $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
+        $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
         ?>
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
@@ -1171,8 +1171,17 @@ class AgencyPortal
             <?php if ($message === 'saved'): ?>
                 <div class="notice notice-success"><p><?php esc_html_e('White-label settings saved.', 'sseo-ai-saas'); ?></p></div>
             <?php endif; ?>
+            <?php if ($error === 'invalid_type'): ?>
+                <div class="notice notice-error"><p><?php esc_html_e('Please upload a valid image file (PNG, JPG, GIF or WEBP).', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+            <?php if ($error === 'too_large'): ?>
+                <div class="notice notice-error"><p><?php esc_html_e('The uploaded logo is too large.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+            <?php if ($error === 'upload_failed'): ?>
+                <div class="notice notice-error"><p><?php esc_html_e('The logo could not be saved on the server.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
 
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_save_wl')); ?>">
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_save_wl')); ?>" enctype="multipart/form-data">
                 <?php wp_nonce_field('sseo_ai_agency_wl_save'); ?>
                 <table class="form-table">
                     <tr>
@@ -1184,11 +1193,10 @@ class AgencyPortal
                     <tr>
                         <th scope="row"><label for="company_logo"><?php esc_html_e('Company Logo', 'sseo-ai-saas'); ?></label></th>
                         <td>
-                            <input type="url" id="company_logo" name="company_logo" value="<?php echo esc_attr($wl['company_logo']); ?>" class="regular-text">
-                            <input type="button" id="upload_agency_logo" class="button" value="<?php esc_attr_e('Upload Logo', 'sseo-ai-saas'); ?>">
-                            <p class="description"><?php esc_html_e('Recommended: 200x50px transparent PNG.', 'sseo-ai-saas'); ?></p>
+                            <input type="file" id="company_logo" name="company_logo" accept="image/png, image/jpeg, image/gif, image/webp" class="regular-text">
+                            <p class="description"><?php esc_html_e('Recommended: 200x50px transparent PNG or JPG.', 'sseo-ai-saas'); ?></p>
                             <?php if ($wl['company_logo']): ?>
-                                <p><img id="logo-preview" src="<?php echo esc_url($wl['company_logo']); ?>" alt="" style="max-height: 50px; margin-top: 10px; background: #f0f0f0; padding: 5px;"></p>
+                                <p><img id="logo-preview" src="<?php echo esc_url($wl['company_logo']); ?>?<?php echo esc_attr(time()); ?>" alt="" style="max-height: 50px; margin-top: 10px; background: #f0f0f0; padding: 5px;"></p>
                             <?php else: ?>
                                 <p><img id="logo-preview" src="" alt="" style="max-height: 50px; margin-top: 10px; background: #f0f0f0; padding: 5px; display: none;"></p>
                             <?php endif; ?>
@@ -1242,29 +1250,6 @@ class AgencyPortal
             </div>
             </div>
         </div>
-        <script>
-        jQuery(document).ready(function($) {
-            var frame;
-            $('#upload_agency_logo').on('click', function(e) {
-                e.preventDefault();
-                if (frame) {
-                    frame.open();
-                    return;
-                }
-                frame = wp.media({
-                    title: '<?php echo esc_js(__('Select Company Logo', 'sseo-ai-saas')); ?>',
-                    button: { text: '<?php echo esc_js(__('Use this logo', 'sseo-ai-saas')); ?>' },
-                    multiple: false
-                });
-                frame.on('select', function() {
-                    var attachment = frame.state().get('selection').first().toJSON();
-                    $('#company_logo').val(attachment.url);
-                    $('#logo-preview').attr('src', attachment.url).show();
-                });
-                frame.open();
-            });
-        });
-        </script>
         <?php
     }
 
@@ -1277,20 +1262,70 @@ class AgencyPortal
             wp_die(__('Security check failed.', 'sseo-ai-saas'));
         }
 
-        if (!$this->roleManager->isAgencyUser()) {
+        if (!$this->roleManager->isAgencyUser() || !current_user_can('agency_upload_logo')) {
             wp_die(__('You do not have permission to manage white-label settings.', 'sseo-ai-saas'));
+        }
+
+        $userId = get_current_user_id();
+        $companyLogoUrl = '';
+
+        if (!empty($_FILES['company_logo']['tmp_name']) && is_uploaded_file($_FILES['company_logo']['tmp_name'])) {
+            $allowedMimes = [
+                'jpg|jpeg|jpe' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+            ];
+            $fileInfo = wp_check_filetype($_FILES['company_logo']['name'], $allowedMimes);
+            if (empty($fileInfo['ext']) || empty($fileInfo['type'])) {
+                wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&error=invalid_type'));
+                exit;
+            }
+
+            $maxSize = wp_max_upload_size() ?: (2 * MB_IN_BYTES);
+            if ($_FILES['company_logo']['size'] > $maxSize) {
+                wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&error=too_large'));
+                exit;
+            }
+
+            $uploadDir = wp_upload_dir();
+            $agencyLogosDir = $uploadDir['basedir'] . '/fyndable-agency-logos/' . $userId;
+            $agencyLogosUrl = $uploadDir['baseurl'] . '/fyndable-agency-logos/' . $userId;
+
+            wp_mkdir_p($agencyLogosDir);
+
+            // Remove the previous logo file in this agency's own directory.
+            $existing = $this->getWhiteLabelSettings();
+            if (!empty($existing['company_logo'])) {
+                $oldPath = str_replace($uploadDir['baseurl'], $uploadDir['basedir'], $existing['company_logo']);
+                if (file_exists($oldPath) && strpos($oldPath, $agencyLogosDir) === 0) {
+                    @unlink($oldPath);
+                }
+            }
+
+            $filename = 'logo.' . $fileInfo['ext'];
+            $target = $agencyLogosDir . '/' . $filename;
+            if (!move_uploaded_file($_FILES['company_logo']['tmp_name'], $target)) {
+                wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&error=upload_failed'));
+                exit;
+            }
+
+            $companyLogoUrl = $agencyLogosUrl . '/' . $filename;
+        } else {
+            $existing = $this->getWhiteLabelSettings();
+            $companyLogoUrl = $existing['company_logo'] ?? '';
         }
 
         $wl = [
             'company_name' => sanitize_text_field($_POST['company_name'] ?? ''),
-            'company_logo' => esc_url_raw($_POST['company_logo'] ?? ''),
+            'company_logo' => esc_url_raw($companyLogoUrl),
             'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '') ?: '#379fd3',
             'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '') ?: '#8f39ac',
             'support_email' => sanitize_email($_POST['support_email'] ?? ''),
             'support_url' => esc_url_raw($_POST['support_url'] ?? ''),
         ];
 
-        update_user_meta(get_current_user_id(), 'sseo_ai_agency_wl', $wl);
+        update_user_meta($userId, 'sseo_ai_agency_wl', $wl);
 
         wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&message=saved'));
         exit;
