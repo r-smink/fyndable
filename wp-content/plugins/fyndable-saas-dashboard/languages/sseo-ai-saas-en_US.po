@@ -1,0 +1,891 @@
+﻿msgid ""
+msgstr ""
+"Project-Id-Version: Fyndable SaaS Dashboard\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-07 00:00+0000\n"
+"PO-Revision-Date: 2026-08-07 00:00+0000\n"
+"Last-Translator: Devin\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Devin Translation Script\n"
+
+msgid "%1$d / %2$d used — %3$d remaining"
+msgstr "%1$d / %2$d used — %3$d remaining"
+
+msgid "%s items"
+msgstr "%s items"
+
+msgid "1-6 alphanumeric characters. Will be uppercased. Example: ACME produces ACME-AI-XXXX-XXXX-XXXX"
+msgstr "1-6 alphanumeric characters. Will be uppercased. Example: ACME produces ACME-AI-XXXX-XXXX-XXXX"
+
+msgid "Account updated successfully."
+msgstr "Account updated successfully."
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Active Sub-Tenants"
+msgstr "Active Sub-Tenants"
+
+msgid "Active Tenants"
+msgstr "Active Tenants"
+
+msgid "Add licenses"
+msgstr "Add licenses"
+
+msgid "Add more sub-licenses"
+msgstr "Add more sub-licenses"
+
+msgid "Additional licenses cost €49,99 each for the first 10 extra licenses (up to 20 total) and €34,99 each thereafter."
+msgstr "Additional licenses cost €49,99 each for the first 10 extra licenses (up to 20 total) and €34,99 each thereafter."
+
+msgid "Address"
+msgstr "Address"
+
+msgid "Agency"
+msgstr "Agency"
+
+msgid "Agency - €%s"
+msgstr "Agency - €%s"
+
+msgid "Agency - €%s/month"
+msgstr "Agency - €%s/month"
+
+msgid "Agency account created for %s with %d sub-license quota. A welcome email has been sent with login details."
+msgstr "Agency account created for %s with %d sub-license quota. A welcome email has been sent with login details."
+
+msgid "Agency account not found."
+msgstr "Agency account not found."
+
+msgid "Agency account not found. Please contact the administrator."
+msgstr "Agency account not found. Please contact the administrator."
+
+msgid "Agency Accounts"
+msgstr "Agency Accounts"
+
+msgid "Agency Dashboard"
+msgstr "Agency Dashboard"
+
+msgid "Agency Email"
+msgstr "Agency Email"
+
+msgid "Agency Name"
+msgstr "Agency Name"
+
+msgid "Agency Portal"
+msgstr "Agency Portal"
+
+msgid "Agency Tier"
+msgstr "Agency Tier"
+
+msgid "AI Model Tier"
+msgstr "AI Model Tier"
+
+msgid "AI Models"
+msgstr "AI Models"
+
+msgid "All License Keys"
+msgstr "All License Keys"
+
+msgid "All Licenses"
+msgstr "All Licenses"
+
+msgid "All Priorities"
+msgstr "All Priorities"
+
+msgid "All Statuses"
+msgstr "All Statuses"
+
+msgid "All Sub-Licenses"
+msgstr "All Sub-Licenses"
+
+msgid "All Tiers"
+msgstr "All Tiers"
+
+msgid "All Types"
+msgstr "All Types"
+
+msgid "Amount"
+msgstr "Amount"
+
+msgid "API Calls"
+msgstr "API Calls"
+
+msgid "API Calls Limit"
+msgstr "API Calls Limit"
+
+msgid "API Calls This Month"
+msgstr "API Calls This Month"
+
+msgid "API Cost"
+msgstr "API Cost"
+
+msgid "API Cost This Month"
+msgstr "API Cost This Month"
+
+msgid "API Use"
+msgstr "API Use"
+
+msgid "Are you sure you want to revoke this license? This will also suspend the associated tenant."
+msgstr "Are you sure you want to revoke this license? This will also suspend the associated tenant."
+
+msgid "Assign or update the customer email address for this license."
+msgstr "Assign or update the customer email address for this license."
+
+msgid "Assign To (Email)"
+msgstr "Assign To (Email)"
+
+msgid "Assigned To"
+msgstr "Assigned To"
+
+msgid "Assigned To (Email)"
+msgstr "Assigned To (Email)"
+
+msgid "Awaiting Reply"
+msgstr "Awaiting Reply"
+
+msgid "Back to Tenants"
+msgstr "Back to Tenants"
+
+msgid "Bookkeeping"
+msgstr "Bookkeeping"
+
+msgid "Business"
+msgstr "Business"
+
+msgid "Business - €%s"
+msgstr "Business - €%s"
+
+msgid "Business - €%s/month"
+msgstr "Business - €%s/month"
+
+msgid "Chatbot"
+msgstr "Chatbot"
+
+msgid "Checkout"
+msgstr "Checkout"
+
+msgid "City"
+msgstr "City"
+
+msgid "Client Email"
+msgstr "Client Email"
+
+msgid "Client Portal"
+msgstr "Client Portal"
+
+msgid "Client Versions"
+msgstr "Client Versions"
+
+msgid "Closed"
+msgstr "Closed"
+
+msgid "Company Logo"
+msgstr "Company Logo"
+
+msgid "Company Name"
+msgstr "Company Name"
+
+msgid "Company name is required."
+msgstr "Company name is required."
+
+msgid "Content"
+msgstr "Content"
+
+msgid "Content Generated"
+msgstr "Content Generated"
+
+msgid "Copy All to Clipboard"
+msgstr "Copy All to Clipboard"
+
+msgid "Cost Dashboard"
+msgstr "Cost Dashboard"
+
+msgid "Count"
+msgstr "Count"
+
+msgid "Country"
+msgstr "Country"
+
+msgid "Create a new agency partner. This creates an agency tenant and a WordPress user with the agency_partner role. The agency gets portal access to manage their own sub-licenses — no license is consumed for the agency itself."
+msgstr "Create a new agency partner. This creates an agency tenant and a WordPress user with the agency_partner role. The agency gets portal access to manage their own sub-licenses — no license is consumed for the agency itself."
+
+msgid "Create Agency Account"
+msgstr "Create Agency Account"
+
+msgid "Created"
+msgstr "Created"
+
+msgid "Created Today"
+msgstr "Created Today"
+
+msgid "Current Month"
+msgstr "Current Month"
+
+msgid "Current plan: %1$d / %2$d sub-licenses used."
+msgstr "Current plan: %1$d / %2$d sub-licenses used."
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "DEV - All Features (Internal Use Only)"
+msgstr "DEV - All Features (Internal Use Only)"
+
+msgid "DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients."
+msgstr "DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients."
+
+msgid "Domain"
+msgstr "Domain"
+
+msgid "Download a ready-to-install, re-branded client plugin for your customers. Your company name is used as the plugin name."
+msgstr "Download a ready-to-install, re-branded client plugin for your customers. Your company name is used as the plugin name."
+
+msgid "Download White-Label Client (.zip)"
+msgstr "Download White-Label Client (.zip)"
+
+msgid "Early Adopters"
+msgstr "Early Adopters"
+
+msgid "Early Adopters - €%s"
+msgstr "Early Adopters - €%s"
+
+msgid "Early Adopters - €%s/month"
+msgstr "Early Adopters - €%s/month"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Email for the sub-tenant account"
+msgstr "Email for the sub-tenant account"
+
+msgid "Email Templates"
+msgstr "Email Templates"
+
+msgid "Enabled by default based on license tier"
+msgstr "Enabled by default based on license tier"
+
+msgid "Error loading features: "
+msgstr "Error loading features: "
+
+msgid "Error: "
+msgstr "Error: "
+
+msgid "Est. Cost"
+msgstr "Est. Cost"
+
+msgid "Existing Agency Tenants"
+msgstr "Existing Agency Tenants"
+
+msgid "Exit"
+msgstr "Exit"
+
+msgid "Exit to WordPress"
+msgstr "Exit to WordPress"
+
+msgid "Expired"
+msgstr "Expired"
+
+msgid "Expires"
+msgstr "Expires"
+
+msgid "Expires After (days)"
+msgstr "Expires After (days)"
+
+msgid "Export CSV"
+msgstr "Export CSV"
+
+msgid "Extra Licenses"
+msgstr "Extra Licenses"
+
+msgid "Failed to load features"
+msgstr "Failed to load features"
+
+msgid "Features with default tier access are pre-enabled. You can override these to enable/disable individual features."
+msgstr "Features with default tier access are pre-enabled. You can override these to enable/disable individual features."
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "Free"
+msgstr "Free"
+
+msgid "Free (Complimentary)"
+msgstr "Free (Complimentary)"
+
+msgid "From Tier"
+msgstr "From Tier"
+
+msgid "Generate Keys"
+msgstr "Generate Keys"
+
+msgid "Generate License Keys"
+msgstr "Generate License Keys"
+
+msgid "Generate Licenses"
+msgstr "Generate Licenses"
+
+msgid "Generate New License"
+msgstr "Generate New License"
+
+msgid "Generate New License Keys"
+msgstr "Generate New License Keys"
+
+msgid "Generate New Sub-License"
+msgstr "Generate New Sub-License"
+
+msgid "Generate Sub-License"
+msgstr "Generate Sub-License"
+
+msgid "Generate up to 100 licenses at once"
+msgstr "Generate up to 100 licenses at once"
+
+msgid "Generated License Key"
+msgstr "Generated License Key"
+
+msgid "Generated License Keys"
+msgstr "Generated License Keys"
+
+msgid "GEO Scan"
+msgstr "GEO Scan"
+
+msgid "High"
+msgstr "High"
+
+msgid "Invoice #"
+msgstr "Invoice #"
+
+msgid "Invoice not found or not part of your account."
+msgstr "Invoice not found or not part of your account."
+
+msgid "Invoice not found."
+msgstr "Invoice not found."
+
+msgid "Invoices"
+msgstr "Invoices"
+
+msgid "Last Active"
+msgstr "Last Active"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Leave empty for no expiration"
+msgstr "Leave empty for no expiration"
+
+msgid "Leave empty for no expiration (from activation date)"
+msgstr "Leave empty for no expiration (from activation date)"
+
+msgid "Legend:"
+msgstr "Legend:"
+
+msgid "License Assignment"
+msgstr "License Assignment"
+
+msgid "License Dashboard"
+msgstr "License Dashboard"
+
+msgid "License email updated successfully."
+msgstr "License email updated successfully."
+
+msgid "License Features"
+msgstr "License Features"
+
+msgid "License Key"
+msgstr "License Key"
+
+msgid "License key generated successfully!"
+msgstr "License key generated successfully!"
+
+msgid "License Key Prefix"
+msgstr "License Key Prefix"
+
+msgid "License key required"
+msgstr "License key required"
+
+msgid "License Management"
+msgstr "License Management"
+
+msgid "License Management Dashboard"
+msgstr "License Management Dashboard"
+
+msgid "License not found"
+msgstr "License not found"
+
+msgid "License Quota"
+msgstr "License Quota"
+
+msgid "License revoked successfully."
+msgstr "License revoked successfully."
+
+msgid "License Tier"
+msgstr "License Tier"
+
+msgid "License Type"
+msgstr "License Type"
+
+msgid "Licenses"
+msgstr "Licenses"
+
+msgid "Licenses added successfully. The extra amount will be included in the next direct debit."
+msgstr "Licenses added successfully. The extra amount will be included in the next direct debit."
+
+msgid "Licenses by Status"
+msgstr "Licenses by Status"
+
+msgid "Licenses by Type"
+msgstr "Licenses by Type"
+
+msgid "Lifetime"
+msgstr "Lifetime"
+
+msgid "Lifetime (Never Expires)"
+msgstr "Lifetime (Never Expires)"
+
+msgid "Loading features..."
+msgstr "Loading features..."
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Login as Tenant"
+msgstr "Login as Tenant"
+
+msgid "Logout"
+msgstr "Logout"
+
+msgid "Low"
+msgstr "Low"
+
+msgid "Manage Features"
+msgstr "Manage Features"
+
+msgid "Manage Features for License: %s"
+msgstr "Manage Features for License: %s"
+
+msgid "Manage Tenants"
+msgstr "Manage Tenants"
+
+msgid "Manually enabled/disabled by admin"
+msgstr "Manually enabled/disabled by admin"
+
+msgid "Max Sites"
+msgstr "Max Sites"
+
+msgid "Max Sub-Licenses"
+msgstr "Max Sub-Licenses"
+
+msgid "Maximum API calls per hour"
+msgstr "Maximum API calls per hour"
+
+msgid "Maximum API calls per month"
+msgstr "Maximum API calls per month"
+
+msgid "Maximum number of sub-licenses this agency can generate."
+msgstr "Maximum number of sub-licenses this agency can generate."
+
+msgid "Middle"
+msgstr "Middle"
+
+msgid "Monthly API Limit"
+msgstr "Monthly API Limit"
+
+msgid "My Account"
+msgstr "My Account"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Name for the sub-tenant"
+msgstr "Name for the sub-tenant"
+
+msgid "Never"
+msgstr "Never"
+
+msgid "No agency tenants yet."
+msgstr "No agency tenants yet."
+
+msgid "No invoices found."
+msgstr "No invoices found."
+
+msgid "No sub-licenses generated yet."
+msgstr "No sub-licenses generated yet."
+
+msgid "No sub-tenants found."
+msgstr "No sub-tenants found."
+
+msgid "No sub-tenants yet."
+msgstr "No sub-tenants yet."
+
+msgid "No support tickets found."
+msgstr "No support tickets found."
+
+msgid "No usage data yet."
+msgstr "No usage data yet."
+
+msgid "Not in this tier, can be manually enabled"
+msgstr "Not in this tier, can be manually enabled"
+
+msgid "Not Included"
+msgstr "Not Included"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Number of extra licenses"
+msgstr "Number of extra licenses"
+
+msgid "Number of Licenses"
+msgstr "Number of Licenses"
+
+msgid "Number of sites allowed per license"
+msgstr "Number of sites allowed per license"
+
+msgid "Open"
+msgstr "Open"
+
+msgid "Open Tickets"
+msgstr "Open Tickets"
+
+msgid "Optional: Pre-assign to a customer email"
+msgstr "Optional: Pre-assign to a customer email"
+
+msgid "Overridden"
+msgstr "Overridden"
+
+msgid "Paid"
+msgstr "Paid"
+
+msgid "Paid (Standard)"
+msgstr "Paid (Standard)"
+
+msgid "Period"
+msgstr "Period"
+
+msgid "Period:"
+msgstr "Period:"
+
+msgid "Phone"
+msgstr "Phone"
+
+msgid "Please enter a valid email address."
+msgstr "Please enter a valid email address."
+
+msgid "Please set a Company Name on the White-Label settings page first."
+msgstr "Please set a Company Name on the White-Label settings page first."
+
+msgid "Please upload a valid image file (PNG, JPG, GIF or WEBP)."
+msgstr "Please upload a valid image file (PNG, JPG, GIF or WEBP)."
+
+msgid "Postal Code"
+msgstr "Postal Code"
+
+msgid "Prefix"
+msgstr "Prefix"
+
+msgid "Prefix is required and must be 1-6 alphanumeric characters."
+msgstr "Prefix is required and must be 1-6 alphanumeric characters."
+
+msgid "Premium (higher-quality models)"
+msgstr "Premium (higher-quality models)"
+
+msgid "Primary Color"
+msgstr "Primary Color"
+
+msgid "Print"
+msgstr "Print"
+
+msgid "Priority"
+msgstr "Priority"
+
+msgid "Professional"
+msgstr "Professional"
+
+msgid "Professional - €%s"
+msgstr "Professional - €%s"
+
+msgid "Professional - €%s/month"
+msgstr "Professional - €%s/month"
+
+msgid "Quick Actions"
+msgstr "Quick Actions"
+
+msgid "Quota: %1$d / %2$d used — %3$d remaining"
+msgstr "Quota: %1$d / %2$d used — %3$d remaining"
+
+msgid "Rate Limit"
+msgstr "Rate Limit"
+
+msgid "Rate Limit (per hour)"
+msgstr "Rate Limit (per hour)"
+
+msgid "Recent Licenses"
+msgstr "Recent Licenses"
+
+msgid "Recent Sub-Tenants"
+msgstr "Recent Sub-Tenants"
+
+msgid "Recent Support Tickets"
+msgstr "Recent Support Tickets"
+
+msgid "Recommended: 200x50px transparent PNG or JPG."
+msgstr "Recommended: 200x50px transparent PNG or JPG."
+
+msgid "Revoke"
+msgstr "Revoke"
+
+msgid "Revoked"
+msgstr "Revoked"
+
+msgid "Save Account"
+msgstr "Save Account"
+
+msgid "Save failed"
+msgstr "Save failed"
+
+msgid "Save Feature Overrides"
+msgstr "Save Feature Overrides"
+
+msgid "Save White-Label Settings"
+msgstr "Save White-Label Settings"
+
+msgid "Saved successfully!"
+msgstr "Saved successfully!"
+
+msgid "Saving..."
+msgstr "Saving..."
+
+msgid "Secondary Color"
+msgstr "Secondary Color"
+
+msgid "Security check failed"
+msgstr "Security check failed"
+
+msgid "Security check failed."
+msgstr "Security check failed."
+
+msgid "SERP"
+msgstr "SERP"
+
+msgid "SERP Requests"
+msgstr "SERP Requests"
+
+msgid "Set a Company Name above and save your settings to enable the plugin download."
+msgstr "Set a Company Name above and save your settings to enable the plugin download."
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Showing usage for %s. Total values include all sub-tenants under your agency."
+msgstr "Showing usage for %s. Total values include all sub-tenants under your agency."
+
+msgid "Sort by:"
+msgstr "Sort by:"
+
+msgid "Standard (cost-effective models)"
+msgstr "Standard (cost-effective models)"
+
+msgid "Standard uses affordable models (GPT-4o-mini, Deepseek). Premium uses higher-quality models (GPT-4o, Claude 3.5)."
+msgstr "Standard uses affordable models (GPT-4o-mini, Deepseek). Premium uses higher-quality models (GPT-4o, Claude 3.5)."
+
+msgid "Starter"
+msgstr "Starter"
+
+msgid "Starter - €%s"
+msgstr "Starter - €%s"
+
+msgid "Starter - €%s/month"
+msgstr "Starter - €%s/month"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Subject"
+msgstr "Subject"
+
+msgid "Sub-Licenses"
+msgstr "Sub-Licenses"
+
+msgid "Sub-Tenant Usage & Costs"
+msgstr "Sub-Tenant Usage & Costs"
+
+msgid "Sub-Tenants"
+msgstr "Sub-Tenants"
+
+msgid "Sub-Tenants by Status"
+msgstr "Sub-Tenants by Status"
+
+msgid "Sub-Tenants by Tier"
+msgstr "Sub-Tenants by Tier"
+
+msgid "Successfully generated %1$d license keys. %2$d failed."
+msgstr "Successfully generated %1$d license keys. %2$d failed."
+
+msgid "Support"
+msgstr "Support"
+
+msgid "Support Email"
+msgstr "Support Email"
+
+msgid "Support Tickets"
+msgstr "Support Tickets"
+
+msgid "Support URL"
+msgstr "Support URL"
+
+msgid "Team"
+msgstr "Team"
+
+msgid "Tenant"
+msgstr "Tenant"
+
+msgid "Tenant Detail"
+msgstr "Tenant Detail"
+
+msgid "Tenant Details"
+msgstr "Tenant Details"
+
+msgid "Tenant Key"
+msgstr "Tenant Key"
+
+msgid "Tenant Management"
+msgstr "Tenant Management"
+
+msgid "Tenant not found or not part of your agency."
+msgstr "Tenant not found or not part of your agency."
+
+msgid "Tenants"
+msgstr "Tenants"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Test (Internal Testing)"
+msgstr "Test (Internal Testing)"
+
+msgid "The extra amount will be added to the next direct debit. You can use the licenses right away."
+msgstr "The extra amount will be added to the next direct debit. You can use the licenses right away."
+
+msgid "The logo could not be saved on the server."
+msgstr "The logo could not be saved on the server."
+
+msgid "The uploaded logo is too large."
+msgstr "The uploaded logo is too large."
+
+msgid "This email is already in use."
+msgstr "This email is already in use."
+
+msgid "This Month"
+msgstr "This Month"
+
+msgid "Tier"
+msgstr "Tier"
+
+msgid "Tier:"
+msgstr "Tier:"
+
+msgid "To reduce the number of licenses, please contact support."
+msgstr "To reduce the number of licenses, please contact support."
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Total Licenses"
+msgstr "Total Licenses"
+
+msgid "Trial"
+msgstr "Trial"
+
+msgid "Trial (Time-limited)"
+msgstr "Trial (Time-limited)"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Unknown error"
+msgstr "Unknown error"
+
+msgid "Update Assignment"
+msgstr "Update Assignment"
+
+msgid "Updated"
+msgstr "Updated"
+
+msgid "Usage & Costs"
+msgstr "Usage & Costs"
+
+msgid "Usage History"
+msgstr "Usage History"
+
+msgid "Usage Reports"
+msgstr "Usage Reports"
+
+msgid "Used"
+msgstr "Used"
+
+msgid "Valid email is required."
+msgstr "Valid email is required."
+
+msgid "View"
+msgstr "View"
+
+msgid "View All Licenses"
+msgstr "View All Licenses"
+
+msgid "View All Tickets"
+msgstr "View All Tickets"
+
+msgid "View Tenants"
+msgstr "View Tenants"
+
+msgid "White-Label"
+msgstr "White-Label"
+
+msgid "White-Label Settings"
+msgstr "White-Label Settings"
+
+msgid "White-label settings saved."
+msgstr "White-label settings saved."
+
+msgid "Wizard completed"
+msgstr "Wizard completed"
+
+msgid "Wizard not completed"
+msgstr "Wizard not completed"
+
+msgid "You do not have permission to add licenses."
+msgstr "You do not have permission to add licenses."
+
+msgid "You do not have permission to download packages."
+msgstr "You do not have permission to download packages."
+
+msgid "You do not have permission to manage white-label settings."
+msgstr "You do not have permission to manage white-label settings."
+
+msgid "You do not have permission to view invoices."
+msgstr "You do not have permission to view invoices."
+
+msgid "You have reached your maximum sub-license quota."
+msgstr "You have reached your maximum sub-license quota."
+
+msgid "You have reached your sub-license quota. Contact the administrator to increase your limit."
+msgstr "You have reached your sub-license quota. Contact the administrator to increase your limit."
+
+msgid "Your White-Label Client Plugin"
+msgstr "Your White-Label Client Plugin"
+

@@ -11,11 +11,11 @@
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="icon" type="image/png" href="assets/images/logo/fyndable-favi.png">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://docs.fyndable.ai/fyndable-workflow-handleiding-en.html">
+<link rel="canonical" href="https://docs.fyndable.ai/how-to/index-en.html">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Fyndable Workflow Guide">
 <meta property="og:description" content="The logical order of the Fyndable SEO plugin: from installation to monitoring, by phase and by feature.">
-<meta property="og:url" content="https://docs.fyndable.ai/fyndable-workflow-handleiding-en.html">
+<meta property="og:url" content="https://docs.fyndable.ai/how-to/index-en.html">
 <meta property="og:site_name" content="Fyndable">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://docs.fyndable.ai/assets/images/logo/long-white-png.png">
@@ -75,18 +75,28 @@ details.phase-block[open] .chevron { transform: rotate(180deg); }
     .phase-body { padding: 0 16px 18px; }
     .fn-block { padding: 14px 16px; }
 }
+
+/* ===== White lang-switch text (workflow guide page) ===== */
+.lang-switch a { color: #fff; }
+
+/* ===== Clickable feature tags in overview ===== */
+.phase-fns span.fn-link { cursor: pointer; transition: background 0.15s, color 0.15s; }
+.phase-fns span.fn-link:hover { background: var(--primary); color: #fff; }
+
+/* ===== Scroll-offset for sticky header ===== */
+.fn-block, details.phase-block { scroll-margin-top: 100px; }
 </style>
 </head>
 <body>
 
 <header class="site-header">
     <div class="header-inner" style="justify-content: center; position: relative;">
-        <a href="index-en.html" class="header-logo" style="margin: 0;">
+        <a href="../docs/index-en.html" class="header-logo" style="margin: 0;">
             <img src="assets/images/logo/long-white-png.png" alt="Fyndable">
         </a>
         <div class="lang-switch" style="position: absolute; right: 24px;">
-            <a href="fyndable-workflow-handleiding.html">NL</a>
-            <a href="fyndable-workflow-handleiding-en.html" class="active">EN</a>
+            <a href="index.html">NL</a>
+            <a href="index-en.html" class="active">EN</a>
         </div>
     </div>
 </header>
@@ -1244,13 +1254,54 @@ details.phase-block[open] .chevron { transform: rotate(180deg); }
 
 <footer class="site-footer">
     <div class="footer-inner" style="display: flex; justify-content: center; align-items: center; padding: 48px 24px;">
-        <a href="index-en.html">
+        <a href="../docs/index-en.html">
             <img src="assets/images/logo/long-white-png.png" alt="Fyndable" style="height: 38px; width: auto;">
         </a>
     </div>
 </footer>
 
 <script src="assets/js/main.js"></script>
+<script>
+(function(){
+    var blocks = Array.prototype.slice.call(document.querySelectorAll('details.phase-block'));
+    var fnMap = {};
+    var norm = function(s){ return s.toLowerCase().replace(/&amp;/g,'&').replace(/[^a-z0-9 &-]/g,'').replace(/\s+/g,' ').trim(); };
+    blocks.forEach(function(d){
+        d.querySelectorAll('.fn-block').forEach(function(fb){
+            var h = fb.querySelector('h4');
+            if(!h) return;
+            var name = h.textContent.replace(/^\d+\.\d+\s+/, '');
+            fnMap[norm(name)] = { fb: fb, details: d };
+        });
+    });
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.phase-card'));
+    cards.forEach(function(card, phaseIdx){
+        var spans = card.querySelectorAll('.phase-fns span');
+        spans.forEach(function(span){
+            var key = norm(span.textContent);
+            var match = fnMap[key] || null;
+            if(!match){
+                var cand = blocks[phaseIdx] ? Array.prototype.slice.call(blocks[phaseIdx].querySelectorAll('.fn-block')) : [];
+                for(var i=0;i<cand.length;i++){
+                    var h = cand[i].querySelector('h4');
+                    if(!h) continue;
+                    var nm = norm(h.textContent.replace(/^\d+\.\d+\s+/, ''));
+                    if(nm.indexOf(key) === 0){ match = { fb: cand[i], details: blocks[phaseIdx] }; break; }
+                }
+            }
+            var target = match || { fb: null, details: blocks[phaseIdx] };
+            if(!target.details) return;
+            span.classList.add('fn-link');
+            span.addEventListener('click', function(e){
+                e.preventDefault();
+                target.details.open = true;
+                var el = target.fb || target.details;
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    });
+})();
+</script>
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
@@ -1276,7 +1327,7 @@ details.phase-block[open] .chevron { transform: rotate(180deg); }
     "@type": "BreadcrumbList",
     "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://docs.fyndable.ai/index-en.html"},
-        {"@type": "ListItem", "position": 2, "name": "Workflow guide", "item": "https://docs.fyndable.ai/fyndable-workflow-handleiding-en.html"}
+        {"@type": "ListItem", "position": 2, "name": "Workflow guide", "item": "https://docs.fyndable.ai/how-to/index-en.html"}
     ]
 }
 </script>
