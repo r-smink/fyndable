@@ -752,7 +752,7 @@ class LicenseAdmin
                         <div class="usage-stat">
                             <span class="usage-label"><?php esc_html_e('Est. Cost', 'sseo-ai-saas'); ?></span>
                             <span class="usage-value">
-                                $<?php echo number_format($usage['api_cost'] ?? 0, 2); ?>
+                                &euro;<?php echo number_format($usage['api_cost'] ?? 0, 2); ?>
                             </span>
                         </div>
                         

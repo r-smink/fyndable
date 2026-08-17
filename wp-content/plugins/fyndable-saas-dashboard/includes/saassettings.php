@@ -1423,7 +1423,7 @@ class SaaSSettings
             <h2><?php echo esc_html(date('F Y')); ?> - <?php esc_html_e('Current Month', 'sseo-ai-saas'); ?></h2>
             <div style="display: flex; gap: 30px; margin-top: 15px;">
                 <div>
-                    <h3>$<?php echo number_format($monthlyStats->total_cost ?? 0, 2); ?></h3>
+                    <h3>&euro;<?php echo number_format($monthlyStats->total_cost ?? 0, 2); ?></h3>
                     <p><?php esc_html_e('Total API Costs', 'sseo-ai-saas'); ?></p>
                 </div>
                 <div>
@@ -1435,7 +1435,7 @@ class SaaSSettings
                     <p><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></p>
                 </div>
                 <div>
-                    <h3>$<?php
+                    <h3>&euro;<?php
                         $avg = ($monthlyStats->active_tenants ?? 0) > 0
                             ? ((float)($monthlyStats->total_cost ?? 0) / (float)($monthlyStats->active_tenants ?? 0))
                             : 0;
@@ -1466,7 +1466,7 @@ class SaaSSettings
                                 <?php echo esc_html(ucfirst($tenant->tier)); ?>
                             </span></td>
                             <td><?php echo number_format((int)($tenant->total_calls ?? 0)); ?></td>
-                            <td>$<?php echo number_format((float)($tenant->total_cost ?? 0), 2); ?></td>
+                            <td>&euro;<?php echo number_format((float)($tenant->total_cost ?? 0), 2); ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -1488,7 +1488,7 @@ class SaaSSettings
                         <tr>
                             <td><?php echo esc_html(ucfirst($tier->tier)); ?></td>
                             <td><?php echo (int)$tier->count; ?></td>
-                            <td>$<?php echo number_format($tier->total_cost ?? 0, 2); ?></td>
+                            <td>&euro;<?php echo number_format($tier->total_cost ?? 0, 2); ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -1535,7 +1535,7 @@ class SaaSSettings
                     <tr>
                         <td><?php echo esc_html(ucwords(str_replace('_', ' ', $service->metric))); ?></td>
                         <td><?php echo number_format((int)($service->total_calls ?? 0)); ?></td>
-                        <td>$<?php echo number_format((float)($service->total_cost ?? 0), 2); ?></td>
+                        <td>&euro;<?php echo number_format((float)($service->total_cost ?? 0), 2); ?></td>
                         <td><?php echo number_format((float)$percent, 1); ?>%</td>
                     </tr>
                     <?php endforeach; ?>
@@ -1650,7 +1650,7 @@ class SaaSSettings
                 <h2><?php echo esc_html(date_i18n('F Y', strtotime($selectedMonth . '-01'))); ?></h2>
                 <div style="display: flex; gap: 30px; margin-top: 15px;">
                     <div>
-                        <h3>$<?php echo number_format($totalCost, 4); ?></h3>
+                        <h3>&euro;<?php echo number_format($totalCost, 4); ?></h3>
                         <p><?php esc_html_e('Totale Google API Kosten', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
@@ -1662,7 +1662,7 @@ class SaaSSettings
                         <p><?php esc_html_e('Actieve Klanten', 'sseo-ai-saas'); ?></p>
                     </div>
                     <div>
-                        <h3>$<?php echo $uniqueTenants > 0 ? number_format($totalCost / $uniqueTenants, 4) : '0.0000'; ?></h3>
+                        <h3>&euro;<?php echo $uniqueTenants > 0 ? number_format($totalCost / $uniqueTenants, 4) : '0.0000'; ?></h3>
                         <p><?php esc_html_e('Gemiddeld per Klant', 'sseo-ai-saas'); ?></p>
                     </div>
                 </div>
@@ -1699,29 +1699,29 @@ class SaaSSettings
                                         <td>
                                             <?php if (isset($t['services']['gsc'])): ?>
                                                 <?php echo number_format($t['services']['gsc']['calls']); ?> calls<br>
-                                                <small>$<?php echo number_format($t['services']['gsc']['cost'], 4); ?></small>
+                                                <small>&euro;<?php echo number_format($t['services']['gsc']['cost'], 4); ?></small>
                                             <?php else: ?>–<?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if (isset($t['services']['ga4'])): ?>
                                                 <?php echo number_format($t['services']['ga4']['calls']); ?> calls<br>
-                                                <small>$<?php echo number_format($t['services']['ga4']['cost'], 4); ?></small>
+                                                <small>&euro;<?php echo number_format($t['services']['ga4']['cost'], 4); ?></small>
                                             <?php else: ?>–<?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if (isset($t['services']['ads'])): ?>
                                                 <?php echo number_format($t['services']['ads']['calls']); ?> calls<br>
-                                                <small>$<?php echo number_format($t['services']['ads']['cost'], 4); ?></small>
+                                                <small>&euro;<?php echo number_format($t['services']['ads']['cost'], 4); ?></small>
                                             <?php else: ?>–<?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if (isset($t['services']['oauth'])): ?>
                                                 <?php echo number_format($t['services']['oauth']['calls']); ?> calls<br>
-                                                <small>$<?php echo number_format($t['services']['oauth']['cost'], 4); ?></small>
+                                                <small>&euro;<?php echo number_format($t['services']['oauth']['cost'], 4); ?></small>
                                             <?php else: ?>–<?php endif; ?>
                                         </td>
                                         <td><strong><?php echo number_format($t['total_calls']); ?></strong></td>
-                                        <td><strong>$<?php echo number_format($t['total_cost'], 4); ?></strong></td>
+                                        <td><strong>&euro;<?php echo number_format($t['total_cost'], 4); ?></strong></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -1771,7 +1771,7 @@ class SaaSSettings
                                         ?>
                                     </td>
                                     <td><strong><?php echo number_format($totalCalls); ?></strong></td>
-                                    <td><strong>$<?php echo number_format($totalCost, 4); ?></strong></td>
+                                    <td><strong>&euro;<?php echo number_format($totalCost, 4); ?></strong></td>
                                 </tr>
                             </tfoot>
                         <?php endif; ?>
@@ -1798,7 +1798,7 @@ class SaaSSettings
                                         <td><?php echo esc_html($serviceLabels[$row['service']] ?? $row['service']); ?></td>
                                         <td><?php echo number_format($row['total_calls']); ?></td>
                                         <td><?php echo (int)$row['active_tenants']; ?></td>
-                                        <td>$<?php echo number_format($row['total_cost'], 4); ?></td>
+                                        <td>&euro;<?php echo number_format($row['total_cost'], 4); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>

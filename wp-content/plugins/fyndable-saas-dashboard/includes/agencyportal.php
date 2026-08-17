@@ -234,7 +234,7 @@ class AgencyPortal
                     <div class="stat-label"><?php esc_html_e('API Calls This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">$<?php echo esc_html(number_format((float)($usage['total_api_cost'] ?? 0), 2)); ?></div>
+                    <div class="stat-value">&euro;<?php echo esc_html(number_format((float)($usage['total_api_cost'] ?? 0), 2)); ?></div>
                     <div class="stat-label"><?php esc_html_e('API Cost This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
@@ -750,7 +750,7 @@ class AgencyPortal
                                             <span style="font-size:11px;"><?php echo esc_html(number_format($apiUsed) . '/' . number_format($apiLimit)); ?></span>
                                         </div>
                                     </td>
-                                    <td>$<?php echo esc_html(number_format((float)($tUsage['api_cost'] ?? 0), 2)); ?></td>
+                                    <td>&euro;<?php echo esc_html(number_format((float)($tUsage['api_cost'] ?? 0), 2)); ?></td>
                                     <td>
                                         <?php
                                         if (!empty($t['last_active'])) {
@@ -822,7 +822,7 @@ class AgencyPortal
                     <div class="stat-label"><?php esc_html_e('API Calls This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">$<?php echo esc_html(number_format((float)($usage['api_cost'] ?? 0), 2)); ?></div>
+                    <div class="stat-value">&euro;<?php echo esc_html(number_format((float)($usage['api_cost'] ?? 0), 2)); ?></div>
                     <div class="stat-label"><?php esc_html_e('API Cost This Month', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
@@ -1048,7 +1048,7 @@ class AgencyPortal
                     <div class="stat-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">$<?php echo esc_html(number_format($totalCost, 2)); ?></div>
+                    <div class="stat-value">&euro;<?php echo esc_html(number_format($totalCost, 2)); ?></div>
                     <div class="stat-label"><?php esc_html_e('API Cost', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
@@ -1095,7 +1095,7 @@ class AgencyPortal
                                     <td><?php echo esc_html(ucfirst($t['tier'])); ?></td>
                                     <td><span class="badge badge-<?php echo esc_attr($t['status']); ?>"><?php echo esc_html(ucfirst($t['status'])); ?></span></td>
                                     <td><?php echo esc_html(number_format($apiUsed)); ?></td>
-                                    <td>$<?php echo esc_html(number_format((float)($t['api_cost'] ?? 0), 2)); ?></td>
+                                    <td>&euro;<?php echo esc_html(number_format((float)($t['api_cost'] ?? 0), 2)); ?></td>
                                     <td>
                                         <div style="display:flex;align-items:center;gap:6px;">
                                             <div class="sseo-ai-usage-bar" style="flex:1;max-width:80px;height:6px;">
@@ -1123,7 +1123,7 @@ class AgencyPortal
                         <tr style="font-weight:600;">
                             <td colspan="3"><?php esc_html_e('Total', 'sseo-ai-saas'); ?></td>
                             <td><?php echo esc_html(number_format($totalCalls)); ?></td>
-                            <td>$<?php echo esc_html(number_format($totalCost, 2)); ?></td>
+                            <td>&euro;<?php echo esc_html(number_format($totalCost, 2)); ?></td>
                             <td colspan="5"></td>
                         </tr>
                     </tfoot>
@@ -1488,6 +1488,34 @@ class AgencyPortal
         // Build the list of available languages for the selector.
         $availableLanguages = (array) \get_available_languages();
         $translations = \function_exists('wp_get_available_translations') ? \wp_get_available_translations() : [];
+        // Fallback map of common locale codes → native names (used when
+        // wp_get_available_translations() is not loaded or returns nothing).
+        $nativeNames = [
+            'nl_NL' => 'Nederlands',
+            'nl_BE' => 'Nederlands (België)',
+            'de_DE' => 'Deutsch',
+            'de_AT' => 'Deutsch (Österreich)',
+            'de_CH' => 'Deutsch (Schweiz)',
+            'fr_FR' => 'Français',
+            'fr_BE' => 'Français (Belgique)',
+            'es_ES' => 'Español',
+            'it_IT' => 'Italiano',
+            'pt_PT' => 'Português',
+            'pt_BR' => 'Português (Brasil)',
+            'pl_PL' => 'Polski',
+            'da_DK' => 'Dansk',
+            'sv_SE' => 'Svenska',
+            'nb_NO' => 'Norsk',
+            'fi_FI' => 'Suomi',
+            'cs_CZ' => 'Čeština',
+            'tr_TR' => 'Türkçe',
+            'ru_RU' => 'Русский',
+            'ar' => 'العربية',
+            'zh_CN' => '简体中文',
+            'ja_JP' => '日本語',
+            'ko_KR' => '한국어',
+            'en_GB' => 'English (UK)',
+        ];
         $languageOptions = [];
         // Site default first (empty value).
         $languageOptions[''] = __('Site Default', 'sseo-ai-saas');
@@ -1496,6 +1524,8 @@ class AgencyPortal
         foreach ($availableLanguages as $lang) {
             if (isset($translations[$lang]['native_name'])) {
                 $languageOptions[$lang] = $translations[$lang]['native_name'];
+            } elseif (isset($nativeNames[$lang])) {
+                $languageOptions[$lang] = $nativeNames[$lang];
             } else {
                 $languageOptions[$lang] = $lang;
             }
@@ -1610,7 +1640,7 @@ class AgencyPortal
                                 <tr>
                                     <td><?php echo esc_html($invoice['invoice_number']); ?></td>
                                     <td><?php echo esc_html($invoice['description']); ?></td>
-                                    <td><?php echo esc_html(number_format((float) ($invoice['amount'] ?? 0), 2)); ?></td>
+                                    <td>&euro;<?php echo esc_html(number_format((float) ($invoice['amount'] ?? 0), 2)); ?></td>
                                     <td><?php echo esc_html(ucfirst($invoice['status'] ?? '')); ?></td>
                                     <td><?php echo esc_html($invoice['created_at']); ?></td>
                                     <td>

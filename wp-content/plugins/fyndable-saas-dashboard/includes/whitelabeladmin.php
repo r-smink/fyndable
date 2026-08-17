@@ -558,7 +558,7 @@ class WhiteLabelAdmin
                     <div class="stat-label"><?php esc_html_e('Keywords Tracked', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">$<?php echo number_format($usage['api_cost'] ?? 0, 2); ?></div>
+                    <div class="stat-value">&euro;<?php echo number_format($usage['api_cost'] ?? 0, 2); ?></div>
                     <div class="stat-label"><?php esc_html_e('API Cost', 'sseo-ai-saas'); ?></div>
                 </div>
                 <div class="stat-card">
@@ -592,7 +592,7 @@ class WhiteLabelAdmin
                                         <td><?php echo number_format($history['api_calls'] ?? 0); ?></td>
                                         <td><?php echo number_format($history['content_generated'] ?? 0); ?></td>
                                         <td><?php echo number_format($history['serp_requests'] ?? 0); ?></td>
-                                        <td>$<?php echo number_format($history['api_cost'] ?? 0, 2); ?></td>
+                                        <td>&euro;<?php echo number_format($history['api_cost'] ?? 0, 2); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <tr style="background: #f0f6fc; font-weight: 600;">
@@ -600,7 +600,7 @@ class WhiteLabelAdmin
                                     <td><?php echo number_format($totalApiCalls); ?></td>
                                     <td><?php echo number_format($totalContent); ?></td>
                                     <td><?php echo number_format($totalSerp); ?></td>
-                                    <td>$<?php echo number_format($totalCost, 2); ?></td>
+                                    <td>&euro;<?php echo number_format($totalCost, 2); ?></td>
                                 </tr>
                             </tbody>
                         </table>
