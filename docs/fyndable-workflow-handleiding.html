@@ -1,0 +1,1350 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fyndable Workflow-handleiding - De logische volgorde van de SEO-plugin</title>
+<meta name="description" content="Een stapsgewijze handleiding die de logische volgorde beschrijft waarin je de Fyndable SEO-plugin gebruikt: van installatie tot monitoring, per fase en per functie.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" type="image/png" href="assets/images/logo/fyndable-favi.png">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://docs.fyndable.ai/fyndable-workflow-handleiding.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fyndable Workflow-handleiding">
+<meta property="og:description" content="De logische volgorde van de Fyndable SEO-plugin: van installatie tot monitoring, per fase en per functie.">
+<meta property="og:url" content="https://docs.fyndable.ai/fyndable-workflow-handleiding.html">
+<meta property="og:site_name" content="Fyndable">
+<meta property="og:locale" content="nl_NL">
+<meta property="og:image" content="https://docs.fyndable.ai/assets/images/logo/long-white-png.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fyndable Workflow-handleiding">
+<meta name="twitter:description" content="De logische volgorde van de Fyndable SEO-plugin: van installatie tot monitoring, per fase en per functie.">
+<style>
+/* ===== Workflow-specifieke stijlen ===== */
+.workflow-intro { max-width: 820px; margin: 0 auto 40px; padding: 0 24px; text-align: center; }
+.workflow-intro p { font-size: 17px; color: var(--text-muted); line-height: 1.7; }
+.workflow-section { max-width: 1200px; margin: 0 auto 60px; padding: 0 24px; }
+.workflow-section > h2 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; letter-spacing: -0.5px; }
+.workflow-section > .section-sub { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 36px; }
+
+.phase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.phase-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; position: relative; overflow: hidden; }
+.phase-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+.phase-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient); }
+.phase-number { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--gradient); color: #fff; font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+.phase-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.phase-card .phase-goal { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; }
+.phase-card .phase-fns { font-size: 13px; color: var(--text); line-height: 1.6; }
+.phase-card .phase-fns strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+.phase-card .phase-fns span { display: inline-block; background: #f0f4f8; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; margin: 0 4px 4px 0; }
+
+.phase-details { max-width: 880px; margin: 0 auto; }
+details.phase-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; }
+details.phase-block[open] { box-shadow: var(--shadow-lg); border-color: var(--primary); }
+details.phase-block > summary { list-style: none; cursor: pointer; padding: 20px 24px; display: flex; align-items: center; gap: 16px; user-select: none; transition: background 0.15s; }
+details.phase-block > summary::-webkit-details-marker { display: none; }
+details.phase-block > summary:hover { background: #f8f9fb; }
+.phase-block .summary-num { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--gradient); color: #fff; font-weight: 700; font-size: 14px; }
+.phase-block .summary-title { flex: 1; }
+.phase-block .summary-title h3 { font-size: 17px; font-weight: 700; margin: 0; }
+.phase-block .summary-title p { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; }
+.phase-block .chevron { flex-shrink: 0; color: var(--text-muted); transition: transform 0.2s; }
+details.phase-block[open] .chevron { transform: rotate(180deg); }
+
+.phase-body { padding: 0 24px 24px; }
+.phase-body .phase-intro { font-size: 15px; color: #374151; margin-bottom: 20px; padding: 14px 18px; background: #f0f6fc; border: 1px solid #b3d4f0; border-radius: var(--radius-sm); line-height: 1.6; }
+
+.fn-block { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 14px; background: #fff; }
+.fn-block:last-child { margin-bottom: 0; }
+.fn-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.fn-head h4 { font-size: 16px; font-weight: 700; margin: 0; }
+.fn-head .badge { font-size: 12px; padding: 3px 10px; }
+.fn-yield { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6; }
+.fn-block h5 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text); margin: 14px 0 6px; }
+.fn-block ol, .fn-block ul { margin: 0 0 10px 20px; font-size: 14px; color: #374151; line-height: 1.6; }
+.fn-block ol li, .fn-block ul li { margin-bottom: 4px; }
+.fn-block .fn-example { background: #f8f9fb; border-left: 3px solid var(--primary); padding: 10px 14px; border-radius: 4px; font-size: 14px; color: #374151; margin: 8px 0 0; line-height: 1.6; }
+.fn-block code { background: #f0f4f8; padding: 1px 6px; border-radius: 4px; font-size: 13px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+
+.workflow-faq { max-width: 880px; margin: 0 auto 80px; padding: 0 24px; }
+.workflow-faq h2 { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 28px; }
+.faq-q { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 10px; }
+.faq-q p { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
+.faq-q p strong { color: var(--text); }
+
+@media (max-width: 968px) { .phase-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+    .phase-grid { grid-template-columns: 1fr; }
+    .workflow-section > h2 { font-size: 22px; }
+    .workflow-intro p { font-size: 15px; }
+    details.phase-block > summary { padding: 16px; gap: 12px; }
+    .phase-body { padding: 0 16px 18px; }
+    .fn-block { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-inner">
+        <a href="index.html" class="header-logo">
+            <img src="assets/images/logo/long-white-png.png" alt="Fyndable">
+        </a>
+        <nav class="header-nav">
+            <a href="index.html">Home</a>
+            <a href="nl/aan-de-slag/index.html">Aan de slag</a>
+            <a href="nl/content-keywords/index.html">Content</a>
+            <a href="nl/links-technische-seo/index.html">SEO</a>
+            <a href="nl/instellingen-tools/index.html">Instellingen</a>
+            <div class="lang-switch">
+                <a href="fyndable-workflow-handleiding.html" class="active">NL</a>
+                <a href="#" style="opacity:0.5;cursor:not-allowed" title="Niet beschikbaar">EN</a>
+            </div>
+        </nav>
+        <button class="mobile-menu-toggle" aria-label="Menu">&#9776;</button>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-inner">
+        <h1>Fyndable Workflow-handleiding</h1>
+        <p>De logische volgorde van de Fyndable SEO-plugin &mdash; van installatie tot monitoring, stap voor stap per fase en per functie.</p>
+    </div>
+</section>
+
+<div class="content-area">
+    <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="separator">/</span>
+        <span class="current">Workflow-handleiding</span>
+    </div>
+
+    <div class="workflow-intro">
+        <p>Deze handleiding laat zien in welke volgorde je Fyndable het beste kunt gebruiken. Je begint met activatie en basisinstellingen, doet vervolgens onderzoek, maakt en optimaliseert content, regelt links en techniek, voegt schema toe, en sluit af met monitoring. Onder het overzicht vind je per fase uitklapbare detail-secties met de belangrijkste stappen, voorbeelden en tips.</p>
+    </div>
+</div>
+
+<!-- ===== WORKFLOW OVERZICHT ===== -->
+<section class="workflow-section">
+    <h2>De 9 fasen in logische volgorde</h2>
+    <p class="section-sub">Klik op een fase in het overzicht of vouw de detail-secties hieronder uit.</p>
+
+    <div class="phase-grid">
+        <div class="phase-card">
+            <div class="phase-number">1</div>
+            <h3>Setup &amp; activatie</h3>
+            <p class="phase-goal">Koppel je licentie en stel de basis-SEO in zodat alle tools beschikbaar zijn.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Licentie activeren</span>
+                <span>Onboarding Wizard</span>
+                <span>Settings</span>
+                <span>SEO Importer</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">2</div>
+            <h3>Onderzoek &amp; strategie</h3>
+            <p class="phase-goal">Bepaal op welke keywords en topics je gaat richten voordat je content schrijft.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Keywords-beheer</span>
+                <span>Keyword Explorer</span>
+                <span>Keyword Difficulty</span>
+                <span>Topic Clusters</span>
+                <span>SERP Competitor</span>
+                <span>Competitor Research</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">3</div>
+            <h3>Content maken</h3>
+            <p class="phase-goal">Genereer nieuwe content, idee&euml;n en planning op basis van je onderzoek.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Ideas</span>
+                <span>Content Brief</span>
+                <span>AI Content Writer</span>
+                <span>Simple Content Generator</span>
+                <span>Content Calendar</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">4</div>
+            <h3>Bestaande content optimaliseren</h3>
+            <p class="phase-goal">Maak elke pagina SEO-sterk: scores, meta, leesbaarheid en E-E-A-T.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Smart Tags</span>
+                <span>TruSEO</span>
+                <span>Readability</span>
+                <span>LSI Keywords</span>
+                <span>Content Optimizer</span>
+                <span>E-E-A-T</span>
+                <span>Bulk Optimizer</span>
+                <span>Open Graph</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">5</div>
+            <h3>Link management</h3>
+            <p class="phase-goal">Bouw een sterke interne linkstructuur en behoud linkwaarde.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Link Manager</span>
+                <span>Link Genius</span>
+                <span>Redirect Manager</span>
+                <span>Backlink Analyzer</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">6</div>
+            <h3>Technische SEO</h3>
+            <p class="phase-goal">Zorg dat zoekmachines je site kunnen crawlen en indexeren zonder fouten.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Site Audit</span>
+                <span>XML Sitemap</span>
+                <span>Robots.txt</span>
+                <span>Canonical</span>
+                <span>Hreflang</span>
+                <span>Breadcrumbs</span>
+                <span>404 Monitor</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">7</div>
+            <h3>Schema &amp; gespecialiseerde SEO</h3>
+            <p class="phase-goal">Voeg structured data en niche-SEO toe voor rich snippets en meer.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Schema Markup</span>
+                <span>FAQ Schema</span>
+                <span>Video SEO</span>
+                <span>Local SEO</span>
+                <span>WooCommerce SEO</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">8</div>
+            <h3>Monitoring &amp; rapportage</h3>
+            <p class="phase-goal">Meet of je werk effect heeft en grijp in bij dalingen of kansen.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Rank Tracker</span>
+                <span>AI Search Visibility</span>
+                <span>Content Performance</span>
+                <span>Content Decay</span>
+                <span>A/B Testing</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">9</div>
+            <h3>Integraties (parallel)</h3>
+            <p class="phase-goal">Koppel externe diensten voor data, snellere indexering en rapportage.</p>
+            <div class="phase-fns">
+                <strong>Functies</strong>
+                <span>Google Search Console</span>
+                <span>Google Data / GA4</span>
+                <span>PageSpeed</span>
+                <span>Direct Index</span>
+                <span>IndexNow</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== DETAIL-SECTIES PER FASE ===== -->
+<section class="workflow-section">
+    <h2>Stap-voor-stap per fase</h2>
+    <p class="section-sub">Vouw een fase uit voor de stappen, voorbeelden en tips per functie.</p>
+
+    <div class="phase-details">
+
+        <!-- FASE 1 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">1</span>
+                <span class="summary-title">
+                    <h3>Setup &amp; activatie</h3>
+                    <p>Koppel je licentie en stel de basis-SEO in.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Zonder actieve licentie en correcte basisinstellingen werken de meeste Fyndable-tools niet. Begin hier altijd mee, v&oacute;&oacute;rdat je content maakt of onderzoek doet.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.1 Licentie activeren</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Koppelt je WordPress-site aan je Fyndable-licentie. Pas na activatie verschijnen de rest van de menu's en worden AI- en data-features ontsloten.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Log in als beheerder in WordPress.</li>
+                        <li>Klik in het linker menu op <strong>Fyndable &rarr; Connection</strong>.</li>
+                        <li>Vul het <strong>Dashboard URL</strong>-veld in, bijv. <code>https://saas.jouwdomein.nl</code>.</li>
+                        <li>Plak je <strong>license key</strong> in het daarvoor bestemde veld.</li>
+                        <li>Klik op <strong>Activate License</strong>.</li>
+                        <li>Wacht tot het groene vinkje verschijnt. Het menu wordt opnieuw opgebouwd.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> "Invalid license"? Controleer of de key geen spaties bevat en of het dashboard-URL correct is (inclusief <code>https://</code>).</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.2 Onboarding Wizard</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Helpt je binnen een paar minuten de basis van Fyndable correct in te stellen: title separators, sitenaam, social profielen, post types en Google-integraties.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Na activatie verschijnt automatisch de wizard. Klik <strong>Start</strong>.</li>
+                        <li>Controleer in stap 1 of je licentie actief is.</li>
+                        <li>Vul in stap 2 basis-SEO in: title separators, sitenaam, social profielen en standaard Open Graph-afbeelding.</li>
+                        <li>Kies in stap 3 voor welke post types SEO-tools actief moeten zijn (meestal <code>post</code>, <code>page</code> en eventueel <code>product</code>).</li>
+                        <li>Koppel in stap 4 optioneel Search Console, GA4 of PageSpeed.</li>
+                        <li>Klik <strong>Finish</strong>; je wordt naar het dashboard doorgestuurd.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Voor een blog selecteer je <code>post</code> en <code>page</code>. Voor WooCommerce voeg je ook <code>product</code> toe.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.3 Settings</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Centrale plek voor sitenaam, separators, post types, schema-defaults, sitemap, social en geavanceerde opties.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Settings</strong>.</li>
+                        <li>Doorloop de tabbladen: General, Post Types, Social, Sitemap, Advanced.</li>
+                        <li>Pas de instellingen aan.</li>
+                        <li>Klik <strong>Save</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zet alleen <code>post</code>, <code>page</code> en <code>product</code> aan om de editor overzichtelijk te houden.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.4 SEO Importer</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Importeert meta-gegevens uit Yoast, Rank Math of All in One SEO, zodat je niet alles handmatig hoeft over te zetten.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Settings &rarr; Importer</strong>.</li>
+                        <li>Kies de bron-plugin.</li>
+                        <li>Klik <strong>Import</strong>.</li>
+                        <li>Controleer na afloop willekeurig enkele posts.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Niet alle plugins slaan dezelfde velden op; vul na import de rest handmatig aan.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 2 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">2</span>
+                <span class="summary-title">
+                    <h3>Onderzoek &amp; strategie</h3>
+                    <p>Bepaal op welke keywords en topics je gaat richten.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Voordat je content schrijft, bepaal je op welke keywords en topics je richt. Goed onderzoek voorkomt tijdverspilling aan te moeilijke of irrelevante keywords.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.1 Keywords-beheer</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Centrale bibliotheek voor al je keywords: toevoegen, importeren, exporteren, clusters maken en contentidee&euml;n genereren.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Keywords</strong>.</li>
+                        <li>Klik <strong>Add Keyword</strong>.</li>
+                        <li>Voer het keyword in, optioneel een cluster en zoekvolume.</li>
+                        <li>Klik <strong>Save</strong>.</li>
+                        <li>Selecteer keywords en klik <strong>Generate Ideas</strong> voor content-voorstellen.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Gebruik de export-functie regelmatig als backup.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.2 Keyword Explorer</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Vergroot een seed-keyword met SERP-titelanalyse en groepeert gerelateerde termen op Jaccard-similariteit.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Tools &rarr; Keyword Explorer</strong>.</li>
+                        <li>Voer een breed keyword in, bijv. "planten".</li>
+                        <li>Klik <strong>Explore</strong>.</li>
+                        <li>Bekijk clusters zoals "kamerplanten" of "planten verzorgen".</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Gebruik een specifiekere seed als de resultaten te algemeen zijn.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.3 Keyword Difficulty</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Berekent de kans dat jij kunt ranken, gebaseerd op jouw eigen site authority, content en interne linkstructuur.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Tools &rarr; Keyword Difficulty</strong>.</li>
+                        <li>Voer een keyword in.</li>
+                        <li>Bekijk de gepersonaliseerde score en het advies.</li>
+                        <li>Is de score laag, focus dan eerst op long-tail varianten.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> "Zorgverzekering" met difficulty 85? Target eerst "zorgverzekering vergelijken zzp".</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.4 Topic Clusters</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Genereert een pillar-cluster map: &eacute;&eacute;n hoofdtopic (pillar) met onderliggende artikelen (clusters). Bouwt topische autoriteit op.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Topic Clusters</strong>.</li>
+                        <li>Voer een hoofdtopic in, bijv. "duurzame energie".</li>
+                        <li>Klik <strong>Generate Cluster</strong>.</li>
+                        <li>Bekijk de voorgestelde pillar en clusters.</li>
+                        <li>Maak de pillar-pagina eerst aan, daarna de cluster-artikelen, en link die naar de pillar.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Begin met 3-5 clusters per pillar; te veel clusters overlappen snel.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.5 SERP Competitor</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Analyseert de top-10 in Google voor een keyword en vergelijkt die met jouw content. Toont topic-gaps en ontbrekende entiteiten.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Tools &rarr; SERP Competitor</strong>.</li>
+                        <li>Voer een keyword in.</li>
+                        <li>Klik <strong>Analyze</strong>.</li>
+                        <li>Bekijk de heatmap: groen = jij hebt het, rood = mist.</li>
+                        <li>Werk de rode velden in je content bij.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Voor "thuisbatterij kopen" ontbreken vaak "subsidie", "levensduur" en "terugverdientijd".</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.6 Competitor Research</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Diepgaande concurrentieanalyse: keywords, content, backlinks, advertentiekopie&euml;n en AI-detectie.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Competitors</strong>.</li>
+                        <li>Voer een concurrentiedomein in, bijv. <code>voorbeeld.nl</code>.</li>
+                        <li>Klik <strong>Analyze</strong>.</li>
+                        <li>Bekijk de tabbladen: Keywords, Content, Backlinks, Ads.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Concurrentiedata wordt gecachet; klik <strong>Refresh</strong> als je twijfelt.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 3 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">3</span>
+                <span class="summary-title">
+                    <h3>Content maken</h3>
+                    <p>Genereer nieuwe content, idee&euml;n en planning.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Met je onderzoek als basis genereer je idee&euml;n, een brief of een volledig concept, en plan je de publicatie. Controleer AI-output altijd op feiten en merkstem.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.1 Ideas</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Genereert contentidee&euml;n op basis van een topic of keyword. Bewaar, bewerk of zet om naar draft of geplande post.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Ideas</strong> in het menu.</li>
+                        <li>Typ een topic of keyword, bijv. "duurzaam wonen".</li>
+                        <li>Klik <strong>Generate Ideas</strong>.</li>
+                        <li>Klik het sterretje om idee&euml;n op te slaan.</li>
+                        <li>Klik bij een idee op <strong>Convert to Draft</strong> of <strong>Schedule</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Geef een specifieker topic als de idee&euml;n te breed zijn.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.2 Content Brief</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Genereert een volledige SEO-brief op basis van topresultaten: structuur, koppen, vragen, entiteiten, gemiddelde lengte en interne-linkkansen.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Tools &rarr; Content Brief</strong>.</li>
+                        <li>Voer het doel-keyword in.</li>
+                        <li>Klik <strong>Generate Brief</strong>.</li>
+                        <li>Lees de brief: H1, H2's, benodigde woordenaantal en PAA-vragen.</li>
+                        <li>Gebruik de brief als leidraad in de editor.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> SERP-data wordt 7 dagen gecachet; klik <strong>Refresh</strong> als je twijfelt.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.3 AI Content Writer</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Business+</span>
+                    </div>
+                    <p class="fn-yield">Schrijft complete artikelen op basis van een keyword. Kies type, toon, lengte en structuur. Fyndable voegt automatisch interne links toe.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Tools &rarr; Content Writer</strong>.</li>
+                        <li>Voer een keyword / topic in.</li>
+                        <li>Kies artikeltype, toon en gewenst aantal woorden.</li>
+                        <li>Klik <strong>Generate</strong>.</li>
+                        <li>Controleer het concept op feiten, leesbaarheid en merkstem.</li>
+                        <li>Publiceer of plan in.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> AI kan hallucineren; controleer alle cijfers, datums en claims.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.4 Content Calendar</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Visuele kalender waarin je posts plant, toewijst aan teamleden en content-gaps signaleert.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Content Calendar</strong>.</li>
+                        <li>Klik op een datum om een nieuw idee of post toe te voegen.</li>
+                        <li>Sleep een bestaande post naar een andere datum om te verplaatsen.</li>
+                        <li>Open in de editor de <strong>Workflow</strong> accordion om status en auteur in te stellen.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Workflow-velden zijn alleen zichtbaar bij Business+ tier.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.5 Created Posts</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Overzicht van alle AI-gegenereerde posts, gesorteerd op status: concept, gepland, gepubliceerd, review nodig.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Created Posts</strong>.</li>
+                        <li>Gebruik filters om snel concepten of geplande posts te vinden.</li>
+                        <li>Selecteer &eacute;&eacute;n of meer posts.</li>
+                        <li>Kies <strong>Bulk Publish</strong>, <strong>Bulk Draft</strong> of <strong>Regenerate</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Voeg handmatig een featured image toe of gebruik de AI Image Generator.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 4 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">4</span>
+                <span class="summary-title">
+                    <h3>Bestaande content optimaliseren</h3>
+                    <p>Maak elke pagina SEO-sterk: scores, meta, leesbaarheid en E-E-A-T.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Per pagina vul je SEO-meta in, verhoog je de TruSEO- en leesbaarheidsscore, verwerk je LSI-termen en controleer je E-E-A-T. Voor grote sites gebruik je de Bulk Optimizer.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.1 Smart Tags</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Genereert en beheert SEO-title, meta-description, focus keyword en Open Graph-tags. De eerste stap per post.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de editor de <strong>Smart Tags</strong> accordion.</li>
+                        <li>Klik <strong>Generate</strong> voor een AI-voorstel.</li>
+                        <li>Bewerk title en description zodat ze onder de 60/160 tekens blijven.</li>
+                        <li>Klik <strong>Update</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Houd title onder 60 tekens; Fyndable toont een preview.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.2 TruSEO Score</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Geeft je content een score van 0-100 op basis van titel, meta, koppen, keyworddichtheid, interne links en afbeeldingen.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open een post of pagina.</li>
+                        <li>Klap de <strong>SEO Score</strong>-sectie in de meta-box open.</li>
+                        <li>Lees de feedback: groen = goed, oranje = verbeterpunt, rood = tekort.</li>
+                        <li>Pas titel, meta of structuur aan.</li>
+                        <li>Sla op en herhaal tot de score boven de 80 blijft.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Controleer of je een focus-keyword hebt ingevuld en of de koppenstructuur logisch is (H1 &rarr; H2 &rarr; H3).</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.3 Readability Score</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Meet hoe makkelijk je tekst leest en signaleert lange zinnen, passieve constructies en overbodige tussenwoordjes.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de meta-box <strong>Readability</strong>.</li>
+                        <li>Bekijk de score en specifieke verbeterpunten.</li>
+                        <li>Knip lange zinnen op, vervang passieve constructies en vermijd vakjargon.</li>
+                        <li>Herhaal totdat de indicator groen wordt.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Controleer in <strong>Settings &rarr; General</strong> of de site-taal correct staat.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.4 LSI Keywords</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Semantisch gerelateerde termen en synoniemen. Maakt je content begrijpelijker voor zoekmachines.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Vul eerst een focus-keyword in.</li>
+                        <li>Open <strong>Keywords</strong> (LSI) in de meta-box.</li>
+                        <li>Klik <strong>Generate LSI Keywords</strong>.</li>
+                        <li>Selecteer 3-5 relevante termen en verwerk die natuurlijk in je tekst.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Gebruik niet alle suggesties; kies alleen termen die echt passen om stuffing te voorkomen.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.5 Content Optimizer</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Analyseert de top-10 in Google en bouwt een topic-model. Scoort je tekst (0-100) en toont missing, overused en used terms.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Tools &rarr; Content Optimizer</strong> of open het paneel in de editor.</li>
+                        <li>Voer je focus-keyword in.</li>
+                        <li>Klik <strong>Analyze</strong>.</li>
+                        <li>Bekijk de lijst met missing, overused en used terms.</li>
+                        <li>Werk je tekst bij en klik <strong>Re-analyze</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Gebruik missende termen in natuurlijke alinea's; geforceerd gebruik helpt niet.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.6 E-E-A-T Validator</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Controleert of je content voldoet aan Google's E-E-A-T: Experience, Expertise, Authoritativeness, Trustworthiness. Belangrijk voor YMYL.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de editor de <strong>E-E-A-T</strong> accordion.</li>
+                        <li>Klik <strong>Analyze</strong>.</li>
+                        <li>Bekijk de scores per pijler.</li>
+                        <li>Voeg auteursinformatie, bronvermelding, datums en bewijs toe waar nodig.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zorg voor een uitgebreide auteur-bio en externe bronnen voor een hogere score.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.7 Bulk Optimizer</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Business+</span>
+                    </div>
+                    <p class="fn-yield">Scant je hele site op ontbrekende SEO-titles, meta-descriptions, OG-tags en focus-keyphrases en vult ze in bulk in.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Bulk Optimizer</strong>.</li>
+                        <li>Klik <strong>Scan Site</strong>.</li>
+                        <li>Bekijk de samenvatting van ontbrekende velden.</li>
+                        <li>Filter op een specifiek probleem.</li>
+                        <li>Vink de velden aan die je wilt genereren.</li>
+                        <li>Selecteer posts en klik <strong>Generate for Selected</strong>.</li>
+                        <li>Controleer willekeurig enkele resultaten.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Het proces verwerkt &eacute;&eacute;n post per keer om quota te sparen. Herlaad en hervat bij onderbreking.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.8 Open Graph &amp; Social Sharing</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Bepaalt hoe je pagina eruitziet als iemand de link deelt op Facebook, LinkedIn of Twitter/X.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de editor de <strong>Social Preview</strong> accordion.</li>
+                        <li>Pas de Open Graph-title, -description en -image aan.</li>
+                        <li>Sla de post op.</li>
+                        <li>Test via de Facebook Sharing Debugger of LinkedIn Post Inspector.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Gebruik OG-afbeeldingen van 1200&times;630 px en ververs de cache in de debugger.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 5 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">5</span>
+                <span class="summary-title">
+                    <h3>Link management</h3>
+                    <p>Bouw een sterke interne linkstructuur en behoud linkwaarde.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Interne links verdelen linkwaarde en helpen crawlers en gebruikers. Redirects behouden linkwaarde bij verwijderde of verplaatste pagina's.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.1 Link Manager / Smart Internal Linking</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Detecteert wees-pagina's (orphans), scoort interne linkkansen en geeft geoptimaliseerde anchor-teksten.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Link Manager</strong>.</li>
+                        <li>Bekijk het tabblad <strong>Orphan Pages</strong>.</li>
+                        <li>Klik een pagina aan om link-suggesties te zien.</li>
+                        <li>Klik <strong>Add Link</strong> of kopieer de anchor tekst en URL naar een geschikte post.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Niet elke orphan page hoeft intern gelinkt te worden; sommige landingspagina's zijn bewust losstaand.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.2 Link Genius</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Starter+</span>
+                    </div>
+                    <p class="fn-yield">Automatische interne linkregels: bepaal welke woorden of zinnen linken naar welke URL.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Link Genius</strong>.</li>
+                        <li>Schakel <strong>Enable Link Genius</strong> in.</li>
+                        <li>Voeg een regel toe: Keyword(s) &rarr; Doel-URL.</li>
+                        <li>Stel het maximum aantal links per pagina in (bijv. 3).</li>
+                        <li>Sla op.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Verlaag het maximum of gebruik exact-match als er te veel links ontstaan.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.3 Redirect Manager</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Starter+</span>
+                    </div>
+                    <p class="fn-yield">Beheert 301- en 302-omleidingen. Voorkomt 404-fouten en behoudt linkwaarde.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Sitemaps &rarr; Redirect Manager</strong>.</li>
+                        <li>Klik <strong>Add Redirect</strong>.</li>
+                        <li>Vul bron-URL in (oud pad zonder domein, bijv. <code>/oud-artikel</code>).</li>
+                        <li>Vul doel-URL in (bijv. <code>/nieuw-artikel</code>).</li>
+                        <li>Kies <strong>301</strong> of <strong>302</strong>.</li>
+                        <li>Sla op en test de redirect.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zorg dat doel niet teruglinkt naar bron; anders ontstaat een redirect-loop.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.4 Backlink Analyzer</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Analyseert je backlinkprofiel via Ahrefs of Semrush. Toont autoriteit, verwijzende domeinen en toxische links.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>SEO Data &rarr; Backlinks</strong> of <strong>AI Tools &rarr; Backlink Analyzer</strong>.</li>
+                        <li>Voer een domein in.</li>
+                        <li>Klik <strong>Analyze</strong>.</li>
+                        <li>Bekijk de metrics en exporteer de lijst.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Elke API gebruikt een eigen index; vergelijk trends, niet absolute getallen.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 6 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">6</span>
+                <span class="summary-title">
+                    <h3>Technische SEO</h3>
+                    <p>Zorg dat zoekmachines je site kunnen crawlen en indexeren.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Technische problemen kunnen crawlen en indexeren blokkeren. Draai regelmatig een Site Audit, pak rode items als eerste aan, en houd sitemap, robots.txt, canonicals en 404's gezond.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.1 Technical SEO Auditor / Site Audit</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Doorloopt je hele site en controleert crawlability, crawl budget, URL-structuur, sitemap-health, robots.txt en performance.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Site Audit</strong>.</li>
+                        <li>Klik <strong>Run Full Technical Audit</strong>.</li>
+                        <li>Wacht tot de scan is afgerond.</li>
+                        <li>Bekijk de scores bovenaan: Crawlability, Performance, URL Structure en Sitemap Health.</li>
+                        <li>Scroll naar waarschuwingen (oranje) en fouten (rood).</li>
+                        <li>Pak de rode items als eerste aan.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Draai de audit minimaal 1x per maand of na grote wijzigingen.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.2 XML Sitemap</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Genereert automatisch een XML-sitemap met alle publieke URLs. Zoekmachines gebruiken deze als routekaart.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Sitemaps</strong>.</li>
+                        <li>Controleer of de hoofdsitemap actief is (meestal <code>https://jouwsite.nl/sitemap.xml</code>).</li>
+                        <li>Kopieer de URL.</li>
+                        <li>Dien deze in via <strong>Google Search Console &rarr; Sitemaps</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Sitemap is leeg? Controleer in <strong>Settings &rarr; Post Types</strong> welke post types zijn opgenomen.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.3 Robots.txt Editor</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Bewerk <code>robots.txt</code> vanuit WordPress. Bepaalt welke pagina's zoekmachines mogen crawlen.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Sitemaps &rarr; Robots.txt</strong>.</li>
+                        <li>Bekijk de huidige inhoud.</li>
+                        <li>Voeg regels toe of pas ze aan, bijv. <code>Disallow: /wp-admin/</code>.</li>
+                        <li>Zorg dat er een regel <code>Sitemap: https://jouwsite.nl/sitemap.xml</code> staat.</li>
+                        <li>Klik <strong>Save</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Pas op met <code>Disallow: /</code>; dit blokkeert je hele site. Test met GSC robots.txt-tester.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.4 Canonical URL</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Geeft aan welke URL de voorkeursversie is. Voorkomt duplicate-content bij paginering, filters en guest posts.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de editor de <strong>Canonical URL</strong> accordion.</li>
+                        <li>Vul een custom canonical in als de standaard niet correct is.</li>
+                        <li>Laat het veld leeg om automatisch de huidige URL te gebruiken.</li>
+                        <li>Sla op.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Canonical is een hint, geen commando; zorg dat de inhoud overeenkomt.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.5 Hreflang</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Voegt taal- en regiotags toe zodat zoekmachines de juiste taalvariant tonen. Ondersteunt WPML, Polylang en TranslatePress.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de editor de <strong>Hreflang</strong> accordion.</li>
+                        <li>Koppel de vertaalde versies of vul handmatig <code>x-default</code> en taalcodes in.</li>
+                        <li>Sla op.</li>
+                        <li>Test met een hreflang-testtool.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zorg dat elke taalvariant terugverwijst naar de anderen; gebruik <code>nl-nl</code> voor Nederland.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.6 Breadcrumbs</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Genereert frontend-kruimelpaden en JSON-LD BreadcrumbList schema. Helpt gebruikers en zoekmachines met hi&euml;rarchie.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Settings &rarr; Breadcrumbs</strong>.</li>
+                        <li>Schakel breadcrumbs in.</li>
+                        <li>Kies shortcode, widget of template-functie.</li>
+                        <li>Test of het kruimelpad correct verschijnt.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Valideer het BreadcrumbList schema met de Google Rich Results Test.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.7 404 Monitor</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Houdt 404-fouten bij die bezoekers en crawlers tegenkomen. Voorkomt verloren verkeer.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Site Audit &rarr; 404 Monitor</strong>.</li>
+                        <li>Bekijk de lijst met gebroken URL's, gesorteerd op aantal hits.</li>
+                        <li>Klik een URL aan.</li>
+                        <li>Maak een 301-redirect naar de meest relevante pagina of repareer de interne link.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Check de referrer om te zien of er externe links naar de gebroken URL verwijzen.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 7 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">7</span>
+                <span class="summary-title">
+                    <h3>Schema &amp; gespecialiseerde SEO</h3>
+                    <p>Voeg structured data en niche-SEO toe.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Structured data (JSON-LD) maakt rich snippets mogelijk: sterren, FAQ-uitklappers, video's en local pack. Voor lokale bedrijven en webshops zijn Local SEO en WooCommerce SEO essentieel.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.1 Schema Markup Manager</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Voegt gestructureerde data (JSON-LD) toe voor rich snippets: sterren, FAQ-uitklappers, carrousels en meer.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open in de editor de <strong>Schema</strong> accordion.</li>
+                        <li>Klik <strong>Add Schema</strong>.</li>
+                        <li>Kies een type: Article, Product, LocalBusiness, Review, etc.</li>
+                        <li>Vul de verplichte velden in.</li>
+                        <li>Klik <strong>Validate</strong> en sla op.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Schakel conflicterende schema-plugins (Yoast, Rank Math) uit als je Fyndable als leidend schema wilt.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.2 FAQ Schema</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Markeert vragen en antwoorden zodat Google een FAQ-uitklapper in de SERP kan tonen.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Open de <strong>FAQ Schema</strong> accordion in de editor.</li>
+                        <li>Klik <strong>Add Question</strong>.</li>
+                        <li>Vul vraag en antwoord in.</li>
+                        <li>Herhaal voor elke FAQ.</li>
+                        <li>Sla op.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Houd het bij &eacute;&eacute;n FAQ-block per pagina om schema-fouten te voorkomen.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.3 Video SEO</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Voegt VideoObject schema en video-sitemap-ondersteuning toe, zodat video's beter vindbaar worden.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Zorg dat een video is ge&euml;mbed in een post.</li>
+                        <li>Open <strong>Video SEO</strong> in de meta-box.</li>
+                        <li>Vul titel, beschrijving, upload- en duur-informatie in.</li>
+                        <li>Activeer de video-sitemap in <strong>Sitemaps</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zorg dat video's openbaar toegankelijk zijn en geen noindex hebben.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.4 Local SEO</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Optimaliseert je site voor lokale zoekopdrachten: bedrijfsnaam, adres, telefoon, openingsuren en LocalBusiness schema.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Settings &rarr; Local SEO</strong>.</li>
+                        <li>Vul bedrijfsnaam, adres, telefoonnummer, e-mail, openingsuren en URL's in.</li>
+                        <li>Kies je bedrijfstype, bijv. <code>LocalBusiness</code> of <code>Dentist</code>.</li>
+                        <li>Sla op.</li>
+                        <li>Open een post en voeg indien nodig <strong>Local SEO</strong> schema toe.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zorg dat naam, adres en telefoon (NAP) op elke pagina exact hetzelfde zijn.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.5 WooCommerce SEO</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Voegt product- en review-schema toe, optimaliseert productcategorie&euml;n en biedt SEO-tools specifiek voor WooCommerce.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Settings &rarr; Post Types</strong> en zorg dat <code>product</code> is ingeschakeld.</li>
+                        <li>Open een product in de editor.</li>
+                        <li>Vul SEO-titel, meta-description en product-schema in.</li>
+                        <li>Laat prijs, beschikbaarheid en SKU automatisch invullen.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Vraag in Search Console een recrawl aan als de prijs in Google niet klopt.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 8 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">8</span>
+                <span class="summary-title">
+                    <h3>Monitoring &amp; rapportage</h3>
+                    <p>Meet of je werk effect heeft en grijp in bij dalingen.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Zodra content live staat, meet je posities, verkeer en AI-zichtbaarheid. Content Decay signaleert dalingen; A/B-testen en rapportages ondersteunen iteratief verbeteren.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.1 Rank Tracker</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Volgt dagelijks de posities van je belangrijkste keywords. Toont historische trends en schommelingen.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Rank Tracker</strong>.</li>
+                        <li>Klik <strong>Add Keyword</strong>.</li>
+                        <li>Voer het keyword in en selecteer land/apparaat.</li>
+                        <li>Fyndable checkt dagelijks de positie.</li>
+                        <li>Bekijk het trendoverzicht na een paar dagen.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Positie 0 betekent: nog niet geïndexeerd of buiten de top 100.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.2 AI Search Visibility / LLM Tracker</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Meet hoe vaak je merk, producten of concurrenten worden genoemd in antwoorden van ChatGPT, Perplexity en Google Gemini.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>AI Search Visibility</strong> of <strong>LLM Tracker</strong>.</li>
+                        <li>Vul je <strong>brand name</strong> in.</li>
+                        <li>Vul product names en concurrenten in, elk op een aparte regel.</li>
+                        <li>Vul je <strong>categorie</strong> in.</li>
+                        <li>Kies de platforms en frequentie.</li>
+                        <li>Klik <strong>Save Settings</strong> en daarna <strong>Run Scan</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> AI-antwoorden zijn niet-deterministisch; gebruik meerdere scans en vergelijk trends.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.3 Content Performance</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Koppelt rankings aan verkeersdata uit Search Console en/of GA4. Ziet welke content daalt, groeit of stilzit.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Koppel eerst <strong>Search Console</strong> en/of <strong>GA4</strong> in <strong>Integrations</strong>.</li>
+                        <li>Ga naar <strong>Content Performance</strong>.</li>
+                        <li>Filter op periode, auteur of post type.</li>
+                        <li>Analyseer klikken, impressies, CTR en gemiddelde positie.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> GSC- en GA4-cijfers verschillen altijd; gebruik ze voor trends, niet exacte vergelijkingen.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.4 Content Decay Monitor</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Business+</span>
+                    </div>
+                    <p class="fn-yield">Detecteert pagina's die posities of verkeer verliezen. Geeft per post een historisch overzicht en verversingsadvies.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Content Decay</strong> of open <strong>Position Trends</strong> in de editor.</li>
+                        <li>Sorteer op dalende posities of dalend verkeer.</li>
+                        <li>Klik een post aan.</li>
+                        <li>Volg het advies: werk statistieken bij, breid het topic uit of verbeter interne links.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Koppel eerst Search Console of GA4 in Integrations als er geen data verschijnt.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.5 A/B Testing (SEO)</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Test varianten van titles of descriptions en meet welke variant meer klikken oplevert.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>A/B Testing</strong>.</li>
+                        <li>Kies een post en element (title of description).</li>
+                        <li>Maak variant A en variant B.</li>
+                        <li>Stel de duur in (bijv. 30 dagen) en start de test.</li>
+                        <li>Na afloop bekijk je de winnaar en pas deze toe.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Je hebt voldoende verkeer nodig voor statistische significantie; kleine sites testen langer.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- FASE 9 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">9</span>
+                <span class="summary-title">
+                    <h3>Integraties (parallel)</h3>
+                    <p>Koppel externe diensten voor data en snellere indexering.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Deze koppelingen draaien parallel aan de workflow. GSC en GA4 geven inzicht; Direct Index en IndexNow versnellen indexering. Voeg ze toe zodra je Fyndable hebt geactiveerd.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.1 Google Search Console</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Haalt prestatiedata op: queries, pagina's, CTR, posities en indexstatus.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Integrations &rarr; Google Search Console</strong>.</li>
+                        <li>Klik <strong>Connect with Google</strong>.</li>
+                        <li>Kies het juiste property.</li>
+                        <li>Open <strong>Google Data &rarr; Search Console</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Property niet zichtbaar? Zorg dat je site is geverifieerd en dat je met een beheerdersaccount inlogt.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.2 Google Data / GA4</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Combineert data van GSC, GA4, Google Ads, SE Ranking en Ahrefs in &eacute;&eacute;n dashboard.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Koppel de gewenste diensten in <strong>Integrations</strong>.</li>
+                        <li>Ga naar <strong>Google Data</strong> of <strong>SEO Data</strong>.</li>
+                        <li>Kies periode en metrics.</li>
+                        <li>Bekijk grafieken en tabellen.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Lege widgets? Controleer of de bijbehorende API-koppeling actief is.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.3 PageSpeed Insights</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Meet Core Web Vitals en prestatiescores voor mobiel en desktop. Fyndable slaat de resultaten op zodat je trends kunt volgen.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Integrations &rarr; PageSpeed</strong>.</li>
+                        <li>Voer een URL in.</li>
+                        <li>Klik <strong>Analyze</strong>.</li>
+                        <li>Bekijk de scores en aanbevelingen.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> PageSpeed heeft een quotum; probeer het later opnieuw als het quotum op is.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.4 Direct Index (Google Indexing API)</h4>
+                        <span class="badge badge-priority-high">Hoog</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Vraagt direct bij Google indexering aan voor gepubliceerde of bijgewerkte posts via de Google Indexing API.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Integrations &rarr; Direct Index</strong>.</li>
+                        <li>Koppel je Google-account met de juiste OAuth-scope (<code>indexing</code>).</li>
+                        <li>Open een gepubliceerde post in de editor.</li>
+                        <li>Klik in de meta-box op <strong>Submit to Google</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Het dagelijkse quotum is beperkt; prioriteer belangrijke posts.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.5 IndexNow</h4>
+                        <span class="badge badge-priority-medium">Middelhoog</span>
+                        <span class="badge badge-tier">Alle tiers</span>
+                    </div>
+                    <p class="fn-yield">Stuurt automatisch Bing en Yandex een seintje wanneer je content wijzigt, zodat je sneller geïndexeerd wordt.</p>
+                    <h5>Stappen</h5>
+                    <ol>
+                        <li>Ga naar <strong>Integrations &rarr; IndexNow</strong>.</li>
+                        <li>Schakel <strong>Enable IndexNow</strong> in.</li>
+                        <li>Genereer of upload je API-key.</li>
+                        <li>Sla op. Fyndable pingt nu automatisch bij publicatie en update.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Zorg dat de uploads-map schrijfbaar is zodat <code>indexnow-key.txt</code> automatisch aangemaakt kan worden.</p>
+                </div>
+            </div>
+        </details>
+    </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="workflow-faq">
+    <h2>Veelgestelde vragen</h2>
+    <div class="faq-q"><p><strong>Kan ik Fyndable gebruiken naast Yoast of Rank Math?</strong><br>Ja, maar gebruik &eacute;&eacute;n plugin als leidend voor sitemap, schema en redirects om conflicten te voorkomen.</p></div>
+    <div class="faq-q"><p><strong>Waarom zie ik bepaalde menu's niet?</strong><br>Controleer of je licentie actief is en of je tier toegang geeft tot dat menu. Trial en DEV tonen alle menu's.</p></div>
+    <div class="faq-q"><p><strong>Hoe vaak moet ik een Site Audit draaien?</strong><br>Minimaal &eacute;&eacute;n keer per maand, of direct na grote wijzigingen.</p></div>
+    <div class="faq-q"><p><strong>Hoe forceer ik een Google-crawl?</strong><br>Gebruik <strong>Direct Index</strong> voor belangrijke URLs. Het quotum is beperkt.</p></div>
+    <div class="faq-q"><p><strong>Mijn AI-tools genereren geen output, wat nu?</strong><br>Controleer je licentiequota, de SaaS-dashboard-verbinding en of de juiste API-key is geconfigureerd.</p></div>
+    <div class="faq-q"><p><strong>Werkt Fyndable met de klassieke editor?</strong><br>De Editor Assistant werkt alleen in Gutenberg. De SEO-meta-box werkt in zowel Gutenberg als de klassieke editor.</p></div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <img src="assets/images/logo/long-white-png.png" alt="Fyndable">
+            <p>Slimme SEO voor groeiende bedrijven.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Product</h4>
+            <ul>
+                <li><a href="https://fyndable.ai">Features</a></li>
+                <li><a href="https://fyndable.ai">Prijzen</a></li>
+                <li><a href="index.html">Documentatie</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Bedrijf</h4>
+            <ul>
+                <li><a href="https://fyndable.ai">Over ons</a></li>
+                <li><a href="https://fyndable.ai">Contact</a></li>
+                <li><a href="https://fyndable.ai">Blog</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Support</h4>
+            <ul>
+                <li><a href="index.html">Documentatie</a></li>
+                <li><a href="index-en.html">English Docs</a></li>
+                <li><a href="https://fyndable.ai">Support</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Fyndable. Alle rechten voorbehouden.</div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Fyndable Workflow-handleiding",
+    "description": "De logische volgorde van de Fyndable SEO-plugin: van installatie tot monitoring, per fase en per functie.",
+    "datePublished": "2026-08-17",
+    "dateModified": "2026-08-17",
+    "inLanguage": "nl-NL",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Fyndable",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://docs.fyndable.ai/assets/images/logo/long-white-png.png"
+        }
+    }
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://docs.fyndable.ai/"},
+        {"@type": "ListItem", "position": 2, "name": "Workflow-handleiding", "item": "https://docs.fyndable.ai/fyndable-workflow-handleiding.html"}
+    ]
+}
+</script>
+</body>
+</html>
