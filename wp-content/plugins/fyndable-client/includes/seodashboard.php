@@ -45,8 +45,7 @@ class SeoDashboard
             return $cached;
         }
 
-        $postTypes = get_post_types(['public' => true]);
-        unset($postTypes['attachment']);
+        $postTypes = PageBuilderHelper::getSeoPostTypes();
 
         // Use WP_Query for better performance with meta queries
         $query = new \WP_Query([

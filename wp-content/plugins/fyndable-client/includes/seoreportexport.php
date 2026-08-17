@@ -42,8 +42,7 @@ class SeoReportExport
      */
     public function getReportData(): array
     {
-        $postTypes = get_post_types(['public' => true]);
-        unset($postTypes['attachment']);
+        $postTypes = PageBuilderHelper::getSeoPostTypes();
 
         $posts = get_posts([
             'post_type' => array_values($postTypes),
