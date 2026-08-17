@@ -342,7 +342,10 @@ class EmailTemplateRenderer
             }
 
             if (str_ends_with($key, '_html')) {
-                return (string) $value;
+                // Allow safe HTML subset but strip scripts/event handlers.
+                // This prevents XSS even if a placeholder value is influenced
+                // by untrusted tenant data.
+                return wp_kses_post((string) $value);
             }
 
             if (str_ends_with($key, '_message')) {

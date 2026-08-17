@@ -24,6 +24,7 @@ class ApiGateway
 
     // SERP provider fallback order
     private const FALLBACK_PROVIDERS = ['dataforseo', 'serpapi', 'seranking'];
+    private const LOCAL_PACK_FALLBACK_PROVIDERS = ['dataforseo', 'serpapi'];
     private const MAX_RETRIES = 3;
     private const CIRCUIT_BREAKER_FAILURES = 3;
     private const CIRCUIT_BREAKER_WINDOW = 900; // 15 minutes
@@ -64,6 +65,20 @@ class ApiGateway
         register_rest_route('ai-seo-saas/v1', '/serp/rank-check', [
             'methods' => 'POST',
             'callback' => [$this, 'handleSerpRankCheck'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // Local SERP / local pack scan endpoint
+        register_rest_route('ai-seo-saas/v1', '/serp/local-pack', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleLocalPackRequest'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // Local SERP geo-grid scan endpoint
+        register_rest_route('ai-seo-saas/v1', '/serp/local-grid', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleLocalGridRequest'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
 
@@ -356,6 +371,487 @@ class ApiGateway
                 'cost' => $cost,
             ]
         ], 200);
+    }
+
+    /**
+     * Handle local pack / Google Maps SERP request around GPS coordinates.
+     *
+     * Body: { keyword, latitude, longitude, radius, language, country, search_type: 'maps'|'local_finder' }
+     */
+    public function handleLocalPackRequest(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $keyword = sanitize_text_field($body['keyword'] ?? '');
+        $lat = filter_var($body['latitude'] ?? '', FILTER_VALIDATE_FLOAT);
+        $lng = filter_var($body['longitude'] ?? '', FILTER_VALIDATE_FLOAT);
+        $radius = filter_var($body['radius'] ?? 0, FILTER_VALIDATE_FLOAT);
+        $country = sanitize_text_field($body['country'] ?? 'nl');
+        $language = $this->countryToLanguage(sanitize_text_field($body['language'] ?? $country));
+        $searchType = sanitize_text_field($body['search_type'] ?? 'maps');
+        $targetName = sanitize_text_field($body['target_business_name'] ?? '');
+
+        if (empty($keyword) || $lat === false || $lng === false || $radius <= 0) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'missing_params',
+                'message' => __('Keyword, latitude, longitude and radius are required', 'sseo-ai-saas')
+            ], 400);
+        }
+
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_coordinates',
+                'message' => __('Invalid latitude or longitude', 'sseo-ai-saas')
+            ], 400);
+        }
+
+        $result = $this->fetchLocalPackData($keyword, $lat, $lng, $radius, $language, $country, $searchType);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'serp_request_failed',
+                'message' => $result->get_error_message()
+            ], 502);
+        }
+
+        $provider = $result['_provider'] ?? $this->settings->getSerpApiProvider();
+        $cost = self::SERP_PRICING[$provider] ?? 0.005;
+        $this->trackUsage($tenant, 'serp_query', 1, $cost);
+
+        $items = $this->filterLocalPackByDistance($result['items'] ?? [], $lat, $lng, $radius);
+
+        // Detect own business position if name provided
+        $ownPosition = 0;
+        if (!empty($targetName)) {
+            foreach ($items as $index => $item) {
+                if (isset($item['title']) && str_contains(strtolower($item['title']), strtolower($targetName))) {
+                    $ownPosition = $index + 1;
+                    break;
+                }
+            }
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'results' => $items,
+            'center' => ['lat' => $lat, 'lng' => $lng, 'radius_km' => $radius],
+            'own_position' => $ownPosition,
+            'result_count' => count($items),
+            'provider' => $provider,
+            'usage' => ['cost' => $cost],
+            'checked_at' => current_time('mysql'),
+        ], 200);
+    }
+
+    /**
+     * Handle local SERP geo-grid scan for Agency/Enterprise tiers.
+     *
+     * Body: { keyword, latitude, longitude, radius, grid_size: 3|5|7|9, language, country, search_type }
+     */
+    public function handleLocalGridRequest(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $keyword = sanitize_text_field($body['keyword'] ?? '');
+        $lat = filter_var($body['latitude'] ?? '', FILTER_VALIDATE_FLOAT);
+        $lng = filter_var($body['longitude'] ?? '', FILTER_VALIDATE_FLOAT);
+        $radius = filter_var($body['radius'] ?? 0, FILTER_VALIDATE_FLOAT);
+        $gridSize = (int) ($body['grid_size'] ?? 3);
+        $country = sanitize_text_field($body['country'] ?? 'nl');
+        $language = $this->countryToLanguage(sanitize_text_field($body['language'] ?? $country));
+        $searchType = sanitize_text_field($body['search_type'] ?? 'maps');
+        $targetName = sanitize_text_field($body['target_business_name'] ?? '');
+
+        if (empty($keyword) || $lat === false || $lng === false || $radius <= 0) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'missing_params',
+                'message' => __('Keyword, latitude, longitude and radius are required', 'sseo-ai-saas')
+            ], 400);
+        }
+
+        $allowedGrids = [3, 5, 7, 9];
+        if (!in_array($gridSize, $allowedGrids, true)) {
+            $gridSize = 3;
+        }
+
+        $points = $this->generateGridPoints($lat, $lng, $radius, $gridSize);
+        $allItems = [];
+        $totalCost = 0.0;
+        $providers = [];
+
+        foreach ($points as $point) {
+            $result = $this->fetchLocalPackData($keyword, $point['lat'], $point['lng'], $radius, $language, $country, $searchType);
+            if (is_wp_error($result)) {
+                continue;
+            }
+            $provider = $result['_provider'] ?? $this->settings->getSerpApiProvider();
+            $providers[$provider] = true;
+            $totalCost += self::SERP_PRICING[$provider] ?? 0.005;
+
+            $filtered = $this->filterLocalPackByDistance($result['items'] ?? [], $point['lat'], $point['lng'], $radius * 1.5);
+            foreach ($filtered as $item) {
+                $key = $item['place_id'] ?? $item['title'] ?? md5($item['url'] ?? '');
+                if (!isset($allItems[$key])) {
+                    $item['points_seen'] = 0;
+                    $allItems[$key] = $item;
+                }
+                $allItems[$key]['points_seen']++;
+            }
+        }
+
+        $this->trackUsage($tenant, 'serp_query', count($points), $totalCost);
+
+        $items = $this->filterLocalPackByDistance(array_values($allItems), $lat, $lng, $radius);
+        usort($items, fn($a, $b) => ($b['points_seen'] ?? 0) <=> ($a['points_seen'] ?? 0));
+
+        $ownPresence = 0;
+        $ownBestPosition = 0;
+        if (!empty($targetName)) {
+            foreach ($items as $index => $item) {
+                if (isset($item['title']) && str_contains(strtolower($item['title']), strtolower($targetName))) {
+                    $ownPresence = $item['points_seen'] ?? 0;
+                    $ownBestPosition = $index + 1;
+                    break;
+                }
+            }
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'results' => array_slice($items, 0, 100),
+            'center' => ['lat' => $lat, 'lng' => $lng, 'radius_km' => $radius],
+            'grid_size' => $gridSize,
+            'points_scanned' => count($points),
+            'own_presence' => $ownPresence,
+            'own_best_position' => $ownBestPosition,
+            'provider' => implode(',', array_keys($providers)) ?: 'unknown',
+            'usage' => ['cost' => $totalCost],
+            'checked_at' => current_time('mysql'),
+        ], 200);
+    }
+
+    /**
+     * Fetch local pack data from the configured provider with fallback.
+     */
+    private function fetchLocalPackData(string $keyword, float $lat, float $lng, float $radius, string $language, string $country, string $searchType): array|\WP_Error
+    {
+        $provider = $this->settings->getSerpApiProvider();
+        // Local pack only supports dataforseo and serpapi; seranking has no GPS/radius local pack
+        $providers = in_array($provider, self::LOCAL_PACK_FALLBACK_PROVIDERS, true) ? [$provider] : ['dataforseo'];
+        foreach (self::LOCAL_PACK_FALLBACK_PROVIDERS as $p) {
+            if ($p !== $provider && !in_array($p, $providers, true)) {
+                $providers[] = $p;
+            }
+        }
+
+        $lastError = null;
+        foreach ($providers as $p) {
+            if ($this->isProviderCircuitOpen($p)) {
+                $lastError = new \WP_Error('circuit_open', sprintf(__('SERP provider %s is temporarily skipped due to recent failures', 'sseo-ai-saas'), $p));
+                continue;
+            }
+
+            for ($attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++) {
+                $result = $this->fetchLocalPackFromProvider($p, $keyword, $lat, $lng, $radius, $language, $country, $searchType);
+                if (!is_wp_error($result)) {
+                    $this->recordProviderSuccess($p);
+                    return $result;
+                }
+                $this->recordProviderFailure($p);
+                $lastError = $result;
+                if ($attempt < self::MAX_RETRIES) {
+                    usleep(min(4000000, 1000000 * (2 ** ($attempt - 1))));
+                }
+            }
+        }
+
+        return $lastError ?: new \WP_Error('serp_failed', __('All SERP providers failed', 'sseo-ai-saas'));
+    }
+
+    /**
+     * Fetch local pack results from a specific provider.
+     */
+    private function fetchLocalPackFromProvider(string $provider, string $keyword, float $lat, float $lng, float $radius, string $language, string $country, string $searchType): array|\WP_Error
+    {
+        $apiKey = $this->getProviderApiKey($provider, $this->settings->getSerpApiKey());
+
+        switch ($provider) {
+            case 'dataforseo':
+                return $this->fetchDataForSeoLocalPack($apiKey, $keyword, $lat, $lng, $radius, $language, $searchType);
+            case 'serpapi':
+                return $this->fetchSerpApiLocalPack($apiKey, $keyword, $lat, $lng, $radius, $language, $country);
+            case 'seranking':
+                // SE Ranking does not support GPS/radius local pack
+                return new \WP_Error('seranking_no_local_pack', __('SE Ranking does not support GPS/radius local pack scans', 'sseo-ai-saas'));
+            default:
+                return new \WP_Error('unknown_provider', __('Unknown SERP provider', 'sseo-ai-saas'));
+        }
+    }
+
+    /**
+     * Fetch local pack from DataForSEO (maps or local_finder endpoint).
+     */
+    private function fetchDataForSeoLocalPack(string $apiKey, string $keyword, float $lat, float $lng, float $radius, string $language, string $searchType): array|\WP_Error
+    {
+        if (!$this->dataForSeoClient || !$this->dataForSeoClient->isConfigured()) {
+            return new \WP_Error('dataforseo_not_configured', __('DataForSEO API is not configured', 'sseo-ai-saas'));
+        }
+
+        $zoom = DataForSeoClient::radiusToZoom($radius, $lat);
+        $coordinate = sprintf('%.7f,%.7f,%dz', $lat, $lng, $zoom);
+
+        if ($searchType === 'local_finder') {
+            $items = $this->dataForSeoClient->serpGoogleLocalFinderLiveAdvanced($keyword, $coordinate, $language);
+        } else {
+            $items = $this->dataForSeoClient->serpGoogleMapsLiveAdvanced($keyword, $coordinate, $language, true);
+        }
+
+        if (is_wp_error($items)) {
+            return $items;
+        }
+
+        return [
+            '_provider' => 'dataforseo',
+            'items' => $this->normalizeLocalPackItems($items, 'dataforseo'),
+        ];
+    }
+
+    /**
+     * Fetch local pack from SerpAPI (Google Maps engine with radius in metres).
+     */
+    private function fetchSerpApiLocalPack(string $apiKey, string $keyword, float $lat, float $lng, float $radius, string $language, string $country): array|\WP_Error
+    {
+        $locale = $this->getSerpApiLocaleByCountry($country);
+        $radiusMeters = min(15028132, max(1, (int) round($radius * 1000)));
+
+        $url = add_query_arg([
+            'engine' => 'google_maps',
+            'q' => $keyword,
+            'lat' => $lat,
+            'lon' => $lng,
+            'm' => $radiusMeters,
+            'hl' => $language,
+            'gl' => $locale['gl'] ?? $country,
+            'api_key' => $apiKey,
+            'output' => 'json',
+        ], 'https://serpapi.com/search');
+
+        $response = wp_remote_get($url, ['timeout' => 60]);
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 || !empty($body['error'])) {
+            $message = $body['error'] ?? __('Unknown SerpApi error', 'sseo-ai-saas');
+            return new \WP_Error('serpapi_error', is_string($message) ? $message : json_encode($message));
+        }
+
+        $items = $body['local_results'] ?? $body['maps_results'] ?? [];
+        return [
+            '_provider' => 'serpapi',
+            'items' => $this->normalizeLocalPackItems($items, 'serpapi'),
+        ];
+    }
+
+    /**
+     * Normalize items from DataForSEO and SerpAPI into a common local pack shape.
+     */
+    private function normalizeLocalPackItems(array $items, string $source): array
+    {
+        $normalized = [];
+        foreach ($items as $item) {
+            $title = sanitize_text_field($item['title'] ?? '');
+            if (empty($title)) {
+                continue;
+            }
+
+            $url = '';
+            if (!empty($item['url'])) {
+                $url = esc_url_raw($item['url']);
+            } elseif (!empty($item['links']['website'])) {
+                $url = esc_url_raw($item['links']['website']);
+            } elseif (!empty($item['place_id_search'])) {
+                $url = esc_url_raw($item['place_id_search']);
+            }
+
+            $rating = null;
+            if (isset($item['rating']['value'])) {
+                $rating = (float) $item['rating']['value'];
+            } elseif (isset($item['rating'])) {
+                $rating = (float) $item['rating'];
+            }
+
+            $reviews = null;
+            if (isset($item['rating']['votes_count'])) {
+                $reviews = (int) $item['rating']['votes_count'];
+            } elseif (isset($item['reviews'])) {
+                $reviews = (int) $item['reviews'];
+            }
+
+            $address = '';
+            if (!empty($item['address'])) {
+                $address = sanitize_text_field($item['address']);
+            } elseif (!empty($item['address_info']['address'])) {
+                $address = sanitize_text_field($item['address_info']['address']);
+            }
+
+            $gps = null;
+            if (!empty($item['gps_coordinates']['latitude']) && !empty($item['gps_coordinates']['longitude'])) {
+                $gps = [
+                    'lat' => (float) $item['gps_coordinates']['latitude'],
+                    'lng' => (float) $item['gps_coordinates']['longitude'],
+                ];
+            } elseif (isset($item['latitude']) && isset($item['longitude'])) {
+                $gps = [
+                    'lat' => (float) $item['latitude'],
+                    'lng' => (float) $item['longitude'],
+                ];
+            }
+
+            $placeId = sanitize_text_field($item['place_id'] ?? $item['data_id'] ?? $item['data_cid'] ?? '');
+
+            $normalized[] = [
+                'position' => (int) ($item['position'] ?? $item['rank_group'] ?? $item['rank_absolute'] ?? 0),
+                'title' => $title,
+                'url' => $url,
+                'place_id' => $placeId,
+                'type' => sanitize_text_field($item['type'] ?? $item['type_id'] ?? 'local'),
+                'rating' => $rating,
+                'reviews' => $reviews,
+                'address' => $address,
+                'gps' => $gps,
+                'source' => $source,
+                'thumbnail' => esc_url_raw($item['thumbnail'] ?? $item['serpapi_thumbnail'] ?? ''),
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Filter local pack items by real distance from the center point.
+     */
+    private function filterLocalPackByDistance(array $items, float $centerLat, float $centerLng, float $maxKm): array
+    {
+        return array_values(array_filter($items, function ($item) use ($centerLat, $centerLng, $maxKm) {
+            if (empty($item['gps']['lat']) || empty($item['gps']['lng'])) {
+                // Keep items without coordinates; they cannot be distance-filtered
+                return true;
+            }
+            return $this->haversineDistance($centerLat, $centerLng, $item['gps']['lat'], $item['gps']['lng']) <= $maxKm;
+        }));
+    }
+
+    /**
+     * Calculate great-circle distance between two coordinates in kilometres.
+     */
+    private function haversineDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadius = 6371.0;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLng / 2) * sin($dLng / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+
+    /**
+     * Generate a square grid of GPS points inside a circle.
+     */
+    private function generateGridPoints(float $centerLat, float $centerLng, float $radiusKm, int $gridSize): array
+    {
+        $points = [];
+        $step = 2 * $radiusKm / max(1, $gridSize - 1);
+
+        for ($i = 0; $i < $gridSize; $i++) {
+            for ($j = 0; $j < $gridSize; $j++) {
+                $x = -$radiusKm + $i * $step;
+                $y = -$radiusKm + $j * $step;
+                $distance = sqrt($x * $x + $y * $y);
+                if ($distance > $radiusKm) {
+                    continue;
+                }
+                $points[] = $this->offsetCoordinate($centerLat, $centerLng, $x, $y);
+            }
+        }
+
+        // Always include the center point if grid was too coarse to produce it
+        if (empty($points)) {
+            $points[] = ['lat' => $centerLat, 'lng' => $centerLng];
+        }
+
+        return $points;
+    }
+
+    /**
+     * Offset a coordinate by an east/west and north/south distance in kilometres.
+     */
+    private function offsetCoordinate(float $lat, float $lng, float $eastKm, float $northKm): array
+    {
+        $latDelta = ($northKm / 111.0);
+        $lngDelta = ($eastKm / (111.32 * cos(deg2rad($lat))));
+        return [
+            'lat' => round($lat + $latDelta, 7),
+            'lng' => round($lng + $lngDelta, 7),
+        ];
+    }
+
+    /**
+     * Map a country code to a valid Google/DataForSEO language code.
+     */
+    private function countryToLanguage(string $country): string
+    {
+        $map = [
+            'nl' => 'nl',
+            'be' => 'nl',
+            'de' => 'de',
+            'fr' => 'fr',
+            'gb' => 'en',
+            'uk' => 'en',
+            'us' => 'en',
+            'ca' => 'en',
+            'au' => 'en',
+            'es' => 'es',
+            'it' => 'it',
+        ];
+        return $map[strtolower($country)] ?? 'en';
+    }
+
+    /**
+     * Helper for SerpAPI locale (reuses existing logic but keyed by country code).
+     */
+    private function getSerpApiLocaleByCountry(string $country): array
+    {
+        $map = [
+            'nl' => ['domain' => 'google.nl', 'gl' => 'nl', 'hl' => 'nl'],
+            'be' => ['domain' => 'google.be', 'gl' => 'be', 'hl' => 'nl'],
+            'de' => ['domain' => 'google.de', 'gl' => 'de', 'hl' => 'de'],
+            'fr' => ['domain' => 'google.fr', 'gl' => 'fr', 'hl' => 'fr'],
+            'gb' => ['domain' => 'google.co.uk', 'gl' => 'gb', 'hl' => 'en'],
+            'uk' => ['domain' => 'google.co.uk', 'gl' => 'gb', 'hl' => 'en'],
+            'us' => ['domain' => 'google.com', 'gl' => 'us', 'hl' => 'en'],
+            'ca' => ['domain' => 'google.ca', 'gl' => 'ca', 'hl' => 'en'],
+            'au' => ['domain' => 'google.com.au', 'gl' => 'au', 'hl' => 'en'],
+            'es' => ['domain' => 'google.es', 'gl' => 'es', 'hl' => 'es'],
+            'it' => ['domain' => 'google.it', 'gl' => 'it', 'hl' => 'it'],
+        ];
+        return $map[strtolower($country)] ?? ['domain' => 'google.com', 'gl' => 'us', 'hl' => 'en'];
     }
 
     /**

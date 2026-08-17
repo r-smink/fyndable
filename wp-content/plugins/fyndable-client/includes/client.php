@@ -38,6 +38,7 @@ class Client
     private ?BulkActions $bulkActions = null;
     private ?SeoDashboard $seoDashboard = null;
     private ?RankTracker $rankTracker = null;
+    private ?LocalSerp $localSerp = null;
     private ?Hreflang $hreflang = null;
     private ?SeoReportExport $seoReportExport = null;
     private ?WooCommerceSeo $wooSeo = null;
@@ -414,11 +415,15 @@ class Client
             
             $this->localSEO = new LocalSEO($this->settings);
             $this->localSEO->register();
-            
+
+            $this->localSerp = new LocalSerp($this->settings, $this->dashboardAPI, $this->licenseValidator);
+            $this->localSerp->register();
+
             $this->notFoundMonitor = new NotFoundMonitor($this->settings);
             $this->notFoundMonitor->register();
-            
+
             $this->rankTracker = new RankTracker($this->settings, $this->dashboardAPI);
+            $this->rankTracker->setLocalSerp($this->localSerp);
             $this->rankTracker->register();
             
             $this->seoReportExport = new SeoReportExport($this->settings);
@@ -2206,12 +2211,110 @@ class Client
                         <div class="settings-section">
                             <h2><?php esc_html_e('Location Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
-                            
+
                             <div class="form-field">
                                 <label for="locations"><?php esc_html_e('Target Locations', 'ai-seo-client'); ?></label>
-                                <textarea name="locations" id="locations" rows="3" 
+                                <textarea name="locations" id="locations" rows="3"
                                           placeholder="e.g., Amsterdam, Rotterdam, Utrecht"><?php echo esc_textarea($locations); ?></textarea>
                                 <p class="field-description"><?php esc_html_e('Enter cities, regions, or countries (comma-separated)', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Local Business', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Used for LocalBusiness schema and Local SERP radius scans', 'ai-seo-client'); ?></p>
+
+                            <?php
+                            $localOptions = $this->settings->all();
+                            ?>
+
+                            <div class="form-field">
+                                <label for="local_business_name"><?php esc_html_e('Business Name', 'ai-seo-client'); ?></label>
+                                <input type="text" name="local_business_name" id="local_business_name" value="<?php echo esc_attr($localOptions['local_business_name'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_business_type"><?php esc_html_e('Business Type', 'ai-seo-client'); ?></label>
+                                <select name="local_business_type" id="local_business_type">
+                                    <option value="LocalBusiness" <?php selected($localOptions['local_business_type'] ?? 'LocalBusiness', 'LocalBusiness'); ?>><?php esc_html_e('Local Business', 'ai-seo-client'); ?></option>
+                                    <option value="Restaurant" <?php selected($localOptions['local_business_type'] ?? '', 'Restaurant'); ?>><?php esc_html_e('Restaurant', 'ai-seo-client'); ?></option>
+                                    <option value="Store" <?php selected($localOptions['local_business_type'] ?? '', 'Store'); ?>><?php esc_html_e('Store', 'ai-seo-client'); ?></option>
+                                    <option value="Dentist" <?php selected($localOptions['local_business_type'] ?? '', 'Dentist'); ?>><?php esc_html_e('Dentist', 'ai-seo-client'); ?></option>
+                                    <option value="Doctor" <?php selected($localOptions['local_business_type'] ?? '', 'Doctor'); ?>><?php esc_html_e('Doctor', 'ai-seo-client'); ?></option>
+                                    <option value="Plumber" <?php selected($localOptions['local_business_type'] ?? '', 'Plumber'); ?>><?php esc_html_e('Plumber', 'ai-seo-client'); ?></option>
+                                    <option value="Electrician" <?php selected($localOptions['local_business_type'] ?? '', 'Electrician'); ?>><?php esc_html_e('Electrician', 'ai-seo-client'); ?></option>
+                                    <option value="Lawyer" <?php selected($localOptions['local_business_type'] ?? '', 'Lawyer'); ?>><?php esc_html_e('Lawyer', 'ai-seo-client'); ?></option>
+                                    <option value="RealEstateAgent" <?php selected($localOptions['local_business_type'] ?? '', 'RealEstateAgent'); ?>><?php esc_html_e('Real Estate Agent', 'ai-seo-client'); ?></option>
+                                    <option value="HairSalon" <?php selected($localOptions['local_business_type'] ?? '', 'HairSalon'); ?>><?php esc_html_e('Hair Salon', 'ai-seo-client'); ?></option>
+                                    <option value="AutoRepair" <?php selected($localOptions['local_business_type'] ?? '', 'AutoRepair'); ?>><?php esc_html_e('Auto Repair', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_description"><?php esc_html_e('Description', 'ai-seo-client'); ?></label>
+                                <textarea name="local_description" id="local_description" rows="3"><?php echo esc_textarea($localOptions['local_description'] ?? ''); ?></textarea>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_street"><?php esc_html_e('Address', 'ai-seo-client'); ?></label>
+                                <input type="text" name="local_street" id="local_street" value="<?php echo esc_attr($localOptions['local_street'] ?? ''); ?>" placeholder="Street">
+                                <p style="margin-top:8px;display:flex;gap:8px;">
+                                    <input type="text" name="local_city" value="<?php echo esc_attr($localOptions['local_city'] ?? ''); ?>" placeholder="City" style="flex:2;">
+                                    <input type="text" name="local_state" value="<?php echo esc_attr($localOptions['local_state'] ?? ''); ?>" placeholder="State/Province" style="flex:1;">
+                                    <input type="text" name="local_postal" value="<?php echo esc_attr($localOptions['local_postal'] ?? ''); ?>" placeholder="Postal code" style="flex:1;">
+                                    <input type="text" name="local_country" value="<?php echo esc_attr($localOptions['local_country'] ?? 'NL'); ?>" placeholder="Country" style="flex:1;">
+                                </p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_latitude"><?php esc_html_e('Coordinates (Lat, Lng)', 'ai-seo-client'); ?></label>
+                                <p style="display:flex;gap:8px;">
+                                    <input type="text" name="local_latitude" id="local_latitude" value="<?php echo esc_attr($localOptions['local_latitude'] ?? ''); ?>" placeholder="Latitude" style="flex:1;">
+                                    <input type="text" name="local_longitude" value="<?php echo esc_attr($localOptions['local_longitude'] ?? ''); ?>" placeholder="Longitude" style="flex:1;">
+                                </p>
+                                <p class="field-description"><?php esc_html_e('Required for Local SERP radius scans', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_search_radius"><?php esc_html_e('Default Local SERP Radius (km)', 'ai-seo-client'); ?></label>
+                                <select name="local_search_radius" id="local_search_radius">
+                                    <?php foreach ([1, 2, 5, 10, 15, 25, 50, 100] as $km): ?>
+                                        <option value="<?php echo esc_attr($km); ?>" <?php selected((int) ($localOptions['local_search_radius'] ?? 10), $km); ?>><?php echo esc_html($km); ?> km</option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_search_grid"><?php esc_html_e('Default Local SERP Grid', 'ai-seo-client'); ?></label>
+                                <select name="local_search_grid" id="local_search_grid">
+                                    <option value="1" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 1); ?>><?php esc_html_e('Single center (Professional)', 'ai-seo-client'); ?></option>
+                                    <option value="3" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 3); ?>><?php esc_html_e('3x3 grid (Business)', 'ai-seo-client'); ?></option>
+                                    <option value="5" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 5); ?>><?php esc_html_e('5x5 grid (Agency)', 'ai-seo-client'); ?></option>
+                                    <option value="7" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 7); ?>><?php esc_html_e('7x7 grid (Agency)', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_phone"><?php esc_html_e('Contact', 'ai-seo-client'); ?></label>
+                                <p style="display:flex;gap:8px;">
+                                    <input type="text" name="local_phone" value="<?php echo esc_attr($localOptions['local_phone'] ?? ''); ?>" placeholder="Phone" style="flex:1;">
+                                    <input type="email" name="local_email" value="<?php echo esc_attr($localOptions['local_email'] ?? ''); ?>" placeholder="Email" style="flex:1;">
+                                </p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_url"><?php esc_html_e('Business URL', 'ai-seo-client'); ?></label>
+                                <input type="url" name="local_url" id="local_url" value="<?php echo esc_attr($localOptions['local_url'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_image"><?php esc_html_e('Business Image', 'ai-seo-client'); ?></label>
+                                <input type="url" name="local_image" id="local_image" value="<?php echo esc_attr($localOptions['local_image'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_opening_hours"><?php esc_html_e('Opening Hours', 'ai-seo-client'); ?></label>
+                                <textarea name="local_opening_hours" id="local_opening_hours" rows="3" placeholder="Mo-Fr 09:00-17:00&#10;Sa 10:00-14:00"><?php echo esc_textarea($localOptions['local_opening_hours'] ?? ''); ?></textarea>
                             </div>
                         </div>
                         
@@ -2310,6 +2413,26 @@ class Client
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
         update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
+
+        // Local business settings (used by Local SEO schema and Local SERP radius scans)
+        update_option('sseo_ai_client_local_business_name', sanitize_text_field($_POST['local_business_name'] ?? ''));
+        update_option('sseo_ai_client_local_business_type', sanitize_text_field($_POST['local_business_type'] ?? 'LocalBusiness'));
+        update_option('sseo_ai_client_local_description', sanitize_textarea_field($_POST['local_description'] ?? ''));
+        update_option('sseo_ai_client_local_street', sanitize_text_field($_POST['local_street'] ?? ''));
+        update_option('sseo_ai_client_local_city', sanitize_text_field($_POST['local_city'] ?? ''));
+        update_option('sseo_ai_client_local_state', sanitize_text_field($_POST['local_state'] ?? ''));
+        update_option('sseo_ai_client_local_postal', sanitize_text_field($_POST['local_postal'] ?? ''));
+        update_option('sseo_ai_client_local_country', sanitize_text_field($_POST['local_country'] ?? 'NL'));
+        update_option('sseo_ai_client_local_phone', sanitize_text_field($_POST['local_phone'] ?? ''));
+        update_option('sseo_ai_client_local_email', sanitize_email($_POST['local_email'] ?? ''));
+        update_option('sseo_ai_client_local_url', esc_url_raw($_POST['local_url'] ?? ''));
+        update_option('sseo_ai_client_local_latitude', sanitize_text_field($_POST['local_latitude'] ?? ''));
+        update_option('sseo_ai_client_local_longitude', sanitize_text_field($_POST['local_longitude'] ?? ''));
+        update_option('sseo_ai_client_local_image', esc_url_raw($_POST['local_image'] ?? ''));
+        update_option('sseo_ai_client_local_price_range', sanitize_text_field($_POST['local_price_range'] ?? '$$'));
+        update_option('sseo_ai_client_local_opening_hours', sanitize_textarea_field($_POST['local_opening_hours'] ?? ''));
+        update_option('sseo_ai_client_local_search_radius', max(1, min(500, (int) ($_POST['local_search_radius'] ?? 10))));
+        update_option('sseo_ai_client_local_search_grid', max(1, min(9, (int) ($_POST['local_search_grid'] ?? 3))));
 
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));

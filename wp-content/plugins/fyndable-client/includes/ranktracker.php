@@ -13,6 +13,7 @@ class RankTracker
 {
     private Settings $settings;
     private DashboardAPI $dashboardAPI;
+    private ?LocalSerp $localSerp = null;
     private string $tableName;
     private string $keywordsTable;
 
@@ -23,6 +24,11 @@ class RankTracker
         $this->dashboardAPI = $dashboardAPI;
         $this->tableName = $wpdb->prefix . 'sseo_ai_rank_history';
         $this->keywordsTable = $wpdb->prefix . 'sseo_ai_tracked_keywords';
+    }
+
+    public function setLocalSerp(?LocalSerp $localSerp): void
+    {
+        $this->localSerp = $localSerp;
     }
 
     public function register(): void
@@ -426,6 +432,16 @@ class RankTracker
 
             <div class="sseo-ai-content">
                 <div style="max-width:1100px;">
+
+                <!-- Tabs -->
+                <div style="margin-bottom:20px;">
+                    <button type="button" class="button rank-tab active" data-tab="rank-tracker" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></button>
+                    <?php if ($this->localSerp): ?>
+                        <button type="button" class="button rank-tab" data-tab="rank-local" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
+                    <?php endif; ?>
+                </div>
+
+                <div id="rank-tracker-panel" class="rank-panel" style="display:block;">
                 <!-- Add Keyword Form -->
                 <div class="sseo-ai-dashboard-card">
                     <h2><?php esc_html_e('Add Keyword to Track', 'ai-seo-client'); ?></h2>
@@ -483,6 +499,14 @@ class RankTracker
                     <h2 id="rank-history-title"></h2>
                     <div id="rank-history-chart" style="height:250px; position:relative;"></div>
                 </div>
+                </div>
+
+                <?php if ($this->localSerp): ?>
+                    <div id="rank-local-panel" class="rank-panel" style="display:none;">
+                        <?php $this->localSerp->renderPanel(); ?>
+                    </div>
+                <?php endif; ?>
+
             </div>
             </div>
         </div>
@@ -660,6 +684,106 @@ class RankTracker
                 html += '</div>';
 
                 container.html(html);
+            }
+
+            // Tab switching
+            $('.rank-tab').on('click', function() {
+                var tab = $(this).data('tab');
+                $('.rank-tab').removeClass('active').css({'background':'#f0f0f1','color':'#1d2327'});
+                $(this).addClass('active').css({'background':'#fff','color':'#2271b1'});
+                $('.rank-panel').hide();
+                $('#' + tab).show();
+            });
+            $('.rank-tab.active').trigger('click');
+
+            // Local SERP scan
+            $('#local-scan').on('click', function() {
+                var btn = $(this);
+                var lat = $('#local-lat').val();
+                var lng = $('#local-lng').val();
+
+                if (!lat || !lng) {
+                    alert('<?php echo esc_js(__('Set your business coordinates first in Settings → Local Business.', 'ai-seo-client')); ?>');
+                    return;
+                }
+
+                btn.prop('disabled', true);
+                $('#local-spinner').addClass('is-active');
+                $('#local-results-table').hide();
+                $('#local-result-summary').html('');
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/local-serp/scan',
+                    method: 'POST',
+                    data: {
+                        keyword: $('#local-keyword').val().trim(),
+                        latitude: parseFloat(lat),
+                        longitude: parseFloat(lng),
+                        radius: parseInt($('#local-radius').val(), 10),
+                        grid: parseInt($('#local-grid').val(), 10),
+                        country: $('#rank-country').val() || 'nl',
+                        language: $('#rank-country').val() || 'nl',
+                        business_name: ''
+                    }
+                }).then(function(res) {
+                    var tbody = $('#local-results-body');
+                    tbody.empty();
+
+                    var results = res.results || [];
+                    var summary = '';
+                    if (res.own_position) {
+                        summary += '<?php echo esc_js(__('Your business position', 'ai-seo-client')); ?>: #' + res.own_position;
+                    } else if (res.own_presence) {
+                        summary += '<?php echo esc_js(__('Your business seen in', 'ai-seo-client')); ?> ' + res.own_presence + ' / ' + res.points_scanned + ' <?php echo esc_js(__('grid points', 'ai-seo-client')); ?>';
+                    } else {
+                        summary += '<?php echo esc_js(__('Not found in this scan.', 'ai-seo-client')); ?>';
+                    }
+                    if (res.provider) {
+                        summary += ' <span style="color:#999;font-size:12px;">(<?php echo esc_js(__('provider', 'ai-seo-client')); ?>: ' + res.provider + ')</span>';
+                    }
+                    $('#local-result-summary').html(summary);
+
+                    if (!results.length) {
+                        tbody.append('<tr><td colspan="5" style="text-align:center;color:#999;"><?php echo esc_js(__('No local results found.', 'ai-seo-client')); ?></td></tr>');
+                    }
+
+                    results.forEach(function(item, index) {
+                        var distance = '';
+                        if (item.gps && typeof item.gps.lat !== 'undefined' && lat && lng) {
+                            distance = calculateDistance(parseFloat(lat), parseFloat(lng), item.gps.lat, item.gps.lng).toFixed(2) + ' km';
+                        }
+                        var rating = (item.rating ? item.rating + ' (' + (item.reviews || 0) + ')' : '—');
+                        var title = item.title ? $('<span>').text(item.title).html() : '—';
+                        var address = item.address ? $('<span>').text(item.address).html() : '';
+                        var row = '<tr>' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td><strong>' + title + '</strong></td>' +
+                            '<td style="font-size:12px;">' + address + '</td>' +
+                            '<td>' + rating + '</td>' +
+                            '<td>' + distance + '</td>' +
+                        '</tr>';
+                        tbody.append(row);
+                    });
+
+                    $('#local-results-table').show();
+                    btn.prop('disabled', false);
+                    $('#local-spinner').removeClass('is-active');
+                }).catch(function(err) {
+                    alert(err.message || '<?php echo esc_js(__('Local scan failed.', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false);
+                    $('#local-spinner').removeClass('is-active');
+                });
+            });
+
+            function calculateDistance(lat1, lng1, lat2, lng2) {
+                var R = 6371;
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLng = (lng2 - lng1) * Math.PI / 180;
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
             }
         });
         </script>

@@ -92,6 +92,82 @@ class DataForSeoClient
         return $items;
     }
 
+    /**
+     * Fetch Google Maps SERP results (Live Advanced) around GPS coordinates.
+     *
+     * @param string $keyword      Search keyword
+     * @param string $coordinate   "latitude,longitude,zoom" string
+     * @param string $languageCode Language code (e.g. 'en', 'nl')
+     * @param bool   $searchThisArea Use Google Maps "search this area" flag for broader local results
+     * @return array|\WP_Error     Normalized items array or WP_Error
+     */
+    public function serpGoogleMapsLiveAdvanced(string $keyword, string $coordinate, string $languageCode = 'en', bool $searchThisArea = true): array|\WP_Error
+    {
+        $task = [
+            'keyword'             => $keyword,
+            'location_coordinate' => $coordinate,
+            'language_code'       => $languageCode,
+        ];
+        if ($searchThisArea) {
+            $task['search_this_area'] = true;
+        }
+
+        $result = $this->request('/serp/google/maps/live/advanced', [$task], 'serp');
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $items = $result['tasks'][0]['result'][0]['items'] ?? [];
+        return $items;
+    }
+
+    /**
+     * Fetch Google Local Finder SERP results (Live Advanced) around GPS coordinates.
+     *
+     * @param string $keyword      Search keyword
+     * @param string $coordinate   "latitude,longitude,zoom" string
+     * @param string $languageCode Language code (e.g. 'en', 'nl')
+     * @return array|\WP_Error     Normalized items array or WP_Error
+     */
+    public function serpGoogleLocalFinderLiveAdvanced(string $keyword, string $coordinate, string $languageCode = 'en'): array|\WP_Error
+    {
+        $task = [
+            'keyword'             => $keyword,
+            'location_coordinate' => $coordinate,
+            'language_code'       => $languageCode,
+        ];
+
+        $result = $this->request('/serp/google/local_finder/live/advanced', [$task], 'serp');
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $items = $result['tasks'][0]['result'][0]['items'] ?? [];
+        return $items;
+    }
+
+    /**
+     * Convert a radius in kilometres to an approximate Google Maps zoom level.
+     * Uses a constant pixel viewport assumption (640px) and aims for a
+     * map view that covers at least 4x the requested radius.
+     */
+    public static function radiusToZoom(float $radiusKm, float $latitude = 52.0): int
+    {
+        if ($radiusKm <= 0) {
+            $radiusKm = 5;
+        }
+
+        // metres per pixel at zoom z = 156543.03392 * cos(lat) / 2^z
+        // we want a 640px viewport to cover 4x the requested radius
+        $targetMpp = (4 * $radiusKm * 1000) / 640;
+        $circumferenceMpp = 156543.03392 * max(0.1, abs(cos(deg2rad($latitude))));
+
+        $zoom = (int) round(log($circumferenceMpp / $targetMpp, 2));
+        return max(3, min(21, $zoom));
+    }
+
     // -------------------------------------------------------------------------
     // AI Optimization — LLM Mentions
     // -------------------------------------------------------------------------

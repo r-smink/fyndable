@@ -503,6 +503,64 @@ WP-5 dekt alle bestanden die niet in WP-1 t/m WP-4 zijn geaudit, plus een finale
 - **[OK]** Geen `eval()`, `system()`, `shell_exec()`, `passthru()`, `proc_open()`, of `exec()` calls gevonden in de volledige codebase.
 - **[OK]** Geen `unserialize()` (zonder `maybe_` prefix) gevonden. Alleen `maybe_unserialize()` (veilige WordPress wrapper) gebruikt in `faqschema.php` en `settings.php`.
 
+---
+
+## WP-3 — Security-audit ronde 2 (augustus 2026)
+
+Volledige her-audit van beide plugins. Onderstaande bevindingen zijn gevonden en gefixed.
+
+### KRITIEK
+
+#### licenseapi.php (fyndable-saas-dashboard) — API-key leak in validateLicense
+- **[FIXED · KRITIEK]** `validateLicense` (publiek endpoint, `__return_true`) retourneerde de centrale OpenArt/OpenRouter API-keys van de operator naar iedereen die een willekeurige license_key POST. Hiermee kon een aanvaller onbeperkte API-calls uitvoeren op kosten van de operator. Fix: `image_api` volledig verwijderd uit de `validateLicense`-response. Clients ontvangen image-API credentials alleen via `activateLicense` / `getTenantStatus`, die een geldige license_key + tenant_key vereisen. Tevens een `getImageApiData()` helper geëxtraheerd om duplicatie te voorkomen. **Backlog:** lange-termijn oplossing is een proxy-architectuur waarbij de SaaS-server API-calls uitvoert namens de tenant, zodat de centrale key nooit de server verlaat.
+
+#### localseo.php (fyndable-client) — open REST endpoint
+- **[FIXED · KRITIEK]** `/local-schema` endpoint had `permission_callback => '__return_true` waardoor bedrijfsgegevens (adres, coördinaten, contact) publiek uitleesbaar waren. Het endpoint wordt nergens in de codebase aangeroepen (schema-data wordt al server-side in de pagina gerenderd). Fix: beperkt tot `current_user_can('edit_posts')`.
+
+#### abtesting.php (fyndable-client) — conversion endpoint versterkt
+- **[FIXED · HOOG]** `/ab-tests/conversion` endpoint (`__return_true`, moet publiek zijn voor anonieme bezoekers) had geen rate limiting en valideerde niet dat de test/variant bestond. Fix: IP-gebaseerde rate limiting (30 req/min) toegevoegd, plus validatie dat variant bij een actieve test hoort vóór conversie wordt geregistreerd. Session-based dedup was al aanwezig.
+
+#### gscoauth.php (fyndable-client) — OAuth callback (false positive)
+- **[OK]** `/gsc-callback` heeft `__return_true` maar dit is correct: OAuth callbacks moeten publiek zijn (Google redirect de browser erheen). Beveiliging komt van de `state` parameter die gevalideerd wordt met `hash_equals()` tegen een server-side transient. Verduidelijkende comment toegevoegd.
+
+### HOOG
+
+#### htmlfetcher.php (fyndable-saas-dashboard) — SSRF bescherming
+- **[FIXED · HOOG]** GEO-scan URL-fetch had geen validatie tegen localhost/private IP-ranges. Hoewel de fetch via Jina Reader/Firecrawl (externe services) loopt en de server niet zelf fetcht, is URL-validatie toegevoegd als defense-in-depth: `isUrlSafe()` blokkeert loopback, private, link-local, en ULA-adressen via `gethostbynamel()` + `FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE`.
+
+#### licenseapi.php (fyndable-saas-dashboard) — rate limiting publieke endpoints
+- **[FIXED · HOOG]** `/license/validate`, `/license/activate`, `/license/trial` hadden geen rate limiting → brute-force van license keys mogelijk. Fix: IP-gebaseerde rate limiting via transients toegevoegd. Validate: 10/min, Activate: 5/min, Trial: 3/uur. Tevens `getClientIp()` helper geëxtraheerd.
+
+#### abtesting.php (fyndable-client) — mt_rand → random_int
+- **[FIXED · MINOR]** `mt_rand(1, 100)` voor variant-toewijzing was niet cryptografisch veilig. Vervangen door `random_int(1, 100)`.
+
+#### abtesting.php (fyndable-client) — XSS in admin JS (false positive)
+- **[OK]** Audit meldde XSS op regels 298-300, maar `$testId`/`$variantId` zijn al naar `(int)` gecast (regels 291-292) en `$goalType` is al via `esc_js()` gehaald (regel 293). Geen issue.
+
+### MEDIUM
+
+#### emailtemplaterenderer.php (fyndable-saas-dashboard) — _html placeholders
+- **[FIXED · MEDIUM]** Placeholders eindigend op `_html` werden ongesaniteerd als HTML geretourneerd → mogelijke XSS in email/preview als tenant-data in templates terechtkomt. Fix: `wp_kses_post()` toegevoegd aan de `_html` branch in `replacePlaceholders()`, zodat veilige HTML-tags toegestaan blijven maar scripts/event-handlers gestript worden.
+
+#### paymentprocessor.php (fyndable-saas-dashboard) — expliciete sslverify
+- **[FIXED · MEDIUM]** `stripeRequest()` en `mollieRequest()` zetten `sslverify` niet expliciet. WordPress-default is `true` maar bij development-configs kan dit uit staan. Fix: `'sslverify' => true` expliciet toegevoegd aan beide methoden.
+
+#### signupcheckout.php (fyndable-saas-dashboard) — payment return handler
+- **[FIXED · MEDIUM]** `handlePaymentReturn()` had geen status-check op de tenant. Hoewel `cleanupPendingSignup()` al een guard heeft tegen actieve tenants, is een extra check toegevoegd: als de tenant al `active` + `paid` is, wordt direct naar het dashboard geredirect zonder verdere processing.
+
+#### supporttickets.php (fyndable-saas-dashboard) — tenant-scope (false positive)
+- **[OK]** Audit meldde ontbrekende tenant-scope filtering in `getAllTickets`. Verificieerd: `getAllTickets` wordt alleen vanuit `supportadmin.php` aangeroepen (vereist `manage_options`). De agency portal gebruikt `getTicketsForTenants($subTenantIds)` met correcte tenant-scoping. Geen issue.
+
+### LAAG
+
+#### licenseapi.php (fyndable-saas-dashboard) — tenant_key in error_log
+- **[FIXED · LAAG]** `error_log` bij succesvolle activatie logde de volledige `tenant_key`. Vervangen door numeriek tenant-ID (`$result['id']`).
+
+### Backlog / niet-gefixt
+- **[BACKLOG]** Directe `$wpdb->query()` zonder `prepare()` in diverse cleanup/ALTER TABLE queries (contentdecay, ideas, settings, llmtracker, brandvisibilitytracker, notfoundmonitor, ranktracker). Geen user-input → geen live SQLi, maar best-practice om `prepare()` te gebruiken.
+- **[BACKLOG]** Proxy-architectuur voor image-API: centrale API-keys verlaten de server via `activateLicense`/`getTenantStatus`. Lange-termijn oplossing is een proxy-endpoint.
+- **[BACKLOG]** License-key entropie: 96 bits (3×32 bits). Acceptabel maar 128+ bits aanbevolen.
+
 #### SSL verificatie
 - **[OK]** Geen `sslverify => false` gevonden in de volledige codebase. `updatechecker.php` gebruikt `$this->settings->sslVerify()` (default `true`).
 

@@ -334,6 +334,15 @@ class LicenseAPI
      */
     public function validateLicense(\WP_REST_Request $request): \WP_REST_Response
     {
+        // Rate limit: 10 validation attempts per minute per IP
+        if (!$this->checkRateLimit('validate')) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many requests. Please try again later.',
+            ], 429);
+        }
+
         $licenseKey = $request->get_param('license_key');
         $siteUrl = $request->get_param('site_url');
 
@@ -350,23 +359,17 @@ class LicenseAPI
             ], 400);
         }
 
-        // Get SaaS settings instance
-        $settings = new \SSEOAISaaS\SaaSSettings();
-        
+        // NOTE: image_api credentials are intentionally NOT returned by validateLicense.
+        // This endpoint only checks validity — returning central API keys here would leak
+        // the operator's OpenArt/OpenRouter keys to anyone who knows any valid license key.
+        // Clients receive image_api credentials only via activateLicense / getTenantStatus,
+        // which require a valid license_key + tenant_key pair.
+
         return new \WP_REST_Response([
             'success' => true,
             'valid' => true,
             'license' => $result,
             'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
-            'image_api' => [
-                'provider' => $settings->getImageApiProvider(),
-                'key' => match ($settings->getImageApiProvider()) {
-                    'openart' => get_option('ai_seo_saas_openart_api_key', ''),
-                    'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
-                    default => $settings->getImageApiKey(),
-                },
-                'model' => $settings->getImageApiModel(),
-            ],
         ], 200);
     }
 
@@ -375,6 +378,15 @@ class LicenseAPI
      */
     public function activateLicense(\WP_REST_Request $request): \WP_REST_Response
     {
+        // Rate limit: 5 activation attempts per minute per IP (stricter than validate)
+        if (!$this->checkRateLimit('activate', 5)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many activation attempts. Please try again later.',
+            ], 429);
+        }
+
         $licenseKey = $request->get_param('license_key');
         $siteUrl = $request->get_param('site_url');
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
@@ -384,9 +396,7 @@ class LicenseAPI
         error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
 
         // Get client IP
-        $ipAddress = $request->get_header('X-Forwarded-For') 
-            ?: $request->get_header('X-Real-IP') 
-            ?: $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $ipAddress = $this->getClientIp();
 
         $activationData = [
             'site_url' => $siteUrl,
@@ -405,13 +415,10 @@ class LicenseAPI
             ], 400);
         }
 
-        error_log('SSEO AI Dashboard: Activation successful - Tenant: ' . $result['tenant_key']);
+        error_log('SSEO AI Dashboard: Activation successful - Tenant ID: ' . ($result['id'] ?? 'unknown'));
         
         // Get white-label settings to sync to client
         $whiteLabelData = $this->getWhiteLabelData($result['tenant_key']);
-        
-        // Get SaaS settings for image API
-        $settings = new \SSEOAISaaS\SaaSSettings();
         
         return new \WP_REST_Response([
             'success' => true,
@@ -426,15 +433,7 @@ class LicenseAPI
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
             'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
-            'image_api' => [
-                'provider' => $settings->getImageApiProvider(),
-                'key' => match ($settings->getImageApiProvider()) {
-                    'openart' => get_option('ai_seo_saas_openart_api_key', ''),
-                    'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
-                    default => $settings->getImageApiKey(),
-                },
-                'model' => $settings->getImageApiModel(),
-            ],
+            'image_api' => $this->getImageApiData(),
         ], 200);
     }
     
@@ -448,6 +447,72 @@ class LicenseAPI
             return ProviderRouter::getRoutingForModelTier($modelTier);
         }
         return $this->getModelRoutingForTier($tier);
+    }
+
+    /**
+     * Build the image_api credentials payload for a tenant.
+     *
+     * SECURITY: Only call this from endpoints that have already verified a valid
+     * license_key + tenant_key pair (activateLicense, getTenantStatus). The central
+     * operator API keys (OpenArt/OpenRouter) are returned here so the client plugin
+     * can call the image provider directly. Long-term this should be replaced by a
+     * proxy architecture where the SaaS server makes the API call on behalf of the
+     * tenant, so the central key never leaves the server.
+     */
+    private function getImageApiData(): array
+    {
+        $settings = new \SSEOAISaaS\SaaSSettings();
+        return [
+            'provider' => $settings->getImageApiProvider(),
+            'key' => match ($settings->getImageApiProvider()) {
+                'openart' => get_option('ai_seo_saas_openart_api_key', ''),
+                'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                default => $settings->getImageApiKey(),
+            },
+            'model' => $settings->getImageApiModel(),
+        ];
+    }
+
+    /**
+     * IP-based rate limiting for public license endpoints.
+     *
+     * Prevents brute-force attacks on license keys and enumeration of valid keys.
+     * Uses a sliding window via WordPress transients. Default: 10 requests per
+     * minute per IP. Returns true when within limit, false when exceeded.
+     */
+    private function checkRateLimit(string $bucket, int $maxRequests = 10, int $windowSeconds = 60): bool
+    {
+        $ip = $this->getClientIp();
+        $key = 'sseo_saas_rl_' . $bucket . '_' . md5($ip);
+        $count = (int) get_transient($key);
+        if ($count >= $maxRequests) {
+            return false;
+        }
+        if ($count === 0) {
+            set_transient($key, 1, $windowSeconds);
+        } else {
+            set_transient($key, $count + 1, $windowSeconds);
+        }
+        return true;
+    }
+
+    /**
+     * Get the client IP address, preferring forwarded headers.
+     */
+    private function getClientIp(): string
+    {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+        if (!empty($ip)) {
+            $parts = explode(',', $ip);
+            $ip = trim($parts[0]);
+        }
+        if (empty($ip)) {
+            $ip = $_SERVER['HTTP_X_REAL_IP'] ?? '';
+        }
+        if (empty($ip)) {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        }
+        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
     }
 
     /**
@@ -477,6 +542,27 @@ class LicenseAPI
             $brand = is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
             if (!empty($brand['company_name'])) {
                 return $brand;
+            }
+        }
+
+        // Fall back to the parent agency's white-label settings for sub-tenants.
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if ($tenant && !empty($tenant['parent_tenant_id'])) {
+            $agencyAccount = $this->tenants->getAgencyAccountByTenant((int)$tenant['parent_tenant_id']);
+            if ($agencyAccount && !empty($agencyAccount['user_id'])) {
+                $agencyWl = get_user_meta((int)$agencyAccount['user_id'], 'sseo_ai_agency_wl', true);
+                if (is_array($agencyWl) && !empty($agencyWl['company_name'])) {
+                    return [
+                        'company_name' => $agencyWl['company_name'],
+                        'company_logo' => $agencyWl['company_logo'] ?? '',
+                        'primary_color' => $agencyWl['primary_color'] ?? '#379fd3',
+                        'secondary_color' => $agencyWl['secondary_color'] ?? '#8f39ac',
+                        'use_primary_only' => false,
+                        'support_email' => $agencyWl['support_email'] ?? '',
+                        'support_url' => $agencyWl['support_url'] ?? '',
+                        'enabled' => true,
+                    ];
+                }
             }
         }
 
@@ -544,8 +630,7 @@ class LicenseAPI
         }
 
         $limits = $this->tenants->checkTenantLimits($tenantKey);
-        
-        // Get SaaS settings for image API
+
         $settings = new \SSEOAISaaS\SaaSSettings();
 
         return new \WP_REST_Response([
@@ -564,15 +649,7 @@ class LicenseAPI
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'chatbot_config' => $this->getChatbotConfig(),
             'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
-            'image_api' => [
-                'provider' => $settings->getImageApiProvider(),
-                'key' => match ($settings->getImageApiProvider()) {
-                    'openart' => get_option('ai_seo_saas_openart_api_key', ''),
-                    'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
-                    default => $settings->getImageApiKey(),
-                },
-                'model' => $settings->getImageApiModel(),
-            ],
+            'image_api' => $this->getImageApiData(),
         ], 200);
     }
 
@@ -676,6 +753,15 @@ class LicenseAPI
      */
     public function startTrial(\WP_REST_Request $request): \WP_REST_Response
     {
+        // Rate limit: 3 trial signups per hour per IP (very strict to prevent abuse)
+        if (!$this->checkRateLimit('trial', 3, 3600)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many trial requests. Please try again later.',
+            ], 429);
+        }
+
         $email = $request->get_param('email');
         $name = $request->get_param('name');
         $siteUrl = $request->get_param('site_url');

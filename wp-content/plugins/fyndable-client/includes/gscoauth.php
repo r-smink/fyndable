@@ -73,7 +73,11 @@ class GscOAuth
             'permission_callback' => fn() => current_user_can('manage_options'),
         ]);
 
-        // Legacy callback (kept for backward compatibility with existing connected sites)
+        // Legacy callback (kept for backward compatibility with existing connected sites).
+        // NOTE: This endpoint MUST remain public (__return_true) because Google redirects
+        // the user's browser here after OAuth consent. Security is provided by the OAuth
+        // `state` parameter, which is validated with hash_equals() in restHandleCallback()
+        // against a server-side transient. This prevents CSRF and token interception.
         register_rest_route('sseo-ai/v1', '/gsc-callback', [
             'methods' => 'GET',
             'callback' => [$this, 'restHandleCallback'],

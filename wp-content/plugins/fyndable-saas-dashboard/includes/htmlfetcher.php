@@ -31,6 +31,14 @@ class HtmlFetcher
             return new \WP_Error('invalid_url', __('Invalid URL provided', 'sseo-ai-saas'));
         }
 
+        // SSRF protection: block loopback, private, and link-local targets.
+        // Although Jina/Firecrawl fetch the URL on their side (not our server),
+        // this prevents abuse of the service to probe internal addresses and
+        // protects against future architecture changes where we might fetch directly.
+        if (!$this->isUrlSafe($url)) {
+            return new \WP_Error('blocked_url', __('URL points to a blocked (internal/loopback) address', 'sseo-ai-saas'));
+        }
+
         $jinaResult = $this->fetchJina($url);
         if (!is_wp_error($jinaResult)) {
             return $jinaResult;
@@ -120,5 +128,66 @@ class HtmlFetcher
         $text = preg_replace('/\s+/', ' ', $text) ?? $text;
         $text = trim($text);
         return mb_substr($text, 0, 20000);
+    }
+
+    /**
+     * SSRF protection: validate that a URL does not resolve to a loopback,
+     * private, or link-local address. Also blocks common internal hostnames.
+     */
+    private function isUrlSafe(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (empty($host)) {
+            return false;
+        }
+
+        // Block common internal/loopback hostnames.
+        $blockedHosts = ['localhost', 'metadata.google.internal'];
+        foreach ($blockedHosts as $blocked) {
+            if (strcasecmp($host, $blocked) === 0) {
+                return false;
+            }
+        }
+
+        // Resolve host to IPs and check each against blocked ranges.
+        // Note: gethostbynamel() returns only IPv4; for IPv6 we rely on
+        // host-name blocklist above. This is defense-in-depth, not exhaustive.
+        $ips = gethostbynamel($host);
+        if (is_array($ips)) {
+            foreach ($ips as $ip) {
+                if (!$this->isIpSafe($ip)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check whether an IP is outside loopback/private/link-local ranges.
+     */
+    private function isIpSafe(string $ip): bool
+    {
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            // IPv6: block ::1 (loopback) and fc00::/7 (unique local)
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                if ($ip === '::1') {
+                    return false;
+                }
+                $packed = inet_pton($ip);
+                if ($packed !== false && (ord($packed[0]) & 0xfe) === 0xfc) {
+                    return false; // ULA fc00::/7
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // Block loopback, private, link-local, reserved ranges
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return true;
+        }
+        return false;
     }
 }

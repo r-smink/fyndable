@@ -540,6 +540,8 @@ class DashboardAPI
         $endpointMap = [
             'serp/search'               => '/serp/query',
             'serp/query'                => '/serp/query',
+            'serp/local-pack'           => '/serp/local-pack',
+            'serp/local-grid'           => '/serp/local-grid',
             'ai/llm-mentions'           => '/ai/llm-mentions',
             'ai/keyword-data'           => '/ai/keyword-data',
             'ai/llm-response'           => '/ai/llm-response',

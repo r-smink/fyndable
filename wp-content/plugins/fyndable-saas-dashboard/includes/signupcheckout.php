@@ -503,6 +503,18 @@ class SignupCheckout
             exit;
         }
 
+        // Defense-in-depth: only process return URLs for tenants that are still
+        // pending or in trial. Active/paid customers should never be affected by
+        // a return URL visit (cleanupPendingSignup also guards against this, but
+        // this check prevents unnecessary processing entirely).
+        $tenantStatus = $tenant['status'] ?? '';
+        $paymentStatus = $tenant['payment_status'] ?? '';
+        if ($tenantStatus === 'active' && in_array($paymentStatus, ['active', 'paid'], true)) {
+            // Already activated — redirect to portal without processing.
+            wp_redirect(home_url('/dashboard/'));
+            exit;
+        }
+
         // Fallback: als Mollie het payment ID niet in de redirect URL heeft meegegeven,
         // haal het op uit de tenant settings (opgeslagen tijdens checkout creatie).
         if (empty($paymentId) && $provider === 'mollie' && $state === 'success') {

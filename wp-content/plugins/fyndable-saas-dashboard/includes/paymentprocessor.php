@@ -501,6 +501,7 @@ class PaymentProcessor
                 'Content-Type' => 'application/x-www-form-urlencoded',
             ],
             'timeout' => 60,
+            'sslverify' => true, // Explicit: payment API calls must always verify SSL
         ];
 
         if ($method === 'GET') {
@@ -544,6 +545,7 @@ class PaymentProcessor
                 'Content-Type' => 'application/json',
             ],
             'timeout' => 60,
+            'sslverify' => true, // Explicit: payment API calls must always verify SSL
         ];
 
         if ($method === 'GET') {
