@@ -83,8 +83,7 @@ class BulkActions
      */
     public function restScanPosts(\WP_REST_Request $request): array
     {
-        $postTypes = get_post_types(['public' => true]);
-        unset($postTypes['attachment']);
+        $postTypes = PageBuilderHelper::getSeoPostTypes();
 
         $posts = get_posts([
             'post_type' => array_values($postTypes),

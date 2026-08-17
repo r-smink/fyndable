@@ -11,6 +11,65 @@ namespace SSEOAIClient;
 class PageBuilderHelper
 {
     /**
+     * Builder/template post types that should never appear in SEO audits,
+     * bulk scans, or reports. These are structural templates (headers, footers,
+     * blocks, popups) — not standalone indexable pages.
+     */
+    private static array $builderTemplateTypes = [
+        'elementor_library',      // Elementor templates (headers, footers, blocks, popups)
+        'e-floating-buttons',     // Elementor floating buttons
+        'e-landing-page',         // Elementor landing page templates
+        'e-popup',                // Elementor popups (newer)
+        'fl-theme-layout',        // Beaver Builder theme layouts
+        'fl-builder-template',    // Beaver Builder templates
+        'fusion_element',         // Avada Fusion Builder elements
+        'ft_layout',              // Avada Fusion Builder layouts
+        'tcb_symbol',             // Thrive Architect symbols
+        'tcb_lightbox',           // Thrive Architect lightboxes
+        'jet-menu',               // JetMenu items
+        'jet-smart-filters',      // JetSmartFilters
+        'wp_block',               // Gutenberg reusable blocks (template parts)
+        'custom_css',             // Custom CSS
+        'customize_changeset',    // Customizer changesets
+        'oembed_cache',           // oEmbed cache
+        'user_request',           // Privacy user requests
+        'vc4t_template',          // VC templates
+        'popup_maker',            // Popup Maker popups
+        'amp_validated_url',      // AMP validated URLs
+    ];
+
+    /**
+     * Get the post types that should be included in SEO audits, bulk scans,
+     * and reports.
+     *
+     * Respects the existing `sseo_ai_enabled_post_types` option (set during
+     * onboarding, default ['post', 'page']). Always excludes the
+     * `attachment` type and the builder/template blacklist.
+     *
+     * @return array<int,string> List of post type slugs.
+     */
+    public static function getSeoPostTypes(): array
+    {
+        $enabled = get_option('sseo_ai_enabled_post_types', ['post', 'page']);
+
+        if (empty($enabled) || !is_array($enabled)) {
+            // Fallback: all public post types, minus excluded ones
+            $types = get_post_types(['public' => true]);
+        } else {
+            $types = $enabled;
+        }
+
+        // Always exclude attachment
+        $types = array_diff($types, ['attachment']);
+
+        // Always exclude builder/template post types
+        $types = array_diff($types, self::$builderTemplateTypes);
+
+        // Re-index and return
+        return array_values($types);
+    }
+
+    /**
      * Get fully rendered content for a post, including page builder output.
      *
      * @param \WP_Post $post
