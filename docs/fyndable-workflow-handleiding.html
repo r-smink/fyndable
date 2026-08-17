@@ -24,8 +24,6 @@
 <meta name="twitter:description" content="De logische volgorde van de Fyndable SEO-plugin: van installatie tot monitoring, per fase en per functie.">
 <style>
 /* ===== Workflow-specifieke stijlen ===== */
-.workflow-intro { max-width: 820px; margin: 0 auto 40px; padding: 0 24px; text-align: center; }
-.workflow-intro p { font-size: 17px; color: var(--text-muted); line-height: 1.7; }
 .workflow-section { max-width: 1200px; margin: 0 auto 60px; padding: 0 24px; }
 .workflow-section > h2 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; letter-spacing: -0.5px; }
 .workflow-section > .section-sub { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 36px; }
@@ -69,17 +67,11 @@ details.phase-block[open] .chevron { transform: rotate(180deg); }
 .fn-block .fn-example { background: #f8f9fb; border-left: 3px solid var(--primary); padding: 10px 14px; border-radius: 4px; font-size: 14px; color: #374151; margin: 8px 0 0; line-height: 1.6; }
 .fn-block code { background: #f0f4f8; padding: 1px 6px; border-radius: 4px; font-size: 13px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
 
-.workflow-faq { max-width: 880px; margin: 0 auto 80px; padding: 0 24px; }
-.workflow-faq h2 { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 28px; }
-.faq-q { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 10px; }
-.faq-q p { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
-.faq-q p strong { color: var(--text); }
 
 @media (max-width: 968px) { .phase-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) {
     .phase-grid { grid-template-columns: 1fr; }
     .workflow-section > h2 { font-size: 22px; }
-    .workflow-intro p { font-size: 15px; }
     details.phase-block > summary { padding: 16px; gap: 12px; }
     .phase-body { padding: 0 16px 18px; }
     .fn-block { padding: 14px 16px; }
@@ -89,43 +81,23 @@ details.phase-block[open] .chevron { transform: rotate(180deg); }
 <body>
 
 <header class="site-header">
-    <div class="header-inner">
-        <a href="index.html" class="header-logo">
+    <div class="header-inner" style="justify-content: center; position: relative;">
+        <a href="index.html" class="header-logo" style="margin: 0;">
             <img src="assets/images/logo/long-white-png.png" alt="Fyndable">
         </a>
-        <nav class="header-nav">
-            <a href="index.html">Home</a>
-            <a href="nl/aan-de-slag/index.html">Aan de slag</a>
-            <a href="nl/content-keywords/index.html">Content</a>
-            <a href="nl/links-technische-seo/index.html">SEO</a>
-            <a href="nl/instellingen-tools/index.html">Instellingen</a>
-            <div class="lang-switch">
-                <a href="fyndable-workflow-handleiding.html" class="active">NL</a>
-                <a href="#" style="opacity:0.5;cursor:not-allowed" title="Niet beschikbaar">EN</a>
-            </div>
-        </nav>
-        <button class="mobile-menu-toggle" aria-label="Menu">&#9776;</button>
+        <div class="lang-switch" style="position: absolute; right: 24px;">
+            <a href="fyndable-workflow-handleiding.html" class="active">NL</a>
+            <a href="fyndable-workflow-handleiding-en.html">EN</a>
+        </div>
     </div>
 </header>
 
 <section class="hero">
     <div class="hero-inner">
         <h1>Fyndable Workflow-handleiding</h1>
-        <p>De logische volgorde van de Fyndable SEO-plugin &mdash; van installatie tot monitoring, stap voor stap per fase en per functie.</p>
-    </div>
-</section>
-
-<div class="content-area">
-    <div class="breadcrumb">
-        <a href="index.html">Home</a>
-        <span class="separator">/</span>
-        <span class="current">Workflow-handleiding</span>
-    </div>
-
-    <div class="workflow-intro">
         <p>Deze handleiding laat zien in welke volgorde je Fyndable het beste kunt gebruiken. Je begint met activatie en basisinstellingen, doet vervolgens onderzoek, maakt en optimaliseert content, regelt links en techniek, voegt schema toe, en sluit af met monitoring. Onder het overzicht vind je per fase uitklapbare detail-secties met de belangrijkste stappen, voorbeelden en tips.</p>
     </div>
-</div>
+</section>
 
 <!-- ===== WORKFLOW OVERZICHT ===== -->
 <section class="workflow-section">
@@ -1271,49 +1243,12 @@ details.phase-block[open] .chevron { transform: rotate(180deg); }
     </div>
 </section>
 
-<!-- ===== FAQ ===== -->
-<section class="workflow-faq">
-    <h2>Veelgestelde vragen</h2>
-    <div class="faq-q"><p><strong>Kan ik Fyndable gebruiken naast Yoast of Rank Math?</strong><br>Ja, maar gebruik &eacute;&eacute;n plugin als leidend voor sitemap, schema en redirects om conflicten te voorkomen.</p></div>
-    <div class="faq-q"><p><strong>Waarom zie ik bepaalde menu's niet?</strong><br>Controleer of je licentie actief is en of je tier toegang geeft tot dat menu. Trial en DEV tonen alle menu's.</p></div>
-    <div class="faq-q"><p><strong>Hoe vaak moet ik een Site Audit draaien?</strong><br>Minimaal &eacute;&eacute;n keer per maand, of direct na grote wijzigingen.</p></div>
-    <div class="faq-q"><p><strong>Hoe forceer ik een Google-crawl?</strong><br>Gebruik <strong>Direct Index</strong> voor belangrijke URLs. Het quotum is beperkt.</p></div>
-    <div class="faq-q"><p><strong>Mijn AI-tools genereren geen output, wat nu?</strong><br>Controleer je licentiequota, de SaaS-dashboard-verbinding en of de juiste API-key is geconfigureerd.</p></div>
-    <div class="faq-q"><p><strong>Werkt Fyndable met de klassieke editor?</strong><br>De Editor Assistant werkt alleen in Gutenberg. De SEO-meta-box werkt in zowel Gutenberg als de klassieke editor.</p></div>
-</section>
-
 <footer class="site-footer">
-    <div class="footer-inner">
-        <div class="footer-brand">
-            <img src="assets/images/logo/long-white-png.png" alt="Fyndable">
-            <p>Slimme SEO voor groeiende bedrijven.</p>
-        </div>
-        <div class="footer-col">
-            <h4>Product</h4>
-            <ul>
-                <li><a href="https://fyndable.ai">Features</a></li>
-                <li><a href="https://fyndable.ai">Prijzen</a></li>
-                <li><a href="index.html">Documentatie</a></li>
-            </ul>
-        </div>
-        <div class="footer-col">
-            <h4>Bedrijf</h4>
-            <ul>
-                <li><a href="https://fyndable.ai">Over ons</a></li>
-                <li><a href="https://fyndable.ai">Contact</a></li>
-                <li><a href="https://fyndable.ai">Blog</a></li>
-            </ul>
-        </div>
-        <div class="footer-col">
-            <h4>Support</h4>
-            <ul>
-                <li><a href="index.html">Documentatie</a></li>
-                <li><a href="index-en.html">English Docs</a></li>
-                <li><a href="https://fyndable.ai">Support</a></li>
-            </ul>
-        </div>
+    <div class="footer-inner" style="display: flex; justify-content: center; align-items: center; padding: 48px 24px;">
+        <a href="index.html">
+            <img src="assets/images/logo/long-white-png.png" alt="Fyndable" style="height: 38px; width: auto;">
+        </a>
     </div>
-    <div class="footer-bottom">&copy; 2026 Fyndable. Alle rechten voorbehouden.</div>
 </footer>
 
 <script src="assets/js/main.js"></script>
