@@ -115,14 +115,14 @@ class LicenseAdmin
         if (strpos($hook, 'sseo-ai') === false) {
             return;
         }
-        
+
         wp_enqueue_style(
             'sseo-ai-license-admin',
             plugins_url('assets/license-admin.css', $this->pluginFile),
             [],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
         );
-        
+
         wp_enqueue_script(
             'sseo-ai-license-admin',
             plugins_url('assets/license-admin.js', $this->pluginFile),
@@ -130,6 +130,42 @@ class LicenseAdmin
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.js'),
             true
         );
+
+        // Apply global white-label colors to the SaaS admin pages. Agency pages
+        // are skipped because AgencyPortal::enqueueAssets() injects an
+        // agency-specific override there.
+        if (strpos($hook, 'sseo-ai-agency') !== false) {
+            return;
+        }
+
+        $wlEnabled = (bool) get_option('sseo_ai_saas_wl_enabled', false);
+        if (!$wlEnabled) {
+            return;
+        }
+
+        $primary = sanitize_hex_color(get_option('sseo_ai_saas_wl_primary_color', '#379fd3')) ?: '#379fd3';
+        $secondary = sanitize_hex_color(get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac')) ?: '#8f39ac';
+
+        $gradient = sprintf('linear-gradient(135deg, %s 0%%, %s 100%%)', $primary, $secondary);
+
+        $css = ':root {
+            --sseo-primary: ' . $primary . ';
+            --sseo-blue: ' . $primary . ';
+        }
+        body[class*="sseo-ai"] {
+            background: ' . $gradient . ' !important;
+        }
+        .wrap.sseo-ai-license-admin {
+            background: ' . $gradient . ' !important;
+        }
+        .wrap.sseo-ai-license-admin > h1 {
+            background: ' . $gradient . ' !important;
+        }
+        .sseo-ai-upgrade-cta {
+            background: ' . $gradient . ' !important;
+        }';
+
+        wp_add_inline_style('sseo-ai-license-admin', $css);
     }
     
     /**

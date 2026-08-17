@@ -71,6 +71,9 @@ class AgencyPortal
         body[class*="sseo-ai"] {
             background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
         }
+        .wrap.sseo-ai-license-admin {
+            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
+        }
         .wrap.sseo-ai-license-admin h1 {
             background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
             color: #fff !important;
