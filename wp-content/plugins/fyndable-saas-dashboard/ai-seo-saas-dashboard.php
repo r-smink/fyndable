@@ -56,6 +56,20 @@ register_deactivation_hook(__FILE__, function () {
 
 // Load translations
 add_action('init', function () {
+    // Generate MO files from PO files if needed (auto-regeneration so
+    // updated .po files are picked up without a manual build step).
+    require_once SSEO_AI_SAAS_PLUGIN_DIR . 'includes/translationhelper.php';
+
+    $languagesDir = SSEO_AI_SAAS_PLUGIN_DIR . 'languages/';
+    if (is_dir($languagesDir)) {
+        foreach ((array) glob($languagesDir . '*.po') as $poFile) {
+            $moFile = str_replace('.po', '.mo', $poFile);
+            if (!file_exists($moFile) || (file_exists($poFile) && filemtime($poFile) > filemtime($moFile))) {
+                \SSEOAISaaS\TranslationHelper::generateMoFile($poFile, $moFile);
+            }
+        }
+    }
+
     load_plugin_textdomain('sseo-ai-saas', false, dirname(plugin_basename(__FILE__)) . '/languages');
 }, 5);
 

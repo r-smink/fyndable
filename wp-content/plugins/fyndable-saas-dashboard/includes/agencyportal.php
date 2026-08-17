@@ -1457,6 +1457,21 @@ class AgencyPortal
             update_user_meta($user->ID, 'fyndable_city', $city);
             update_user_meta($user->ID, 'fyndable_country', $country);
 
+            // Update WordPress user locale (language) — empty string = site default.
+            $localeInput = sanitize_text_field($_POST['wp_locale'] ?? '');
+            $allowedLocales = array_merge(['en_US'], (array) get_available_languages());
+            if ($localeInput === '' || in_array($localeInput, $allowedLocales, true)) {
+                $localeUpdate = wp_update_user([
+                    'ID' => $user->ID,
+                    'locale' => $localeInput,
+                ]);
+                if (is_wp_error($localeUpdate)) {
+                    $error = $localeUpdate->get_error_message();
+                }
+            } else {
+                $error = __('Invalid language selected.', 'sseo-ai-saas');
+            }
+
             if (empty($error)) {
                 $message = __('Account updated successfully.', 'sseo-ai-saas');
             }
@@ -1469,6 +1484,22 @@ class AgencyPortal
         $postal = get_user_meta($user->ID, 'fyndable_postal_code', true);
         $city = get_user_meta($user->ID, 'fyndable_city', true);
         $country = get_user_meta($user->ID, 'fyndable_country', true);
+        $currentLocale = get_user_meta($user->ID, 'locale', true);
+        // Build the list of available languages for the selector.
+        $availableLanguages = (array) get_available_languages();
+        $translations = wp_get_available_translations();
+        $languageOptions = [];
+        // Site default first (empty value).
+        $languageOptions[''] = __('Site Default', 'sseo-ai-saas');
+        // English is always available (source language).
+        $languageOptions['en_US'] = 'English';
+        foreach ($availableLanguages as $lang) {
+            if (isset($translations[$lang]['native_name'])) {
+                $languageOptions[$lang] = $translations[$lang]['native_name'];
+            } else {
+                $languageOptions[$lang] = $lang;
+            }
+        }
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('My Account', 'sseo-ai-saas'); ?></h1>
@@ -1521,6 +1552,21 @@ class AgencyPortal
                         <tr>
                             <th scope="row"><label for="country"><?php esc_html_e('Country', 'sseo-ai-saas'); ?></label></th>
                             <td><input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="wp_locale"><?php esc_html_e('Language', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="wp_locale" id="wp_locale" class="regular-text">
+                                    <?php foreach ($languageOptions as $value => $label): ?>
+                                        <option value="<?php echo esc_attr($value); ?>" <?php selected($currentLocale, $value); ?>>
+                                            <?php echo esc_html($label); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <p class="description">
+                                    <?php esc_html_e('Choose the language for the Fyndable dashboard. This sets your WordPress profile language. The dashboard reloads in the selected language after saving. Site Default follows the site language setting.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
                         </tr>
                     </table>
                     <?php submit_button(__('Save Account', 'sseo-ai-saas'), 'primary', 'agency_update_account'); ?>

@@ -166,6 +166,9 @@ msgstr "Afrekenen"
 msgid "Choose Logo"
 msgstr "Logo Kiezen"
 
+msgid "Choose the language for the Fyndable dashboard. This sets your WordPress profile language. The dashboard reloads in the selected language after saving. Site Default follows the site language setting."
+msgstr "Kies de taal voor het Fyndable-dashboard. Dit stelt je WordPress-profieltaal in. Het dashboard herlaadt in de geselecteerde taal na het opslaan. Standaard (site) volgt de sitetaalinstelling."
+
 msgid "Citeerwaardigheid"
 msgstr "Citeerwaardigheid"
 
@@ -430,6 +433,9 @@ msgstr "Interne links"
 
 msgid "Invalid credentials."
 msgstr "Ongeldige inloggegevens."
+
+msgid "Invalid language selected."
+msgstr "Ongeldige taal geselecteerd."
 
 msgid "Invalid OpenAI API key. Check your settings."
 msgstr "Ongeldige OpenAI API sleutel. Controleer je instellingen."
@@ -823,6 +829,9 @@ msgstr "Gebruik weergegeven voor %s. Totale waarden omvatten alle sub-tenants on
 
 msgid "Sign in"
 msgstr "Inloggen"
+
+msgid "Site Default"
+msgstr "Standaard (site)"
 
 msgid "Smart SEO"
 msgstr "Smart SEO"
@@ -1384,6 +1393,9 @@ msgstr "Factuur niet gevonden of niet onderdeel van je account."
 
 msgid "Last Active"
 msgstr "Laatst actief"
+
+msgid "Language"
+msgstr "Taal"
 
 msgid "Last Name"
 msgstr "Achternaam"

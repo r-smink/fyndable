@@ -172,6 +172,9 @@ msgstr "Chatbot"
 msgid "Checkout"
 msgstr "Checkout"
 
+msgid "Choose the language for the Fyndable dashboard. This sets your WordPress profile language. The dashboard reloads in the selected language after saving. Site Default follows the site language setting."
+msgstr "Choose the language for the Fyndable dashboard. This sets your WordPress profile language. The dashboard reloads in the selected language after saving. Site Default follows the site language setting."
+
 msgid "City"
 msgstr "City"
 
@@ -379,8 +382,14 @@ msgstr "Invoice not found."
 msgid "Invoices"
 msgstr "Invoices"
 
+msgid "Invalid language selected."
+msgstr "Invalid language selected."
+
 msgid "Last Active"
 msgstr "Last Active"
+
+msgid "Language"
+msgstr "Language"
 
 msgid "Last Name"
 msgstr "Last Name"
@@ -690,6 +699,9 @@ msgstr "Set a Company Name above and save your settings to enable the plugin dow
 
 msgid "Settings"
 msgstr "Settings"
+
+msgid "Site Default"
+msgstr "Site Default"
 
 msgid "Showing usage for %s. Total values include all sub-tenants under your agency."
 msgstr "Showing usage for %s. Total values include all sub-tenants under your agency."
