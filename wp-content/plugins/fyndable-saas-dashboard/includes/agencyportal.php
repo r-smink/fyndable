@@ -1459,9 +1459,9 @@ class AgencyPortal
 
             // Update WordPress user locale (language) — empty string = site default.
             $localeInput = sanitize_text_field($_POST['wp_locale'] ?? '');
-            $allowedLocales = array_merge(['en_US'], (array) get_available_languages());
+            $allowedLocales = array_merge(['en_US'], (array) \get_available_languages());
             if ($localeInput === '' || in_array($localeInput, $allowedLocales, true)) {
-                $localeUpdate = wp_update_user([
+                $localeUpdate = \wp_update_user([
                     'ID' => $user->ID,
                     'locale' => $localeInput,
                 ]);
@@ -1486,8 +1486,8 @@ class AgencyPortal
         $country = get_user_meta($user->ID, 'fyndable_country', true);
         $currentLocale = get_user_meta($user->ID, 'locale', true);
         // Build the list of available languages for the selector.
-        $availableLanguages = (array) get_available_languages();
-        $translations = wp_get_available_translations();
+        $availableLanguages = (array) \get_available_languages();
+        $translations = \function_exists('wp_get_available_translations') ? \wp_get_available_translations() : [];
         $languageOptions = [];
         // Site default first (empty value).
         $languageOptions[''] = __('Site Default', 'sseo-ai-saas');

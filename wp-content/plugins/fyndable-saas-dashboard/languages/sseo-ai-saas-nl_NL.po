@@ -193,6 +193,9 @@ msgstr "Gesloten"
 msgid "Company name"
 msgstr "Bedrijfsnaam"
 
+msgid "Company Name"
+msgstr "Bedrijfsnaam"
+
 msgid "Company name is required to build a white-label package."
 msgstr "Bedrijfsnaam is vereist om een white-label pakket te bouwen."
 
