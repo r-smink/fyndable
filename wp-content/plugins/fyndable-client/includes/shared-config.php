@@ -26,7 +26,7 @@ if (!defined('SSEO_AI_SAAS_API_NAMESPACE')) {
 
 // License Key Format
 if (!defined('SSEO_AI_LICENSE_KEY_PATTERN')) {
-    define('SSEO_AI_LICENSE_KEY_PATTERN', '/^FYN-SSAI-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/');
+    define('SSEO_AI_LICENSE_KEY_PATTERN', '/^(FYN-SSAI|[A-Z0-9]{1,6}-AI)-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/i');
 }
 
 // Database Table Names (without prefix)

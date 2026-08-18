@@ -977,5 +977,5 @@ msgstr "Bekijk je SEO-instellingen in Instellingen > Fyndable"
 msgid "Go to Dashboard"
 msgstr "Naar dashboard"
 
-msgid "FYN-SSAI-XXXX-XXXX-XXXX"
-msgstr "FYN-SSAI-XXXX-XXXX-XXXX"
+msgid "XXXX-XXXX-XXXX-XXXX-XXXX"
+msgstr "XXXX-XXXX-XXXX-XXXX-XXXX"

@@ -37,7 +37,7 @@
         // Validate license key format (non-blocking)
         $('#license_key').on('input', function() {
             const key = $(this).val().trim();
-            const pattern = /^FYN-SSAI-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/i;
+            const pattern = /^(FYN-SSAI|[A-Z0-9]{1,6}-AI)-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$/i;
             
             // Remove previous error messages
             $(this).next('.error-message').remove();
@@ -45,7 +45,7 @@
             if (key && key.length > 5 && !pattern.test(key)) {
                 $(this).addClass('error');
                 if (!$(this).next('.error-message').length) {
-                    $(this).after('<p class="description error-message" style="color: #d63638;">⚠️ Expected format: FYN-SSAI-XXXX-XXXX-XXXX (case-insensitive)</p>');
+                    $(this).after('<p class="description error-message" style="color: #d63638;">⚠️ Expected format: XXXX-XXXX-XXXX-XXXX-XXXX (case-insensitive)</p>');
                 }
             } else {
                 $(this).removeClass('error');
