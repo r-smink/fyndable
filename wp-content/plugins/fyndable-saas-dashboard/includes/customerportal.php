@@ -439,6 +439,18 @@ class CustomerPortal
         $downloadUrl = get_option('sseo_ai_saas_download_url', '');
         $latestVersion = get_option('sseo_ai_saas_latest_version', '');
 
+        // Prefer remote update server metadata if configured
+        $updateServerUrl = get_option('sseo_ai_saas_update_server_url', '');
+        if (!empty($updateServerUrl)) {
+            $remoteMeta = $this->fetchRemoteMetadata(rtrim($updateServerUrl, '/') . '/fyndable-client/latest.json');
+            if (!empty($remoteMeta['download_url'])) {
+                $downloadUrl = $remoteMeta['download_url'];
+            }
+            if (!empty($remoteMeta['version'])) {
+                $latestVersion = $remoteMeta['version'];
+            }
+        }
+
         if (empty($downloadUrl)) {
             return new \WP_REST_Response([
                 'success' => false,
@@ -605,6 +617,42 @@ class CustomerPortal
         update_user_meta($userId, 'fyndable_lang', $lang);
 
         return new \WP_REST_Response(['success' => true, 'lang' => $lang], 200);
+    }
+
+    /**
+     * Fetch remote metadata from the configured update server.
+     *
+     * Returns decoded array or null on failure.
+     */
+    private function fetchRemoteMetadata(string $url): ?array
+    {
+        $cacheKey = 'sseo_ai_portal_update_meta_' . md5($url);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        if (is_wp_error($response)) {
+            return null;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code >= 400) {
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($body)) {
+            return null;
+        }
+
+        set_transient($cacheKey, $body, 6 * HOUR_IN_SECONDS);
+        return $body;
     }
 
     /**
