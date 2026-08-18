@@ -1238,20 +1238,98 @@ class Client
         if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
             $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?: '#379fd3') ?: '#379fd3';
             $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?: '#8f39ac') ?: '#8f39ac';
+            $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+            $bgGradient = $usePrimaryOnly
+                ? $primaryColor
+                : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+
+            // Convert hex to rgb for rgba() usage
+            $rgb = sscanf($primaryColor, '#%02x%02x%02x');
+            $rgbStr = implode(',', $rgb);
+
             wp_add_inline_style('ai-seo-client-admin', "
                 :root {
                     --sseo-primary-color: {$primaryColor};
                     --sseo-secondary-color: {$secondaryColor};
+                    --sseo-sa-primary: {$primaryColor};
+                    --sseo-sa-secondary: {$secondaryColor};
                 }
-                .sseo-ai-header, .ai-tool-card:hover {
+                /* Override all hardcoded Fyndable gradients on admin pages */
+                .sseo-ai-header {
+                    background: {$bgGradient} !important;
                     border-color: {$primaryColor} !important;
                 }
-                .button-primary.sseo-btn, .sseo-ai-btn-primary {
-                    background-color: {$primaryColor} !important;
-                    border-color: {$primaryColor} !important;
+                .sseo-ai-content {
+                    background: {$bgGradient} !important;
                 }
                 .sseo-ai-header h1::before {
                     color: {$primaryColor};
+                }
+                /* Primary buttons */
+                .button-primary.sseo-btn, .sseo-ai-btn-primary,
+                .sseo-ai-connection-card .button-primary,
+                .sseo-onboarding-actions .button-primary {
+                    background-color: {$primaryColor} !important;
+                    border-color: {$primaryColor} !important;
+                }
+                .button-primary.sseo-btn:hover, .sseo-ai-btn-primary:hover,
+                .sseo-ai-connection-card .button-primary:hover,
+                .sseo-onboarding-actions .button-primary:hover {
+                    background-color: {$secondaryColor} !important;
+                    border-color: {$secondaryColor} !important;
+                }
+                /* Accent colors — focus borders, hover states, active tabs */
+                .form-field input:focus, .form-field select:focus, .form-field textarea:focus,
+                .sseo-form-field select:focus, .sseo-reply-form textarea:focus,
+                .connection-form input:focus, .sseo-onboarding-field input:focus,
+                .sseo-onboarding-field select:focus, .sseo-onboarding-field textarea:focus {
+                    border-color: {$primaryColor} !important;
+                    box-shadow: 0 0 0 3px rgba({$rgbStr}, 0.1) !important;
+                }
+                .ai-tool-card:hover {
+                    border-color: {$primaryColor} !important;
+                    box-shadow: 0 10px 20px rgba({$rgbStr}, 0.15) !important;
+                }
+                .sseo-ticket-item:hover {
+                    border-color: {$primaryColor} !important;
+                    box-shadow: 0 4px 12px rgba({$rgbStr}, 0.1) !important;
+                }
+                .sseo-ticket-item a:hover, .sseo-card-controls button:hover,
+                .sseo-reorder-toggle:hover {
+                    color: {$primaryColor} !important;
+                    border-color: {$primaryColor} !important;
+                }
+                .sseo-file-drop:hover {
+                    border-color: {$primaryColor} !important;
+                }
+                /* Active states */
+                .google-tab.active, .bv-period-tab.active {
+                    color: {$primaryColor} !important;
+                    border-bottom-color: {$primaryColor} !important;
+                    background: {$primaryColor} !important;
+                }
+                .bv-pagination a:hover, .bv-pagination span.current,
+                .bv-scan-btn, .bv-competitor-bar-fill {
+                    background: {$primaryColor} !important;
+                }
+                /* Spinner */
+                .sseo-ai-connection-loader .spinner,
+                .sseo-onboarding-loader .spinner {
+                    border-top-color: {$primaryColor} !important;
+                }
+                /* Highlight text gradient */
+                .sseo-ai-connection-card .highlight {
+                    background: {$bgGradient} !important;
+                    -webkit-background-clip: text !important;
+                    -webkit-text-fill-color: transparent !important;
+                }
+                /* Progress circle active state */
+                .sseo-onboarding-progress-step.active .sseo-onboarding-progress-circle {
+                    color: {$primaryColor} !important;
+                }
+                /* Checkbox/item hover */
+                .sseo-onboarding-checkbox-item:hover {
+                    border-color: {$primaryColor} !important;
                 }
             ");
         }
@@ -2520,21 +2598,30 @@ class Client
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = $this->getBrandName();
         $brandName = $companyName . ' Smart SEO';
-        
+
+        // White-label colors: use custom brand colors when configured, otherwise Fyndable defaults
+        $hasCustomBrand = !empty($whiteLabel['company_name']);
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
+        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
+        $bgGradient = $usePrimaryOnly
+            ? $primaryColor
+            : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+
         // Mask the keys for display
         $maskedLicenseKey = !empty($licenseKey) ? substr($licenseKey, 0, 12) . str_repeat('*', 20) . substr($licenseKey, -8) : '';
         $maskedTenantKey = !empty($tenantKey) ? substr($tenantKey, 0, 8) . str_repeat('*', 20) . substr($tenantKey, -8) : '';
-        
+
         ?>
         <style>
             /* Critical layout CSS */
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header { background: <?php echo esc_attr($bgGradient); ?>; color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: <?php echo esc_attr($bgGradient); ?>; min-height: calc(100vh - 150px); }
             .sseo-ai-connection-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 60px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); text-align: center; }
             .sseo-ai-connection-card h2 { font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 20px 0; }
-            .sseo-ai-connection-card .highlight { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .sseo-ai-connection-card .highlight { background: <?php echo esc_attr($bgGradient); ?>; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .connection-details { text-align: left; margin-top: 40px; padding-top: 30px; border-top: 2px solid #f3f4f6; }
             .detail-item { margin-bottom: 20px; }
             .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280;  margin-bottom: 6px; }
@@ -2543,12 +2630,15 @@ class Client
             .connection-form .form-field { margin-bottom: 20px; }
             .connection-form label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
             .connection-form input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .connection-form input:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1); }
+            .connection-form input:focus { border-color: <?php echo esc_attr($primaryColor); ?>; outline: none; box-shadow: 0 0 0 3px rgba(<?php echo esc_attr(implode(',', sscanf($primaryColor, '#%02x%02x%02x'))); ?>, 0.1); }
             .sseo-ai-connection-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
             .sseo-ai-connection-loader.active { display: flex; }
-            .sseo-ai-connection-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: #379fd3; border-radius: 50%; animation: sseo-conn-spin 1s linear infinite; }
+            .sseo-ai-connection-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: <?php echo esc_attr($primaryColor); ?>; border-radius: 50%; animation: sseo-conn-spin 1s linear infinite; }
             .sseo-ai-connection-loader p { margin-top: 20px; color: #374151; font-size: 16px; font-weight: 500; }
             @keyframes sseo-conn-spin { to { transform: rotate(360deg); } }
+            /* White-label buttons inside the connection card */
+            .sseo-ai-connection-card .button-primary { background: <?php echo esc_attr($primaryColor); ?> !important; border-color: <?php echo esc_attr($primaryColor); ?> !important; color: #fff !important; }
+            .sseo-ai-connection-card .button-primary:hover { background: <?php echo esc_attr($secondaryColor); ?> !important; border-color: <?php echo esc_attr($secondaryColor); ?> !important; }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
