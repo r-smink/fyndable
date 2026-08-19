@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.1 (2026-08-19)
+
+### Fixed / Improved
+- **Upgrade button** — "Upgrade Now →" button on locked-feature pages now links to the Customer Portal on the SaaS dashboard (with dashboard-URL fallback) instead of the local Connection page. Opens in a new tab.
+- **Portal URL storage** — Client stores `portal_url` from `tenant/status` and `license/activate` responses in `sseo_ai_client_portal_url` option.
+- **Ideas page upgrade link** — "Upgrade My Plan" link on the Ideas page now points to the Customer Portal instead of `#`.
+- **Plugin metadata cleanup** — Removed `FEATURES.md` and `REVIEW-EN-FEATURES.md` from the plugin package; only `README.md` and `CHANGELOG.md` are shipped.
+
 ## v1.5.1 (2026-07-15)
 
 ### New Features

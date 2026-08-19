@@ -3103,6 +3103,11 @@ class Client
             update_option('sseo_ai_client_image_api', $result['image_api']);
         }
 
+        // Store customer portal URL (used by upgrade buttons in the client UI)
+        if (!empty($result['portal_url'])) {
+            update_option('sseo_ai_client_portal_url', esc_url_raw($result['portal_url']));
+        }
+
         // Set a transient to show success message on next page load
         set_transient('sseo_ai_activation_success', true, 30);
         
@@ -3212,6 +3217,15 @@ class Client
             ],
         ];
         $benefits = $tierBenefits[$nextTier] ?? $tierBenefits['Professional'];
+
+        // Resolve the upgrade destination. The real upgrade flow lives in the
+        // Customer Portal on the SaaS dashboard site (/portal/upgrade). Fall
+        // back to the dashboard URL, then to the local Connection page.
+        $portalUrl = get_option('sseo_ai_client_portal_url', '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $upgradeUrl = !empty($portalUrl)
+            ? $portalUrl
+            : (!empty($dashboardUrl) ? $dashboardUrl : admin_url('admin.php?page=ai-seo-client'));
         ?>
         <style>
             .sseo-upgrade-wrap { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -3340,7 +3354,7 @@ class Client
                         <li><?php echo esc_html($benefit); ?></li>
                         <?php endforeach; ?>
                     </ul>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="sseo-upgrade-cta">
+                    <a href="<?php echo esc_url($upgradeUrl); ?>" class="sseo-upgrade-cta" target="_blank" rel="noopener noreferrer">
                         <?php esc_html_e('Upgrade Now →', 'ai-seo-client'); ?>
                     </a>
                     <div class="sseo-current-tier">

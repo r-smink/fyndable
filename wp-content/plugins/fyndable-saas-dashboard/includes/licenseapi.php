@@ -434,7 +434,29 @@ class LicenseAPI
             'white_label' => $whiteLabelData,
             'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
             'image_api' => $this->getImageApiData(),
+            'portal_url' => $this->getPortalUrl(),
         ], 200);
+    }
+
+    /**
+     * Get the URL of the customer portal page on this SaaS dashboard site.
+     *
+     * Mirrors CustomerRoleManager::getPortalUrl() so the client plugin can
+     * link its "Upgrade" buttons directly to the portal where the actual
+     * upgrade flow lives (/portal/upgrade REST endpoint).
+     */
+    private function getPortalUrl(): string
+    {
+        $portalPageId = (int) get_option('sseo_ai_saas_customer_portal_page', 0);
+        if ($portalPageId > 0) {
+            $url = get_permalink($portalPageId);
+            if ($url) {
+                return $url;
+            }
+        }
+        // No portal page configured — fall back to /dashboard, then home.
+        $dashboard = home_url('/dashboard/');
+        return $dashboard ?: home_url('/');
     }
     
     /**
@@ -650,6 +672,7 @@ class LicenseAPI
             'chatbot_config' => $this->getChatbotConfig(),
             'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
             'image_api' => $this->getImageApiData(),
+            'portal_url' => $this->getPortalUrl(),
         ], 200);
     }
 

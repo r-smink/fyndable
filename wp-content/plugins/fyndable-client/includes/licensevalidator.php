@@ -175,6 +175,11 @@ class LicenseValidator
             update_option('sseo_ai_client_image_api', $body['image_api']);
         }
 
+        // Store customer portal URL (used by upgrade buttons in the client UI)
+        if (!empty($body['portal_url'])) {
+            update_option('sseo_ai_client_portal_url', esc_url_raw($body['portal_url']));
+        }
+
         // Store white-label settings from SaaS dashboard
         if (!empty($body['white_label']) && is_array($body['white_label'])) {
             update_option('sseo_ai_white_label', $body['white_label']);

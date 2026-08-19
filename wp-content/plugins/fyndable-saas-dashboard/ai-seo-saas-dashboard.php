@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable SmartSEO Dashboard
  * Description: Multi-tenant license and tenant management dashboard for Fyndable SmartSEO
- * Version: 1.4.8
+ * Version: 1.4.9
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Fyndable
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_SAAS_VERSION', '1.4.8');
+define('SSEO_AI_SAAS_VERSION', '1.4.9');
 define('SSEO_AI_SAAS_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_SAAS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_SAAS_PLUGIN_URL', plugin_dir_url(__FILE__));

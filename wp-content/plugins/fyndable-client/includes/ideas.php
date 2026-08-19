@@ -716,6 +716,14 @@ PROMPT;
 
         // Use configurable or dynamically computed credits
         $credits = $this->getCredits($table);
+
+        // Resolve the upgrade destination (Customer Portal on the SaaS
+        // dashboard site), with dashboard URL / Connection page fallbacks.
+        $portalUrl = get_option('sseo_ai_client_portal_url', '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $upgradeUrl = !empty($portalUrl)
+            ? $portalUrl
+            : (!empty($dashboardUrl) ? $dashboardUrl : admin_url('admin.php?page=ai-seo-client'));
         ?>
 
         <div class="wrap sseo-ai-modern" id="sseo-ideas-page">
@@ -757,7 +765,7 @@ PROMPT;
                                     <span class="credit-label"><?php esc_html_e('Images', 'ai-seo-client'); ?></span>
                                 </div>
                             </div>
-                            <a href="#" class="upgrade-link"><?php esc_html_e('Upgrade My Plan', 'ai-seo-client'); ?></a>
+                            <a href="<?php echo esc_url($upgradeUrl); ?>" class="upgrade-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Upgrade My Plan', 'ai-seo-client'); ?></a>
                         </div>
                     </div>
 
