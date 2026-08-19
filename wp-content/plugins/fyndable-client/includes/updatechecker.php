@@ -27,6 +27,8 @@ class UpdateChecker
         add_filter('pre_set_site_transient_update_plugins', [$this, 'checkForUpdates']);
         add_filter('plugins_api', [$this, 'filterPluginInfo'], 10, 3);
         add_filter('plugin_row_meta', [$this, 'addUpdateMeta'], 10, 2);
+        add_action('admin_action_sseo_ai_force_update_check', [$this, 'handleForceCheck']);
+        add_action('admin_notices', [$this, 'renderForceCheckNotice']);
     }
 
     /**
@@ -196,10 +198,74 @@ class UpdateChecker
             return $links;
         }
 
-        $links[] = '<a href="' . esc_url(admin_url('admin.php?page=ai-seo-settings')) . '">' .
+        $forceUrl = wp_nonce_url(
+            admin_url('admin.php?action=sseo_ai_force_update_check'),
+            'sseo_ai_force_update_check'
+        );
+
+        $links[] = '<a href="' . esc_url($forceUrl) . '">' .
             __('Check for Updates', 'ai-seo-client') . '</a>';
 
         return $links;
+    }
+
+    /**
+     * Handle the forced update check request.
+     * Clears the cache, refreshes the update transient, then redirects back
+     * to the plugins page with a result notice.
+     */
+    public function handleForceCheck(): void
+    {
+        if (!current_user_can('update_plugins')) {
+            wp_die(esc_html__('You do not have permission to check for updates.', 'ai-seo-client'));
+        }
+
+        check_admin_referer('sseo_ai_force_update_check');
+
+        $this->forceCheck();
+
+        // Re-fetch update info immediately so the result is fresh
+        $result = $this->fetchUpdateInfo();
+        $notice = 'no_update';
+
+        if (is_wp_error($result)) {
+            $notice = 'error';
+        } elseif (!empty($result['has_update'])) {
+            $notice = 'has_update';
+            set_transient(self::CACHE_KEY, $result, self::CACHE_TTL);
+        } else {
+            set_transient(self::CACHE_KEY, $result, self::CACHE_TTL);
+        }
+
+        wp_safe_redirect(
+            admin_url('plugins.php?sseo_ai_update_check=' . $notice)
+        );
+        exit;
+    }
+
+    /**
+     * Show a notice on the plugins page after a forced update check.
+     */
+    public function renderForceCheckNotice(): void
+    {
+        $result = $_GET['sseo_ai_update_check'] ?? '';
+        if (empty($result)) {
+            return;
+        }
+
+        if ($result === 'has_update') {
+            echo '<div class="notice notice-success is-dismissible"><p>' .
+                esc_html__('A new version of Fyndable is available. See the update notice above.', 'ai-seo-client') .
+                '</p></div>';
+        } elseif ($result === 'no_update') {
+            echo '<div class="notice notice-success is-dismissible"><p>' .
+                esc_html__('Fyndable is up to date.', 'ai-seo-client') .
+                '</p></div>';
+        } elseif ($result === 'error') {
+            echo '<div class="notice notice-error is-dismissible"><p>' .
+                esc_html__('Could not check for updates. Please verify your license and dashboard connection.', 'ai-seo-client') .
+                '</p></div>';
+        }
     }
 
     /**
