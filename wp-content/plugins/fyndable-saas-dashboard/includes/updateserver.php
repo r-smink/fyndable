@@ -215,7 +215,7 @@ class UpdateServer
             return null;
         }
 
-        set_transient($cacheKey, $body, 6 * HOUR_IN_SECONDS);
+        set_transient($cacheKey, $body, 1 * MINUTE_IN_SECONDS);
         return $body;
     }
 
