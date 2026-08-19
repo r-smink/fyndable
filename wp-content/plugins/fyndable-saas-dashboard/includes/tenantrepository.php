@@ -170,6 +170,7 @@ class TenantRepository
             priority enum('low', 'middle', 'high') NOT NULL DEFAULT 'middle',
             status enum('open', 'reaction', 'closed') NOT NULL DEFAULT 'open',
             screenshots longtext DEFAULT NULL COMMENT 'JSON array of attachment URLs',
+            last_read_reply_id bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'Last reply ID read by the customer/agency',
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
@@ -186,10 +187,12 @@ class TenantRepository
             author_name varchar(255) DEFAULT NULL,
             message longtext NOT NULL,
             screenshots longtext DEFAULT NULL COMMENT 'JSON array of attachment URLs',
+            is_read tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Whether this staff reply has been read by the customer/agency',
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY ticket_id (ticket_id),
             KEY is_staff (is_staff),
+            KEY is_read (is_read),
             KEY created_at (created_at)
         ) $charsetCollate;";
 

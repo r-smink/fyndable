@@ -75,9 +75,9 @@
 			if (!postId) return;
 			apiFetch({ path: `/wp/v2/posts/${postId}` }).then((post) => {
 				if (post.meta) {
-					if (post.meta._aiseo_focus_keyphrase) setKeyphrase(post.meta._aiseo_focus_keyphrase);
-					if (post.meta._aiseo_title) setSeoTitle(post.meta._aiseo_title);
-					if (post.meta._aiseo_description) setSeoDesc(post.meta._aiseo_description);
+					if (post.meta._sseo_ai_focus_keyphrase) setKeyphrase(post.meta._sseo_ai_focus_keyphrase);
+					if (post.meta._sseo_ai_title) setSeoTitle(post.meta._sseo_ai_title);
+					if (post.meta._sseo_ai_description) setSeoDesc(post.meta._sseo_ai_description);
 				}
 			}).catch(() => {});
 		}, [postId]);
@@ -136,9 +136,9 @@
 				method: 'POST',
 				data: {
 					meta: {
-						_aiseo_focus_keyphrase: keyphrase,
-						_aiseo_title: seoTitle,
-						_aiseo_description: seoDesc,
+						_sseo_ai_focus_keyphrase: keyphrase,
+						_sseo_ai_title: seoTitle,
+						_sseo_ai_description: seoDesc,
 					}
 				}
 			}).then(() => {

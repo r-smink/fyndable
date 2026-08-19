@@ -881,6 +881,119 @@ class DashboardAPI
     }
 
     /**
+     * Get the unread support reply count for the current tenant.
+     * Cached for 2 minutes to avoid excessive API calls.
+     */
+    public function getUnreadSupportCount(): int
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return 0;
+        }
+
+        $cacheKey = 'sseo_ai_support_unread_' . md5($licenseKey);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_numeric($cached)) {
+            return (int)$cached;
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/unread-count',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return 0;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $count = (int)($body['unread_count'] ?? 0);
+
+        set_transient($cacheKey, $count, 2 * MINUTE_IN_SECONDS);
+
+        return $count;
+    }
+
+    /**
+     * Mark a support ticket's staff replies as read.
+     */
+    public function markSupportTicketRead(int $ticketId): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/mark-read',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => wp_json_encode(['ticket_id' => $ticketId]),
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        // Clear unread cache
+        delete_transient('sseo_ai_support_unread_' . md5($licenseKey));
+
+        return $this->handleSupportResponse($response, __('Could not mark ticket as read.', 'ai-seo-client'));
+    }
+
+    /**
+     * Forward a support ticket to Fyndable support (agency-tier feature).
+     */
+    public function forwardSupportTicket(int $ticketId, string $note = ''): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/forward',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => wp_json_encode(['ticket_id' => $ticketId, 'note' => $note]),
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not forward ticket.', 'ai-seo-client'));
+    }
+
+    /**
      * Create a new support ticket.
      */
     public function createSupportTicket(string $subject, string $message, string $priority, array $screenshots = []): array|\WP_Error

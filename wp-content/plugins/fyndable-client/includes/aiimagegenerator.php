@@ -485,29 +485,35 @@ class AIImageGenerator
     }
     
     /**
-     * Generate image prompt from post content
+     * Generate image prompt from post content, incorporating photo portfolio
+     * references (logo, persons, environment, brand style) when configured.
      */
     private function generateImagePrompt(\WP_Post $post, string $style, string $size = '1024x1024', string $context = '', int $wordCount = 100): string
     {
+        // Build brand reference description from photo portfolio
+        $brandReferenceDesc = $this->getBrandReferenceDescription();
+
         if (!empty($context)) {
             $aiPrompt = "Generate a detailed image prompt for creating a {$style} image.
 
 User context: {$context}
 Target prompt length: approximately {$wordCount} words.
+{$brandReferenceDesc}
 
 Create a concise, descriptive prompt that captures the essence. Focus on visual elements, mood, and composition.";
         } else {
             $content = wp_strip_all_tags($post->post_content);
             $excerpt = substr($content, 0, 500);
-            
+
             $aiPrompt = "Generate a detailed image prompt for creating a {$style} image about:
 
 Title: {$post->post_title}
 Content: {$excerpt}
+{$brandReferenceDesc}
 
 Create a concise, descriptive prompt (max {$wordCount} words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
         }
-        
+
         $imagePrompt = $this->llm->generateText($aiPrompt, [
             'max_tokens' => max(150, (int)($wordCount * 2)),
             'track_extra' => [
@@ -516,13 +522,83 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
                 'context' => substr($context, 0, 100) ?: 'auto',
             ],
         ]);
-        
+
         if (is_wp_error($imagePrompt)) {
             // Fallback to simple prompt
-            return (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
+            $fallback = (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
+            if (!empty($brandReferenceDesc)) {
+                $fallback .= ". Match the brand's visual identity.";
+            }
+            return $fallback;
         }
-        
+
         return trim($imagePrompt) . ", {$style} style, {$size}, high quality";
+    }
+
+    /**
+     * Get brand reference descriptions from the photo portfolio.
+     *
+     * Uses a vision-capable LLM to describe each reference image (logo, person,
+     * environment, product, brand style) and caches the descriptions in a
+     * transient to avoid repeated vision API calls on every image generation.
+     *
+     * @return string Brand reference instructions to inject into the image prompt.
+     */
+    private function getBrandReferenceDescription(): string
+    {
+        $portfolio = get_option('sseo_ai_client_photo_portfolio', []);
+        if (empty($portfolio) || !is_array($portfolio)) {
+            return '';
+        }
+
+        // Check cache (1 week)
+        $cacheKey = 'sseo_ai_brand_ref_desc';
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_string($cached)) {
+            return $cached;
+        }
+
+        $typeLabels = [
+            'logo' => 'Logo / brand identity',
+            'person' => 'Person / team member',
+            'environment' => 'Building / environment / location',
+            'product' => 'Product',
+            'style' => 'Brand style / mood / color palette',
+        ];
+
+        $descriptions = [];
+        foreach ($portfolio as $ref) {
+            $url = $ref['url'] ?? '';
+            $type = $ref['type'] ?? 'style';
+            if (empty($url)) {
+                continue;
+            }
+
+            $label = $typeLabels[$type] ?? 'Reference image';
+            $visionPrompt = "Describe this image concisely for use as a brand style reference in AI image generation. "
+                . "Focus on: colors, visual style, mood, composition, key visual elements. "
+                . "This image is categorized as: {$label}. "
+                . "Provide a 1-2 sentence description.";
+
+            $result = $this->llm->callWithImage($visionPrompt, $url, null, 100, 'image_alt_text');
+
+            if (!is_wp_error($result) && !empty($result['text'])) {
+                $desc = trim($result['text']);
+                $descriptions[] = "{$label}: {$desc}";
+            }
+        }
+
+        if (empty($descriptions)) {
+            return '';
+        }
+
+        $brandDesc = "\nBRAND VISUAL REFERENCES (incorporate these in the generated image):\n"
+            . implode("\n", $descriptions)
+            . "\nEnsure the generated image aligns with these brand visual references where appropriate.\n";
+
+        set_transient($cacheKey, $brandDesc, WEEK_IN_SECONDS);
+
+        return $brandDesc;
     }
     
     /**

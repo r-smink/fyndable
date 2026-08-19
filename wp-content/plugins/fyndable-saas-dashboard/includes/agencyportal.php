@@ -920,6 +920,41 @@ class AgencyPortal
         $agencyTenantId = (int)$ctx['account']['tenant_id'];
         $subTenantIds = $this->tenants->getSubTenantIds($agencyTenantId);
 
+        // Handle ticket detail view
+        $ticketId = isset($_GET['ticket_id']) ? (int)$_GET['ticket_id'] : 0;
+        if ($ticketId > 0) {
+            $this->renderAgencyTicketDetail($ticketId, $subTenantIds);
+            return;
+        }
+
+        // Handle reply submission
+        if (isset($_POST['agency_reply_submit']) && isset($_POST['agency_reply_nonce'])) {
+            if (wp_verify_nonce($_POST['agency_reply_nonce'], 'agency_reply')) {
+                $replyTicketId = (int)$_POST['ticket_id'];
+                $replyMessage = sanitize_textarea_field($_POST['message'] ?? '');
+                if ($replyMessage && in_array($replyTicketId, $this->getValidTicketIds($subTenantIds), true)) {
+                    $this->supportTickets->insertReply($replyTicketId, 1, wp_get_current_user()->display_name, $replyMessage, []);
+                    $this->supportTickets->updateTicketStatus($replyTicketId, 'reaction');
+                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Reply sent.', 'sseo-ai-saas') . '</p></div>';
+                }
+            }
+        }
+
+        // Handle forward submission
+        if (isset($_POST['agency_forward_submit']) && isset($_POST['agency_forward_nonce'])) {
+            if (wp_verify_nonce($_POST['agency_forward_nonce'], 'agency_forward')) {
+                $forwardTicketId = (int)$_POST['ticket_id'];
+                $forwardNote = sanitize_textarea_field($_POST['note'] ?? '');
+                if (in_array($forwardTicketId, $this->getValidTicketIds($subTenantIds), true)) {
+                    $forwardMessage = 'Ticket forwarded to Fyndable support by agency.';
+                    if ($forwardNote) $forwardMessage .= ' Note: ' . $forwardNote;
+                    $this->supportTickets->insertReply($forwardTicketId, 1, 'System', $forwardMessage, []);
+                    $this->supportTickets->updateTicketStatus($forwardTicketId, 'reaction');
+                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Ticket forwarded to Fyndable support.', 'sseo-ai-saas') . '</p></div>';
+                }
+            }
+        }
+
         $filters = [];
         if (!empty($_GET['status'])) {
             $filters['status'] = sanitize_text_field($_GET['status']);
@@ -963,11 +998,12 @@ class AgencyPortal
                             <th><?php esc_html_e('Subject', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Updated', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($tickets)): ?>
-                            <tr><td colspan="7"><?php esc_html_e('No support tickets found.', 'sseo-ai-saas'); ?></td></tr>
+                            <tr><td colspan="8"><?php esc_html_e('No support tickets found.', 'sseo-ai-saas'); ?></td></tr>
                         <?php else: ?>
                             <?php foreach ($tickets as $ticket): ?>
                                 <tr>
@@ -978,12 +1014,119 @@ class AgencyPortal
                                     <td><?php echo esc_html($ticket['subject']); ?></td>
                                     <td><?php echo esc_html(human_time_diff(strtotime($ticket['created_at']), current_time('timestamp')) . ' ago'); ?></td>
                                     <td><?php echo esc_html(human_time_diff(strtotime($ticket['updated_at']), current_time('timestamp')) . ' ago'); ?></td>
+                                    <td>
+                                        <a href="<?php echo esc_url(add_query_arg(['page' => 'sseo-ai-agency-support', 'ticket_id' => $ticket['id']], admin_url('admin.php'))); ?>" class="button button-small">
+                                            <?php esc_html_e('View', 'sseo-ai-saas'); ?>
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Get valid ticket IDs for a set of tenant IDs (for permission checks).
+     */
+    private function getValidTicketIds(array $tenantIds): array
+    {
+        if (empty($tenantIds)) {
+            return [];
+        }
+        $tickets = $this->supportTickets->getTicketsForTenants($tenantIds);
+        return array_map(fn($t) => (int)$t['id'], $tickets);
+    }
+
+    /**
+     * Render the ticket detail view for agency users with reply and forward forms.
+     */
+    private function renderAgencyTicketDetail(int $ticketId, array $subTenantIds): void
+    {
+        $ticket = $this->supportTickets->getTicketById($ticketId);
+        if (!$ticket || !in_array((int)$ticket['tenant_id'], $subTenantIds, true)) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Ticket not found or access denied.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
+                <h1>
+                    <a href="<?php echo esc_url(add_query_arg(['page' => 'sseo-ai-agency-support'], admin_url('admin.php'))); ?>" class="button" style="vertical-align:middle;">
+                        &larr; <?php esc_html_e('Back', 'sseo-ai-saas'); ?>
+                    </a>
+                    <?php esc_html_e('Ticket', 'sseo-ai-saas'); ?> #<?php echo esc_html($ticketId); ?>
+                </h1>
+
+                <div class="sseo-ai-card" style="margin-bottom:20px;">
+                    <h2><?php echo esc_html($ticket['subject']); ?></h2>
+                    <p style="color:#666;">
+                        <strong><?php esc_html_e('Tenant:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($ticket['tenant_name'] ?? '-'); ?>
+                        &nbsp;|&nbsp;
+                        <strong><?php esc_html_e('Priority:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(ucfirst($ticket['priority'])); ?>
+                        &nbsp;|&nbsp;
+                        <strong><?php esc_html_e('Status:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(ucfirst($ticket['status'])); ?>
+                    </p>
+                    <div style="background:#f9fafb;padding:15px;border-radius:8px;margin:10px 0;">
+                        <?php echo nl2br(esc_html($ticket['message'])); ?>
+                    </div>
+                </div>
+
+                <div class="sseo-ai-card" style="margin-bottom:20px;">
+                    <h3><?php esc_html_e('Replies', 'sseo-ai-saas'); ?></h3>
+                    <?php if (!empty($ticket['replies'])): ?>
+                        <?php foreach ($ticket['replies'] as $reply): ?>
+                            <div style="padding:15px;border-radius:8px;margin:10px 0;border:1px solid #e5e7eb;background:<?php echo $reply['is_staff'] ? '#eff6ff' : '#f0fdf4'; ?>;">
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <strong>
+                                        <?php echo $reply['is_staff'] ? esc_html($reply['author_name'] ?: 'Support') : esc_html($ticket['tenant_name'] ?? 'Customer'); ?>
+                                        <?php if ($reply['is_staff']): ?>
+                                            <span style="font-size:11px;background:#379fd3;color:#fff;padding:1px 6px;border-radius:10px;">staff</span>
+                                        <?php endif; ?>
+                                    </strong>
+                                    <span style="font-size:12px;color:#666;"><?php echo esc_html($reply['created_at']); ?></span>
+                                </div>
+                                <div><?php echo nl2br(esc_html($reply['message'])); ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p><?php esc_html_e('No replies yet.', 'sseo-ai-saas'); ?></p>
+                    <?php endif; ?>
+                </div>
+
+                <div class="sseo-ai-card" style="margin-bottom:20px;">
+                    <h3><?php esc_html_e('Reply as agency', 'sseo-ai-saas'); ?></h3>
+                    <form method="post">
+                        <?php wp_nonce_field('agency_reply', 'agency_reply_nonce'); ?>
+                        <input type="hidden" name="ticket_id" value="<?php echo esc_attr($ticketId); ?>">
+                        <textarea name="message" rows="4" style="width:100%;" required placeholder="<?php esc_attr_e('Type your reply...', 'sseo-ai-saas'); ?>"></textarea>
+                        <p style="margin-top:10px;">
+                            <button type="submit" name="agency_reply_submit" class="button button-primary">
+                                <?php esc_html_e('Send reply', 'sseo-ai-saas'); ?>
+                            </button>
+                        </p>
+                    </form>
+                </div>
+
+                <div class="sseo-ai-card" style="margin-bottom:20px;border-left:4px solid #f59e0b;">
+                    <h3><?php esc_html_e('Forward to Fyndable support', 'sseo-ai-saas'); ?></h3>
+                    <p style="color:#666;font-size:13px;"><?php esc_html_e('Escalate this ticket to Fyndable support. A system note will be added to the ticket.', 'sseo-ai-saas'); ?></p>
+                    <form method="post">
+                        <?php wp_nonce_field('agency_forward', 'agency_forward_nonce'); ?>
+                        <input type="hidden" name="ticket_id" value="<?php echo esc_attr($ticketId); ?>">
+                        <textarea name="note" rows="2" style="width:100%;" placeholder="<?php esc_attr_e('Optional note for Fyndable support...', 'sseo-ai-saas'); ?>"></textarea>
+                        <p style="margin-top:10px;">
+                            <button type="submit" name="agency_forward_submit" class="button" style="color:#f59e0b;border-color:#f59e0b;">
+                                <?php esc_html_e('Forward to Fyndable', 'sseo-ai-saas'); ?>
+                            </button>
+                        </p>
+                    </form>
+                </div>
             </div>
         </div>
         <?php

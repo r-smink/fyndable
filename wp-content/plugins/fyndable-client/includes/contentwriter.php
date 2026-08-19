@@ -600,6 +600,14 @@ Requirements:
             update_post_meta($postId, '_sseo_ai_faq_schema', wp_json_encode($faqSchema));
         }
 
+        // Run fact check (fail gracefully — does not block content generation)
+        try {
+            $factChecker = new FactChecker($this->llm);
+            $factChecker->checkPost($postId);
+        } catch (\Exception $e) {
+            // Silently fail — fact checking is optional and non-blocking
+        }
+
         return $postId;
     }
 

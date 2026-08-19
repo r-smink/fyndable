@@ -169,6 +169,12 @@ class PostMetaBox
         echo '<span class="fyndable-seo-badge">' . esc_html__('Post Optimization', 'ai-seo-client') . '</span>';
         echo '</div>';
 
+        // Fact check badge (if a fact check has been run for this post)
+        $factCheckMeta = get_post_meta($post->ID, '_sseo_ai_fact_check', true);
+        if (is_array($factCheckMeta)) {
+            $this->renderFactCheckBadge($factCheckMeta);
+        }
+
         // Accordion groups
         foreach ($groupsWithItems as $gIndex => $group) {
             $isOpen = $gIndex === 0;
@@ -219,6 +225,51 @@ class PostMetaBox
             echo '</div>';
         }
 
+        echo '</div>';
+    }
+
+    /**
+     * Render a fact-check warning badge from stored post meta.
+     */
+    private function renderFactCheckBadge(array $report): void
+    {
+        $verdict = $report['verdict'] ?? 'uncertain';
+        $warnings = $report['warnings'] ?? [];
+        $verdictColors = [
+            'supported' => '#16a34a',
+            'uncertain' => '#d97706',
+            'questionable' => '#dc2626',
+        ];
+        $verdictLabels = [
+            'supported' => __('Fact check: supported', 'ai-seo-client'),
+            'uncertain' => __('Fact check: uncertain', 'ai-seo-client'),
+            'questionable' => __('Fact check: questionable', 'ai-seo-client'),
+        ];
+        $color = $verdictColors[$verdict] ?? '#6b7280';
+        $label = $verdictLabels[$verdict] ?? __('Fact check: unknown', 'ai-seo-client');
+        $warningCount = count($warnings);
+
+        echo '<div class="sseo-fact-check-badge" style="padding:10px 14px;border-radius:8px;margin:10px 0;background:'
+            . $color . '15;border:1px solid ' . $color . '40;">';
+        echo '<div style="display:flex;align-items:center;gap:8px;">';
+        echo '<span style="color:' . $color . ';font-weight:600;">&#9888; ' . esc_html($label) . '</span>';
+        if ($warningCount > 0) {
+            echo '<span style="background:' . $color . ';color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;">'
+                . $warningCount . '</span>';
+        }
+        echo '</div>';
+
+        if (!empty($warnings)) {
+            echo '<ul style="margin:8px 0 0 0;padding-left:20px;color:#475569;font-size:13px;">';
+            foreach ($warnings as $warning) {
+                echo '<li>' . esc_html($warning) . '</li>';
+            }
+            echo '</ul>';
+        }
+
+        echo '<p style="margin:8px 0 0 0;font-size:11px;color:#6b7280;">'
+            . esc_html__('This is an AI self-assessment, not external fact verification.', 'ai-seo-client')
+            . '</p>';
         echo '</div>';
     }
 

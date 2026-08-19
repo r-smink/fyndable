@@ -62,6 +62,24 @@ class SupportTickets
             'callback' => [$this, 'uploadScreenshot'],
             'permission_callback' => [$this, 'validateRequest'],
         ]);
+
+        register_rest_route('ai-seo-saas/v1', '/support/unread-count', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getUnreadCount'],
+            'permission_callback' => [$this, 'validateRequest'],
+        ]);
+
+        register_rest_route('ai-seo-saas/v1', '/support/mark-read', [
+            'methods' => 'POST',
+            'callback' => [$this, 'markTicketRead'],
+            'permission_callback' => [$this, 'validateRequest'],
+        ]);
+
+        register_rest_route('ai-seo-saas/v1', '/support/forward', [
+            'methods' => 'POST',
+            'callback' => [$this, 'forwardTicket'],
+            'permission_callback' => [$this, 'validateRequest'],
+        ]);
     }
 
     /**
@@ -225,6 +243,135 @@ class SupportTickets
             'reply_id' => $replyId,
             'ticket' => $this->getTicketById($ticketId),
         ], 201);
+    }
+
+    /**
+     * Get the count of unread staff replies for the current tenant.
+     * An unread reply is a staff reply (is_staff=1) with is_read=0.
+     */
+    public function getUnreadCount(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->getTenantFromRequest($request);
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'invalid_tenant'], 403);
+        }
+
+        $count = $this->getUnreadReplyCount((int)$tenant['id']);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'unread_count' => $count,
+        ], 200);
+    }
+
+    /**
+     * Mark all staff replies on a ticket as read by the customer/agency.
+     */
+    public function markTicketRead(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->getTenantFromRequest($request);
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'invalid_tenant'], 403);
+        }
+
+        $ticketId = (int)$request->get_param('ticket_id');
+        $ticket = $this->getTicketById($ticketId);
+        if (!$ticket || (int)$ticket['tenant_id'] !== (int)$tenant['id']) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_found'], 404);
+        }
+
+        $this->markRepliesRead($ticketId);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'unread_count' => $this->getUnreadReplyCount((int)$tenant['id']),
+        ], 200);
+    }
+
+    /**
+     * Forward/escalate a ticket to Fyndable support (agency-tier feature).
+     * Adds a system reply noting the forwarding action.
+     */
+    public function forwardTicket(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->getTenantFromRequest($request);
+        if (!$tenant) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'invalid_tenant'], 403);
+        }
+
+        $ticketId = (int)$request->get_param('ticket_id');
+        $note = sanitize_textarea_field($request->get_param('note') ?? '');
+        $ticket = $this->getTicketById($ticketId);
+        if (!$ticket || (int)$ticket['tenant_id'] !== (int)$tenant['id']) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_found'], 404);
+        }
+
+        $forwardNote = 'Ticket forwarded to Fyndable support by agency.';
+        if (!empty($note)) {
+            $forwardNote .= ' Note: ' . $note;
+        }
+
+        $this->insertReply($ticketId, 1, 'System', $forwardNote, []);
+        $this->updateTicketStatus($ticketId, 'reaction');
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'ticket' => $this->getTicketById($ticketId),
+        ], 200);
+    }
+
+    /**
+     * Count unread staff replies for a tenant.
+     */
+    public function getUnreadReplyCount(int $tenantId): int
+    {
+        global $wpdb;
+        $ticketsTable = $wpdb->prefix . self::TICKETS_TABLE;
+        $repliesTable = $wpdb->prefix . self::REPLIES_TABLE;
+
+        $count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(r.id)
+             FROM {$repliesTable} r
+             INNER JOIN {$ticketsTable} t ON r.ticket_id = t.id
+             WHERE t.tenant_id = %d
+               AND r.is_staff = 1
+               AND r.is_read = 0",
+            $tenantId
+        ));
+
+        return $count;
+    }
+
+    /**
+     * Mark all staff replies on a ticket as read.
+     */
+    private function markRepliesRead(int $ticketId): void
+    {
+        global $wpdb;
+        $repliesTable = $wpdb->prefix . self::REPLIES_TABLE;
+
+        $wpdb->update(
+            $repliesTable,
+            ['is_read' => 1],
+            ['ticket_id' => $ticketId, 'is_staff' => 1],
+            ['%d'],
+            ['%d', '%d']
+        );
+
+        // Update last_read_reply_id on the ticket
+        $lastReplyId = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT MAX(id) FROM {$repliesTable} WHERE ticket_id = %d AND is_staff = 1",
+            $ticketId
+        ));
+
+        $ticketsTable = $wpdb->prefix . self::TICKETS_TABLE;
+        $wpdb->update(
+            $ticketsTable,
+            ['last_read_reply_id' => $lastReplyId],
+            ['id' => $ticketId],
+            ['%d'],
+            ['%d']
+        );
     }
 
     /**
@@ -533,7 +680,7 @@ class SupportTickets
         return (int)$wpdb->insert_id;
     }
 
-    private function insertReply(int $ticketId, int $isStaff, ?string $authorName, string $message, array $screenshots): int
+    public function insertReply(int $ticketId, int $isStaff, ?string $authorName, string $message, array $screenshots): int
     {
         global $wpdb;
         $table = $wpdb->prefix . self::REPLIES_TABLE;
@@ -549,7 +696,7 @@ class SupportTickets
         return (int)$wpdb->insert_id;
     }
 
-    private function updateTicketStatus(int $ticketId, string $status): void
+    public function updateTicketStatus(int $ticketId, string $status): void
     {
         global $wpdb;
         $table = $wpdb->prefix . self::TICKETS_TABLE;

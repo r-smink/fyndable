@@ -229,6 +229,28 @@ class LlmClient
             $requestedModel = $availableModels[count($availableModels) - 1] ?? 'openai/gpt-4o-mini';
         }
 
+        // Always enforce sentence case for any use case that produces titles,
+        // headings, FAQ questions, meta titles or other visible copy. This
+        // prevents the LLM from defaulting to Title Case ("Every Word
+        // Capitalized") which looks unnatural in Dutch and most European
+        // languages. Only the first word of a title/heading and proper nouns
+        // should be capitalized.
+        if (in_array($useCase, ['content_generation', 'meta_optimization', 'faq_generation', 'analysis'], true)) {
+            $casingInstruction = "CASING REQUIREMENT (follow strictly):\n"
+                . "Use sentence case for ALL titles, headings, subheadings, FAQ questions and meta titles. "
+                . "Only the first word of a title/heading and proper nouns (brand names, place names, person names, acronyms) may be capitalized. "
+                . "Do NOT use Title Case (where every word is capitalized). Example correct: \"How to improve your SEO in 2026\". Example wrong: \"How To Improve Your SEO In 2026\".\n\n";
+            $prompt = $casingInstruction . $prompt;
+        }
+
+        // Inject brand voice instructions for content generation use cases
+        if (in_array($useCase, ['content_generation', 'analysis', 'keyword_research'], true)) {
+            $brandVoicePrompt = apply_filters('sseo_ai_brand_voice_prompt', '');
+            if (!empty($brandVoicePrompt)) {
+                $prompt = $brandVoicePrompt . $prompt;
+            }
+        }
+
         // Build messages
         $messages = [];
         if ($systemRole) {
@@ -322,14 +344,8 @@ class LlmClient
         $trackExtra = $options['track_extra'] ?? [];
         $useCase = $options['use_case'] ?? 'content_generation';
 
-        // Inject brand voice instructions for content generation use cases
-        if (in_array($useCase, ['content_generation', 'analysis', 'keyword_research'], true)) {
-            $brandVoicePrompt = apply_filters('sseo_ai_brand_voice_prompt', '');
-            if (!empty($brandVoicePrompt)) {
-                $prompt = $brandVoicePrompt . $prompt;
-            }
-        }
-        
+        // Casing + brand voice injection happens in call() so that direct
+        // callers of call() also benefit.
         $result = $this->call($prompt, $model, $systemRole, $maxTokens, $trackExtra, $useCase);
         
         if (is_wp_error($result)) {

@@ -255,6 +255,18 @@ class TopicCluster
         // 1.5 — Post-generation quality pipeline
         $qualityScores = $this->runPostGenerationPipeline($postId, $keyword, $content['content']);
 
+        // Run fact check (fail gracefully — does not block content generation)
+        $factCheckReport = null;
+        try {
+            $factChecker = new FactChecker($this->llm);
+            $factCheckReport = $factChecker->checkPost($postId);
+            if (is_wp_error($factCheckReport)) {
+                $factCheckReport = null;
+            }
+        } catch (\Exception $e) {
+            $factCheckReport = null;
+        }
+
         $result = [
             'success' => true,
             'post_id' => $postId,
@@ -263,6 +275,10 @@ class TopicCluster
             'title' => $title,
             'word_count' => $content['word_count'] ?? 0,
         ];
+
+        if ($factCheckReport !== null) {
+            $result['fact_check'] = $factCheckReport;
+        }
 
         if ($imageAttachmentId) {
             $result['image_attachment_id'] = $imageAttachmentId;
@@ -1002,7 +1018,37 @@ PROMPT;
             return $result;
         }
 
-        $text = $result['text'] ?? '';
+        $data = $this->parseClusterJson($result['text'] ?? '');
+        if (is_wp_error($data)) {
+            // Retry once with a stricter prompt and lower temperature for reliability
+            $retryPrompt = $prompt . "\n\nIMPORTANT: Your previous response was not valid JSON. Return ONLY a valid JSON object starting with { and ending with }. No markdown, no code fences, no commentary.";
+            $retryResult = $this->llm->call($retryPrompt, null, 'seo_expert', 4000, [], 'keyword_research');
+            if (!is_wp_error($retryResult)) {
+                $data = $this->parseClusterJson($retryResult['text'] ?? '');
+            }
+        }
+
+        if (is_wp_error($data)) {
+            return $data;
+        }
+
+        $data['topic'] = $topic;
+        $data['generated_at'] = current_time('mysql');
+        $data['depth'] = $depth;
+
+        return $data;
+    }
+
+    /**
+     * Parse and validate the JSON returned by the LLM for a cluster map.
+     * Strips markdown fences, extracts the JSON object, and validates structure.
+     *
+     * @return array|\WP_Error
+     */
+    private function parseClusterJson(string $rawText): array|\WP_Error
+    {
+        $text = $rawText;
+        // Strip markdown code fences
         $text = preg_replace('/^```(?:json)?\s*\n?/i', '', trim($text));
         $text = preg_replace('/\n?```\s*$/', '', $text);
 
@@ -1015,12 +1061,12 @@ PROMPT;
 
         $data = json_decode(trim($text), true);
         if (!$data || !isset($data['pillar_page'])) {
-            return new \WP_Error('parse_error', __('Failed to generate topic cluster. LLM response was not valid JSON.', 'ai-seo-client') . ' Response: ' . substr($result['text'] ?? '', 0, 500));
+            return new \WP_Error(
+                'parse_error',
+                __('De gegenereerde topic cluster kon niet worden geparseerd. De AI retourneerde geen geldige JSON. Probeer het opnieuw of verklein de depth instelling.', 'ai-seo-client')
+                    . ' Response: ' . substr($rawText, 0, 500)
+            );
         }
-
-        $data['topic'] = $topic;
-        $data['generated_at'] = current_time('mysql');
-        $data['depth'] = $depth;
 
         return $data;
     }
@@ -1216,12 +1262,20 @@ PROMPT;
                             </select>
                         </div>
                         <button type="button" class="button button-primary" id="tc-generate" style="height:30px;"><?php esc_html_e('Generate Map', 'ai-seo-client'); ?></button>
+                        <span id="tc-generate-spinner" class="spinner" style="float:none;margin:0 5px;"></span>
                         <button type="button" class="button" id="tc-audit" style="height:30px;"><?php esc_html_e('Audit Existing Content', 'ai-seo-client'); ?></button>
                     </div>
                 </div>
 
                 <!-- Audit Results -->
                 <div id="tc-audit-result" style="display:none;margin-top:20px;"></div>
+
+                <!-- Inline Error Message -->
+                <div id="tc-error-msg" style="display:none;margin-top:20px;padding:15px 20px;background:#fee2e2;border:1px solid #dc2626;border-radius:8px;color:#991b1b;">
+                    <strong>&#9888; <?php esc_html_e('Fout', 'ai-seo-client'); ?>:</strong>
+                    <span id="tc-error-text"></span>
+                    <button type="button" class="button button-small" style="float:right;" onclick="jQuery('#tc-error-msg').slideUp();">&times;</button>
+                </div>
 
                 <!-- Cluster Map -->
                 <div id="tc-result" style="display:none;margin-top:20px;">
@@ -1313,6 +1367,9 @@ PROMPT;
                                     <button type="button" class="button button-primary" id="tc-bulk-generate" style="background:#16a34a;border-color:#16a34a;">
                                         <?php esc_html_e('Generate Selected', 'ai-seo-client'); ?> (<span id="tc-selected-count">0</span>)
                                     </button>
+                                    <button type="button" class="button button-primary" id="tc-generate-all" style="background:#0d6efd;border-color:#0d6efd;margin-left:5px;">
+                                        <?php esc_html_e('Generate All', 'ai-seo-client'); ?>
+                                    </button>
                                 </div>
                             </div>
                             
@@ -1348,6 +1405,7 @@ PROMPT;
                                             <th style="width:100px;"><?php esc_html_e('Words', 'ai-seo-client'); ?></th>
                                             <th style="width:100px;"><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
                                             <th style="width:120px;"><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                            <th style="width:50px;text-align:center;"><?php esc_html_e('Delete', 'ai-seo-client'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody id="tc-pages-tbody">
@@ -1451,6 +1509,7 @@ PROMPT;
                 if (!topic) return;
                 var btn = $(this);
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
+                $('#tc-generate-spinner').addClass('is-active');
                 if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
@@ -1463,9 +1522,10 @@ PROMPT;
                     $('#tc-result').show();
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
                 }).catch(function(err) {
-                    alert(err.message || 'Failed');
+                    showInlineError(err.message || '<?php echo esc_js(__('Failed to generate cluster map', 'ai-seo-client')); ?>');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
                 }).finally(function() {
+                    $('#tc-generate-spinner').removeClass('is-active');
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
@@ -1509,7 +1569,7 @@ PROMPT;
                     $('#tc-audit-result').html(html).show();
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Audit Existing Content', 'ai-seo-client')); ?>');
                 }).catch(function(err) {
-                    alert(err.message || 'Failed');
+                    showInlineError(err.message || '<?php echo esc_js(__('Audit failed', 'ai-seo-client')); ?>');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Audit Existing Content', 'ai-seo-client')); ?>');
                 }).finally(function() {
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
@@ -1557,7 +1617,7 @@ PROMPT;
                         btn.text(originalText).prop('disabled', false);
                     }, 3000);
                 }).catch(function(err) {
-                    alert('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (err.message || '<?php echo esc_js(__('Failed to generate content', 'ai-seo-client')); ?>'));
+                    showInlineError('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (err.message || '<?php echo esc_js(__('Failed to generate content', 'ai-seo-client')); ?>'));
                     btn.prop('disabled', false).text(originalText);
                 }).finally(function() {
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
@@ -1571,7 +1631,7 @@ PROMPT;
                 $('#tc-months').text(data.estimated_months || 0);
                 $('#tc-authority').text(data.topical_authority_score_potential || 0);
 
-                // Pillar with generate button
+                // Pillar with generate + delete button
                 var p = data.pillar_page || {};
                 $('#tc-pillar').html(
                     '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -1583,15 +1643,18 @@ PROMPT;
                     '<span>📝 ' + (p.target_word_count || 3000) + ' words</span>' +
                     '<span>🔍 ' + (p.search_intent || '') + '</span></div>' +
                     '</div>' +
+                    '<div style="display:flex;gap:5px;align-items:center;">' +
                     '<button type="button" class="button button-primary tc-generate-content" ' +
                     'data-title="' + escapeHtml(p.title || '') + '" ' +
                     'data-keyword="' + escapeHtml(p.target_keyword || '') + '" ' +
                     'data-words="' + (p.target_word_count || 3000) + '" ' +
                     'data-type="pillar"><?php echo esc_js(__('Generate Content', 'ai-seo-client')); ?></button>' +
+                    '<button type="button" class="button button-small tc-delete-card" data-role="pillar" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;">&times;</button>' +
+                    '</div>' +
                     '</div>'
                 );
 
-                // Clusters with generate buttons
+                // Clusters with generate + delete buttons
                 var gridHtml = '';
                 var priorityColors = {high:'#16a34a',medium:'#d97706',low:'#6b7280'};
                 var priorityTooltips = {
@@ -1601,10 +1664,13 @@ PROMPT;
                 };
                 (data.clusters || []).forEach(function(cl, idx) {
                     gridHtml += '<div class="postbox" style="padding:15px;margin-bottom:15px;">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
                         '<h3 style="margin-top:0;">📂 ' + cl.name + '</h3>' +
+                        '<button type="button" class="button button-small tc-delete-card" data-role="cluster" data-cluster-idx="' + idx + '" title="<?php echo esc_js(__('Delete this cluster', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;">&times;</button>' +
+                        '</div>' +
                         '<p style="font-size:12px;color:#666;">' + (cl.description || '') + '</p>';
 
-                    // Hub with generate button
+                    // Hub with generate + delete button
                     var h = cl.hub_page || {};
                     gridHtml += '<div style="padding:10px;background:#eff6ff;border-radius:6px;border-left:3px solid #379fd3;margin:10px 0;display:flex;justify-content:space-between;align-items:center;">' +
                         '<div>' +
@@ -1613,26 +1679,31 @@ PROMPT;
                         '🎯 ' + (h.target_keyword || '') + ' · ' + (h.target_word_count || 0) + ' words · ' +
                         '<span style="color:' + (priorityColors[h.priority]||'#999') + ';" title="' + (priorityTooltips[h.priority] || '') + '">' + (h.priority || '') + '</span></div>' +
                         '</div>' +
+                        '<div style="display:flex;gap:5px;align-items:center;">' +
                         '<button type="button" class="button tc-generate-content" ' +
                         'data-title="' + escapeHtml(h.title || '') + '" ' +
                         'data-keyword="' + escapeHtml(h.target_keyword || '') + '" ' +
                         'data-words="' + (h.target_word_count || 1500) + '" ' +
                         'data-type="hub"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button>' +
+                        '<button type="button" class="button button-small tc-delete-card" data-role="hub" data-cluster-idx="' + idx + '" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;">&times;</button>' +
+                        '</div>' +
                         '</div>';
 
-                    // Supporting pages with generate buttons
-                    (cl.supporting_pages || []).forEach(function(sp) {
+                    // Supporting pages with generate + delete buttons
+                    (cl.supporting_pages || []).forEach(function(sp, spIdx) {
                         gridHtml += '<div style="padding:8px 10px;margin:4px 0 4px 20px;background:#f9f9f9;border-left:2px solid #93c5fd;border-radius:0 4px 4px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;">' +
                             '<div>' + sp.title +
                             '<div style="font-size:11px;color:#666;">' +
                             '🎯 ' + (sp.target_keyword || '') + ' · ' + (sp.target_word_count || 0) + 'w · ' +
                             '<span style="background:#e0e7ff;padding:1px 4px;border-radius:2px;font-size:10px;">' + (sp.content_type || '') + '</span>' +
                             '</div></div>' +
+                            '<div style="display:flex;gap:3px;align-items:center;">' +
                             '<button type="button" class="button button-small tc-generate-content" ' +
                             'data-title="' + escapeHtml(sp.title || '') + '" ' +
                             'data-keyword="' + escapeHtml(sp.target_keyword || '') + '" ' +
                             'data-words="' + (sp.target_word_count || 800) + '" ' +
                             'data-type="supporting"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button>' +
+                            '<button type="button" class="button button-small tc-delete-card" data-role="supporting" data-cluster-idx="' + idx + '" data-page-idx="' + spIdx + '" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;padding:1px 5px;">&times;</button>' +
                             '</div>';
                     });
                     gridHtml += '</div>';
@@ -1649,6 +1720,30 @@ PROMPT;
                         btn.data('type'),
                         this
                     );
+                });
+
+                // Bind delete-card buttons (pillar/hub/supporting/cluster)
+                $(document).off('click', '.tc-delete-card').on('click', '.tc-delete-card', function() {
+                    var role = $(this).data('role');
+                    var clusterIdx = $(this).data('cluster-idx');
+                    var pageIdx = $(this).data('page-idx');
+                    if (!confirm('<?php echo esc_js(__('Delete this topic from the cluster?', 'ai-seo-client')); ?>')) return;
+
+                    if (role === 'pillar') {
+                        delete currentCluster.pillar_page;
+                    } else if (role === 'cluster') {
+                        if (currentCluster.clusters) currentCluster.clusters.splice(clusterIdx, 1);
+                    } else if (role === 'hub') {
+                        if (currentCluster.clusters && currentCluster.clusters[clusterIdx]) {
+                            delete currentCluster.clusters[clusterIdx].hub_page;
+                        }
+                    } else if (role === 'supporting') {
+                        if (currentCluster.clusters && currentCluster.clusters[clusterIdx] && currentCluster.clusters[clusterIdx].supporting_pages) {
+                            currentCluster.clusters[clusterIdx].supporting_pages.splice(pageIdx, 1);
+                        }
+                    }
+                    // Re-render the cluster grid and review table
+                    renderCluster(currentCluster);
                 });
 
                 // Linking
@@ -1772,6 +1867,7 @@ PROMPT;
                         '<td style="text-align:center;">' + page.words.toLocaleString() + '</td>' +
                         '<td style="text-align:center;"><span style="color:' + priorityColors[page.priority] + ';font-weight:600;font-size:12px;" title="' + (priorityTooltips[page.priority] || '') + '">' + priorityLabels[page.priority] + '</span></td>' +
                         '<td style="text-align:center;" class="tc-status-cell"><span class="tc-status-pending" style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:12px;font-size:11px;"><?php echo esc_js(__('Pending', 'ai-seo-client')); ?></span></td>' +
+                        '<td style="text-align:center;"><button type="button" class="button button-small tc-delete-page" data-page-id="' + page.id + '" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;line-height:1;padding:2px 6px;">&times;</button></td>' +
                         '</tr>';
                 });
                 
@@ -1826,7 +1922,43 @@ PROMPT;
                 $('#tc-select-all-checkbox').prop('checked', false);
                 updateReviewStats();
             });
-            
+
+            // Delete individual topic/page from the review table
+            $(document).on('click', '.tc-delete-page', function() {
+                var pageId = $(this).data('page-id');
+                if (!confirm('<?php echo esc_js(__('Delete this topic from the cluster?', 'ai-seo-client')); ?>')) return;
+                // Remove from window.tcAllPages
+                if (window.tcAllPages) {
+                    window.tcAllPages = window.tcAllPages.filter(function(p) { return p.id !== pageId; });
+                }
+                // Remove the row
+                $('tr[data-page-id="' + pageId + '"]').fadeOut(300, function() { $(this).remove(); });
+                updateReviewStats();
+            });
+
+            // Generate All — selects all pages then triggers bulk generate
+            $('#tc-generate-all').on('click', function() {
+                if (!window.tcAllPages || window.tcAllPages.length === 0) {
+                    showInlineError('<?php echo esc_js(__('No pages to generate. Generate a cluster map first.', 'ai-seo-client')); ?>');
+                    return;
+                }
+                $('.tc-page-checkbox').prop('checked', true);
+                $('#tc-select-all-checkbox').prop('checked', true);
+                updateReviewStats();
+                // Trigger the bulk generate flow
+                $('#tc-bulk-generate').trigger('click');
+            });
+
+            // Inline error display helper (replaces alert() for better UX)
+            function showInlineError(message) {
+                $('#tc-error-text').text(message);
+                $('#tc-error-msg').slideDown();
+                $('html, body').animate({
+                    scrollTop: $('#tc-error-msg').offset().top - 100
+                }, 300);
+            }
+            window.showInlineError = showInlineError;
+
             // Bulk Generate — Queue-based background processing
             $('#tc-bulk-generate').on('click', function() {
                 var selectedIds = [];

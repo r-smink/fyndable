@@ -24,15 +24,15 @@ class Supportickets
         $this->dashboardAPI = $dashboardAPI;
 
         $this->priorityLabels = [
-            'low' => __('Low', 'ai-seo-client'),
-            'middle' => __('Middle', 'ai-seo-client'),
-            'high' => __('High', 'ai-seo-client'),
+            'low' => __('Laag', 'ai-seo-client'),
+            'middle' => __('Gemiddeld', 'ai-seo-client'),
+            'high' => __('Hoog', 'ai-seo-client'),
         ];
 
         $this->statusLabels = [
             'open' => __('Open', 'ai-seo-client'),
-            'reaction' => __('Reaction', 'ai-seo-client'),
-            'closed' => __('Closed', 'ai-seo-client'),
+            'reaction' => __('In behandeling', 'ai-seo-client'),
+            'closed' => __('Gesloten', 'ai-seo-client'),
         ];
     }
 
@@ -249,7 +249,7 @@ class Supportickets
 
         <?php if (isset($_GET['created'])): ?>
             <div class="sseo-support-card" style="margin-bottom: 30px; background: #d1fae5; color: #065f46;">
-                <strong><?php esc_html_e('Ticket created successfully.', 'ai-seo-client'); ?></strong>
+                <strong><?php esc_html_e('Ticket succesvol aangemaakt.', 'ai-seo-client'); ?></strong>
             </div>
         <?php endif; ?>
 
@@ -269,7 +269,7 @@ class Supportickets
 
         <div class="sseo-support-grid">
             <div class="sseo-support-card">
-                <h2><?php esc_html_e('Your tickets', 'ai-seo-client'); ?></h2>
+                <h2><?php esc_html_e('Jouw tickets', 'ai-seo-client'); ?></h2>
                 <?php if (empty($ticketList) && !$hasError): ?>
                     <p><?php esc_html_e('You have no support tickets yet.', 'ai-seo-client'); ?></p>
                 <?php elseif (!empty($ticketList)): ?>
@@ -297,7 +297,7 @@ class Supportickets
             </div>
 
             <div class="sseo-support-card">
-                <h2><?php esc_html_e('Create ticket', 'ai-seo-client'); ?></h2>
+                <h2><?php esc_html_e('Ticket aanmaken', 'ai-seo-client'); ?></h2>
                 <form method="post" enctype="multipart/form-data">
                     <?php wp_nonce_field('create_support_ticket', 'support_ticket_nonce'); ?>
                     <div class="sseo-form-field">
@@ -307,9 +307,9 @@ class Supportickets
                     <div class="sseo-form-field">
                         <label for="ticket_priority"><?php esc_html_e('Priority', 'ai-seo-client'); ?></label>
                         <select name="ticket_priority" id="ticket_priority">
-                            <option value="low"><?php esc_html_e('Low', 'ai-seo-client'); ?></option>
-                            <option value="middle" selected><?php esc_html_e('Middle', 'ai-seo-client'); ?></option>
-                            <option value="high"><?php esc_html_e('High', 'ai-seo-client'); ?></option>
+                            <option value="low"><?php esc_html_e('Laag', 'ai-seo-client'); ?></option>
+                            <option value="middle" selected><?php esc_html_e('Gemiddeld', 'ai-seo-client'); ?></option>
+                            <option value="high"><?php esc_html_e('Hoog', 'ai-seo-client'); ?></option>
                         </select>
                     </div>
                     <div class="sseo-form-field">
@@ -317,13 +317,13 @@ class Supportickets
                         <textarea name="ticket_message" id="ticket_message" rows="6" required></textarea>
                     </div>
                     <div class="sseo-form-field">
-                        <label for="ticket_screenshots"><?php esc_html_e('Screenshots', 'ai-seo-client'); ?></label>
+                        <label for="ticket_screenshots"><?php esc_html_e('Schermafbeeldingen', 'ai-seo-client'); ?></label>
                         <div class="sseo-file-drop">
                             <input type="file" name="ticket_screenshots[]" id="ticket_screenshots" multiple accept="image/*">
                             <p class="sseo-file-hint"><?php esc_html_e('You can select multiple files. Hold Ctrl/Cmd to select more than one.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    <?php submit_button(__('Submit ticket', 'ai-seo-client'), 'primary', 'create_support_ticket'); ?>
+                    <?php submit_button(__('Ticket versturen', 'ai-seo-client'), 'primary', 'create_support_ticket'); ?>
                 </form>
             </div>
         </div>
@@ -340,7 +340,7 @@ class Supportickets
         ?>
         <div class="sseo-support-card" style="margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
             <div>
-                <h2 style="margin: 0 0 6px 0; font-size: 18px;"><?php esc_html_e('Support chatbot', 'ai-seo-client'); ?></h2>
+                <h2 style="margin: 0 0 6px 0; font-size: 18px;"><?php esc_html_e('Ondersteunende chatbot', 'ai-seo-client'); ?></h2>
                 <p style="margin: 0; color: #6b7280; font-size: 14px;">
                     <?php esc_html_e('Toon de chatbot-widget rechtsonder in het dashboard en op post-edit pagina\'s.', 'ai-seo-client'); ?>
                 </p>
@@ -370,13 +370,20 @@ class Supportickets
                 <?php if (is_wp_error($result)): ?>
                     <p><?php echo esc_html($result->get_error_message()); ?></p>
                 <?php endif; ?>
-                <p><a href="<?php echo esc_url($this->pageUrl()); ?>" class="button"><?php esc_html_e('Back', 'ai-seo-client'); ?></a></p>
+                <p><a href="<?php echo esc_url($this->pageUrl()); ?>" class="button"><?php esc_html_e('Terug', 'ai-seo-client'); ?></a></p>
             </div>
             <?php
             return;
         }
 
         $ticket = $result['ticket'];
+
+        // Mark staff replies as read when the ticket is viewed
+        try {
+            $this->dashboardAPI->markSupportTicketRead($ticketId);
+        } catch (\Exception $e) {
+            // Silently fail — don't block ticket viewing
+        }
         ?>
         <style>
             .sseo-ticket-detail { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
@@ -406,12 +413,12 @@ class Supportickets
 
         <?php if (isset($_GET['created'])): ?>
             <div class="sseo-ticket-detail" style="background: #d1fae5; color: #065f46; margin-bottom: 20px;">
-                <strong><?php esc_html_e('Ticket created successfully.', 'ai-seo-client'); ?></strong>
+                <strong><?php esc_html_e('Ticket succesvol aangemaakt.', 'ai-seo-client'); ?></strong>
             </div>
         <?php endif; ?>
         <?php if (isset($_GET['reply_sent'])): ?>
             <div class="sseo-ticket-detail" style="background: #d1fae5; color: #065f46; margin-bottom: 20px;">
-                <strong><?php esc_html_e('Reply sent.', 'ai-seo-client'); ?></strong>
+                <strong><?php esc_html_e('Reactie verzonden.', 'ai-seo-client'); ?></strong>
             </div>
         <?php endif; ?>
         <?php if (isset($_GET['error'])): ?>
@@ -449,7 +456,7 @@ class Supportickets
         <div class="sseo-ticket-detail">
             <h2><?php esc_html_e('Replies', 'ai-seo-client'); ?></h2>
             <?php if (empty($ticket['replies'])): ?>
-                <p><?php esc_html_e('No replies yet.', 'ai-seo-client'); ?></p>
+                <p><?php esc_html_e('Nog geen reacties.', 'ai-seo-client'); ?></p>
             <?php else: ?>
                 <div class="sseo-reply-list">
                     <?php foreach ($ticket['replies'] as $reply): ?>
@@ -457,7 +464,7 @@ class Supportickets
                             <div class="sseo-reply-header">
                                 <span class="sseo-reply-author">
                                     <span class="sseo-reply-avatar"><?php echo $reply['is_staff'] ? esc_html(mb_substr($reply['author_name'] ?: 'S', 0, 1)) : esc_html__('U', 'ai-seo-client'); ?></span>
-                                    <?php echo $reply['is_staff'] ? esc_html($reply['author_name'] ?: __('Support', 'ai-seo-client')) : esc_html(__('You', 'ai-seo-client')); ?>
+                                    <?php echo $reply['is_staff'] ? esc_html($reply['author_name'] ?: __('Support', 'ai-seo-client')) : esc_html(__('Jij', 'ai-seo-client')); ?>
                                 </span>
                                 <small style="color: #6b7280; font-weight: 400;"><?php echo esc_html($reply['created_at']); ?></small>
                             </div>
@@ -487,13 +494,13 @@ class Supportickets
                             <textarea name="reply_message" id="reply_message" rows="5" required placeholder="<?php esc_attr_e('Type your reply here...', 'ai-seo-client'); ?>"></textarea>
                         </div>
                         <div class="sseo-form-field">
-                            <label for="reply_screenshots"><?php esc_html_e('Screenshots', 'ai-seo-client'); ?></label>
+                            <label for="reply_screenshots"><?php esc_html_e('Schermafbeeldingen', 'ai-seo-client'); ?></label>
                             <div class="sseo-file-drop">
                                 <input type="file" name="reply_screenshots[]" id="reply_screenshots" multiple accept="image/*">
                                 <p class="sseo-file-hint"><?php esc_html_e('You can select multiple files. Hold Ctrl/Cmd to select more than one.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
-                        <?php submit_button(__('Send reply', 'ai-seo-client'), 'primary', 'add_support_reply'); ?>
+                        <?php submit_button(__('Reactie versturen', 'ai-seo-client'), 'primary', 'add_support_reply'); ?>
                     </form>
                 </div>
             <?php else: ?>

@@ -79,13 +79,30 @@ class CompetitorResearch
             <!-- Add Competitor -->
             <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h2>
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
                     <div>
                         <label for="competitor-domain">
                             <strong><?php esc_html_e('Competitor Domain:', 'ai-seo-client'); ?></strong>
                         </label><br>
-                        <input type="text" id="competitor-domain" class="regular-text" 
+                        <input type="text" id="competitor-domain" class="regular-text"
                                placeholder="competitor.com">
+                    </div>
+                    <div>
+                        <label for="competitor-sitemap">
+                            <strong><?php esc_html_e('Sitemap URL (optional):', 'ai-seo-client'); ?></strong>
+                        </label><br>
+                        <input type="text" id="competitor-sitemap" class="regular-text"
+                               placeholder="https://competitor.com/sitemap_index.xml" style="width:300px;">
+                        <p class="description" style="margin-top:2px;font-size:11px;color:#666;">
+                            <?php esc_html_e('Leave empty to auto-detect. Use a sitemap index URL for a full-site check.', 'ai-seo-client'); ?>
+                        </p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;padding-bottom:5px;">
+                        <input type="checkbox" id="competitor-fullsite" value="1">
+                        <label for="competitor-fullsite" style="white-space:nowrap;">
+                            <strong><?php esc_html_e('Full site', 'ai-seo-client'); ?></strong>
+                        </label>
+                        <span style="font-size:11px;color:#666;" title="<?php esc_attr_e('Follow all sub-sitemaps in a sitemap index for a complete check', 'ai-seo-client'); ?>">ⓘ</span>
                     </div>
                     <button type="button" class="button button-primary" onclick="sseoAddCompetitorTracking()">
                         <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
@@ -136,12 +153,12 @@ class CompetitorResearch
                                 ?>
                             </td>
                             <td>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="button button-small"
                                         onclick="sseoViewCompetitorDetails('<?php echo esc_js($comp['domain']); ?>')">
                                     <?php esc_html_e('View Details', 'ai-seo-client'); ?>
                                 </button>
-                                <button type="button" class="button button-small" 
-                                        onclick="sseoRefreshCompetitor('<?php echo esc_js($comp['domain']); ?>')">
+                                <button type="button" class="button button-small"
+                                        onclick="sseoRefreshCompetitor('<?php echo esc_js($comp['domain']); ?>', '<?php echo esc_js($comp['sitemap_url'] ?? ''); ?>', <?php echo !empty($comp['full_site']) ? 'true' : 'false'; ?>)">
                                     <?php esc_html_e('Refresh', 'ai-seo-client'); ?>
                                 </button>
                             </td>
@@ -226,10 +243,14 @@ class CompetitorResearch
                 alert('<?php esc_html_e('Please enter a competitor domain', 'ai-seo-client'); ?>');
                 return;
             }
-            
+            const sitemapUrl = jQuery('#competitor-sitemap').val().trim();
+            const fullSite = jQuery('#competitor-fullsite').is(':checked') ? 1 : 0;
+
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_analyze_competitor',
                 domain: domain,
+                sitemap_url: sitemapUrl,
+                full_site: fullSite,
                 nonce: '<?php echo wp_create_nonce('sseo_competitor'); ?>'
             }, function(response) {
                 if (response.success) {
@@ -249,14 +270,16 @@ class CompetitorResearch
             sseoLoadAdCopy(domain);
         }
         
-        function sseoRefreshCompetitor(domain) {
+        function sseoRefreshCompetitor(domain, sitemapUrl, fullSite) {
             if (!confirm('<?php esc_html_e('Refresh competitor data? This may take a few minutes.', 'ai-seo-client'); ?>')) {
                 return;
             }
-            
+
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_analyze_competitor',
                 domain: domain,
+                sitemap_url: sitemapUrl || '',
+                full_site: fullSite ? 1 : 0,
                 force_refresh: true,
                 nonce: '<?php echo wp_create_nonce('sseo_competitor'); ?>'
             }, function(response) {
@@ -356,57 +379,59 @@ class CompetitorResearch
     /**
      * Analyze competitor comprehensively
      */
-    public function analyzeCompetitor(string $domain): array
+    public function analyzeCompetitor(string $domain, string $sitemapUrl = '', bool $fullSite = false): array
     {
         $cacheKey = 'sseo_competitor_' . md5($domain);
         $cached = get_transient($cacheKey);
-        
+
         if ($cached !== false) {
             return $cached;
         }
-        
+
         $analysis = [
             'domain' => $domain,
+            'sitemap_url' => $sitemapUrl,
+            'full_site' => $fullSite,
             'keyword_count' => 0,
             'content_strategy' => 'Unknown',
             'ai_content_percentage' => 0,
             'last_updated' => current_time('mysql'),
         ];
-        
+
         // 1. Keyword Strategy Detection
         $keywordStrategy = $this->detectKeywordStrategy($domain);
         $analysis['keyword_count'] = count($keywordStrategy['keywords'] ?? []);
         $analysis['keyword_strategy'] = $keywordStrategy;
-        
-        // 2. Content Calendar Analysis
-        $contentCalendar = $this->analyzeContentCalendar($domain);
+
+        // 2. Content Calendar Analysis (with custom sitemap support)
+        $contentCalendar = $this->analyzeContentCalendar($domain, $sitemapUrl, $fullSite);
         $analysis['content_calendar'] = $contentCalendar;
         $analysis['content_strategy'] = $contentCalendar['strategy'] ?? 'Unknown';
-        
+
         // 3. AI Content Detection
         $aiDetection = $this->detectAIGeneratedContent($domain);
         $analysis['ai_content_percentage'] = $aiDetection['percentage'] ?? 0;
         $analysis['ai_detection'] = $aiDetection;
-        
+
         // 4. Win/Loss Analysis
         $winLoss = $this->performWinLossAnalysis($domain);
         $analysis['win_loss'] = $winLoss;
-        
+
         // 5. Backlink Strategy
         $backlinkStrategy = $this->analyzeBacklinkStrategy($domain);
         $analysis['backlink_strategy'] = $backlinkStrategy;
-        
+
         // 6. Ad Copy Analysis
         $adCopy = $this->analyzeAdCopy($domain);
         $analysis['ad_copy'] = $adCopy;
-        
+
         set_transient($cacheKey, $analysis, DAY_IN_SECONDS);
-        
+
         // Store in tracked competitors
         $competitors = get_option('sseo_ai_tracked_competitors', []);
         $competitors[$domain] = $analysis;
         update_option('sseo_ai_tracked_competitors', $competitors);
-        
+
         return $analysis;
     }
     
@@ -480,28 +505,54 @@ Provide a concise analysis (3-4 sentences):";
     }
     
     /**
-     * Analyze content publishing calendar
+     * Analyze content publishing calendar.
+     *
+     * @param string $domain      Competitor domain.
+     * @param string $sitemapUrl  Custom sitemap URL (empty = auto-detect).
+     * @param bool   $fullSite    Follow all sub-sitemaps in a sitemap index.
      */
-    private function analyzeContentCalendar(string $domain): array
+    private function analyzeContentCalendar(string $domain, string $sitemapUrl = '', bool $fullSite = false): array
     {
-        // Scrape competitor's sitemap or recent posts
-        $sitemapUrl = "https://{$domain}/sitemap.xml";
-        $response = wp_remote_get($sitemapUrl, ['timeout' => 15]);
-        
-        if (is_wp_error($response)) {
-            return ['posts' => [], 'strategy' => 'Unknown', 'frequency' => 'Unknown'];
+        // Determine which sitemap URL(s) to fetch
+        $sitemapUrls = [];
+        if (!empty($sitemapUrl)) {
+            $sitemapUrls[] = $sitemapUrl;
+        } else {
+            // Auto-detect: try common sitemap locations
+            $sitemapUrls[] = "https://{$domain}/sitemap.xml";
+            $sitemapUrls[] = "https://{$domain}/sitemap_index.xml";
+            $sitemapUrls[] = "https://{$domain}/sitemap-index.xml";
         }
-        
-        $xml = wp_remote_retrieve_body($response);
-        $posts = $this->parseSitemapDates($xml);
-        
+
+        $posts = [];
+        $visitedUrls = []; // Prevent infinite loops / duplicate fetches
+        $maxSubSitemaps = 15;  // Safety limit for full-site mode
+        $maxUrls = 2000;       // Safety limit for total URLs parsed
+
+        foreach ($sitemapUrls as $url) {
+            if (isset($visitedUrls[$url]) || count($posts) >= $maxUrls) {
+                continue;
+            }
+            $visitedUrls[$url] = true;
+
+            $response = wp_remote_get($url, ['timeout' => 20]);
+            if (is_wp_error($response)) {
+                continue;
+            }
+
+            $xml = wp_remote_retrieve_body($response);
+            $parsed = $this->parseSitemapDates($xml, $fullSite, $visitedUrls, $maxSubSitemaps, $maxUrls, 0);
+            $posts = array_merge($posts, $parsed['posts']);
+            $visitedUrls = $parsed['visited'];
+        }
+
         // Analyze publishing frequency
         $frequency = $this->calculatePublishingFrequency($posts);
-        
+
         // Detect content strategy using AI
         $recentTitles = array_slice(array_column($posts, 'title'), 0, 20);
         $titlesText = implode("\n", $recentTitles);
-        
+
         $prompt = "Analyze this competitor's content strategy based on recent article titles:
 
 {$titlesText}
@@ -513,9 +564,9 @@ Identify:
 4. Publishing strategy
 
 Provide a brief analysis (2-3 sentences):";
-        
+
         $strategyAnalysis = $this->llm->generateText($prompt, ['max_tokens' => 150]);
-        
+
         return [
             'posts' => $posts,
             'total_posts' => count($posts),
@@ -523,41 +574,95 @@ Provide a brief analysis (2-3 sentences):";
             'strategy' => is_wp_error($strategyAnalysis) ? 'Unknown' : trim($strategyAnalysis),
         ];
     }
-    
+
     /**
-     * Parse sitemap for post dates
+     * Parse sitemap XML for post dates.
+     *
+     * Handles both regular sitemaps (<urlset> with <url> entries) and
+     * sitemap indexes (<sitemapindex> with <sitemap> entries). When
+     * $followIndex is true, sub-sitemaps are fetched recursively.
+     *
+     * @param string $xml             Raw XML content.
+     * @param bool   $followIndex     Whether to follow sitemap index sub-sitemaps.
+     * @param array  $visited         Already-visited URLs (by reference).
+     * @param int    $maxSubSitemaps  Max sub-sitemaps to follow.
+     * @param int    $maxUrls         Max total URLs to collect.
+     * @param int    $depth           Current recursion depth.
+     * @return array{posts: array, visited: array}
      */
-    private function parseSitemapDates(string $xml): array
+    private function parseSitemapDates(string $xml, bool $followIndex = false, array $visited = [], int $maxSubSitemaps = 15, int $maxUrls = 2000, int $depth = 0): array
     {
         $posts = [];
-        
+
         try {
-            $sitemap = new \SimpleXMLElement($xml);
-            
-            foreach ($sitemap->url as $url) {
-                $loc = (string)$url->loc;
-                $lastmod = (string)$url->lastmod;
-                
-                // Extract title from URL
-                $path = parse_url($loc, PHP_URL_PATH);
-                $slug = basename($path);
-                $title = ucwords(str_replace(['-', '_'], ' ', $slug));
-                
-                $posts[] = [
-                    'url' => $loc,
-                    'title' => $title,
-                    'date' => $lastmod,
-                    'timestamp' => strtotime($lastmod),
-                ];
+            // Suppress libxml warnings for malformed XML
+            $previous = libxml_use_internal_errors(true);
+            $sitemap = simplexml_load_string($xml);
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+
+            if ($sitemap === false) {
+                return ['posts' => [], 'visited' => $visited];
+            }
+
+            // Check if this is a sitemap index (<sitemapindex> with <sitemap> children)
+            $isSitemapIndex = $sitemap->getName() === 'sitemapindex'
+                || (isset($sitemap->sitemap) && count($sitemap->sitemap) > 0);
+
+            if ($isSitemapIndex && $followIndex && $depth < 3) {
+                $subSitemapCount = 0;
+                foreach ($sitemap->sitemap as $sub) {
+                    if ($subSitemapCount >= $maxSubSitemaps || count($posts) >= $maxUrls) {
+                        break;
+                    }
+                    $subLoc = (string)($sub->loc ?? '');
+                    if (empty($subLoc) || isset($visited[$subLoc])) {
+                        continue;
+                    }
+                    $visited[$subLoc] = true;
+                    $subSitemapCount++;
+
+                    $subResponse = wp_remote_get($subLoc, ['timeout' => 20]);
+                    if (is_wp_error($subResponse)) {
+                        continue;
+                    }
+                    $subXml = wp_remote_retrieve_body($subResponse);
+                    $subParsed = $this->parseSitemapDates($subXml, true, $visited, $maxSubSitemaps - $subSitemapCount, $maxUrls - count($posts), $depth + 1);
+                    $posts = array_merge($posts, $subParsed['posts']);
+                    $visited = $subParsed['visited'];
+                }
+            } else {
+                // Regular sitemap — extract <url> entries
+                foreach ($sitemap->url as $url) {
+                    if (count($posts) >= $maxUrls) {
+                        break;
+                    }
+                    $loc = (string)$url->loc;
+                    $lastmod = (string)$url->lastmod;
+
+                    // Extract title from URL — keep natural slug casing (no forced Title Case)
+                    $path = parse_url($loc, PHP_URL_PATH);
+                    $slug = basename($path);
+                    $title = str_replace(['-', '_'], ' ', $slug);
+                    // Sentence case: capitalize only the first character
+                    $title = ucfirst($title);
+
+                    $posts[] = [
+                        'url' => $loc,
+                        'title' => $title,
+                        'date' => $lastmod,
+                        'timestamp' => strtotime($lastmod),
+                    ];
+                }
             }
         } catch (\Exception $e) {
             // Sitemap parsing failed
         }
-        
+
         // Sort by date descending
         usort($posts, fn($a, $b) => $b['timestamp'] - $a['timestamp']);
-        
-        return $posts;
+
+        return ['posts' => $posts, 'visited' => $visited];
     }
     
     /**
@@ -945,19 +1050,27 @@ Respond in JSON format:
     public function ajaxAnalyzeCompetitor(): void
     {
         check_ajax_referer('sseo_competitor', 'nonce');
-        
+
         if (!current_user_can('edit_posts')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
-        
+
         $domain = sanitize_text_field($_POST['domain'] ?? '');
-        
+        $sitemapUrl = esc_url_raw($_POST['sitemap_url'] ?? '');
+        $fullSite = !empty($_POST['full_site']) ? true : false;
+        $forceRefresh = !empty($_POST['force_refresh']);
+
         if (empty($domain)) {
             wp_send_json_error(['message' => 'Domain required']);
         }
-        
-        $analysis = $this->analyzeCompetitor($domain);
-        
+
+        // Clear cache on force refresh
+        if ($forceRefresh) {
+            delete_transient('sseo_competitor_' . md5($domain));
+        }
+
+        $analysis = $this->analyzeCompetitor($domain, $sitemapUrl, $fullSite);
+
         wp_send_json_success(['analysis' => $analysis]);
     }
     

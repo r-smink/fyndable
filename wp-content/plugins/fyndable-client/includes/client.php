@@ -74,6 +74,7 @@ class Client
     private ?AdvancedBacklinks $advancedBacklinks = null;
     private ?SmartInternalLinking $smartInternalLinking = null;
     private ?EEATValidator $eeatValidator = null;
+    private ?FactChecker $factChecker = null;
     private ?VideoSEO $videoSEO = null;
     private ?FAQSchema $faqSchema = null;
     private ?AIImageGenerator $aiImageGenerator = null;
@@ -343,6 +344,10 @@ class Client
         // E-E-A-T Validator - available to all tiers
         $this->eeatValidator = new EEATValidator($this->settings, $this->llmClient);
         $this->eeatValidator->register();
+
+        // Fact Checker - available to all tiers (LLM self-check with warnings)
+        $this->factChecker = new FactChecker($this->llmClient);
+        $this->factChecker->register();
         
         // Video SEO - available to all tiers
         $this->videoSEO = new VideoSEO($this->settings, $this->llmClient);
@@ -953,11 +958,21 @@ class Client
                 [$this, 'renderIntegrationsPage']
             );
 
-            // 9c. Support - all tiers
+            // 9c. Support - all tiers (with unread badge)
+            $unreadCount = 0;
+            try {
+                $unreadCount = $this->dashboardAPI->getUnreadSupportCount();
+            } catch (\Exception $e) {
+                $unreadCount = 0;
+            }
+            $supportTitle = __('💬 Support', 'ai-seo-client');
+            if ($unreadCount > 0) {
+                $supportTitle .= ' <span class="awaiting-mod count-' . $unreadCount . '"><span class="pending-count">' . $unreadCount . '</span></span>';
+            }
             add_submenu_page(
                 'fyndable-dashboard',
                 __('Support', 'ai-seo-client'),
-                __('💬 Support', 'ai-seo-client'),
+                $supportTitle,
                 'manage_options',
                 'ai-seo-support',
                 [$this, 'renderSupportPage']
@@ -1135,6 +1150,9 @@ class Client
         if (strpos($hook, 'ai-seo') === false && strpos($hook, 'fyndable') === false) {
             return;
         }
+
+        // WordPress media uploader (used by photo portfolio settings)
+        wp_enqueue_media();
 
         wp_enqueue_style(
             'ai-seo-client-admin',
@@ -2086,6 +2104,7 @@ class Client
         $sslVerify = $this->settings->sslVerify();
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
+        $googlePlacesKey = get_option('sseo_ai_client_google_places_key', '');
 
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -2213,10 +2232,25 @@ class Client
                             <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
 
                             <div class="form-field">
+                                <label for="google_places_key"><?php esc_html_e('Google Places API Key (optional)', 'ai-seo-client'); ?></label>
+                                <input type="text" name="google_places_key" id="google_places_key"
+                                       value="<?php echo esc_attr($googlePlacesKey); ?>" class="regular-text"
+                                       placeholder="AIza...">
+                                <p class="field-description"><?php esc_html_e('Vul een Google Places API key in voor autocomplete-suggesties bij het typen van locaties. Zonder key werkt een eenvoudige fallback-lijst.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
                                 <label for="locations"><?php esc_html_e('Target Locations', 'ai-seo-client'); ?></label>
-                                <textarea name="locations" id="locations" rows="3"
-                                          placeholder="e.g., Amsterdam, Rotterdam, Utrecht"><?php echo esc_textarea($locations); ?></textarea>
-                                <p class="field-description"><?php esc_html_e('Enter cities, regions, or countries (comma-separated)', 'ai-seo-client'); ?></p>
+                                <div id="locations-tag-container" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid #ddd;border-radius:4px;min-height:42px;background:#fff;cursor:text;">
+                                    <!-- Tag chips will be inserted here by JS -->
+                                </div>
+                                <input type="text" id="locations-input" class="regular-text"
+                                       placeholder="<?php esc_attr_e('Typ een plaatsnaam en selecteer uit de suggesties...', 'ai-seo-client'); ?>"
+                                       style="margin-top:6px;width:100%;"
+                                       autocomplete="off">
+                                <!-- Hidden textarea for backward-compatible comma-separated storage -->
+                                <textarea name="locations" id="locations" rows="3" style="display:none;"><?php echo esc_textarea($locations); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Steden, regio\'s of landen. Suggesties verschijnen automatisch tijdens het typen.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
 
@@ -2346,6 +2380,40 @@ class Client
                         </div>
                         
                         <div class="settings-section">
+                            <h2><?php esc_html_e('Photo Portfolio / Huisstijl Referenties', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Upload referentie-afbeeldingen (logo\'s, personen, omgeving, producten) die als stijl-referentie worden gebruikt bij het genereren van afbeeldingen. De AI beschrijft deze referenties en past de huisstijl toe in gegenereerde afbeeldingen.', 'ai-seo-client'); ?></p>
+
+                            <?php
+                            $photoPortfolio = get_option('sseo_ai_client_photo_portfolio', []);
+                            if (!is_array($photoPortfolio)) { $photoPortfolio = []; }
+                            ?>
+
+                            <div class="form-field">
+                                <label><?php esc_html_e('Referentie-afbeeldingen', 'ai-seo-client'); ?></label>
+                                <div id="photo-portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:10px;">
+                                    <?php foreach ($photoPortfolio as $idx => $ref): ?>
+                                        <div class="photo-portfolio-item" data-idx="<?php echo esc_attr($idx); ?>" style="position:relative;border:1px solid #ddd;border-radius:8px;padding:8px;text-align:center;">
+                                            <img src="<?php echo esc_url($ref['url'] ?? ''); ?>" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">
+                                            <select class="photo-ref-type" data-idx="<?php echo esc_attr($idx); ?>" style="width:100%;font-size:11px;margin-bottom:3px;">
+                                                <option value="logo" <?php selected($ref['type'] ?? '', 'logo'); ?>><?php esc_html_e('Logo', 'ai-seo-client'); ?></option>
+                                                <option value="person" <?php selected($ref['type'] ?? '', 'person'); ?>><?php esc_html_e('Persoon', 'ai-seo-client'); ?></option>
+                                                <option value="environment" <?php selected($ref['type'] ?? '', 'environment'); ?>><?php esc_html_e('Omgeving/Pand', 'ai-seo-client'); ?></option>
+                                                <option value="product" <?php selected($ref['type'] ?? '', 'product'); ?>><?php esc_html_e('Product', 'ai-seo-client'); ?></option>
+                                                <option value="style" <?php selected($ref['type'] ?? '', 'style'); ?>><?php esc_html_e('Huisstijl/sfeer', 'ai-seo-client'); ?></option>
+                                            </select>
+                                            <button type="button" class="button button-small photo-ref-remove" data-idx="<?php echo esc_attr($idx); ?>" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; <?php esc_html_e('Verwijder', 'ai-seo-client'); ?></button>
+                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][attachment_id]" value="<?php echo esc_attr($ref['attachment_id'] ?? 0); ?>">
+                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][url]" value="<?php echo esc_attr($ref['url'] ?? ''); ?>">
+                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][type]" class="photo-ref-type-hidden" value="<?php echo esc_attr($ref['type'] ?? 'logo'); ?>">
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <button type="button" class="button" id="photo-portfolio-add"><?php esc_html_e('+ Referentie toevoegen', 'ai-seo-client'); ?></button>
+                                <p class="field-description"><?php esc_html_e('De AI gebruikt deze afbeeldingen om logo\'s, kleuren, sfeer en personen te herkennen en toe te passen in gegenereerde afbeeldingen.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
 
@@ -2383,6 +2451,188 @@ class Client
                                 <?php esc_html_e('Save Settings', 'ai-seo-client'); ?>
                             </button>
                         </div>
+
+                        <script>
+                        (function() {
+                            // Photo Portfolio media uploader
+                            var addBtn = document.getElementById('photo-portfolio-add');
+                            var grid = document.getElementById('photo-portfolio-grid');
+                            if (!addBtn || !grid) return;
+                            var idxCounter = grid.children.length;
+
+                            // Update hidden type field when select changes
+                            document.addEventListener('change', function(e) {
+                                if (e.target && e.target.classList && e.target.classList.contains('photo-ref-type')) {
+                                    var idx = e.target.getAttribute('data-idx');
+                                    var hidden = document.querySelector('.photo-ref-type-hidden[data-idx="' + idx + '"]');
+                                    if (hidden) hidden.value = e.target.value;
+                                }
+                            });
+
+                            // Remove reference
+                            document.addEventListener('click', function(e) {
+                                if (e.target && e.target.classList && e.target.classList.contains('photo-ref-remove')) {
+                                    e.target.closest('.photo-portfolio-item').remove();
+                                }
+                            });
+
+                            addBtn.addEventListener('click', function() {
+                                var frame = wp.media({
+                                    title: '<?php echo esc_js(__('Selecteer referentie-afbeelding', 'ai-seo-client')); ?>',
+                                    multiple: false,
+                                    library: { type: 'image' }
+                                });
+                                frame.on('select', function() {
+                                    var attachment = frame.state().get('selection').first().toJSON();
+                                    var idx = idxCounter++;
+                                    var item = document.createElement('div');
+                                    item.className = 'photo-portfolio-item';
+                                    item.setAttribute('data-idx', idx);
+                                    item.style.cssText = 'position:relative;border:1px solid #ddd;border-radius:8px;padding:8px;text-align:center;';
+                                    item.innerHTML =
+                                        '<img src="' + attachment.url + '" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">' +
+                                        '<select class="photo-ref-type" data-idx="' + idx + '" style="width:100%;font-size:11px;margin-bottom:3px;">' +
+                                        '<option value="logo">Logo</option>' +
+                                        '<option value="person">Persoon</option>' +
+                                        '<option value="environment">Omgeving/Pand</option>' +
+                                        '<option value="product">Product</option>' +
+                                        '<option value="style">Huisstijl/sfeer</option>' +
+                                        '</select>' +
+                                        '<button type="button" class="button button-small photo-ref-remove" data-idx="' + idx + '" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; Verwijder</button>' +
+                                        '<input type="hidden" name="photo_portfolio[' + idx + '][attachment_id]" value="' + attachment.id + '">' +
+                                        '<input type="hidden" name="photo_portfolio[' + idx + '][url]" value="' + attachment.url + '">' +
+                                        '<input type="hidden" name="photo_portfolio[' + idx + '][type]" class="photo-ref-type-hidden" value="logo">';
+                                    grid.appendChild(item);
+                                });
+                                frame.open();
+                            });
+                        })();
+                        </script>
+
+                        <script>
+                        (function() {
+                            var container = document.getElementById('locations-tag-container');
+                            var input = document.getElementById('locations-input');
+                            var hidden = document.getElementById('locations');
+                            if (!container || !input || !hidden) return;
+
+                            var apiKey = '<?php echo esc_js($googlePlacesKey); ?>';
+                            var existingLocations = (hidden.value || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                            var autocomplete = null;
+
+                            // Render existing tags
+                            function renderTags() {
+                                container.innerHTML = '';
+                                existingLocations.forEach(function(loc, idx) {
+                                    var chip = document.createElement('span');
+                                    chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#e8f4fa;color:#379fd3;border-radius:20px;font-size:13px;cursor:default;';
+                                    chip.textContent = loc;
+                                    var removeBtn = document.createElement('span');
+                                    removeBtn.textContent = '\u00d7';
+                                    removeBtn.style.cssText = 'cursor:pointer;font-weight:bold;margin-left:2px;';
+                                    removeBtn.onclick = function() {
+                                        existingLocations.splice(idx, 1);
+                                        renderTags();
+                                    };
+                                    chip.appendChild(removeBtn);
+                                    container.appendChild(chip);
+                                });
+                                syncHidden();
+                            }
+
+                            function syncHidden() {
+                                hidden.value = existingLocations.join(', ');
+                            }
+
+                            function addLocation(loc) {
+                                loc = loc.trim();
+                                if (!loc) return;
+                                if (existingLocations.indexOf(loc) !== -1) return;
+                                existingLocations.push(loc);
+                                renderTags();
+                            }
+
+                            // Set up fallback datalist (common European cities)
+                            function setupFallback() {
+                                var datalist = document.createElement('datalist');
+                                datalist.id = 'locations-datalist';
+                                var commonCities = ['Amsterdam','Rotterdam','Den Haag','Utrecht','Eindhoven','Tilburg','Groningen','Almere','Breda','Nijmegen','Enschede','Apeldoorn','Haarlem','Arnhem','Amersfoort','Zwolle','Zaanstad','Leeuwarden','Leiden','Maastricht','Dordrecht','Ede','Alkmaar','Emmen','Delft','Heerlen','Zoetermeer','Lelystad','Alphen aan den Rijn','Bergen op Zoom','Brussel','Antwerpen','Gent','Charleroi','Luik','Brugge','Leuven','Berlin','Hamburg','München','Köln','Frankfurt','Stuttgart','Düsseldorf','Paris','Lyon','Marseille','Toulouse','Nice','Lille','Bordeaux','London','Manchester','Birmingham','Leeds','Glasgow','Liverpool','Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Rome','Milan','Naples','Turin','Florence','Lisbon','Porto','Warsaw','Kraków','Wrocław','Poznań','Gdańsk'];
+                                commonCities.forEach(function(city) {
+                                    var opt = document.createElement('option');
+                                    opt.value = city;
+                                    datalist.appendChild(opt);
+                                });
+                                input.setAttribute('list', 'locations-datalist');
+                                document.body.appendChild(datalist);
+                            }
+
+                            // Initialize Google Places Autocomplete
+                            function initPlacesAutocomplete() {
+                                if (!apiKey || typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                                    setupFallback();
+                                    return;
+                                }
+                                try {
+                                    autocomplete = new google.maps.places.Autocomplete(input, {
+                                        types: ['(cities)']
+                                    });
+                                    autocomplete.addListener('place_changed', function() {
+                                        var place = autocomplete.getPlace();
+                                        if (place && place.name) {
+                                            addLocation(place.name);
+                                            input.value = '';
+                                        }
+                                    });
+                                } catch (e) {
+                                    setupFallback();
+                                }
+                            }
+
+                            // Allow Enter key to add location manually
+                            input.addEventListener('keydown', function(e) {
+                                if (e.key === 'Enter' || e.key === ',') {
+                                    e.preventDefault();
+                                    if (input.value.trim()) {
+                                        addLocation(input.value);
+                                        input.value = '';
+                                    }
+                                }
+                            });
+
+                            // Allow blur to add
+                            input.addEventListener('blur', function() {
+                                if (input.value.trim()) {
+                                    addLocation(input.value);
+                                    input.value = '';
+                                }
+                            });
+
+                            // Click on container focuses input
+                            container.addEventListener('click', function() {
+                                input.focus();
+                            });
+
+                            renderTags();
+
+                            // If no API key, use fallback immediately
+                            if (!apiKey) {
+                                setupFallback();
+                            } else {
+                                // Expose callback for Google Maps script
+                                window.initLocationsAutocomplete = initPlacesAutocomplete;
+                                // If Google Maps already loaded (e.g. cached), init now
+                                if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                                    initPlacesAutocomplete();
+                                }
+                                // Otherwise the callback=initLocationsAutocomplete in the script tag will fire
+                            }
+                        })();
+                        </script>
+
+                        <?php if (!empty($googlePlacesKey)): ?>
+                        <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr($googlePlacesKey); ?>&libraries=places&callback=initLocationsAutocomplete" async defer></script>
+                        <?php endif; ?>
+
                     </form>
                 </div>
             </div>
@@ -2408,6 +2658,23 @@ class Client
         update_option('sseo_ai_brand_voice', sanitize_text_field($_POST['brand_voice'] ?? ''));
         update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
+        update_option('sseo_ai_client_google_places_key', sanitize_text_field($_POST['google_places_key'] ?? ''));
+
+        // Save photo portfolio references
+        $photoPortfolio = [];
+        if (!empty($_POST['photo_portfolio']) && is_array($_POST['photo_portfolio'])) {
+            foreach ($_POST['photo_portfolio'] as $ref) {
+                $url = esc_url_raw($ref['url'] ?? '');
+                if (empty($url)) continue;
+                $photoPortfolio[] = [
+                    'attachment_id' => (int)($ref['attachment_id'] ?? 0),
+                    'url' => $url,
+                    'type' => sanitize_text_field($ref['type'] ?? 'logo'),
+                ];
+            }
+        }
+        update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
+
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');

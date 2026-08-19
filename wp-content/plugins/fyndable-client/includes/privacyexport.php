@@ -201,10 +201,6 @@ class PrivacyExport
             '_sseo_ai_content_decay_score',
             '_sseo_ai_ab_test_id',
             '_sseo_ai_brand_visibility',
-            '_aiseo_focus_keyphrase',
-            '_aiseo_title',
-            '_aiseo_description',
-            '_aiseo_score',
         ];
     }
 }

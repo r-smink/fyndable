@@ -35,14 +35,18 @@ class SeoDashboard
 
     /**
      * Calculate full site SEO overview
+     *
+     * @param bool $force Bypass the transient cache and re-scan.
      */
-    public function getOverview(): array
+    public function getOverview(bool $force = false): array
     {
         // Check cache first (5 minute transient)
         $cacheKey = 'sseo_dashboard_overview_' . get_current_blog_id();
-        $cached = get_transient($cacheKey);
-        if ($cached !== false) {
-            return $cached;
+        if (!$force) {
+            $cached = get_transient($cacheKey);
+            if ($cached !== false) {
+                return $cached;
+            }
         }
 
         $postTypes = PageBuilderHelper::getSeoPostTypes();
@@ -324,7 +328,8 @@ class SeoDashboard
      */
     public function restGetOverview(\WP_REST_Request $request): array
     {
-        return $this->getOverview();
+        $force = (bool) $request->get_param('force');
+        return $this->getOverview($force);
     }
 
     /**
@@ -517,7 +522,7 @@ class SeoDashboard
                 btn.prop('disabled', true);
                 $('#seo-dash-spinner').addClass('is-active');
 
-                wp.apiFetch({ path: 'sseo-ai/v1/dashboard/overview' }).then(function(data) {
+                wp.apiFetch({ path: 'sseo-ai/v1/dashboard/overview?force=1' }).then(function(data) {
                     window.sseoDashLastData = data;
                     localStorage.setItem('sseo_dashboard_overview', JSON.stringify(data));
                     renderDashboard(data);

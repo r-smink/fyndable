@@ -19,6 +19,26 @@ class TruSEOSCORE
         add_action('save_post', [$this, 'saveSeoMeta'], 10, 2);
         add_action('enqueue_block_editor_assets', [$this, 'enqueueAssets']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
+        // Invalidate the site analysis dashboard cache when SEO meta changes
+        // (covers Gutenberg REST saves that bypass the classic-editor nonce check in saveSeoMeta).
+        add_action('updated_post_meta', [$this, 'invalidateDashboardCache'], 10, 4);
+        add_action('added_post_meta', [$this, 'invalidateDashboardCache'], 10, 4);
+    }
+
+    /**
+     * Clear the site analysis overview transient when SEO meta is updated.
+     *
+     * @param int    $metaId    Unused.
+     * @param int    $postId    Post ID whose meta changed.
+     * @param string $metaKey   Meta key that was updated/added.
+     * @param mixed  $metaValue Unused.
+     */
+    public function invalidateDashboardCache(int $metaId, int $postId, string $metaKey, $metaValue): void
+    {
+        $seoKeys = ['_sseo_ai_title', '_sseo_ai_description', '_sseo_ai_focus_keyphrase'];
+        if (in_array($metaKey, $seoKeys, true)) {
+            delete_transient('sseo_dashboard_overview_' . get_current_blog_id());
+        }
     }
 
     public function addMetaBoxes(): void
@@ -223,6 +243,9 @@ class TruSEOSCORE
         // Save score
         $score = $this->calculateScore($post, $_POST['aiseo_focus_keyphrase'] ?? '');
         update_post_meta($postId, '_sseo_ai_score', $score);
+
+        // Invalidate the site analysis dashboard cache so newly saved SEO meta is reflected.
+        delete_transient('sseo_dashboard_overview_' . get_current_blog_id());
     }
 
     public function calculateScore(\WP_Post $post, string $focusKeyphrase): int

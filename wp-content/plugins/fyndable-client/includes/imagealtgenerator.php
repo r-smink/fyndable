@@ -253,11 +253,13 @@ class ImageAltGenerator
 
     private function filenameToAlt(string $filename): string
     {
-        // Convert filename to readable alt text
-        $alt = ucwords(strtolower($filename));
+        // Convert filename to readable alt text using sentence case
+        // (only first word + proper nouns capitalized, not Title Case)
+        $alt = strtolower($filename);
         $alt = preg_replace('/\d+/', '', $alt);
         $alt = trim($alt);
-        
+        $alt = ucfirst($alt);
+
         return substr($alt, 0, 125) ?: 'Image';
     }
 
