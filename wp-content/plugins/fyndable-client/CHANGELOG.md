@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8.0 (2026-08-19)
+
+### New Features
+- **Post Auto-Cleaner** — Automatically trashes AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded). Settings: enable/disable, days threshold (default 60), max views (default 0). Daily cron + REST endpoints for preview and manual run. Available to all tiers.
+
+### Fixed / Improved
+- **Agency white-label download** — White-label package builder now downloads the latest client plugin from updates.fyndable.ai when the plugin is not locally installed, ensuring agency customers always get the latest version. Falls back to packaged zips if the update server is unavailable.
+
 ## v1.7.1 (2026-08-19)
 
 ### Fixed / Improved

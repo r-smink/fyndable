@@ -1895,6 +1895,7 @@ class SaaSSettings
             wp_die(esc_html__('You do not have permission to manage client versions.', 'sseo-ai-saas'));
         }
 
+        update_option('sseo_ai_saas_update_server_url', esc_url_raw($_POST['sseo_ai_saas_update_server_url'] ?? ''));
         update_option('sseo_ai_saas_latest_version', sanitize_text_field($_POST['sseo_ai_saas_latest_version'] ?? ''));
         update_option('sseo_ai_saas_download_url', sanitize_text_field($_POST['sseo_ai_saas_download_url'] ?? ''));
         update_option('sseo_ai_saas_min_wp_version', sanitize_text_field($_POST['sseo_ai_saas_min_wp_version'] ?? '6.0'));
@@ -2019,6 +2020,7 @@ class SaaSSettings
         $downloadUrl = get_option('sseo_ai_saas_download_url', '');
         $minWpVersion = get_option('sseo_ai_saas_min_wp_version', '6.0');
         $changelog = get_option('sseo_ai_saas_update_changelog', '');
+        $updateServerUrl = get_option('sseo_ai_saas_update_server_url', '');
         $betaEnabled = get_option('sseo_ai_saas_beta_enabled', '0') === '1';
         $betaVersion = get_option('sseo_ai_saas_beta_version', '');
         $betaDownloadUrl = get_option('sseo_ai_saas_beta_download_url', '');
@@ -2048,6 +2050,13 @@ class SaaSSettings
                 <div class="sseo-ai-card" style="margin-bottom: 20px;">
                     <h2><?php esc_html_e('Stable Release', 'sseo-ai-saas'); ?></h2>
                     <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="sseo_ai_saas_update_server_url"><?php esc_html_e('Update Server URL', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="url" name="sseo_ai_saas_update_server_url" id="sseo_ai_saas_update_server_url" value="<?php echo esc_attr($updateServerUrl); ?>" class="regular-text" placeholder="https://updates.fyndable.ai">
+                                <p class="description"><?php esc_html_e('If set, version/download URL/changelog below are overridden by the remote latest.json from this server. Leave empty to use the manual fields below.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
                         <tr>
                             <th scope="row"><label for="sseo_ai_saas_latest_version"><?php esc_html_e('Latest Version', 'sseo-ai-saas'); ?></label></th>
                             <td>

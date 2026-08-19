@@ -104,6 +104,7 @@ class Client
     private ?MultiCMSPublisher $multiCMS = null;
     private ?SerpChangeMonitor $serpMonitor = null;
     private ?SupportAssistant $supportAssistant = null;
+    private ?PostAutoCleaner $postAutoCleaner = null;
 
     public function init(): void
     {
@@ -393,6 +394,10 @@ class Client
         // Created Posts - available to all tiers
         $this->createdPosts = new CreatedPosts($this->settings);
         $this->createdPosts->register();
+
+        // Post Auto-Cleaner - available to all tiers
+        $this->postAutoCleaner = new PostAutoCleaner($this->settings);
+        $this->postAutoCleaner->register();
 
         // Keywords Management - available to all tiers
         $this->keywords = new Keywords($this->settings, $this->llmClient, $this->dashboardAPI);
@@ -2456,6 +2461,52 @@ class Client
                                 <p class="field-description"><?php esc_html_e('When enabled, the Content Writer will include an FAQ section in generated articles by default. This can be overridden per article in the Content Writer.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
+
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Post Auto-Cleaner', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Automatically trash AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded).', 'ai-seo-client'); ?></p>
+
+                            <?php
+                            $autocleanEnabled = get_option('sseo_ai_client_autoclean_enabled', '0') === '1';
+                            $autocleanDays = (int) get_option('sseo_ai_client_autoclean_days', 60);
+                            $autocleanMaxClicks = (int) get_option('sseo_ai_client_autoclean_max_clicks', 0);
+                            $autocleanLastRun = get_option('sseo_ai_client_autoclean_last_run', '');
+                            $autocleanLastCount = (int) get_option('sseo_ai_client_autoclean_last_count', 0);
+                            ?>
+
+                            <div class="form-field">
+                                <label for="autoclean_enabled">
+                                    <input type="checkbox" name="autoclean_enabled" id="autoclean_enabled" value="1" <?php checked($autocleanEnabled); ?>>
+                                    <?php esc_html_e('Enable auto-cleanup', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('When enabled, a daily check trashes AI-generated posts that meet the criteria below.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="autoclean_days"><?php esc_html_e('Days threshold', 'ai-seo-client'); ?></label>
+                                <input type="number" name="autoclean_days" id="autoclean_days" min="1" max="3650" step="1"
+                                       value="<?php echo esc_attr($autocleanDays); ?>">
+                                <p class="field-description"><?php esc_html_e('Posts older than this many days are eligible for cleanup. Default: 60.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="autoclean_max_clicks"><?php esc_html_e('Max views before cleanup', 'ai-seo-client'); ?></label>
+                                <input type="number" name="autoclean_max_clicks" id="autoclean_max_clicks" min="0" max="1000000" step="1"
+                                       value="<?php echo esc_attr($autocleanMaxClicks); ?>">
+                                <p class="field-description"><?php esc_html_e('Posts with this many views or fewer are eligible. Set to 0 to only clean posts with zero views. Default: 0.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <?php if (!empty($autocleanLastRun)): ?>
+                            <p class="field-description" style="color:#666;">
+                                <?php printf(
+                                    /* translators: 1: date/time, 2: number of posts */
+                                    esc_html__('Last run: %1$s — %2$s post(s) trashed.', 'ai-seo-client'),
+                                    esc_html($autocleanLastRun),
+                                    esc_html(number_format($autocleanLastCount))
+                                ); ?>
+                            </p>
+                            <?php endif; ?>
+                        </div>
                         
                         <div class="settings-section">
                             <h2><?php esc_html_e('Photo Portfolio / Huisstijl Referenties', 'ai-seo-client'); ?></h2>
@@ -2778,6 +2829,11 @@ class Client
         update_option('sseo_ai_client_local_opening_hours', sanitize_textarea_field($_POST['local_opening_hours'] ?? ''));
         update_option('sseo_ai_client_local_search_radius', max(1, min(500, (int) ($_POST['local_search_radius'] ?? 10))));
         update_option('sseo_ai_client_local_search_grid', max(1, min(9, (int) ($_POST['local_search_grid'] ?? 3))));
+
+        // Post Auto-Cleaner settings
+        update_option('sseo_ai_client_autoclean_enabled', isset($_POST['autoclean_enabled']) && $_POST['autoclean_enabled'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_autoclean_days', max(1, min(3650, (int) ($_POST['autoclean_days'] ?? 60))));
+        update_option('sseo_ai_client_autoclean_max_clicks', max(0, (int) ($_POST['autoclean_max_clicks'] ?? 0)));
 
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));

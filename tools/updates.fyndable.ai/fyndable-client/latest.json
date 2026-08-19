@@ -1,7 +1,7 @@
 ﻿{
-    "version":  "1.7.1",
-    "download_url":  "https://updates.fyndable.ai/fyndable-client/fyndable-client-1.7.1.zip",
-    "changelog":  "<h4>v1.7.1</h4><ul><li><strong>Upgrade button</strong> — \"Upgrade Now\" button on locked-feature pages now links to the Customer Portal on the SaaS dashboard (with dashboard-URL fallback) instead of the local Connection page. Opens in a new tab.</li><li><strong>Portal URL storage</strong> — Client stores portal_url from tenant/status and license/activate responses in sseo_ai_client_portal_url option.</li><li><strong>Ideas page upgrade link</strong> — \"Upgrade My Plan\" link on the Ideas page now points to the Customer Portal instead of #.</li><li><strong>Check for Updates link</strong> — \"Check for Updates\" link in the plugin row now actually forces an update check (clears cache, re-fetches from SaaS dashboard) and shows a result notice, instead of just redirecting to the Settings page.</li><li><strong>Plugin metadata cleanup</strong> — Removed FEATURES.md and REVIEW-EN-FEATURES.md from the plugin package; only README.md and CHANGELOG.md are shipped.</li></ul>",
+    "version":  "1.8.0",
+    "download_url":  "https://updates.fyndable.ai/fyndable-client/fyndable-client-1.8.0.zip",
+    "changelog":  "<h4>v1.8.0</h4><h5>New Features</h5><ul><li><strong>Post Auto-Cleaner</strong> — Automatically trashes AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded). Settings: enable/disable, days threshold (default 60), max views (default 0). Daily cron + REST endpoints for preview and manual run. Available to all tiers.</li></ul><h5>Fixed / Improved</h5><ul><li><strong>Agency white-label download</strong> — White-label package builder now downloads the latest client plugin from updates.fyndable.ai when the plugin is not locally installed, ensuring agency customers always get the latest version. Falls back to packaged zips if the update server is unavailable.</li></ul>",
     "min_wp_version":  "6.0",
     "tested_wp_version":  "2026-08-19",
     "last_updated":  "2026-08-19",

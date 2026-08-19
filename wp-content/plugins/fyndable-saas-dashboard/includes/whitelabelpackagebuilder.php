@@ -91,13 +91,22 @@ class WhiteLabelPackageBuilder
     /**
      * Determine the source directory for the client plugin.
      *
-     * Prefers the installed fyndable-client plugin directory, then a versions zip.
+     * Resolution order:
+     *   1. Locally installed fyndable-client plugin (fastest).
+     *   2. Remote update server (updates.fyndable.ai) — download latest zip.
+     *   3. Packaged version zips in uploads/plugin dirs (legacy fallback).
      */
     private function resolveSourceDirectory(): string|\WP_Error
     {
         $installed = WP_PLUGIN_DIR . '/fyndable-client';
         if (is_dir($installed)) {
             return $installed;
+        }
+
+        // Try the remote update server (updates.fyndable.ai) before legacy zips.
+        $remoteDir = $this->resolveFromUpdateServer();
+        if (!is_wp_error($remoteDir)) {
+            return $remoteDir;
         }
 
         // Fallback to packaged version zip (extract to temp).
@@ -126,6 +135,83 @@ class WhiteLabelPackageBuilder
         }
 
         return new \WP_Error('source_not_found', __('Client plugin source not found.', 'sseo-ai-saas'));
+    }
+
+    /**
+     * Download the latest client plugin zip from the configured update server
+     * (updates.fyndable.ai) and extract it to a temp directory.
+     *
+     * Uses a 6-hour transient cache to avoid re-downloading on every agency
+     * download request.
+     *
+     * @return string|\WP_Error Extracted source directory, or WP_Error on failure.
+     */
+    private function resolveFromUpdateServer(): string|\WP_Error
+    {
+        $updateServerUrl = \get_option('sseo_ai_saas_update_server_url', '');
+        if (empty($updateServerUrl)) {
+            return new \WP_Error('no_update_server', __('No update server configured.', 'sseo-ai-saas'));
+        }
+
+        $metaUrl = rtrim($updateServerUrl, '/') . '/fyndable-client/latest.json';
+
+        // Cache the downloaded+extracted source dir path for 6 hours.
+        $cacheKey = 'sseo_ai_wl_update_source_' . md5($metaUrl);
+        $cachedDir = \get_transient($cacheKey);
+        if (!empty($cachedDir) && is_dir($cachedDir)) {
+            return $cachedDir;
+        }
+
+        // Fetch latest.json metadata.
+        $response = \wp_remote_get($metaUrl, [
+            'timeout' => 15,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+        if (\is_wp_error($response)) {
+            return new \WP_Error('fetch_failed', $response->get_error_message());
+        }
+        $code = \wp_remote_retrieve_response_code($response);
+        if ($code >= 400) {
+            return new \WP_Error('fetch_failed', sprintf(__('Update server returned HTTP %d.', 'sseo-ai-saas'), $code));
+        }
+        $meta = json_decode(\wp_remote_retrieve_body($response), true);
+        if (!is_array($meta) || empty($meta['download_url'])) {
+            return new \WP_Error('invalid_meta', __('Invalid latest.json from update server.', 'sseo-ai-saas'));
+        }
+
+        $downloadUrl = $meta['download_url'];
+
+        // Download the zip to a temp file.
+        $tmpDir = get_temp_dir();
+        if (!is_writable($tmpDir)) {
+            return new \WP_Error('temp_not_writable', __('Temporary directory is not writable.', 'sseo-ai-saas'));
+        }
+        $tmpZip = $tmpDir . wp_unique_filename($tmpDir, 'fyndable-client-wl-source.zip');
+
+        $zipResponse = \wp_remote_get($downloadUrl, ['timeout' => 60]);
+        if (\is_wp_error($zipResponse)) {
+            return new \WP_Error('download_failed', $zipResponse->get_error_message());
+        }
+        $zipBody = \wp_remote_retrieve_body($zipResponse);
+        if (empty($zipBody)) {
+            return new \WP_Error('download_failed', __('Downloaded zip is empty.', 'sseo-ai-saas'));
+        }
+        if (file_put_contents($tmpZip, $zipBody) === false) {
+            return new \WP_Error('save_failed', __('Could not save downloaded zip.', 'sseo-ai-saas'));
+        }
+
+        // Extract.
+        $extracted = $this->extractClientZip($tmpZip);
+        @unlink($tmpZip);
+
+        if (is_wp_error($extracted)) {
+            return $extracted;
+        }
+
+        // Cache the extracted dir path.
+        \set_transient($cacheKey, $extracted, 6 * HOUR_IN_SECONDS);
+
+        return $extracted;
     }
 
     /**
