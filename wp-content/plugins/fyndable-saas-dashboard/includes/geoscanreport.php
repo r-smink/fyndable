@@ -152,7 +152,7 @@ class GeoScanReport
                         $label = $metricLabels[$key] ?? ucwords(str_replace('_', ' ', $key));
                         $tooltip = $metricTooltips[$key] ?? '';
                     ?>
-                    <div class="sseo-geo-metric" data-value="<?php echo esc_attr($value); ?>" style="--value: <?php echo esc_attr($value); ?>;">
+                    <div class="sseo-geo-metric" data-value="<?php echo esc_attr($value); ?>" style="--target: <?php echo esc_attr($value); ?>%;">
                         <div class="value"><?php echo esc_html($value); ?></div>
                         <div class="label"><?php echo esc_html($label); ?></div>
                         <div class="sseo-geo-metric-tooltip"><?php echo esc_html($tooltip); ?></div>

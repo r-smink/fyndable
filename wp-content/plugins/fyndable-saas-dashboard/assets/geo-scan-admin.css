@@ -189,20 +189,28 @@
     border-color: #379fd3;
 }
 
-/* Transparent gradient fill that rises with the pillar score (0-100%). */
+/* Gradient fill that rises with the pillar score (0-100%). */
 .sseo-geo-metric::after {
     content: "";
     position: absolute;
-    inset: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--target, 0%);
     z-index: 0;
     pointer-events: none;
     border-radius: 10px;
     background: linear-gradient(
         to top,
-        rgba(55, 159, 211, 0.28) 0%,
-        rgba(143, 57, 172, 0.28) var(--value, 0%),
-        transparent var(--value, 0%)
+        rgba(55, 159, 211, 0.5) 0%,
+        rgba(143, 57, 172, 0.5) 100%
     );
+    animation: sseo-geo-metric-fill 1s ease forwards;
+}
+
+@keyframes sseo-geo-metric-fill {
+    from { height: 0%; }
+    to { height: var(--target, 0%); }
 }
 
 .sseo-geo-metric .value,

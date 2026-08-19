@@ -43,7 +43,7 @@ class GeoScanAdmin
             'sseo-ai-licenses',
             __('GEO Scan', 'sseo-ai-saas'),
             __('GEO Scan', 'sseo-ai-saas'),
-            'manage_options',
+            'agency_geo_scan',
             'sseo-ai-geo-scan',
             [$this, 'render']
         );
@@ -180,7 +180,7 @@ class GeoScanAdmin
     {
         check_ajax_referer('sseo_geo_scan', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('agency_geo_scan') && !current_user_can('manage_options')) {
             wp_send_json_error(__('You do not have permission to run scans.', 'sseo-ai-saas'));
         }
 

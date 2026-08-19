@@ -41,6 +41,11 @@ class SaaSDashboardShell
                     'icon' => '&#128202;',
                 ],
                 [
+                    'slug' => 'sseo-ai-geo-scan',
+                    'label' => __('GEO Scan', 'sseo-ai-saas'),
+                    'icon' => '&#128269;',
+                ],
+                [
                     'slug' => 'sseo-ai-agency-generate',
                     'label' => __('Generate Licenses', 'sseo-ai-saas'),
                     'icon' => '&#128273;',

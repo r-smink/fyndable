@@ -35,6 +35,9 @@ class AgencyRoleManager
             if (!$role->has_cap('agency_upload_logo')) {
                 $role->add_cap('agency_upload_logo', true);
             }
+            if (!$role->has_cap('agency_geo_scan')) {
+                $role->add_cap('agency_geo_scan', true);
+            }
             return;
         }
 
@@ -48,6 +51,7 @@ class AgencyRoleManager
                 'agency_view_tenants' => true,
                 'agency_view_support' => true,
                 'agency_upload_logo' => true,
+                'agency_geo_scan' => true,
             ]
         );
     }
@@ -84,7 +88,7 @@ class AgencyRoleManager
             'agency-portal_page_sseo-ai-agency-add-licenses',
         ];
 
-        $allowedPatterns = ['sseo-ai-agency', 'sseo-ai-shell'];
+        $allowedPatterns = ['sseo-ai-agency', 'sseo-ai-shell', 'sseo-ai-geo-scan'];
 
         foreach ($allowedPatterns as $pattern) {
             if (strpos($screen->id, $pattern) !== false) {
