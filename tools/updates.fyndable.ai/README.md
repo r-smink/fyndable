@@ -14,7 +14,9 @@ Structuur:
         beta/
             latest-beta.json     ← beta metadata (leeg placeholder)
 
-Zie tools/UPDATES-SERVER.md voor de volledige Apache-setup.
+Zie tools/UPDATES-SERVER.md voor de volledige Nginx-setup (Apache als
+appendix). Een kant-en-klare Nginx vhost-config staat in
+`tools/updates.fyndable.ai/nginx/updates.fyndable.ai.conf`.
 
 ## Changelog invullen
 
