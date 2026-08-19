@@ -264,9 +264,10 @@ class OnboardingWizard
             case 7:
                 $this->saveStep7();
                 update_option(self::COMPLETED_OPTION, '1');
-                // Break out of the shell iframe and reload the full dashboard
-                // at the top level so the Fyndable menu is visible.
-                $this->breakOutOfIframe('fyndable-dashboard');
+                // Break out of the shell iframe and hard-refresh the top-level
+                // window to the shell with the connection page loaded inside,
+                // so the user lands on the connection page (not frame-in-frame).
+                $this->breakOutOfIframe('fyndable-dashboard&fyndable_page=ai-seo-client');
                 exit;
             default:
                 break;
@@ -325,7 +326,9 @@ class OnboardingWizard
         ]);
         update_option(self::COMPLETED_OPTION, '1');
 
-        $this->breakOutOfIframe('fyndable-dashboard');
+        // Hard-refresh the top-level window to the shell with the connection
+        // page loaded inside, avoiding frame-in-frame.
+        $this->breakOutOfIframe('fyndable-dashboard&fyndable_page=ai-seo-client');
         exit;
     }
 
@@ -333,6 +336,10 @@ class OnboardingWizard
      * Break out of the shell iframe by outputting a minimal HTML page that
      * sets the top-level window location. A plain wp_redirect() would only
      * navigate the iframe, causing an iframe-in-iframe situation.
+     *
+     * The $page argument may include additional query parameters (e.g.
+     * 'fyndable-dashboard&fyndable_page=ai-seo-client') to control which
+     * sub-page the shell loads in its iframe.
      */
     private function breakOutOfIframe(string $page): void
     {
@@ -644,11 +651,17 @@ class OnboardingWizard
             7 => __('Review', 'ai-seo-client'),
         ];
 
-        $primaryColor = '#379fd3';
-        $secondaryColor = '#8f39ac';
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $hasCustomBrand = !empty($whiteLabel['company_name']);
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
+        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
+        $bgGradient = $usePrimaryOnly
+            ? $primaryColor
+            : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
         ?>
         <style>
-            #wpcontent, #wpbody, #wpbody-content { background: linear-gradient(135deg, <?php echo esc_attr($primaryColor); ?> 0%, <?php echo esc_attr($secondaryColor); ?> 100%) !important; }
+            #wpcontent, #wpbody, #wpbody-content { background: <?php echo esc_attr($bgGradient); ?> !important; }
             .sseo-onboarding { max-width: 760px; margin: 0 auto; padding: 60px 20px; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; position: relative; }
             .sseo-onboarding-skip-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; transition: background 0.15s; }
             .sseo-onboarding-skip-btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
@@ -682,6 +695,7 @@ class OnboardingWizard
             .sseo-onboarding-checkbox-item input { margin: 0; }
             .sseo-onboarding-actions { display: flex; justify-content: space-between; margin-top: 30px; }
             .sseo-onboarding-actions .button-primary { background: <?php echo esc_attr($primaryColor); ?>; border-color: <?php echo esc_attr($primaryColor); ?>; padding: 8px 24px; font-size: 15px; color: #fff; }
+            .sseo-onboarding-actions .button-primary:hover { background: <?php echo esc_attr($secondaryColor); ?>; border-color: <?php echo esc_attr($secondaryColor); ?>; }
             .sseo-onboarding-actions .button-secondary { background: #f3f4f6; color: #374151; border-color: #e5e7eb; padding: 8px 24px; font-size: 15px; }
             .sseo-onboarding-skip { color: #fff; text-decoration: none; font-size: 14px; line-height: 34px; }
         </style>
