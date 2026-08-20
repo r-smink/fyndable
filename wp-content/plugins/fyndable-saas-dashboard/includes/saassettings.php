@@ -713,9 +713,17 @@ class SaaSSettings
                             <th scope="row"><label for="sseo_geo_model"><?php esc_html_e('GEO Scan Model', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <select name="sseo_ai_saas_geo_model" id="sseo_geo_model">
-                                    <?php foreach (\SSEOAISaaS\ProviderRouter::getAvailableModels() as $modelKey => $modelLabel): ?>
+                                    <?php
+                                    $geoRouter = new \SSEOAISaaS\ProviderRouter($this);
+                                    foreach ($geoRouter->getMergedAvailableModels() as $modelKey => $modelLabel):
+                                    ?>
                                         <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($this->getGeoModel(), $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
                                     <?php endforeach; ?>
+                                    <?php $geoModel = $this->getGeoModel(); ?>
+                                    <?php if (!empty($geoModel) && !isset(\SSEOAISaaS\ProviderRouter::getAvailableModels()[$geoModel])): ?>
+                                        <?php // Include saved model if it's not in the hardcoded list (live fetch may have failed). ?>
+                                        <option value="<?php echo esc_attr($geoModel); ?>" selected><?php echo esc_html($geoModel); ?> (<?php esc_html_e('saved', 'sseo-ai-saas'); ?>)</option>
+                                    <?php endif; ?>
                                 </select>
                             </td>
                         </tr>
@@ -1812,30 +1820,50 @@ class SaaSSettings
     public function renderAiModelsPage(): void
     {
         $useCases = \SSEOAISaaS\ProviderRouter::getUseCases();
-        $standardModels = array_intersect_key(
-            \SSEOAISaaS\ProviderRouter::getAvailableModels(),
-            array_flip(\SSEOAISaaS\ProviderRouter::getStandardModels())
-        );
-        $premiumModels = array_intersect_key(
-            \SSEOAISaaS\ProviderRouter::getAvailableModels(),
-            array_flip(\SSEOAISaaS\ProviderRouter::getPremiumModels())
-        );
+
+        // Use merged model lists (hardcoded + live OpenRouter models) so the
+        // admin can pick from the full set of models available via OpenRouter.
+        $router = new \SSEOAISaaS\ProviderRouter($this);
+        $forceRefresh = !empty($_GET['refresh_models'])
+            && isset($_GET['_wpnonce'])
+            && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'sseo_ai_refresh_models');
+        $standardModels = $router->getMergedStandardModels($forceRefresh);
+        $premiumModels = $router->getMergedPremiumModels($forceRefresh);
+        $allModels = $router->getMergedAvailableModels($forceRefresh);
+
         $standardRouting = get_option('sseo_ai_saas_standard_routing', []);
         $premiumRouting = get_option('sseo_ai_saas_premium_routing', []);
         $standardDefaults = \SSEOAISaaS\ProviderRouter::getRoutingForModelTier('standard');
         $premiumDefaults = \SSEOAISaaS\ProviderRouter::getRoutingForModelTier('premium');
+
+        $liveCount = count($allModels) - count(\SSEOAISaaS\ProviderRouter::getAvailableModels());
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('AI Models', 'sseo-ai-saas'); ?></h1>
+            <p class="description" style="margin: 0 20px; color: #fff; font-size: 14px;">
+                <?php esc_html_e('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas'); ?>
+            </p>
+            <p class="description" style="margin: 0 20px; color: #fff; font-size: 14px;">
+                <?php
+                printf(
+                    /* translators: 1: total model count, 2: live-fetched count */
+                    esc_html__('Showing %1$d models (%2$d live-fetched from OpenRouter).', 'sseo-ai-saas'),
+                    count($allModels),
+                    max(0, $liveCount)
+                );
+                ?>
+                <a style="color: #fff; text-decoration: underline;" href="<?php echo esc_url(wp_nonce_url(add_query_arg('refresh_models', '1', admin_url('admin.php?page=sseo-ai-ai-models')), 'sseo_ai_refresh_models')); ?>">
+                    <?php esc_html_e('Refresh model list', 'sseo-ai-saas'); ?>
+                </a>
+            </p>
             <form method="post" action="options.php">
                 <?php settings_fields('ai_seo_saas_settings'); ?>
-                <p class="description"><?php esc_html_e('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas'); ?></p>
 
                 <h2><?php esc_html_e('Standard Tier Models', 'sseo-ai-saas'); ?></h2>
                 <p class="description"><?php esc_html_e('Used for Starter / standard subscriptions.', 'sseo-ai-saas'); ?></p>
                 <table class="form-table">
                     <?php foreach ($useCases as $key => $label): ?>
-                        <?php $current = $standardRouting[$key] ?? $standardDefaults[$key] ?? 'openai/gpt-4o-mini'; ?>
+                        <?php $current = $standardRouting[$key] ?? $standardDefaults[$key] ?? 'openai/gpt-5-mini'; ?>
                         <tr>
                             <th scope="row"><label for="standard_routing_<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></label></th>
                             <td>
@@ -1843,6 +1871,10 @@ class SaaSSettings
                                     <?php foreach ($standardModels as $modelKey => $modelLabel): ?>
                                         <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($current, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
                                     <?php endforeach; ?>
+                                    <?php // Ensure the currently-saved model is always selectable even if not in the merged list. ?>
+                                    <?php if (!empty($current) && !isset($standardModels[$current])): ?>
+                                        <option value="<?php echo esc_attr($current); ?>" selected><?php echo esc_html($current); ?> (<?php esc_html_e('saved', 'sseo-ai-saas'); ?>)</option>
+                                    <?php endif; ?>
                                 </select>
                             </td>
                         </tr>
@@ -1853,7 +1885,7 @@ class SaaSSettings
                 <p class="description"><?php esc_html_e('Used for Professional, Business and Agency subscriptions.', 'sseo-ai-saas'); ?></p>
                 <table class="form-table">
                     <?php foreach ($useCases as $key => $label): ?>
-                        <?php $current = $premiumRouting[$key] ?? $premiumDefaults[$key] ?? 'openai/gpt-4o'; ?>
+                        <?php $current = $premiumRouting[$key] ?? $premiumDefaults[$key] ?? 'openai/gpt-5'; ?>
                         <tr>
                             <th scope="row"><label for="premium_routing_<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></label></th>
                             <td>
@@ -1861,6 +1893,9 @@ class SaaSSettings
                                     <?php foreach ($premiumModels as $modelKey => $modelLabel): ?>
                                         <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($current, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
                                     <?php endforeach; ?>
+                                    <?php if (!empty($current) && !isset($premiumModels[$current])): ?>
+                                        <option value="<?php echo esc_attr($current); ?>" selected><?php echo esc_html($current); ?> (<?php esc_html_e('saved', 'sseo-ai-saas'); ?>)</option>
+                                    <?php endif; ?>
                                 </select>
                             </td>
                         </tr>

@@ -16,6 +16,12 @@ class OpenRouterAdapter
 {
     private SaaSSettings $settings;
     private string $apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    private string $modelsUrl = 'https://openrouter.ai/api/v1/models';
+
+    /** Transient key for cached model list. */
+    public const MODELS_TRANSIENT = 'sseo_ai_openrouter_models_cache';
+    /** Cache lifetime in seconds (12 hours). */
+    public const MODELS_CACHE_TTL = 12 * HOUR_IN_SECONDS;
 
     public function __construct(SaaSSettings $settings)
     {
@@ -120,5 +126,87 @@ class OpenRouterAdapter
                 'cost'              => $usage['cost'] ?? 0,
             ],
         ];
+    }
+
+    /**
+     * Fetch the list of available models from OpenRouter's /api/v1/models endpoint.
+     *
+     * Returns an associative array [model_id => label] filtered to text-output chat
+     * models. Results are cached in a transient for self::MODELS_CACHE_TTL seconds.
+     * Pass $forceRefresh = true to bypass the cache (used by the admin "Refresh" button).
+     *
+     * @param bool $forceRefresh Bypass the transient cache.
+     * @return array [id => label]  (empty array if fetch fails / not configured)
+     */
+    public function fetchModels(bool $forceRefresh = false): array
+    {
+        if (!$this->isConfigured()) {
+            return [];
+        }
+
+        if (!$forceRefresh) {
+            $cached = get_transient(self::MODELS_TRANSIENT);
+            if (is_array($cached) && !empty($cached)) {
+                return $cached;
+            }
+        }
+
+        $response = wp_remote_get($this->modelsUrl, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->getApiKey(),
+            ],
+            'timeout' => 30,
+        ]);
+
+        if (is_wp_error($response)) {
+            return [];
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        if ($statusCode !== 200) {
+            return [];
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (empty($body['data']) || !is_array($body['data'])) {
+            return [];
+        }
+
+        $models = [];
+        foreach ($body['data'] as $model) {
+            $id = $model['id'] ?? '';
+            if (empty($id)) {
+                continue;
+            }
+
+            // Skip non-text output models (image/audio/video only) and batch variants.
+            $outputModalities = $model['architecture']['output_modalities'] ?? ['text'];
+            if (!in_array('text', $outputModalities, true)) {
+                continue;
+            }
+            // Skip batch endpoints and free variants to keep the dropdown clean.
+            if (str_contains($id, ':batch') || str_contains($id, ':free')) {
+                continue;
+            }
+
+            $name = $model['name'] ?? $id;
+            $models[$id] = $name;
+        }
+
+        asort($models, SORT_STRING | SORT_FLAG_CASE);
+
+        if (!empty($models)) {
+            set_transient(self::MODELS_TRANSIENT, $models, self::MODELS_CACHE_TTL);
+        }
+
+        return $models;
+    }
+
+    /**
+     * Clear the cached model list (forces a fresh fetch on next request).
+     */
+    public static function clearModelsCache(): void
+    {
+        delete_transient(self::MODELS_TRANSIENT);
     }
 }

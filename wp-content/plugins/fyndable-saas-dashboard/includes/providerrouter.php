@@ -25,6 +25,7 @@ class ProviderRouter
      * Used for cost tracking when the provider doesn't return cost.
      */
     private const MODEL_PRICING = [
+        // Legacy / existing models (kept for backward compatibility with saved routing)
         'openai/gpt-4o'               => ['input' => 0.0025, 'output' => 0.01],
         'openai/gpt-4o-mini'          => ['input' => 0.00015, 'output' => 0.0006],
         'openai/gpt-4-turbo'          => ['input' => 0.01, 'output' => 0.03],
@@ -36,6 +37,29 @@ class ProviderRouter
         'deepseek/deepseek-coder'     => ['input' => 0.00014, 'output' => 0.00028],
         'google/gemini-flash-1.5'     => ['input' => 0.000075, 'output' => 0.0003],
         'meta-llama/llama-3.1-70b-instruct' => ['input' => 0.00059, 'output' => 0.00079],
+        // Modern OpenAI models
+        'openai/gpt-5'                => ['input' => 0.005, 'output' => 0.015],
+        'openai/gpt-5-mini'           => ['input' => 0.0004, 'output' => 0.0016],
+        'openai/gpt-5-nano'           => ['input' => 0.00005, 'output' => 0.0002],
+        // Modern Anthropic models
+        'anthropic/claude-opus-4'     => ['input' => 0.015, 'output' => 0.075],
+        'anthropic/claude-sonnet-4'   => ['input' => 0.003, 'output' => 0.015],
+        'anthropic/claude-sonnet-4.5' => ['input' => 0.003, 'output' => 0.015],
+        'anthropic/claude-haiku-4'    => ['input' => 0.001, 'output' => 0.005],
+        // Modern Google models
+        'google/gemini-2.5-pro'       => ['input' => 0.00125, 'output' => 0.01],
+        'google/gemini-2.5-flash'     => ['input' => 0.00015, 'output' => 0.0006],
+        'google/gemini-3.7-flash'     => ['input' => 0.000375, 'output' => 0.001875],
+        // Modern Deepseek models
+        'deepseek/deepseek-v3'        => ['input' => 0.00028, 'output' => 0.00042],
+        'deepseek/deepseek-r1'        => ['input' => 0.00055, 'output' => 0.00219],
+        // Modern Meta models
+        'meta-llama/llama-4-scout'    => ['input' => 0.00011, 'output' => 0.00034],
+        'meta-llama/llama-4-maverick' => ['input' => 0.0002, 'output' => 0.0006],
+        // Other providers
+        'qwen/qwen3.8-27b'            => ['input' => 0.00045, 'output' => 0.0032],
+        'z-ai/glm-5.3'                => ['input' => 0.0014, 'output' => 0.0044],
+        'x-ai/grok-4'                 => ['input' => 0.003, 'output' => 0.015],
     ];
 
     /**
@@ -43,13 +67,13 @@ class ProviderRouter
      * Can be overridden via sseo_ai_saas_model_routing option.
      */
     private const DEFAULT_ROUTING = [
-        'content_generation'  => 'openai/gpt-4o',
-        'meta_optimization'   => 'openai/gpt-4o-mini',
-        'keyword_research'    => 'openai/gpt-4o',
-        'faq_generation'      => 'openai/gpt-4o-mini',
-        'content_analysis'    => 'openai/gpt-4o-mini',
-        'image_alt_text'      => 'openai/gpt-4o-mini',
-        'geo_readiness'       => 'google/gemini-flash-1.5',
+        'content_generation'  => 'openai/gpt-5',
+        'meta_optimization'   => 'openai/gpt-5-mini',
+        'keyword_research'    => 'openai/gpt-5',
+        'faq_generation'      => 'openai/gpt-5-mini',
+        'content_analysis'    => 'openai/gpt-5-mini',
+        'image_alt_text'      => 'openai/gpt-5-mini',
+        'geo_readiness'       => 'google/gemini-3.7-flash',
     ];
 
     /**
@@ -57,30 +81,53 @@ class ProviderRouter
      * Used when the primary model or its provider fails.
      */
     private const FALLBACK_CHAIN = [
-        'content_generation'  => ['openai/gpt-4o', 'openai/gpt-4o-mini', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
-        'meta_optimization'   => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
-        'keyword_research'    => ['openai/gpt-4o', 'openai/gpt-4o-mini', 'deepseek/deepseek-chat', 'anthropic/claude-3-haiku'],
-        'faq_generation'      => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
-        'content_analysis'    => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
-        'image_alt_text'      => ['openai/gpt-4o-mini', 'anthropic/claude-3-haiku', 'deepseek/deepseek-chat'],
-        'geo_readiness'       => ['google/gemini-flash-1.5', 'anthropic/claude-3-haiku', 'openai/gpt-4o-mini', 'deepseek/deepseek-chat'],
+        'content_generation'  => ['openai/gpt-5', 'openai/gpt-4o', 'anthropic/claude-sonnet-4.5', 'openai/gpt-5-mini', 'openai/gpt-4o-mini', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat'],
+        'meta_optimization'   => ['openai/gpt-5-mini', 'openai/gpt-4o-mini', 'openai/gpt-5', 'openai/gpt-4o', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat'],
+        'keyword_research'    => ['openai/gpt-5', 'openai/gpt-4o', 'openai/gpt-5-mini', 'openai/gpt-4o-mini', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku'],
+        'faq_generation'      => ['openai/gpt-5-mini', 'openai/gpt-4o-mini', 'openai/gpt-5', 'openai/gpt-4o', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat'],
+        'content_analysis'    => ['openai/gpt-5-mini', 'openai/gpt-4o-mini', 'openai/gpt-5', 'openai/gpt-4o', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat'],
+        'image_alt_text'      => ['openai/gpt-5-mini', 'openai/gpt-4o-mini', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat'],
+        'geo_readiness'       => ['google/gemini-3.7-flash', 'google/gemini-2.5-flash', 'google/gemini-flash-1.5', 'anthropic/claude-haiku-4', 'anthropic/claude-3-haiku', 'openai/gpt-5-mini', 'openai/gpt-4o-mini', 'deepseek/deepseek-v3', 'deepseek/deepseek-chat'],
     ];
 
     /**
      * Available models for dropdowns.
      */
     private const AVAILABLE_MODELS = [
-        'openai/gpt-4o'               => 'OpenAI GPT-4o (Best quality)',
+        // OpenAI
+        'openai/gpt-5'                => 'OpenAI GPT-5 (Newest, best quality)',
+        'openai/gpt-5-mini'           => 'OpenAI GPT-5 Mini (Fast, affordable)',
+        'openai/gpt-5-nano'           => 'OpenAI GPT-5 Nano (Cheapest)',
+        'openai/gpt-4o'               => 'OpenAI GPT-4o',
         'openai/gpt-4o-mini'          => 'OpenAI GPT-4o Mini (Fast, cheap)',
         'openai/gpt-4-turbo'          => 'OpenAI GPT-4 Turbo',
         'openai/gpt-4'                => 'OpenAI GPT-4',
-        'openai/gpt-3.5-turbo'        => 'OpenAI GPT-3.5 Turbo (Cheapest)',
-        'anthropic/claude-3.5-sonnet' => 'Anthropic Claude 3.5 Sonnet',
-        'anthropic/claude-3-haiku'    => 'Anthropic Claude 3 Haiku (Fast)',
-        'deepseek/deepseek-chat'      => 'Deepseek Chat (Cost-effective)',
-        'deepseek/deepseek-coder'     => 'Deepseek Coder',
-        'google/gemini-flash-1.5'     => 'Google Gemini Flash 1.5',
-        'meta-llama/llama-3.1-70b-instruct' => 'Meta Llama 3.1 70B',
+        'openai/gpt-3.5-turbo'        => 'OpenAI GPT-3.5 Turbo (Cheapest legacy)',
+        // Anthropic
+        'anthropic/claude-opus-4'     => 'Anthropic Claude Opus 4 (Top quality)',
+        'anthropic/claude-sonnet-4.5' => 'Anthropic Claude Sonnet 4.5',
+        'anthropic/claude-sonnet-4'   => 'Anthropic Claude Sonnet 4',
+        'anthropic/claude-haiku-4'    => 'Anthropic Claude Haiku 4 (Fast)',
+        'anthropic/claude-3.5-sonnet' => 'Anthropic Claude 3.5 Sonnet (legacy)',
+        'anthropic/claude-3-haiku'    => 'Anthropic Claude 3 Haiku (legacy, fast)',
+        // Google
+        'google/gemini-3.7-flash'     => 'Google Gemini 3.7 Flash (Fast, modern)',
+        'google/gemini-2.5-pro'       => 'Google Gemini 2.5 Pro',
+        'google/gemini-2.5-flash'     => 'Google Gemini 2.5 Flash (Fast, cheap)',
+        'google/gemini-flash-1.5'     => 'Google Gemini Flash 1.5 (legacy)',
+        // Deepseek
+        'deepseek/deepseek-v3'        => 'Deepseek V3 (Cost-effective)',
+        'deepseek/deepseek-r1'        => 'Deepseek R1 (Reasoning)',
+        'deepseek/deepseek-chat'      => 'Deepseek Chat (legacy, cost-effective)',
+        'deepseek/deepseek-coder'     => 'Deepseek Coder (legacy)',
+        // Meta
+        'meta-llama/llama-4-maverick' => 'Meta Llama 4 Maverick',
+        'meta-llama/llama-4-scout'    => 'Meta Llama 4 Scout (Cheap)',
+        'meta-llama/llama-3.1-70b-instruct' => 'Meta Llama 3.1 70B (legacy)',
+        // Other
+        'qwen/qwen3.8-27b'            => 'Qwen 3.8 27B',
+        'z-ai/glm-5.3'                => 'Z.ai GLM 5.3 (Reasoning)',
+        'x-ai/grok-4'                 => 'xAI Grok 4',
     ];
 
     /**
@@ -88,10 +135,17 @@ class ProviderRouter
      * Cost-effective models for lower-tier plans.
      */
     private const STANDARD_MODELS = [
+        'openai/gpt-5-mini',
+        'openai/gpt-5-nano',
         'openai/gpt-4o-mini',
-        'deepseek/deepseek-chat',
+        'anthropic/claude-haiku-4',
         'anthropic/claude-3-haiku',
+        'deepseek/deepseek-v3',
+        'deepseek/deepseek-chat',
+        'google/gemini-3.7-flash',
+        'google/gemini-2.5-flash',
         'google/gemini-flash-1.5',
+        'meta-llama/llama-4-scout',
     ];
 
     /**
@@ -99,36 +153,46 @@ class ProviderRouter
      * Higher-quality models for mid-tier plans.
      */
     private const PREMIUM_MODELS = [
+        'openai/gpt-5',
         'openai/gpt-4o',
+        'anthropic/claude-opus-4',
+        'anthropic/claude-sonnet-4.5',
+        'anthropic/claude-sonnet-4',
         'anthropic/claude-3.5-sonnet',
+        'google/gemini-2.5-pro',
         'openai/gpt-4-turbo',
+        'meta-llama/llama-4-maverick',
         'meta-llama/llama-3.1-70b-instruct',
+        'deepseek/deepseek-r1',
+        'qwen/qwen3.8-27b',
+        'z-ai/glm-5.3',
+        'x-ai/grok-4',
     ];
 
     /**
      * Default routing for standard model tier (Starter).
      */
     private const STANDARD_ROUTING = [
-        'content_generation'  => 'openai/gpt-4o-mini',
-        'meta_optimization'   => 'openai/gpt-4o-mini',
-        'keyword_research'    => 'deepseek/deepseek-chat',
-        'faq_generation'      => 'openai/gpt-4o-mini',
-        'content_analysis'    => 'openai/gpt-4o-mini',
-        'image_alt_text'      => 'openai/gpt-4o-mini',
-        'geo_readiness'       => 'google/gemini-flash-1.5',
+        'content_generation'  => 'openai/gpt-5-mini',
+        'meta_optimization'   => 'openai/gpt-5-mini',
+        'keyword_research'    => 'deepseek/deepseek-v3',
+        'faq_generation'      => 'openai/gpt-5-mini',
+        'content_analysis'    => 'openai/gpt-5-mini',
+        'image_alt_text'      => 'openai/gpt-5-mini',
+        'geo_readiness'       => 'google/gemini-3.7-flash',
     ];
 
     /**
      * Default routing for premium model tier (Professional / Business).
      */
     private const PREMIUM_ROUTING = [
-        'content_generation'  => 'openai/gpt-4o',
-        'meta_optimization'   => 'openai/gpt-4o-mini',
-        'keyword_research'    => 'openai/gpt-4o',
-        'faq_generation'      => 'openai/gpt-4o-mini',
-        'content_analysis'    => 'openai/gpt-4o',
-        'image_alt_text'      => 'openai/gpt-4o-mini',
-        'geo_readiness'       => 'google/gemini-flash-1.5',
+        'content_generation'  => 'openai/gpt-5',
+        'meta_optimization'   => 'openai/gpt-5-mini',
+        'keyword_research'    => 'openai/gpt-5',
+        'faq_generation'      => 'openai/gpt-5-mini',
+        'content_analysis'    => 'openai/gpt-5',
+        'image_alt_text'      => 'openai/gpt-5-mini',
+        'geo_readiness'       => 'google/gemini-3.7-flash',
     ];
 
     public function __construct(SaaSSettings $settings)
@@ -329,11 +393,91 @@ class ProviderRouter
     }
 
     /**
-     * Get available models for dropdowns.
+     * Get available models for dropdowns (hardcoded list only).
+     * Use getMergedAvailableModels() to also include live-fetched OpenRouter models.
      */
     public static function getAvailableModels(): array
     {
         return self::AVAILABLE_MODELS;
+    }
+
+    /**
+     * Get available models merged with live-fetched OpenRouter models.
+     * Hardcoded models take precedence (their curated labels are preserved);
+     * any additional models returned by OpenRouter's /api/v1/models endpoint
+     * are appended with their provider-supplied name as the label.
+     *
+     * @param bool $forceRefresh Bypass the OpenRouter models cache.
+     * @return array [id => label]
+     */
+    public function getMergedAvailableModels(bool $forceRefresh = false): array
+    {
+        $models = self::AVAILABLE_MODELS;
+
+        $live = $this->openRouter->fetchModels($forceRefresh);
+        if (!empty($live)) {
+            foreach ($live as $id => $label) {
+                if (!isset($models[$id])) {
+                    $models[$id] = $label;
+                }
+            }
+        }
+
+        return $models;
+    }
+
+    /**
+     * Get standard tier models merged with live OpenRouter models that are
+     * not already classified as premium. This keeps the standard dropdown
+     * focused on cost-effective options while still allowing admins to pick
+     * any newly available model.
+     *
+     * @param bool $forceRefresh Bypass the OpenRouter models cache.
+     * @return array [id => label]
+     */
+    public function getMergedStandardModels(bool $forceRefresh = false): array
+    {
+        $merged = $this->getMergedAvailableModels($forceRefresh);
+        $standard = array_flip(self::STANDARD_MODELS);
+
+        // Include hardcoded standard models plus any live model that is not
+        // explicitly a premium model (so new cheap models show up here).
+        $premium = array_flip(self::PREMIUM_MODELS);
+        $result = [];
+        foreach ($merged as $id => $label) {
+            if (isset($standard[$id]) || !isset($premium[$id])) {
+                $result[$id] = $label;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Get premium tier models merged with live OpenRouter models.
+     * Includes all hardcoded premium models plus every live model (so admins
+     * can assign any high-end model to premium use-cases).
+     *
+     * @param bool $forceRefresh Bypass the OpenRouter models cache.
+     * @return array [id => label]
+     */
+    public function getMergedPremiumModels(bool $forceRefresh = false): array
+    {
+        $merged = $this->getMergedAvailableModels($forceRefresh);
+        $premium = array_flip(self::PREMIUM_MODELS);
+
+        $result = [];
+        // Premium models first (curated order), then the rest.
+        foreach (self::PREMIUM_MODELS as $id) {
+            if (isset($merged[$id])) {
+                $result[$id] = $merged[$id];
+            }
+        }
+        foreach ($merged as $id => $label) {
+            if (!isset($result[$id])) {
+                $result[$id] = $label;
+            }
+        }
+        return $result;
     }
 
     /**

@@ -596,7 +596,7 @@ class AgencyPortal
                                     <option value="standard"><?php esc_html_e('Standard (cost-effective models)', 'sseo-ai-saas'); ?></option>
                                     <option value="premium"><?php esc_html_e('Premium (higher-quality models)', 'sseo-ai-saas'); ?></option>
                                 </select>
-                                <p class="description"><?php esc_html_e('Standard uses affordable models (GPT-4o-mini, Deepseek). Premium uses higher-quality models (GPT-4o, Claude 3.5).', 'sseo-ai-saas'); ?></p>
+                                <p class="description"><?php esc_html_e('Standard uses affordable models (GPT-5 Mini, Deepseek V3). Premium uses higher-quality models (GPT-5, Claude Sonnet 4.5, Gemini 2.5 Pro).', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         <tr>
