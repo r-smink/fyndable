@@ -11,8 +11,45 @@
     var availablePaymentMethods = {};
     var trialEnabled = true;
     var plans = {};
+    var queryParams = getQueryParams();
+
+    function getQueryParams() {
+        var params = {};
+        if (typeof window === 'undefined' || !window.location || !window.location.search) {
+            return params;
+        }
+        var search = window.location.search;
+        try {
+            var qs = new URLSearchParams(search);
+            var tier = qs.get('tier');
+            var interval = qs.get('interval');
+            if (tier) {
+                params.tier = tier;
+            }
+            if (interval === 'month' || interval === 'year') {
+                params.interval = interval;
+            }
+        } catch (e) {
+            var pairs = search.substring(1).split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                var key = decodeURIComponent(pair[0] || '');
+                var value = decodeURIComponent((pair[1] || '').replace(/\+/g, ' '));
+                if (key === 'tier') {
+                    params.tier = value;
+                }
+                if (key === 'interval' && (value === 'month' || value === 'year')) {
+                    params.interval = value;
+                }
+            }
+        }
+        return params;
+    }
 
     function init() {
+        if (queryParams.interval) {
+            selectedInterval = queryParams.interval;
+        }
         fetch(restUrl + '/signup/plans?_=' + Date.now())
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -20,6 +57,11 @@
                     paymentProvider = data.provider || 'stripe';
                     trialEnabled = !!data.trial_enabled;
                     renderPlans(data.plans, data.provider, data.payment_methods, data.trial_enabled);
+                    if (queryParams.tier && plans[queryParams.tier] && plans[queryParams.tier].self_serve !== false) {
+                        selectedTier = queryParams.tier;
+                        document.getElementById('fyndable-selected-plan').textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
+                        showStep('form');
+                    }
                 }
             })
             .catch(function () {
@@ -157,7 +199,7 @@
         if (billingToggle) {
             billingToggle.addEventListener('change', function () {
                 selectedInterval = billingToggle.checked ? 'year' : 'month';
-                renderPlans(plans);
+                updatePriceDisplays();
             });
         }
 
@@ -176,6 +218,26 @@
         plansEl.style.display = step === 'plans' ? 'grid' : 'none';
         formEl.classList.toggle('active', step === 'form');
         successEl.classList.toggle('active', step === 'success');
+    }
+
+    function updatePriceDisplays() {
+        Object.keys(plans).forEach(function (key) {
+            var planEl = container.querySelector('.fyndable-signup-plan[data-tier="' + key + '"]');
+            if (!planEl) return;
+            var priceEl = planEl.querySelector('.price');
+            if (priceEl) {
+                var interval = plans[key].intervals[selectedInterval];
+                priceEl.innerHTML = escapeHtml(interval.price_display) + '<span class="period">' + escapeHtml(interval.period) + '</span>';
+            }
+        });
+        var selectedPlanEl = document.getElementById('fyndable-selected-plan');
+        if (selectedPlanEl && selectedTier && plans[selectedTier]) {
+            selectedPlanEl.textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
+        }
+        var billingToggle = document.getElementById('fyndable-billing-toggle');
+        if (billingToggle) {
+            billingToggle.checked = selectedInterval === 'year';
+        }
     }
 
     function escapeHtml(text) {
