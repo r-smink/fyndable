@@ -204,6 +204,9 @@ class SignupCheckout
 
         $plans = [];
         foreach ($tiers as $key => $tier) {
+            if (!get_option("sseo_ai_saas_tier_visible_{$key}", '1')) {
+                continue;
+            }
             $monthly = $this->paymentProcessor->getTierPricing($key, 'month');
             $yearly = $this->paymentProcessor->getTierPricing($key, 'year');
             $monthlyAmount = is_wp_error($monthly) ? 0.0 : $monthly['amount'];

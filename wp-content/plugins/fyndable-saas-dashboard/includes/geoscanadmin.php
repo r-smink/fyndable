@@ -153,7 +153,7 @@ class GeoScanAdmin
                             <?php foreach ($recentScans as $scan) :
                                 $result = $scan['result'] ?? [];
                                 $score = (int)($result['score'] ?? 0);
-                                $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$scan['id']);
+                                $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$scan['id'] . (isset($_GET['saas_shell']) ? '&saas_shell=1' : ''));
                             ?>
                             <tr>
                                 <td><?php echo esc_html($scan['created_at']); ?></td>
@@ -196,9 +196,10 @@ class GeoScanAdmin
             wp_send_json_error($result->get_error_message());
         }
 
+        $saasShell = !empty($_POST['saas_shell']) ? '&saas_shell=1' : '';
         wp_send_json_success([
             'scan_id'  => $result['scan_id'],
-            'redirect' => admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$result['scan_id']),
+            'redirect' => admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$result['scan_id'] . $saasShell),
         ]);
     }
 }

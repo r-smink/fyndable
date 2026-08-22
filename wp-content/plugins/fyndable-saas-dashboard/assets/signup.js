@@ -24,22 +24,28 @@
             var tier = qs.get('tier');
             var interval = qs.get('interval');
             if (tier) {
-                params.tier = tier;
+                params.tier = tier.toLowerCase();
             }
-            if (interval === 'month' || interval === 'year') {
-                params.interval = interval;
+            if (interval) {
+                interval = interval.toLowerCase();
+                if (interval === 'month' || interval === 'year') {
+                    params.interval = interval;
+                }
             }
         } catch (e) {
             var pairs = search.substring(1).split('&');
             for (var i = 0; i < pairs.length; i++) {
                 var pair = pairs[i].split('=');
-                var key = decodeURIComponent(pair[0] || '');
+                var key = decodeURIComponent(pair[0] || '').toLowerCase();
                 var value = decodeURIComponent((pair[1] || '').replace(/\+/g, ' '));
                 if (key === 'tier') {
-                    params.tier = value;
+                    params.tier = value.toLowerCase();
                 }
-                if (key === 'interval' && (value === 'month' || value === 'year')) {
-                    params.interval = value;
+                if (key === 'interval') {
+                    var intervalValue = value.toLowerCase();
+                    if (intervalValue === 'month' || intervalValue === 'year') {
+                        params.interval = intervalValue;
+                    }
                 }
             }
         }
@@ -59,8 +65,8 @@
                     renderPlans(data.plans, data.provider, data.payment_methods, data.trial_enabled);
                     if (queryParams.tier && plans[queryParams.tier] && plans[queryParams.tier].self_serve !== false) {
                         selectedTier = queryParams.tier;
-                        document.getElementById('fyndable-selected-plan').textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
                         showStep('form');
+                        updatePriceDisplays();
                     }
                 }
             })
@@ -214,10 +220,18 @@
         var plansEl = container.querySelector('.fyndable-signup-plans');
         var formEl = document.getElementById('fyndable-signup-form-step');
         var successEl = document.getElementById('fyndable-signup-success-step');
+        var headerEl = container.querySelector('.fyndable-signup-header');
 
         plansEl.style.display = step === 'plans' ? 'grid' : 'none';
         formEl.classList.toggle('active', step === 'form');
         successEl.classList.toggle('active', step === 'success');
+        if (headerEl) {
+            var titleEl = headerEl.querySelector('h1');
+            var subtitleEl = headerEl.querySelector('p');
+            var showHeaderText = step === 'plans';
+            if (titleEl) titleEl.style.display = showHeaderText ? '' : 'none';
+            if (subtitleEl) subtitleEl.style.display = showHeaderText ? '' : 'none';
+        }
     }
 
     function updatePriceDisplays() {

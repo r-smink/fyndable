@@ -38,22 +38,28 @@ class AgencyRoleManager
             if (!$role->has_cap('agency_geo_scan')) {
                 $role->add_cap('agency_geo_scan', true);
             }
-            return;
+        } else {
+            add_role(
+                self::ROLE_NAME,
+                __('Agency Partner', 'sseo-ai-saas'),
+                [
+                    'read' => true,
+                    'agency_view_dashboard' => true,
+                    'agency_generate_licenses' => true,
+                    'agency_view_tenants' => true,
+                    'agency_view_support' => true,
+                    'agency_upload_logo' => true,
+                    'agency_geo_scan' => true,
+                ]
+            );
         }
 
-        add_role(
-            self::ROLE_NAME,
-            __('Agency Partner', 'sseo-ai-saas'),
-            [
-                'read' => true,
-                'agency_view_dashboard' => true,
-                'agency_generate_licenses' => true,
-                'agency_view_tenants' => true,
-                'agency_view_support' => true,
-                'agency_upload_logo' => true,
-                'agency_geo_scan' => true,
-            ]
-        );
+        $admin = get_role('administrator');
+        if ($admin) {
+            if (!$admin->has_cap('agency_geo_scan')) {
+                $admin->add_cap('agency_geo_scan', true);
+            }
+        }
     }
 
     /**

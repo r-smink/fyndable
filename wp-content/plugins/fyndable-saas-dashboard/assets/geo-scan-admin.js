@@ -39,7 +39,8 @@
                     nonce: sseoGeoScan.nonce,
                     url: $('#sseo_geo_url').val().trim(),
                     keywords: $('#sseo_geo_keywords').val().trim(),
-                    language: $('#sseo_geo_language').val()
+                    language: $('#sseo_geo_language').val(),
+                    saas_shell: window.location.search.indexOf('saas_shell=1') !== -1 ? 1 : ''
                 }
             })
             .done(function (response) {

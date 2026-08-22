@@ -54,7 +54,7 @@ class GeoScanReport
             </div>
 
             <div class="sseo-geo-actions">
-                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-geo-scan')); ?>" class="button button-secondary"><?php esc_html_e('Terug naar scans', 'sseo-ai-saas'); ?></a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-geo-scan' . (isset($_GET['saas_shell']) ? '&saas_shell=1' : ''))); ?>" class="button button-secondary"><?php esc_html_e('Terug naar scans', 'sseo-ai-saas'); ?></a>
                 <button type="button" class="button button-primary" onclick="window.print();"><?php esc_html_e('Printen / Opslaan als PDF', 'sseo-ai-saas'); ?></button>
                 <span class="sseo-geo-print-hint"><?php esc_html_e('Kies in het printvenster "Opslaan als PDF".', 'sseo-ai-saas'); ?></span>
             </div>

@@ -213,6 +213,16 @@ class SaaSSettings
         // Early Adopters tier toggle
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_early_adopters_enabled', ['default' => false, 'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1)]);
 
+        // Tier visibility in self-serve checkout
+        foreach (['starter', 'early_adopters', 'trial', 'professional', 'business', 'agency'] as $tier_slug) {
+            register_setting('sseo_ai_saas_billing', "sseo_ai_saas_tier_visible_{$tier_slug}", [
+                'default' => '1',
+                'sanitize_callback' => function ($value) {
+                    return ($value === '1' || $value === true || $value === 1) ? '1' : '0';
+                },
+            ]);
+        }
+
         // Invoice template (Bookkeeping tab 3)
         register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_logo_id', ['default' => 0, 'sanitize_callback' => 'absint']);
         register_setting('sseo_ai_saas_invoice_template', 'sseo_ai_saas_inv_bg_id', ['default' => 0, 'sanitize_callback' => 'absint']);
@@ -1229,6 +1239,7 @@ class SaaSSettings
                             <th style="width: 150px;"><?php esc_html_e('Cost Cap (EUR)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Auto Posts/mo', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('GEO Scans/mo', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 140px;"><?php esc_html_e('Visible in checkout', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1279,6 +1290,9 @@ class SaaSSettings
                                        name="ai_seo_saas_<?php echo esc_attr($tier); ?>_geo_scans"
                                        value="<?php echo esc_attr($geoScans); ?>"
                                        style="width: 120px;">
+                            </td>
+                            <td>
+                                <input type="checkbox" name="sseo_ai_saas_tier_visible_<?php echo esc_attr($tier); ?>" value="1" <?php checked(get_option("sseo_ai_saas_tier_visible_{$tier}", '1'), '1'); ?>>
                             </td>
                         </tr>
                         <?php endforeach; ?>
