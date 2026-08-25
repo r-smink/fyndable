@@ -39,6 +39,8 @@ class LocalSEO
             'local_image',
             'local_price_range',
             'local_opening_hours',
+            'local_search_radius',
+            'local_search_grid',
         ];
 
         foreach ($fields as $field) {
@@ -339,16 +341,43 @@ class LocalSEO
                     </select>
                 </td>
             </tr>
+            <tr>
+                <th><?php esc_html_e('Local SERP Radius', 'ai-seo-client'); ?></th>
+                <td>
+                    <select name="aiseoclient[local_search_radius]">
+                        <?php foreach ([1, 2, 5, 10, 15, 25, 50, 100] as $km): ?>
+                            <option value="<?php echo esc_attr($km); ?>" <?php selected((int) ($options['local_search_radius'] ?? 10), $km); ?>><?php echo esc_html($km); ?> km</option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description"><?php esc_html_e('Default radius for Local SERP scans around your business address.', 'ai-seo-client'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th><?php esc_html_e('Local SERP Grid', 'ai-seo-client'); ?></th>
+                <td>
+                    <select name="aiseoclient[local_search_grid]">
+                        <option value="1" <?php selected((int) ($options['local_search_grid'] ?? 1), 1); ?>><?php esc_html_e('Single center', 'ai-seo-client'); ?></option>
+                        <option value="3" <?php selected((int) ($options['local_search_grid'] ?? 1), 3); ?>>3x3</option>
+                        <option value="5" <?php selected((int) ($options['local_search_grid'] ?? 1), 5); ?>>5x5</option>
+                        <option value="7" <?php selected((int) ($options['local_search_grid'] ?? 1), 7); ?>>7x7</option>
+                    </select>
+                    <p class="description"><?php esc_html_e('Grid density for Local SERP scans (higher = more API calls).', 'ai-seo-client'); ?></p>
+                </td>
+            </tr>
         </table>
         <?php
     }
 
     public function registerRestRoutes(): void
     {
+        // SECURITY: Restricted to edit_posts. Previously __return_true, which leaked
+        // business address/coordinates to unauthenticated callers. The schema data
+        // is already rendered server-side in the page HTML; this endpoint is not
+        // used by any frontend JavaScript.
         register_rest_route('sseo-ai/v1', '/local-schema', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetLocalSchema'],
-            'permission_callback' => '__return_true',
+            'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
     }
 
@@ -363,11 +392,14 @@ class LocalSEO
                 'street' => $options['local_street'] ?? '',
                 'city' => $options['local_city'] ?? '',
                 'postal' => $options['local_postal'] ?? '',
+                'country' => $options['local_country'] ?? 'NL',
             ],
             'coordinates' => [
                 'lat' => $options['local_latitude'] ?? '',
                 'lng' => $options['local_longitude'] ?? '',
             ],
+            'local_serp_radius' => (int) ($options['local_search_radius'] ?? 10),
+            'local_serp_grid' => (int) ($options['local_search_grid'] ?? 1),
         ];
     }
 }

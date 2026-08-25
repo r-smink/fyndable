@@ -17,8 +17,8 @@ class LicenseKeyGenerator
      * Default rate limits (requests per hour) per tier
      */
     private const TIER_RATE_LIMITS = [
-        'free'         => 30,
         'starter'      => 60,
+        'early_adopters' => 60,
         'trial'        => 200,
         'professional' => 200,
         'business'     => 500,
@@ -30,8 +30,8 @@ class LicenseKeyGenerator
      * Default API call limits (per month) per tier
      */
     private const TIER_API_LIMITS = [
-        'free'         => 500,
         'starter'      => 1000,
+        'early_adopters' => 1000,
         'trial'        => 5000,
         'professional' => 10000,
         'business'     => 50000,
@@ -66,7 +66,7 @@ class LicenseKeyGenerator
      * Generate a new license key
      * 
      * @param array $options License options
-     *   - tier: free|trial|starter|professional|business|agency
+     *   - tier: trial|starter|early_adopters|professional|business|agency
      *   - type: test|free|paid|lifetime|trial
      *   - max_sites: int
      *   - rate_limit: int (per hour)
@@ -82,7 +82,8 @@ class LicenseKeyGenerator
         $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
         
         // Generate unique license key
-        $licenseKey = $this->generateUniqueKey();
+        $keyPrefix = !empty($options['key_prefix']) ? strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $options['key_prefix'])) : null;
+        $licenseKey = $this->generateUniqueKey($keyPrefix);
         
         $licenseType = $options['type'] ?? 'paid';
         $tier = $options['tier'] ?? 'starter';
@@ -104,6 +105,8 @@ class LicenseKeyGenerator
             'assigned_to' => !empty($options['assigned_to']) ? sanitize_text_field($options['assigned_to']) : null,
             'notes' => !empty($options['notes']) ? sanitize_textarea_field($options['notes']) : null,
             'created_at' => current_time('mysql'),
+            'agency_tenant_id' => !empty($options['agency_tenant_id']) ? (int)$options['agency_tenant_id'] : null,
+            'key_prefix' => $keyPrefix,
         ];
         
         $result = $wpdb->insert($table, $data);
@@ -194,10 +197,19 @@ class LicenseKeyGenerator
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
         
         if ($existingTenant) {
-            // Re-activation - restore to active and update last active
+            // Re-activation - restore to active, update last active, domain, name and metadata
+            $metadata = is_array($existingTenant['metadata'] ?? null) ? $existingTenant['metadata'] : [];
+            $metadata['activated_from'] = $activationData['site_url'] ?? 'unknown';
+            $metadata['ip_address'] = $activationData['ip_address'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $metadata['reactivated_at'] = current_time('mysql');
+            $metadata['license_type'] = $license['license_type'] ?? ($metadata['license_type'] ?? 'paid');
+
             $this->tenants->updateTenant($existingTenant['tenant_key'], [
                 'status' => 'active',
                 'last_active' => current_time('mysql'),
+                'domain' => $activationData['site_url'] ?? $existingTenant['domain'] ?? null,
+                'name' => $activationData['site_name'] ?? $existingTenant['name'] ?? null,
+                'metadata' => $metadata,
             ]);
             
             return [
@@ -205,6 +217,7 @@ class LicenseKeyGenerator
                 'reactivation' => true,
                 'tenant_key' => $existingTenant['tenant_key'],
                 'tier' => $existingTenant['tier'],
+                'email' => $existingTenant['email'] ?: null,
                 'expires_at' => $existingTenant['expires_at'],
                 'max_sites' => $existingTenant['max_sites'] ?? 1,
                 'rate_limit' => $existingTenant['rate_limit'] ?? 60,
@@ -252,6 +265,7 @@ class LicenseKeyGenerator
             'success' => true,
             'tenant_key' => $tenantResult['tenant_key'],
             'tier' => $license['tier'],
+            'email' => $license['assigned_to'] ?: 'unknown@example.com',
             'expires_at' => $expiresAt,
             'max_sites' => $license['max_sites'],
             'rate_limit' => $license['rate_limit'],
@@ -392,6 +406,15 @@ class LicenseKeyGenerator
             $where[] = 'created_by = %d';
             $params[] = (int)$filters['created_by'];
         }
+
+        if (array_key_exists('agency_tenant_id', $filters)) {
+            if ($filters['agency_tenant_id'] === null) {
+                $where[] = 'agency_tenant_id IS NULL';
+            } else {
+                $where[] = 'agency_tenant_id = %d';
+                $params[] = (int)$filters['agency_tenant_id'];
+            }
+        }
         
         $whereClause = implode(' AND ', $where);
         
@@ -429,6 +452,10 @@ class LicenseKeyGenerator
         }
         
         $whereClause = implode(' AND ', $where);
+        
+        if (empty($params)) {
+            return (int)$wpdb->get_var("SELECT COUNT(*) FROM $table WHERE $whereClause");
+        }
         
         return (int)$wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table WHERE $whereClause",
@@ -528,19 +555,21 @@ class LicenseKeyGenerator
     /**
      * Generate unique license key
      */
-    private function generateUniqueKey(): string
+    private function generateUniqueKey(?string $prefix = null): string
     {
         global $wpdb;
         $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
         
+        $keyPrefix = $prefix ? $prefix . '-AI' : 'FYN-SSAI';
+        
         $attempts = 0;
         do {
-            // Format: SSEO-AI-XXXX-XXXX-XXXX
+            // Format: {PREFIX}-AI-XXXX-XXXX-XXXX
             $parts = [];
             for ($i = 0; $i < 3; $i++) {
                 $parts[] = strtoupper(bin2hex(random_bytes(4)));
             }
-            $key = 'SSEO-AI-' . implode('-', $parts);
+            $key = $keyPrefix . '-' . implode('-', $parts);
             
             // Check uniqueness
             $exists = $wpdb->get_var($wpdb->prepare(
@@ -556,5 +585,27 @@ class LicenseKeyGenerator
         }
         
         return $key;
+    }
+
+    /**
+     * Get all licenses generated by a specific agency.
+     */
+    public function getLicensesByAgency(int $agencyTenantId, int $limit = 50, int $offset = 0): array
+    {
+        return $this->getLicenses(['agency_tenant_id' => $agencyTenantId], $limit, $offset);
+    }
+
+    /**
+     * Count licenses generated by a specific agency.
+     */
+    public function countLicensesByAgency(int $agencyTenantId): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+
+        return (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE agency_tenant_id = %d",
+            $agencyTenantId
+        ));
     }
 }

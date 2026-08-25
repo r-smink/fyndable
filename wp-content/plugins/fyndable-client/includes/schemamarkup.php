@@ -122,6 +122,16 @@ class SchemaMarkup
                 if ($schema) {
                     $schemas[] = $schema;
                 }
+
+                // FAQ schema stored separately by the Content Writer (parsed Q&A pairs).
+                // Appended (not returned) so WebSite/Org/Breadcrumb schema stays intact.
+                $faqSchema = get_post_meta($post->ID, '_sseo_ai_faq_schema', true);
+                if ($faqSchema && $this->isValidJson($faqSchema)) {
+                    $decoded = json_decode($faqSchema, true);
+                    if (is_array($decoded)) {
+                        $schemas[] = $decoded;
+                    }
+                }
             }
         }
 

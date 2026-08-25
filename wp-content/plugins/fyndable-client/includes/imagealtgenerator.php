@@ -177,7 +177,6 @@ class ImageAltGenerator
             return new \WP_Error('no_file', __('Image file not found', 'ai-seo-client'));
         }
 
-        // Try vision analysis if available
         $imageUrl = wp_get_attachment_url($attachmentId);
         
         // Use filename as fallback context
@@ -190,12 +189,36 @@ class ImageAltGenerator
         $title = $attachment->post_title;
         $caption = $attachment->post_excerpt;
 
-        // Generate alt text using LLM with context
+        // Try vision-based alt text generation first (actually analyzes the image)
+        if (!empty($imageUrl)) {
+            $visionPrompt = "Write a concise, descriptive alt text for this image. Keep it under 125 characters. Be specific about what's visible. Don't start with 'Image of' or 'Picture of'.";
+            
+            // Add context if available
+            $contextParts = [];
+            if ($title && $title !== $filename) $contextParts[] = "Title: {$title}";
+            if ($caption) $contextParts[] = "Caption: {$caption}";
+            if (!empty($contextParts)) {
+                $visionPrompt .= "\n\nContext: " . implode(', ', $contextParts);
+            }
+
+            $visionResult = $this->llm->callWithImage($visionPrompt, $imageUrl, null, 200, 'image_alt_text');
+            
+            if (!is_wp_error($visionResult) && !empty($visionResult['text'])) {
+                $altText = trim($visionResult['text']);
+                $altText = preg_replace('/^(image of|picture of|photo of|graphic of)\s*/i', '', $altText);
+                $altText = substr($altText, 0, 125);
+                if (!empty($altText)) {
+                    return $altText;
+                }
+            }
+        }
+
+        // Fallback: text-only LLM with context
         $context = $this->buildAltContext($filename, $title, $caption, $imageUrl);
         $prompt = "Write a concise, descriptive alt text for this image. Keep it under 125 characters. Be specific about what's visible. Don't start with 'Image of' or 'Picture of'.\n\n";
         $prompt .= "Context:\n" . $context;
 
-        $result = $this->llm->call($prompt);
+        $result = $this->llm->call($prompt, null, null, null, [], 'image_alt_text');
         if (is_wp_error($result)) {
             // Fallback: use filename-based alt
             return $this->filenameToAlt($filename);
@@ -230,11 +253,13 @@ class ImageAltGenerator
 
     private function filenameToAlt(string $filename): string
     {
-        // Convert filename to readable alt text
-        $alt = ucwords(strtolower($filename));
+        // Convert filename to readable alt text using sentence case
+        // (only first word + proper nouns capitalized, not Title Case)
+        $alt = strtolower($filename);
         $alt = preg_replace('/\d+/', '', $alt);
         $alt = trim($alt);
-        
+        $alt = ucfirst($alt);
+
         return substr($alt, 0, 125) ?: 'Image';
     }
 

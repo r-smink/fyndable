@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.8.0 (2026-08-19)
+
+### New Features
+- **Post Auto-Cleaner** — Automatically trashes AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded). Settings: enable/disable, days threshold (default 60), max views (default 0). Daily cron + REST endpoints for preview and manual run. Available to all tiers.
+
+### Fixed / Improved
+- **Agency white-label download** — White-label package builder now downloads the latest client plugin from updates.fyndable.ai when the plugin is not locally installed, ensuring agency customers always get the latest version. Falls back to packaged zips if the update server is unavailable.
+
+## v1.7.1 (2026-08-19)
+
+### Fixed / Improved
+- **Upgrade button** — "Upgrade Now →" button on locked-feature pages now links to the Customer Portal on the SaaS dashboard (with dashboard-URL fallback) instead of the local Connection page. Opens in a new tab.
+- **Portal URL storage** — Client stores `portal_url` from `tenant/status` and `license/activate` responses in `sseo_ai_client_portal_url` option.
+- **Ideas page upgrade link** — "Upgrade My Plan" link on the Ideas page now points to the Customer Portal instead of `#`.
+- **Check for Updates link** — "Check for Updates" link in the plugin row now actually forces an update check (clears cache, re-fetches from SaaS dashboard) and shows a result notice, instead of just redirecting to the Settings page.
+- **Plugin metadata cleanup** — Removed `FEATURES.md` and `REVIEW-EN-FEATURES.md` from the plugin package; only `README.md` and `CHANGELOG.md` are shipped.
+
+## v1.5.1 (2026-07-15)
+
+### New Features
+- **Fynable Login Screen** — Fully branded WordPress `wp-login.php` with separate toggle (Settings → White-Label & Login). Works for all users/tiers.
+- **Free Tier Toggle** — Onboarding free-tier skip can be toggled off; default is disabled for beta, code remains intact.
+
+### Fixed / Improved
+- **SaaS Dashboard Branding** — Topbar now shows `Fyndable Smart SEO` with a smaller `SaaS` suffix.
+- **SaaS Login Header** — Login screen now shows `Fyndable Smart SEO` instead of `Fyndable SaaS`.
+
 ## v0.5-beta (2026-03-08)
 
 ### New Features

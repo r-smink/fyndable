@@ -17,11 +17,13 @@ namespace SSEOAIClient;
 class BacklinkAnalyzer
 {
     private Settings $settings;
+    private ?DashboardAPI $dashboardAPI = null;
     private const CACHE_TTL = DAY_IN_SECONDS;
-    
-    public function __construct(Settings $settings)
+
+    public function __construct(Settings $settings, ?DashboardAPI $dashboardAPI = null)
     {
         $this->settings = $settings;
+        $this->dashboardAPI = $dashboardAPI;
     }
     
     public function register(): void
@@ -331,7 +333,7 @@ class BacklinkAnalyzer
     }
     
     /**
-     * Get domain authority metrics
+     * Get domain authority metrics. Tries primary provider, then fallbacks.
      */
     public function getDomainAuthority(string $domain): array
     {
@@ -342,12 +344,14 @@ class BacklinkAnalyzer
             return $cached;
         }
         
-        $provider = get_option('sseo_ai_backlink_provider', 'ahrefs');
+        $providers = $this->getProviderChain();
+        $metrics = $this->getDefaultMetrics();
         
-        if ($provider === 'ahrefs') {
-            $metrics = $this->getAhrefsDomainMetrics($domain);
-        } else {
-            $metrics = $this->getSemrushDomainMetrics($domain);
+        foreach ($providers as $provider) {
+            $metrics = $this->getDomainMetricsFromProvider($domain, $provider);
+            if (!empty($metrics['backlinks']) || !empty($metrics['referring_domains']) || !empty($metrics['domain_rating'])) {
+                break;
+            }
         }
         
         set_transient($cacheKey, $metrics, self::CACHE_TTL);
@@ -355,7 +359,7 @@ class BacklinkAnalyzer
     }
     
     /**
-     * Get backlink profile
+     * Get backlink profile. Tries primary provider, then fallbacks.
      */
     public function getBacklinkProfile(string $domain): array
     {
@@ -366,16 +370,72 @@ class BacklinkAnalyzer
             return $cached;
         }
         
-        $provider = get_option('sseo_ai_backlink_provider', 'ahrefs');
+        $providers = $this->getProviderChain();
+        $profile = $this->getDefaultBacklinkProfile();
         
-        if ($provider === 'ahrefs') {
-            $profile = $this->getAhrefsBacklinks($domain);
-        } else {
-            $profile = $this->getSemrushBacklinks($domain);
+        foreach ($providers as $provider) {
+            $profile = $this->getBacklinksFromProvider($domain, $provider);
+            if (!empty($profile['items']) || !empty($profile['backlinks']) || ($profile['dofollow'] + $profile['nofollow']) > 0) {
+                break;
+            }
         }
         
         set_transient($cacheKey, $profile, self::CACHE_TTL);
         return $profile;
+    }
+    
+    /**
+     * Build provider chain: primary first, then configured fallbacks.
+     */
+    private function getProviderChain(): array
+    {
+        $primary = get_option('sseo_ai_backlink_provider', 'dataforseo');
+        $all = ['dataforseo', 'ahrefs', 'seranking', 'semrush'];
+        $chain = [$primary];
+        foreach ($all as $p) {
+            if ($p !== $primary) {
+                $chain[] = $p;
+            }
+        }
+        return $chain;
+    }
+    
+    /**
+     * Get domain metrics from a single provider.
+     */
+    private function getDomainMetricsFromProvider(string $domain, string $provider): array
+    {
+        switch ($provider) {
+            case 'dataforseo':
+                return $this->getDataForSEODomainMetrics($domain);
+            case 'ahrefs':
+                return $this->getAhrefsDomainMetrics($domain);
+            case 'seranking':
+                return $this->getSerankingDomainMetrics($domain);
+            case 'semrush':
+                return $this->getSemrushDomainMetrics($domain);
+            default:
+                return $this->getDefaultMetrics();
+        }
+    }
+    
+    /**
+     * Get backlink profile from a single provider.
+     */
+    private function getBacklinksFromProvider(string $domain, string $provider): array
+    {
+        switch ($provider) {
+            case 'dataforseo':
+                return $this->getDataForSEOBacklinks($domain);
+            case 'ahrefs':
+                return $this->getAhrefsBacklinks($domain);
+            case 'seranking':
+                return $this->getSerankingBacklinks($domain);
+            case 'semrush':
+                return $this->getSemrushBacklinks($domain);
+            default:
+                return $this->getDefaultBacklinkProfile();
+        }
     }
     
     /**
@@ -577,7 +637,214 @@ class BacklinkAnalyzer
     }
     
     /**
-     * Detect toxic links
+     * DataForSEO domain metrics.
+     *
+     * Uses the Portal proxy (via DashboardAPI) as the primary path so that
+     * the central DataForSEO API key is used. Falls back to the legacy
+     * client-side DataForSEOBacklinksClient when the proxy is unavailable
+     * and a client-side key is configured.
+     */
+    private function getDataForSEODomainMetrics(string $domain): array
+    {
+        // Primary: Portal proxy
+        if ($this->dashboardAPI) {
+            $response = $this->dashboardAPI->request('backlinks/summary', ['target' => $domain]);
+            if (!is_wp_error($response) && !empty($response['data'])) {
+                return $this->parseDataForSeoSummaryMetrics($response['data']);
+            }
+        }
+
+        // Fallback: client-side direct call with customer's own key
+        $apiKey = get_option('sseo_ai_dataforseo_api_key', '');
+        if (empty($apiKey)) {
+            return $this->getDefaultMetrics();
+        }
+
+        $client = new DataForSEOBacklinksClient($apiKey);
+        return $client->getDomainMetrics($domain);
+    }
+
+    /**
+     * DataForSEO backlinks.
+     *
+     * Uses the Portal proxy as primary, with client-side fallback.
+     */
+    private function getDataForSEOBacklinks(string $domain): array
+    {
+        // Primary: Portal proxy
+        if ($this->dashboardAPI) {
+            $response = $this->dashboardAPI->request('backlinks/live', [
+                'target' => $domain,
+                'limit'  => 1000,
+            ]);
+            if (!is_wp_error($response) && !empty($response['data'])) {
+                return $this->parseDataForSeoBacklinks($response['data']);
+            }
+        }
+
+        // Fallback: client-side direct call
+        $apiKey = get_option('sseo_ai_dataforseo_api_key', '');
+        if (empty($apiKey)) {
+            return $this->getDefaultBacklinkProfile();
+        }
+
+        $client = new DataForSEOBacklinksClient($apiKey);
+        return $client->getBacklinks($domain);
+    }
+
+    /**
+     * Parse DataForSEO summary response (from Portal proxy) into the
+     * normalized metrics shape used by this class.
+     */
+    private function parseDataForSeoSummaryMetrics(array $data): array
+    {
+        $tasks = $data['tasks'] ?? [];
+        $result = $tasks[0]['result'][0] ?? [];
+        $summary = $result['summary'] ?? $result;
+
+        return [
+            'domain_rating'    => (int) ($summary['domain_rank'] ?? $summary['domain_rating'] ?? 0),
+            'referring_domains'=> (int) ($summary['referring_domains'] ?? 0),
+            'backlinks'        => (int) ($summary['backlinks'] ?? 0),
+            'organic_traffic'  => (int) ($summary['organic_traffic'] ?? 0),
+            'organic_keywords' => (int) ($summary['organic_keywords'] ?? 0),
+        ];
+    }
+
+    /**
+     * Parse DataForSEO backlinks list response (from Portal proxy) into the
+     * normalized backlink profile shape used by this class.
+     */
+    private function parseDataForSeoBacklinks(array $data): array
+    {
+        $tasks = $data['tasks'] ?? [];
+        $items = $tasks[0]['result'][0]['items'] ?? [];
+
+        $dofollow = 0;
+        $nofollow = 0;
+        $redirect = 0;
+        $anchors = [];
+
+        foreach ($items as $link) {
+            $linkType = $link['link_type'] ?? '';
+            $isDofollow = ($linkType === 'dofollow' || ($link['dofollow'] ?? false));
+
+            if ($isDofollow) {
+                $dofollow++;
+            } else {
+                $nofollow++;
+            }
+
+            if (!empty($link['is_redirect']) || stripos($link['type'] ?? '', 'redirect') !== false) {
+                $redirect++;
+            }
+
+            $anchor = $link['anchor_text'] ?? $link['anchor'] ?? '';
+            if (!empty($anchor)) {
+                if (!isset($anchors[$anchor])) {
+                    $anchors[$anchor] = 0;
+                }
+                $anchors[$anchor]++;
+            }
+        }
+
+        arsort($anchors);
+        $topAnchors = [];
+        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
+            $topAnchors[] = ['text' => $text, 'count' => $count];
+        }
+
+        return [
+            'dofollow'    => $dofollow,
+            'nofollow'    => $nofollow,
+            'redirect'    => $redirect,
+            'top_anchors' => $topAnchors,
+            'items'       => $items,
+        ];
+    }
+    
+    /**
+     * SE Ranking domain metrics
+     */
+    private function getSerankingDomainMetrics(string $domain): array
+    {
+        $apiKey = get_option('sseo_ai_seranking_api_key', '');
+        if (empty($apiKey)) {
+            return $this->getDefaultMetrics();
+        }
+
+        $client = new SERankingDataClient($apiKey);
+        $overview = $client->getDomainOverview($domain, 'us', true);
+        if (is_wp_error($overview)) {
+            return $this->getDefaultMetrics();
+        }
+
+        return [
+            'domain_rating' => (int) ($overview['domain_trust'] ?? $overview['domain_rank'] ?? 0),
+            'referring_domains' => (int) ($overview['referring_domains'] ?? 0),
+            'backlinks' => (int) ($overview['backlinks'] ?? 0),
+            'organic_traffic' => (int) ($overview['organic_traffic'] ?? 0),
+            'organic_keywords' => (int) ($overview['organic_keywords'] ?? 0),
+        ];
+    }
+    
+    /**
+     * SE Ranking backlinks (best-effort via Data API)
+     */
+    private function getSerankingBacklinks(string $domain): array
+    {
+        $apiKey = get_option('sseo_ai_seranking_api_key', '');
+        if (empty($apiKey)) {
+            return $this->getDefaultBacklinkProfile();
+        }
+
+        $response = wp_remote_get(
+            'https://api.seranking.com/v1/backlinks?domain=' . urlencode($domain) . '&token=' . urlencode($apiKey),
+            ['timeout' => 30]
+        );
+
+        if (is_wp_error($response)) {
+            return $this->getDefaultBacklinkProfile();
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $items = $body['data'] ?? $body['backlinks'] ?? [];
+
+        $dofollow = 0;
+        $nofollow = 0;
+        $anchors = [];
+
+        foreach ($items as $link) {
+            $isDofollow = ($link['type'] ?? '') === 'dofollow' || ($link['dofollow'] ?? false);
+            if ($isDofollow) {
+                $dofollow++;
+            } else {
+                $nofollow++;
+            }
+
+            $anchor = $link['anchor'] ?? $link['anchor_text'] ?? '';
+            if (!empty($anchor)) {
+                $anchors[$anchor] = ($anchors[$anchor] ?? 0) + 1;
+            }
+        }
+
+        arsort($anchors);
+        $topAnchors = [];
+        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
+            $topAnchors[] = ['text' => $text, 'count' => $count];
+        }
+
+        return [
+            'dofollow' => $dofollow,
+            'nofollow' => $nofollow,
+            'redirect' => 0,
+            'top_anchors' => $topAnchors,
+            'items' => $items,
+        ];
+    }
+    
+    /**
+     * Detect toxic links using backlink profile items.
      */
     public function getToxicLinks(string $domain): array
     {
@@ -588,23 +855,46 @@ class BacklinkAnalyzer
             return $cached;
         }
         
-        $backlinks = $this->getBacklinkProfile($domain);
-        $provider = get_option('sseo_ai_backlink_provider', 'ahrefs');
+        $profile = $this->getBacklinkProfile($domain);
+        $toxicLinks = [];
         
-        // Get full backlink list
-        $apiKey = $provider === 'ahrefs' 
-            ? get_option('sseo_ai_ahrefs_api_key', '')
-            : get_option('sseo_ai_semrush_api_key', '');
-            
-        if (empty($apiKey)) {
+        $items = $profile['items'] ?? [];
+        if (empty($items)) {
+            set_transient($cacheKey, [], self::CACHE_TTL);
             return [];
         }
         
-        // Analyze each backlink for toxicity
-        $toxicLinks = [];
+        $suspiciousAnchors = ['click here', 'read more', 'here', 'link', 'website', 'buy now', 'cheap', 'free', 'porn', 'xxx', 'casino'];
         
-        // This is a simplified version - in production, you'd use the API's toxic score
-        // or implement more sophisticated analysis
+        foreach ($items as $link) {
+            $url = $link['url'] ?? $link['target'] ?? '';
+            $anchor = strtolower($link['anchor_text'] ?? $link['anchor'] ?? '');
+            $referringDomain = parse_url($url, PHP_URL_HOST) ?: '';
+            $isToxic = false;
+            $reasons = [];
+            
+            foreach ($suspiciousAnchors as $suspicious) {
+                if (str_contains($anchor, $suspicious)) {
+                    $isToxic = true;
+                    $reasons[] = 'suspicious anchor';
+                    break;
+                }
+            }
+            
+            if (!empty($link['referring_domain_attributes']['domain_rank']) && (int) $link['referring_domain_attributes']['domain_rank'] < 5) {
+                $isToxic = true;
+                $reasons[] = 'low authority domain';
+            }
+            
+            if ($isToxic) {
+                $toxicLinks[] = [
+                    'url' => $url,
+                    'domain' => $referringDomain,
+                    'anchor' => $anchor,
+                    'reasons' => array_unique($reasons),
+                ];
+            }
+        }
         
         set_transient($cacheKey, $toxicLinks, self::CACHE_TTL);
         return $toxicLinks;

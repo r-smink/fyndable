@@ -162,6 +162,7 @@ class ContentBrief
             'target_audience' => $brief['audience'] ?? '',
             'content_angle' => $brief['angle'] ?? '',
             'internal_link_opportunities' => $this->findInternalLinkOpportunities($keyword),
+            'sources' => $this->extractSources($topResults),
         ];
 
         // Cache the brief
@@ -368,9 +369,9 @@ PROMPT;
     private function buildSerpOverview(array $results): array
     {
         $overview = [];
-        foreach (array_slice($results, 0, 10) as $i => $result) {
+        foreach (array_values(array_slice($results, 0, 10)) as $i => $result) {
             $overview[] = [
-                'position' => $result['position'] ?? ($i + 1),
+                'position' => (int)($result['position'] ?? ($i + 1)),
                 'title' => $result['title'] ?? '',
                 'url' => $result['link'] ?? $result['url'] ?? '',
                 'snippet' => $result['snippet'] ?? $result['description'] ?? '',
@@ -402,6 +403,30 @@ PROMPT;
             ];
         }
         return $opportunities;
+    }
+
+    /**
+     * Extract authoritative sources from SERP results for citation.
+     */
+    private function extractSources(array $results): array
+    {
+        $sources = [];
+        foreach (array_slice($results, 0, 5) as $i => $result) {
+            $url = $result['link'] ?? $result['url'] ?? '';
+            $title = $result['title'] ?? '';
+            if (empty($url) || empty($title)) continue;
+
+            $parsed = parse_url($url);
+            $domain = $parsed['host'] ?? '';
+
+            $sources[] = [
+                'title' => $title,
+                'url' => $url,
+                'domain' => $domain,
+                'snippet' => $result['snippet'] ?? $result['description'] ?? '',
+            ];
+        }
+        return $sources;
     }
 
     /**
@@ -752,7 +777,7 @@ PROMPT;
                 var headingsHtml = '';
                 (brief.recommended_headings || []).forEach(function(h) {
                     var isH3 = h.toLowerCase().indexOf('h3') === 0;
-                    headingsHtml += '<li style="padding:5px 8px; margin:3px 0; background:#f0f7ff; border-left:3px solid ' + (isH3 ? '#93c5fd' : '#2563eb') + '; ' + (isH3 ? 'margin-left:20px;' : 'font-weight:bold;') + '">' + h + '</li>';
+                    headingsHtml += '<li style="padding:5px 8px; margin:3px 0; background:#f0f7ff; border-left:3px solid ' + (isH3 ? '#93c5fd' : '#379fd3') + '; ' + (isH3 ? 'margin-left:20px;' : 'font-weight:bold;') + '">' + h + '</li>';
                 });
                 $('#brief-headings').html(headingsHtml);
 

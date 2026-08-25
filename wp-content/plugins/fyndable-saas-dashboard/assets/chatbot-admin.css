@@ -1,0 +1,75 @@
+/* Chatbot admin settings page */
+.sseo-ai-chatbot-admin .sseo-ai-chatbot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 0;
+}
+
+.sseo-ai-chatbot-admin > p {
+    color: #fff;
+    padding: 0 40px 30px;
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.sseo-ai-chatbot-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: var(--sseo-radius);
+    padding: 30px;
+    margin: 16px 20px;
+    box-shadow: var(--sseo-shadow-lg);
+}
+
+.sseo-ai-chatbot-card h2 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--sseo-gray-100);
+    color: var(--sseo-gray-900);
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.sseo-ai-chatbot-card-wide {
+    grid-column: 1 / -1;
+}
+
+.sseo-ai-chatbot-avatar-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #379fd3, #8f39ac);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    overflow: hidden;
+}
+
+.sseo-ai-chatbot-avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sseo-ai-chatbot-avatar-placeholder {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 600;
+    
+}
+
+#sseo-ai-chatbot-knowledge {
+    font-family: Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+@media (max-width: 782px) {
+    .sseo-ai-chatbot-admin .sseo-ai-chatbot-grid {
+        grid-template-columns: 1fr;
+    }
+}

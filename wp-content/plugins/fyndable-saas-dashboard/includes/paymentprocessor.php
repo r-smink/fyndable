@@ -12,20 +12,29 @@ namespace SSEOAISaaS;
 class PaymentProcessor
 {
     private string $provider;
-    private ?string $stripeSecretKey = null;
-    private ?string $mollieApiKey = null;
+    private string $stripeSecretKey;
+    private string $mollieApiKey;
+    private string $mollieMode;
+    private string $mollieLiveKey;
+    private string $mollieTestKey;
     private string $currency;
     private TenantRepository $tenants;
-    
+
+    private const STRIPE_API = 'https://api.stripe.com/v1';
+    private const MOLLIE_API = 'https://api.mollie.com/v2';
+
     public function __construct(TenantRepository $tenants)
     {
         $this->tenants = $tenants;
         $this->provider = get_option('sseo_ai_saas_payment_provider', 'stripe');
         $this->stripeSecretKey = get_option('sseo_ai_saas_stripe_secret', '');
-        $this->mollieApiKey = get_option('sseo_ai_saas_mollie_api_key', '');
+        $this->mollieMode = get_option('sseo_ai_saas_mollie_mode', 'live');
+        $this->mollieLiveKey = get_option('sseo_ai_saas_mollie_api_key', '');
+        $this->mollieTestKey = get_option('sseo_ai_saas_mollie_test_api_key', '');
+        $this->mollieApiKey = ($this->mollieMode === 'test' && !empty($this->mollieTestKey)) ? $this->mollieTestKey : $this->mollieLiveKey;
         $this->currency = get_option('sseo_ai_saas_currency', 'EUR');
     }
-    
+
     /**
      * Get available payment providers
      */
@@ -46,65 +55,114 @@ class PaymentProcessor
             ],
         ];
     }
-    
+
     /**
-     * Create a subscription for a tenant
+     * Create a subscription checkout for a tenant
      */
-    public function createSubscription(string $tenantKey, string $tier): array|\WP_Error
+    public function createSubscription(string $tenantKey, string $tier, string $interval = 'month', ?string $paymentMethod = null): array|\WP_Error
     {
         $tenant = $this->tenants->getTenant($tenantKey);
         if (!$tenant) {
             return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
-        
-        // Get tier pricing
-        $pricing = $this->getTierPricing($tier);
+
+        $pricing = $this->getTierPricing($tier, $interval);
         if (is_wp_error($pricing)) {
             return $pricing;
         }
-        
+
         switch ($this->provider) {
             case 'stripe':
                 return $this->createStripeSubscription($tenant, $tier, $pricing);
             case 'mollie':
-                return $this->createMollieSubscription($tenant, $tier, $pricing);
+                return $this->createMollieCheckout($tenant, $tier, $pricing, $paymentMethod);
             default:
                 return new \WP_Error('invalid_provider', __('Invalid payment provider', 'sseo-ai-saas'));
         }
     }
-    
+
     /**
-     * Get pricing for a tier
+     * Get pricing for a tier and billing interval
      */
-    private function getTierPricing(string $tier): array|\WP_Error
+    public function getTierPricing(string $tier, string $interval = 'month'): array|\WP_Error
     {
-        $pricing = [
-            'free' => ['amount' => 0.00, 'interval' => 'month'],
-            'trial' => ['amount' => 0.00, 'interval' => 'month'],
-            'starter' => ['amount' => 19.00, 'interval' => 'month'],
-            'professional' => ['amount' => 49.00, 'interval' => 'month'],
-            'business' => ['amount' => 99.00, 'interval' => 'month'],
-            'agency' => ['amount' => 199.00, 'interval' => 'month'],
-        ];
-        
-        if (!isset($pricing[$tier])) {
+        // Canonical monthly price comes from the "Tier Pricing & Limits"
+        // admin page (ai_seo_saas_{tier}_price option) so checkout always
+        // matches what is configured there.
+        $monthlyAmount = SaaSSettings::tierPrice($tier);
+
+        // Optional explicit yearly_amount override (legacy custom pricing),
+        // kept for backwards compatibility. Monthly is always taken from the
+        // admin tier price option above.
+        $customPricing = get_option('sseo_ai_saas_pricing', []);
+        $customYearly = null;
+        if (is_array($customPricing[$tier] ?? null) && isset($customPricing[$tier]['yearly_amount'])) {
+            $customYearly = (float) $customPricing[$tier]['yearly_amount'];
+        }
+
+        if ($monthlyAmount === 0.0 && $tier !== 'trial') {
+            // Unknown tier returned the 0 default -> invalid (trial is legitimately free)
             return new \WP_Error('invalid_tier', __('Invalid subscription tier', 'sseo-ai-saas'));
         }
-        
-        return $pricing[$tier];
+
+        if ($interval === 'year') {
+            $amount = $customYearly ?? (float) round($monthlyAmount * 12, 0);
+            $stripeInterval = 'year';
+            $mollieInterval = '12 months';
+        } else {
+            $amount = $monthlyAmount;
+            $stripeInterval = 'month';
+            $mollieInterval = '1 month';
+        }
+
+        return [
+            'amount' => $amount,
+            'interval' => $stripeInterval,
+            'mollie_interval' => $mollieInterval,
+        ];
     }
-    
+
     /**
-     * Create Stripe subscription
+     * Create Stripe subscription checkout session
      */
     private function createStripeSubscription(array $tenant, string $tier, array $pricing): array|\WP_Error
     {
         if (empty($this->stripeSecretKey)) {
-            return new \WP_Error('stripe_not_configured', __('Stripe not configured', 'sseo-ai-saas'));
+            return new \WP_Error('stripe_not_configured', __('Stripe secret key is not configured', 'sseo-ai-saas'));
         }
-        
-        // This would integrate with Stripe PHP SDK
-        // For now, return a placeholder that indicates the integration point
+
+        $priceResult = $this->createStripePrice($tier, $pricing);
+        if (is_wp_error($priceResult)) {
+            return $priceResult;
+        }
+
+        $successUrl = $this->getReturnUrl($tenant['tenant_key'], 'stripe');
+        $cancelUrl = $this->getCancelUrl($tenant['tenant_key']);
+
+        $session = $this->stripeRequest('checkout/sessions', [
+            'mode' => 'subscription',
+            'client_reference_id' => $tenant['tenant_key'],
+            'customer_email' => $tenant['email'],
+            'line_items' => [
+                [
+                    'price' => $priceResult['id'],
+                    'quantity' => 1,
+                ],
+            ],
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+            'metadata' => [
+                'tenant_key' => $tenant['tenant_key'],
+                'tier' => $tier,
+            ],
+        ]);
+
+        if (is_wp_error($session)) {
+            return $session;
+        }
+
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'stripe_session_id', $session['id']);
+
         return [
             'provider' => 'stripe',
             'tenant_key' => $tenant['tenant_key'],
@@ -112,22 +170,105 @@ class PaymentProcessor
             'amount' => $pricing['amount'],
             'currency' => $this->currency,
             'status' => 'pending_setup',
-            'message' => __('Stripe subscription created. Customer needs to complete payment setup.', 'sseo-ai-saas'),
-            'checkout_url' => $this->generateStripeCheckoutUrl($tenant, $tier, $pricing),
+            'message' => __('Redirect to Stripe to complete payment setup.', 'sseo-ai-saas'),
+            'checkout_url' => $session['url'] ?? '',
         ];
     }
-    
+
     /**
-     * Create Mollie subscription
+     * Create a Stripe price for a tier
      */
-    private function createMollieSubscription(array $tenant, string $tier, array $pricing): array|\WP_Error
+    private function createStripePrice(string $tier, array $pricing): array|\WP_Error
+    {
+        $product = $this->stripeRequest('products', [
+            'name' => 'Fyndable SmartSEO - ' . ucfirst($tier),
+            'metadata' => ['tier' => $tier],
+        ]);
+
+        if (is_wp_error($product)) {
+            return $product;
+        }
+
+        $currency = strtolower($this->currency);
+        $amountCents = (int) round($pricing['amount'] * 100);
+
+        $price = $this->stripeRequest('prices', [
+            'unit_amount' => $amountCents,
+            'currency' => $currency,
+            'recurring' => ['interval' => $pricing['interval']],
+            'product' => $product['id'],
+            'metadata' => ['tier' => $tier],
+        ]);
+
+        if (is_wp_error($price)) {
+            return $price;
+        }
+
+        return $price;
+    }
+
+    /**
+     * Create Mollie checkout for the first recurring payment
+     */
+    private function createMollieCheckout(array $tenant, string $tier, array $pricing, ?string $paymentMethod = null): array|\WP_Error
     {
         if (empty($this->mollieApiKey)) {
-            return new \WP_Error('mollie_not_configured', __('Mollie not configured', 'sseo-ai-saas'));
+            return new \WP_Error('mollie_not_configured', __('Mollie API key is not configured', 'sseo-ai-saas'));
         }
-        
-        // This would integrate with Mollie PHP SDK
-        // For now, return a placeholder
+
+        $expectedPrefix = $this->mollieMode === 'test' ? 'test_' : 'live_';
+        if (strpos($this->mollieApiKey, $expectedPrefix) !== 0) {
+            return new \WP_Error(
+                'mollie_key_mismatch',
+                sprintf(__('Mollie is set to %s mode but the API key does not start with "%s".', 'sseo-ai-saas'), $this->mollieMode, $expectedPrefix)
+            );
+        }
+
+        $customer = $this->createMollieCustomer($tenant);
+        if (is_wp_error($customer)) {
+            return $customer;
+        }
+
+        $customerId = $customer['id'];
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_customer_id', $customerId);
+
+        $paymentParams = [
+            'amount' => $this->mollieAmount($pricing['amount']),
+            'customerId' => $customerId,
+            'sequenceType' => 'first',
+            'description' => sprintf(__('Fyndable SmartSEO %s subscription', 'sseo-ai-saas'), ucfirst($tier)),
+            'redirectUrl' => $this->getReturnUrl($tenant['tenant_key'], 'mollie'),
+            'webhookUrl' => $this->getWebhookUrl('mollie'),
+            'metadata' => [
+                'tenant_key' => $tenant['tenant_key'],
+                'tier' => $tier,
+                'interval' => $pricing['interval'] ?? 'month',
+                'mollie_interval' => $pricing['mollie_interval'] ?? '1 month',
+            ],
+        ];
+
+        if (!empty($paymentMethod)) {
+            $paymentParams['method'] = $paymentMethod;
+        }
+
+        $payment = $this->mollieRequest('payments', $paymentParams);
+
+        if (is_wp_error($payment)) {
+            return $payment;
+        }
+
+        error_log(sprintf(
+            'SSEO AI SaaS: Mollie first payment created — tenant=%s customer=%s payment=%s method=%s amount=%s %s',
+            $tenant['tenant_key'],
+            $customerId,
+            $payment['id'] ?? '',
+            $paymentMethod ?: '(default)',
+            $pricing['amount'],
+            strtoupper($this->currency)
+        ));
+
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_payment_id', $payment['id']);
+
         return [
             'provider' => 'mollie',
             'tenant_key' => $tenant['tenant_key'],
@@ -135,263 +276,131 @@ class PaymentProcessor
             'amount' => $pricing['amount'],
             'currency' => $this->currency,
             'status' => 'pending_payment',
-            'message' => __('Mollie payment initiated. Customer needs to complete payment.', 'sseo-ai-saas'),
-            'checkout_url' => $this->generateMollieCheckoutUrl($tenant, $tier, $pricing),
+            'message' => __('Redirect to Mollie to complete the first payment.', 'sseo-ai-saas'),
+            'checkout_url' => $payment['_links']['checkout']['href'] ?? '',
         ];
     }
-    
+
     /**
-     * Generate Stripe Checkout URL
+     * Create a Mollie customer
      */
-    private function generateStripeCheckoutUrl(array $tenant, string $tier, array $pricing): string
+    private function createMollieCustomer(array $tenant): array|\WP_Error
     {
-        // This would generate a Stripe Checkout Session URL
-        // Placeholder for actual implementation
-        return add_query_arg([
-            'stripe_checkout' => '1',
-            'tenant' => $tenant['tenant_key'],
-            'tier' => $tier,
-        ], home_url('/stripe-checkout/'));
-    }
-    
-    /**
-     * Generate Mollie Checkout URL
-     */
-    private function generateMollieCheckoutUrl(array $tenant, string $tier, array $pricing): string
-    {
-        // This would create a Mollie payment and return the checkout URL
-        // Placeholder for actual implementation
-        return add_query_arg([
-            'mollie_checkout' => '1',
-            'tenant' => $tenant['tenant_key'],
-            'tier' => $tier,
-        ], home_url('/mollie-checkout/'));
-    }
-    
-    /**
-     * Handle Stripe webhook
-     */
-    public function handleStripeWebhook(): \WP_REST_Response
-    {
-        $payload = file_get_contents('php://input');
-        $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
-        $webhookSecret = get_option('sseo_ai_saas_stripe_webhook_secret', '');
-        
-        // Verify webhook signature (when properly configured)
-        // This is a placeholder - real implementation needs Stripe PHP SDK
-        
-        $event = json_decode($payload, true);
-        
-        if (!$event || !isset($event['type'])) {
-            return new \WP_REST_Response(['error' => 'Invalid payload'], 400);
-        }
-        
-        switch ($event['type']) {
-            case 'invoice.payment_succeeded':
-                $this->handlePaymentSuccess($event, 'stripe');
-                break;
-                
-            case 'invoice.payment_failed':
-                $this->handlePaymentFailed($event, 'stripe');
-                break;
-                
-            case 'customer.subscription.deleted':
-                $this->handleSubscriptionCanceled($event, 'stripe');
-                break;
-                
-            case 'customer.subscription.updated':
-                $this->handleSubscriptionUpdated($event, 'stripe');
-                break;
-        }
-        
-        return new \WP_REST_Response(['received' => true], 200);
-    }
-    
-    /**
-     * Handle Mollie webhook
-     */
-    public function handleMollieWebhook(): \WP_REST_Response
-    {
-        $paymentId = $_POST['id'] ?? '';
-        
-        if (empty($paymentId)) {
-            return new \WP_REST_Response(['error' => 'No payment ID'], 400);
-        }
-        
-        // Fetch payment from Mollie API (placeholder)
-        // Real implementation needs Mollie PHP SDK
-        
-        // Update tenant status based on payment result
-        $this->updateTenantPaymentStatus($paymentId, 'completed', 'mollie');
-        
-        return new \WP_REST_Response(['received' => true], 200);
-    }
-    
-    /**
-     * Handle successful payment
-     */
-    private function handlePaymentSuccess(array $event, string $provider): void
-    {
-        // Extract tenant information from event
-        $customerId = $event['data']['object']['customer'] ?? '';
-        $subscriptionId = $event['data']['object']['subscription'] ?? '';
-        
-        // Find tenant by customer ID
-        $tenantKey = $this->findTenantByCustomerId($customerId, $provider);
-        
-        if ($tenantKey) {
-            // Update tenant status
-            $this->tenants->updateTenant($tenantKey, [
-                'status' => 'active',
-                'payment_status' => 'paid',
-                'last_payment_at' => current_time('mysql'),
-            ]);
-            
-            // Store subscription ID
-            $this->tenants->setTenantSetting($tenantKey, "{$provider}_subscription_id", $subscriptionId);
-            
-            do_action('sseo_ai_saas_payment_success', $tenantKey, $event, $provider);
-        }
-    }
-    
-    /**
-     * Handle failed payment
-     */
-    private function handlePaymentFailed(array $event, string $provider): void
-    {
-        $customerId = $event['data']['object']['customer'] ?? '';
-        $tenantKey = $this->findTenantByCustomerId($customerId, $provider);
-        
-        if ($tenantKey) {
-            $this->tenants->updateTenant($tenantKey, [
-                'payment_status' => 'failed',
-            ]);
-            
-            // Send notification to admin
-            $this->notifyPaymentFailure($tenantKey, $event, $provider);
-            
-            do_action('sseo_ai_saas_payment_failed', $tenantKey, $event, $provider);
-        }
-    }
-    
-    /**
-     * Handle subscription cancellation
-     */
-    private function handleSubscriptionCanceled(array $event, string $provider): void
-    {
-        $subscriptionId = $event['data']['object']['id'] ?? '';
-        $tenantKey = $this->findTenantBySubscriptionId($subscriptionId, $provider);
-        
-        if ($tenantKey) {
-            $this->tenants->updateTenant($tenantKey, [
-                'status' => 'cancelled',
-                'payment_status' => 'cancelled',
-            ]);
-            
-            do_action('sseo_ai_saas_subscription_cancelled', $tenantKey, $event, $provider);
-        }
-    }
-    
-    /**
-     * Handle subscription update
-     */
-    private function handleSubscriptionUpdated(array $event, string $provider): void
-    {
-        $subscriptionId = $event['data']['object']['id'] ?? '';
-        $tenantKey = $this->findTenantBySubscriptionId($subscriptionId, $provider);
-        
-        if ($tenantKey) {
-            // Update subscription details
-            $status = $event['data']['object']['status'] ?? '';
-            
-            if ($status === 'past_due') {
-                $this->tenants->updateTenant($tenantKey, [
-                    'payment_status' => 'past_due',
-                ]);
+        $existing = $this->tenants->getTenantSetting($tenant['tenant_key'], 'mollie_customer_id', '');
+        if (!empty($existing)) {
+            $customer = $this->mollieRequest('customers/' . $existing, [], 'GET');
+            if (!is_wp_error($customer)) {
+                return $customer;
             }
-            
-            do_action('sseo_ai_saas_subscription_updated', $tenantKey, $event, $provider);
         }
+
+        return $this->mollieRequest('customers', [
+            'email' => $tenant['email'],
+            'name' => $tenant['name'],
+            'metadata' => [
+                'tenant_key' => $tenant['tenant_key'],
+            ],
+        ]);
     }
-    
+
     /**
-     * Find tenant by customer ID
+     * Fetch a Mollie payment by ID
      */
-    private function findTenantByCustomerId(string $customerId, string $provider): ?string
+    public function fetchMolliePayment(string $paymentId): array|\WP_Error
     {
-        // This would search tenants by payment provider customer ID
-        // Implementation depends on how customer IDs are stored
-        global $wpdb;
-        $settingsTable = $wpdb->prefix . 'sseo_ai_tenant_settings';
-        
-        $result = $wpdb->get_var($wpdb->prepare(
-            "SELECT tenant_id FROM $settingsTable 
-             WHERE setting_key = %s AND setting_value = %s",
-            "{$provider}_customer_id",
-            $customerId
-        ));
-        
-        if ($result) {
-            $tenant = $this->tenants->getTenant((string)$result);
-            return $tenant['tenant_key'] ?? null;
+        if (empty($this->mollieApiKey)) {
+            return new \WP_Error('mollie_not_configured', __('Mollie API key is not configured', 'sseo-ai-saas'));
         }
-        
-        return null;
+
+        return $this->mollieRequest('payments/' . $paymentId, [], 'GET');
     }
-    
+
     /**
-     * Find tenant by subscription ID
+     * Create a Mollie subscription after a successful first payment
      */
-    private function findTenantBySubscriptionId(string $subscriptionId, string $provider): ?string
+    public function createMollieSubscription(string $tenantKey, array $payment): array|\WP_Error
     {
-        global $wpdb;
-        $settingsTable = $wpdb->prefix . 'sseo_ai_tenant_settings';
-        
-        $result = $wpdb->get_var($wpdb->prepare(
-            "SELECT tenant_id FROM $settingsTable 
-             WHERE setting_key = %s AND setting_value = %s",
-            "{$provider}_subscription_id",
-            $subscriptionId
-        ));
-        
-        if ($result) {
-            $tenant = $this->tenants->getTenant((string)$result);
-            return $tenant['tenant_key'] ?? null;
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Update tenant payment status
-     */
-    private function updateTenantPaymentStatus(string $paymentId, string $status, string $provider): void
-    {
-        // Implementation for updating payment status
-        // This would find the tenant by payment ID and update their status
-    }
-    
-    /**
-     * Send payment failure notification
-     */
-    private function notifyPaymentFailure(string $tenantKey, array $event, string $provider): void
-    {
-        $adminEmail = get_option('admin_email');
         $tenant = $this->tenants->getTenant($tenantKey);
-        
-        if ($tenant) {
-            $subject = sprintf(__('Payment Failed: %s', 'sseo-ai-saas'), $tenant['name']);
-            $message = sprintf(
-                __("Payment failed for tenant: %s\nProvider: %s\nTenant Email: %s\n\nPlease check the payment dashboard.", 'sseo-ai-saas'),
-                $tenant['name'],
-                ucfirst($provider),
-                $tenant['email']
-            );
-            
-            wp_mail($adminEmail, $subject, $message);
+        if (!$tenant) {
+            return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
+
+        $customerId = $payment['customerId'] ?? '';
+        $mandateId = $payment['mandateId'] ?? '';
+        $tier = $payment['metadata']['tier'] ?? $tenant['tier'];
+        $interval = $payment['metadata']['interval'] ?? 'month';
+        $mollieInterval = $payment['metadata']['mollie_interval'] ?? '1 month';
+
+        if (empty($customerId)) {
+            return new \WP_Error('mollie_no_customer', __('Mollie payment does not have a customer ID', 'sseo-ai-saas'));
+        }
+
+        // If no mandateId in payment response, fetch mandates for the customer.
+        // Mollie may not register the mandate immediately after a first payment,
+        // so we retry a few times before giving up.
+        if (empty($mandateId)) {
+            $mandateMethod = $payment['method'] ?? '';
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $mandateId = $this->fetchValidMandateId($customerId, $mandateMethod);
+                if (!empty($mandateId)) {
+                    break;
+                }
+                if ($attempt < 2) {
+                    sleep(2);
+                }
+            }
+            if (empty($mandateId)) {
+                error_log('SSEO AI SaaS: No valid Mollie mandate found for customer ' . $customerId . ' after 3 attempts (tenant ' . $tenantKey . ')');
+                return new \WP_Error('mollie_no_mandate', __('No valid mandate found for Mollie customer. The payment method may not support recurring payments.', 'sseo-ai-saas'));
+            }
+        }
+
+        error_log('SSEO AI SaaS: Creating Mollie subscription for tenant ' . $tenantKey . ' with mandate ' . $mandateId . ' (customer ' . $customerId . ', interval ' . $mollieInterval . ')');
+
+        $pricing = $this->getTierPricing($tier, $interval);
+        if (is_wp_error($pricing)) {
+            return $pricing;
+        }
+
+        $period = $interval === 'year' ? 'P1Y' : 'P1M';
+        $startDate = (new \DateTime('now', new \DateTimeZone('UTC')))
+            ->add(new \DateInterval($period))
+            ->format('Y-m-d');
+
+        $subscription = $this->mollieRequest('customers/' . $customerId . '/subscriptions', [
+            'amount' => $this->mollieAmount($pricing['amount']),
+            'interval' => $mollieInterval,
+            'startDate' => $startDate,
+            'description' => sprintf(__('Fyndable SmartSEO %s subscription', 'sseo-ai-saas'), ucfirst($tier)),
+            'mandateId' => $mandateId,
+            'webhookUrl' => $this->getWebhookUrl('mollie'),
+            'metadata' => [
+                'tenant_key' => $tenantKey,
+                'tier' => $tier,
+                'interval' => $interval,
+            ],
+        ]);
+
+        if (is_wp_error($subscription)) {
+            return $subscription;
+        }
+
+        $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_id', $subscription['id']);
+        $this->tenants->setTenantSetting($tenantKey, 'mollie_mandate_id', $mandateId);
+        $this->tenants->setTenantSetting($tenantKey, 'subscription_interval', $interval);
+        $this->tenants->setTenantSetting($tenantKey, 'mollie_interval', $mollieInterval);
+
+        $expiresPeriod = $interval === 'year' ? '+1 year' : '+1 month';
+        $this->tenants->updateTenant($tenantKey, [
+            'status' => 'active',
+            'payment_status' => 'active',
+            'last_payment_at' => current_time('mysql'),
+            'expires_at' => gmdate('Y-m-d H:i:s', strtotime($expiresPeriod)),
+        ]);
+
+        return $subscription;
     }
-    
+
     /**
      * Cancel a subscription
      */
@@ -401,31 +410,30 @@ class PaymentProcessor
         if (!$tenant) {
             return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
-        
-        // Get subscription IDs
+
         $stripeSubId = $this->tenants->getTenantSetting($tenantKey, 'stripe_subscription_id', '');
         $mollieSubId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
-        
-        // Cancel via appropriate provider
+
         if (!empty($stripeSubId)) {
-            // Cancel Stripe subscription
-            // Implementation with Stripe SDK
+            $this->stripeRequest('subscriptions/' . $stripeSubId, ['cancel_at_period_end' => true], 'POST');
         } elseif (!empty($mollieSubId)) {
-            // Cancel Mollie subscription
-            // Implementation with Mollie SDK
+            $mollieCustomerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+            if (!empty($mollieCustomerId)) {
+                $this->mollieRequest('customers/' . $mollieCustomerId . '/subscriptions/' . $mollieSubId, [], 'DELETE');
+            }
         }
-        
-        // Update tenant status
+
         $this->tenants->updateTenant($tenantKey, [
             'status' => 'cancelled',
+            'payment_status' => 'cancelled',
         ]);
-        
+
         return [
             'success' => true,
             'message' => __('Subscription cancelled successfully', 'sseo-ai-saas'),
         ];
     }
-    
+
     /**
      * Upgrade/downgrade subscription tier
      */
@@ -435,28 +443,573 @@ class PaymentProcessor
         if (!$tenant) {
             return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
-        
-        $currentTier = $tenant['tier'] ?? 'basic';
-        
-        // Get pricing for new tier
-        $pricing = $this->getTierPricing($newTier);
+
+        $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+        $pricing = $this->getTierPricing($newTier, $interval);
         if (is_wp_error($pricing)) {
             return $pricing;
         }
-        
-        // Update subscription with provider
-        // Implementation depends on provider SDK
-        
-        // Update tenant tier
-        $this->tenants->updateTenant($tenantKey, [
-            'tier' => $newTier,
-        ]);
-        
+
+        $stripeSubId = $this->tenants->getTenantSetting($tenantKey, 'stripe_subscription_id', '');
+        if (!empty($stripeSubId)) {
+            $items = $this->stripeRequest('subscriptions/' . $stripeSubId, [], 'GET');
+            if (!is_wp_error($items) && !empty($items['items']['data'][0]['id'])) {
+                $priceResult = $this->createStripePrice($newTier, $pricing);
+                if (!is_wp_error($priceResult)) {
+                    $this->stripeRequest('subscriptions/' . $stripeSubId, [
+                        'items' => [
+                            [
+                                'id' => $items['items']['data'][0]['id'],
+                                'price' => $priceResult['id'],
+                            ],
+                        ],
+                        'proration_behavior' => 'create_prorations',
+                    ], 'POST');
+                }
+            }
+        }
+
+        $mollieSubId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        if (!empty($mollieSubId)) {
+            $mollieCustomerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+            if (!empty($mollieCustomerId)) {
+                $this->mollieRequest('customers/' . $mollieCustomerId . '/subscriptions/' . $mollieSubId, [
+                    'amount' => $this->mollieAmount($pricing['amount']),
+                ], 'PATCH');
+            }
+        }
+
+        $this->tenants->updateTenant($tenantKey, ['tier' => $newTier]);
+
         return [
             'success' => true,
             'message' => sprintf(__('Subscription upgraded to %s', 'sseo-ai-saas'), ucfirst($newTier)),
-            'old_tier' => $currentTier,
+            'old_tier' => $tenant['tier'],
             'new_tier' => $newTier,
         ];
+    }
+
+    /**
+     * Generic Stripe API request
+     */
+    private function stripeRequest(string $endpoint, array $params, string $method = 'POST'): array|\WP_Error
+    {
+        $url = self::STRIPE_API . '/' . $endpoint;
+        $args = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->stripeSecretKey,
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ],
+            'timeout' => 60,
+            'sslverify' => true, // Explicit: payment API calls must always verify SSL
+        ];
+
+        if ($method === 'GET') {
+            if (!empty($params)) {
+                $url = add_query_arg($params, $url);
+            }
+            $response = wp_remote_get($url, $args);
+        } else {
+            $args['body'] = http_build_query($params);
+            $args['method'] = $method;
+            $response = wp_remote_request($url, $args);
+        }
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($body)) {
+            $body = [];
+        }
+
+        if ($statusCode >= 400 || !empty($body['error'])) {
+            $message = $body['error']['message'] ?? __('Stripe API request failed', 'sseo-ai-saas');
+            return new \WP_Error('stripe_request_failed', $message, ['status' => $statusCode]);
+        }
+
+        return $body;
+    }
+
+    /**
+     * Generic Mollie API request
+     */
+    private function mollieRequest(string $endpoint, array $params, string $method = 'POST'): array|\WP_Error
+    {
+        $url = self::MOLLIE_API . '/' . ltrim($endpoint, '/');
+        $args = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->mollieApiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'timeout' => 60,
+            'sslverify' => true, // Explicit: payment API calls must always verify SSL
+        ];
+
+        if ($method === 'GET') {
+            if (!empty($params)) {
+                $url = add_query_arg($params, $url);
+            }
+            $response = wp_remote_get($url, $args);
+        } else {
+            $args['body'] = json_encode($params);
+            $args['method'] = $method;
+            $response = wp_remote_request($url, $args);
+        }
+
+        if (is_wp_error($response)) {
+            error_log('Mollie API connection error: ' . $response->get_error_message());
+            return new \WP_Error(
+                'mollie_request_failed',
+                __('Mollie API connection failed: ', 'sseo-ai-saas') . $response->get_error_message()
+            );
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $rawBody = wp_remote_retrieve_body($response);
+        $body = json_decode($rawBody, true);
+        if (!is_array($body)) {
+            $body = [];
+        }
+
+        if ($statusCode >= 400 || (!empty($body['status']) && is_numeric($body['status']) && $body['status'] >= 400) || !empty($body['detail'])) {
+            $message = $body['detail'] ?? ($body['title'] ?? null);
+            if (empty($message)) {
+                error_log(sprintf('Mollie API error: HTTP %d %s', $statusCode, $rawBody ?: '(empty body)'));
+                $message = sprintf(__('Mollie API request failed (HTTP %d): %s', 'sseo-ai-saas'), $statusCode, $rawBody ?: '(empty response)');
+            }
+            return new \WP_Error('mollie_request_failed', $message, ['status' => $statusCode]);
+        }
+
+        return $body;
+    }
+
+    /**
+     * Format amount for Mollie (currency + value)
+     */
+    private function mollieAmount(float $amount): array
+    {
+        $decimals = in_array(strtoupper($this->currency), ['JPY', 'KRW', 'CLP', 'ISK'], true) ? 0 : 2;
+        $value = number_format($amount, $decimals, '.', '');
+
+        return [
+            'currency' => strtoupper($this->currency),
+            'value' => $value,
+        ];
+    }
+
+    /**
+     * Return URL after payment
+     */
+    private function getReturnUrl(string $tenantKey, string $provider): string
+    {
+        return add_query_arg([
+            'fyndable_payment' => 'success',
+            'provider' => $provider,
+            'tenant_key' => $tenantKey,
+        ], home_url('/thank-you/'));
+    }
+
+    /**
+     * Cancel URL
+     */
+    private function getCancelUrl(string $tenantKey): string
+    {
+        return add_query_arg([
+            'fyndable_payment' => 'cancel',
+            'tenant_key' => $tenantKey,
+        ], home_url('/pricing/'));
+    }
+
+    /**
+     * Webhook URL for a provider
+     */
+    public function getWebhookUrl(string $provider): string
+    {
+        return rest_url('ai-seo-saas/v1/webhooks/' . $provider);
+    }
+
+    /**
+     * Find tenant by customer ID
+     */
+    private function findTenantByCustomerId(string $customerId, string $provider): ?string
+    {
+        return $this->findTenantByProviderId("{$provider}_customer_id", $customerId);
+    }
+
+    /**
+     * Find tenant by subscription ID
+     */
+    private function findTenantBySubscriptionId(string $subscriptionId, string $provider): ?string
+    {
+        return $this->findTenantByProviderId("{$provider}_subscription_id", $subscriptionId);
+    }
+
+    /**
+     * Find tenant by payment/session ID
+     */
+    public function findTenantByPaymentId(string $paymentId, string $key): ?string
+    {
+        return $this->findTenantByProviderId($key, $paymentId);
+    }
+
+    /**
+     * Find tenant by provider setting
+     */
+    private function findTenantByProviderId(string $key, string $value): ?string
+    {
+        global $wpdb;
+        $settingsTable = $wpdb->prefix . 'sseo_ai_tenant_settings';
+        $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
+
+        $tenantId = $wpdb->get_var($wpdb->prepare(
+            "SELECT tenant_id FROM $settingsTable 
+             WHERE setting_key = %s AND setting_value = %s",
+            $key,
+            $value
+        ));
+
+        if ($tenantId) {
+            $tenantKey = $wpdb->get_var($wpdb->prepare(
+                "SELECT tenant_key FROM $tenantsTable WHERE id = %d",
+                $tenantId
+            ));
+            return $tenantKey ?: null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetch a valid mandate ID for a Mollie customer.
+     * Returns the first valid mandate, or empty string if none found.
+     * When $preferredMethod is given (e.g. 'ideal' or 'creditcard'), mandates
+     * whose method matches are preferred — iDEAL first payments yield
+     * 'directdebit' mandates, creditcard payments yield 'creditcard' mandates.
+     */
+    public function fetchValidMandateId(string $customerId, string $preferredMethod = ''): string
+    {
+        $mandates = $this->mollieRequest('customers/' . $customerId . '/mandates', [], 'GET');
+        if (is_wp_error($mandates)) {
+            error_log('SSEO AI SaaS: Failed to fetch Mollie mandates for customer ' . $customerId . ': ' . $mandates->get_error_message());
+            return '';
+        }
+        if (empty($mandates['_embedded']['mandates'])) {
+            error_log('SSEO AI SaaS: No Mollie mandates found for customer ' . $customerId);
+            return '';
+        }
+
+        $allMandates = $mandates['_embedded']['mandates'];
+        $validMandates = array_filter($allMandates, function ($m) {
+            return ($m['status'] ?? '') === 'valid';
+        });
+
+        if (empty($validMandates)) {
+            $statuses = array_map(function ($m) { return $m['status'] ?? 'unknown'; }, $allMandates);
+            error_log('SSEO AI SaaS: No valid Mollie mandate for customer ' . $customerId . ' (statuses: ' . implode(',', $statuses) . ')');
+            return '';
+        }
+
+        // Prefer mandates matching the original payment method.
+        // iDEAL → directdebit, creditcard → creditcard
+        $expectedMethod = '';
+        if ($preferredMethod === 'ideal') {
+            $expectedMethod = 'directdebit';
+        } elseif ($preferredMethod === 'creditcard') {
+            $expectedMethod = 'creditcard';
+        }
+
+        if (!empty($expectedMethod)) {
+            foreach ($validMandates as $mandate) {
+                if (($mandate['method'] ?? '') === $expectedMethod) {
+                    error_log('SSEO AI SaaS: Selected Mollie mandate ' . ($mandate['id'] ?? '') . ' (method: ' . $expectedMethod . ') for customer ' . $customerId);
+                    return $mandate['id'] ?? '';
+                }
+            }
+        }
+
+        // Fall back to the first valid mandate.
+        $first = reset($validMandates);
+        error_log('SSEO AI SaaS: Selected first valid Mollie mandate ' . ($first['id'] ?? '') . ' (method: ' . ($first['method'] ?? 'unknown') . ') for customer ' . $customerId);
+        return $first['id'] ?? '';
+    }
+
+    /**
+     * Fetch a Mollie subscription by customer and subscription ID.
+     */
+    public function fetchMollieSubscription(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+    }
+
+    /**
+     * Fetch Mollie payments for a customer (for invoice/billing history).
+     */
+    public function fetchMollieCustomerPayments(string $tenantKey, int $limit = 50): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+
+        if (empty($customerId)) {
+            return new \WP_Error('not_configured', __('Mollie customer not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        return $this->mollieRequest('customers/' . $customerId . '/payments', [
+            'limit' => $limit,
+            'sort' => 'desc',
+        ], 'GET');
+    }
+
+    /**
+     * Get the full Mollie recurring status for a tenant — customer, mandates,
+     * subscription and last payment. Used by the admin diagnostics endpoint.
+     */
+    public function getMollieSubscriptionStatus(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        $storedMandateId = $this->tenants->getTenantSetting($tenantKey, 'mollie_mandate_id', '');
+
+        if (empty($customerId)) {
+            return new \WP_Error('not_configured', __('Mollie customer not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $status = [
+            'customer_id' => $customerId,
+            'subscription_id' => $subscriptionId,
+            'stored_mandate_id' => $storedMandateId,
+            'subscription' => null,
+            'mandates' => [],
+            'last_payment' => null,
+        ];
+
+        // Subscription
+        if (!empty($subscriptionId)) {
+            $sub = $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+            if (!is_wp_error($sub)) {
+                $status['subscription'] = [
+                    'id' => $sub['id'] ?? '',
+                    'status' => $sub['status'] ?? '',
+                    'amount' => $sub['amount'] ?? null,
+                    'interval' => $sub['interval'] ?? '',
+                    'nextPaymentDate' => $sub['nextPaymentDate'] ?? '',
+                    'startDate' => $sub['startDate'] ?? '',
+                    'mandateId' => $sub['mandateId'] ?? '',
+                    'times' => $sub['times'] ?? null,
+                    'timesRemaining' => $sub['timesRemaining'] ?? null,
+                ];
+            }
+        }
+
+        // Mandates
+        $mandatesResp = $this->mollieRequest('customers/' . $customerId . '/mandates', [], 'GET');
+        if (!is_wp_error($mandatesResp) && !empty($mandatesResp['_embedded']['mandates'])) {
+            foreach ($mandatesResp['_embedded']['mandates'] as $mandate) {
+                $status['mandates'][] = [
+                    'id' => $mandate['id'] ?? '',
+                    'status' => $mandate['status'] ?? '',
+                    'method' => $mandate['method'] ?? '',
+                    'mandateReference' => $mandate['mandateReference'] ?? '',
+                    'signatureDate' => $mandate['signatureDate'] ?? '',
+                ];
+            }
+        }
+
+        // Last payment
+        $paymentsResp = $this->mollieRequest('customers/' . $customerId . '/payments', [
+            'limit' => 1,
+            'sort' => 'desc',
+        ], 'GET');
+        if (!is_wp_error($paymentsResp) && !empty($paymentsResp['_embedded']['payments'][0])) {
+            $last = $paymentsResp['_embedded']['payments'][0];
+            $status['last_payment'] = [
+                'id' => $last['id'] ?? '',
+                'status' => $last['status'] ?? '',
+                'sequenceType' => $last['sequenceType'] ?? '',
+                'method' => $last['method'] ?? '',
+                'amount' => $last['amount'] ?? null,
+                'paidAt' => $last['paidAt'] ?? '',
+                'subscriptionId' => $last['subscriptionId'] ?? '',
+            ];
+        }
+
+        return $status;
+    }
+
+    /**
+     * Create a Mollie subscription from the last successful first payment.
+     * Admin fallback for when the webhook/return-URL both failed to create one.
+     */
+    public function createMollieSubscriptionFromLastPayment(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        if (empty($customerId)) {
+            return new \WP_Error('not_configured', __('Mollie customer not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $paymentsResp = $this->mollieRequest('customers/' . $customerId . '/payments', [
+            'limit' => 50,
+            'sort' => 'desc',
+        ], 'GET');
+        if (is_wp_error($paymentsResp) || empty($paymentsResp['_embedded']['payments'])) {
+            return new \WP_Error('no_payments', __('No Mollie payments found for this customer', 'sseo-ai-saas'));
+        }
+
+        foreach ($paymentsResp['_embedded']['payments'] as $payment) {
+            if (($payment['status'] ?? '') === 'paid' && ($payment['sequenceType'] ?? '') === 'first') {
+                return $this->createMollieSubscription($tenantKey, $payment);
+            }
+        }
+
+        return new \WP_Error('no_first_payment', __('No successful first payment found to base a subscription on', 'sseo-ai-saas'));
+    }
+
+    /**
+     * Cancel a Mollie subscription.
+     */
+    public function cancelMollieSubscription(string $tenantKey): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'DELETE');
+    }
+
+    /**
+     * Send payment failure notification
+     */
+    private function notifyPaymentFailure(string $tenantKey, array $event, string $provider): void
+    {
+        $adminEmail = get_option('admin_email');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        if ($tenant) {
+            $subject = sprintf(__('Payment Failed: %s', 'sseo-ai-saas'), $tenant['name']);
+            $message = sprintf(
+                __("Payment failed for tenant: %s\nProvider: %s\nTenant Email: %s\n\nPlease check the payment dashboard.", 'sseo-ai-saas'),
+                $tenant['name'],
+                ucfirst($provider),
+                $tenant['email']
+            );
+
+            wp_mail($adminEmail, $subject, $message);
+        }
+    }
+
+    /**
+     * Create a one-time checkout for extra agency licenses.
+     *
+     * Pricing: additional licenses up to 20 total cost €49.99 each,
+     *          any license above 20 total costs €34.99 each.
+     *          The current plan includes 10 licenses.
+     *
+     * @param array $agencyAccount Agency account row (id, tenant_id, max_sub_licenses, ...).
+     * @param int   $quantity      Number of extra licenses to purchase.
+     * @return array|\WP_Error Checkout result with checkout_url, or WP_Error.
+     */
+    public function createExtraLicensesCheckout(array $agencyAccount, int $quantity): array|\WP_Error
+    {
+        if ($quantity < 1) {
+            return new \WP_Error('invalid_quantity', __('Invalid number of extra licenses.', 'sseo-ai-saas'));
+        }
+
+        $tenant = $this->tenants->getTenantById((int) $agencyAccount['tenant_id']);
+        if (!$tenant) {
+            return new \WP_Error('tenant_not_found', __('Agency tenant not found.', 'sseo-ai-saas'));
+        }
+
+        $tenantKey = $tenant['tenant_key'];
+        $currentTotal = (int) ($agencyAccount['max_sub_licenses'] ?? 10);
+        $start = max($currentTotal, 10);
+        $totalAmount = 0.0;
+        for ($i = 1; $i <= $quantity; $i++) {
+            $licenseNumber = $start + $i;
+            $totalAmount += $licenseNumber <= 20 ? 49.99 : 34.99;
+        }
+
+        $mollieCustomerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        if (!empty($mollieCustomerId)) {
+            $payment = $this->mollieRequest('payments', [
+                'amount' => $this->mollieAmount($totalAmount),
+                'customerId' => $mollieCustomerId,
+                'sequenceType' => 'oneoff',
+                'description' => sprintf(__('Extra agency licenses x%d', 'sseo-ai-saas'), $quantity),
+                'redirectUrl' => admin_url('admin.php?page=sseo-ai-agency-add-licenses&extra_status=success'),
+                'webhookUrl' => $this->getWebhookUrl('mollie'),
+                'metadata' => [
+                    'tenant_key' => $tenantKey,
+                    'agency_account_id' => (int) $agencyAccount['id'],
+                    'extra_licenses' => $quantity,
+                    'type' => 'extra_licenses',
+                ],
+            ]);
+
+            if (is_wp_error($payment)) {
+                return $payment;
+            }
+
+            $checkoutUrl = $payment['_links']['checkout']['href'] ?? '';
+            if (empty($checkoutUrl)) {
+                return new \WP_Error('no_checkout_url', __('Could not retrieve a checkout URL from Mollie.', 'sseo-ai-saas'));
+            }
+
+            return [
+                'provider' => 'mollie',
+                'checkout_url' => $checkoutUrl,
+                'amount' => $totalAmount,
+                'quantity' => $quantity,
+                'payment_id' => $payment['id'] ?? '',
+            ];
+        }
+
+        return new \WP_Error(
+            'payment_not_configured',
+            __('Extra license checkout is currently only available via Mollie. Please contact support to add licenses.', 'sseo-ai-saas')
+        );
+    }
+
+    /**
+     * Increase the Mollie subscription amount for a tenant so the next recurring
+     * payment includes the new monthly cost of extra licenses.
+     *
+     * @param string $tenantKey The agency tenant key.
+     * @param float  $addAmount Amount to add to the current monthly subscription amount.
+     * @return array|\WP_Error Updated subscription or WP_Error.
+     */
+    public function updateMollieSubscriptionAmount(string $tenantKey, float $addAmount): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $subscription = $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+        if (is_wp_error($subscription)) {
+            return $subscription;
+        }
+
+        $currentValue = (float) ($subscription['amount']['value'] ?? 0);
+        $currency = $subscription['amount']['currency'] ?? $this->currency;
+        $newAmount = $currentValue + $addAmount;
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [
+            'amount' => [
+                'currency' => $currency,
+                'value' => number_format($newAmount, 2, '.', ''),
+            ],
+        ], 'PATCH');
     }
 }

@@ -29,36 +29,40 @@ class DashboardAPI
      */
     public function activateLicense(string $licenseKey, string $dashboardUrl): array|\WP_Error
     {
+        // Normalize the license key before sending it to the dashboard.
+        // Keys are generated in uppercase; trimming avoids leading/trailing
+        // spaces that cause "License key not found" errors.
+        $licenseKey = strtoupper(trim($licenseKey));
+
         $siteUrl = get_site_url();
         $siteName = get_bloginfo('name');
         
         // Ensure HTTPS and normalize URL to prevent 301 redirects
         $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Attempting license activation');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Dashboard URL: ' . $dashboardUrl);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: License Key: ' . substr($licenseKey, 0, 15) . '...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Attempting license activation');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Dashboard URL: ' . $dashboardUrl);
 
         // Check if SaaS Dashboard plugin is active on this same WordPress installation
         // This avoids HTTP loopback issues on shared hosting
         if ($this->isSameSiteActivation($dashboardUrl)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Detected same-site installation, using direct PHP activation');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Detected same-site installation, using direct PHP activation');
             return $this->activateLicenseDirectly($licenseKey, $siteUrl, $siteName);
         }
 
         $apiUrl = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/activate';
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: API URL: ' . $apiUrl);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: API URL: ' . $apiUrl);
 
         // First test basic connectivity with a simple GET request
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Testing basic connectivity to ' . $dashboardUrl);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Testing basic connectivity to ' . $dashboardUrl);
         $testResponse = wp_remote_get($dashboardUrl, [
             'timeout' => 15,
             'sslverify' => $this->getSslVerify(),
         ]);
         
         if (is_wp_error($testResponse)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: WordPress HTTP API failed: ' . $testResponse->get_error_message());
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Attempting native curl fallback...');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: WordPress HTTP API failed: ' . $testResponse->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Attempting native curl fallback...');
             
             // Try native curl as fallback
             $response = $this->curlPost($apiUrl, [
@@ -68,12 +72,12 @@ class DashboardAPI
             ]);
             
             if (is_wp_error($response)) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Native curl also failed: ' . $response->get_error_message());
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Native curl also failed: ' . $response->get_error_message());
                 return $response;
             }
         } else {
             $testCode = wp_remote_retrieve_response_code($testResponse);
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Basic connectivity test passed, status: ' . $testCode);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Basic connectivity test passed, status: ' . $testCode);
             
             // Use WordPress HTTP API
             $response = wp_remote_post(
@@ -91,7 +95,7 @@ class DashboardAPI
             );
             
             if (is_wp_error($response)) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: wp_remote_post failed, trying curl fallback...');
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: wp_remote_post failed, trying curl fallback...');
                 $response = $this->curlPost($apiUrl, [
                     'license_key' => $licenseKey,
                     'site_url' => $siteUrl,
@@ -108,7 +112,7 @@ class DashboardAPI
                 $headers = wp_remote_retrieve_headers($response);
                 $location = $headers['location'] ?? '';
                 if ($location) {
-                    if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Following redirect to: ' . $location);
+                    if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Following redirect to: ' . $location);
                     $response = wp_remote_post(
                         $location,
                         [
@@ -140,33 +144,43 @@ class DashboardAPI
             return $response;
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Response status: ' . $statusCode);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Response body: ' . json_encode($body));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Response status: ' . $statusCode);
 
         if ($statusCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Activation failed: ' . $message);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Activation failed: ' . $message);
             if (!empty($body['error'])) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Error code: ' . $body['error']);
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Error code: ' . $body['error']);
             }
             return new \WP_Error('activation_failed', $message);
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Activation successful');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Activation successful');
         return $body;
     }
 
     /**
-     * Normalize dashboard URL to prevent 301 redirects
+     * Normalize dashboard URL to prevent 301 redirects.
+     *
+     * Made public so callers (handleLicenseActivation, onboarding, validator)
+     * can store the same normalized URL that the API client uses internally,
+     * avoiding http->https 301 redirects on subsequent API calls.
      */
-    private function normalizeDashboardUrl(string $url): string
+    public function normalizeDashboardUrl(string $url): string
     {
-        // Force HTTPS
-        $url = str_replace('http://', 'https://', $url);
-        
+        $url = trim($url);
+
+        // Prepend a protocol when the user only types the domain.
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . $url;
+        } else {
+            // Force HTTPS if an HTTP protocol is present.
+            $url = str_replace('http://', 'https://', $url);
+        }
+
         // Remove trailing slash
         $url = rtrim($url, '/');
-        
+
         return $url;
     }
 
@@ -179,7 +193,7 @@ class DashboardAPI
             return new \WP_Error('curl_not_available', __('cURL extension not available', 'ai-seo-client'));
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Using native curl for POST to: ' . $url);
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Using native curl for POST to: ' . $url);
 
         $ch = curl_init();
         
@@ -208,18 +222,17 @@ class DashboardAPI
         curl_close($ch);
 
         if ($error) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL error: ' . $error);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: cURL error: ' . $error);
             return new \WP_Error('curl_error', 'cURL error: ' . $error);
         }
 
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL response code: ' . $httpCode);
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL response body: ' . substr($response, 0, 500));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: cURL response code: ' . $httpCode);
 
         $body = json_decode($response, true);
         
         if ($httpCode !== 200 || empty($body['success'])) {
             $message = $body['message'] ?? __('License activation failed.', 'ai-seo-client');
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: cURL activation failed: ' . $message);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: cURL activation failed: ' . $message);
             return new \WP_Error('activation_failed', $message);
         }
 
@@ -231,6 +244,7 @@ class DashboardAPI
      */
     public function deactivateLicense(string $licenseKey, string $tenantKey, string $dashboardUrl): bool
     {
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/deactivate',
             [
@@ -240,7 +254,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -253,6 +267,7 @@ class DashboardAPI
     public function validateLicense(string $licenseKey, string $dashboardUrl): array|\WP_Error
     {
         $siteUrl = get_site_url();
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
 
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/license/validate',
@@ -263,7 +278,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -296,6 +311,7 @@ class DashboardAPI
             return false;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/usage/report',
             [
@@ -308,7 +324,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -328,6 +344,7 @@ class DashboardAPI
             return false;
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/google/report-usage',
             [
@@ -340,7 +357,7 @@ class DashboardAPI
                 ],
                 'timeout' => 10,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -352,6 +369,7 @@ class DashboardAPI
      */
     public function checkTenantStatus(string $tenantKey, string $licenseKey, string $dashboardUrl): array|\WP_Error
     {
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/tenant/status',
             [
@@ -361,7 +379,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -378,13 +396,23 @@ class DashboardAPI
             );
         }
 
+        // Sync white-label settings from the SaaS dashboard
+        if (!empty($body['white_label']) && is_array($body['white_label'])) {
+            update_option('sseo_ai_white_label', $body['white_label']);
+        }
+
+        // Sync chatbot configuration from the SaaS dashboard
+        if (!empty($body['chatbot_config']) && is_array($body['chatbot_config'])) {
+            update_option('sseo_ai_chatbot_config', $body['chatbot_config']);
+        }
+
         return $body;
     }
 
     /**
      * Generate AI content through dashboard proxy
      */
-    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature): array|\WP_Error
+    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature, string $useCase = 'content_generation'): array|\WP_Error
     {
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
@@ -394,6 +422,7 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_post(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/ai/generate',
             [
@@ -407,10 +436,11 @@ class DashboardAPI
                     'model' => $model,
                     'max_tokens' => $maxTokens,
                     'temperature' => $temperature,
+                    'use_case' => $useCase,
                 ]),
-                'timeout' => 60,
+                'timeout' => 90,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -448,6 +478,13 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $cacheKey = 'sseo_ai_usage_status_' . md5($licenseKey);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
         $response = wp_remote_get(
             rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/usage/check',
             [
@@ -457,7 +494,7 @@ class DashboardAPI
                 ],
                 'timeout' => 30,
                 'sslverify' => $this->getSslVerify(),
-                'redirection' => 5,
+                'redirection' => 0,
             ]
         );
 
@@ -473,6 +510,8 @@ class DashboardAPI
                 $body['message'] ?? __('Could not retrieve usage status.', 'ai-seo-client')
             );
         }
+
+        set_transient($cacheKey, $body, 5 * MINUTE_IN_SECONDS);
 
         return $body;
     }
@@ -495,10 +534,21 @@ class DashboardAPI
             return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
         }
 
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+
         // Map client-side endpoint names to SaaS dashboard REST routes
         $endpointMap = [
-            'serp/search'  => '/serp/query',
-            'serp/query'   => '/serp/query',
+            'serp/search'               => '/serp/query',
+            'serp/query'                => '/serp/query',
+            'serp/local-pack'           => '/serp/local-pack',
+            'serp/local-grid'           => '/serp/local-grid',
+            'ai/llm-mentions'           => '/ai/llm-mentions',
+            'ai/keyword-data'           => '/ai/keyword-data',
+            'ai/llm-response'           => '/ai/llm-response',
+            'keywords/google-trends'    => '/keywords/google-trends',
+            'keywords/dataforseo-trends'=> '/keywords/dataforseo-trends',
+            'backlinks/summary'         => '/backlinks/summary',
+            'backlinks/live'            => '/backlinks/live',
         ];
 
         $route = $endpointMap[$endpoint] ?? '/' . ltrim($endpoint, '/');
@@ -513,7 +563,7 @@ class DashboardAPI
             'body' => json_encode($params),
             'timeout' => 60,
             'sslverify' => $this->getSslVerify(),
-            'redirection' => 5,
+            'redirection' => 0,
         ]);
 
         if (is_wp_error($response)) {
@@ -565,7 +615,7 @@ class DashboardAPI
         
         $urlsMatch = strcasecmp($currentSiteNorm, $dashboardSiteNorm) === 0;
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Same-site check - Current: ' . $currentSiteNorm . ', Dashboard: ' . $dashboardSiteNorm . ', Match: ' . ($urlsMatch ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Same-site check - Current: ' . $currentSiteNorm . ', Dashboard: ' . $dashboardSiteNorm . ', Match: ' . ($urlsMatch ? 'yes' : 'no'));
         
         if (!$urlsMatch) {
             return false;
@@ -578,16 +628,16 @@ class DashboardAPI
                          class_exists('\\SSEOAISaaS\\LicenseAPI') ||
                          defined('SSEO_AI_SAAS_VERSION');
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: SaaS Dashboard available: ' . ($saasAvailable ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: SaaS Dashboard available: ' . ($saasAvailable ? 'yes' : 'no'));
         
         // If URLs match but SaaS not loaded, try to load it
         if (!$saasAvailable && $urlsMatch) {
             // Check if the SaaS plugin file exists
-            $saasPluginFile = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/ai-seo-saas-dashboard.php';
-            if (file_exists($saasPluginFile) && is_plugin_active('ai-seo-saas-dashboard/ai-seo-saas-dashboard.php')) {
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: SaaS plugin exists and is active, attempting to load classes');
+            $saasPluginFile = WP_PLUGIN_DIR . '/fyndable-saas-dashboard/ai-seo-saas-dashboard.php';
+            if (file_exists($saasPluginFile) && is_plugin_active('fyndable-saas-dashboard/ai-seo-saas-dashboard.php')) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: SaaS plugin exists and is active, attempting to load classes');
                 // Include the necessary files
-                $saasDir = WP_PLUGIN_DIR . '/ai-seo-saas-dashboard/includes/';
+                $saasDir = WP_PLUGIN_DIR . '/fyndable-saas-dashboard/includes/';
                 if (file_exists($saasDir . 'tenantrepository.php')) {
                     require_once $saasDir . 'tenantrepository.php';
                 }
@@ -595,7 +645,7 @@ class DashboardAPI
                     require_once $saasDir . 'licensekeygenerator.php';
                 }
                 $saasAvailable = class_exists('\\SSEOAISaaS\\TenantRepository');
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: After manual load, SaaS available: ' . ($saasAvailable ? 'yes' : 'no'));
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: After manual load, SaaS available: ' . ($saasAvailable ? 'yes' : 'no'));
             }
         }
         
@@ -652,12 +702,14 @@ class DashboardAPI
                     'name' => $siteName,
                 ]);
                 $tenantKey = $existingTenant['tenant_key'];
+                $tenantEmail = $existingTenant['email'];
             } else {
                 // Create new tenant
+                $tenantEmail = $license['assigned_to'] ?: get_option('admin_email') ?: 'unknown@example.com';
                 $tenantResult = $tenants->createTenant([
                     'name' => $siteName,
                     'domain' => $domain,
-                    'email' => get_option('admin_email'),
+                    'email' => $tenantEmail,
                     'license_key' => $licenseKey,
                     'tier' => $license['tier'],
                     'max_sites' => $license['max_sites'],
@@ -676,15 +728,16 @@ class DashboardAPI
                 $licenseGenerator->markLicenseUsed($licenseKey);
             }
 
-            // Get white-label settings
-            $whiteLabel = get_option('sseo_ai_saas_white_label', []);
+            // Get tenant-specific white-label settings
+            $whiteLabel = $this->getTenantWhiteLabelData($tenants, $tenantKey);
 
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Direct activation successful, tenant_key: ' . $tenantKey);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Direct activation successful, tenant_key: ' . $tenantKey);
 
             return [
                 'success' => true,
                 'tenant_key' => $tenantKey,
                 'tier' => $license['tier'],
+                'email' => $tenantEmail,
                 'expires_at' => $license['expires_at'],
                 'rate_limit' => $license['rate_limit'],
                 'api_calls_limit' => $license['api_calls_limit'],
@@ -692,8 +745,490 @@ class DashboardAPI
             ];
 
         } catch (\Exception $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Direct activation error: ' . $e->getMessage());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Direct activation error: ' . $e->getMessage());
             return new \WP_Error('activation_error', $e->getMessage());
         }
+    }
+
+    /**
+     * Get tenant-specific white-label data for same-site activation
+     */
+    private function getTenantWhiteLabelData(\SSEOAISaaS\TenantRepository $tenants, string $tenantKey): array
+    {
+        // Global SaaS white-label switch overrides tenant-level settings
+        if (!get_option('sseo_ai_saas_wl_enabled', false)) {
+            return [
+                'company_name' => '',
+                'company_logo' => '',
+                'primary_color' => '',
+                'secondary_color' => '',
+                'use_primary_only' => false,
+                'support_email' => '',
+                'support_url' => '',
+                'enabled' => false,
+            ];
+        }
+
+        $enabled = $tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
+        $brand = $tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
+
+        if ($enabled && is_array($brand) && !empty($brand['company_name'])) {
+            return $brand;
+        }
+
+        return [
+            'company_name' => '',
+            'company_logo' => '',
+            'primary_color' => '',
+            'secondary_color' => '',
+            'use_primary_only' => false,
+            'support_email' => '',
+            'support_url' => '',
+            'enabled' => false,
+        ];
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Support ticket API
+     * -------------------------------------------------------------------------
+     */
+
+    /**
+     * Sync white-label from SaaS dashboard on every admin page load.
+     */
+    public function syncWhiteLabel(): void
+    {
+        if (get_transient('sseo_ai_white_label_sync')) {
+            return;
+        }
+
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return;
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/tenant/status',
+            [
+                'body' => [
+                    'license_key' => $licenseKey,
+                    'tenant_key' => $tenantKey,
+                ],
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (!empty($body['success']) && isset($body['white_label']) && is_array($body['white_label'])) {
+            update_option('sseo_ai_white_label', $body['white_label']);
+        }
+
+        set_transient('sseo_ai_white_label_sync', true, MINUTE_IN_SECONDS);
+    }
+
+    /**
+     * Get support tickets for the current tenant.
+     */
+    public function getSupportTickets(): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $cacheKey = 'sseo_ai_support_tickets_' . md5($licenseKey);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        $result = $this->handleSupportResponse($response, __('Could not retrieve support tickets.', 'ai-seo-client'));
+
+        if (!is_wp_error($result)) {
+            set_transient($cacheKey, $result, 2 * MINUTE_IN_SECONDS);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get the unread support reply count for the current tenant.
+     * Cached for 2 minutes to avoid excessive API calls.
+     */
+    public function getUnreadSupportCount(): int
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return 0;
+        }
+
+        $cacheKey = 'sseo_ai_support_unread_' . md5($licenseKey);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_numeric($cached)) {
+            return (int)$cached;
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/unread-count',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return 0;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $count = (int)($body['unread_count'] ?? 0);
+
+        set_transient($cacheKey, $count, 2 * MINUTE_IN_SECONDS);
+
+        return $count;
+    }
+
+    /**
+     * Mark a support ticket's staff replies as read.
+     */
+    public function markSupportTicketRead(int $ticketId): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/mark-read',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => wp_json_encode(['ticket_id' => $ticketId]),
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        // Clear unread cache
+        delete_transient('sseo_ai_support_unread_' . md5($licenseKey));
+
+        return $this->handleSupportResponse($response, __('Could not mark ticket as read.', 'ai-seo-client'));
+    }
+
+    /**
+     * Forward a support ticket to Fyndable support (agency-tier feature).
+     */
+    public function forwardSupportTicket(int $ticketId, string $note = ''): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/forward',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => wp_json_encode(['ticket_id' => $ticketId, 'note' => $note]),
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not forward ticket.', 'ai-seo-client'));
+    }
+
+    /**
+     * Create a new support ticket.
+     */
+    public function createSupportTicket(string $subject, string $message, string $priority, array $screenshots = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/tickets',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'subject' => $subject,
+                    'message' => $message,
+                    'priority' => $priority,
+                    'screenshots' => $screenshots,
+                ]),
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        $result = $this->handleSupportResponse($response, __('Could not create support ticket.', 'ai-seo-client'));
+
+        if (!is_wp_error($result)) {
+            $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+            delete_transient('sseo_ai_support_tickets_' . md5($licenseKey));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get a single support ticket with replies.
+     */
+    public function getSupportTicket(int $ticketId): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/ticket/' . $ticketId,
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not retrieve support ticket.', 'ai-seo-client'));
+    }
+
+    /**
+     * Add a reply to a support ticket.
+     */
+    public function addSupportReply(int $ticketId, string $message, array $screenshots = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/reply',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'ticket_id' => $ticketId,
+                    'message' => $message,
+                    'screenshots' => $screenshots,
+                ]),
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not send reply.', 'ai-seo-client'));
+    }
+
+    /**
+     * Upload a screenshot to the SaaS dashboard.
+     */
+    public function uploadSupportScreenshot(array $file): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        if (empty($file['tmp_name'])) {
+            return new \WP_Error('no_file', __('No screenshot uploaded.', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $url = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/support/upload';
+
+        $boundary = wp_generate_password(24, false);
+        $body = $this->buildMultipartBody($file, $boundary);
+
+        $response = wp_remote_post(
+            $url,
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
+                ],
+                'body' => $body,
+                'timeout' => 60,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not upload screenshot.', 'ai-seo-client'));
+    }
+
+    /**
+     * Shared response handler for support ticket endpoints.
+     */
+    private function handleSupportResponse($response, string $errorMessage): array|\WP_Error
+    {
+        if (is_wp_error($response)) {
+            return new \WP_Error('connection_error', $errorMessage);
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 && $statusCode !== 201) {
+            $message = $body['message'] ?? $errorMessage;
+            return new \WP_Error(
+                $body['error'] ?? 'support_request_failed',
+                $message
+            );
+        }
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'support_request_failed',
+                $body['message'] ?? $errorMessage
+            );
+        }
+
+        return $body;
+    }
+
+    /**
+     * Build multipart body for a single file upload.
+     */
+    private function buildMultipartBody(array $file, string $boundary): string
+    {
+        $fileName = sanitize_file_name($file['name'] ?? 'screenshot.png');
+        $fileType = sanitize_text_field($file['type'] ?? 'image/png');
+        $fileContent = file_get_contents($file['tmp_name']);
+
+        $body = "--{$boundary}\r\n";
+        $body .= "Content-Disposition: form-data; name=\"screenshot\"; filename=\"{$fileName}\"\r\n";
+        $body .= "Content-Type: {$fileType}\r\n\r\n";
+        $body .= $fileContent . "\r\n";
+        $body .= "--{$boundary}--\r\n";
+
+        return $body;
+    }
+
+    /**
+     * Report onboarding completion / current step to the SaaS dashboard.
+     * Fails silently so the wizard flow is never interrupted.
+     */
+    public function reportOnboardingStatus(int $completed, int $currentStep, ?string $completedAt): bool
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return false;
+        }
+
+        $url = rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/tenant/onboarding';
+
+        $response = wp_remote_post(
+            $url,
+            [
+                'body' => [
+                    'license_key' => $licenseKey,
+                    'tenant_key' => $tenantKey,
+                    'completed' => $completed,
+                    'current_step' => $currentStep,
+                    'completed_at' => $completedAt ?: '',
+                ],
+                'timeout' => 15,
+                'sslverify' => $this->getSslVerify(),
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: onboarding status sync failed: ' . $response->get_error_message());
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        return !empty($body['success']);
     }
 }

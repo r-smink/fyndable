@@ -150,7 +150,7 @@ Title: {$post->post_title}
 
 Content: " . wp_trim_words(strip_tags($post->post_content), 200);
 
-        $result = $this->llm->call($prompt);
+        $result = $this->llm->call($prompt, null, null, null, [], 'content_analysis');
         
         if (is_wp_error($result)) {
             return $this->fallbackTagExtraction($post);

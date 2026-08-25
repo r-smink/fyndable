@@ -30,9 +30,63 @@ class FAQSchema
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_extract_faqs', [$this, 'ajaxExtractFAQs']);
         add_action('wp_ajax_sseo_ai_generate_faqs', [$this, 'ajaxGenerateFAQs']);
-        
+
         // Output FAQ schema
         add_action('wp_head', [$this, 'outputFAQSchema']);
+
+        // Frontend accordion styling for generated FAQ blocks
+        add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendStyles']);
+    }
+
+    /**
+     * Enqueue minimal frontend CSS for the FAQ accordion.
+     * Only loaded on singular pages where the accordion may appear.
+     */
+    public function enqueueFrontendStyles(): void
+    {
+        if (!is_singular()) {
+            return;
+        }
+        wp_register_style('sseo-faq-accordion', false, [], null);
+        wp_enqueue_style('sseo-faq-accordion');
+        wp_add_inline_style('sseo-faq-accordion', '
+            .sseo-faq-accordion { margin: 24px 0; }
+            .sseo-faq-accordion .sseo-faq-item {
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                margin-bottom: 8px;
+                background: #fff;
+                overflow: hidden;
+            }
+            .sseo-faq-accordion .sseo-faq-item[open] { border-color: #379fd3; }
+            .sseo-faq-accordion .sseo-faq-question {
+                padding: 14px 18px;
+                font-weight: 600;
+                cursor: pointer;
+                list-style: none;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+            }
+            .sseo-faq-accordion .sseo-faq-question::-webkit-details-marker { display: none; }
+            .sseo-faq-accordion .sseo-faq-question::after {
+                content: "+";
+                font-size: 20px;
+                font-weight: 400;
+                color: #379fd3;
+                transition: transform 0.2s ease;
+            }
+            .sseo-faq-accordion .sseo-faq-item[open] .sseo-faq-question::after {
+                content: "\\2212";
+            }
+            .sseo-faq-accordion .sseo-faq-answer {
+                padding: 0 18px 16px 18px;
+                color: #475569;
+                line-height: 1.6;
+            }
+            .sseo-faq-accordion .sseo-faq-answer p { margin: 0; }
+        ');
     }
     
     public function addMenu(): void
@@ -500,6 +554,7 @@ Make answers concise (2-3 sentences) and informative.";
         
         $response = $this->llm->generateText($prompt, [
             'max_tokens' => max(500, $count * 150),
+            'use_case' => 'faq_generation',
             'track_extra' => [
                 'endpoint' => 'faq.generate',
                 'post_id' => $postId,
@@ -719,15 +774,21 @@ Make answers concise (2-3 sentences) and informative.";
         
         update_post_meta($postId, '_sseo_ai_faqs', $allFAQs);
 
-        // Optionally insert into post content
+        // Optionally insert into post content as a native HTML5 accordion
         if ($insertContent) {
             $post = get_post($postId);
             if ($post) {
-                $faqHtml = "\n\n<h2>" . __('Frequently Asked Questions', 'ai-seo-client') . "</h2>\n";
+                $faqHtml = "\n\n<h2>" . __('Veelgestelde vragen', 'ai-seo-client') . "</h2>\n";
+                $faqHtml .= '<div class="sseo-faq-accordion">' . "\n";
                 foreach ($faqs as $faq) {
-                    $faqHtml .= "<h3>" . esc_html($faq['question']) . "</h3>\n";
-                    $faqHtml .= "<p>" . esc_html($faq['answer']) . "</p>\n";
+                    $question = esc_html($faq['question']);
+                    $answer = esc_html($faq['answer']);
+                    $faqHtml .= "<details class=\"sseo-faq-item\">\n";
+                    $faqHtml .= "  <summary class=\"sseo-faq-question\">{$question}</summary>\n";
+                    $faqHtml .= "  <div class=\"sseo-faq-answer\"><p>{$answer}</p></div>\n";
+                    $faqHtml .= "</details>\n";
                 }
+                $faqHtml .= "</div>\n";
                 $newContent = $post->post_content . $faqHtml;
                 wp_update_post([
                     'ID' => $postId,

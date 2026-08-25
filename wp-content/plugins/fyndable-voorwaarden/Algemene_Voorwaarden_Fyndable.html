@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algemene Voorwaarden - Fyndable Smart SEO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#8F39AC;
+    --blue:#379FD3;
+    --dark:#333333;
+    --light:#E6E7E8;
+    --grad: linear-gradient(135deg, var(--purple), var(--blue));
+    --sidebar-w: 300px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:'Outfit', sans-serif;
+    font-weight:300;
+    color:var(--dark);
+    background:#fff;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    position:fixed;
+    top:0; left:0; bottom:0;
+    width:var(--sidebar-w);
+    background:var(--grad);
+    color:#fff;
+    padding:32px 24px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .sidebar .brand-mark{
+    width:34px;height:34px;
+    border-radius:9px;
+    background:rgba(255,255,255,0.18);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:16px;
+    flex-shrink:0;
+  }
+  .sidebar .brand-name{
+    font-weight:600;
+    font-size:17px;
+    letter-spacing:0.2px;
+  }
+  .sidebar .doc-label{
+    font-weight:300;
+    font-size:13px;
+    opacity:0.85;
+    margin:2px 0 28px 44px;
+  }
+  .sidebar nav{flex:1;}
+  .sidebar nav a{
+    display:block;
+    color:#fff;
+    text-decoration:none;
+    font-size:13.5px;
+    font-weight:300;
+    padding:9px 12px;
+    margin-bottom:2px;
+    border-radius:8px;
+    opacity:0.82;
+    transition:background 0.15s ease, opacity 0.15s ease, padding-left 0.15s ease;
+    line-height:1.35;
+  }
+  .sidebar nav a:hover{
+    background:rgba(255,255,255,0.14);
+    opacity:1;
+    padding-left:16px;
+  }
+  .sidebar nav a.active{
+    background:rgba(255,255,255,0.22);
+    opacity:1;
+    font-weight:400;
+  }
+  .sidebar nav a .num{
+    display:inline-block;
+    width:20px;
+    opacity:0.75;
+    font-variant-numeric:tabular-nums;
+  }
+  .sidebar .foot{
+    font-size:11.5px;
+    opacity:0.65;
+    margin-top:24px;
+    padding-top:16px;
+    border-top:1px solid rgba(255,255,255,0.25);
+  }
+
+  /* ---------- Content ---------- */
+  .content{
+    margin-left:var(--sidebar-w);
+    max-width:840px;
+    padding:56px 64px 120px 64px;
+  }
+  .doc-title{
+    font-weight:200;
+    font-size:40px;
+    color:var(--dark);
+    margin:0 0 4px 0;
+    letter-spacing:-0.5px;
+  }
+  .doc-subtitle{
+    font-weight:600;
+    font-size:17px;
+    background:var(--grad);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    margin:0 0 6px 0;
+  }
+  .doc-version{
+    font-size:13px;
+    font-style:italic;
+    color:#8a8a8a;
+    margin:0 0 28px 0;
+  }
+  .notice{
+    background:var(--light);
+    border-left:4px solid var(--purple);
+    border-radius:6px;
+    padding:16px 20px;
+    font-size:13.5px;
+    font-style:italic;
+    color:#4a4a4a;
+    line-height:1.6;
+    margin-bottom:48px;
+  }
+
+  article{
+    margin-bottom:44px;
+    scroll-margin-top:40px;
+  }
+  article.highlight{
+    background:linear-gradient(180deg, rgba(143,57,172,0.04), rgba(55,159,211,0.04));
+    border:1px solid rgba(143,57,172,0.15);
+    border-radius:12px;
+    padding:28px 32px;
+    margin-left:-32px;
+    margin-right:-32px;
+  }
+  h2{
+    font-weight:500;
+    font-size:22px;
+    color:var(--dark);
+    margin:0 0 18px 0;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  h2 .art-num{
+    font-weight:600;
+    font-size:14px;
+    color:#fff;
+    background:var(--grad);
+    padding:3px 10px;
+    border-radius:20px;
+    letter-spacing:0.3px;
+  }
+  ol{
+    margin:0;
+    padding-left:0;
+    list-style:none;
+    counter-reset:item;
+  }
+  ol li{
+    counter-increment:item;
+    position:relative;
+    padding-left:34px;
+    margin-bottom:14px;
+    font-size:15px;
+    line-height:1.7;
+    font-weight:300;
+    color:#3d3d3d;
+  }
+  ol li::before{
+    content: counter(item, lower-alpha) ".";
+    position:absolute;
+    left:0;
+    top:0;
+    font-weight:500;
+    color:var(--blue);
+  }
+  strong.term{
+    font-weight:500;
+    color:var(--dark);
+  }
+
+  footer.doc-footer{
+    margin-top:80px;
+    padding-top:24px;
+    border-top:1px solid var(--light);
+    font-size:12.5px;
+    color:#9a9a9a;
+  }
+
+  @media (max-width: 860px){
+    .sidebar{
+      position:relative;
+      width:100%;
+      height:auto;
+    }
+    .content{
+      margin-left:0;
+      padding:40px 24px 80px 24px;
+    }
+    article.highlight{
+      margin-left:0;
+      margin-right:0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">F</div>
+    <div class="brand-name">Fyndable</div>
+  </div>
+  <div class="doc-label">Smart SEO</div>
+
+  <nav id="toc">
+    <a href="#artikel-1"><span class="num">01</span>Definities</a>
+    <a href="#artikel-2"><span class="num">02</span>Toepasselijkheid</a>
+    <a href="#artikel-3"><span class="num">03</span>De dienst en het gebruik van AI</a>
+    <a href="#artikel-4"><span class="num">04</span>Menselijke controle aanbevolen</a>
+    <a href="#artikel-5"><span class="num">05</span>Transparantie over AI-content</a>
+    <a href="#artikel-6"><span class="num">06</span>Aansprakelijkheid</a>
+    <a href="#artikel-7"><span class="num">07</span>Intellectueel eigendom</a>
+    <a href="#artikel-8"><span class="num">08</span>Vergelijkbare content tussen klanten</a>
+    <a href="#artikel-9"><span class="num">09</span>Beschikbaarheid en afhankelijkheid derden</a>
+    <a href="#artikel-10"><span class="num">10</span>Accountbeveiliging en gebruik</a>
+    <a href="#artikel-11"><span class="num">11</span>Betaling, looptijd en opzegging</a>
+    <a href="#artikel-12"><span class="num">12</span>Geheimhouding en gegevensverwerking</a>
+    <a href="#artikel-13"><span class="num">13</span>Overmacht</a>
+    <a href="#artikel-14"><span class="num">14</span>Klachtenregeling</a>
+    <a href="#artikel-15"><span class="num">15</span>Slotbepalingen</a>
+    <a href="#artikel-16"><span class="num">16</span>Toepasselijk recht en geschillen</a>
+  </nav>
+
+  <div class="foot">Versie: 1<br>Laatst gewijzigd op 25 augustus 2026</div>
+</div>
+
+<div class="content">
+  <h1 class="doc-title">Algemene Voorwaarden</h1>
+  <div class="doc-subtitle">Fyndable Smart SEO</div>
+  <div class="doc-version">Versie: 1 - Laatst gewijzigd op 25 augustus 2026</div>
+
+  <div class="notice">
+    Let op: dit is een conceptdocument opgesteld als hulpmiddel en vormt geen juridisch advies. Laat deze algemene voorwaarden altijd controleren en op maat maken door een jurist voordat je ze publiceert of gebruikt, zeker gezien de AI Act-transparantieverplichtingen, de aansprakelijkheidsclausules en de B2B-afbakening. Vul ook de placeholders tussen vierkante haken (opzegtermijn, bedragen, termijnen) in.
+  </div>
+
+  <article id="artikel-1">
+    <h2><span class="art-num">Art. 1</span>Definities</h2>
+    <ol>
+      <li><strong class="term">Fyndable Smart SEO</strong> / "wij", "ons", "Fyndable": de aanbieder van de Fyndable Smart SEO software, plugins en dashboard, zoals beschreven op de website en in de bijbehorende WordPress-plugins.</li>
+      <li><strong class="term">Klant</strong> / "gebruiker", "u": de natuurlijke persoon of rechtspersoon die een overeenkomst aangaat met Fyndable of gebruikmaakt van de Dienst.</li>
+      <li><strong class="term">Dienst</strong>: alle software, plugins, dashboards, functionaliteiten en gerelateerde diensten die Fyndable aanbiedt, waaronder het genereren van SEO-content met behulp van kunstmatige intelligentie (AI) op basis van SERP-data.</li>
+      <li><strong class="term">AI-gegenereerde Content</strong>: alle tekst, metadata, contentplanningen, suggesties en overige output die door de Dienst automatisch wordt gegenereerd met behulp van AI-modellen, zonder voorafgaande menselijke redactie door Fyndable.</li>
+      <li><strong class="term">Overeenkomst</strong>: iedere overeenkomst tussen Fyndable en de Klant waarop deze algemene voorwaarden van toepassing zijn.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-2">
+    <h2><span class="art-num">Art. 2</span>Toepasselijkheid</h2>
+    <ol>
+      <li>De Dienst wordt uitsluitend aangeboden aan ondernemers die handelen in de uitoefening van een beroep of bedrijf (business-to-business). De Klant verklaart bij het aangaan van de Overeenkomst niet als consument in de zin van de wet te handelen.</li>
+      <li>Deze algemene voorwaarden zijn van toepassing op elk gebruik van de Dienst, op elke offerte, aanbieding en Overeenkomst tussen Fyndable en de Klant, tenzij schriftelijk anders is overeengekomen.</li>
+      <li>Door de Dienst te installeren, te activeren of te gebruiken, aanvaardt de Klant deze algemene voorwaarden volledig en zonder voorbehoud.</li>
+      <li>Eventuele inkoop- of andere voorwaarden van de Klant worden uitdrukkelijk van de hand gewezen.</li>
+      <li>Fyndable is gerechtigd deze algemene voorwaarden eenzijdig te wijzigen. Gewijzigde voorwaarden worden via de website of het dashboard bekendgemaakt en gelden vanaf de datum van publicatie.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-3" class="highlight">
+    <h2><span class="art-num">Art. 3</span>De dienst en het gebruik van AI</h2>
+    <ol>
+      <li>De Dienst maakt gebruik van AI-modellen in combinatie met SERP-data (zoekresultaatdata) om automatisch SEO-content, contentplanningen en aanbevelingen te genereren.</li>
+      <li>De Klant erkent en aanvaardt dat AI-gegenereerde Content op geautomatiseerde wijze tot stand komt en dat deze content, ondanks de inspanningen van Fyndable om de kwaliteit te bevorderen, feitelijke onjuistheden, verouderde informatie, onvolledigheden, stijlfouten of ongepaste formuleringen kan bevatten.</li>
+      <li>Fyndable geeft geen garantie dat AI-gegenereerde Content juist, volledig, actueel, origineel, niet-inbreukmakend op rechten van derden, of geschikt is voor een specifiek doel.</li>
+      <li>Het is uitdrukkelijk de verantwoordelijkheid van de Klant om AI-gegenereerde Content te controleren, te redigeren en goed te keuren voordat deze wordt gepubliceerd, verzonden of anderszins extern gebruikt.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-4" class="highlight">
+    <h2><span class="art-num">Art. 4</span>Menselijke controle aanbevolen</h2>
+    <ol>
+      <li>Fyndable adviseert nadrukkelijk om alle AI-gegenereerde Content vóór publicatie te laten controleren door een daartoe bevoegd persoon binnen de organisatie van de Klant, bijvoorbeeld een content- of marketingverantwoordelijke, met het oog op feitelijke juistheid, wettelijke naleving, merkconsistentie en algehele kwaliteit.</li>
+      <li>De Dienst kan functionaliteiten bevatten waarmee content vóór publicatie ter beoordeling of goedkeuring kan worden voorgelegd. Het gebruik van dergelijke controlefunctionaliteit is en blijft de keuze en verantwoordelijkheid van de Klant.</li>
+      <li>Het achterwege laten van menselijke controle is voor eigen rekening en risico van de Klant en ontslaat Fyndable niet van enige verplichting, maar beperkt evenmin de aansprakelijkheidsuitsluiting zoals opgenomen in artikel 6.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-5" class="highlight">
+    <h2><span class="art-num">Art. 5</span>Transparantie over AI-gegenereerde content</h2>
+    <ol>
+      <li>Conform de transparantieverplichtingen van artikel 50 van de Europese AI-verordening (AI Act) markeert Fyndable AI-gegenereerde Content, voor zover de Dienst dit ondersteunt, als zodanig herkenbaar en machineleesbaar.</li>
+      <li>Voor zover de Klant AI-gegenereerde Content buiten de Dienst publiceert of verspreidt, bijvoorbeeld op de eigen website, is de Klant zelf verantwoordelijk voor het naleven van de op hem rustende wettelijke labelings- en informatieverplichtingen jegens eindgebruikers, tenzij partijen schriftelijk anders overeenkomen.</li>
+      <li>Fyndable behoudt zich het recht voor de wijze van labeling en markering aan te passen aan gewijzigde wet- en regelgeving of richtsnoeren van toezichthouders.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-6" class="highlight">
+    <h2><span class="art-num">Art. 6</span>Aansprakelijkheid</h2>
+    <ol>
+      <li>Fyndable is nimmer aansprakelijk voor enige schade, direct of indirect, die voortvloeit uit of verband houdt met het gebruik, de publicatie of de verspreiding van AI-gegenereerde Content door de Klant, waaronder begrepen doch niet beperkt tot: reputatieschade, schade door onjuiste of misleidende informatie, inbreuk op intellectuele eigendomsrechten van derden, schending van wet- en regelgeving (waaronder reclame-, consumenten- en privacywetgeving), of gederfde omzet of winst.</li>
+      <li>De Klant is en blijft te allen tijde zelf verantwoordelijk voor de uiteindelijke beoordeling, goedkeuring en publicatie van alle AI-gegenereerde Content. Fyndable treedt niet op als redacteur, uitgever of eindverantwoordelijke van gepubliceerde content.</li>
+      <li>Onverminderd het bepaalde in de vorige leden, is de totale aansprakelijkheid van Fyndable jegens de Klant, uit welke hoofde dan ook, per gebeurtenis (waarbij een reeks van samenhangende gebeurtenissen als één gebeurtenis geldt) beperkt tot het bedrag dat de Klant in de twaalf (12) maanden voorafgaand aan de schadeveroorzakende gebeurtenis aan Fyndable heeft betaald, met een maximum van € 10.000.</li>
+      <li>Fyndable is nimmer aansprakelijk voor indirecte schade, waaronder mede begrepen gevolgschade, gederfde winst, gemiste besparingen, verminderde goodwill, schade door bedrijfsstagnatie en schade als gevolg van aanspraken van derden.</li>
+      <li>De beperkingen van aansprakelijkheid in dit artikel vervallen indien de schade het gevolg is van opzet of bewuste roekeloosheid van Fyndable of haar leidinggevenden.</li>
+      <li>De Klant vrijwaart Fyndable voor alle aanspraken van derden die verband houden met de publicatie of het gebruik van AI-gegenereerde Content door de Klant.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-7">
+    <h2><span class="art-num">Art. 7</span>Intellectueel eigendom</h2>
+    <ol>
+      <li>Alle rechten van intellectuele eigendom op de Dienst zelf, waaronder de software, plugins, het dashboard en de onderliggende technologie, berusten bij Fyndable of haar licentiegevers.</li>
+      <li>Tenzij schriftelijk anders overeengekomen, verkrijgt de Klant na betaling het recht om AI-gegenereerde Content te gebruiken en te publiceren voor eigen doeleinden. Fyndable garandeert niet dat deze content vrij is van rechten van derden.</li>
+      <li>Voor zover AI-gegenereerde Content naar geldend Nederlands en Europees auteursrecht niet in aanmerking komt voor auteursrechtelijke bescherming, bijvoorbeeld omdat een voldoende eigen en oorspronkelijk karakter met een persoonlijk stempel van een maker ontbreekt, garandeert Fyndable niet dat de Klant exclusieve rechten op deze content kan uitoefenen jegens derden.</li>
+      <li>Fyndable is gerechtigd geanonimiseerde en/of geaggregeerde gegevens die voortvloeien uit het gebruik van de Dienst door de Klant te gebruiken ter verbetering van de Dienst, waaronder begrepen de onderliggende AI-modellen en SERP-analyses, mits deze gegevens niet herleidbaar zijn tot de Klant of diens eindgebruikers.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-8">
+    <h2><span class="art-num">Art. 8</span>Vergelijkbare content tussen klanten</h2>
+    <ol>
+      <li>De Dienst kan door meerdere klanten tegelijk worden gebruikt, waaronder klanten die in dezelfde branche of regio actief zijn of vergelijkbare zoekwoorden targeten. Hierdoor kan AI-gegenereerde Content die aan verschillende klanten wordt geleverd qua opzet, structuur of formulering op elkaar lijken.</li>
+      <li>Fyndable spant zich in om overlap tussen klanten te beperken, maar garandeert niet dat AI-gegenereerde Content uniek is ten opzichte van content die aan andere klanten is of wordt geleverd, en is niet aansprakelijk voor de gevolgen hiervan, waaronder eventuele duplicate-contentproblematiek in zoekmachines.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-9">
+    <h2><span class="art-num">Art. 9</span>Beschikbaarheid, wijzigingen en afhankelijkheid van derden</h2>
+    <ol>
+      <li>Fyndable spant zich in om de Dienst zo goed mogelijk beschikbaar te houden, maar garandeert geen ononderbroken of foutloze werking.</li>
+      <li>De Dienst maakt gebruik van AI-modellen en SERP-data van derde partijen. Fyndable heeft geen invloed op en is niet verantwoordelijk voor wijzigingen, storingen, prijswijzigingen of het staken van deze diensten door de betreffende derde partijen.</li>
+      <li>Indien een derde partij waarvan de Dienst afhankelijk is de dienstverlening wijzigt, beperkt of beëindigt, is Fyndable gerechtigd de Dienst daarop aan te passen, tijdelijk te beperken of te vervangen door een vergelijkbaar alternatief, zonder dat dit recht geeft op schadevergoeding.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-10">
+    <h2><span class="art-num">Art. 10</span>Accountbeveiliging en toegestaan gebruik</h2>
+    <ol>
+      <li>De Klant is verantwoordelijk voor het geheimhouden van inloggegevens en voor alle activiteiten die via zijn account plaatsvinden, ook indien deze door een derde zijn verricht.</li>
+      <li>De Klant meldt vermoedelijk onbevoegd gebruik van zijn account onverwijld aan Fyndable.</li>
+      <li>Het is de Klant niet toegestaan de Dienst te gebruiken voor het genereren of verspreiden van content die onrechtmatig, misleidend, discriminerend of anderszins in strijd met toepasselijke wet- en regelgeving is.</li>
+      <li>Het is de Klant niet toegestaan de Dienst te gebruiken voor spamdoeleinden, voor het omzeilen van beveiligingsmaatregelen, of om de onderliggende software te reverse-engineeren, te decompileren of anderszins na te bootsen.</li>
+      <li>Bij overtreding van dit artikel is Fyndable gerechtigd de toegang tot de Dienst op te schorten of te beëindigen, onverminderd het recht van Fyndable op schadevergoeding.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-11">
+    <h2><span class="art-num">Art. 11</span>Betaling, looptijd en opzegging</h2>
+    <ol>
+      <li>Betalingsverplichtingen, abonnementsvormen, looptijd en opzegtermijnen worden vastgelegd in de Overeenkomst of het bij het abonnement behorende overzicht op de website.</li>
+      <li>Tenzij schriftelijk anders overeengekomen wordt de Overeenkomst na afloop van de initiële looptijd stilzwijgend verlengd voor eenzelfde periode, tenzij de Klant het abonnement in het portal annuleert voordat de nieuwe periode van start gaat.</li>
+      <li>Bij niet-tijdige betaling is Fyndable gerechtigd de toegang tot de Dienst op te schorten totdat volledige betaling is ontvangen.</li>
+      <li>Na beëindiging van de Overeenkomst vervalt het recht van de Klant om nieuwe AI-gegenereerde Content via de Dienst te laten genereren. Voor reeds gepubliceerde content blijft artikel 7 onverkort van toepassing, tenzij schriftelijk anders overeengekomen.</li>
+      <li>Fyndable stelt de Klant op verzoek in de gelegenheid om binnen 14 dagen na beëindiging een export van zijn gegevens op te vragen, waarna Fyndable gerechtigd is de gegevens van de Klant te verwijderen.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-12">
+    <h2><span class="art-num">Art. 12</span>Geheimhouding en gegevensverwerking</h2>
+    <ol>
+      <li>Beide partijen verplichten zich tot geheimhouding van vertrouwelijke informatie die zij in het kader van de Overeenkomst van elkaar ontvangen.</li>
+      <li>Voor zover persoonsgegevens worden verwerkt, gebeurt dit conform de toepasselijke privacywetgeving (AVG/GDPR) en, indien van toepassing, een separate verwerkersovereenkomst.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-13">
+    <h2><span class="art-num">Art. 13</span>Overmacht</h2>
+    <ol>
+      <li>Fyndable is niet gehouden tot nakoming van enige verplichting indien zij daartoe verhinderd is door overmacht, waaronder mede begrepen storingen bij onderliggende AI-aanbieders of SERP-databronnen, uitval van internet of hostingdiensten, en overheidsmaatregelen.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-14">
+    <h2><span class="art-num">Art. 14</span>Klachtenregeling</h2>
+    <ol>
+      <li>Klachten over de uitvoering van de Overeenkomst dienen zo spoedig mogelijk, doch uiterlijk binnen 7 dagen nadat de Klant de tekortkoming heeft geconstateerd, schriftelijk en gemotiveerd bij Fyndable te worden gemeld.</li>
+      <li>Fyndable streeft ernaar binnen 3 werkdagen inhoudelijk op de klacht te reageren.</li>
+      <li>Het indienen van een klacht schort de betalingsverplichting van de Klant niet op.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-15">
+    <h2><span class="art-num">Art. 15</span>Slotbepalingen</h2>
+    <ol>
+      <li>Indien enige bepaling van deze algemene voorwaarden nietig of vernietigbaar blijkt, blijven de overige bepalingen onverminderd van kracht. Partijen treden in dat geval in overleg om de betreffende bepaling te vervangen door een bepaling die de strekking van de oorspronkelijke bepaling zoveel mogelijk benadert.</li>
+      <li>Deze algemene voorwaarden vormen, samen met de Overeenkomst, de volledige afspraak tussen partijen en vervangen alle eerdere mondelinge of schriftelijke afspraken met betrekking tot het onderwerp daarvan.</li>
+      <li>Mededelingen tussen partijen in het kader van de Overeenkomst geschieden schriftelijk, waaronder mede begrepen per e-mail, gericht aan de bij Fyndable respectievelijk bij de Klant bekende contactgegevens.</li>
+      <li>Fyndable is gerechtigd rechten en verplichtingen uit de Overeenkomst over te dragen aan een aan haar gelieerde onderneming of in het kader van een bedrijfsovername, zonder voorafgaande toestemming van de Klant.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-16">
+    <h2><span class="art-num">Art. 16</span>Toepasselijk recht en geschillen</h2>
+    <ol>
+      <li>Op deze algemene voorwaarden en alle Overeenkomsten tussen Fyndable en de Klant is uitsluitend Nederlands recht van toepassing.</li>
+      <li>Geschillen worden voorgelegd aan de bevoegde rechter van de rechtbank in het arrondissement waar Fyndable is gevestigd, tenzij dwingend recht anders bepaalt.</li>
+    </ol>
+  </article>
+
+  <footer class="doc-footer">
+    Fyndable Smart SEO - Algemene Voorwaarden. Dit document is een concept en vervangt geen juridisch advies.
+  </footer>
+</div>
+
+<script>
+  // Highlight active section in sidebar on scroll
+  const links = document.querySelectorAll('.sidebar nav a');
+  const sections = Array.from(links).map(l => document.querySelector(l.getAttribute('href')));
+
+  function setActive(){
+    let idx = 0;
+    const scrollPos = window.scrollY + 120;
+    sections.forEach((sec, i) => {
+      if(sec && sec.offsetTop <= scrollPos) idx = i;
+    });
+    links.forEach(l => l.classList.remove('active'));
+    if(links[idx]) links[idx].classList.add('active');
+  }
+  window.addEventListener('scroll', setActive);
+  setActive();
+</script>
+
+</body>
+</html>

@@ -88,7 +88,7 @@ class LLMTracker
         }
 
         return $wpdb->get_results(
-            "SELECT * FROM {$table}{$where} ORDER BY id DESC LIMIT {$offset}, {$limit}",
+            $wpdb->prepare("SELECT * FROM {$table}{$where} ORDER BY id DESC LIMIT %d, %d", $offset, $limit),
             ARRAY_A
         );
     }

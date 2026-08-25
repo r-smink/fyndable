@@ -83,8 +83,7 @@ class BulkActions
      */
     public function restScanPosts(\WP_REST_Request $request): array
     {
-        $postTypes = get_post_types(['public' => true]);
-        unset($postTypes['attachment']);
+        $postTypes = PageBuilderHelper::getSeoPostTypes();
 
         $posts = get_posts([
             'post_type' => array_values($postTypes),
@@ -305,28 +304,38 @@ Return ONLY the JSON.";
             return;
         }
 
-        $seoTitle = get_post_meta($postId, '_sseo_ai_title', true);
-        $seoDesc = get_post_meta($postId, '_sseo_ai_description', true);
-        $keyphrase = get_post_meta($postId, '_sseo_ai_focus_keyphrase', true);
+        // Show the numeric SEO score (0-100) from _sseo_ai_score if available
+        $seoScore = get_post_meta($postId, '_sseo_ai_score', true);
 
-        $score = 0;
-        if ($seoTitle) $score++;
-        if ($seoDesc) $score++;
-        if ($keyphrase) $score++;
+        if ($seoScore !== '' && $seoScore !== null && $seoScore !== false) {
+            $score = (int) $seoScore;
+            if ($score < 0) {
+                $score = 0;
+            } elseif ($score > 100) {
+                $score = 100;
+            }
 
-        $colors = ['#d63638', '#dba617', '#dba617', '#00a32a'];
-        $labels = [
-            __('Missing', 'ai-seo-client'),
-            __('Basic', 'ai-seo-client'),
-            __('Good', 'ai-seo-client'),
-            __('Complete', 'ai-seo-client'),
-        ];
+            // Color code: red (0-40), orange (41-70), green (71-100)
+            if ($score <= 40) {
+                $color = '#d63638';
+            } elseif ($score <= 70) {
+                $color = '#dba617';
+            } else {
+                $color = '#00a32a';
+            }
 
-        printf(
-            '<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:%s;color:#fff;font-size:11px;font-weight:600;">%s</span>',
-            esc_attr($colors[$score]),
-            esc_html($labels[$score])
-        );
+            printf(
+                '<span style="display:inline-block;padding:2px 10px;border-radius:10px;background:%s;color:#fff;font-size:11px;font-weight:600;min-width:32px;text-align:center;">%d</span>',
+                esc_attr($color),
+                $score
+            );
+        } else {
+            // No score calculated yet — show a neutral placeholder
+            printf(
+                '<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:#cbd5e1;color:#fff;font-size:11px;font-weight:600;">%s</span>',
+                esc_html__('—', 'ai-seo-client')
+            );
+        }
     }
 
     /**
@@ -335,39 +344,53 @@ Return ONLY the JSON.";
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('AI Bulk SEO Optimizer', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Scan your site for missing SEO data and bulk-generate meta titles, descriptions, and Open Graph tags using AI.', 'ai-seo-client'); ?></p>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('AI Bulk SEO Optimizer', 'ai-seo-client'); ?></h1>
+            </div>
 
-            <div style="max-width: 1200px;">
+            <div class="sseo-ai-content">
                 <!-- Summary Cards -->
-                <div id="bulk-summary" style="display:none; margin: 20px 0;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:15px;">
-                        <div class="postbox" style="padding:15px; text-align:center; margin:0;">
-                            <div style="font-size:28px; font-weight:bold; color:#2271b1;" id="bulk-total">0</div>
-                            <div style="color:#666;"><?php esc_html_e('Total Posts', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px; text-align:center; margin:0;">
-                            <div style="font-size:28px; font-weight:bold; color:#d63638;" id="bulk-no-title">0</div>
-                            <div style="color:#666;"><?php esc_html_e('Missing Title', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px; text-align:center; margin:0;">
-                            <div style="font-size:28px; font-weight:bold; color:#d63638;" id="bulk-no-desc">0</div>
-                            <div style="color:#666;"><?php esc_html_e('Missing Description', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px; text-align:center; margin:0;">
-                            <div style="font-size:28px; font-weight:bold; color:#dba617;" id="bulk-no-og">0</div>
-                            <div style="color:#666;"><?php esc_html_e('Missing OG Tags', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px; text-align:center; margin:0;">
-                            <div style="font-size:28px; font-weight:bold; color:#dba617;" id="bulk-no-kw">0</div>
-                            <div style="color:#666;"><?php esc_html_e('Missing Keyphrase', 'ai-seo-client'); ?></div>
+                <div class="sseo-ai-dashboard-card" id="bulk-summary-card" style="display:none;">
+                    <h2><?php esc_html_e('SEO Overview', 'ai-seo-client'); ?></h2>
+                    <p style="color:#666; margin-top:0;"><?php esc_html_e('Scan your site for missing SEO data and bulk-generate meta titles, descriptions, and Open Graph tags using AI.', 'ai-seo-client'); ?></p>
+                    <div id="bulk-summary">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:15px;">
+                            <div style="padding:20px; text-align:center; background:#f0f6fc; border-radius:8px;">
+                                <div style="font-size:36px; font-weight:bold; color:#2271b1; line-height:1.2;" id="bulk-total">0</div>
+                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Total Posts', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div style="padding:20px; text-align:center; background:#f8d7da; border-radius:8px;">
+                                <div style="font-size:36px; font-weight:bold; color:#d63638; line-height:1.2;" id="bulk-no-title">0</div>
+                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing Title', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div style="padding:20px; text-align:center; background:#f8d7da; border-radius:8px;">
+                                <div style="font-size:36px; font-weight:bold; color:#d63638; line-height:1.2;" id="bulk-no-desc">0</div>
+                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing Description', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div style="padding:20px; text-align:center; background:#fff3cd; border-radius:8px;">
+                                <div style="font-size:36px; font-weight:bold; color:#856404; line-height:1.2;" id="bulk-no-og">0</div>
+                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing OG Tags', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div style="padding:20px; text-align:center; background:#fff3cd; border-radius:8px;">
+                                <div style="font-size:36px; font-weight:bold; color:#856404; line-height:1.2;" id="bulk-no-kw">0</div>
+                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing Keyphrase', 'ai-seo-client'); ?></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Controls -->
-                <div class="postbox" style="padding:20px;">
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Bulk Actions', 'ai-seo-client'); ?></h2>
                     <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                         <button type="button" class="button button-primary" id="bulk-scan">
                             <?php esc_html_e('Scan Site', 'ai-seo-client'); ?>
@@ -403,14 +426,15 @@ Return ONLY the JSON.";
                     <!-- Progress bar -->
                     <div id="bulk-progress" style="display:none; margin-top:15px;">
                         <div style="background:#e0e0e0; border-radius:4px; height:24px; overflow:hidden;">
-                            <div id="bulk-progress-bar" style="background:#2271b1; height:100%; width:0%; transition:width 0.3s; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:600;"></div>
+                            <div id="bulk-progress-bar" style="background:linear-gradient(90deg, #379fd3, #8f39ac); height:100%; width:0%; transition:width 0.3s; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:600;"></div>
                         </div>
                         <p id="bulk-progress-text" style="color:#666; margin-top:5px;"></p>
                     </div>
                 </div>
 
                 <!-- Results Table -->
-                <div id="bulk-results" style="display:none; margin-top:20px;">
+                <div class="sseo-ai-dashboard-card" id="bulk-results" style="display:none;">
+                    <h2><?php esc_html_e('Posts Overview', 'ai-seo-client'); ?></h2>
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
@@ -455,9 +479,9 @@ Return ONLY the JSON.";
                         '<td><a href="' + p.edit_url + '" target="_blank">' + $('<span>').text(p.title).html() + '</a></td>' +
                         '<td>' + p.type + '</td>' +
                         '<td>' + p.word_count + '</td>' +
-                        '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">—</em>') + '</td>' +
-                        '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">—</em>') + '</td>' +
-                        '<td>' + (issueHtml || '<span style="color:#00a32a;">✓</span>') + '</td>' +
+                        '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">&mdash;</em>') + '</td>' +
+                        '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">&mdash;</em>') + '</td>' +
+                        '<td>' + (issueHtml || '<span style="color:#00a32a;">&check;</span>') + '</td>' +
                         '<td><button class="button button-small bulk-gen-single" data-id="' + p.id + '"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button></td>' +
                         '</tr>'
                     );
@@ -478,7 +502,7 @@ Return ONLY the JSON.";
                     $('#bulk-no-desc').text(s.missing_description);
                     $('#bulk-no-og').text(s.missing_og);
                     $('#bulk-no-kw').text(s.missing_keyphrase);
-                    $('#bulk-summary, #bulk-results, #bulk-filter, #bulk-fields-label, .bulk-field-cb, #bulk-generate-selected, #bulk-generate-all').show();
+                    $('#bulk-summary-card, #bulk-results, #bulk-filter, #bulk-fields-label, .bulk-field-cb, #bulk-generate-selected, #bulk-generate-all').show();
                     renderTable(allPosts);
                     btn.prop('disabled', false);
                     $('#bulk-spinner').removeClass('is-active');

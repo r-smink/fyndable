@@ -349,7 +349,7 @@ class ContentPerformanceMonitor
             <style>
                 .sseo-metric { margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #2271b1; }
                 .sseo-metric-value { font-size: 24px; font-weight: bold; color: #2271b1; }
-                .sseo-metric-label { font-size: 12px; color: #666; text-transform: uppercase; }
+                .sseo-metric-label { font-size: 12px; color: #666;  }
                 .sseo-metric-change { font-size: 14px; margin-top: 5px; }
             </style>
             

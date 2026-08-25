@@ -1,0 +1,194 @@
+/* Email Block Editor — UI styling */
+
+.sseo-email-block-editor {
+    margin-top: 10px;
+}
+
+/* Palette: row of "add block" buttons */
+.sseo-block-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.sseo-block-palette-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #374151;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.sseo-block-palette-btn:hover {
+    background: #379fd3;
+    border-color: #379fd3;
+    color: #fff;
+}
+
+.sseo-block-palette-btn .sseo-block-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* Block list */
+.sseo-email-block-list {
+    min-height: 60px;
+}
+
+.sseo-block-empty {
+    color: #9ca3af;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    border: 1px dashed #d1d5db;
+    border-radius: 6px;
+    background: #f9fafb;
+}
+
+/* Individual block item */
+.sseo-block-item {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.sseo-block-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sseo-block-item-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+    
+    letter-spacing: 0.03em;
+}
+
+.sseo-block-item-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.sseo-block-item-controls .button-small {
+    padding: 2px 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    min-height: 26px;
+}
+
+.button-link-delete {
+    color: #ef4444 !important;
+}
+
+.button-link-delete:hover {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+
+/* Block body / fields */
+.sseo-block-item-body {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+}
+
+.sseo-block-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sseo-block-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.sseo-block-field input[type="text"],
+.sseo-block-field input[type="url"],
+.sseo-block-field input[type="number"],
+.sseo-block-field textarea,
+.sseo-block-field select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.sseo-block-field input[type="color"] {
+    width: 50px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Full-width fields (text, textarea) span both columns */
+.sseo-block-field:has(textarea),
+.sseo-block-field[data-full="true"] {
+    grid-column: 1 / -1;
+}
+
+/* Tab switcher */
+.sseo-email-editor-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.sseo-email-editor-tab {
+    padding: 8px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.sseo-email-editor-tab:hover {
+    color: #379fd3;
+}
+
+.sseo-email-editor-tab.active {
+    color: #379fd3;
+    border-bottom-color: #379fd3;
+}
+
+.sseo-email-editor-panel {
+    display: none;
+    padding-top: 16px;
+}
+
+.sseo-email-editor-panel.active {
+    display: block;
+}
+
+/* Responsive: stack fields on narrow screens */
+@media (max-width: 782px) {
+    .sseo-block-item-body {
+        grid-template-columns: 1fr;
+    }
+}

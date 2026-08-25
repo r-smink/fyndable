@@ -24,6 +24,7 @@ class Keywords
 
     public function register(): void
     {
+        $this->maybeCreateTable();
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
     }
 
@@ -136,15 +137,23 @@ class Keywords
         $difficulty = sanitize_text_field($request->get_param('difficulty') ?? '');
         $searchIntent = sanitize_text_field($request->get_param('search_intent') ?? '');
         $language = sanitize_text_field($request->get_param('language') ?? '');
+        $status = sanitize_text_field($request->get_param('status') ?? '');
         $orderby = sanitize_text_field($request->get_param('orderby') ?? 'keyword');
         $order = sanitize_text_field($request->get_param('order') ?? 'ASC');
         $limit = (int) ($request->get_param('limit') ?? 50);
         $offset = (int) ($request->get_param('offset') ?? 0);
 
-        $sql = "SELECT k.*, c.pillar_topic as cluster_name 
-                FROM {$table} k
-                LEFT JOIN {$wpdb->prefix}sseo_ai_clusters c ON k.cluster_id = c.id
-                WHERE 1=1";
+        $clusterTable = $wpdb->prefix . 'sseo_ai_clusters';
+        $clusterTableExists = $wpdb->get_var("SHOW TABLES LIKE '{$clusterTable}'") === $clusterTable;
+
+        if ($clusterTableExists) {
+            $sql = "SELECT k.*, c.pillar_topic as cluster_name 
+                    FROM {$table} k
+                    LEFT JOIN {$clusterTable} c ON k.cluster_id = c.id
+                    WHERE 1=1";
+        } else {
+            $sql = "SELECT k.*, NULL as cluster_name FROM {$table} k WHERE 1=1";
+        }
         $params = [];
 
         if ($search) {
@@ -172,6 +181,11 @@ class Keywords
         if ($language) {
             $sql .= " AND k.language = %s";
             $params[] = $language;
+        }
+
+        if ($status) {
+            $sql .= " AND k.status = %s";
+            $params[] = $status;
         }
 
         // Safe orderby
@@ -212,6 +226,10 @@ class Keywords
         if ($language) {
             $countSql .= " AND k.language = %s";
             $countParams[] = $language;
+        }
+        if ($status) {
+            $countSql .= " AND k.status = %s";
+            $countParams[] = $status;
         }
 
         $total = $wpdb->get_var($wpdb->prepare($countSql, $countParams));
@@ -374,8 +392,15 @@ class Keywords
         $id = (int) $request->get_param('id');
 
         $data = [];
+        if ($request->has_param('keyword')) {
+            $keyword = sanitize_text_field($request->get_param('keyword'));
+            if (empty($keyword)) {
+                return new \WP_Error('missing_keyword', __('Keyword is required', 'ai-seo-client'), ['status' => 400]);
+            }
+            $data['keyword'] = $keyword;
+        }
         if ($request->has_param('cluster_id')) {
-            $data['cluster_id'] = (int) $request->get_param('cluster_id');
+            $data['cluster_id'] = (int) $request->get_param('cluster_id') ?: null;
         }
         if ($request->has_param('search_intent')) {
             $data['search_intent'] = sanitize_text_field($request->get_param('search_intent'));
@@ -489,7 +514,7 @@ Return ONLY a JSON array in this format (no markdown):
 Generate exactly {$count} keywords.
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 2000]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 2000, 'use_case' => 'keyword_research']);
 
         if (is_wp_error($response)) {
             return $response;
@@ -583,7 +608,7 @@ Return JSON array:
 ]
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 1500]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 1500, 'use_case' => 'keyword_research']);
 
         if (is_wp_error($response)) {
             return $response;
@@ -834,9 +859,10 @@ PROMPT;
     public static function createTable(): void
     {
         global $wpdb;
-        $table = $wpdb->prefix . 'sseo_ai_keywords';
         $charset = $wpdb->get_charset_collate();
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
+        $table = $wpdb->prefix . 'sseo_ai_keywords';
         $sql = "CREATE TABLE {$table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             keyword varchar(255) NOT NULL,
@@ -863,9 +889,28 @@ PROMPT;
             KEY status (status),
             KEY created_at (created_at)
         ) {$charset};";
-
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
+
+        $clusterTable = $wpdb->prefix . 'sseo_ai_clusters';
+        $clusterSql = "CREATE TABLE {$clusterTable} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            pillar_topic varchar(255) NOT NULL,
+            description text,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY pillar_topic (pillar_topic)
+        ) {$charset};";
+        dbDelta($clusterSql);
+    }
+
+    public function maybeCreateTable(): void
+    {
+        global $wpdb;
+        $clusterTable = $wpdb->prefix . 'sseo_ai_clusters';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$clusterTable}'") !== $clusterTable) {
+            self::createTable();
+        }
     }
 
     /**
@@ -878,6 +923,19 @@ PROMPT;
         // Get clusters for dropdown
         $clusterTable = $wpdb->prefix . 'sseo_ai_clusters';
         $clusters = $wpdb->get_results("SELECT id, pillar_topic as name FROM {$clusterTable} ORDER BY pillar_topic LIMIT 50");
+
+        // Fallback: clusters generated in Topic Clusters page are stored in aiseo_topic_clusters option
+        if (empty($clusters)) {
+            $topicClusters = get_option('aiseo_topic_clusters', []);
+            if (is_array($topicClusters) && !empty($topicClusters)) {
+                foreach ($topicClusters as $cluster) {
+                    $clusters[] = (object) [
+                        'id' => (int) ($cluster['id'] ?? 0),
+                        'name' => sanitize_text_field($cluster['topic'] ?? ($cluster['pillar_page']['title'] ?? __('Unnamed cluster', 'ai-seo-client'))),
+                    ];
+                }
+            }
+        }
 
         // Get initial stats
         $keywordsTable = $wpdb->prefix . 'sseo_ai_keywords';
@@ -1046,6 +1104,91 @@ PROMPT;
             </div>
         </div>
 
+        <!-- Edit Keyword Modal -->
+        <div class="sseo-modal" id="modal-edit-keyword" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Edit Keyword', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <input type="hidden" id="edit-keyword-id">
+                    <div class="form-group">
+                        <label><?php esc_html_e('Keyword', 'ai-seo-client'); ?> *</label>
+                        <input type="text" id="edit-keyword-input" class="sseo-input" placeholder="<?php esc_attr_e('Enter keyword...', 'ai-seo-client'); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Cluster', 'ai-seo-client'); ?></label>
+                        <select id="edit-keyword-cluster" class="sseo-select">
+                            <option value=""><?php esc_html_e('No cluster', 'ai-seo-client'); ?></option>
+                            <?php foreach ($clusters as $cluster): ?>
+                                <option value="<?php echo esc_attr($cluster->id); ?>">
+                                    <?php echo esc_html($cluster->name); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Search Intent', 'ai-seo-client'); ?></label>
+                        <select id="edit-keyword-intent" class="sseo-select">
+                            <option value="informational"><?php esc_html_e('Informational', 'ai-seo-client'); ?></option>
+                            <option value="commercial"><?php esc_html_e('Commercial', 'ai-seo-client'); ?></option>
+                            <option value="transactional"><?php esc_html_e('Transactional', 'ai-seo-client'); ?></option>
+                            <option value="navigational"><?php esc_html_e('Navigational', 'ai-seo-client'); ?></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Difficulty', 'ai-seo-client'); ?></label>
+                        <select id="edit-keyword-difficulty" class="sseo-select">
+                            <option value="LOW"><?php esc_html_e('Low', 'ai-seo-client'); ?></option>
+                            <option value="MEDIUM"><?php esc_html_e('Medium', 'ai-seo-client'); ?></option>
+                            <option value="HIGH"><?php esc_html_e('High', 'ai-seo-client'); ?></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Notes', 'ai-seo-client'); ?></label>
+                        <textarea id="edit-keyword-notes" class="sseo-input" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="sseo-btn-primary" id="btn-confirm-edit-keyword">
+                        <span class="spinner" style="display: none;"></span>
+                        <?php esc_html_e('Save Changes', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Competitor Modal -->
+        <div class="sseo-modal" id="modal-add-competitor" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Add Competitor', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <input type="hidden" id="add-competitor-keyword">
+                    <p class="description" style="margin-bottom: 15px;">
+                        <?php esc_html_e('Enter a competitor domain to analyze for this keyword.', 'ai-seo-client'); ?>
+                    </p>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Competitor Domain', 'ai-seo-client'); ?> *</label>
+                        <input type="text" id="add-competitor-domain" class="sseo-input" placeholder="competitor.com">
+                    </div>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="sseo-btn-primary" id="btn-confirm-add-competitor">
+                        <span class="spinner" style="display: none;"></span>
+                        <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Generate Keywords Modal -->
         <div class="sseo-modal" id="modal-generate-keywords" style="display: none;">
             <div class="sseo-modal-overlay"></div>
@@ -1083,6 +1226,81 @@ PROMPT;
                         <span class="spinner" style="display: none;"></span>
                         <?php esc_html_e('Generate', 'ai-seo-client'); ?>
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Keyword Ideas Modal -->
+        <div class="sseo-modal" id="modal-generate-keyword-ideas" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Generate keyword-based ideas', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <div class="form-group">
+                        <label><?php esc_html_e('Keyword', 'ai-seo-client'); ?> *</label>
+                        <input type="text" id="generate-ideas-keyword" class="sseo-input" placeholder="<?php esc_attr_e('Enter keyword to generate ideas for...', 'ai-seo-client'); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label><?php esc_html_e('Number of ideas', 'ai-seo-client'); ?></label>
+                        <select id="generate-ideas-count" class="sseo-select">
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                        </select>
+                    </div>
+                    <p class="description" style="margin-bottom: 0;">
+                        <?php esc_html_e('Generates blog post ideas for the keyword using AI and saves them to the Ideas page.', 'ai-seo-client'); ?>
+                    </p>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="sseo-btn-primary" id="btn-confirm-generate-ideas">
+                        <span class="spinner" style="display: none;"></span>
+                        <?php esc_html_e('Generate ideas', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clusters Modal -->
+        <div class="sseo-modal" id="modal-clusters" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Keyword Clusters', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body">
+                    <?php if (empty($clusters)): ?>
+                        <p><?php esc_html_e('No clusters found. Generate clusters from the Topic Clusters page.', 'ai-seo-client'); ?></p>
+                    <?php else: ?>
+                        <table class="keywords-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Cluster', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($clusters as $cluster): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($cluster->name); ?></td>
+                                        <td>
+                                            <button type="button" class="sseo-btn-secondary btn-filter-cluster" data-id="<?php echo esc_attr($cluster->id); ?>">
+                                                <?php esc_html_e('Show keywords', 'ai-seo-client'); ?>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+                <div class="sseo-modal-footer">
+                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>
                 </div>
             </div>
         </div>
@@ -1156,9 +1374,130 @@ PROMPT;
                 $('#modal-generate-keywords').show();
             });
 
+            // Generate keyword-based ideas button
+            $('#btn-generate-keyword-ideas').on('click', function() {
+                const kw = $('#keyword-input').val().trim();
+                if (!kw) {
+                    alert('<?php echo esc_js(__('Enter a keyword in the search field first', 'ai-seo-client')); ?>');
+                    $('#keyword-input').focus();
+                    return;
+                }
+                $('#generate-ideas-keyword').val(kw);
+                $('#modal-generate-keyword-ideas').show();
+            });
+
+            // Confirm generate keyword ideas
+            $('#btn-confirm-generate-ideas').on('click', function() {
+                const keyword = $('#generate-ideas-keyword').val().trim();
+                const count = parseInt($('#generate-ideas-count').val(), 10) || 5;
+                const btn = $(this);
+
+                if (!keyword) {
+                    alert('<?php echo esc_js(__('Please enter a keyword', 'ai-seo-client')); ?>');
+                    return;
+                }
+
+                btn.prop('disabled', true);
+                btn.find('.spinner').show();
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/keywords/generate-ideas',
+                    method: 'POST',
+                    data: { keyword: keyword, count: count }
+                }).then(function(response) {
+                    const generated = response.ideas_generated || 0;
+                    const msg = generated + ' <?php echo esc_js(__('ideas generated and saved to the Ideas page.', 'ai-seo-client')); ?>';
+                    $('#modal-generate-keyword-ideas').hide();
+                    alert(msg);
+                }).catch(function(error) {
+                    alert(error.message || '<?php echo esc_js(__('Failed to generate ideas', 'ai-seo-client')); ?>');
+                }).finally(function() {
+                    btn.prop('disabled', false);
+                    btn.find('.spinner').hide();
+                });
+            });
+
             // Explorer button
             $('#btn-keywords-explorer').on('click', function() {
                 $('#modal-explorer').show();
+            });
+
+            $('#btn-explore').on('click', function() {
+                const input = $('#explorer-input').val().trim();
+                const results = $('#explorer-results');
+                const btn = $(this);
+
+                if (!input) {
+                    alert('<?php echo esc_js(__('Please enter a keyword to explore', 'ai-seo-client')); ?>');
+                    return;
+                }
+
+                btn.prop('disabled', true).text('<?php echo esc_js(__('Exploring...', 'ai-seo-client')); ?>');
+                results.html('<p><?php echo esc_js(__('Loading related keywords...', 'ai-seo-client')); ?></p>');
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/keywords/expand',
+                    method: 'POST',
+                    data: { keyword: input }
+                }).then(function(response) {
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('Explore', 'ai-seo-client')); ?>');
+
+                    if (response.error) {
+                        results.html('<p style="color:#d63638;">' + response.error + '</p>');
+                        return;
+                    }
+
+                    const related = response.related || {};
+                    const keys = Object.keys(related);
+                    if (keys.length === 0) {
+                        results.html('<p><?php echo esc_js(__('No related keywords found.', 'ai-seo-client')); ?></p>');
+                        return;
+                    }
+
+                    let html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th><?php echo esc_js(__('Keyword', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Relevance Score', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Action', 'ai-seo-client')); ?></th></tr></thead><tbody>';
+                    keys.forEach(function(kw) {
+                        html += '<tr><td>' + escapeHtml(kw) + '</td><td>' + (related[kw] || 0) + '</td><td><button type="button" class="button button-small btn-add-explored-keyword" data-keyword="' + escapeHtml(kw) + '"><?php echo esc_js(__('Add keyword', 'ai-seo-client')); ?></button></td></tr>';
+                    });
+                    html += '</tbody></table>';
+                    results.html(html);
+                }).catch(function(error) {
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('Explore', 'ai-seo-client')); ?>');
+                    results.html('<p style="color:#d63638;">' + (error.message || '<?php echo esc_js(__('Failed to explore keyword.', 'ai-seo-client')); ?>') + '</p>');
+                });
+            });
+
+            $(document).on('click', '.btn-add-explored-keyword', function() {
+                const keyword = $(this).data('keyword');
+                const btn = $(this);
+                btn.prop('disabled', true).text('<?php echo esc_js(__('Adding...', 'ai-seo-client')); ?>');
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/keywords/add',
+                    method: 'POST',
+                    data: { keyword: keyword }
+                }).then(function() {
+                    alert('<?php echo esc_js(__('Keyword added', 'ai-seo-client')); ?>: ' + keyword);
+                    btn.text('<?php echo esc_js(__('Added', 'ai-seo-client')); ?>').addClass('button-primary');
+                    loadKeywords();
+                    loadStats();
+                }).catch(function(error) {
+                    alert(error.message || '<?php echo esc_js(__('Failed to add keyword', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('Add keyword', 'ai-seo-client')); ?>');
+                });
+            });
+
+            // Clusters button
+            $('#btn-clusters').on('click', function() {
+                $('#modal-clusters').show();
+            });
+
+            // Filter cluster from clusters modal
+            $(document).on('click', '.btn-filter-cluster', function() {
+                const clusterId = $(this).data('id');
+                $('#filter-cluster').val(clusterId);
+                currentPage = 1;
+                $('#modal-clusters').hide();
+                loadKeywords();
             });
 
             // Close modals
@@ -1338,10 +1677,12 @@ PROMPT;
 
                 let html = '';
                 keywords.forEach(function(kw) {
-                    const difficultyClass = 'difficulty-' + kw.difficulty.toLowerCase();
+                    const difficulty = kw.difficulty || 'LOW';
+                    const difficultyClass = 'difficulty-' + difficulty.toLowerCase();
                     const rankDisplay = kw.rank ? '#' + kw.rank : '-';
                     const ideasCount = kw.ideas_count || 0;
                     const postsCount = kw.posts_count || 0;
+                    const searchIntent = kw.search_intent || 'informational';
 
                     html += `
                         <tr data-id="${kw.id}">
@@ -1363,27 +1704,27 @@ PROMPT;
                                 </button>
                             </td>
                             <td class="col-keyword">
-                                <strong>${escapeHtml(kw.keyword)}</strong>
+                                <strong>${escapeHtmlTemplate(kw.keyword)}</strong>
                             </td>
                             <td class="col-cluster">
-                                ${kw.cluster_name ? `<span class="cluster-badge">${escapeHtml(kw.cluster_name)}</span>` : `<button class="btn-set-cluster" data-id="${kw.id}">+ <?php echo esc_js(__('set cluster', 'ai-seo-client')); ?></button>`}
+                                ${kw.cluster_name ? `<span class="cluster-badge" data-id="${kw.cluster_id || ''}">${escapeHtmlTemplate(kw.cluster_name)}</span>` : `<button class="btn-set-cluster" data-id="${kw.id}">+ <?php echo esc_js(__('set cluster', 'ai-seo-client')); ?></button>`}
                             </td>
-                            <td class="col-volume">${kw.search_volume.toLocaleString()}</td>
+                            <td class="col-volume">${(kw.search_volume || 0).toLocaleString()}</td>
                             <td class="col-difficulty">
-                                <span class="difficulty-badge ${difficultyClass}">${kw.difficulty}</span>
+                                <span class="difficulty-badge ${difficultyClass}">${difficulty}</span>
                             </td>
                             <td class="col-cpc">${kw.cpc || '-'}</td>
                             <td class="col-rank">${rankDisplay}</td>
                             <td class="col-serp">
-                                <button class="btn-show-competitors" data-keyword="${escapeHtml(kw.keyword)}">
+                                <button class="btn-show-competitors" data-keyword="${escapeTemplate(kw.keyword)}">
                                     + <?php echo esc_js(__('show competitors', 'ai-seo-client')); ?>
                                 </button>
                             </td>
                             <td class="col-intent">
-                                <span class="intent-badge ${kw.search_intent}">${kw.search_intent}</span>
+                                <span class="intent-badge ${searchIntent}">${searchIntent}</span>
                             </td>
                             <td class="col-created">${formatDate(kw.created_at)}</td>
-                            <td class="col-country">${kw.country || 'Netherlands'} <span class="lang-flag">${getFlag(kw.language || 'nl')}</span></td>
+                            <td class="col-country">${escapeHtmlTemplate(kw.country || 'Netherlands')} <span class="lang-flag">${getFlag(kw.language || 'nl')}</span></td>
                             <td class="col-link">
                                 <button type="button" class="btn-action btn-delete" data-action="delete" title="<?php echo esc_js(__('Delete', 'ai-seo-client')); ?>">
                                     <span class="dashicons dashicons-trash"></span>
@@ -1399,6 +1740,87 @@ PROMPT;
 
             // Bind row actions
             function bindRowActions() {
+                // Edit
+                $('.btn-edit').on('click', function() {
+                    const row = $(this).closest('tr');
+                    const id = row.data('id');
+                    const keyword = row.find('.col-keyword strong').text();
+                    const clusterId = row.find('.col-cluster .cluster-badge').data('id') || '';
+                    const intent = row.find('.col-intent .intent-badge').attr('class').replace('intent-badge ', '').trim() || 'informational';
+                    const difficulty = (row.find('.difficulty-badge').text() || 'LOW').toUpperCase();
+
+                    $('#edit-keyword-id').val(id);
+                    $('#edit-keyword-input').val(keyword);
+                    $('#edit-keyword-cluster').val(clusterId);
+                    $('#edit-keyword-intent').val(intent);
+                    $('#edit-keyword-difficulty').val(difficulty);
+                    $('#edit-keyword-notes').val('');
+                    $('#modal-edit-keyword').show();
+                });
+
+                // Set cluster (inline "+ set cluster" button in the cluster column).
+                // Opens the edit-keyword modal focused on the cluster select so the
+                // existing save handler can PUT the new cluster_id.
+                $(document).off('click.setcluster').on('click.setcluster', '.btn-set-cluster', function() {
+                    const row = $(this).closest('tr');
+                    const id = row.data('id');
+                    const keyword = row.find('.col-keyword strong').text();
+                    const intent = row.find('.col-intent .intent-badge').attr('class').replace('intent-badge ', '').trim() || 'informational';
+                    const difficulty = (row.find('.difficulty-badge').text() || 'LOW').toUpperCase();
+
+                    $('#edit-keyword-id').val(id);
+                    $('#edit-keyword-input').val(keyword);
+                    $('#edit-keyword-cluster').val('');
+                    $('#edit-keyword-intent').val(intent);
+                    $('#edit-keyword-difficulty').val(difficulty);
+                    $('#edit-keyword-notes').val('');
+                    $('#modal-edit-keyword').show();
+                    // Focus the cluster select so the user can pick immediately.
+                    setTimeout(function() { $('#edit-keyword-cluster').focus(); }, 50);
+                });
+
+                // Save edit
+                $('#btn-confirm-edit-keyword').on('click', function() {
+                    const id = $('#edit-keyword-id').val();
+                    const keyword = $('#edit-keyword-input').val().trim();
+                    const clusterId = $('#edit-keyword-cluster').val();
+                    const intent = $('#edit-keyword-intent').val();
+                    const difficulty = $('#edit-keyword-difficulty').val();
+                    const notes = $('#edit-keyword-notes').val();
+                    const btn = $(this);
+
+                    if (!keyword) {
+                        alert('<?php echo esc_js(__('Please enter a keyword', 'ai-seo-client')); ?>');
+                        return;
+                    }
+
+                    btn.find('.spinner').show();
+                    btn.prop('disabled', true);
+
+                    const data = {
+                        keyword: keyword,
+                        search_intent: intent,
+                        difficulty: difficulty,
+                    };
+                    if (clusterId) data.cluster_id = parseInt(clusterId);
+                    if (notes) data.notes = notes;
+
+                    wp.apiFetch({
+                        path: 'sseo-ai/v1/keywords/' + id,
+                        method: 'PUT',
+                        data: data
+                    }).then(function() {
+                        $('#modal-edit-keyword').hide();
+                        loadKeywords();
+                        loadStats();
+                    }).catch(function(error) {
+                        alert(error.message || '<?php echo esc_js(__('Failed to update keyword', 'ai-seo-client')); ?>');
+                    }).finally(function() {
+                        btn.find('.spinner').hide();
+                        btn.prop('disabled', false);
+                    });
+                });
+
                 // Delete
                 $('.btn-delete[data-action="delete"]').on('click', function() {
                     const row = $(this).closest('tr');
@@ -1449,6 +1871,50 @@ PROMPT;
                         alert(error.message || '<?php echo esc_js(__('Failed to get ideas', 'ai-seo-client')); ?>');
                     });
                 });
+
+                // Show competitors — open add competitor modal, then redirect inside dashboard shell
+                $('.btn-show-competitors').on('click', function() {
+                    const keyword = $(this).data('keyword');
+                    if (keyword) {
+                        $('#add-competitor-keyword').val(keyword);
+                        $('#add-competitor-domain').val('');
+                        $('#modal-add-competitor').show();
+                    }
+                });
+
+                $('#btn-confirm-add-competitor').on('click', function() {
+                    const keyword = $('#add-competitor-keyword').val();
+                    const domain = $('#add-competitor-domain').val().trim();
+                    const btn = $(this);
+
+                    if (!domain) {
+                        alert('<?php echo esc_js(__('Please enter a competitor domain', 'ai-seo-client')); ?>');
+                        return;
+                    }
+
+                    btn.find('.spinner').show();
+                    btn.prop('disabled', true);
+
+                    jQuery.post(ajaxurl, {
+                        action: 'sseo_ai_analyze_competitor',
+                        domain: domain,
+                        nonce: '<?php echo wp_create_nonce('sseo_competitor'); ?>'
+                    }, function(response) {
+                        btn.find('.spinner').hide();
+                        btn.prop('disabled', false);
+
+                        if (response.success) {
+                            $('#modal-add-competitor').hide();
+                            window.location.href = '<?php echo esc_js(admin_url('admin.php?page=fyndable-dashboard&fyndable_page=ai-seo-competitor-research')); ?>&keyword=' + encodeURIComponent(keyword);
+                        } else {
+                            alert(response.data.message || '<?php echo esc_js(__('Error analyzing competitor', 'ai-seo-client')); ?>');
+                        }
+                    }).fail(function() {
+                        btn.find('.spinner').hide();
+                        btn.prop('disabled', false);
+                        alert('<?php echo esc_js(__('Error analyzing competitor', 'ai-seo-client')); ?>');
+                    });
+                });
             }
 
             // Update pagination
@@ -1484,7 +1950,7 @@ PROMPT;
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     month: 'short',
                     day: 'numeric'
                 });
@@ -1506,6 +1972,18 @@ PROMPT;
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            function escapeTemplate(text) {
+                if (!text) return '';
+                return String(text)
+                    .replace(/\\/g, '\\\\')
+                    .replace(/`/g, '\\`')
+                    .replace(/\$\{/g, '\\${');
+            }
+
+            function escapeHtmlTemplate(text) {
+                return escapeTemplate(escapeHtml(text));
             }
         });
         </script>

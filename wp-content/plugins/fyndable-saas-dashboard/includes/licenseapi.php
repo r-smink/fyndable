@@ -71,6 +71,38 @@ class LicenseAPI
             ],
         ]);
 
+        // Report onboarding status from client
+        register_rest_route($this->namespace, '/tenant/onboarding', [
+            'methods' => 'POST',
+            'callback' => [$this, 'updateOnboardingStatus'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'tenant_key' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'completed' => [
+                    'required' => true,
+                    'type' => 'integer',
+                ],
+                'current_step' => [
+                    'required' => true,
+                    'type' => 'integer',
+                ],
+                'completed_at' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+
         // Get tenant limits/status
         register_rest_route($this->namespace, '/tenant/status', [
             'methods' => 'POST',
@@ -139,6 +171,30 @@ class LicenseAPI
                     'required' => true,
                     'type' => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+
+        // Start free trial (no license key needed â€” creates one)
+        register_rest_route($this->namespace, '/license/trial', [
+            'methods' => 'POST',
+            'callback' => [$this, 'startTrial'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'email' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_email',
+                ],
+                'name' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'site_url' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_url',
                 ],
             ],
         ]);
@@ -238,10 +294,33 @@ class LicenseAPI
             ],
         ]);
 
-        // Google OAuth start page — renders HTML with GIS popup (only SaaS domain needed in Google Console)
+        // Google OAuth start page â€” renders HTML with GIS popup (only SaaS domain needed in Google Console)
         register_rest_route($this->namespace, '/google/oauth-start', [
             'methods' => 'GET',
             'callback' => [$this, 'googleOAuthStart'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // GDPR: Request data deletion (tenant can self-delete)
+        register_rest_route($this->namespace, '/gdpr/delete', [
+            'methods' => 'POST',
+            'callback' => [$this, 'gdprDelete'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'confirm' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // GDPR: Export all tenant data
+        register_rest_route($this->namespace, '/gdpr/export', [
+            'methods' => 'POST',
+            'callback' => [$this, 'gdprExport'],
             'permission_callback' => '__return_true',
             'args' => [
                 'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
@@ -255,6 +334,15 @@ class LicenseAPI
      */
     public function validateLicense(\WP_REST_Request $request): \WP_REST_Response
     {
+        // Rate limit: 10 validation attempts per minute per IP
+        if (!$this->checkRateLimit('validate')) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many requests. Please try again later.',
+            ], 429);
+        }
+
         $licenseKey = $request->get_param('license_key');
         $siteUrl = $request->get_param('site_url');
 
@@ -271,18 +359,17 @@ class LicenseAPI
             ], 400);
         }
 
-        // Get SaaS settings instance
-        $settings = new \SSEOAISaaS\SaaSSettings();
-        
+        // NOTE: image_api credentials are intentionally NOT returned by validateLicense.
+        // This endpoint only checks validity — returning central API keys here would leak
+        // the operator's OpenArt/OpenRouter keys to anyone who knows any valid license key.
+        // Clients receive image_api credentials only via activateLicense / getTenantStatus,
+        // which require a valid license_key + tenant_key pair.
+
         return new \WP_REST_Response([
             'success' => true,
             'valid' => true,
             'license' => $result,
-            'image_api' => [
-                'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiKey(),
-                'model' => $settings->getImageApiModel(),
-            ],
+            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
         ], 200);
     }
 
@@ -291,6 +378,15 @@ class LicenseAPI
      */
     public function activateLicense(\WP_REST_Request $request): \WP_REST_Response
     {
+        // Rate limit: 5 activation attempts per minute per IP (stricter than validate)
+        if (!$this->checkRateLimit('activate', 5)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many activation attempts. Please try again later.',
+            ], 429);
+        }
+
         $licenseKey = $request->get_param('license_key');
         $siteUrl = $request->get_param('site_url');
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
@@ -300,9 +396,7 @@ class LicenseAPI
         error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
 
         // Get client IP
-        $ipAddress = $request->get_header('X-Forwarded-For') 
-            ?: $request->get_header('X-Real-IP') 
-            ?: $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $ipAddress = $this->getClientIp();
 
         $activationData = [
             'site_url' => $siteUrl,
@@ -321,59 +415,221 @@ class LicenseAPI
             ], 400);
         }
 
-        error_log('SSEO AI Dashboard: Activation successful - Tenant: ' . $result['tenant_key']);
+        error_log('SSEO AI Dashboard: Activation successful - Tenant ID: ' . ($result['id'] ?? 'unknown'));
         
         // Get white-label settings to sync to client
         $whiteLabelData = $this->getWhiteLabelData($result['tenant_key']);
-        
-        // Get SaaS settings for image API
-        $settings = new \SSEOAISaaS\SaaSSettings();
         
         return new \WP_REST_Response([
             'success' => true,
             'activated' => true,
             'tenant_key' => $result['tenant_key'],
             'tier' => $result['tier'],
+            'email' => $result['email'] ?? null,
             'expires_at' => $result['expires_at'],
             'max_sites' => $result['max_sites'],
             'rate_limit' => $result['rate_limit'],
             'api_calls_limit' => $result['api_calls_limit'],
             'is_reactivation' => $result['reactivation'] ?? false,
             'white_label' => $whiteLabelData,
-            'image_api' => [
-                'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiKey(),
-                'model' => $settings->getImageApiModel(),
-            ],
+            'model_routing' => $this->getModelRoutingForTier($result['tier'] ?? 'starter'),
+            'image_api' => $this->getImageApiData(),
+            'portal_url' => $this->getPortalUrl(),
         ], 200);
+    }
+
+    /**
+     * Get the URL of the customer portal page on this SaaS dashboard site.
+     *
+     * Mirrors CustomerRoleManager::getPortalUrl() so the client plugin can
+     * link its "Upgrade" buttons directly to the portal where the actual
+     * upgrade flow lives (/portal/upgrade REST endpoint).
+     */
+    private function getPortalUrl(): string
+    {
+        $portalPageId = (int) get_option('sseo_ai_saas_customer_portal_page', 0);
+        if ($portalPageId > 0) {
+            $url = get_permalink($portalPageId);
+            if ($url) {
+                return $url;
+            }
+        }
+        // No portal page configured — fall back to /dashboard, then home.
+        $dashboard = home_url('/dashboard/');
+        return $dashboard ?: home_url('/');
     }
     
     /**
-     * Get white-label data for tenant - ONLY tenant-level (no global fallback)
+     * Get model routing for a tenant based on tier or per-tenant override.
+     */
+    private function getModelRoutingForTenant(string $tenantKey, string $tier): array
+    {
+        $modelTier = $this->tenants->getTenantSetting($tenantKey, 'model_tier', null);
+        if ($modelTier === 'standard' || $modelTier === 'premium') {
+            return ProviderRouter::getRoutingForModelTier($modelTier);
+        }
+        return $this->getModelRoutingForTier($tier);
+    }
+
+    /**
+     * Build the image_api credentials payload for a tenant.
+     *
+     * SECURITY: Only call this from endpoints that have already verified a valid
+     * license_key + tenant_key pair (activateLicense, getTenantStatus). The central
+     * operator API keys (OpenArt/OpenRouter) are returned here so the client plugin
+     * can call the image provider directly. Long-term this should be replaced by a
+     * proxy architecture where the SaaS server makes the API call on behalf of the
+     * tenant, so the central key never leaves the server.
+     */
+    private function getImageApiData(): array
+    {
+        $settings = new \SSEOAISaaS\SaaSSettings();
+        return [
+            'provider' => $settings->getImageApiProvider(),
+            'key' => match ($settings->getImageApiProvider()) {
+                'openart' => get_option('ai_seo_saas_openart_api_key', ''),
+                'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                default => $settings->getImageApiKey(),
+            },
+            'model' => $settings->getImageApiModel(),
+        ];
+    }
+
+    /**
+     * IP-based rate limiting for public license endpoints.
+     *
+     * Prevents brute-force attacks on license keys and enumeration of valid keys.
+     * Uses a sliding window via WordPress transients. Default: 10 requests per
+     * minute per IP. Returns true when within limit, false when exceeded.
+     */
+    private function checkRateLimit(string $bucket, int $maxRequests = 10, int $windowSeconds = 60): bool
+    {
+        $ip = $this->getClientIp();
+        $key = 'sseo_saas_rl_' . $bucket . '_' . md5($ip);
+        $count = (int) get_transient($key);
+        if ($count >= $maxRequests) {
+            return false;
+        }
+        if ($count === 0) {
+            set_transient($key, 1, $windowSeconds);
+        } else {
+            set_transient($key, $count + 1, $windowSeconds);
+        }
+        return true;
+    }
+
+    /**
+     * Get the client IP address, preferring forwarded headers.
+     */
+    private function getClientIp(): string
+    {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+        if (!empty($ip)) {
+            $parts = explode(',', $ip);
+            $ip = trim($parts[0]);
+        }
+        if (empty($ip)) {
+            $ip = $_SERVER['HTTP_X_REAL_IP'] ?? '';
+        }
+        if (empty($ip)) {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        }
+        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
+    }
+
+    /**
+     * Get model routing for a tier (no per-tenant override).
+     */
+    private function getModelRoutingForTier(string $tier): array
+    {
+        $modelTier = ProviderRouter::getModelTierForTier($tier);
+        return ProviderRouter::getRoutingForModelTier($modelTier);
+    }
+
+    /**
+     * Get white-label data for tenant.
+     *
+     * Falls back to the global agency white-label settings when no tenant-specific
+     * brand is configured. This ensures agency/whitelabel API keys sync the correct
+     * branding to the client plugin.
      */
     private function getWhiteLabelData(string $tenantKey): array
     {
-        // Only tenant-specific white-label settings (no global fallback)
+        $isGlobalEnabled = (bool) get_option('sseo_ai_saas_wl_enabled', false);
+
+        // Tenant-specific white-label takes priority if enabled.
         $tenantBrand = $this->tenants->getTenantSetting($tenantKey, 'white_label_brand', null);
-        $enabled = $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
-        
-        // Only return white-label if explicitly enabled and configured
-        if ($enabled && $tenantBrand) {
+        $tenantEnabled = (bool) $this->tenants->getTenantSetting($tenantKey, 'enable_whitelabel', false);
+        if ($tenantEnabled && $tenantBrand) {
             $brand = is_array($tenantBrand) ? $tenantBrand : (json_decode($tenantBrand, true) ?: []);
             if (!empty($brand['company_name'])) {
                 return $brand;
             }
         }
-        
-        // Return empty if no tenant white-label configured
+
+        // Fall back to the parent agency's white-label settings for sub-tenants.
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if ($tenant && !empty($tenant['parent_tenant_id'])) {
+            $agencyAccount = $this->tenants->getAgencyAccountByTenant((int)$tenant['parent_tenant_id']);
+            if ($agencyAccount && !empty($agencyAccount['user_id'])) {
+                $agencyWl = get_user_meta((int)$agencyAccount['user_id'], 'sseo_ai_agency_wl', true);
+                if (is_array($agencyWl) && !empty($agencyWl['company_name'])) {
+                    return [
+                        'company_name' => $agencyWl['company_name'],
+                        'company_logo' => $agencyWl['company_logo'] ?? '',
+                        'primary_color' => $agencyWl['primary_color'] ?? '#379fd3',
+                        'secondary_color' => $agencyWl['secondary_color'] ?? '#8f39ac',
+                        'use_primary_only' => false,
+                        'support_email' => $agencyWl['support_email'] ?? '',
+                        'support_url' => $agencyWl['support_url'] ?? '',
+                        'enabled' => true,
+                    ];
+                }
+            }
+        }
+
+        // Fall back to global agency white-label settings.
+        if ($isGlobalEnabled) {
+            return [
+                'company_name' => get_option('sseo_ai_saas_wl_company_name', ''),
+                'company_logo' => get_option('sseo_ai_saas_wl_company_logo', ''),
+                'primary_color' => get_option('sseo_ai_saas_wl_primary_color', '#379fd3'),
+                'secondary_color' => get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac'),
+                'use_primary_only' => false,
+                'support_email' => get_option('sseo_ai_saas_wl_support_email', ''),
+                'support_url' => get_option('sseo_ai_saas_wl_support_url', ''),
+                'enabled' => true,
+            ];
+        }
+
         return [
             'company_name' => '',
             'company_logo' => '',
-            'primary_color' => '#2563eb',
-            'secondary_color' => '#1e40af',
+            'primary_color' => '',
+            'secondary_color' => '',
+            'use_primary_only' => false,
             'support_email' => '',
             'support_url' => '',
             'enabled' => false,
+        ];
+    }
+
+    /**
+     * Get the global chatbot configuration (synced to client sites).
+     * Returns only the fields the client needs: enabled, name, avatar_url, knowledge.
+     */
+    private function getChatbotConfig(): array
+    {
+        $config = get_option('sseo_ai_saas_chatbot_config', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        return [
+            'enabled' => !empty($config['enabled']) ? 1 : 0,
+            'name' => $config['name'] ?? 'Fyndable Assistant',
+            'avatar_url' => $config['avatar_url'] ?? '',
+            'knowledge' => $config['knowledge'] ?? '',
         ];
     }
 
@@ -396,8 +652,7 @@ class LicenseAPI
         }
 
         $limits = $this->tenants->checkTenantLimits($tenantKey);
-        
-        // Get SaaS settings for image API
+
         $settings = new \SSEOAISaaS\SaaSSettings();
 
         return new \WP_REST_Response([
@@ -405,15 +660,54 @@ class LicenseAPI
             'valid' => $limits['valid'],
             'tier' => $tenant['tier'],
             'status' => $tenant['status'],
+            'email' => $tenant['email'] ?? null,
+            'domain' => $tenant['domain'] ?? null,
             'limits' => $limits['checks'] ?? [],
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
             'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
+            'monthly_auto_posts' => (int)$settings->getAutoPostLimitForTier($tenant['tier']),
+            'monthly_geo_scans' => (int)$settings->getGeoScanLimitForTier($tenant['tier']),
             'expires_at' => $tenant['expires_at'],
-            'image_api' => [
-                'provider' => $settings->getImageApiProvider(),
-                'key' => $settings->getImageApiKey(),
-                'model' => $settings->getImageApiModel(),
-            ],
+            'white_label' => $this->getWhiteLabelData($tenantKey),
+            'chatbot_config' => $this->getChatbotConfig(),
+            'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
+            'image_api' => $this->getImageApiData(),
+            'portal_url' => $this->getPortalUrl(),
+        ], 200);
+    }
+
+    /**
+     * Update client onboarding status for a tenant.
+     */
+    public function updateOnboardingStatus(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $licenseKey = $request->get_param('license_key');
+
+        // Verify tenant belongs to this license
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_tenant',
+                'message' => 'Tenant not found or license mismatch',
+            ], 403);
+        }
+
+        $completed = (int) $request->get_param('completed');
+        $currentStep = (int) $request->get_param('current_step');
+        $completedAt = sanitize_text_field($request->get_param('completed_at') ?? '');
+
+        $this->tenants->setTenantSetting($tenantKey, 'onboarding_completed', $completed ? '1' : '0');
+        $this->tenants->setTenantSetting($tenantKey, 'onboarding_current_step', (string) $currentStep);
+        if ($completed && $completedAt) {
+            $this->tenants->setTenantSetting($tenantKey, 'onboarding_completed_at', $completedAt);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'onboarding_completed' => $completed ? 1 : 0,
+            'onboarding_current_step' => $currentStep,
         ], 200);
     }
 
@@ -465,14 +759,113 @@ class LicenseAPI
             ], 403);
         }
 
-        // Set tenant to inactive (not suspended — suspended is only for revoked licenses)
-        $this->tenants->updateTenant($tenantKey, [
-            'status' => 'inactive',
-        ]);
+        // Set tenant to inactive (not suspended â€” suspended is only for revoked licenses)
+        // Set tenant to inactive and clear the connected domain so the
+        // license can be re-activated on a different URL.
+        $this->tenants->deactivateTenant($tenant['tenant_key']);
 
         return new \WP_REST_Response([
             'success' => true,
             'deactivated' => true,
+        ], 200);
+    }
+
+    /**
+     * Start a free trial â€” creates a trial tenant with 14-day expiry.
+     * No license key needed; one is generated automatically.
+     */
+    public function startTrial(\WP_REST_Request $request): \WP_REST_Response
+    {
+        // Rate limit: 3 trial signups per hour per IP (very strict to prevent abuse)
+        if (!$this->checkRateLimit('trial', 3, 3600)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many trial requests. Please try again later.',
+            ], 429);
+        }
+
+        $email = $request->get_param('email');
+        $name = $request->get_param('name');
+        $siteUrl = $request->get_param('site_url');
+
+        // Check if email already has a tenant (prevent trial abuse)
+        $allTenants = $this->tenants->getAllTenants(500);
+        foreach ($allTenants as $existing) {
+            if (($existing['email'] ?? '') === $email) {
+                $tier = $existing['tier'] ?? '';
+                if ($tier === 'trial') {
+                    return new \WP_REST_Response([
+                        'success' => false,
+                        'error' => 'trial_exists',
+                        'message' => 'You already have a trial account. Use your existing license key or upgrade.',
+                        'license_key' => $existing['license_key'] ?? '',
+                    ], 409);
+                }
+                return new \WP_REST_Response([
+                    'success' => false,
+                    'error' => 'account_exists',
+                    'message' => 'An account with this email already exists.',
+                ], 409);
+            }
+        }
+
+        // Generate license key for trial
+        $licenseResult = $this->licenseGenerator->generateLicense([
+            'tier' => 'trial',
+            'name' => $name,
+        ]);
+
+        if (is_wp_error($licenseResult)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to generate license key.',
+            ], 500);
+        }
+
+        $licenseKey = $licenseResult['license_key'] ?? '';
+
+        // Create trial tenant (14 days)
+        $trialDays = (int) get_option('sseo_ai_saas_trial_days', 14);
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + $trialDays * DAY_IN_SECONDS);
+
+        $tenantResult = $this->tenants->createTenant([
+            'name' => $name,
+            'email' => $email,
+            'domain' => $siteUrl,
+            'tier' => 'trial',
+            'license_key' => $licenseKey,
+            'status' => 'active',
+            'max_sites' => 1,
+            'rate_limit' => 200,
+            'api_calls_limit' => 5000,
+            'expires_at' => $expiresAt,
+        ]);
+
+        if (is_wp_error($tenantResult)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => $tenantResult->get_error_message(),
+            ], 500);
+        }
+
+        $tenantKey = $tenantResult['tenant_key'];
+
+        // Fire activation hook for welcome email
+        do_action('sseo_ai_license_activated', $tenantKey, [
+            'email' => $email,
+            'tier' => 'trial',
+            'license_key' => $licenseKey,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'license_key' => $licenseKey,
+            'tenant_key' => $tenantKey,
+            'tier' => 'trial',
+            'expires_at' => $expiresAt,
+            'trial_days' => $trialDays,
         ], 200);
     }
 
@@ -656,7 +1049,7 @@ class LicenseAPI
     }
 
     /**
-     * REST: Get Google OAuth config (client ID only — secret stays server-side)
+     * REST: Get Google OAuth config (client ID only â€” secret stays server-side)
      */
     public function getGoogleOAuthConfig(\WP_REST_Request $request): \WP_REST_Response
     {
@@ -675,7 +1068,7 @@ class LicenseAPI
         return new \WP_REST_Response([
             'success' => true,
             'client_id' => $clientId,
-            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
+            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
         ], 200);
     }
 
@@ -806,8 +1199,27 @@ class LicenseAPI
             wp_die(__('Google OAuth is not configured on the SaaS dashboard.', 'sseo-ai-saas'), 500);
         }
 
-        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
+        $whiteLabel = $this->getWhiteLabelData($tenantKey);
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $globalCompanyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : ($globalCompanyName ?: 'Fyndable');
+
+        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
         $exchangeUrl = rest_url($this->namespace . '/google/exchange');
+
+        // SECURITY: restrict postMessage target origin to the tenant's registered
+        // domain so OAuth tokens cannot be intercepted by an arbitrary opener.
+        // Falls back to '*' only when the domain cannot be parsed (never breaks flow).
+        $clientOrigin = '*';
+        if (!empty($tenant['domain'])) {
+            $parsed = wp_parse_url($tenant['domain']);
+            if (!empty($parsed['host'])) {
+                $clientOrigin = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+                if (!empty($parsed['port'])) {
+                    $clientOrigin .= ':' . $parsed['port'];
+                }
+            }
+        }
 
         header('Content-Type: text/html; charset=utf-8');
         ?>
@@ -816,23 +1228,23 @@ class LicenseAPI
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connect Google — Fyndable</title>
+    <title><?php echo esc_html(sprintf(__('Connect Google â€” %s', 'sseo-ai-saas'), $companyName)); ?></title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
+        body { font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f1; }
         .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; max-width: 420px; }
-        .logo { font-size: 24px; font-weight: 700; color: #2563eb; margin-bottom: 8px; }
+        .logo { font-size: 24px; font-weight: 700; color: #379fd3; margin-bottom: 8px; }
         .status { color: #555; margin: 16px 0; }
         .error { color: #d63638; }
-        .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px 0; }
+        .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #379fd3; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .btn { display: inline-block; background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn:hover { background: #1d4ed8; }
+        .btn { display: inline-block; background: #379fd3; color: #fff; border: none; border-radius: 8px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #2a7ba8; }
         .btn:disabled { background: #93a3bf; cursor: not-allowed; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="logo">Fyndable</div>
+        <div class="logo"><?php echo esc_html($companyName); ?></div>
         <div id="status-area">
             <p class="status">Click the button below to connect your Google account.</p>
             <button class="btn" id="google-connect-btn" onclick="sseoStartGoogleAuth()">Connect Google Account</button>
@@ -847,6 +1259,7 @@ class LicenseAPI
             var EXCHANGE_URL = <?php echo wp_json_encode($exchangeUrl); ?>;
             var LICENSE_KEY = <?php echo wp_json_encode($licenseKey); ?>;
             var TENANT_KEY = <?php echo wp_json_encode($tenantKey); ?>;
+            var TARGET_ORIGIN = <?php echo wp_json_encode($clientOrigin); ?>;
 
             var statusArea = document.getElementById('status-area');
 
@@ -889,7 +1302,7 @@ class LicenseAPI
                                             type: 'fyndable_google_tokens',
                                             tokens: data.tokens,
                                             success: true
-                                        }, '*');
+                                        }, TARGET_ORIGIN);
                                     }
                                     setStatus('Successfully connected! Closing...');
                                     closePopup();
@@ -900,7 +1313,7 @@ class LicenseAPI
                                             type: 'fyndable_google_tokens',
                                             success: false,
                                             error: msg
-                                        }, '*');
+                                        }, TARGET_ORIGIN);
                                     }
                                     setStatus(msg, true);
                                     closePopup();
@@ -912,7 +1325,7 @@ class LicenseAPI
                                         type: 'fyndable_google_tokens',
                                         success: false,
                                         error: msg
-                                    }, '*');
+                                    }, TARGET_ORIGIN);
                                 }
                                 setStatus(msg, true);
                                 closePopup();
@@ -925,7 +1338,7 @@ class LicenseAPI
                                     type: 'fyndable_google_tokens',
                                     success: false,
                                     error: msg
-                                }, '*');
+                                }, TARGET_ORIGIN);
                             }
                             setStatus(msg, true);
                             closePopup();
@@ -952,5 +1365,131 @@ class LicenseAPI
 </html>
         <?php
         exit;
+    }
+
+    /**
+     * GDPR: Delete all tenant data (right to erasure).
+     * Anonymizes PII and removes tenant records.
+     */
+    public function gdprDelete(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $licenseKey = $request->get_param('license_key');
+        $tenantKey = $request->get_param('tenant_key');
+        $confirm = $request->get_param('confirm');
+
+        if ($confirm !== 'DELETE') {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Confirmation required. Send confirm=DELETE to proceed.',
+            ], 400);
+        }
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Invalid tenant or license mismatch.',
+            ], 403);
+        }
+
+        global $wpdb;
+
+        // Anonymize and delete tenant record
+        $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
+        $wpdb->update($tenantsTable, [
+            'name' => '[deleted]',
+            'email' => '[deleted]',
+            'domain' => null,
+            'status' => 'deleted',
+            'license_key' => null,
+            'metadata' => null,
+        ], ['tenant_key' => $tenantKey]);
+
+        // Delete usage records
+        $usageTable = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $wpdb->delete($usageTable, ['tenant_key' => $tenantKey]);
+
+        // Delete license key record
+        $licenseTable = $wpdb->prefix . 'sseo_ai_license_keys';
+        $wpdb->delete($licenseTable, ['license_key' => $licenseKey]);
+
+        // Delete support tickets
+        $ticketsTable = $wpdb->prefix . 'sseo_ai_support_tickets';
+        $wpdb->delete($ticketsTable, ['tenant_key' => $tenantKey]);
+
+        // Delete Google tokens if any
+        delete_option('sseo_ai_google_tokens_' . $tenantKey);
+
+        // Fire action for extensions
+        do_action('sseo_ai_gdpr_tenant_deleted', $tenantKey, $licenseKey);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'message' => 'All personal data has been deleted.',
+            'deleted_at' => current_time('mysql'),
+        ], 200);
+    }
+
+    /**
+     * GDPR: Export all tenant data (data portability).
+     */
+    public function gdprExport(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $licenseKey = $request->get_param('license_key');
+        $tenantKey = $request->get_param('tenant_key');
+
+        $tenant = $this->tenants->getTenant($tenantKey);
+        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Invalid tenant or license mismatch.',
+            ], 403);
+        }
+
+        global $wpdb;
+
+        // Gather all tenant data
+        $exportData = [
+            'tenant' => [
+                'name' => $tenant['name'],
+                'email' => $tenant['email'],
+                'domain' => $tenant['domain'],
+                'tier' => $tenant['tier'],
+                'status' => $tenant['status'],
+                'created_at' => $tenant['created_at'],
+                'expires_at' => $tenant['expires_at'],
+                'license_key' => $tenant['license_key'],
+            ],
+        ];
+
+        // Usage data
+        $usageTable = $wpdb->prefix . 'sseo_ai_tenant_usage';
+        $usageRecords = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $usageTable WHERE tenant_key = %s ORDER BY period DESC LIMIT 12",
+            $tenantKey
+        ), ARRAY_A);
+        $exportData['usage_history'] = $usageRecords;
+
+        // Support tickets
+        $ticketsTable = $wpdb->prefix . 'sseo_ai_support_tickets';
+        $tickets = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, subject, status, created_at, updated_at FROM $ticketsTable WHERE tenant_key = %s ORDER BY created_at DESC",
+            $tenantKey
+        ), ARRAY_A);
+        $exportData['support_tickets'] = $tickets;
+
+        // Google integration status
+        $googleTokens = get_option('sseo_ai_google_tokens_' . $tenantKey, []);
+        $exportData['google_integrations'] = [
+            'connected_services' => array_keys($googleTokens),
+            'has_tokens' => !empty($googleTokens),
+        ];
+
+        $exportData['exported_at'] = current_time('mysql');
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data' => $exportData,
+        ], 200);
     }
 }

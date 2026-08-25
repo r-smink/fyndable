@@ -18,8 +18,33 @@ class Dashboard
     private SaaSSettings $saasSettings;
     private ApiGateway $apiGateway;
     private WhiteLabelAdmin $whiteLabelAdmin;
+    private ChatbotAdmin $chatbotAdmin;
     private PaymentProcessor $paymentProcessor;
     private WebhookHandler $webhookHandler;
+    private SupportTickets $supportTickets;
+    private SupportAdmin $supportAdmin;
+    private SaaSDashboardShell $dashboardShell;
+    private EmailTemplateRepository $emailTemplateRepository;
+    private EmailTemplateAdmin $emailTemplateAdmin;
+    private EmailAutomation $emailAutomation;
+    private UpdateServer $updateServer;
+    private SignupCheckout $signupCheckout;
+    private RevenueDashboard $revenueDashboard;
+    private ProviderRouter $providerRouter;
+    private DataForSeoClient $dataForSeoClient;
+    private AgencyRoleManager $agencyRoleManager;
+    private AgencyPortal $agencyPortal;
+    private FyndableLogin $fyndableLogin;
+    private CustomerRoleManager $customerRoleManager;
+    private CustomerPortal $customerPortal;
+    private InvoiceManager $invoiceManager;
+    private BookkeepingAdmin $bookkeepingAdmin;
+    private GeoScanRepository $geoScanRepository;
+    private HtmlFetcher $htmlFetcher;
+    private AiOverviewExtractor $aiOverviewExtractor;
+    private GeoScanner $geoScanner;
+    private GeoScanReport $geoScanReport;
+    private GeoScanAdmin $geoScanAdmin;
 
     public function __construct()
     {
@@ -33,30 +58,151 @@ class Dashboard
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
 
+        // Force currency to EUR; all prices, invoices and cost caps are shown in Euro.
+        if (get_option('sseo_ai_saas_currency') !== 'EUR') {
+            update_option('sseo_ai_saas_currency', 'EUR');
+        }
+
         $this->licenseGenerator = new LicenseKeyGenerator($this->tenants);
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
         $this->saasSettings = new SaaSSettings();
-        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings);
-        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants);
+        add_action('phpmailer_init', [$this->saasSettings, 'configureMailer']);
+        add_filter('wp_mail_from', [$this->saasSettings, 'getSmtpFromEmail']);
+        add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
+        $this->providerRouter = new ProviderRouter($this->saasSettings);
+        $this->dataForSeoClient = new DataForSeoClient($this->saasSettings);
+        $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter, $this->dataForSeoClient);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
+        $this->emailTemplateRepository = new EmailTemplateRepository();
+        $this->emailTemplateRepository->maybeCreateTables();
+        add_action('init', [$this->emailTemplateRepository, 'seedDefaults'], 20);
 
-        // Register admin menu
+        $this->supportTickets = new SupportTickets($this->tenants, $this->emailTemplateRepository);
+        $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);
+        $this->dashboardShell = new SaaSDashboardShell($this->pluginFile);
+        $this->emailTemplateAdmin = new EmailTemplateAdmin($this->emailTemplateRepository, new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants));
+        $this->emailAutomation = new EmailAutomation($this->tenants, $this->emailTemplateRepository);
+        $this->updateServer = new UpdateServer($this->tenants);
+        $this->signupCheckout = new SignupCheckout($this->tenants, $this->licenseGenerator, $this->paymentProcessor, $this->emailAutomation, $this->emailTemplateRepository);
+        $this->revenueDashboard = new RevenueDashboard($this->tenants);
+
+        $this->invoiceManager = new InvoiceManager($this->tenants);
+
+        // Agency portal
+        $this->agencyRoleManager = new AgencyRoleManager($this->tenants);
+        $this->agencyPortal = new AgencyPortal(
+            $this->pluginFile,
+            $this->tenants,
+            $this->licenseGenerator,
+            $this->supportTickets,
+            $this->agencyRoleManager,
+            $this->invoiceManager,
+            $this->paymentProcessor
+        );
+        $this->fyndableLogin = new FyndableLogin($this->tenants, $this->agencyRoleManager);
+
+        // Customer portal
+        $this->customerRoleManager = new CustomerRoleManager(
+            $this->tenants,
+            $this->emailTemplateRepository,
+            new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants)
+        );
+        $this->customerPortal = new CustomerPortal(
+            $this->tenants,
+            $this->paymentProcessor,
+            $this->customerRoleManager,
+            $this->invoiceManager
+        );
+
+        // Bookkeeping admin (invoices, profit, template)
+        $this->bookkeepingAdmin = new BookkeepingAdmin($this->pluginFile, $this->tenants, $this->invoiceManager);
+        $this->whiteLabelAdmin = new WhiteLabelAdmin($this->tenants, $this->bookkeepingAdmin);
+
+        // Chatbot admin (support chatbot settings: name, avatar, knowledge, history)
+        $this->chatbotAdmin = new ChatbotAdmin();
+        $this->chatbotAdmin->register();
+
+        $this->geoScanRepository = new GeoScanRepository();
+        $this->htmlFetcher = new HtmlFetcher($this->saasSettings);
+        $this->aiOverviewExtractor = new AiOverviewExtractor($this->saasSettings, $this->dataForSeoClient);
+        $this->geoScanner = new GeoScanner(
+            $this->htmlFetcher,
+            $this->aiOverviewExtractor,
+            $this->providerRouter,
+            $this->saasSettings,
+            $this->geoScanRepository
+        );
+        $this->geoScanReport = new GeoScanReport($this->geoScanRepository);
+        $this->geoScanAdmin = new GeoScanAdmin(
+            $this->pluginFile,
+            $this->geoScanner,
+            $this->geoScanRepository,
+            $this->geoScanReport
+        );
+
+        // Register dashboard shell (top-level menu)
+        add_action('admin_menu', [$this, 'registerShellMenu']);
+        add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
+        add_action('admin_head', function (): void {
+            echo '<style>
+            #toplevel_page_sseo-ai-shell .wp-menu-image img {
+                padding: 6px 0 0;
+                opacity: 1;
+                width: 22px;
+            }
+            </style>';
+        });
+
+        // Register admin menu (existing submenus under sseo-ai-licenses)
         add_action('admin_menu', [$this->licenseAdmin, 'register']);
         add_action('admin_menu', [$this->saasSettings, 'addSettingsMenu']);
         add_action('admin_menu', [$this->whiteLabelAdmin, 'addMenu']);
+        add_action('admin_menu', [$this->supportAdmin, 'register']);
+        add_action('admin_menu', [$this->emailTemplateAdmin, 'addMenu']);
+        add_action('admin_menu', [$this->geoScanAdmin, 'register']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
+        add_action('admin_enqueue_scripts', [$this->emailTemplateAdmin, 'enqueueAssets']);
 
         // Register REST API for client plugin communication
         add_action('rest_api_init', [$this->licenseAPI, 'register']);
         add_action('rest_api_init', [$this->apiGateway, 'register']);
         add_action('rest_api_init', [$this->webhookHandler, 'register']);
+        add_action('rest_api_init', [$this->supportTickets, 'registerRoutes']);
+        add_action('rest_api_init', [$this->updateServer, 'register']);
+
+        // Register self-serve signup (REST + shortcode)
+        $this->signupCheckout->register();
+
+        // Register revenue dashboard
+        $this->revenueDashboard->register();
+        
+        // Register agency portal
+        $this->agencyRoleManager->register();
+        $this->agencyPortal->register();
+        $this->fyndableLogin->register();
+        
+        // Register customer portal
+        $this->customerRoleManager->register();
+        $this->customerPortal->register();
+        $this->invoiceManager->register();
+
+        // Register bookkeeping admin
+        $this->bookkeepingAdmin->register();
         
         // Register settings
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
         add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
+        add_action('admin_init', [$this->emailTemplateAdmin, 'registerSettings']);
+        add_action('admin_init', [$this->geoScanRepository, 'maybeCreateTables']);
+
+        // Register email automation
+        $this->emailAutomation->register();
+
+        // Register update server settings
+        add_action('admin_init', [$this->updateServer, 'registerSettings']);
 
         // Register activation hook for table creation
         register_activation_hook($this->pluginFile, [$this, 'activate']);
@@ -66,5 +212,41 @@ class Dashboard
     {
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
+        $this->geoScanRepository->maybeCreateTables();
+        $this->emailTemplateRepository->maybeCreateTables();
+        $this->emailTemplateRepository->seedDefaults();
+    }
+
+    /**
+     * Register the SaaS dashboard shell as the main top-level menu.
+     * The existing license menu becomes a hidden submenu (accessed via iframe).
+     */
+    public function registerShellMenu(): void
+    {
+        $enabled = get_option('sseo_ai_saas_wl_enabled', false);
+        $companyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
+
+        $user = wp_get_current_user();
+        $isAgency = $user && in_array('agency_partner', (array)$user->roles, true);
+        if ($isAgency) {
+            $wl = get_user_meta($user->ID, 'sseo_ai_agency_wl', true);
+            if (is_array($wl) && !empty($wl['company_name'])) {
+                $companyName = $wl['company_name'];
+            }
+        }
+
+        $menuName = 'Fyndable Portal';
+        $capability = $isAgency ? 'agency_view_dashboard' : 'manage_options';
+        $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
+
+        add_menu_page(
+            $menuName,
+            $menuName,
+            $capability,
+            'sseo-ai-shell',
+            [$this->dashboardShell, 'render'],
+            $iconUrl,
+            3
+        );
     }
 }

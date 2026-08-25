@@ -50,12 +50,12 @@ if (!defined('SSEO_AI_LICENSE_TYPES')) {
 
 // License Tiers
 if (!defined('SSEO_AI_LICENSE_TIERS')) {
-    define('SSEO_AI_LICENSE_TIERS', ['free', 'trial', 'starter', 'professional', 'business', 'agency', 'dev']);
+    define('SSEO_AI_LICENSE_TIERS', ['trial', 'starter', 'early_adopters', 'professional', 'business', 'agency', 'dev']);
 }
 
 // Tenant Status
 if (!defined('SSEO_AI_TENANT_STATUS')) {
-    define('SSEO_AI_TENANT_STATUS', ['active', 'suspended', 'cancelled']);
+    define('SSEO_AI_TENANT_STATUS', ['active', 'inactive', 'suspended', 'cancelled']);
 }
 
 // License Status

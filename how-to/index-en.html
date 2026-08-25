@@ -1,0 +1,1335 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fyndable Workflow Guide - The logical order of the SEO plugin</title>
+<meta name="description" content="A step-by-step guide that describes the logical order to use the Fyndable SEO plugin: from installation to monitoring, by phase and by feature.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" type="image/png" href="assets/images/logo/fyndable-favi.png">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://docs.fyndable.ai/how-to/index-en.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fyndable Workflow Guide">
+<meta property="og:description" content="The logical order of the Fyndable SEO plugin: from installation to monitoring, by phase and by feature.">
+<meta property="og:url" content="https://docs.fyndable.ai/how-to/index-en.html">
+<meta property="og:site_name" content="Fyndable">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://docs.fyndable.ai/assets/images/logo/long-white-png.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fyndable Workflow Guide">
+<meta name="twitter:description" content="The logical order of the Fyndable SEO plugin: from installation to monitoring, by phase and by feature.">
+<style>
+/* ===== Workflow-specific styles ===== */
+.workflow-section { max-width: 1200px; margin: 0 auto 60px; padding: 0 24px; }
+.workflow-section > h2 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; letter-spacing: -0.5px; }
+.workflow-section > .section-sub { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 36px; }
+
+.phase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.phase-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; position: relative; overflow: hidden; }
+.phase-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+.phase-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient); }
+.phase-number { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--gradient); color: #fff; font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+.phase-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.phase-card .phase-goal { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; }
+.phase-card .phase-fns { font-size: 13px; color: var(--text); line-height: 1.6; }
+.phase-card .phase-fns strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+.phase-card .phase-fns span { display: inline-block; background: #f0f4f8; color: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; margin: 0 4px 4px 0; }
+
+.phase-details { max-width: 880px; margin: 0 auto; }
+details.phase-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; }
+details.phase-block[open] { box-shadow: var(--shadow-lg); border-color: var(--primary); }
+details.phase-block > summary { list-style: none; cursor: pointer; padding: 20px 24px; display: flex; align-items: center; gap: 16px; user-select: none; transition: background 0.15s; }
+details.phase-block > summary::-webkit-details-marker { display: none; }
+details.phase-block > summary:hover { background: #f8f9fb; }
+.phase-block .summary-num { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--gradient); color: #fff; font-weight: 700; font-size: 14px; }
+.phase-block .summary-title { flex: 1; }
+.phase-block .summary-title h3 { font-size: 17px; font-weight: 700; margin: 0; }
+.phase-block .summary-title p { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; }
+.phase-block .chevron { flex-shrink: 0; color: var(--text-muted); transition: transform 0.2s; }
+details.phase-block[open] .chevron { transform: rotate(180deg); }
+
+.phase-body { padding: 0 24px 24px; }
+.phase-body .phase-intro { font-size: 15px; color: #374151; margin-bottom: 20px; padding: 14px 18px; background: #f0f6fc; border: 1px solid #b3d4f0; border-radius: var(--radius-sm); line-height: 1.6; }
+
+.fn-block { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 14px; background: #fff; }
+.fn-block:last-child { margin-bottom: 0; }
+.fn-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.fn-head h4 { font-size: 16px; font-weight: 700; margin: 0; }
+.fn-head .badge { font-size: 12px; padding: 3px 10px; }
+.fn-yield { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6; }
+.fn-block h5 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text); margin: 14px 0 6px; }
+.fn-block ol, .fn-block ul { margin: 0 0 10px 20px; font-size: 14px; color: #374151; line-height: 1.6; }
+.fn-block ol li, .fn-block ul li { margin-bottom: 4px; }
+.fn-block .fn-example { background: #f8f9fb; border-left: 3px solid var(--primary); padding: 10px 14px; border-radius: 4px; font-size: 14px; color: #374151; margin: 8px 0 0; line-height: 1.6; }
+.fn-block code { background: #f0f4f8; padding: 1px 6px; border-radius: 4px; font-size: 13px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+
+@media (max-width: 968px) { .phase-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+    .phase-grid { grid-template-columns: 1fr; }
+    .workflow-section > h2 { font-size: 22px; }
+    details.phase-block > summary { padding: 16px; gap: 12px; }
+    .phase-body { padding: 0 16px 18px; }
+    .fn-block { padding: 14px 16px; }
+}
+
+/* ===== White lang-switch text (workflow guide page) ===== */
+.lang-switch a { color: #fff; }
+
+/* ===== Clickable feature tags in overview ===== */
+.phase-fns span.fn-link { cursor: pointer; transition: background 0.15s, color 0.15s; }
+.phase-fns span.fn-link:hover { background: var(--primary); color: #fff; }
+
+/* ===== Scroll-offset for sticky header ===== */
+.fn-block, details.phase-block { scroll-margin-top: 100px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-inner" style="justify-content: center; position: relative;">
+        <a href="../docs/index-en.html" class="header-logo" style="margin: 0;">
+            <img src="assets/images/logo/long-white-png.png" alt="Fyndable">
+        </a>
+        <div class="lang-switch" style="position: absolute; right: 24px;">
+            <a href="index.html">NL</a>
+            <a href="index-en.html" class="active">EN</a>
+        </div>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-inner">
+        <h1>Fyndable Workflow Guide</h1>
+        <p>This guide shows you the best order in which to use Fyndable. You start with activation and basic settings, then do research, create and optimize content, manage links and technical SEO, add schema, and finish with monitoring. Below the overview you will find expandable detail sections for each phase, with the most important steps, examples, and tips.</p>
+    </div>
+</section>
+
+<!-- ===== WORKFLOW OVERVIEW ===== -->
+<section class="workflow-section">
+    <h2>The 9 phases in logical order</h2>
+    <p class="section-sub">Click a phase in the overview or expand the detail sections below.</p>
+
+    <div class="phase-grid">
+        <div class="phase-card">
+            <div class="phase-number">1</div>
+            <h3>Setup &amp; activation</h3>
+            <p class="phase-goal">Connect your license and set up the SEO basics so all tools become available.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Activate license</span>
+                <span>Onboarding Wizard</span>
+                <span>Settings</span>
+                <span>SEO Importer</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">2</div>
+            <h3>Research &amp; strategy</h3>
+            <p class="phase-goal">Decide which keywords and topics to target before you start writing.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Keywords</span>
+                <span>Keyword Explorer</span>
+                <span>Keyword Difficulty</span>
+                <span>Topic Clusters</span>
+                <span>SERP Competitor</span>
+                <span>Competitor Research</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">3</div>
+            <h3>Content creation</h3>
+            <p class="phase-goal">Generate new content, ideas, and a publishing plan based on your research.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Ideas</span>
+                <span>Content Brief</span>
+                <span>AI Content Writer</span>
+                <span>Simple Content Generator</span>
+                <span>Content Calendar</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">4</div>
+            <h3>Optimize existing content</h3>
+            <p class="phase-goal">Make every page SEO-strong: scores, meta, readability, and E-E-A-T.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Smart Tags</span>
+                <span>TruSEO</span>
+                <span>Readability</span>
+                <span>LSI Keywords</span>
+                <span>Content Optimizer</span>
+                <span>E-E-A-T</span>
+                <span>Bulk Optimizer</span>
+                <span>Open Graph</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">5</div>
+            <h3>Link management</h3>
+            <p class="phase-goal">Build a strong internal link structure and preserve link value.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Link Manager</span>
+                <span>Link Genius</span>
+                <span>Redirect Manager</span>
+                <span>Backlink Analyzer</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">6</div>
+            <h3>Technical SEO</h3>
+            <p class="phase-goal">Make sure search engines can crawl and index your site without errors.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Site Audit</span>
+                <span>XML Sitemap</span>
+                <span>Robots.txt</span>
+                <span>Canonical URL</span>
+                <span>Hreflang</span>
+                <span>Breadcrumbs</span>
+                <span>404 Monitor</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">7</div>
+            <h3>Schema &amp; specialized SEO</h3>
+            <p class="phase-goal">Add structured data and niche SEO for rich snippets and more.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Schema Markup</span>
+                <span>FAQ Schema</span>
+                <span>Video SEO</span>
+                <span>Local SEO</span>
+                <span>WooCommerce SEO</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">8</div>
+            <h3>Monitoring &amp; reporting</h3>
+            <p class="phase-goal">Measure whether your work is effective and act on drops or opportunities.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Rank Tracker</span>
+                <span>AI Search Visibility</span>
+                <span>Content Performance</span>
+                <span>Content Decay</span>
+                <span>A/B Testing</span>
+            </div>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-number">9</div>
+            <h3>Integrations (parallel)</h3>
+            <p class="phase-goal">Connect external services for data, faster indexing, and reporting.</p>
+            <div class="phase-fns">
+                <strong>Features</strong>
+                <span>Google Search Console</span>
+                <span>Google Data / GA4</span>
+                <span>PageSpeed</span>
+                <span>Direct Index</span>
+                <span>IndexNow</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== DETAIL SECTIONS PER PHASE ===== -->
+<section class="workflow-section">
+    <h2>Step-by-step per phase</h2>
+    <p class="section-sub">Expand a phase to see the steps, examples, and tips for each feature.</p>
+
+    <div class="phase-details">
+
+        <!-- PHASE 1 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">1</span>
+                <span class="summary-title">
+                    <h3>Setup &amp; activation</h3>
+                    <p>Connect your license and configure the SEO basics.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Without an active license and correct basic settings, most Fyndable tools will not work. Always start here before creating content or doing research.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.1 Activate license</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Connects your WordPress site to your Fyndable license. After activation, the menus appear and AI and data features are unlocked.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Log in as an administrator in WordPress.</li>
+                        <li>Click <strong>Fyndable &rarr; Connection</strong> in the left menu.</li>
+                        <li>Fill the <strong>Dashboard URL</strong> field, e.g. <code>https://saas.yourdomain.com</code>.</li>
+                        <li>Paste your <strong>license key</strong> in the field.</li>
+                        <li>Click <strong>Activate License</strong>.</li>
+                        <li>Wait for the green checkmark. The menu will rebuild.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> "Invalid license"? Check that the key has no spaces and the dashboard URL is correct (including <code>https://</code>).</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.2 Onboarding Wizard</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Helps you set up the Fyndable basics in a few minutes: title separators, site name, social profiles, post types, and Google integrations.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>After activation the wizard starts automatically. Click <strong>Start</strong>.</li>
+                        <li>Step 1: check that your license is active.</li>
+                        <li>Step 2: fill in basic SEO: separators, site name, social profiles, default Open Graph image.</li>
+                        <li>Step 3: select which post types need SEO tools (usually <code>post</code>, <code>page</code>, and optionally <code>product</code>).</li>
+                        <li>Step 4: optionally connect Search Console, GA4, or PageSpeed.</li>
+                        <li>Click <strong>Finish</strong>; you are redirected to the dashboard.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> For a blog, select <code>post</code> and <code>page</code>. For WooCommerce, also add <code>product</code>.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.3 Settings</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Central place for site name, separators, post types, schema defaults, sitemap, social, and advanced options.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Settings</strong>.</li>
+                        <li>Walk through the tabs: General, Post Types, Social, Sitemap, Advanced.</li>
+                        <li>Change the settings.</li>
+                        <li>Click <strong>Save</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Enable only <code>post</code>, <code>page</code>, and <code>product</code> to keep the editor clean.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>1.4 SEO Importer</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Imports meta data from Yoast, Rank Math, or All in One SEO, so you don't have to move everything manually.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Settings &rarr; Importer</strong>.</li>
+                        <li>Choose the source plugin.</li>
+                        <li>Click <strong>Import</strong>.</li>
+                        <li>Afterwards, spot-check some posts.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Not all plugins store the same fields; fill in the rest manually after the import.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 2 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">2</span>
+                <span class="summary-title">
+                    <h3>Research &amp; strategy</h3>
+                    <p>Decide which keywords and topics to target.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Before writing content, decide which keywords and topics to target. Good research prevents wasting time on keywords that are too difficult or irrelevant.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.1 Keywords</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Central library for all your keywords: add manually, import, export, create clusters, and generate content ideas.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Keywords</strong>.</li>
+                        <li>Click <strong>Add Keyword</strong>.</li>
+                        <li>Enter the keyword, optionally a cluster, and search volume.</li>
+                        <li>Click <strong>Save</strong>.</li>
+                        <li>Select keywords and click <strong>Generate Ideas</strong> for content suggestions.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Use the export function regularly as a backup.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.2 Keyword Explorer</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Expands a seed keyword with SERP title analysis and groups related terms by Jaccard similarity. Discover new content angles.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Tools &rarr; Keyword Explorer</strong>.</li>
+                        <li>Enter a broad keyword, e.g. "plants".</li>
+                        <li>Click <strong>Explore</strong>.</li>
+                        <li>Review clusters like "houseplants" or "plant care".</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Use a more specific seed if the results are too general.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.3 Keyword Difficulty</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Calculates your chance of ranking for a keyword, based on your own site authority, content, and internal link structure.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Tools &rarr; Keyword Difficulty</strong>.</li>
+                        <li>Enter a keyword.</li>
+                        <li>Review the personalized score and advice.</li>
+                        <li>If the score is low, focus on a long-tail variant first.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> "Health insurance" with difficulty 85 for a small site? Target "health insurance compare self-employed" first.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.4 Topic Clusters</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Generates a pillar-cluster map: one main topic (pillar) with supporting articles (clusters). Builds topical authority.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Topic Clusters</strong>.</li>
+                        <li>Enter a main topic, e.g. "sustainable energy".</li>
+                        <li>Click <strong>Generate Cluster</strong>.</li>
+                        <li>Review the suggested pillar and clusters.</li>
+                        <li>Create the pillar page first, then the cluster articles, and link them to the pillar.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Start with 3-5 clusters per pillar; too many clusters will overlap.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.5 SERP Competitor</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Analyzes the top 10 in Google for a keyword and compares it to your content. Shows topic gaps and missing entities.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Tools &rarr; SERP Competitor</strong>.</li>
+                        <li>Enter a keyword.</li>
+                        <li>Click <strong>Analyze</strong>.</li>
+                        <li>Review the heatmap: green = you have it, red = missing.</li>
+                        <li>Update your content for the red fields.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> For "home battery buy" the tool often flags missing "subsidies", "lifespan", and "payback time".</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>2.6 Competitor Research</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Deep competitor analysis: keywords, content, backlinks, ad copy, and AI-generated content detection.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Competitors</strong>.</li>
+                        <li>Enter a competitor domain, e.g. <code>example.com</code>.</li>
+                        <li>Click <strong>Analyze</strong>.</li>
+                        <li>Review the tabs: Keywords, Content, Backlinks, Ads.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Competitor data is cached; click <strong>Refresh</strong> if in doubt.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 3 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">3</span>
+                <span class="summary-title">
+                    <h3>Content creation</h3>
+                    <p>Generate new content, ideas, and a plan.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">With your research as a base, generate ideas, a brief, or a full draft, and schedule publication. Always check AI output for facts and brand voice.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.1 Ideas</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Generates content ideas based on a topic or keyword. Save, edit, or convert to draft or scheduled post.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Ideas</strong> in the menu.</li>
+                        <li>Type a topic or keyword, e.g. "sustainable living".</li>
+                        <li>Click <strong>Generate Ideas</strong>.</li>
+                        <li>Click the star to save ideas.</li>
+                        <li>Click <strong>Convert to Draft</strong> or <strong>Schedule</strong> for an idea.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Give a more specific topic if the ideas are too broad.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.2 Content Brief</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Generates a full SEO brief based on top results: structure, headings, questions, entities, average length, and internal-link opportunities.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Tools &rarr; Content Brief</strong>.</li>
+                        <li>Enter the target keyword.</li>
+                        <li>Click <strong>Generate Brief</strong>.</li>
+                        <li>Read the brief: H1, H2s, target word count, and PAA questions.</li>
+                        <li>Use the brief as a guide in the editor.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> SERP data is cached for 7 days; click <strong>Refresh</strong> if in doubt.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.3 AI Content Writer</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Business+</span>
+                    </div>
+                    <p class="fn-yield">Writes complete articles based on a keyword. Choose type, tone, length, and structure. Fyndable adds relevant internal links automatically.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Tools &rarr; Content Writer</strong>.</li>
+                        <li>Enter a keyword / topic.</li>
+                        <li>Choose article type, tone, and desired word count.</li>
+                        <li>Click <strong>Generate</strong>.</li>
+                        <li>Check the draft for facts, readability, and brand voice.</li>
+                        <li>Publish or schedule.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> AI can hallucinate; check all numbers, dates, and claims.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.4 Content Calendar</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Visual calendar to plan posts, assign them to team members, and spot content gaps.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Content Calendar</strong>.</li>
+                        <li>Click a date to add a new idea or post.</li>
+                        <li>Drag an existing post to another date to reschedule.</li>
+                        <li>Open the <strong>Workflow</strong> accordion in the editor to set status and author.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Workflow fields are only visible in the Business+ tier.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>3.5 Created Posts</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Overview of all AI-generated posts, sorted by status: draft, scheduled, published, or needs review.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Created Posts</strong>.</li>
+                        <li>Use filters to find drafts or scheduled posts.</li>
+                        <li>Select one or more posts.</li>
+                        <li>Choose <strong>Bulk Publish</strong>, <strong>Bulk Draft</strong>, or <strong>Regenerate</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Add a featured image manually or use the AI Image Generator.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 4 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">4</span>
+                <span class="summary-title">
+                    <h3>Optimize existing content</h3>
+                    <p>Make every page SEO-strong: scores, meta, readability, and E-E-A-T.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">For each page, fill in SEO meta, improve the TruSEO and readability score, work in LSI terms, and check E-E-A-T. For large sites, use Bulk Optimizer.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.1 Smart Tags</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Generates and manages SEO title, meta description, focus keyword, and Open Graph tags. The first step per post.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>Smart Tags</strong> accordion in the editor.</li>
+                        <li>Click <strong>Generate</strong> for an AI suggestion.</li>
+                        <li>Edit title and description to stay under 60/160 characters.</li>
+                        <li>Click <strong>Update</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Keep the title under 60 characters; Fyndable shows a preview.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.2 TruSEO Score</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Scores your content 0-100 based on title, meta, heading structure, keyword density, internal links, and images.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open a post or page.</li>
+                        <li>Expand the <strong>SEO Score</strong> section in the meta-box.</li>
+                        <li>Read the feedback: green = good, orange = improvement, red = missing.</li>
+                        <li>Adjust title, meta, or structure.</li>
+                        <li>Save and repeat until the score stays above 80.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Make sure you entered a focus keyword and the heading structure is logical (H1 &rarr; H2 &rarr; H3).</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.3 Readability Score</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Measures how easy your text is to read and flags long sentences, passive voice, and unnecessary filler words.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open <strong>Readability</strong> in the meta-box.</li>
+                        <li>Check the score and specific improvement points.</li>
+                        <li>Shorten long sentences, replace passive constructions, and avoid jargon.</li>
+                        <li>Repeat until the indicator turns green.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Check in <strong>Settings &rarr; General</strong> that the site language is set correctly.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.4 LSI Keywords</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Semantically related terms and synonyms. Working these in makes your content more understandable for search engines.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>First, enter a focus keyword.</li>
+                        <li>Open <strong>Keywords</strong> (LSI) in the meta-box.</li>
+                        <li>Click <strong>Generate LSI Keywords</strong>.</li>
+                        <li>Select 3-5 relevant terms and use them naturally in your text.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Don't use every suggestion; only pick terms that really fit to avoid stuffing.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.5 Content Optimizer</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Analyzes the top 10 in Google and builds a topic model. Scores your text (0-100) and shows missing, overused, and used terms.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Tools &rarr; Content Optimizer</strong> or open the panel in the editor.</li>
+                        <li>Enter your focus keyword.</li>
+                        <li>Click <strong>Analyze</strong>.</li>
+                        <li>Review the list of missing, overused, and used terms.</li>
+                        <li>Update your text and click <strong>Re-analyze</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Use missing terms in natural paragraphs; forced usage doesn't help.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.6 E-E-A-T Validator</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Checks if your content meets Google's E-E-A-T: Experience, Expertise, Authoritativeness, Trustworthiness. Important for YMYL topics.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>E-E-A-T</strong> accordion in the editor.</li>
+                        <li>Click <strong>Analyze</strong>.</li>
+                        <li>Review the scores per pillar.</li>
+                        <li>Add author info, sources, dates, and evidence where needed.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Add a detailed author bio and external sources for a higher score.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.7 Bulk Optimizer</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Business+</span>
+                    </div>
+                    <p class="fn-yield">Scans your entire site for missing SEO titles, meta descriptions, OG tags, and focus keyphrases, and fills them in bulk with AI.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Bulk Optimizer</strong>.</li>
+                        <li>Click <strong>Scan Site</strong>.</li>
+                        <li>Review the summary of missing fields.</li>
+                        <li>Filter on a specific problem.</li>
+                        <li>Check the fields you want to generate.</li>
+                        <li>Select posts and click <strong>Generate for Selected</strong>.</li>
+                        <li>Spot-check a few results.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> It processes one post at a time to save quota. Reload and continue if interrupted.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>4.8 Open Graph &amp; Social Sharing</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Controls how your page looks when someone shares the link on Facebook, LinkedIn, or Twitter/X.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>Social Preview</strong> accordion in the editor.</li>
+                        <li>Adjust the Open Graph title, description, and image.</li>
+                        <li>Save the post.</li>
+                        <li>Test with the Facebook Sharing Debugger or LinkedIn Post Inspector.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Use 1200&times;630 px OG images and refresh the cache in the debugger.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 5 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">5</span>
+                <span class="summary-title">
+                    <h3>Link management</h3>
+                    <p>Build a strong internal link structure and preserve link value.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Internal links distribute link value and help crawlers and users. Redirects preserve link value for deleted or moved pages.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.1 Link Manager / Smart Internal Linking</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Detects orphan pages, scores internal link opportunities, and gives optimized anchor text suggestions.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Link Manager</strong>.</li>
+                        <li>Review the <strong>Orphan Pages</strong> tab.</li>
+                        <li>Click a page to see link suggestions.</li>
+                        <li>Click <strong>Add Link</strong> or copy the anchor and URL to a suitable post.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Not every orphan page needs internal links; some landing pages are intentionally standalone.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.2 Link Genius</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Starter+</span>
+                    </div>
+                    <p class="fn-yield">Automatic internal link rules: define which words or phrases link to which URL. Useful for evergreen links like product categories.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Link Genius</strong>.</li>
+                        <li>Enable <strong>Enable Link Genius</strong>.</li>
+                        <li>Add a rule: Keyword(s) &rarr; Target URL.</li>
+                        <li>Set the maximum number of links per page (e.g. 3).</li>
+                        <li>Save.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Lower the maximum or use exact-match if too many links appear.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.3 Redirect Manager</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Starter+</span>
+                    </div>
+                    <p class="fn-yield">Manages 301 and 302 redirects. Prevents 404 errors and preserves link value for deleted or moved pages.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Sitemaps &rarr; Redirect Manager</strong>.</li>
+                        <li>Click <strong>Add Redirect</strong>.</li>
+                        <li>Enter the source URL (old path without domain, e.g. <code>/old-article</code>).</li>
+                        <li>Enter the target URL (e.g. <code>/new-article</code>).</li>
+                        <li>Choose <strong>301</strong> (permanent) or <strong>302</strong> (temporary).</li>
+                        <li>Save and test the redirect.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Make sure the target does not link back to the source, or you create a redirect loop.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>5.4 Backlink Analyzer</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Analyzes your backlink profile via Ahrefs or Semrush. Shows authority, referring domains, and toxic links.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>SEO Data &rarr; Backlinks</strong> or <strong>AI Tools &rarr; Backlink Analyzer</strong>.</li>
+                        <li>Enter a domain.</li>
+                        <li>Click <strong>Analyze</strong>.</li>
+                        <li>Review the metrics and export the list.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Each API uses its own index; compare trends, not absolute numbers.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 6 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">6</span>
+                <span class="summary-title">
+                    <h3>Technical SEO</h3>
+                    <p>Make sure search engines can crawl and index your site.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Technical issues can block crawling and indexing. Run a Site Audit regularly, fix red items first, and keep sitemap, robots.txt, canonicals, and 404s healthy.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.1 Technical SEO Auditor / Site Audit</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Crawls your entire site and checks crawlability, crawl budget, URL structure, sitemap health, robots.txt, and performance.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Site Audit</strong>.</li>
+                        <li>Click <strong>Run Full Technical Audit</strong>.</li>
+                        <li>Wait for the scan to finish.</li>
+                        <li>Review the scores: Crawlability, Performance, URL Structure, and Sitemap Health.</li>
+                        <li>Scroll to warnings (orange) and errors (red).</li>
+                        <li>Fix the red items first.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Run the audit at least once a month or after major changes.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.2 XML Sitemap</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Automatically generates an XML sitemap with all public URLs. Search engines use this as a roadmap.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Sitemaps</strong>.</li>
+                        <li>Check that the main sitemap is active (usually <code>https://yoursite.com/sitemap.xml</code>).</li>
+                        <li>Copy the URL.</li>
+                        <li>Submit it in <strong>Google Search Console &rarr; Sitemaps</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Sitemap empty? Check in <strong>Settings &rarr; Post Types</strong> which post types are included.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.3 Robots.txt Editor</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Edit <code>robots.txt</code> from WordPress. Determines which pages search engines may crawl.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Sitemaps &rarr; Robots.txt</strong>.</li>
+                        <li>Review the current content.</li>
+                        <li>Add or adjust rules, e.g. <code>Disallow: /wp-admin/</code>.</li>
+                        <li>Make sure a <code>Sitemap: https://yoursite.com/sitemap.xml</code> line is present.</li>
+                        <li>Click <strong>Save</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Be careful with <code>Disallow: /</code>; it blocks your entire site. Test with the GSC robots.txt tester.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.4 Canonical URL</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Indicates the preferred URL version of a page. Prevents duplicate content issues from pagination, filters, and guest posts.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>Canonical URL</strong> accordion in the editor.</li>
+                        <li>Enter a custom canonical if the default is not correct.</li>
+                        <li>Leave the field empty to use the current URL automatically.</li>
+                        <li>Save.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Canonical is a hint, not a command; the content must actually match.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.5 Hreflang</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Adds language and region tags so search engines show the correct language variant. Supports WPML, Polylang, and TranslatePress.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>Hreflang</strong> accordion in the editor.</li>
+                        <li>Connect translated versions or manually fill <code>x-default</code> and language codes.</li>
+                        <li>Save.</li>
+                        <li>Test with an hreflang testing tool.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Make sure every language variant links back to the others; use <code>nl-nl</code> for the Netherlands.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.6 Breadcrumbs</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Generates frontend breadcrumbs and JSON-LD BreadcrumbList schema. Helps users and search engines with hierarchy.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Settings &rarr; Breadcrumbs</strong>.</li>
+                        <li>Enable breadcrumbs.</li>
+                        <li>Choose shortcode, widget, or template function.</li>
+                        <li>Test that the breadcrumbs display correctly.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Validate the BreadcrumbList schema with the Google Rich Results Test.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>6.7 404 Monitor</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Tracks 404 errors encountered by visitors and crawlers. Prevents lost traffic.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Site Audit &rarr; 404 Monitor</strong>.</li>
+                        <li>Review the list of broken URLs, sorted by hits.</li>
+                        <li>Click a URL.</li>
+                        <li>Create a 301 redirect to the most relevant page or fix the internal link.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Check the referrer to see if external links point to the broken URL.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 7 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">7</span>
+                <span class="summary-title">
+                    <h3>Schema &amp; specialized SEO</h3>
+                    <p>Add structured data and niche SEO.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Structured data (JSON-LD) enables rich snippets: stars, FAQ drop-downs, videos, and local pack. Local SEO and WooCommerce SEO are essential for local businesses and webshops.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.1 Schema Markup Manager</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Adds structured data (JSON-LD) for rich snippets: stars, FAQ drop-downs, carousels, and more.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>Schema</strong> accordion in the editor.</li>
+                        <li>Click <strong>Add Schema</strong>.</li>
+                        <li>Choose a type: Article, Product, LocalBusiness, Review, etc.</li>
+                        <li>Fill the required fields.</li>
+                        <li>Click <strong>Validate</strong> and save.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Disable conflicting schema plugins (Yoast, Rank Math) if you want Fyndable to be the primary schema source.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.2 FAQ Schema</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Marks up questions and answers so Google may show an FAQ drop-down in the SERP.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Open the <strong>FAQ Schema</strong> accordion in the editor.</li>
+                        <li>Click <strong>Add Question</strong>.</li>
+                        <li>Fill in question and answer.</li>
+                        <li>Repeat for each FAQ.</li>
+                        <li>Save.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Keep it to one FAQ block per page to avoid schema errors.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.3 Video SEO</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Adds VideoObject schema and video sitemap support, making videos more findable in Google Video and YouTube links.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Make sure a video is embedded in a post.</li>
+                        <li>Open <strong>Video SEO</strong> in the meta-box.</li>
+                        <li>Fill in title, description, upload, and duration information.</li>
+                        <li>Enable the video sitemap in <strong>Sitemaps</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Make sure videos are publicly accessible and not noindexed.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.4 Local SEO</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Optimizes your site for local searches: business name, address, phone, opening hours, and LocalBusiness schema.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Settings &rarr; Local SEO</strong>.</li>
+                        <li>Fill in business name, address, phone, email, opening hours, and URLs.</li>
+                        <li>Choose your business type, e.g. <code>LocalBusiness</code> or <code>Dentist</code>.</li>
+                        <li>Save.</li>
+                        <li>Open a post and add <strong>Local SEO</strong> schema if needed.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Keep name, address, and phone (NAP) exactly the same on every page.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>7.5 WooCommerce SEO</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Adds product and review schema, optimizes product categories, and offers SEO tools specifically for WooCommerce.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Settings &rarr; Post Types</strong> and make sure <code>product</code> is enabled.</li>
+                        <li>Open a product in the editor.</li>
+                        <li>Fill in SEO title, meta description, and product schema.</li>
+                        <li>Let price, availability, and SKU fill in automatically.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Request a recrawl in Search Console if the price in Google is wrong.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 8 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">8</span>
+                <span class="summary-title">
+                    <h3>Monitoring &amp; reporting</h3>
+                    <p>Measure whether your work is effective and act on drops.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">Once content is live, track rankings, traffic, and AI visibility. Content Decay flags drops; A/B testing and reports support iterative improvement.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.1 Rank Tracker</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Tracks daily positions for your most important keywords. Shows historical trends and fluctuations.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Rank Tracker</strong>.</li>
+                        <li>Click <strong>Add Keyword</strong>.</li>
+                        <li>Enter the keyword and select country/device.</li>
+                        <li>Fyndable checks the position daily.</li>
+                        <li>Review the trend overview after a few days.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Position 0 means not yet indexed or outside the top 100.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.2 AI Search Visibility / LLM Tracker</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Measures how often your brand, products, or competitors are mentioned in answers from ChatGPT, Perplexity, and Google Gemini.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>AI Search Visibility</strong> or <strong>LLM Tracker</strong>.</li>
+                        <li>Enter your <strong>brand name</strong>.</li>
+                        <li>Enter product names and competitors, each on a new line.</li>
+                        <li>Enter your <strong>category</strong>.</li>
+                        <li>Choose platforms and frequency.</li>
+                        <li>Click <strong>Save Settings</strong> and then <strong>Run Scan</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> AI answers are non-deterministic; run multiple scans and compare trends.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.3 Content Performance</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Connects rankings to traffic data from Search Console and/or GA4. See which content drops, grows, or stagnates.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>First connect <strong>Search Console</strong> and/or <strong>GA4</strong> in <strong>Integrations</strong>.</li>
+                        <li>Go to <strong>Content Performance</strong>.</li>
+                        <li>Filter by period, author, or post type.</li>
+                        <li>Analyze clicks, impressions, CTR, and average position.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> GSC and GA4 numbers always differ; use them for trends, not exact comparisons.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.4 Content Decay Monitor</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Business+</span>
+                    </div>
+                    <p class="fn-yield">Detects pages that are losing positions or traffic. Gives a historical overview and refresh advice per post.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Content Decay</strong> or open <strong>Position Trends</strong> in the editor.</li>
+                        <li>Sort by dropping positions or declining traffic.</li>
+                        <li>Click a post.</li>
+                        <li>Follow the advice: update statistics, expand the topic, or improve internal links.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Connect Search Console or GA4 in Integrations first if no data appears.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>8.5 A/B Testing (SEO)</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Tests variants of titles or descriptions and measures which variant gets more clicks.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>A/B Testing</strong>.</li>
+                        <li>Choose a post and element (title or description).</li>
+                        <li>Create variant A and variant B.</li>
+                        <li>Set the duration (e.g. 30 days) and start the test.</li>
+                        <li>After the test, review the winner and apply it.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> You need enough traffic for statistical significance; small sites need more time.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PHASE 9 -->
+        <details class="phase-block">
+            <summary>
+                <span class="summary-num">9</span>
+                <span class="summary-title">
+                    <h3>Integrations (parallel)</h3>
+                    <p>Connect external services for data and faster indexing.</p>
+                </span>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div class="phase-body">
+                <p class="phase-intro">These connections run parallel to the workflow. GSC and GA4 give insight; Direct Index and IndexNow speed up indexing. Add them as soon as you have activated Fyndable.</p>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.1 Google Search Console</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Pulls performance data: queries, pages, CTR, positions, and index status.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Integrations &rarr; Google Search Console</strong>.</li>
+                        <li>Click <strong>Connect with Google</strong>.</li>
+                        <li>Choose the correct property.</li>
+                        <li>Open <strong>Google Data &rarr; Search Console</strong>.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Property not visible? Make sure your site is verified and you log in with an admin account.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.2 Google Data / GA4</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Combines data from GSC, GA4, Google Ads, SE Ranking, and Ahrefs in one dashboard.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Connect the desired services in <strong>Integrations</strong>.</li>
+                        <li>Go to <strong>Google Data</strong> or <strong>SEO Data</strong>.</li>
+                        <li>Choose period and metrics.</li>
+                        <li>Review graphs and tables.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Empty widgets? Check that the related API connection is active.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.3 PageSpeed Insights</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Measures Core Web Vitals and performance scores for mobile and desktop. Fyndable stores results so you can track trends.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Integrations &rarr; PageSpeed</strong>.</li>
+                        <li>Enter a URL.</li>
+                        <li>Click <strong>Analyze</strong>.</li>
+                        <li>Review scores and recommendations.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> PageSpeed has a quota; try again later if the quota is exhausted.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.4 Direct Index (Google Indexing API)</h4>
+                        <span class="badge badge-priority-high">High</span>
+                        <span class="badge badge-tier">Professional+</span>
+                    </div>
+                    <p class="fn-yield">Requests indexing directly from Google for published or updated posts via the Google Indexing API.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Integrations &rarr; Direct Index</strong>.</li>
+                        <li>Connect your Google account with the correct OAuth scope (<code>indexing</code>).</li>
+                        <li>Open a published post in the editor.</li>
+                        <li>Click <strong>Submit to Google</strong> in the meta-box.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> The daily quota is limited; prioritize important posts.</p>
+                </div>
+
+                <div class="fn-block">
+                    <div class="fn-head">
+                        <h4>9.5 IndexNow</h4>
+                        <span class="badge badge-priority-medium">Medium</span>
+                        <span class="badge badge-tier">All tiers</span>
+                    </div>
+                    <p class="fn-yield">Automatically notifies Bing and Yandex when your content changes, so you get indexed faster.</p>
+                    <h5>Steps</h5>
+                    <ol>
+                        <li>Go to <strong>Integrations &rarr; IndexNow</strong>.</li>
+                        <li>Enable <strong>Enable IndexNow</strong>.</li>
+                        <li>Generate or upload your API key.</li>
+                        <li>Save. Fyndable now pings automatically on publish and update.</li>
+                    </ol>
+                    <p class="fn-example"><strong>Tip:</strong> Make sure the uploads folder is writable so <code>indexnow-key.txt</code> can be created automatically.</p>
+                </div>
+            </div>
+        </details>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-inner" style="display: flex; justify-content: center; align-items: center; padding: 48px 24px;">
+        <a href="../docs/index-en.html">
+            <img src="assets/images/logo/long-white-png.png" alt="Fyndable" style="height: 38px; width: auto;">
+        </a>
+    </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script>
+(function(){
+    var blocks = Array.prototype.slice.call(document.querySelectorAll('details.phase-block'));
+    var fnMap = {};
+    var norm = function(s){ return s.toLowerCase().replace(/&amp;/g,'&').replace(/[^a-z0-9 &-]/g,'').replace(/\s+/g,' ').trim(); };
+    blocks.forEach(function(d){
+        d.querySelectorAll('.fn-block').forEach(function(fb){
+            var h = fb.querySelector('h4');
+            if(!h) return;
+            var name = h.textContent.replace(/^\d+\.\d+\s+/, '');
+            fnMap[norm(name)] = { fb: fb, details: d };
+        });
+    });
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.phase-card'));
+    cards.forEach(function(card, phaseIdx){
+        var spans = card.querySelectorAll('.phase-fns span');
+        spans.forEach(function(span){
+            var key = norm(span.textContent);
+            var match = fnMap[key] || null;
+            if(!match){
+                var cand = blocks[phaseIdx] ? Array.prototype.slice.call(blocks[phaseIdx].querySelectorAll('.fn-block')) : [];
+                for(var i=0;i<cand.length;i++){
+                    var h = cand[i].querySelector('h4');
+                    if(!h) continue;
+                    var nm = norm(h.textContent.replace(/^\d+\.\d+\s+/, ''));
+                    if(nm.indexOf(key) === 0){ match = { fb: cand[i], details: blocks[phaseIdx] }; break; }
+                }
+            }
+            var target = match || { fb: null, details: blocks[phaseIdx] };
+            if(!target.details) return;
+            span.classList.add('fn-link');
+            span.addEventListener('click', function(e){
+                e.preventDefault();
+                target.details.open = true;
+                var el = target.fb || target.details;
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    });
+})();
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Fyndable Workflow Guide",
+    "description": "The logical order of the Fyndable SEO plugin: from installation to monitoring, by phase and by feature.",
+    "datePublished": "2026-08-17",
+    "dateModified": "2026-08-17",
+    "inLanguage": "en-US",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Fyndable",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://docs.fyndable.ai/assets/images/logo/long-white-png.png"
+        }
+    }
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://docs.fyndable.ai/index-en.html"},
+        {"@type": "ListItem", "position": 2, "name": "Workflow guide", "item": "https://docs.fyndable.ai/how-to/index-en.html"}
+    ]
+}
+</script>
+</body>
+</html>

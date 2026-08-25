@@ -13,6 +13,7 @@ class RankTracker
 {
     private Settings $settings;
     private DashboardAPI $dashboardAPI;
+    private ?LocalSerp $localSerp = null;
     private string $tableName;
     private string $keywordsTable;
 
@@ -23,6 +24,11 @@ class RankTracker
         $this->dashboardAPI = $dashboardAPI;
         $this->tableName = $wpdb->prefix . 'sseo_ai_rank_history';
         $this->keywordsTable = $wpdb->prefix . 'sseo_ai_tracked_keywords';
+    }
+
+    public function setLocalSerp(?LocalSerp $localSerp): void
+    {
+        $this->localSerp = $localSerp;
     }
 
     public function register(): void
@@ -60,6 +66,8 @@ class RankTracker
             best_position int DEFAULT 0,
             previous_position int DEFAULT 0,
             last_checked datetime DEFAULT NULL,
+            last_provider varchar(50) DEFAULT NULL,
+            last_error text DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             active tinyint(1) DEFAULT 1,
             PRIMARY KEY (id),
@@ -108,6 +116,13 @@ class RankTracker
         $createdAtExists = $wpdb->get_results("SHOW COLUMNS FROM {$this->tableName} LIKE 'created_at'");
         if (empty($createdAtExists)) {
             $wpdb->query("ALTER TABLE {$this->tableName} ADD COLUMN created_at datetime DEFAULT CURRENT_TIMESTAMP");
+        }
+        
+        // Check if last_provider and last_error columns exist
+        $lastProviderExists = $wpdb->get_results("SHOW COLUMNS FROM {$this->keywordsTable} LIKE 'last_provider'");
+        if (empty($lastProviderExists)) {
+            $wpdb->query("ALTER TABLE {$this->keywordsTable} ADD COLUMN last_provider varchar(50) DEFAULT NULL");
+            $wpdb->query("ALTER TABLE {$this->keywordsTable} ADD COLUMN last_error text DEFAULT NULL");
         }
     }
 
@@ -291,9 +306,12 @@ class RankTracker
                 continue;
             }
 
-            $position = $this->checkKeywordPosition($kw['keyword'], $kw['url'], $kw['country']);
+            $checkResult = $this->checkKeywordPosition($kw['keyword'], $kw['url'], $kw['country']);
+            $now = current_time('mysql');
 
-            if ($position !== null) {
+            if ($checkResult !== null) {
+                $position = (int) ($checkResult['position'] ?? 0);
+
                 // Insert history record
                 $wpdb->replace($this->tableName, [
                     'keyword_id' => $kw['id'],
@@ -307,7 +325,9 @@ class RankTracker
                 $updateData = [
                     'previous_position' => $kw['current_position'],
                     'current_position' => $position,
-                    'last_checked' => current_time('mysql'),
+                    'last_checked' => $now,
+                    'last_provider' => $checkResult['provider'] ?? null,
+                    'last_error' => $checkResult['error'] ?? null,
                 ];
                 if ($position > 0 && ($kw['best_position'] == 0 || $position < $kw['best_position'])) {
                     $updateData['best_position'] = $position;
@@ -315,6 +335,11 @@ class RankTracker
 
                 $wpdb->update($this->keywordsTable, $updateData, ['id' => $kw['id']]);
                 $checked++;
+            } else {
+                $wpdb->update($this->keywordsTable, [
+                    'last_error' => __('No response from dashboard', 'ai-seo-client'),
+                    'last_checked' => $now,
+                ], ['id' => $kw['id']]);
             }
         }
 
@@ -322,9 +347,10 @@ class RankTracker
     }
 
     /**
-     * Check a single keyword position via SaaS Dashboard SERP proxy
+     * Check a single keyword position via SaaS Dashboard SERP proxy.
+     * Returns null on connection failure, or an array with position, provider, checked_at, error.
      */
-    private function checkKeywordPosition(string $keyword, string $targetUrl, string $country): ?int
+    private function checkKeywordPosition(string $keyword, string $targetUrl, string $country): ?array
     {
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
@@ -347,22 +373,40 @@ class RankTracker
                     'target_url' => $targetUrl,
                     'country' => $country,
                 ]),
-                'timeout' => 30,
+                'timeout' => 60,
                 'sslverify' => true,
             ]
         );
 
         if (is_wp_error($response)) {
-            return null;
+            return [
+                'position' => 0,
+                'provider' => null,
+                'checked_at' => current_time('mysql'),
+                'error' => $response->get_error_message(),
+            ];
         }
 
+        $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
+        $now = current_time('mysql');
 
-        if (!empty($body['success']) && isset($body['position'])) {
-            return (int) $body['position'];
+        if ($statusCode !== 200 || empty($body['success']) || !isset($body['position'])) {
+            $message = $body['message'] ?? __('Invalid response from SERP service', 'ai-seo-client');
+            return [
+                'position' => 0,
+                'provider' => $body['provider'] ?? null,
+                'checked_at' => $now,
+                'error' => $message,
+            ];
         }
 
-        return null;
+        return [
+            'position' => (int) $body['position'],
+            'provider' => $body['provider'] ?? null,
+            'checked_at' => $body['checked_at'] ?? $now,
+            'error' => null,
+        ];
     }
 
     /**
@@ -372,11 +416,11 @@ class RankTracker
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: 0; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: 0; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
         </style>
@@ -388,6 +432,16 @@ class RankTracker
 
             <div class="sseo-ai-content">
                 <div style="max-width:1100px;">
+
+                <!-- Tabs -->
+                <div style="margin-bottom:20px;">
+                    <button type="button" class="button rank-tab active" data-tab="rank-tracker" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></button>
+                    <?php if ($this->localSerp): ?>
+                        <button type="button" class="button rank-tab" data-tab="rank-local" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
+                    <?php endif; ?>
+                </div>
+
+                <div id="rank-tracker-panel" class="rank-panel" style="display:block;">
                 <!-- Add Keyword Form -->
                 <div class="sseo-ai-dashboard-card">
                     <h2><?php esc_html_e('Add Keyword to Track', 'ai-seo-client'); ?></h2>
@@ -430,11 +484,12 @@ class RankTracker
                                 <th style="width:60px;"><?php esc_html_e('Country', 'ai-seo-client'); ?></th>
                                 <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
                                 <th style="width:140px;"><?php esc_html_e('Last Checked', 'ai-seo-client'); ?></th>
+                                <th style="width:80px;"><?php esc_html_e('Provider', 'ai-seo-client'); ?></th>
                                 <th style="width:130px;"><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
                             </tr>
                         </thead>
                         <tbody id="rank-table-body">
-                            <tr><td colspan="8" style="text-align:center;color:#999;"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></td></tr>
+                            <tr><td colspan="9" style="text-align:center;color:#999;"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -444,6 +499,14 @@ class RankTracker
                     <h2 id="rank-history-title"></h2>
                     <div id="rank-history-chart" style="height:250px; position:relative;"></div>
                 </div>
+                </div>
+
+                <?php if ($this->localSerp): ?>
+                    <div id="rank-local-panel" class="rank-panel" style="display:none;">
+                        <?php $this->localSerp->renderPanel(); ?>
+                    </div>
+                <?php endif; ?>
+
             </div>
             </div>
         </div>
@@ -458,10 +521,11 @@ class RankTracker
                     var keywords = (res && res.keywords) ? res.keywords : [];
 
                     if (!keywords.length) {
-                        tbody.append('<tr><td colspan="8" style="text-align:center;color:#999;"><?php echo esc_js(__('No keywords tracked yet. Add one above!', 'ai-seo-client')); ?></td></tr>');
+                        tbody.append('<tr><td colspan="9" style="text-align:center;color:#999;"><?php echo esc_js(__('No keywords tracked yet. Add one above!', 'ai-seo-client')); ?></td></tr>');
                         return;
                     }
 
+                    var now = new Date();
                     keywords.forEach(function(kw) {
                         var pos = kw.current_position || '—';
                         var prev = kw.previous_position || 0;
@@ -482,15 +546,29 @@ class RankTracker
                         var posColor = curr > 0 && curr <= 3 ? '#00a32a' : (curr <= 10 ? '#2271b1' : (curr <= 20 ? '#dba617' : '#d63638'));
                         if (curr === 0) posColor = '#999';
 
+                        var lastCheckedText = kw.last_checked || '<?php echo esc_js(__('Never', 'ai-seo-client')); ?>';
+                        var lastCheckedStyle = '';
+                        if (kw.last_checked) {
+                            var checkedDate = new Date(kw.last_checked.replace(' ', 'T'));
+                            if (!isNaN(checkedDate) && (now - checkedDate) > (48 * 60 * 60 * 1000)) {
+                                lastCheckedText += ' (stale)';
+                                lastCheckedStyle = 'color:#d63638;';
+                            }
+                        }
+
+                        var providerText = kw.last_provider ? kw.last_provider : '—';
+                        var errorAttr = kw.last_error ? ' title="' + $('<span>').text(kw.last_error).html().replace(/"/g, '&quot;') + '"' : '';
+
                         tbody.append(
-                            '<tr>' +
+                            '<tr' + errorAttr + '>' +
                             '<td><strong>' + $('<span>').text(kw.keyword).html() + '</strong></td>' +
                             '<td><span style="font-size:18px;font-weight:bold;color:' + posColor + ';">' + (curr || '—') + '</span></td>' +
                             '<td>' + changeHtml + '</td>' +
                             '<td>' + (kw.best_position || '—') + '</td>' +
                             '<td>' + (kw.country || '').toUpperCase() + '</td>' +
                             '<td style="font-size:12px;">' + $('<span>').text(kw.url || '').html() + '</td>' +
-                            '<td style="font-size:12px;">' + (kw.last_checked || '<?php echo esc_js(__('Never', 'ai-seo-client')); ?>') + '</td>' +
+                            '<td style="font-size:12px;' + lastCheckedStyle + '">' + lastCheckedText + '</td>' +
+                            '<td style="font-size:12px;">' + $('<span>').text(providerText).html() + '</td>' +
                             '<td>' +
                                 '<button class="button button-small rank-show-history" data-id="' + kw.id + '" data-keyword="' + $('<span>').text(kw.keyword).html() + '"><?php echo esc_js(__('History', 'ai-seo-client')); ?></button> ' +
                                 '<button class="button button-small rank-delete" data-id="' + kw.id + '" style="color:#d63638;">✕</button>' +
@@ -501,7 +579,7 @@ class RankTracker
                 }).catch(function(error) {
                     var tbody = $('#rank-table-body');
                     tbody.empty();
-                    tbody.append('<tr><td colspan="8" style="text-align:center;color:#d63638;"><?php echo esc_js(__('Failed to load keywords. Please refresh the page.', 'ai-seo-client')); ?></td></tr>');
+                    tbody.append('<tr><td colspan="9" style="text-align:center;color:#d63638;"><?php echo esc_js(__('Failed to load keywords. Please refresh the page.', 'ai-seo-client')); ?></td></tr>');
                     console.error('Rank tracker loadKeywords error:', error);
                 });
             }
@@ -606,6 +684,106 @@ class RankTracker
                 html += '</div>';
 
                 container.html(html);
+            }
+
+            // Tab switching
+            $('.rank-tab').on('click', function() {
+                var tab = $(this).data('tab');
+                $('.rank-tab').removeClass('active').css({'background':'#f0f0f1','color':'#1d2327'});
+                $(this).addClass('active').css({'background':'#fff','color':'#2271b1'});
+                $('.rank-panel').hide();
+                $('#' + tab).show();
+            });
+            $('.rank-tab.active').trigger('click');
+
+            // Local SERP scan
+            $('#local-scan').on('click', function() {
+                var btn = $(this);
+                var lat = $('#local-lat').val();
+                var lng = $('#local-lng').val();
+
+                if (!lat || !lng) {
+                    alert('<?php echo esc_js(__('Set your business coordinates first in Settings → Local Business.', 'ai-seo-client')); ?>');
+                    return;
+                }
+
+                btn.prop('disabled', true);
+                $('#local-spinner').addClass('is-active');
+                $('#local-results-table').hide();
+                $('#local-result-summary').html('');
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/local-serp/scan',
+                    method: 'POST',
+                    data: {
+                        keyword: $('#local-keyword').val().trim(),
+                        latitude: parseFloat(lat),
+                        longitude: parseFloat(lng),
+                        radius: parseInt($('#local-radius').val(), 10),
+                        grid: parseInt($('#local-grid').val(), 10),
+                        country: $('#rank-country').val() || 'nl',
+                        language: $('#rank-country').val() || 'nl',
+                        business_name: ''
+                    }
+                }).then(function(res) {
+                    var tbody = $('#local-results-body');
+                    tbody.empty();
+
+                    var results = res.results || [];
+                    var summary = '';
+                    if (res.own_position) {
+                        summary += '<?php echo esc_js(__('Your business position', 'ai-seo-client')); ?>: #' + res.own_position;
+                    } else if (res.own_presence) {
+                        summary += '<?php echo esc_js(__('Your business seen in', 'ai-seo-client')); ?> ' + res.own_presence + ' / ' + res.points_scanned + ' <?php echo esc_js(__('grid points', 'ai-seo-client')); ?>';
+                    } else {
+                        summary += '<?php echo esc_js(__('Not found in this scan.', 'ai-seo-client')); ?>';
+                    }
+                    if (res.provider) {
+                        summary += ' <span style="color:#999;font-size:12px;">(<?php echo esc_js(__('provider', 'ai-seo-client')); ?>: ' + res.provider + ')</span>';
+                    }
+                    $('#local-result-summary').html(summary);
+
+                    if (!results.length) {
+                        tbody.append('<tr><td colspan="5" style="text-align:center;color:#999;"><?php echo esc_js(__('No local results found.', 'ai-seo-client')); ?></td></tr>');
+                    }
+
+                    results.forEach(function(item, index) {
+                        var distance = '';
+                        if (item.gps && typeof item.gps.lat !== 'undefined' && lat && lng) {
+                            distance = calculateDistance(parseFloat(lat), parseFloat(lng), item.gps.lat, item.gps.lng).toFixed(2) + ' km';
+                        }
+                        var rating = (item.rating ? item.rating + ' (' + (item.reviews || 0) + ')' : '—');
+                        var title = item.title ? $('<span>').text(item.title).html() : '—';
+                        var address = item.address ? $('<span>').text(item.address).html() : '';
+                        var row = '<tr>' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td><strong>' + title + '</strong></td>' +
+                            '<td style="font-size:12px;">' + address + '</td>' +
+                            '<td>' + rating + '</td>' +
+                            '<td>' + distance + '</td>' +
+                        '</tr>';
+                        tbody.append(row);
+                    });
+
+                    $('#local-results-table').show();
+                    btn.prop('disabled', false);
+                    $('#local-spinner').removeClass('is-active');
+                }).catch(function(err) {
+                    alert(err.message || '<?php echo esc_js(__('Local scan failed.', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false);
+                    $('#local-spinner').removeClass('is-active');
+                });
+            });
+
+            function calculateDistance(lat1, lng1, lat2, lng2) {
+                var R = 6371;
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLng = (lng2 - lng1) * Math.PI / 180;
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
             }
         });
         </script>

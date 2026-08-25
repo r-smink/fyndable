@@ -95,6 +95,7 @@ class RolePermissions
     {
         $map = [
             'ai-seo-client' => 'manage_options', // Connection page - all admins can access
+            'ai-seo-competitor-research' => 'edit_posts',
             'ai-seo-assistant-dashboard' => 'aiseo_view_dashboard',
             'ai-seo-assistant-snapshots' => 'aiseo_view_serp',
             'ai-seo-assistant-redirects' => 'aiseo_manage_redirects',

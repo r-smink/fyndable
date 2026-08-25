@@ -40,10 +40,9 @@ class SeoReportExport
     /**
      * Gather all SEO data for the report
      */
-    private function gatherReportData(): array
+    public function getReportData(): array
     {
-        $postTypes = get_post_types(['public' => true]);
-        unset($postTypes['attachment']);
+        $postTypes = PageBuilderHelper::getSeoPostTypes();
 
         $posts = get_posts([
             'post_type' => array_values($postTypes),
@@ -174,7 +173,7 @@ class SeoReportExport
         }
         check_admin_referer('aiseo_export_pdf');
 
-        $data = $this->gatherReportData();
+        $data = $this->getReportData();
 
         $postsWithIssues = array_filter($data['rows'], fn($r) => $r['issue_count'] > 0);
         $postsOk = $data['total_posts'] - count($postsWithIssues);
@@ -187,7 +186,7 @@ class SeoReportExport
             <title><?php echo esc_html($data['site_name']); ?> — SEO Report</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1d2327; padding: 40px; max-width: 1000px; margin: 0 auto; font-size: 14px; }
+                body { font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1d2327; padding: 40px; max-width: 1000px; margin: 0 auto; font-size: 14px; }
                 h1 { font-size: 28px; margin-bottom: 5px; }
                 h2 { font-size: 20px; margin: 30px 0 15px; border-bottom: 2px solid #2271b1; padding-bottom: 5px; }
                 .meta { color: #666; margin-bottom: 30px; }

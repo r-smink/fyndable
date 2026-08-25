@@ -351,3 +351,631 @@ msgstr "Ongeldig antwoord van dashboard - geen tenant sleutel"
 
 msgid "You do not have permission to access this page."
 msgstr "Je hebt geen toestemming om deze pagina te bekijken."
+
+# Missing menu labels from fyndabledashboard.php
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Ideas"
+msgstr "Ideeën"
+
+msgid "Created Posts"
+msgstr "Aangemaakte berichten"
+
+msgid "Keywords"
+msgstr "Zoekwoorden"
+
+msgid "Link Manager"
+msgstr "Linkbeheer"
+
+msgid "Competitors"
+msgstr "Concurrenten"
+
+msgid "Sitemaps"
+msgstr "Sitemaps"
+
+msgid "Bulk Optimizer"
+msgstr "Bulkoptimalisatie"
+
+msgid "SEO Data"
+msgstr "SEO-data"
+
+msgid "LLM Tracker"
+msgstr "LLM-tracker"
+
+msgid "A/B Testing"
+msgstr "A/B-testen"
+
+msgid "Google Data"
+msgstr "Google-data"
+
+msgid "Rank Tracker"
+msgstr "Ranktracker"
+
+msgid "Topic Clusters"
+msgstr "Onderwerpgroepen"
+
+msgid "Support"
+msgstr "Ondersteuning"
+
+# Post meta box groups and panels
+msgid "Content & Keywords"
+msgstr "Content & zoekwoorden"
+
+msgid "Technical SEO"
+msgstr "Technische SEO"
+
+msgid "Social & Schema"
+msgstr "Social & schema"
+
+msgid "AI Tools"
+msgstr "AI-hulpmiddelen"
+
+msgid "Advanced"
+msgstr "Geavanceerd"
+
+msgid "SEO Score"
+msgstr "SEO-score"
+
+msgid "Smart Tags"
+msgstr "Slimme tags"
+
+msgid "Internal Links"
+msgstr "Interne links"
+
+msgid "E-E-A-T"
+msgstr "E-E-A-T"
+
+msgid "Performance"
+msgstr "Prestaties"
+
+msgid "Workflow"
+msgstr "Workflow"
+
+msgid "Canonical URL"
+msgstr "Canonical URL"
+
+msgid "Hreflang"
+msgstr "Hreflang"
+
+msgid "International"
+msgstr "Internationaal"
+
+msgid "SERP Features"
+msgstr "SERP-functies"
+
+msgid "Position Trends"
+msgstr "Positietrends"
+
+msgid "SEO Revisions"
+msgstr "SEO-revisies"
+
+msgid "Social Preview"
+msgstr "Social preview"
+
+msgid "Social Sharing"
+msgstr "Social sharing"
+
+msgid "Schema"
+msgstr "Schema"
+
+msgid "FAQ Schema"
+msgstr "FAQ-schema"
+
+msgid "Video SEO"
+msgstr "Video-SEO"
+
+msgid "Local SEO"
+msgstr "Lokale SEO"
+
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+msgid "AI Content"
+msgstr "AI-content"
+
+msgid "AI Image"
+msgstr "AI-afbeelding"
+
+msgid "AI Repurpose"
+msgstr "AI-hergebruik"
+
+msgid "Originality"
+msgstr "Originaliteit"
+
+msgid "Alt Text"
+msgstr "Alt-tekst"
+
+msgid "Every 2 minutes (Fyndable Queue)"
+msgstr "Elke 2 minuten (Fyndable-wachtrij)"
+
+# Client page titles / post meta box
+msgid "Competitor Research"
+msgstr "Concurrentieonderzoek"
+
+msgid "Link Genius"
+msgstr "Linkgenie"
+
+msgid "Redirect Manager"
+msgstr "Redirectbeheer"
+
+msgid "SEO Data Dashboard"
+msgstr "SEO-datadashboard"
+
+msgid "AI Search Visibility"
+msgstr "AI-zichtbaarheid"
+
+msgid "Automation"
+msgstr "Automatisering"
+
+msgid "Search Console"
+msgstr "Search Console"
+
+msgid "Post Optimization"
+msgstr "Postoptimalisatie"
+
+msgid "No SEO options available."
+msgstr "Geen SEO-opties beschikbaar."
+
+msgid "AI is generating... Please wait."
+msgstr "AI is aan het genereren... Even geduld."
+
+# License / activation
+msgid "License activated successfully!"
+msgstr "Licentie succesvol geactiveerd!"
+
+msgid "License deactivated."
+msgstr "Licentie gedeactiveerd."
+
+msgid "Activation Error:"
+msgstr "Activeerfout:"
+
+msgid "Your license has expired. Please renew to continue using AI SEO features."
+msgstr "Je licentie is verlopen. Vernieuw om AI SEO-functies te blijven gebruiken."
+
+msgid "Your license has been revoked. Please contact support."
+msgstr "Je licentie is ingetrokken. Neem contact op met support."
+
+msgid "Activate Your License"
+msgstr "Activeer je licentie"
+
+msgid "Enter your license key to activate AI SEO features on this site."
+msgstr "Voer je licentiesleutel in om AI SEO-functies op deze site te activeren."
+
+msgid "SaaS Dashboard URL"
+msgstr "SaaS Dashboard URL"
+
+msgid "The URL where your AI SEO SaaS Dashboard is hosted"
+msgstr "De URL waar je AI SEO SaaS-dashboard wordt gehost"
+
+msgid "Bulk generate meta titles and descriptions"
+msgstr "Genereer meta-titels en -omschrijvingen in bulk"
+
+msgid "Available in post editor sidebar"
+msgstr "Beschikbaar in de zijbalk van de berichteditor"
+
+# XML Sitemaps
+msgid "XML Sitemaps"
+msgstr "XML-sitemaps"
+
+msgid "Sitemap Status"
+msgstr "Sitemap-status"
+
+msgid "Loading sitemap status..."
+msgstr "Sitemap-status laden..."
+
+msgid "Run Full Sitemap Health Check"
+msgstr "Volledige sitemap-gezondheidscheck uitvoeren"
+
+msgid "Sitemap Index Found"
+msgstr "Sitemap-index gevonden"
+
+msgid "XML Sitemap Found"
+msgstr "XML-sitemap gevonden"
+
+msgid "Sitemap size:"
+msgstr "Sitemap-grootte:"
+
+msgid "No Sitemap Found"
+msgstr "Geen sitemap gevonden"
+
+msgid "Neither sitemap.xml nor sitemap_index.xml could be found."
+msgstr "sitemap.xml en sitemap_index.xml zijn niet gevonden."
+
+msgid "Open Sitemap Settings"
+msgstr "Open sitemap-instellingen"
+
+msgid "Error loading sitemap status"
+msgstr "Fout bij laden sitemap-status"
+
+msgid "Unknown error"
+msgstr "Onbekende fout"
+
+msgid "Running sitemap health check..."
+msgstr "Sitemap-gezondheidscheck wordt uitgevoerd..."
+
+msgid "Sitemap Health Check Results"
+msgstr "Resultaten sitemap-gezondheidscheck"
+
+msgid "Sitemap URL:"
+msgstr "Sitemap-URL:"
+
+msgid "Total URLs"
+msgstr "Totaal aantal URL's"
+
+msgid "Valid URLs"
+msgstr "Geldige URL's"
+
+msgid "Invalid URLs"
+msgstr "Ongeldige URL's"
+
+msgid "Issues Found"
+msgstr "Problemen gevonden"
+
+msgid "No issues found! Your sitemap is healthy."
+msgstr "Geen problemen gevonden! Je sitemap is gezond."
+
+# Client / Dashboard / Connection
+msgid "License is active!"
+msgstr "Licentie is actief!"
+
+msgid "Your license key: %s"
+msgstr "Jouw licentiesleutel: %s"
+
+msgid "Tenant Key: %s"
+msgstr "Tenant-sleutel: %s"
+
+msgid "Limit resets in %d minutes"
+msgstr "Limiet wordt over %d minuten hersteld"
+
+msgid "Your current plan: %s"
+msgstr "Jouw huidige plan: %s"
+
+# Alerts
+msgid "Content Decay Alert:"
+msgstr "Contentverval alert:"
+
+msgid "\"%1$s\" dropped %2$d positions for \"%3$s\""
+msgstr "\"%1$s\" is %2$d posities gezakt voor \"%3$s\""
+
+msgid "Fix now"
+msgstr "Nu oplossen"
+
+msgid "View All Decay Alerts"
+msgstr "Bekijk alle vervalwaarschuwingen"
+
+msgid "Content Decay Warning:"
+msgstr "Contentverval waarschuwing:"
+
+msgid "%d post is losing rankings"
+msgid_plural "%d posts are losing rankings"
+msgstr[0] "%d bericht verliest rankings"
+msgstr[1] "%d berichten verliezen rankings"
+
+msgid "\"%s\" dropped %d positions"
+msgstr "\"%s\" is %d posities gezakt"
+
+msgid "Position trend (last 30 days)"
+msgstr "Positietrend (laatste 30 dagen)"
+
+msgid "No trend data available yet. Track keywords to see position trends."
+msgstr "Nog geen trenddata beschikbaar. Volg zoekwoorden om positietrends te zien."
+
+# Demo
+msgid "Demo Mode"
+msgstr "Demo-modus"
+
+msgid "Demo mode is active — all data is fictitious"
+msgstr "Demo-modus is actief — alle data is fictief"
+
+msgid "Demo Data"
+msgstr "Demodata"
+
+# Direct Index
+msgid "Submit this URL to Google Indexing API"
+msgstr "Dien deze URL in bij de Google Indexing API"
+
+msgid "Index Now"
+msgstr "Nu indexeren"
+
+msgid "Connected"
+msgstr "Verbonden"
+
+msgid "Not connected / missing indexing scope"
+msgstr "Niet verbonden / ontbrekende indexeringsscoop"
+
+msgid "Quota remaining today: %d / %d"
+msgstr "Resterende quota vandaag: %d / %d"
+
+msgid "Index Now is available after publishing."
+msgstr "Nu indexeren is beschikbaar na publiceren."
+
+# Integrations / Site Audit
+msgid "Critical issues"
+msgstr "Kritieke problemen"
+
+msgid "Opportunities & action items"
+msgstr "Kansen & actiepunten"
+
+msgid "Missing SEO titles:"
+msgstr "Ontbrekende SEO-titels:"
+
+msgid "posts"
+msgstr "berichten"
+
+# Onboarding wizard
+msgid "Welcome to Fyndable"
+msgstr "Welkom bij Fyndable"
+
+msgid "Unauthorized"
+msgstr "Niet geautoriseerd"
+
+msgid "Free tier is not available. Please activate a license key."
+msgstr "Gratis versie is niet beschikbaar. Activeer een licentiesleutel."
+
+msgid "Please enter a valid license key and dashboard URL."
+msgstr "Voer een geldige licentiesleutel en dashboard-URL in."
+
+msgid "Invalid response from dashboard. No tenant key received."
+msgstr "Ongeldig antwoord van dashboard. Geen tenant-sleutel ontvangen."
+
+msgid "Branding"
+msgstr "Branding"
+
+msgid "Tone of Voice"
+msgstr "Tone of Voice"
+
+msgid "SEO Setup"
+msgstr "SEO Setup"
+
+msgid "Content Types"
+msgstr "Contenttypen"
+
+msgid "Review"
+msgstr "Review"
+
+msgid "Welcome to %s"
+msgstr "Welkom bij %s"
+
+msgid "Let's get your site SEO-ready in 4 quick steps."
+msgstr "Zet je site SEO-klaar in 4 snelle stappen."
+
+msgid "Connect Your License"
+msgstr "Verbind je licentie"
+
+msgid "Enter your license key to unlock all features, or skip to use the free tier."
+msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen, of sla over om de gratis versie te gebruiken."
+
+msgid "Enter your license key to unlock all features."
+msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen."
+
+msgid "Skip this step to use the free tier with limited features."
+msgstr "Sla deze stap over om de gratis versie met beperkte functies te gebruiken."
+
+msgid "Skip for now"
+msgstr "Sla over voor nu"
+
+msgid "Continue"
+msgstr "Doorgaan"
+
+msgid "Company Branding"
+msgstr "Bedrijfsbranding"
+
+msgid "Tell us about your company to personalize your SEO experience."
+msgstr "Vertel ons over je bedrijf om je SEO-ervaring te personaliseren."
+
+msgid "Company Name"
+msgstr "Bedrijfsnaam"
+
+msgid "Your Company Name"
+msgstr "Jouw bedrijfsnaam"
+
+msgid "Leave empty if already set by your license provider."
+msgstr "Laat leeg als deze al door je licentieprovider is ingesteld."
+
+msgid "Company Logo (optional)"
+msgstr "Bedrijfslogo (optioneel)"
+
+msgid "Upload your company logo for branded reports and dashboards."
+msgstr "Upload je bedrijfslogo voor gepersonaliseerde rapporten en dashboards."
+
+msgid "Website Description"
+msgstr "Websitebeschrijving"
+
+msgid "Brief description of your website or business..."
+msgstr "Korte beschrijving van je website of bedrijf..."
+
+msgid "Industry/Category"
+msgstr "Industrie/Categorie"
+
+msgid "Select your industry..."
+msgstr "Selecteer je industrie..."
+
+msgid "Technology"
+msgstr "Technologie"
+
+msgid "Healthcare"
+msgstr "Gezondheidszorg"
+
+msgid "Finance"
+msgstr "Financiën"
+
+msgid "Retail/E-commerce"
+msgstr "Detailhandel/E-commerce"
+
+msgid "Education"
+msgstr "Onderwijs"
+
+msgid "Travel/Hospitality"
+msgstr "Reizen/Horeca"
+
+msgid "Real Estate"
+msgstr "Vastgoed"
+
+msgid "Other"
+msgstr "Anders"
+
+msgid "Back"
+msgstr "Terug"
+
+msgid "Configure how AI-generated content should sound for your brand."
+msgstr "Stel in hoe door AI gegenereerde content moet klinken voor je merk."
+
+msgid "Brand Voice"
+msgstr "Merkstem"
+
+msgid "Professional"
+msgstr "Professioneel"
+
+msgid "Casual"
+msgstr "Informeel"
+
+msgid "Friendly"
+msgstr "Vriendelijk"
+
+msgid "Authoritative"
+msgstr "Autoritair"
+
+msgid "Humorous"
+msgstr "Humoristisch"
+
+msgid "Technical"
+msgstr "Technisch"
+
+msgid "Target Audience"
+msgstr "Doelgroep"
+
+msgid "Describe your target audience (e.g., small business owners, developers, parents...)"
+msgstr "Beschrijf je doelgroep (bijv. kleine ondernemers, ontwikkelaars, ouders...)"
+
+msgid "Writing Style"
+msgstr "Schrijfstijl"
+
+msgid "Conversational"
+msgstr "Gesprekstijl"
+
+msgid "Formal"
+msgstr "Formeel"
+
+msgid "Persuasive"
+msgstr "Overtuigend"
+
+msgid "Educational"
+msgstr "Educatief"
+
+msgid "Key Brand Values/Phrases (optional)"
+msgstr "Belangrijke merkwaarden/zinnen (optioneel)"
+
+msgid "Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)"
+msgstr "Belangrijke woorden of waarden voor AI-content (bijv. innovatie, klantgericht, duurzaamheid...)"
+
+msgid "These will help AI content align with your brand messaging."
+msgstr "Dit helpt AI-content af te stemmen op je merkboodschap."
+
+msgid "Basic SEO Configuration"
+msgstr "Basis SEO-configuratie"
+
+msgid "Set up your default title and meta description templates."
+msgstr "Stel je standaard titel- en metabeschrijvingsjablonen in."
+
+msgid "Title Template"
+msgstr "Titelsjabloon"
+
+msgid "Available variables: %title%, %separator%, %sitename%"
+msgstr "Beschikbare variabelen: %title%, %separator%, %sitename%"
+
+msgid "Title Separator"
+msgstr "Titelscheidingsteken"
+
+msgid "Facebook URL (optional)"
+msgstr "Facebook URL (optioneel)"
+
+msgid "https://facebook.com/yourpage"
+msgstr "https://facebook.com/jouw-pagina"
+
+msgid "Twitter/X URL (optional)"
+msgstr "Twitter/X URL (optioneel)"
+
+msgid "https://twitter.com/yourhandle"
+msgstr "https://twitter.com/jouwhandle"
+
+msgid "Content Types & Features"
+msgstr "Contenttypen & functies"
+
+msgid "Select which content types should have SEO features enabled."
+msgstr "Selecteer welke contenttypen SEO-functies moeten krijgen."
+
+msgid "Enable XML Sitemap"
+msgstr "XML-sitemap inschakelen"
+
+msgid "Enable robots.txt editor"
+msgstr "robots.txt-editor inschakelen"
+
+msgid "Enable Schema Markup"
+msgstr "Schema Markup inschakelen"
+
+msgid "Google Integrations (Optional)"
+msgstr "Google-integraties (optioneel)"
+
+msgid "Connect Google services for enhanced SEO insights. You can always do this later."
+msgstr "Verbind Google-diensten voor extra SEO-inzichten. Je kunt dit later altijd doen."
+
+msgid "Google PageSpeed API Key (optional)"
+msgstr "Google PageSpeed API-sleutel (optioneel)"
+
+msgid "AIza..."
+msgstr "AIza..."
+
+msgid "Get a free API key from <a href=\"%s\" target=\"_blank\">Google Cloud Console</a>. Free tier: 25 requests/day."
+msgstr "Haal een gratis API-sleutel op via de <a href=\"%s\" target=\"_blank\">Google Cloud Console</a>. Gratis versie: 25 verzoeken/dag."
+
+msgid "You can connect GSC later from the Integrations page after setup."
+msgstr "Je kunt GSC later verbinden via de Integraties-pagina na de setup."
+
+msgid "Setup Complete!"
+msgstr "Setup voltooid!"
+
+msgid "You're all set. Here's a summary of your configuration:"
+msgstr "Je bent helemaal klaar. Hier is een samenvatting van je configuratie:"
+
+msgid "Configuration Summary"
+msgstr "Configuratiesamenvatting"
+
+msgid "License: Connected"
+msgstr "Licentie: Verbonden"
+
+msgid "Company Branding: Configured"
+msgstr "Bedrijfsbranding: Ingesteld"
+
+msgid "Tone of Voice: Set"
+msgstr "Tone of Voice: Ingesteld"
+
+msgid "SEO Settings: Configured"
+msgstr "SEO-instellingen: Ingesteld"
+
+msgid "Content Types: Selected"
+msgstr "Contenttypen: Geselecteerd"
+
+msgid "Integrations: Optional (can be done later)"
+msgstr "Integraties: Optioneel (kan later)"
+
+msgid "Quick Start Tips"
+msgstr "Snelle starttips"
+
+msgid "Check your SEO Dashboard for site health overview"
+msgstr "Bekijk je SEO-dashboard voor een overzicht van je sitegezondheid"
+
+msgid "Use the Content Writer to generate SEO-optimized articles"
+msgstr "Gebruik de Content Writer om SEO-geoptimaliseerde artikelen te genereren"
+
+msgid "Connect Google Search Console for search performance data"
+msgstr "Verbind Google Search Console voor zoekprestatiedata"
+
+msgid "Review your SEO settings in Settings > Fyndable"
+msgstr "Bekijk je SEO-instellingen in Instellingen > Fyndable"
+
+msgid "Go to Dashboard"
+msgstr "Naar dashboard"
+
+msgid "XXXX-XXXX-XXXX-XXXX-XXXX"
+msgstr "XXXX-XXXX-XXXX-XXXX-XXXX"

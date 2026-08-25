@@ -179,8 +179,8 @@ class CreatedPosts
         $dateQuery = [];
         if ($dateFrom || $dateTo) {
             $dateQuery = [
-                'after' => $dateFrom ?: false,
-                'before' => $dateTo ? $dateTo . ' 23:59:59' : false,
+                'after' => $dateFrom ?: '1970-01-01',
+                'before' => $dateTo ? $dateTo . ' 23:59:59' : current_time('mysql'),
                 'inclusive' => true,
             ];
         }
@@ -274,21 +274,27 @@ class CreatedPosts
     {
         global $wpdb;
 
-        // Count by edit status
+        // Count by edit status (join posts to exclude revisions)
         $editStats = $wpdb->get_results(
-            "SELECT meta_value as status, COUNT(*) as count 
-             FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_edit_status' 
-             GROUP BY meta_value",
+            "SELECT pm.meta_value as status, COUNT(*) as count 
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_edit_status' 
+             AND p.post_type = 'post'
+             AND p.post_status IN ('publish', 'future', 'draft', 'private', 'pending')
+             GROUP BY pm.meta_value",
             OBJECT_K
         );
 
-        // Count by review status
+        // Count by review status (join posts to exclude revisions)
         $reviewStats = $wpdb->get_results(
-            "SELECT meta_value as status, COUNT(*) as count 
-             FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_review_status' 
-             GROUP BY meta_value",
+            "SELECT pm.meta_value as status, COUNT(*) as count 
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_review_status' 
+             AND p.post_type = 'post'
+             AND p.post_status IN ('publish', 'future', 'draft', 'private', 'pending')
+             GROUP BY pm.meta_value",
             OBJECT_K
         );
 
@@ -305,12 +311,15 @@ class CreatedPosts
             OBJECT_K
         );
 
-        // Count by language
+        // Count by language (join posts to exclude revisions)
         $languageStats = $wpdb->get_results(
-            "SELECT meta_value as language, COUNT(*) as count 
-             FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_language' 
-             GROUP BY meta_value",
+            "SELECT pm.meta_value as language, COUNT(*) as count 
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_language' 
+             AND p.post_type = 'post'
+             AND p.post_status IN ('publish', 'future', 'draft', 'private', 'pending')
+             GROUP BY pm.meta_value",
             OBJECT_K
         );
 
@@ -531,8 +540,8 @@ class CreatedPosts
              FROM {$wpdb->postmeta} 
              WHERE meta_key = '_sseo_ai_word_count'"
         );
-        $minWords = $wordCountRange->min_words ?? 0;
-        $maxWords = $wordCountRange->max_words ?? 3000;
+        $minWords = (int)($wordCountRange->min_words ?? 0);
+        $maxWords = (int)($wordCountRange->max_words ?? 3000);
         ?>
         <div class="wrap sseo-ai-modern" id="sseo-created-posts-page">
             <div class="sseo-ai-header">
@@ -777,6 +786,25 @@ class CreatedPosts
             </div>
         </div>
 
+        <!-- Post Detail Modal -->
+        <div class="sseo-modal" id="modal-post-detail" style="display: none;">
+            <div class="sseo-modal-overlay"></div>
+            <div class="sseo-modal-content">
+                <div class="sseo-modal-header">
+                    <h3><?php esc_html_e('Post Details', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="sseo-modal-body" id="post-detail-body">
+                    <p><?php esc_html_e('Loading...', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="sseo-modal-footer">
+                    <a href="#" class="sseo-btn-secondary" id="post-detail-view" target="_blank"><?php esc_html_e('View on site', 'ai-seo-client'); ?></a>
+                    <a href="#" class="sseo-btn-primary" id="post-detail-edit" target="_blank"><?php esc_html_e('Edit Post', 'ai-seo-client'); ?></a>
+                    <button type="button" class="sseo-btn-secondary modal-close"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>
+                </div>
+            </div>
+        </div>
+
         <script>
         jQuery(document).ready(function($) {
             let currentPage = 1;
@@ -939,6 +967,7 @@ class CreatedPosts
                     path: 'sseo-ai/v1/created-posts?' + $.param(params),
                     method: 'GET'
                 }).then(function(response) {
+                    console.log('Created posts response:', response);
                     renderPosts(response.posts);
                     renderPagination(response.total_pages, response.page);
                     $('#total-posts-count').text(response.total);
@@ -1062,6 +1091,42 @@ class CreatedPosts
                 });
             }
 
+            // View post details
+            $(document).on('click', '.btn-expand', function() {
+                const postId = $(this).closest('tr').data('id');
+                const body = $('#post-detail-body');
+                $('#modal-post-detail').show();
+                body.html('<p>' + <?php echo wp_json_encode(__('Loading...', 'ai-seo-client')); ?> + '</p>');
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/created-posts/' + postId,
+                    method: 'GET'
+                }).then(function(post) {
+                    $('#post-detail-edit').attr('href', post.edit_url);
+                    $('#post-detail-view').attr('href', post.view_url);
+
+                    let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Title', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.title) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Status', 'ai-seo-client')); ?> + '</strong><p>' + getStatusLabel(post.status) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Edit Status', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.edit_status) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Review Status', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.review_status) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Language', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.language) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Cluster', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.cluster_name || '-') + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Word Count', 'ai-seo-client')); ?> + '</strong><p>' + post.word_count + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Post Type', 'ai-seo-client')); ?> + '</strong><p>' + escapeHtml(post.post_type) + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Generated Date', 'ai-seo-client')); ?> + '</strong><p>' + (post.generated_date ? formatDateTime(post.generated_date) : '-') + '</p></div>';
+                    html += '<div><strong>' + <?php echo wp_json_encode(__('Last Modified', 'ai-seo-client')); ?> + '</strong><p>' + formatDateTime(post.modified) + '</p></div>';
+                    html += '</div>';
+                    body.html(html);
+                }).catch(function(err) {
+                    body.html('<p>' + (err.message || <?php echo wp_json_encode(__('Failed to load details', 'ai-seo-client')); ?>) + '</p>');
+                });
+            });
+
+            $('#modal-post-detail .modal-close, #modal-post-detail .sseo-modal-overlay').on('click', function() {
+                $('#modal-post-detail').hide();
+            });
+
             // Helpers
             function getStatusLabel(status) {
                 const labels = {
@@ -1077,7 +1142,7 @@ class CreatedPosts
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
@@ -1087,7 +1152,7 @@ class CreatedPosts
             function formatDateTime(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     month: 'short',
                     day: 'numeric',
                     hour: '2-digit',

@@ -1,0 +1,9 @@
+﻿{
+    "version":  "1.8.0",
+    "download_url":  "https://updates.fyndable.ai/fyndable-client/fyndable-client-1.8.0.zip",
+    "changelog":  "<h4>v1.8.0</h4><h5>New Features</h5><ul><li><strong>Post Auto-Cleaner</strong> — Automatically trashes AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded). Settings: enable/disable, days threshold (default 60), max views (default 0). Daily cron + REST endpoints for preview and manual run. Available to all tiers.</li></ul><h5>Fixed / Improved</h5><ul><li><strong>Agency white-label download</strong> — White-label package builder now downloads the latest client plugin from updates.fyndable.ai when the plugin is not locally installed, ensuring agency customers always get the latest version. Falls back to packaged zips if the update server is unavailable.</li></ul>",
+    "min_wp_version":  "6.0",
+    "tested_wp_version":  "2026-08-19",
+    "last_updated":  "2026-08-19",
+    "requires_php":  "8.0"
+}

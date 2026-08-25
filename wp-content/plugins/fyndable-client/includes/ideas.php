@@ -191,7 +191,7 @@ Return ONLY a JSON array in this exact format (no markdown, no code blocks):
 Generate {$count} ideas now.
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => 3000]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => 3000, 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;
@@ -637,7 +637,7 @@ Return JSON in this format (no markdown):
 }
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2)]);
+        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2), 'use_case' => 'content_generation']);
         
         if (is_wp_error($response)) {
             return $response;
@@ -713,28 +713,19 @@ PROMPT;
         $table = $wpdb->prefix . 'sseo_ai_ideas';
         $totalIdeas = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'active'") ?: 0;
         $scheduledCount = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'scheduled'") ?: 0;
-        
-        // Get AI-generated posts count
-        $postsCount = wp_count_posts('post');
-        $aiPostsCount = (int) $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->postmeta} 
-             WHERE meta_key = '_sseo_ai_generated' AND meta_value = '1'"
-        ) ?: 0;
-        
-        // Get keyword count
-        $keywordCount = (int) $wpdb->get_var(
-            "SELECT COUNT(DISTINCT keywords) FROM {$table} WHERE keywords != ''"
-        ) ?: 0;
-        
-        // Get available credits (placeholder - integrate with your credit system)
-        $credits = [
-            'posts' => 35,
-            'ideas' => 300,
-            'outlines' => 100,
-            'keywords' => 10,
-            'images' => 111,
-        ];
+
+        // Use configurable or dynamically computed credits
+        $credits = $this->getCredits($table);
+
+        // Resolve the upgrade destination (Customer Portal on the SaaS
+        // dashboard site), with dashboard URL / Connection page fallbacks.
+        $portalUrl = get_option('sseo_ai_client_portal_url', '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $upgradeUrl = !empty($portalUrl)
+            ? $portalUrl
+            : (!empty($dashboardUrl) ? $dashboardUrl : admin_url('admin.php?page=ai-seo-client'));
         ?>
+
         <div class="wrap sseo-ai-modern" id="sseo-ideas-page">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Ideas', 'ai-seo-client'); ?></h1>
@@ -751,30 +742,30 @@ PROMPT;
                         </button>
                         
                         <div class="credits-display">
-                            <span class="credits-label"><?php esc_html_e('Credits you have:', 'ai-seo-client'); ?></span>
+                            <span class="credits-label"><?php esc_html_e('Credits used / available:', 'ai-seo-client'); ?></span>
                             <div class="credits-grid">
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['posts']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['posts'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Posts', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['ideas']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['ideas'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Ideas', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['outlines']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['outlines'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Outlines', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['keywords']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['keywords'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Keywords', 'ai-seo-client'); ?></span>
                                 </div>
                                 <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($credits['images']); ?></span>
+                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['images'])); ?></span>
                                     <span class="credit-label"><?php esc_html_e('Images', 'ai-seo-client'); ?></span>
                                 </div>
                             </div>
-                            <a href="#" class="upgrade-link"><?php esc_html_e('Upgrade My Plan', 'ai-seo-client'); ?></a>
+                            <a href="<?php echo esc_url($upgradeUrl); ?>" class="upgrade-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Upgrade My Plan', 'ai-seo-client'); ?></a>
                         </div>
                     </div>
 
@@ -1221,7 +1212,7 @@ PROMPT;
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
-                return date.toLocaleDateString('<?php echo esc_js(get_locale()); ?>', {
+                return date.toLocaleDateString('<?php echo esc_js(str_replace('_', '-', get_locale())); ?>', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
@@ -1262,5 +1253,122 @@ PROMPT;
         });
         </script>
         <?php
+    }
+
+    /**
+     * Render a credit value as "used" or "used / limit".
+     * Unlimited tiers (PHP_INT_MAX) show "∞" for the limit.
+     */
+    private function renderCreditValue(array $credit): string
+    {
+        $used = (int) ($credit['used'] ?? 0);
+        $limit = $credit['limit'] ?? null;
+
+        if ($limit === null) {
+            return (string) $used;
+        }
+
+        if ($limit === PHP_INT_MAX) {
+            return $used . ' / ∞';
+        }
+
+        return $used . ' / ' . (int) $limit;
+    }
+
+    /**
+     * Get credit counts for the Ideas page.
+     *
+     * Returns per-item arrays with 'used' and 'limit' (limit may be null when
+     * no tier quota applies). Resolution order:
+     * 1. sseo_ai_client_credits option (e.g. set by dashboard / admin code)
+     * 2. apply_filters('sseo_ai_ideas_credits', ...)
+     * 3. Dynamically computed from local data + tier limits
+     */
+    private function getCredits(string $table): array
+    {
+        $optionCredits = get_option('sseo_ai_client_credits');
+        if (is_array($optionCredits) && !empty($optionCredits)) {
+            return $optionCredits;
+        }
+
+        global $wpdb;
+
+        $aiPostsCount = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$wpdb->postmeta}
+             WHERE meta_key = '_sseo_ai_generated' AND meta_value = '1'"
+        ) ?: 0;
+
+        $scheduledCount = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$table} WHERE status = 'scheduled'"
+        ) ?: 0;
+
+        $keywordCount = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT keywords) FROM {$table} WHERE keywords != ''"
+        ) ?: 0;
+
+        $aiImages = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta}
+             WHERE meta_key IN ('_sseo_ai_og_image', '_sseo_ai_twitter_image')"
+        ) ?: 0;
+
+        // Tier-based monthly limits (stored at license activation/validation).
+        // null = no tier quota for this item.
+        $postLimit = $this->getTierLimit('sseo_ai_client_monthly_auto_posts', self::TIER_AUTO_POST_LIMITS);
+        $apiLimit  = $this->getTierLimit('sseo_ai_client_api_limit', self::TIER_API_LIMITS);
+
+        $credits = [
+            'posts'    => ['used' => $aiPostsCount, 'limit' => $postLimit],
+            'ideas'    => ['used' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'active'") ?: 0, 'limit' => null],
+            'outlines' => ['used' => $scheduledCount, 'limit' => null],
+            'keywords' => ['used' => $keywordCount, 'limit' => $apiLimit],
+            'images'   => ['used' => $aiImages, 'limit' => null],
+        ];
+
+        // Allow SaaS dashboard / custom code to override credit display values
+        return apply_filters('sseo_ai_ideas_credits', $credits);
+    }
+
+    /**
+     * Default monthly auto-scheduled post limits per tier.
+     * Mirrors LicenseValidator::TIER_AUTO_POST_LIMITS to avoid coupling.
+     */
+    private const TIER_AUTO_POST_LIMITS = [
+        'free'         => 0,
+        'starter'      => 15,
+        'trial'        => 10,
+        'professional' => 35,
+        'business'     => 150,
+        'agency'       => PHP_INT_MAX,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
+     * Default API call limits per tier (per month).
+     */
+    private const TIER_API_LIMITS = [
+        'free'         => 500,
+        'starter'      => 1000,
+        'trial'        => 5000,
+        'professional' => 10000,
+        'business'     => 50000,
+        'agency'       => 200000,
+        'dev'          => PHP_INT_MAX,
+    ];
+
+    /**
+     * Resolve a tier limit: option value if set, otherwise tier default.
+     * Returns null when the tier is unknown (no quota to show).
+     */
+    private function getTierLimit(string $optionName, array $tierDefaults): ?int
+    {
+        $tier = get_option('sseo_ai_client_license_tier', 'free');
+        if ($tier === 'dev') {
+            return PHP_INT_MAX;
+        }
+        $default = $tierDefaults[$tier] ?? null;
+        if ($default === null) {
+            return null;
+        }
+        return (int) get_option($optionName, $default);
     }
 }

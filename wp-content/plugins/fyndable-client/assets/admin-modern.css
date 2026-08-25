@@ -22,15 +22,19 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 .aiseo-wrapper {
     max-width: 1400px;
     margin: 20px 0;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    min-height: calc(100vh - 90px);
+    border-radius: 12px;
+    padding: 0 30px;
 }
 
 /* Header Section */
 .aiseo-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: transparent;
     color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    margin-bottom: 25px;
+    padding: 30px 0;
+    border-radius: 0;
+    margin-bottom: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -39,7 +43,8 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 .aiseo-header h1 {
     margin: 0;
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -.025em;
 }
 
 .aiseo-header .version {
@@ -79,7 +84,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #379fd3, #8f39ac);
 }
 
 .aiseo-stat-card.success::before {
@@ -107,7 +112,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
     justify-content: center;
     font-size: 24px;
     margin-bottom: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
 }
 
@@ -187,7 +192,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 }
 
 .aiseo-card-header h2 .dashicons {
-    color: #667eea;
+    color: #379fd3;
     margin-right: 8px;
 }
 
@@ -217,16 +222,16 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 
 .aiseo-quick-action:hover {
     background: #fff;
-    border-color: #667eea;
+    border-color: #379fd3;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 4px 12px rgba(55, 159, 211, 0.2);
 }
 
 .aiseo-quick-action .icon {
     width: 48px;
     height: 48px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
     display: flex;
     align-items: center;
@@ -261,12 +266,12 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 }
 
 .aiseo-nav-pill:hover {
-    background: #667eea;
+    background: #379fd3;
     color: #fff;
 }
 
 .aiseo-nav-pill.active {
-    background: #667eea;
+    background: #379fd3;
     color: #fff;
 }
 
@@ -346,7 +351,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
     height: 100%;
     border-radius: 10px;
     transition: width 0.3s ease;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #379fd3, #8f39ac);
 }
 
 .aiseo-progress-bar.success {
@@ -375,7 +380,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
     font-weight: 600;
     color: #666;
     font-size: 13px;
-    text-transform: uppercase;
+    
     letter-spacing: 0.5px;
     border-bottom: 2px solid #e9ecef;
 }
@@ -406,7 +411,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 }
 
 .aiseo-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
     color: #fff;
 }
 
@@ -456,7 +461,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
     justify-content: center;
     margin: 0 auto 20px;
     font-size: 40px;
-    color: #667eea;
+    color: #379fd3;
 }
 
 .aiseo-empty-state h3 {
@@ -529,12 +534,12 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 }
 
 .aiseo-tab:hover {
-    color: #667eea;
+    color: #379fd3;
 }
 
 .aiseo-tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: #379fd3;
+    border-bottom-color: #379fd3;
 }
 
 /* Form Elements */
@@ -564,7 +569,7 @@ body.sseo-ai_page_aiseo-seo-audit #wpcontent {
 .aiseo-form-select:focus,
 .aiseo-form-textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #379fd3;
 }
 
 /* Grid Layouts */

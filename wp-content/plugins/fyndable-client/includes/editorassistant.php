@@ -19,6 +19,30 @@ class EditorAssistant
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueueAssets']);
+    }
+
+    public function enqueueAssets(): void
+    {
+        wp_enqueue_script(
+            'aiseo-editor-sidebar',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/editor-sidebar.js',
+            ['wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-api-fetch'],
+            SSEO_AI_CLIENT_VERSION,
+            true
+        );
+
+        $presets = get_option('sseo_ai_prompt_presets', []);
+        $tone = get_option('sseo_ai_brand_voice', '');
+        $prompts = get_option('sseo_ai_custom_prompts', []);
+        $notes = get_option('sseo_ai_knowledge_notes', []);
+
+        wp_localize_script('aiseo-editor-sidebar', 'AISEOAssistantSettings', [
+            'presets' => $presets,
+            'tone'    => $tone,
+            'prompts' => $prompts,
+            'notes'   => $notes,
+        ]);
     }
 
     public function registerRestRoutes(): void
@@ -76,6 +100,7 @@ class EditorAssistant
 
         $result = $this->llm->generateText($prompt, [
             'max_tokens' => 2000,
+            'use_case' => 'content_generation',
             'track_extra' => [
                 'endpoint' => 'editor_action.' . $action,
                 'context' => $topic,

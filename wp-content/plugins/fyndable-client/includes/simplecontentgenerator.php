@@ -159,27 +159,49 @@ class SimpleContentGenerator
             if (!sseoGeneratedContent) return;
 
             var append = jQuery('#sseo-simple-append').is(':checked');
+            var inserted = false;
 
-            if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor')) {
-                // Gutenberg
-                var current = wp.data.select('core/editor').getEditedPostContent();
-                var newContent = append ? (current + '\n\n' + sseoGeneratedContent) : sseoGeneratedContent;
-                wp.data.dispatch('core/editor').editPost({ content: newContent });
-                alert('<?php echo esc_js(__('Content inserted into the block editor.', 'ai-seo-client')); ?>');
-            } else {
-                // Classic editor
-                var editor = document.getElementById('content');
-                if (editor) {
+            if (typeof wp !== 'undefined' && wp.data) {
+                // Try modern block editor store first, fall back to legacy core/editor
+                var blockEditor = wp.data.dispatch('core/block-editor');
+                var legacyEditor = wp.data.dispatch('core/editor');
+                var hasBlocks = wp.blocks && typeof wp.blocks.rawHandler === 'function';
+
+                if (blockEditor && hasBlocks) {
+                    var newBlocks = wp.blocks.rawHandler({ HTML: sseoGeneratedContent });
                     if (append) {
-                        editor.value = editor.value + '\n\n' + sseoGeneratedContent;
+                        var currentBlocks = wp.data.select('core/block-editor').getBlocks();
+                        wp.data.dispatch('core/block-editor').resetBlocks(currentBlocks.concat(newBlocks));
                     } else {
-                        editor.value = sseoGeneratedContent;
+                        wp.data.dispatch('core/block-editor').resetBlocks(newBlocks);
                     }
-                    if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
-                        tinymce.get('content').setContent(editor.value);
-                    }
-                    alert('<?php echo esc_js(__('Content inserted into the editor.', 'ai-seo-client')); ?>');
+                    inserted = true;
+                } else if (legacyEditor) {
+                    var current = wp.data.select('core/editor').getEditedPostContent();
+                    var newContent = append ? (current + '\n\n' + sseoGeneratedContent) : sseoGeneratedContent;
+                    wp.data.dispatch('core/editor').editPost({ content: newContent });
+                    inserted = true;
                 }
+            }
+
+            // Always update classic editor textarea as fallback / for revisions
+            var editor = document.getElementById('content');
+            if (editor) {
+                if (append) {
+                    editor.value = editor.value + '\n\n' + sseoGeneratedContent;
+                } else {
+                    editor.value = sseoGeneratedContent;
+                }
+                if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
+                    tinymce.get('content').setContent(editor.value);
+                }
+                inserted = true;
+            }
+
+            if (inserted) {
+                alert('<?php echo esc_js(__('Content inserted into the editor.', 'ai-seo-client')); ?>');
+            } else {
+                alert('<?php echo esc_js(__('Could not find the editor. Please insert manually from the preview.', 'ai-seo-client')); ?>');
             }
             jQuery('#sseo-simple-preview').hide();
         }
@@ -227,6 +249,7 @@ Write the content:";
 
         $result = $this->llm->generateText($prompt, [
             'max_tokens' => max(1000, (int)($wordCount * 2)),
+            'use_case' => 'content_generation',
             'track_extra' => [
                 'endpoint' => 'simple_content.generate',
                 'post_id' => $postId,

@@ -10,7 +10,7 @@ namespace SSEOAIClient;
  */
 class Client
 {
-    private LicenseValidator $licenseValidator;
+    public LicenseValidator $licenseValidator;
     private DashboardAPI $dashboardAPI;
     private Settings $settings;
     private ?LlmClient $llmClient = null;
@@ -30,6 +30,7 @@ class Client
     private ?RedirectionManager $redirectManager = null;
     private ?NotFoundMonitor $notFoundMonitor = null;
     private ?RobotsTxt $robotsTxt = null;
+    private ?LlmsTxt $llmsTxt = null;
     private ?SeoRevisions $seoRevisions = null;
     private ?OpenGraph $openGraph = null;
     private ?CanonicalUrl $canonicalUrl = null;
@@ -37,6 +38,7 @@ class Client
     private ?BulkActions $bulkActions = null;
     private ?SeoDashboard $seoDashboard = null;
     private ?RankTracker $rankTracker = null;
+    private ?LocalSerp $localSerp = null;
     private ?Hreflang $hreflang = null;
     private ?SeoReportExport $seoReportExport = null;
     private ?WooCommerceSeo $wooSeo = null;
@@ -44,6 +46,7 @@ class Client
     private ?ContentOptimizer $contentOptimizer = null;
     private ?SerpCompetitor $serpCompetitor = null;
     private ?TopicCluster $topicCluster = null;
+    private ?AutomationOrchestrator $automationOrchestrator = null;
     private ?KeywordDifficulty $keywordDifficulty = null;
     private ?LSIKeywords $lsiKeywords = null;
     private ?AIRepurposer $aiRepurposer = null;
@@ -55,9 +58,11 @@ class Client
     private ?ContentRewriter $contentRewriter = null;
     private ?ReadabilityScore $readabilityScore = null;
     private ?IndexNow $indexNow = null;
+    private ?DirectIndex $directIndex = null;
     private ?GscDashboard $gscDashboard = null;
     private ?BacklinkAnalyzer $backlinkAnalyzer = null;
     private ?SerpFeatureTracker $serpFeatureTracker = null;
+    private ?AiOptimizationTracker $aiOptimizationTracker = null;
     private ?ExternalIntegrations $externalIntegrations = null;
     private ?CompetitorResearch $competitorResearch = null;
     private ?WhiteLabelManager $whiteLabelManager = null;
@@ -65,9 +70,11 @@ class Client
     private ?InternationalSEO $internationalSEO = null;
     private ?TechnicalSEOAuditor $technicalSEOAuditor = null;
     private ?ContentCalendar $contentCalendar = null;
+    private ?PromptTemplateLibrary $promptTemplateLibrary = null;
     private ?AdvancedBacklinks $advancedBacklinks = null;
     private ?SmartInternalLinking $smartInternalLinking = null;
     private ?EEATValidator $eeatValidator = null;
+    private ?FactChecker $factChecker = null;
     private ?VideoSEO $videoSEO = null;
     private ?FAQSchema $faqSchema = null;
     private ?AIImageGenerator $aiImageGenerator = null;
@@ -81,14 +88,64 @@ class Client
     private ?SocialSharing $socialSharing = null;
     private ?GoogleDataDashboard $googleDataDashboard = null;
     private ?PostMetaBox $postMetaBox = null;
+    private ?DashboardShell $dashboardShell = null;
+    private ?BrandVisibilityTracker $brandVisibility = null;
+    private ?Supportickets $supportTickets = null;
+    private ?PrivacyExport $privacyExport = null;
+    private ?ReviewPrompt $reviewPrompt = null;
+    private ?SeoImporter $seoImporter = null;
+    private ?OnboardingWizard $onboardingWizard = null;
+    private ?UpdateChecker $updateChecker = null;
+    private ?DemoMode $demoMode = null;
+    private ?AISeoAgent $aiAgent = null;
+    private ?BrandVoice $brandVoice = null;
+    private ?GeoContentScore $geoScore = null;
+    private ?ProgrammaticSEO $programmaticSEO = null;
+    private ?MultiCMSPublisher $multiCMS = null;
+    private ?SerpChangeMonitor $serpMonitor = null;
+    private ?SupportAssistant $supportAssistant = null;
+    private ?PostAutoCleaner $postAutoCleaner = null;
 
     public function init(): void
     {
         $this->settings = new Settings();
         $this->licenseValidator = new LicenseValidator($this->settings);
         $this->dashboardAPI = new DashboardAPI($this->settings);
-        $this->healthLogger = new HealthLogger();
+        $this->healthLogger = new HealthLogger(new AlertNotifier());
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
+        $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
+
+        // Support Assistant (sticky chatbot widget with KB + LLM fallback + ticket escalation)
+        $this->supportAssistant = new SupportAssistant(
+            $this->llmClient,
+            $this->dashboardAPI,
+            $this->licenseValidator
+        );
+        $this->supportAssistant->register();
+
+        // GDPR privacy export/erasure — always registered regardless of license
+        $this->privacyExport = new PrivacyExport();
+        $this->privacyExport->register();
+
+        // Review prompt notice (after 7 days)
+        $this->reviewPrompt = new ReviewPrompt();
+        $this->reviewPrompt->register();
+
+        // SEO Importer (Yoast/RankMath/AIOSEO migration)
+        $this->seoImporter = new SeoImporter();
+        $this->seoImporter->register();
+
+        // Onboarding wizard (first-run setup)
+        $this->onboardingWizard = new OnboardingWizard();
+        $this->onboardingWizard->register();
+
+        // Auto-update checker (SaaS dashboard served)
+        $this->updateChecker = new UpdateChecker($this->settings);
+        $this->updateChecker->register();
+
+        // Demo mode (sandbox with dummy data)
+        $this->demoMode = new DemoMode();
+        $this->demoMode->register();
 
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
@@ -96,6 +153,23 @@ class Client
         // Add admin menu for license activation
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+
+        // Custom menu icon styling
+        $printIconStyles = function (): void {
+            echo '<style>
+            #toplevel_page_fyndable-dashboard .wp-menu-image img,
+            #toplevel_page_fyndable-network .wp-menu-image img {
+                padding: 6px 0 0;
+                opacity: 1;
+                width: 22px;
+            }
+            </style>';
+        };
+        add_action('admin_head', $printIconStyles);
+        add_action('network_admin_head', $printIconStyles);
+
+        // Network admin menu (multisite)
+        add_action('network_admin_menu', [$this, 'registerNetworkMenu']);
 
         // Handle license activation form
         add_action('admin_post_ai_seo_activate_license', [$this, 'handleLicenseActivation']);
@@ -122,6 +196,7 @@ class Client
         add_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         add_option('sseo_ai_client_dashboard_url', '');
         add_option('sseo_ai_client_license_status', 'inactive');
+        add_option('sseo_ai_client_first_activation', time());
         
         // Create rank tracker tables
         $settings = new Settings();
@@ -141,6 +216,15 @@ class Client
 
         // Create LLM tracking table
         LLMTracker::createTable();
+
+        // Create brand visibility table
+        BrandVisibilityTracker::createTable();
+
+        // Create onboarding status table
+        OnboardingWizard::createTable();
+
+        // Ensure sitemap rewrite rules are registered immediately
+        flush_rewrite_rules();
     }
 
     /**
@@ -150,8 +234,34 @@ class Client
     {
         // Check if license is valid on every page load (cached)
         $this->licenseValidator->validateStoredLicense();
+
+        // Keep white-label in sync with the SaaS dashboard (1 minute cache)
+        if (is_admin()) {
+            $this->dashboardAPI->syncWhiteLabel();
+        }
     }
     
+    /**
+     * Get the brand name to display in the plugin UI.
+     *
+     * Prefers the synced white-label company name. Falls back to a generic
+     * brand for agency/whitelabel licenses, and Fyndable otherwise.
+     */
+    private function getBrandName(): string
+    {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        if (!empty($whiteLabel['company_name'])) {
+            return $whiteLabel['company_name'];
+        }
+
+        $tier = get_option('sseo_ai_client_license_tier', 'free');
+        if ($tier === 'agency') {
+            return 'Smart SEO';
+        }
+
+        return 'Fyndable';
+    }
+
     /**
      * Initialize SEO features based on license tier
      */
@@ -175,6 +285,10 @@ class Client
         
         $this->robotsTxt = new RobotsTxt($this->settings);
         $this->robotsTxt->register();
+
+        // llms.txt generator — serves /llms.txt for large language models
+        $this->llmsTxt = new LlmsTxt($this->settings);
+        $this->llmsTxt->register();
         
         $this->openGraph = new OpenGraph($this->settings, $this->llmClient);
         $this->openGraph->register();
@@ -208,6 +322,10 @@ class Client
         $this->indexNow = new IndexNow($this->settings);
         $this->indexNow->register();
         
+        // Direct Index (Google Indexing API) - available to all tiers
+        $this->directIndex = new DirectIndex($this->settings, $this->healthLogger);
+        $this->directIndex->register();
+        
         // External Integrations - available to all tiers
         $this->externalIntegrations = new ExternalIntegrations($this->settings);
         $this->externalIntegrations->register();
@@ -217,7 +335,7 @@ class Client
         $this->contentPerformanceMonitor->register();
         
         // Content Calendar - available to all tiers
-        $this->contentCalendar = new ContentCalendar($this->settings, $this->llmClient);
+        $this->contentCalendar = new ContentCalendar($this->settings, $this->llmClient, $this->licenseValidator);
         $this->contentCalendar->register();
         
         // Smart Internal Linking - available to all tiers
@@ -227,6 +345,10 @@ class Client
         // E-E-A-T Validator - available to all tiers
         $this->eeatValidator = new EEATValidator($this->settings, $this->llmClient);
         $this->eeatValidator->register();
+
+        // Fact Checker - available to all tiers (LLM self-check with warnings)
+        $this->factChecker = new FactChecker($this->llmClient);
+        $this->factChecker->register();
         
         // Video SEO - available to all tiers
         $this->videoSEO = new VideoSEO($this->settings, $this->llmClient);
@@ -256,6 +378,15 @@ class Client
         $this->seoDataDashboard = new SEODataDashboard($this->settings);
         $this->seoDataDashboard->register();
 
+        // Brand & AI Search Visibility - available to all tiers
+        $this->brandVisibility = new BrandVisibilityTracker($this->llmClient, $this->settings);
+        add_action('rest_api_init', [$this->brandVisibility, 'registerRestRoutes']);
+        // Ensure the table exists for installations upgraded without reactivation
+        if (get_option('sseo_ai_brand_visibility_db') !== '1') {
+            BrandVisibilityTracker::createTable();
+            update_option('sseo_ai_brand_visibility_db', '1');
+        }
+
         // Ideas Management - available to all tiers
         $this->ideas = new Ideas($this->settings, $this->llmClient);
         $this->ideas->register();
@@ -263,6 +394,10 @@ class Client
         // Created Posts - available to all tiers
         $this->createdPosts = new CreatedPosts($this->settings);
         $this->createdPosts->register();
+
+        // Post Auto-Cleaner - available to all tiers
+        $this->postAutoCleaner = new PostAutoCleaner($this->settings);
+        $this->postAutoCleaner->register();
 
         // Keywords Management - available to all tiers
         $this->keywords = new Keywords($this->settings, $this->llmClient, $this->dashboardAPI);
@@ -290,11 +425,15 @@ class Client
             
             $this->localSEO = new LocalSEO($this->settings);
             $this->localSEO->register();
-            
+
+            $this->localSerp = new LocalSerp($this->settings, $this->dashboardAPI, $this->licenseValidator);
+            $this->localSerp->register();
+
             $this->notFoundMonitor = new NotFoundMonitor($this->settings);
             $this->notFoundMonitor->register();
-            
+
             $this->rankTracker = new RankTracker($this->settings, $this->dashboardAPI);
+            $this->rankTracker->setLocalSerp($this->localSerp);
             $this->rankTracker->register();
             
             $this->seoReportExport = new SeoReportExport($this->settings);
@@ -309,14 +448,13 @@ class Client
             $this->serpCompetitor = new SerpCompetitor($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->serpCompetitor->register();
             
-            $this->topicCluster = new TopicCluster($this->settings, $this->llmClient);
-            $this->topicCluster->register();
-            
-            $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient);
+            $this->keywordDifficulty = new KeywordDifficulty($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->keywordDifficulty->register();
             
             $this->contentBrief = new ContentBrief($this->settings, $this->llmClient, $this->dashboardAPI);
             $this->contentBrief->register();
+
+            // AI SEO Agent placeholder — instantiated after Business+ features so ContentWriter is available
             
             $this->keywordExplorer = new KeywordExplorer($this->settings, $this->dashboardAPI, $this->llmClient);
             $this->keywordExplorer->register();
@@ -336,9 +474,13 @@ class Client
             // SERP Feature Tracker
             $this->serpFeatureTracker = new SerpFeatureTracker($this->settings, $this->llmClient);
             $this->serpFeatureTracker->register();
+
+            // AI Optimization Tracker (DataForSEO AI Optimization via Portal proxy)
+            $this->aiOptimizationTracker = new AiOptimizationTracker($this->settings, $this->dashboardAPI);
+            $this->aiOptimizationTracker->register();
             
             // Backlink Analyzer
-            $this->backlinkAnalyzer = new BacklinkAnalyzer($this->settings);
+            $this->backlinkAnalyzer = new BacklinkAnalyzer($this->settings, $this->dashboardAPI);
             $this->backlinkAnalyzer->register();
             
             // Competitor Research
@@ -364,7 +506,10 @@ class Client
         
         // Business+ features
         if (in_array($tier, ['business', 'agency', 'dev'])) {
-            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings);
+            $this->promptTemplateLibrary = new PromptTemplateLibrary($this->settings, $this->licenseValidator);
+            $this->promptTemplateLibrary->register();
+
+            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary);
             $this->contentWriter->register();
             
             $this->aiRepurposer = new AIRepurposer($this->settings, $this->llmClient);
@@ -375,24 +520,92 @@ class Client
             
             $snapshots = new SnapshotRepository();
             $gscClientBiz = new GscClient($this->settings);
-            $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings);
+            $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings, $this->llmClient);
             $this->contentDecay->register();
             
             $this->auditService = new AuditService();
+        }
+
+        // AI SEO Agent — conversational interface (after all features are loaded)
+        $this->aiAgent = new AISeoAgent(
+            $this->llmClient,
+            $this->settings,
+            $this->topicCluster,
+            $this->contentBrief,
+            $this->contentWriter,
+            $this->truSEO,
+            $this->smartTags,
+            $this->faqSchema
+        );
+        $this->aiAgent->register();
+
+        // Brand Voice Engine — injects voice into all LLM prompts
+        $this->brandVoice = new BrandVoice($this->settings);
+        $this->brandVoice->register();
+
+        // GEO Content Score — AI search citability scoring
+        $this->geoScore = new GeoContentScore($this->llmClient, $this->settings);
+        $this->geoScore->register();
+
+        // Programmatic SEO — template-led page generation at scale
+        $this->programmaticSEO = new ProgrammaticSEO($this->llmClient, $this->settings);
+        $this->programmaticSEO->register();
+
+        // Multi-CMS Publishing — Webflow/Shopify API integration
+        $this->multiCMS = new MultiCMSPublisher($this->settings);
+        $this->multiCMS->register();
+
+        // SERP Change Monitor — auto-update content on ranking drops
+        $this->serpMonitor = new SerpChangeMonitor($this->settings, $this->llmClient);
+        $this->serpMonitor->register();
+
+        // TopicCluster — instantiated once after all dependencies are available
+        if (in_array($tier, ['professional', 'business', 'agency', 'trial', 'dev'])) {
+            $this->topicCluster = new TopicCluster(
+                $this->settings,
+                $this->llmClient,
+                $this->contentBrief,
+                $this->contentOptimizer,
+                $this->smartTags,
+                $this->faqSchema,
+                $this->openGraph,
+                $this->truSEO,
+                $this->geoScore
+            );
+            $this->topicCluster->register();
+            add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
+            add_filter('cron_schedules', function($schedules) {
+                $schedules['sseo_ai_queue_interval'] = [
+                    'interval' => 120,
+                    'display' => __('Every 2 minutes (Fyndable Queue)', 'ai-seo-client'),
+                ];
+                return $schedules;
+            });
+
+            $this->automationOrchestrator = new AutomationOrchestrator(
+                $this->settings,
+                $this->licenseValidator,
+                $this->topicCluster,
+                $this->llmClient
+            );
+            $this->automationOrchestrator->register();
         }
         
         // Agency-only features (DEV includes these)
         if (in_array($tier, ['agency', 'dev'])) {
             $this->seoRevisions = new SeoRevisions();
             $this->seoRevisions->register();
-            
+
             $this->plagiarismChecker = new PlagiarismChecker($this->settings, $this->llmClient);
             $this->plagiarismChecker->register();
-            
-            // White-Label Manager (Agency only)
-            $this->whiteLabelManager = new WhiteLabelManager($this->settings);
-            $this->whiteLabelManager->register();
         }
+
+        // White-Label Branding (settings managed via SaaS dashboard / license)
+        $this->whiteLabelManager = new WhiteLabelManager($this->settings);
+        $this->whiteLabelManager->register();
+
+        // Dashboard card drag-and-drop ordering
+        DashboardSorter::register();
 
         // Unified Post Meta Box with tabs — replaces individual meta boxes
         $this->initPostMetaBox();
@@ -436,7 +649,7 @@ class Client
             $this->postMetaBox->addPanel('content', 'performance', __('Performance', 'ai-seo-client'), [$this->contentPerformanceMonitor, 'renderMetaBox']);
         }
 
-        if ($this->contentCalendar) {
+        if ($this->contentCalendar && $this->licenseValidator->isBusinessPlus()) {
             $this->postMetaBox->addPanel('content', 'workflow', __('Workflow', 'ai-seo-client'), [$this->contentCalendar, 'renderWorkflowMetaBox']);
         }
 
@@ -520,6 +733,64 @@ class Client
     }
 
     /**
+     * Register network admin menu (multisite)
+     */
+    public function registerNetworkMenu(): void
+    {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $menuName = $this->getBrandName();
+        $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
+
+        add_menu_page(
+            $menuName,
+            $menuName,
+            'manage_network_options',
+            'fyndable-network',
+            [$this, 'renderNetworkPage'],
+            $iconUrl,
+            3
+        );
+    }
+
+    /**
+     * Render network admin page (multisite overview)
+     */
+    public function renderNetworkPage(): void
+    {
+        $sites = get_sites(['number' => 0]);
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $menuName = $this->getBrandName();
+
+        echo '<div class="wrap"><h1>' . esc_html($menuName) . ' — Network Overview</h1>';
+        echo '<p>Manage plugin settings across all sites in your network.</p>';
+
+        echo '<table class="wp-list-table widefat fixed striped"><thead><tr>';
+        echo '<th>Site</th><th>Domain</th><th>License Status</th><th>Tier</th><th>Actions</th>';
+        echo '</tr></thead><tbody>';
+
+        foreach ($sites as $site) {
+            switch_to_blog((int) $site->blog_id);
+            $status = get_option('sseo_ai_client_license_status', 'inactive');
+            $tier = get_option('sseo_ai_client_license_tier', 'free');
+            $siteUrl = get_site_url();
+            $siteName = get_bloginfo('name');
+            $adminUrl = admin_url('admin.php?page=ai-seo-client');
+            restore_current_blog();
+
+            $statusColor = $status === 'active' ? 'green' : 'red';
+            echo '<tr>';
+            echo '<td><strong>' . esc_html($siteName) . '</strong></td>';
+            echo '<td>' . esc_html($siteUrl) . '</td>';
+            echo '<td><span style="color:' . esc_attr($statusColor) . ';font-weight:600;">' . esc_html(ucfirst($status)) . '</span></td>';
+            echo '<td>' . esc_html(ucfirst($tier)) . '</td>';
+            echo '<td><a href="' . esc_url($adminUrl) . '" class="button button-small">Manage</a></td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table></div>';
+    }
+
+    /**
      * Register admin menu
      */
     public function registerAdminMenu(): void
@@ -529,56 +800,62 @@ class Client
         
         // Get white-label company name if set
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $menuName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : __('Fynable', 'ai-seo-client');
-        
-        // Main menu
+        $menuName = $this->getBrandName();
+        $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
+
+        // Initialize dashboard shell
+        $this->dashboardShell = new DashboardShell($this);
+        $this->dashboardShell->register();
+
+        // Main menu — renders the full-page dashboard shell
         add_menu_page(
             $menuName,
             $menuName,
             'manage_options',
-            'ai-seo-client',
-            [$this, 'renderConnectionPage'],
-            'dashicons-chart-line',
+            'fyndable-dashboard',
+            [$this, 'renderDashboardShell'],
+            $iconUrl,
             30
         );
 
-        // Connection (first submenu replaces main menu text)
+        // All tiers: Dashboard, Content Calendar, AI Tools, Link Manager, Integrations
+
+        // 1. Dashboard / Statistics - all tiers (first, so the top-level menu lands here)
         add_submenu_page(
-            'ai-seo-client',
+            'fyndable-dashboard',
+            __('Dashboard', 'ai-seo-client'),
+            __('📊 Dashboard', 'ai-seo-client'),
+            'manage_options',
+            'ai-seo-dashboard',
+            [$this, 'renderDashboardPage']
+        );
+
+        // Connection page (separate slug so it can load in iframe)
+        add_submenu_page(
+            'fyndable-dashboard',
             __('Connection', 'ai-seo-client'),
             __('🔗 Connection', 'ai-seo-client'),
             'manage_options',
             'ai-seo-client',
             [$this, 'renderConnectionPage']
         );
-        
+
         // Only show feature menus if license is valid
         if ($isLicenseValid) {
-            // All tiers: Dashboard, Content Calendar, AI Tools, Link Manager, Integrations
-            
-            // 1. Dashboard / Statistics - all tiers
-            add_submenu_page(
-                'ai-seo-client',
-                __('Dashboard', 'ai-seo-client'),
-                __('📊 Dashboard', 'ai-seo-client'),
-                'manage_options',
-                'ai-seo-dashboard',
-                [$this, 'renderDashboardPage']
-            );
-            
+
             // 2. Content Calendar - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Content Calendar', 'ai-seo-client'),
                 __('📅 Content Calendar', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-content-calendar',
                 [$this, 'renderContentCalendarPage']
             );
-            
+
             // 3. AI Tools - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('AI Tools', 'ai-seo-client'),
                 __('🤖 AI Tools', 'ai-seo-client'),
                 'manage_options',
@@ -588,7 +865,7 @@ class Client
 
             // 4. Ideas - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Ideas', 'ai-seo-client'),
                 __('💡 Ideas', 'ai-seo-client'),
                 'manage_options',
@@ -598,7 +875,7 @@ class Client
 
             // 5. SEO AI Created Posts - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Created Posts', 'ai-seo-client'),
                 __('📝 Created Posts', 'ai-seo-client'),
                 'manage_options',
@@ -608,37 +885,77 @@ class Client
 
             // 6. Keywords - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Keywords', 'ai-seo-client'),
                 __('🎯 Keywords', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-keywords',
                 [$this, 'renderKeywordsPage']
             );
-            
+
             // 7. Link Manager (Smart Internal Linking) - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Link Manager', 'ai-seo-client'),
                 __('🔗 Link Manager', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-link-manager',
                 [$this, 'renderLinkManagerPage']
             );
-            
+
+            // 7c. Competitor Research - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Competitor Research', 'ai-seo-client'),
+                __('🔍 Competitor Research', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-competitor-research',
+                [$this, 'renderCompetitorResearchPage']
+            );
+
+            // 7b. Link Genius (Auto Internal Linking) - starter+
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Link Genius', 'ai-seo-client'),
+                __('✨ Link Genius', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-link-genius',
+                [$this, 'renderLinkGeniusPage']
+            );
+
             // 8. Sitemaps - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Sitemaps', 'ai-seo-client'),
                 __('🗺️ Sitemaps', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-sitemaps',
                 [$this, 'renderSitemapsPage']
             );
-            
+
+            // 8c. Bulk Optimizer - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Bulk Optimizer', 'ai-seo-client'),
+                __('✅ Bulk Optimizer', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-bulk',
+                [$this, 'renderBulkOptimizerPage']
+            );
+
+            // 8b. Redirect Manager - starter+
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Redirect Manager', 'ai-seo-client'),
+                __('↩️ Redirect Manager', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-redirects',
+                [$this, 'renderRedirectManagerPage']
+            );
+
             // 9. Integrations - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('Integrations', 'ai-seo-client'),
                 __('🔌 Integrations', 'ai-seo-client'),
                 'manage_options',
@@ -646,9 +963,29 @@ class Client
                 [$this, 'renderIntegrationsPage']
             );
 
+            // 9c. Support - all tiers (with unread badge)
+            $unreadCount = 0;
+            try {
+                $unreadCount = $this->dashboardAPI->getUnreadSupportCount();
+            } catch (\Exception $e) {
+                $unreadCount = 0;
+            }
+            $supportTitle = __('💬 Support', 'ai-seo-client');
+            if ($unreadCount > 0) {
+                $supportTitle .= ' <span class="awaiting-mod count-' . $unreadCount . '"><span class="pending-count">' . $unreadCount . '</span></span>';
+            }
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Support', 'ai-seo-client'),
+                $supportTitle,
+                'manage_options',
+                'ai-seo-support',
+                [$this, 'renderSupportPage']
+            );
+
             // 9b. SEO Data Dashboard (SE Ranking / Ahrefs) - all tiers
             add_submenu_page(
-                'ai-seo-client',
+                'fyndable-dashboard',
                 __('SEO Data Dashboard', 'ai-seo-client'),
                 __('📈 SEO Data', 'ai-seo-client'),
                 'manage_options',
@@ -656,52 +993,62 @@ class Client
                 [$this, 'renderSEODataDashboardPage']
             );
 
-            // 9c. LLM Tracker - all tiers
+            // 9c. Brand & AI Search Visibility - all tiers
             add_submenu_page(
-                'ai-seo-client',
-                __('LLM Tracker', 'ai-seo-client'),
-                __('🧠 LLM Tracker', 'ai-seo-client'),
+                'fyndable-dashboard',
+                __('AI Search Visibility', 'ai-seo-client'),
+                __('👁️ AI Search Visibility', 'ai-seo-client'),
                 'manage_options',
                 'ai-seo-llm-tracker',
-                [$this, 'renderLLMTrackerPage']
+                [$this, 'renderBrandVisibilityPage']
             );
-            
+
             // Professional+ features: Topic Clusters, Site Audit, Rank Tracker
             $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
             if (in_array($tier, $professionalTiers)) {
                 // 10. Topic Clusters
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Topic Clusters', 'ai-seo-client'),
                     __('🎯 Topic Clusters', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-topic-clusters',
                     [$this, 'renderTopicClusterPage']
                 );
-                
+
+                // 10b. Automation
+                add_submenu_page(
+                    'fyndable-dashboard',
+                    __('Automation', 'ai-seo-client'),
+                    __('Automation', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-automation',
+                    [$this, 'renderAutomationPage']
+                );
+
                 // 11. Site Audit
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Site Audit', 'ai-seo-client'),
                     __('🔍 Site Audit', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-site-audit',
                     [$this, 'renderSiteAuditPage']
                 );
-                
+
                 // 12. Rank Tracker
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Rank Tracker', 'ai-seo-client'),
                     __('📈 Rank Tracker', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-rank-tracker',
                     [$this, 'renderRankTrackerPage']
                 );
-                
+
                 // 13. Search Console (GSC) - Professional+
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Search Console', 'ai-seo-client'),
                     __('📊 Search Console', 'ai-seo-client'),
                     'manage_options',
@@ -711,35 +1058,93 @@ class Client
 
                 // 13b. Google Data Dashboard (GSC + GA4 + Ads) - Professional+
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('Google Data', 'ai-seo-client'),
                     __('📈 Google Data', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-google-data',
                     [$this, 'renderGoogleDataPage']
                 );
-                
+
                 // 14. A/B Testing - Professional+
                 add_submenu_page(
-                    'ai-seo-client',
+                    'fyndable-dashboard',
                     __('A/B Testing', 'ai-seo-client'),
                     __('🧪 A/B Testing', 'ai-seo-client'),
                     'manage_options',
                     'ai-seo-ab-testing',
                     [$this, 'renderABTestingPage']
                 );
+
+                // 15. AI Optimization Tracker - Professional+
+                add_submenu_page(
+                    'fyndable-dashboard',
+                    __('AI Optimization', 'ai-seo-client'),
+                    __('🤖 AI Optimization', 'ai-seo-client'),
+                    'manage_options',
+                    'ai-seo-ai-optimization',
+                    [$this, 'renderAiOptimizationPage']
+                );
+
+                // 14b. Prompt Templates - Business+
+                if ($this->promptTemplateLibrary) {
+                    add_submenu_page(
+                        'fyndable-dashboard',
+                        __('Prompt Templates', 'ai-seo-client'),
+                        __('📝 Prompt Templates', 'ai-seo-client'),
+                        'manage_options',
+                        'ai-seo-prompt-templates',
+                        [$this, 'renderPromptTemplatesPage']
+                    );
+                }
             }
         }
-        
+
         // Settings (always visible)
         add_submenu_page(
-            'ai-seo-client',
+            'fyndable-dashboard',
             __('Settings', 'ai-seo-client'),
             __('⚙️ Settings', 'ai-seo-client'),
             'manage_options',
             'ai-seo-settings',
             [$this, 'renderSettingsPage']
         );
+
+        // Import (always visible — useful even before license activation)
+        add_submenu_page(
+            'fyndable-dashboard',
+            __('Import SEO Data', 'ai-seo-client'),
+            __('📥 Import', 'ai-seo-client'),
+            'manage_options',
+            'ai-seo-import',
+            [$this, 'renderImportPage']
+        );
+
+        // Remove all submenu items from WP admin menu (pages stay accessible via URL for iframe)
+        add_action('admin_head', [$this, 'hideSubmenuItems']);
+    }
+
+    /**
+     * Hide all dashboard submenu items from the WordPress admin menu via CSS.
+     * Pages remain registered and accessible via direct URL (needed for iframe).
+     */
+    public function hideSubmenuItems(): void
+    {
+        echo '<style>
+            #toplevel_page_fyndable-dashboard .wp-submenu,
+            #toplevel_page_fyndable-dashboard .wp-submenu-wrap,
+            #toplevel_page_fyndable-dashboard.wp-has-submenu .wp-submenu {
+                display: none !important;
+            }
+            #toplevel_page_fyndable-dashboard .wp-menu-arrow {
+                display: none !important;
+            }
+            #toplevel_page_fyndable-dashboard:hover .wp-submenu,
+            #toplevel_page_fyndable-dashboard:hover .wp-submenu-wrap,
+            #toplevel_page_fyndable-dashboard.wp-has-submenu:hover .wp-submenu {
+                display: none !important;
+            }
+        </style>';
     }
 
     /**
@@ -747,9 +1152,12 @@ class Client
      */
     public function enqueueAssets(string $hook): void
     {
-        if (strpos($hook, 'ai-seo') === false) {
+        if (strpos($hook, 'ai-seo') === false && strpos($hook, 'fyndable') === false) {
             return;
         }
+
+        // WordPress media uploader (used by photo portfolio settings)
+        wp_enqueue_media();
 
         wp_enqueue_style(
             'ai-seo-client-admin',
@@ -785,7 +1193,7 @@ class Client
         wp_add_inline_style('ai-seo-client-admin', '
             #sseo-ai-loader-overlay {
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center;
+                background: rgba(0,0,0,0.6); z-index: 100001; justify-content: center; align-items: center;
                 flex-direction: column; backdrop-filter: blur(4px);
             }
             #sseo-ai-loader-overlay.active { display: flex !important; }
@@ -805,7 +1213,7 @@ class Client
                 if (document.getElementById("sseo-ai-loader-overlay")) return;
                 var overlay = document.createElement("div");
                 overlay.id = "sseo-ai-loader-overlay";
-                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + ' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . ' + "</div>";
+                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + \'' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . '\' + "</div>";
                 document.body.appendChild(overlay);
 
                 var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
@@ -849,24 +1257,102 @@ class Client
             })(jQuery);
         ', 'after');
 
-        // Apply white-label CSS variables
-        if (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color'])) {
-            $primaryColor = $whiteLabel['primary_color'] ?? '#2563eb';
-            $secondaryColor = $whiteLabel['secondary_color'] ?? '#1e40af';
+        // Apply white-label CSS variables only when a custom brand is configured
+        if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
+            $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?: '#379fd3') ?: '#379fd3';
+            $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?: '#8f39ac') ?: '#8f39ac';
+            $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+            $bgGradient = $usePrimaryOnly
+                ? $primaryColor
+                : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+
+            // Convert hex to rgb for rgba() usage
+            $rgb = sscanf($primaryColor, '#%02x%02x%02x');
+            $rgbStr = implode(',', $rgb);
+
             wp_add_inline_style('ai-seo-client-admin', "
                 :root {
                     --sseo-primary-color: {$primaryColor};
                     --sseo-secondary-color: {$secondaryColor};
+                    --sseo-sa-primary: {$primaryColor};
+                    --sseo-sa-secondary: {$secondaryColor};
                 }
-                .sseo-ai-header, .ai-tool-card:hover {
+                /* Override all hardcoded Fyndable gradients on admin pages */
+                .sseo-ai-header {
+                    background: {$bgGradient} !important;
                     border-color: {$primaryColor} !important;
                 }
-                .button-primary.sseo-btn, .sseo-ai-btn-primary {
-                    background-color: {$primaryColor} !important;
-                    border-color: {$primaryColor} !important;
+                .sseo-ai-content {
+                    background: {$bgGradient} !important;
                 }
                 .sseo-ai-header h1::before {
                     color: {$primaryColor};
+                }
+                /* Primary buttons */
+                .button-primary.sseo-btn, .sseo-ai-btn-primary,
+                .sseo-ai-connection-card .button-primary,
+                .sseo-onboarding-actions .button-primary {
+                    background-color: {$primaryColor} !important;
+                    border-color: {$primaryColor} !important;
+                }
+                .button-primary.sseo-btn:hover, .sseo-ai-btn-primary:hover,
+                .sseo-ai-connection-card .button-primary:hover,
+                .sseo-onboarding-actions .button-primary:hover {
+                    background-color: {$secondaryColor} !important;
+                    border-color: {$secondaryColor} !important;
+                }
+                /* Accent colors — focus borders, hover states, active tabs */
+                .form-field input:focus, .form-field select:focus, .form-field textarea:focus,
+                .sseo-form-field select:focus, .sseo-reply-form textarea:focus,
+                .connection-form input:focus, .sseo-onboarding-field input:focus,
+                .sseo-onboarding-field select:focus, .sseo-onboarding-field textarea:focus {
+                    border-color: {$primaryColor} !important;
+                    box-shadow: 0 0 0 3px rgba({$rgbStr}, 0.1) !important;
+                }
+                .ai-tool-card:hover {
+                    border-color: {$primaryColor} !important;
+                    box-shadow: 0 10px 20px rgba({$rgbStr}, 0.15) !important;
+                }
+                .sseo-ticket-item:hover {
+                    border-color: {$primaryColor} !important;
+                    box-shadow: 0 4px 12px rgba({$rgbStr}, 0.1) !important;
+                }
+                .sseo-ticket-item a:hover, .sseo-card-controls button:hover,
+                .sseo-reorder-toggle:hover {
+                    color: {$primaryColor} !important;
+                    border-color: {$primaryColor} !important;
+                }
+                .sseo-file-drop:hover {
+                    border-color: {$primaryColor} !important;
+                }
+                /* Active states */
+                .google-tab.active, .bv-period-tab.active {
+                    color: {$primaryColor} !important;
+                    border-bottom-color: {$primaryColor} !important;
+                    background: {$primaryColor} !important;
+                }
+                .bv-pagination a:hover, .bv-pagination span.current,
+                .bv-scan-btn, .bv-competitor-bar-fill {
+                    background: {$primaryColor} !important;
+                }
+                /* Spinner */
+                .sseo-ai-connection-loader .spinner,
+                .sseo-onboarding-loader .spinner {
+                    border-top-color: {$primaryColor} !important;
+                }
+                /* Highlight text gradient */
+                .sseo-ai-connection-card .highlight {
+                    background: {$bgGradient} !important;
+                    -webkit-background-clip: text !important;
+                    -webkit-text-fill-color: transparent !important;
+                }
+                /* Progress circle active state */
+                .sseo-onboarding-progress-step.active .sseo-onboarding-progress-circle {
+                    color: {$primaryColor} !important;
+                }
+                /* Checkbox/item hover */
+                .sseo-onboarding-checkbox-item:hover {
+                    border-color: {$primaryColor} !important;
                 }
             ");
         }
@@ -880,10 +1366,14 @@ class Client
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $licenseStatus = get_option('sseo_ai_client_license_status', 'inactive');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
-        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $dashboardUrl = $this->settings->getDashboardUrl();
+
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = $this->getBrandName();
+        $brandName = $companyName . ' ' . __('License Activation', 'ai-seo-client');
         ?>
         <div class="wrap ai-seo-client">
-            <h1><?php esc_html_e('Fynable License Activation', 'ai-seo-client'); ?></h1>
+            <h1><?php echo esc_html($brandName); ?></h1>
 
             <?php
             // Show activation success message
@@ -955,35 +1445,36 @@ class Client
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
                         <?php wp_nonce_field('activate_license'); ?>
                         <input type="hidden" name="action" value="ai_seo_activate_license">
-                        
+                        <input type="hidden" name="dashboard_url" id="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
+
                         <table class="form-table">
-                            <tr>
-                                <th scope="row"><label for="dashboard_url"><?php esc_html_e('SaaS Dashboard URL', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <input type="url" name="dashboard_url" id="dashboard_url" 
-                                           value="<?php echo esc_attr($dashboardUrl); ?>" 
-                                           class="regular-text" 
-                                           placeholder="https://your-saas-domain.com" required>
-                                    <p class="description"><?php esc_html_e('The URL where your AI SEO SaaS Dashboard is hosted', 'ai-seo-client'); ?></p>
-                                </td>
-                            </tr>
                             <tr>
                                 <th scope="row"><label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label></th>
                                 <td>
-                                    <input type="text" name="license_key" id="license_key" 
-                                           value="<?php echo esc_attr($licenseKey); ?>" 
-                                           class="regular-text" 
-                                           placeholder="FYNABLE-XXXX-XXXX-XXXX-XXXX" required>
+                                    <input type="text" name="license_key" id="license_key"
+                                           value="<?php echo esc_attr($licenseKey); ?>"
+                                           class="regular-text"
+                                           placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" required>
                                 </td>
                             </tr>
                         </table>
-                        
+
                         <?php submit_button(__('Activate License', 'ai-seo-client'), 'primary', 'submit', false); ?>
                     </form>
                 </div>
             <?php endif; ?>
         </div>
         <?php
+    }
+
+    /**
+     * Render the full-page dashboard shell
+     */
+    public function renderDashboardShell(): void
+    {
+        if ($this->dashboardShell) {
+            $this->dashboardShell->render();
+        }
     }
 
     /**
@@ -1047,6 +1538,22 @@ class Client
     }
 
     /**
+     * Render Automation page - delegates to AutomationOrchestrator class
+     */
+    public function renderAutomationPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->automationOrchestrator) {
+            $this->automationOrchestrator->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
      * Render AI Tools page
      */
     public function renderAIToolsPage(): void
@@ -1058,13 +1565,13 @@ class Client
         ?>
         <style>
             /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
             .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card:hover { border-color: #379fd3; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15); }
             .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
             .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
         </style>
@@ -1174,6 +1681,22 @@ class Client
     }
 
     /**
+     * Render Bulk Optimizer page - delegates to BulkActions class
+     */
+    public function renderBulkOptimizerPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->bulkActions) {
+            $this->bulkActions->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
      * Render Site Audit page - delegates to TechnicalSEOAuditor class
      */
     public function renderSiteAuditPage(): void
@@ -1254,6 +1777,38 @@ class Client
     }
 
     /**
+     * Render AI Optimization Tracker page - delegates to AiOptimizationTracker class
+     */
+    public function renderAiOptimizationPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->aiOptimizationTracker) {
+            $this->aiOptimizationTracker->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Prompt Templates page - delegates to PromptTemplateLibrary class
+     */
+    public function renderPromptTemplatesPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->promptTemplateLibrary) {
+            $this->promptTemplateLibrary->renderPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
      * Render Link Manager page - delegates to SmartInternalLinking class
      */
     public function renderLinkManagerPage(): void
@@ -1264,6 +1819,54 @@ class Client
         }
         if ($this->smartInternalLinking) {
             $this->smartInternalLinking->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Competitor Research page - delegates to CompetitorResearch class
+     */
+    public function renderCompetitorResearchPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->competitorResearch) {
+            $this->competitorResearch->renderDashboard();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Redirect Manager page - delegates to RedirectionManager class
+     */
+    public function renderRedirectManagerPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->redirectManager) {
+            $this->redirectManager->renderAdminPage();
+        } else {
+            $this->renderFeatureNotAvailable();
+        }
+    }
+
+    /**
+     * Render Link Genius page - delegates to LinkAssistant class
+     */
+    public function renderLinkGeniusPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+        if ($this->linkAssistant) {
+            $this->linkAssistant->renderDashboard();
         } else {
             $this->renderFeatureNotAvailable();
         }
@@ -1311,26 +1914,21 @@ class Client
             return;
         }
 
-        // Check sitemap status
-        $sitemapUrl = home_url('/sitemap.xml');
-        $sitemapIndexUrl = home_url('/sitemap_index.xml');
-        
-        $response = wp_remote_get($sitemapUrl, ['timeout' => 10]);
-        $sitemapExists = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
-        
-        $indexResponse = wp_remote_get($sitemapIndexUrl, ['timeout' => 10]);
-        $indexExists = !is_wp_error($indexResponse) && wp_remote_retrieve_response_code($indexResponse) === 200;
+        // Sitemap URLs for reference
+        $sitemapUrl = $this->sitemapGenerator->getMainSitemapUrl();
+        $sitemapIndexUrl = $this->sitemapGenerator->getSitemapIndexUrl();
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sitemap-status { display: flex; align-items: center; gap: 15px; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
             .sitemap-status.ok { background: #d1fae5; border-left: 4px solid #00a32a; }
             .sitemap-status.error { background: #fee2e2; border-left: 4px solid #d63638; }
+            .sitemap-status.warning { background: #fff3cd; border-left: 4px solid #dba617; }
             .sitemap-url { font-family: monospace; background: #f3f4f6; padding: 10px 15px; border-radius: 6px; display: inline-block; margin: 5px 0; }
         </style>
         <div class="wrap sseo-ai-modern">
@@ -1343,121 +1941,133 @@ class Client
                     <!-- Main Sitemap Status -->
                     <div class="sseo-ai-dashboard-card">
                         <h2><?php esc_html_e('Sitemap Status', 'ai-seo-client'); ?></h2>
+                        <div id="sitemap-status-content">
+                            <p><?php esc_html_e('Loading sitemap status...', 'ai-seo-client'); ?></p>
+                        </div>
                         
-                        <?php if ($sitemapExists || $indexExists): ?>
-                            <?php if ($indexExists): ?>
-                                <div class="sitemap-status ok">
-                                    <span style="font-size: 24px;">✅</span>
-                                    <div>
-                                        <strong><?php esc_html_e('Sitemap Index Found', 'ai-seo-client'); ?></strong>
-                                        <div class="sitemap-url">
-                                            <a href="<?php echo esc_url($sitemapIndexUrl); ?>" target="_blank"><?php echo esc_html($sitemapIndexUrl); ?></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
+                        <p style="margin-top: 20px;">
+                            <button type="button" id="run-sitemap-check" class="button button-primary">
+                                <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
+                            </button>
+                            <span class="spinner" style="float: none; margin-left: 10px;"></span>
+                        </p>
+                        
+                        <div id="sitemap-check-results" style="margin-top: 30px;"></div>
+                        
+                        <script>
+                        jQuery(document).ready(function($) {
+                            function loadSitemapStatus() {
+                                var container = $('#sitemap-status-content');
+                                container.html('<p><?php echo esc_js(__('Loading sitemap status...', 'ai-seo-client')); ?></p>');
+                                
+                                wp.apiFetch({
+                                    path: '/sseo-ai/v1/sitemap/status',
+                                    method: 'GET'
+                                }).then(function(data) {
+                                    var html = '';
+                                    if (data.index_exists) {
+                                        html += '<div class="sitemap-status ok">';
+                                        html += '<span style="font-size: 24px;">✅</span>';
+                                        html += '<div>';
+                                        html += '<strong><?php echo esc_js(__('Sitemap Index Found', 'ai-seo-client')); ?></strong>';
+                                        html += '<div class="sitemap-url"><a href="' + data.sitemap_index_url + '" target="_blank">' + data.sitemap_index_url + '</a></div>';
+                                        html += '</div></div>';
+                                    }
+                                    if (data.sitemap_exists) {
+                                        html += '<div class="sitemap-status ok">';
+                                        html += '<span style="font-size: 24px;">✅</span>';
+                                        html += '<div>';
+                                        html += '<strong><?php echo esc_js(__('XML Sitemap Found', 'ai-seo-client')); ?></strong>';
+                                        html += '<div class="sitemap-url"><a href="' + data.sitemap_url + '" target="_blank">' + data.sitemap_url + '</a></div>';
+                                        html += '<p style="margin: 5px 0 0; font-size: 12px; color: #666;"><?php echo esc_js(__('Sitemap size:', 'ai-seo-client')); ?> ' + (data.sitemap_size || 0) + ' bytes</p>';
+                                        html += '</div></div>';
+                                    }
+                                    if (!data.sitemap_exists && !data.index_exists) {
+                                        html += '<div class="sitemap-status error">';
+                                        html += '<span style="font-size: 24px;">❌</span>';
+                                        html += '<div>';
+                                        html += '<strong><?php echo esc_js(__('No Sitemap Found', 'ai-seo-client')); ?></strong>';
+                                        html += '<p><?php echo esc_js(__('Neither sitemap.xml nor sitemap_index.xml could be found.', 'ai-seo-client')); ?></p>';
+                                        html += '<p style="margin-top: 10px;"><a href="<?php echo esc_js(admin_url('admin.php?page=ai-seo-sitemap-settings')); ?>" class="button button-secondary"><?php echo esc_js(__('Open Sitemap Settings', 'ai-seo-client')); ?></a></p>';
+                                        html += '</div></div>';
+                                    }
+                                    container.html(html);
+                                }).catch(function(error) {
+                                    container.html('<div class="sitemap-status error"><span style="font-size: 24px;">❌</span><div><strong><?php echo esc_js(__('Error loading sitemap status', 'ai-seo-client')); ?></strong><p>' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</p></div></div>');
+                                });
+                            }
                             
-                            <?php if ($sitemapExists): ?>
-                                <div class="sitemap-status ok">
-                                    <span style="font-size: 24px;">✅</span>
-                                    <div>
-                                        <strong><?php esc_html_e('XML Sitemap Found', 'ai-seo-client'); ?></strong>
-                                        <div class="sitemap-url">
-                                            <a href="<?php echo esc_url($sitemapUrl); ?>" target="_blank"><?php echo esc_html($sitemapUrl); ?></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
+                            loadSitemapStatus();
                             
-                            <p style="margin-top: 20px;">
-                                <button type="button" id="run-sitemap-check" class="button button-primary">
-                                    <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
-                                </button>
-                                <span class="spinner" style="float: none; margin-left: 10px;"></span>
-                            </p>
-                            
-                            <div id="sitemap-check-results" style="margin-top: 30px;"></div>
-                            
-                            <script>
-                            jQuery(document).ready(function($) {
-                                $('#run-sitemap-check').on('click', function() {
-                                    var btn = $(this);
-                                    var spinner = btn.next('.spinner');
-                                    var results = $('#sitemap-check-results');
-                                    
-                                    btn.prop('disabled', true);
-                                    spinner.addClass('is-active');
-                                    results.html('<p><?php echo esc_js(__('Running sitemap health check...', 'ai-seo-client')); ?></p>');
-                                    
-                                    wp.apiFetch({
-                                        path: '/sseo-ai/v1/technical/audit',
-                                        method: 'POST'
-                                    }).then(function(response) {
-                                        if (response.success && response.audit && response.audit.sitemap) {
-                                            var sitemap = response.audit.sitemap;
-                                            var html = '<div class="sseo-ai-dashboard-card" style="background: white; padding: 30px; border-radius: 8px;">';
-                                            html += '<h3><?php echo esc_js(__('Sitemap Health Check Results', 'ai-seo-client')); ?></h3>';
-                                            
-                                            // Sitemap URL
-                                            html += '<p><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
-                                            
-                                            // Stats
-                                            html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
-                                            html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
-                                            html += '<div style="font-size: 32px; font-weight: bold; color: #2563eb;">' + (sitemap.total_urls || 0) + '</div>';
-                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
-                                            html += '</div>';
-                                            html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
-                                            html += '<div style="font-size: 32px; font-weight: bold; color: #00a32a;">' + (sitemap.valid_urls || 0) + '</div>';
-                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div>';
-                                            html += '</div>';
-                                            html += '<div style="background: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">';
-                                            html += '<div style="font-size: 32px; font-weight: bold; color: #d63638;">' + (sitemap.invalid_urls || 0) + '</div>';
-                                            html += '<div style="color: #6b7280;"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div>';
-                                            html += '</div>';
-                                            html += '</div>';
-                                            
-                                            // Issues
-                                            if (sitemap.issues && sitemap.issues.length > 0) {
-                                                html += '<h4 style="margin-top: 20px;"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
-                                                html += '<ul style="list-style: none; padding: 0;">';
-                                                sitemap.issues.forEach(function(issue) {
-                                                    html += '<li style="padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #dba617; border-radius: 4px;">';
-                                                    html += '<strong>' + issue.type + ':</strong> ' + issue.description;
-                                                    html += '</li>';
-                                                });
-                                                html += '</ul>';
-                                            } else {
-                                                html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
-                                                html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
-                                                html += '</div>';
-                                            }
-                                            
-                                            html += '</div>';
-                                            results.html(html);
+                            $('#run-sitemap-check').on('click', function() {
+                                var btn = $(this);
+                                var spinner = btn.next('.spinner');
+                                var results = $('#sitemap-check-results');
+                                
+                                btn.prop('disabled', true);
+                                spinner.addClass('is-active');
+                                results.html('<p><?php echo esc_js(__('Running sitemap health check...', 'ai-seo-client')); ?></p>');
+                                
+                                wp.apiFetch({
+                                    path: '/sseo-ai/v1/technical/audit',
+                                    method: 'POST'
+                                }).then(function(response) {
+                                    if (response.success && response.audit && response.audit.sitemap) {
+                                        var sitemap = response.audit.sitemap;
+                                        var html = '<div class="sseo-ai-dashboard-card" style="background: white; padding: 30px; border-radius: 8px;">';
+                                        html += '<h3><?php echo esc_js(__('Sitemap Health Check Results', 'ai-seo-client')); ?></h3>';
+                                        
+                                        // Sitemap URL
+                                        html += '<p><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
+                                        
+                                        // Stats
+                                        html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
+                                        html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #379fd3;">' + (sitemap.total_urls || 0) + '</div>';
+                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
+                                        html += '</div>';
+                                        html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #00a32a;">' + (sitemap.valid_urls || 0) + '</div>';
+                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div>';
+                                        html += '</div>';
+                                        html += '<div style="background: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">';
+                                        html += '<div style="font-size: 32px; font-weight: bold; color: #d63638;">' + (sitemap.invalid_urls || 0) + '</div>';
+                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div>';
+                                        html += '</div>';
+                                        html += '</div>';
+                                        
+                                        // Issues
+                                        if (sitemap.issues && sitemap.issues.length > 0) {
+                                            html += '<h4 style="margin-top: 20px;"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
+                                            html += '<ul style="list-style: none; padding: 0;">';
+                                            sitemap.issues.forEach(function(issue) {
+                                                html += '<li style="padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #dba617; border-radius: 4px;">';
+                                                html += '<strong>' + issue.type + ':</strong> ' + issue.description;
+                                                html += '</li>';
+                                            });
+                                            html += '</ul>';
                                         } else {
-                                            results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><?php echo esc_js(__('Failed to run sitemap check. Please try again.', 'ai-seo-client')); ?></div>');
+                                            html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
+                                            html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
+                                            html += '</div>';
                                         }
                                         
-                                        btn.prop('disabled', false);
-                                        spinner.removeClass('is-active');
-                                    }).catch(function(error) {
-                                        results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>');
-                                        btn.prop('disabled', false);
-                                        spinner.removeClass('is-active');
-                                    });
+                                        html += '</div>';
+                                        results.html(html);
+                                    } else {
+                                        results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><?php echo esc_js(__('Failed to run sitemap check. Please try again.', 'ai-seo-client')); ?></div>');
+                                    }
+                                    
+                                    btn.prop('disabled', false);
+                                    spinner.removeClass('is-active');
+                                }).catch(function(error) {
+                                    results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>';
+                                    btn.prop('disabled', false);
+                                    spinner.removeClass('is-active');
                                 });
                             });
-                            </script>
-                        <?php else: ?>
-                            <div class="sitemap-status error">
-                                <span style="font-size: 24px;">❌</span>
-                                <div>
-                                    <strong><?php esc_html_e('No Sitemap Found', 'ai-seo-client'); ?></strong>
-                                    <p><?php esc_html_e('Neither sitemap.xml nor sitemap_index.xml could be found.', 'ai-seo-client'); ?></p>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+                        });
+                        </script>
                     </div>
                     
                     <!-- Extended Sitemaps Info -->
@@ -1465,6 +2075,7 @@ class Client
                         <h2><?php esc_html_e('Extended Sitemaps', 'ai-seo-client'); ?></h2>
                         <p><?php esc_html_e('The plugin automatically generates the following sitemap types:', 'ai-seo-client'); ?></p>
                         <ul style="list-style: disc; margin-left: 20px;">
+                            <li><strong><?php esc_html_e('Sitemap Index:', 'ai-seo-client'); ?></strong> <code>sitemap_index.xml</code> <?php esc_html_e('(main entry point)', 'ai-seo-client'); ?></li>
                             <li><strong><?php esc_html_e('Main Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap.xml</code></li>
                             <li><strong><?php esc_html_e('RSS Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-rss.xml</code></li>
                             <li><strong><?php esc_html_e('Video Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-videos.xml</code></li>
@@ -1472,6 +2083,13 @@ class Client
                             <li><strong><?php esc_html_e('Image Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-images.xml</code></li>
                             <li><strong><?php esc_html_e('Author Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-authors.xml</code></li>
                         </ul>
+                    </div>
+
+                    <!-- Sitemap Settings -->
+                    <div class="sseo-ai-dashboard-card">
+                        <h2><?php esc_html_e('Sitemap Settings', 'ai-seo-client'); ?></h2>
+                        <p><?php esc_html_e('Choose which post types and taxonomies to include in your sitemap.', 'ai-seo-client'); ?></p>
+                        <?php $this->sitemapGenerator->renderSettings(); ?>
                     </div>
                     
                 </div>
@@ -1487,13 +2105,13 @@ class Client
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
             .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #FF4D00; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15); }
+            .ai-tool-card:hover { border-color: #379fd3; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15); }
             .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
             .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
         </style>
@@ -1548,6 +2166,14 @@ class Client
     }
 
     /**
+     * Render import page
+     */
+    public function renderImportPage(): void
+    {
+        $this->seoImporter->renderPage();
+    }
+
+    /**
      * Render settings page
      */
     public function renderSettingsPage(): void
@@ -1560,7 +2186,9 @@ class Client
         $brandVoice = get_option('sseo_ai_brand_voice', '');
         $sslVerify = $this->settings->sslVerify();
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
-        
+        $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
+        $googlePlacesKey = get_option('sseo_ai_client_google_places_key', '');
+
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
         
@@ -1570,11 +2198,11 @@ class Client
         ?>
         <style>
             /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 900px; margin: 0 auto; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 1200px; margin: 0 auto; }
             .sseo-ai-notice { padding: 16px 20px; border-radius: 6px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
             .sseo-ai-notice-success { background: #d1fae5; color: #10b981; border-left: 4px solid #10b981; }
             .settings-section { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 2px solid #f3f4f6; }
@@ -1582,7 +2210,7 @@ class Client
             .form-field { margin-bottom: 24px; }
             .form-field label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
             .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1); }
+            .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1); }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -1597,6 +2225,20 @@ class Client
                             <strong>✓</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
                         </div>
                     <?php endif; ?>
+
+                    <div class="settings-section" style="background:#f0f6ff;border-radius:8px;padding:20px;">
+                        <h2><?php esc_html_e('Setup Wizard', 'ai-seo-client'); ?></h2>
+                        <p class="description">
+                            <?php esc_html_e('Re-run the Fyndable setup wizard to review or change your onboarding settings.', 'ai-seo-client'); ?>
+                        </p>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:15px;">
+                            <input type="hidden" name="action" value="sseo_ai_onboarding_restart">
+                            <?php wp_nonce_field('sseo_ai_onboarding_restart'); ?>
+                            <button type="submit" class="button button-primary">
+                                <?php esc_html_e('Start Wizard', 'ai-seo-client'); ?>
+                            </button>
+                        </form>
+                    </div>
                     
                     <?php if ($rateLimitStatus['limit'] > 0): ?>
                     <div class="settings-section">
@@ -1671,12 +2313,125 @@ class Client
                         <div class="settings-section">
                             <h2><?php esc_html_e('Location Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
-                            
+
+                            <div class="form-field">
+                                <label for="google_places_key"><?php esc_html_e('Google Places API Key (optional)', 'ai-seo-client'); ?></label>
+                                <input type="text" name="google_places_key" id="google_places_key"
+                                       value="<?php echo esc_attr($googlePlacesKey); ?>" class="regular-text"
+                                       placeholder="AIza...">
+                                <p class="field-description"><?php esc_html_e('Vul een Google Places API key in voor autocomplete-suggesties bij het typen van locaties. Zonder key werkt een eenvoudige fallback-lijst.', 'ai-seo-client'); ?></p>
+                            </div>
+
                             <div class="form-field">
                                 <label for="locations"><?php esc_html_e('Target Locations', 'ai-seo-client'); ?></label>
-                                <textarea name="locations" id="locations" rows="3" 
-                                          placeholder="e.g., Amsterdam, Rotterdam, Utrecht"><?php echo esc_textarea($locations); ?></textarea>
-                                <p class="field-description"><?php esc_html_e('Enter cities, regions, or countries (comma-separated)', 'ai-seo-client'); ?></p>
+                                <div id="locations-tag-container" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid #ddd;border-radius:4px;min-height:42px;background:#fff;cursor:text;">
+                                    <!-- Tag chips will be inserted here by JS -->
+                                </div>
+                                <input type="text" id="locations-input" class="regular-text"
+                                       placeholder="<?php esc_attr_e('Typ een plaatsnaam en selecteer uit de suggesties...', 'ai-seo-client'); ?>"
+                                       style="margin-top:6px;width:100%;"
+                                       autocomplete="off">
+                                <!-- Hidden textarea for backward-compatible comma-separated storage -->
+                                <textarea name="locations" id="locations" rows="3" style="display:none;"><?php echo esc_textarea($locations); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Steden, regio\'s of landen. Suggesties verschijnen automatisch tijdens het typen.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Local Business', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Used for LocalBusiness schema and Local SERP radius scans', 'ai-seo-client'); ?></p>
+
+                            <?php
+                            $localOptions = $this->settings->all();
+                            ?>
+
+                            <div class="form-field">
+                                <label for="local_business_name"><?php esc_html_e('Business Name', 'ai-seo-client'); ?></label>
+                                <input type="text" name="local_business_name" id="local_business_name" value="<?php echo esc_attr($localOptions['local_business_name'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_business_type"><?php esc_html_e('Business Type', 'ai-seo-client'); ?></label>
+                                <select name="local_business_type" id="local_business_type">
+                                    <option value="LocalBusiness" <?php selected($localOptions['local_business_type'] ?? 'LocalBusiness', 'LocalBusiness'); ?>><?php esc_html_e('Local Business', 'ai-seo-client'); ?></option>
+                                    <option value="Restaurant" <?php selected($localOptions['local_business_type'] ?? '', 'Restaurant'); ?>><?php esc_html_e('Restaurant', 'ai-seo-client'); ?></option>
+                                    <option value="Store" <?php selected($localOptions['local_business_type'] ?? '', 'Store'); ?>><?php esc_html_e('Store', 'ai-seo-client'); ?></option>
+                                    <option value="Dentist" <?php selected($localOptions['local_business_type'] ?? '', 'Dentist'); ?>><?php esc_html_e('Dentist', 'ai-seo-client'); ?></option>
+                                    <option value="Doctor" <?php selected($localOptions['local_business_type'] ?? '', 'Doctor'); ?>><?php esc_html_e('Doctor', 'ai-seo-client'); ?></option>
+                                    <option value="Plumber" <?php selected($localOptions['local_business_type'] ?? '', 'Plumber'); ?>><?php esc_html_e('Plumber', 'ai-seo-client'); ?></option>
+                                    <option value="Electrician" <?php selected($localOptions['local_business_type'] ?? '', 'Electrician'); ?>><?php esc_html_e('Electrician', 'ai-seo-client'); ?></option>
+                                    <option value="Lawyer" <?php selected($localOptions['local_business_type'] ?? '', 'Lawyer'); ?>><?php esc_html_e('Lawyer', 'ai-seo-client'); ?></option>
+                                    <option value="RealEstateAgent" <?php selected($localOptions['local_business_type'] ?? '', 'RealEstateAgent'); ?>><?php esc_html_e('Real Estate Agent', 'ai-seo-client'); ?></option>
+                                    <option value="HairSalon" <?php selected($localOptions['local_business_type'] ?? '', 'HairSalon'); ?>><?php esc_html_e('Hair Salon', 'ai-seo-client'); ?></option>
+                                    <option value="AutoRepair" <?php selected($localOptions['local_business_type'] ?? '', 'AutoRepair'); ?>><?php esc_html_e('Auto Repair', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_description"><?php esc_html_e('Description', 'ai-seo-client'); ?></label>
+                                <textarea name="local_description" id="local_description" rows="3"><?php echo esc_textarea($localOptions['local_description'] ?? ''); ?></textarea>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_street"><?php esc_html_e('Address', 'ai-seo-client'); ?></label>
+                                <input type="text" name="local_street" id="local_street" value="<?php echo esc_attr($localOptions['local_street'] ?? ''); ?>" placeholder="Street">
+                                <p style="margin-top:8px;display:flex;gap:8px;">
+                                    <input type="text" name="local_city" value="<?php echo esc_attr($localOptions['local_city'] ?? ''); ?>" placeholder="City" style="flex:2;">
+                                    <input type="text" name="local_state" value="<?php echo esc_attr($localOptions['local_state'] ?? ''); ?>" placeholder="State/Province" style="flex:1;">
+                                    <input type="text" name="local_postal" value="<?php echo esc_attr($localOptions['local_postal'] ?? ''); ?>" placeholder="Postal code" style="flex:1;">
+                                    <input type="text" name="local_country" value="<?php echo esc_attr($localOptions['local_country'] ?? 'NL'); ?>" placeholder="Country" style="flex:1;">
+                                </p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_latitude"><?php esc_html_e('Coordinates (Lat, Lng)', 'ai-seo-client'); ?></label>
+                                <p style="display:flex;gap:8px;">
+                                    <input type="text" name="local_latitude" id="local_latitude" value="<?php echo esc_attr($localOptions['local_latitude'] ?? ''); ?>" placeholder="Latitude" style="flex:1;">
+                                    <input type="text" name="local_longitude" value="<?php echo esc_attr($localOptions['local_longitude'] ?? ''); ?>" placeholder="Longitude" style="flex:1;">
+                                </p>
+                                <p class="field-description"><?php esc_html_e('Required for Local SERP radius scans', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_search_radius"><?php esc_html_e('Default Local SERP Radius (km)', 'ai-seo-client'); ?></label>
+                                <select name="local_search_radius" id="local_search_radius">
+                                    <?php foreach ([1, 2, 5, 10, 15, 25, 50, 100] as $km): ?>
+                                        <option value="<?php echo esc_attr($km); ?>" <?php selected((int) ($localOptions['local_search_radius'] ?? 10), $km); ?>><?php echo esc_html($km); ?> km</option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_search_grid"><?php esc_html_e('Default Local SERP Grid', 'ai-seo-client'); ?></label>
+                                <select name="local_search_grid" id="local_search_grid">
+                                    <option value="1" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 1); ?>><?php esc_html_e('Single center (Professional)', 'ai-seo-client'); ?></option>
+                                    <option value="3" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 3); ?>><?php esc_html_e('3x3 grid (Business)', 'ai-seo-client'); ?></option>
+                                    <option value="5" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 5); ?>><?php esc_html_e('5x5 grid (Agency)', 'ai-seo-client'); ?></option>
+                                    <option value="7" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 7); ?>><?php esc_html_e('7x7 grid (Agency)', 'ai-seo-client'); ?></option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_phone"><?php esc_html_e('Contact', 'ai-seo-client'); ?></label>
+                                <p style="display:flex;gap:8px;">
+                                    <input type="text" name="local_phone" value="<?php echo esc_attr($localOptions['local_phone'] ?? ''); ?>" placeholder="Phone" style="flex:1;">
+                                    <input type="email" name="local_email" value="<?php echo esc_attr($localOptions['local_email'] ?? ''); ?>" placeholder="Email" style="flex:1;">
+                                </p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_url"><?php esc_html_e('Business URL', 'ai-seo-client'); ?></label>
+                                <input type="url" name="local_url" id="local_url" value="<?php echo esc_attr($localOptions['local_url'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_image"><?php esc_html_e('Business Image', 'ai-seo-client'); ?></label>
+                                <input type="url" name="local_image" id="local_image" value="<?php echo esc_attr($localOptions['local_image'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="local_opening_hours"><?php esc_html_e('Opening Hours', 'ai-seo-client'); ?></label>
+                                <textarea name="local_opening_hours" id="local_opening_hours" rows="3" placeholder="Mo-Fr 09:00-17:00&#10;Sa 10:00-14:00"><?php echo esc_textarea($localOptions['local_opening_hours'] ?? ''); ?></textarea>
                             </div>
                         </div>
                         
@@ -1697,12 +2452,100 @@ class Client
                                           placeholder="e.g., Always include actionable tips, use bullet points for readability, focus on practical examples..."><?php echo esc_textarea($promptSettings); ?></textarea>
                                 <p class="field-description"><?php esc_html_e('Additional instructions that will be included in all AI prompts', 'ai-seo-client'); ?></p>
                             </div>
+
+                            <div class="form-field">
+                                <label for="default_include_faq">
+                                    <input type="checkbox" name="default_include_faq" id="default_include_faq" value="1" <?php checked($this->settings->get('default_include_faq', true), true); ?>>
+                                    <?php esc_html_e('Generate FAQ section by default', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('When enabled, the Content Writer will include an FAQ section in generated articles by default. This can be overridden per article in the Content Writer.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h2><?php esc_html_e('Post Auto-Cleaner', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Automatically trash AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded).', 'ai-seo-client'); ?></p>
+
+                            <?php
+                            $autocleanEnabled = get_option('sseo_ai_client_autoclean_enabled', '0') === '1';
+                            $autocleanDays = (int) get_option('sseo_ai_client_autoclean_days', 60);
+                            $autocleanMaxClicks = (int) get_option('sseo_ai_client_autoclean_max_clicks', 0);
+                            $autocleanLastRun = get_option('sseo_ai_client_autoclean_last_run', '');
+                            $autocleanLastCount = (int) get_option('sseo_ai_client_autoclean_last_count', 0);
+                            ?>
+
+                            <div class="form-field">
+                                <label for="autoclean_enabled">
+                                    <input type="checkbox" name="autoclean_enabled" id="autoclean_enabled" value="1" <?php checked($autocleanEnabled); ?>>
+                                    <?php esc_html_e('Enable auto-cleanup', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('When enabled, a daily check trashes AI-generated posts that meet the criteria below.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="autoclean_days"><?php esc_html_e('Days threshold', 'ai-seo-client'); ?></label>
+                                <input type="number" name="autoclean_days" id="autoclean_days" min="1" max="3650" step="1"
+                                       value="<?php echo esc_attr($autocleanDays); ?>">
+                                <p class="field-description"><?php esc_html_e('Posts older than this many days are eligible for cleanup. Default: 60.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="autoclean_max_clicks"><?php esc_html_e('Max views before cleanup', 'ai-seo-client'); ?></label>
+                                <input type="number" name="autoclean_max_clicks" id="autoclean_max_clicks" min="0" max="1000000" step="1"
+                                       value="<?php echo esc_attr($autocleanMaxClicks); ?>">
+                                <p class="field-description"><?php esc_html_e('Posts with this many views or fewer are eligible. Set to 0 to only clean posts with zero views. Default: 0.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <?php if (!empty($autocleanLastRun)): ?>
+                            <p class="field-description" style="color:#666;">
+                                <?php printf(
+                                    /* translators: 1: date/time, 2: number of posts */
+                                    esc_html__('Last run: %1$s — %2$s post(s) trashed.', 'ai-seo-client'),
+                                    esc_html($autocleanLastRun),
+                                    esc_html(number_format($autocleanLastCount))
+                                ); ?>
+                            </p>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="settings-section">
+                            <h2><?php esc_html_e('Photo Portfolio / Huisstijl Referenties', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Upload referentie-afbeeldingen (logo\'s, personen, omgeving, producten) die als stijl-referentie worden gebruikt bij het genereren van afbeeldingen. De AI beschrijft deze referenties en past de huisstijl toe in gegenereerde afbeeldingen.', 'ai-seo-client'); ?></p>
+
+                            <?php
+                            $photoPortfolio = get_option('sseo_ai_client_photo_portfolio', []);
+                            if (!is_array($photoPortfolio)) { $photoPortfolio = []; }
+                            ?>
+
+                            <div class="form-field">
+                                <label><?php esc_html_e('Referentie-afbeeldingen', 'ai-seo-client'); ?></label>
+                                <div id="photo-portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:10px;">
+                                    <?php foreach ($photoPortfolio as $idx => $ref): ?>
+                                        <div class="photo-portfolio-item" data-idx="<?php echo esc_attr($idx); ?>" style="position:relative;border:1px solid #ddd;border-radius:8px;padding:8px;text-align:center;">
+                                            <img src="<?php echo esc_url($ref['url'] ?? ''); ?>" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">
+                                            <select class="photo-ref-type" data-idx="<?php echo esc_attr($idx); ?>" style="width:100%;font-size:11px;margin-bottom:3px;">
+                                                <option value="logo" <?php selected($ref['type'] ?? '', 'logo'); ?>><?php esc_html_e('Logo', 'ai-seo-client'); ?></option>
+                                                <option value="person" <?php selected($ref['type'] ?? '', 'person'); ?>><?php esc_html_e('Persoon', 'ai-seo-client'); ?></option>
+                                                <option value="environment" <?php selected($ref['type'] ?? '', 'environment'); ?>><?php esc_html_e('Omgeving/Pand', 'ai-seo-client'); ?></option>
+                                                <option value="product" <?php selected($ref['type'] ?? '', 'product'); ?>><?php esc_html_e('Product', 'ai-seo-client'); ?></option>
+                                                <option value="style" <?php selected($ref['type'] ?? '', 'style'); ?>><?php esc_html_e('Huisstijl/sfeer', 'ai-seo-client'); ?></option>
+                                            </select>
+                                            <button type="button" class="button button-small photo-ref-remove" data-idx="<?php echo esc_attr($idx); ?>" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; <?php esc_html_e('Verwijder', 'ai-seo-client'); ?></button>
+                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][attachment_id]" value="<?php echo esc_attr($ref['attachment_id'] ?? 0); ?>">
+                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][url]" value="<?php echo esc_attr($ref['url'] ?? ''); ?>">
+                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][type]" class="photo-ref-type-hidden" value="<?php echo esc_attr($ref['type'] ?? 'logo'); ?>">
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <button type="button" class="button" id="photo-portfolio-add"><?php esc_html_e('+ Referentie toevoegen', 'ai-seo-client'); ?></button>
+                                <p class="field-description"><?php esc_html_e('De AI gebruikt deze afbeeldingen om logo\'s, kleuren, sfeer en personen te herkennen en toe te passen in gegenereerde afbeeldingen.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
-                            
+
                             <div class="form-field">
                                 <label for="ssl_verify">
                                     <input type="checkbox" name="ssl_verify" id="ssl_verify" value="1" <?php checked($sslVerify, true); ?>>
@@ -1711,12 +2554,214 @@ class Client
                                 <p class="field-description"><?php esc_html_e('Disable only for development environments with self-signed certificates. Disabling on production is a security risk.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
-                        
+
+                        <div class="settings-section" style="border:2px solid #f59e0b;background:#fffbeb;border-radius:8px;">
+                            <h2>
+                                <?php esc_html_e('Demo Mode', 'ai-seo-client'); ?>
+                                <?php if ($demoMode): ?>
+                                    <span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;letter-spacing:0.5px;margin-left:8px;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
+                                <?php endif; ?>
+                            </h2>
+                            <p class="description"><?php esc_html_e('When enabled, the plugin uses fictitious data and bypasses license validation for demo purposes.', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="demo_mode">
+                                    <input type="checkbox" name="demo_mode" id="demo_mode" value="1" <?php checked($demoMode, true); ?>>
+                                    <?php esc_html_e('Enable demo mode', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description" style="color:#92400e;">
+                                    <?php esc_html_e('All data shown while demo mode is active is fictitious and clearly labelled.', 'ai-seo-client'); ?>
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="settings-actions">
                             <button type="submit" class="button button-primary button-large">
                                 <?php esc_html_e('Save Settings', 'ai-seo-client'); ?>
                             </button>
                         </div>
+
+                        <script>
+                        (function() {
+                            // Photo Portfolio media uploader
+                            var addBtn = document.getElementById('photo-portfolio-add');
+                            var grid = document.getElementById('photo-portfolio-grid');
+                            if (!addBtn || !grid) return;
+                            var idxCounter = grid.children.length;
+
+                            // Update hidden type field when select changes
+                            document.addEventListener('change', function(e) {
+                                if (e.target && e.target.classList && e.target.classList.contains('photo-ref-type')) {
+                                    var idx = e.target.getAttribute('data-idx');
+                                    var hidden = document.querySelector('.photo-ref-type-hidden[data-idx="' + idx + '"]');
+                                    if (hidden) hidden.value = e.target.value;
+                                }
+                            });
+
+                            // Remove reference
+                            document.addEventListener('click', function(e) {
+                                if (e.target && e.target.classList && e.target.classList.contains('photo-ref-remove')) {
+                                    e.target.closest('.photo-portfolio-item').remove();
+                                }
+                            });
+
+                            addBtn.addEventListener('click', function() {
+                                var frame = wp.media({
+                                    title: '<?php echo esc_js(__('Selecteer referentie-afbeelding', 'ai-seo-client')); ?>',
+                                    multiple: false,
+                                    library: { type: 'image' }
+                                });
+                                frame.on('select', function() {
+                                    var attachment = frame.state().get('selection').first().toJSON();
+                                    var idx = idxCounter++;
+                                    var item = document.createElement('div');
+                                    item.className = 'photo-portfolio-item';
+                                    item.setAttribute('data-idx', idx);
+                                    item.style.cssText = 'position:relative;border:1px solid #ddd;border-radius:8px;padding:8px;text-align:center;';
+                                    item.innerHTML =
+                                        '<img src="' + attachment.url + '" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">' +
+                                        '<select class="photo-ref-type" data-idx="' + idx + '" style="width:100%;font-size:11px;margin-bottom:3px;">' +
+                                        '<option value="logo">Logo</option>' +
+                                        '<option value="person">Persoon</option>' +
+                                        '<option value="environment">Omgeving/Pand</option>' +
+                                        '<option value="product">Product</option>' +
+                                        '<option value="style">Huisstijl/sfeer</option>' +
+                                        '</select>' +
+                                        '<button type="button" class="button button-small photo-ref-remove" data-idx="' + idx + '" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; Verwijder</button>' +
+                                        '<input type="hidden" name="photo_portfolio[' + idx + '][attachment_id]" value="' + attachment.id + '">' +
+                                        '<input type="hidden" name="photo_portfolio[' + idx + '][url]" value="' + attachment.url + '">' +
+                                        '<input type="hidden" name="photo_portfolio[' + idx + '][type]" class="photo-ref-type-hidden" value="logo">';
+                                    grid.appendChild(item);
+                                });
+                                frame.open();
+                            });
+                        })();
+                        </script>
+
+                        <script>
+                        (function() {
+                            var container = document.getElementById('locations-tag-container');
+                            var input = document.getElementById('locations-input');
+                            var hidden = document.getElementById('locations');
+                            if (!container || !input || !hidden) return;
+
+                            var apiKey = '<?php echo esc_js($googlePlacesKey); ?>';
+                            var existingLocations = (hidden.value || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                            var autocomplete = null;
+
+                            // Render existing tags
+                            function renderTags() {
+                                container.innerHTML = '';
+                                existingLocations.forEach(function(loc, idx) {
+                                    var chip = document.createElement('span');
+                                    chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#e8f4fa;color:#379fd3;border-radius:20px;font-size:13px;cursor:default;';
+                                    chip.textContent = loc;
+                                    var removeBtn = document.createElement('span');
+                                    removeBtn.textContent = '\u00d7';
+                                    removeBtn.style.cssText = 'cursor:pointer;font-weight:bold;margin-left:2px;';
+                                    removeBtn.onclick = function() {
+                                        existingLocations.splice(idx, 1);
+                                        renderTags();
+                                    };
+                                    chip.appendChild(removeBtn);
+                                    container.appendChild(chip);
+                                });
+                                syncHidden();
+                            }
+
+                            function syncHidden() {
+                                hidden.value = existingLocations.join(', ');
+                            }
+
+                            function addLocation(loc) {
+                                loc = loc.trim();
+                                if (!loc) return;
+                                if (existingLocations.indexOf(loc) !== -1) return;
+                                existingLocations.push(loc);
+                                renderTags();
+                            }
+
+                            // Set up fallback datalist (common European cities)
+                            function setupFallback() {
+                                var datalist = document.createElement('datalist');
+                                datalist.id = 'locations-datalist';
+                                var commonCities = ['Amsterdam','Rotterdam','Den Haag','Utrecht','Eindhoven','Tilburg','Groningen','Almere','Breda','Nijmegen','Enschede','Apeldoorn','Haarlem','Arnhem','Amersfoort','Zwolle','Zaanstad','Leeuwarden','Leiden','Maastricht','Dordrecht','Ede','Alkmaar','Emmen','Delft','Heerlen','Zoetermeer','Lelystad','Alphen aan den Rijn','Bergen op Zoom','Brussel','Antwerpen','Gent','Charleroi','Luik','Brugge','Leuven','Berlin','Hamburg','München','Köln','Frankfurt','Stuttgart','Düsseldorf','Paris','Lyon','Marseille','Toulouse','Nice','Lille','Bordeaux','London','Manchester','Birmingham','Leeds','Glasgow','Liverpool','Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Rome','Milan','Naples','Turin','Florence','Lisbon','Porto','Warsaw','Kraków','Wrocław','Poznań','Gdańsk'];
+                                commonCities.forEach(function(city) {
+                                    var opt = document.createElement('option');
+                                    opt.value = city;
+                                    datalist.appendChild(opt);
+                                });
+                                input.setAttribute('list', 'locations-datalist');
+                                document.body.appendChild(datalist);
+                            }
+
+                            // Initialize Google Places Autocomplete
+                            function initPlacesAutocomplete() {
+                                if (!apiKey || typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                                    setupFallback();
+                                    return;
+                                }
+                                try {
+                                    autocomplete = new google.maps.places.Autocomplete(input, {
+                                        types: ['(cities)']
+                                    });
+                                    autocomplete.addListener('place_changed', function() {
+                                        var place = autocomplete.getPlace();
+                                        if (place && place.name) {
+                                            addLocation(place.name);
+                                            input.value = '';
+                                        }
+                                    });
+                                } catch (e) {
+                                    setupFallback();
+                                }
+                            }
+
+                            // Allow Enter key to add location manually
+                            input.addEventListener('keydown', function(e) {
+                                if (e.key === 'Enter' || e.key === ',') {
+                                    e.preventDefault();
+                                    if (input.value.trim()) {
+                                        addLocation(input.value);
+                                        input.value = '';
+                                    }
+                                }
+                            });
+
+                            // Allow blur to add
+                            input.addEventListener('blur', function() {
+                                if (input.value.trim()) {
+                                    addLocation(input.value);
+                                    input.value = '';
+                                }
+                            });
+
+                            // Click on container focuses input
+                            container.addEventListener('click', function() {
+                                input.focus();
+                            });
+
+                            renderTags();
+
+                            // If no API key, use fallback immediately
+                            if (!apiKey) {
+                                setupFallback();
+                            } else {
+                                // Expose callback for Google Maps script
+                                window.initLocationsAutocomplete = initPlacesAutocomplete;
+                                // If Google Maps already loaded (e.g. cached), init now
+                                if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                                    initPlacesAutocomplete();
+                                }
+                                // Otherwise the callback=initLocationsAutocomplete in the script tag will fire
+                            }
+                        })();
+                        </script>
+
+                        <?php if (!empty($googlePlacesKey)): ?>
+                        <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr($googlePlacesKey); ?>&libraries=places&callback=initLocationsAutocomplete" async defer></script>
+                        <?php endif; ?>
+
                     </form>
                 </div>
             </div>
@@ -1742,9 +2787,53 @@ class Client
         update_option('sseo_ai_brand_voice', sanitize_text_field($_POST['brand_voice'] ?? ''));
         update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
+        update_option('sseo_ai_client_google_places_key', sanitize_text_field($_POST['google_places_key'] ?? ''));
+
+        // Save photo portfolio references
+        $photoPortfolio = [];
+        if (!empty($_POST['photo_portfolio']) && is_array($_POST['photo_portfolio'])) {
+            foreach ($_POST['photo_portfolio'] as $ref) {
+                $url = esc_url_raw($ref['url'] ?? '');
+                if (empty($url)) continue;
+                $photoPortfolio[] = [
+                    'attachment_id' => (int)($ref['attachment_id'] ?? 0),
+                    'url' => $url,
+                    'type' => sanitize_text_field($ref['type'] ?? 'logo'),
+                ];
+            }
+        }
+        update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
+
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
+        $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
+        update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
+
+        // Local business settings (used by Local SEO schema and Local SERP radius scans)
+        update_option('sseo_ai_client_local_business_name', sanitize_text_field($_POST['local_business_name'] ?? ''));
+        update_option('sseo_ai_client_local_business_type', sanitize_text_field($_POST['local_business_type'] ?? 'LocalBusiness'));
+        update_option('sseo_ai_client_local_description', sanitize_textarea_field($_POST['local_description'] ?? ''));
+        update_option('sseo_ai_client_local_street', sanitize_text_field($_POST['local_street'] ?? ''));
+        update_option('sseo_ai_client_local_city', sanitize_text_field($_POST['local_city'] ?? ''));
+        update_option('sseo_ai_client_local_state', sanitize_text_field($_POST['local_state'] ?? ''));
+        update_option('sseo_ai_client_local_postal', sanitize_text_field($_POST['local_postal'] ?? ''));
+        update_option('sseo_ai_client_local_country', sanitize_text_field($_POST['local_country'] ?? 'NL'));
+        update_option('sseo_ai_client_local_phone', sanitize_text_field($_POST['local_phone'] ?? ''));
+        update_option('sseo_ai_client_local_email', sanitize_email($_POST['local_email'] ?? ''));
+        update_option('sseo_ai_client_local_url', esc_url_raw($_POST['local_url'] ?? ''));
+        update_option('sseo_ai_client_local_latitude', sanitize_text_field($_POST['local_latitude'] ?? ''));
+        update_option('sseo_ai_client_local_longitude', sanitize_text_field($_POST['local_longitude'] ?? ''));
+        update_option('sseo_ai_client_local_image', esc_url_raw($_POST['local_image'] ?? ''));
+        update_option('sseo_ai_client_local_price_range', sanitize_text_field($_POST['local_price_range'] ?? '$$'));
+        update_option('sseo_ai_client_local_opening_hours', sanitize_textarea_field($_POST['local_opening_hours'] ?? ''));
+        update_option('sseo_ai_client_local_search_radius', max(1, min(500, (int) ($_POST['local_search_radius'] ?? 10))));
+        update_option('sseo_ai_client_local_search_grid', max(1, min(9, (int) ($_POST['local_search_grid'] ?? 3))));
+
+        // Post Auto-Cleaner settings
+        update_option('sseo_ai_client_autoclean_enabled', isset($_POST['autoclean_enabled']) && $_POST['autoclean_enabled'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_autoclean_days', max(1, min(3650, (int) ($_POST['autoclean_days'] ?? 60))));
+        update_option('sseo_ai_client_autoclean_max_clicks', max(0, (int) ($_POST['autoclean_max_clicks'] ?? 0)));
 
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
@@ -1757,41 +2846,53 @@ class Client
     public function handleManualValidation(): void
     {
         // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: POST data = ' . print_r($_POST, true));
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: User ID = ' . get_current_user_id());
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: User ID = ' . get_current_user_id());
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Can manage_options = ' . (current_user_can('manage_options') ? 'yes' : 'no'));
         
         if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'manual_validate_license')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Nonce verification failed');
             wp_die(__('Security check failed. Please refresh the page and try again.', 'ai-seo-client'));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Nonce verified successfully');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Nonce verified successfully');
 
         if (!current_user_can('manage_options') && !current_user_can('activate_plugins')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: User lacks required capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: User lacks required capability');
             wp_die(__('You need administrator permissions to validate the license.', 'ai-seo-client'));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Permission check passed');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Permission check passed');
         
         // Clear validation cache and force re-validation
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $cacheKey = 'ai_seo_license_check_' . md5($licenseKey);
         delete_transient($cacheKey);
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Running validation...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Running validation...');
         
         // Trigger validation
         $this->licenseValidator->validateStoredLicense();
         
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Manual Validation: Validation complete, redirecting...');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Manual Validation: Validation complete, redirecting...');
         
         wp_redirect(admin_url('admin.php?page=ai-seo-client&validated=1'));
         exit;
     }
     
+    /**
+     * Render support tickets page
+     */
+    public function renderSupportPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+
+        $this->supportTickets->renderPage();
+    }
+
     /**
      * Render connection page (license details)
      */
@@ -1802,31 +2903,65 @@ class Client
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $tier = get_option('sseo_ai_client_license_tier', 'free');
         $licenseType = get_option('sseo_ai_client_license_type', 'paid');
-        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
-        
+        $licenseEmail = get_option('sseo_ai_client_license_email', '');
+
+        // Backfill email from the SaaS dashboard if not stored locally yet.
+        if (empty($licenseEmail) && !empty($licenseKey) && !empty($tenantKey)) {
+            delete_transient('ai_seo_license_check_' . md5($licenseKey));
+            $this->licenseValidator->validateStoredLicense();
+            $licenseEmail = get_option('sseo_ai_client_license_email', '');
+        }
+
+        if (empty($licenseEmail)) {
+            $licenseEmail = __('Unknown', 'ai-seo-client');
+        }
+
+        $dashboardUrl = $this->settings->getDashboardUrl();
+
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = $this->getBrandName();
+        $brandName = $companyName . ' Smart SEO';
+
+        // White-label colors: use custom brand colors when configured, otherwise Fyndable defaults
+        $hasCustomBrand = !empty($whiteLabel['company_name']);
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
+        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
+        $bgGradient = $usePrimaryOnly
+            ? $primaryColor
+            : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+
         // Mask the keys for display
         $maskedLicenseKey = !empty($licenseKey) ? substr($licenseKey, 0, 12) . str_repeat('*', 20) . substr($licenseKey, -8) : '';
         $maskedTenantKey = !empty($tenantKey) ? substr($tenantKey, 0, 8) . str_repeat('*', 20) . substr($tenantKey, -8) : '';
-        
+
         ?>
         <style>
             /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: <?php echo esc_attr($bgGradient); ?>; color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: <?php echo esc_attr($bgGradient); ?>; min-height: calc(100vh - 150px); }
             .sseo-ai-connection-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 60px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); text-align: center; }
             .sseo-ai-connection-card h2 { font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 20px 0; }
-            .sseo-ai-connection-card .highlight { background: linear-gradient(135deg, #3b82f6 0%, #FF4D00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .sseo-ai-connection-card .highlight { background: <?php echo esc_attr($bgGradient); ?>; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .connection-details { text-align: left; margin-top: 40px; padding-top: 30px; border-top: 2px solid #f3f4f6; }
             .detail-item { margin-bottom: 20px; }
-            .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 6px; }
+            .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280;  margin-bottom: 6px; }
             .detail-item .detail-value { font-size: 16px; color: #111827; font-family: 'Courier New', monospace; background: #f9fafb; padding: 12px 16px; border-radius: 6px; border: 1px solid #e5e7eb; }
             .connection-form { text-align: left; margin-top: 30px; }
             .connection-form .form-field { margin-bottom: 20px; }
             .connection-form label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
             .connection-form input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .connection-form input:focus { border-color: #FF4D00; outline: none; box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1); }
+            .connection-form input:focus { border-color: <?php echo esc_attr($primaryColor); ?>; outline: none; box-shadow: 0 0 0 3px rgba(<?php echo esc_attr(implode(',', sscanf($primaryColor, '#%02x%02x%02x'))); ?>, 0.1); }
+            .sseo-ai-connection-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+            .sseo-ai-connection-loader.active { display: flex; }
+            .sseo-ai-connection-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: <?php echo esc_attr($primaryColor); ?>; border-radius: 50%; animation: sseo-conn-spin 1s linear infinite; }
+            .sseo-ai-connection-loader p { margin-top: 20px; color: #374151; font-size: 16px; font-weight: 500; }
+            @keyframes sseo-conn-spin { to { transform: rotate(360deg); } }
+            /* White-label buttons inside the connection card */
+            .sseo-ai-connection-card .button-primary { background: <?php echo esc_attr($primaryColor); ?> !important; border-color: <?php echo esc_attr($primaryColor); ?> !important; color: #fff !important; }
+            .sseo-ai-connection-card .button-primary:hover { background: <?php echo esc_attr($secondaryColor); ?> !important; border-color: <?php echo esc_attr($secondaryColor); ?> !important; }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -1839,14 +2974,14 @@ class Client
                         <div class="connection-status">
                             <h2>
                                 <?php esc_html_e('You are connected', 'ai-seo-client'); ?><br>
-                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php esc_html_e('Fyndable Smart SEO', 'ai-seo-client'); ?></span>
+                                <?php esc_html_e('to the', 'ai-seo-client'); ?> <span class="highlight"><?php echo esc_html($brandName); ?></span>
                             </h2>
                         </div>
                         
                         <div class="connection-details">
                             <div class="detail-item">
                                 <label><?php esc_html_e('Your connection e-mail:', 'ai-seo-client'); ?></label>
-                                <div class="detail-value"><?php echo esc_html(wp_get_current_user()->user_email); ?></div>
+                                <div class="detail-value"><?php echo esc_html($licenseEmail); ?></div>
                             </div>
                             
                             <div class="detail-item">
@@ -1909,31 +3044,42 @@ class Client
                 <?php else: ?>
                     <div class="sseo-ai-connection-card">
                         <div class="connection-status">
-                            <h2><?php esc_html_e('Connect to Fyndable Smart SEO', 'ai-seo-client'); ?></h2>
+                            <h2><?php esc_html_e('Connect to', 'ai-seo-client'); ?> <?php echo esc_html($brandName); ?></h2>
                             <p><?php esc_html_e('Enter your license details to activate the plugin', 'ai-seo-client'); ?></p>
                         </div>
                         
                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="connection-form">
                             <input type="hidden" name="action" value="ai_seo_activate_license">
                             <?php wp_nonce_field('activate_license'); ?>
-                            
-                            <div class="form-field">
-                                <label for="dashboard_url"><?php esc_html_e('Dashboard URL', 'ai-seo-client'); ?></label>
-                                <input type="url" name="dashboard_url" id="dashboard_url" 
-                                       placeholder="https://your-saas-domain.com" required>
-                            </div>
-                            
+                            <input type="hidden" name="dashboard_url" id="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
+
                             <div class="form-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
-                                <input type="text" name="license_key" id="license_key" 
-                                       placeholder="FYNABLE-XXXX-XXXX-XXXX" required>
+                                <input type="text" name="license_key" id="license_key"
+                                       placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" required>
                             </div>
-                            
+
                             <button type="submit" class="button button-primary">
                                 <?php esc_html_e('Connect', 'ai-seo-client'); ?>
                             </button>
                         </form>
                     </div>
+
+                    <div id="sseo-ai-connection-loader" class="sseo-ai-connection-loader">
+                        <div class="spinner"></div>
+                        <p><?php esc_html_e('Connecting your license, please wait...', 'ai-seo-client'); ?></p>
+                    </div>
+
+                    <script>
+                        (function () {
+                            var form = document.querySelector('.connection-form');
+                            var loader = document.getElementById('sseo-ai-connection-loader');
+                            if (!form || !loader) return;
+                            form.addEventListener('submit', function () {
+                                loader.classList.add('active');
+                            });
+                        })();
+                    </script>
                 <?php endif; ?>
             </div>
         </div>
@@ -1945,22 +3091,28 @@ class Client
      */
     public function handleLicenseActivation(): void
     {
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: License activation handler called');
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: License activation handler called');
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Nonce present: ' . (isset($_POST['_wpnonce']) ? 'yes' : 'no'));
         
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'activate_license')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: Nonce verification failed');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Nonce verification failed');
             wp_die(__('Security check failed. Please try again.', 'ai-seo-client'));
         }
 
         if (!current_user_can('manage_options')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable: User lacks manage_options capability');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: User lacks manage_options capability');
             wp_die(__('Insufficient permissions. You must be an administrator to activate licenses.', 'ai-seo-client'));
         }
 
         $licenseKey = sanitize_text_field($_POST['license_key'] ?? '');
         $dashboardUrl = esc_url_raw($_POST['dashboard_url'] ?? '');
+
+        // Fall back to the baked-in default dashboard URL when none is submitted
+        // (the field is hidden in the activation UI).
+        if (empty($dashboardUrl)) {
+            $dashboardUrl = $this->settings->getDashboardUrl();
+        }
 
         if (empty($licenseKey) || empty($dashboardUrl)) {
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Missing license key or dashboard URL')));
@@ -1975,13 +3127,13 @@ class Client
 
         if (is_wp_error($result)) {
             $errorMsg = $result->get_error_message();
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable License Activation Failed: ' . $errorMsg);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable License Activation Failed: ' . $errorMsg);
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode($errorMsg)));
             exit;
         }
 
         if (empty($result['tenant_key'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable License Activation: No tenant_key in response');
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable License Activation: No tenant_key in response');
             wp_redirect(admin_url('admin.php?page=ai-seo-client&error=' . urlencode('Invalid response from dashboard - no tenant key')));
             exit;
         }
@@ -1993,6 +3145,7 @@ class Client
         update_option('sseo_ai_client_license_tier', $result['tier']);
         update_option('sseo_ai_client_license_type', $result['type'] ?? 'paid');
         update_option('sseo_ai_client_license_expires', $result['expires_at'] ?? '');
+        update_option('sseo_ai_client_license_email', $result['email'] ?? '');
         update_option('sseo_ai_client_rate_limit', $result['rate_limit'] ?? 60);
         update_option('sseo_ai_client_api_limit', $result['api_calls_limit'] ?? 1000);
         
@@ -2006,11 +3159,16 @@ class Client
             update_option('sseo_ai_client_image_api', $result['image_api']);
         }
 
+        // Store customer portal URL (used by upgrade buttons in the client UI)
+        if (!empty($result['portal_url'])) {
+            update_option('sseo_ai_client_portal_url', esc_url_raw($result['portal_url']));
+        }
+
         // Set a transient to show success message on next page load
         set_transient('sseo_ai_activation_success', true, 30);
         
-        // Redirect to dashboard instead of license page
-        wp_redirect(admin_url('admin.php?page=ai-seo-dashboard'));
+        // Redirect to onboarding wizard instead of dashboard
+        wp_redirect(admin_url('admin.php?page=ai-seo-onboarding'));
         exit;
     }
 
@@ -2044,6 +3202,7 @@ class Client
         delete_option('sseo_ai_client_license_type');
         delete_option('sseo_ai_client_license_expires');
         delete_option('sseo_ai_client_image_api');
+        delete_option('sseo_ai_white_label');
 
         wp_redirect(admin_url('admin.php?page=ai-seo-client&deactivated=1'));
         exit;
@@ -2114,11 +3273,20 @@ class Client
             ],
         ];
         $benefits = $tierBenefits[$nextTier] ?? $tierBenefits['Professional'];
+
+        // Resolve the upgrade destination. The real upgrade flow lives in the
+        // Customer Portal on the SaaS dashboard site (/portal/upgrade). Fall
+        // back to the dashboard URL, then to the local Connection page.
+        $portalUrl = get_option('sseo_ai_client_portal_url', '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+        $upgradeUrl = !empty($portalUrl)
+            ? $portalUrl
+            : (!empty($dashboardUrl) ? $dashboardUrl : admin_url('admin.php?page=ai-seo-client'));
         ?>
         <style>
-            .sseo-upgrade-wrap { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-upgrade-wrap { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             .sseo-upgrade-header { 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); 
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); 
                 color: #fff; 
                 padding: 60px 40px; 
                 margin: -10px -20px 0 -20px;
@@ -2158,14 +3326,14 @@ class Client
             }
             .sseo-tier-badge {
                 display: inline-block;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
                 color: #fff;
                 padding: 12px 30px;
                 border-radius: 50px;
                 font-size: 18px;
                 font-weight: 700;
                 margin-bottom: 30px;
-                box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+                box-shadow: 0 4px 6px rgba(55, 159, 211, 0.3);
             }
             .sseo-benefits-list {
                 text-align: left;
@@ -2242,7 +3410,7 @@ class Client
                         <li><?php echo esc_html($benefit); ?></li>
                         <?php endforeach; ?>
                     </ul>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="sseo-upgrade-cta">
+                    <a href="<?php echo esc_url($upgradeUrl); ?>" class="sseo-upgrade-cta" target="_blank" rel="noopener noreferrer">
                         <?php esc_html_e('Upgrade Now →', 'ai-seo-client'); ?>
                     </a>
                     <div class="sseo-current-tier">
@@ -2255,124 +3423,399 @@ class Client
     }
 
     /**
-     * Render LLM Tracker page
+     * Render Brand & AI Search Visibility page
      */
-    public function renderLLMTrackerPage(): void
+    public function renderBrandVisibilityPage(): void
     {
         if (!$this->licenseValidator->isLicenseValid()) {
             $this->renderLicenseRequiredNotice();
             return;
         }
 
-        $page = max(1, (int)($_GET['llm_page'] ?? 1));
-        $perPage = 50;
+        $bvConfig = $this->brandVisibility->getSettings();
+        $period = sanitize_text_field($_GET['period'] ?? '30d');
+        $stats = $this->brandVisibility->getStats($period);
+        $recommendations = $this->brandVisibility->getRecommendations($stats, $bvConfig);
+        $lastScan = $this->brandVisibility->getLastScanDate();
+
+        $page = max(1, (int)($_GET['bv_page'] ?? 1));
+        $perPage = 25;
         $offset = ($page - 1) * $perPage;
-        $logs = LLMTracker::getLogs($perPage, $offset);
-        $total = LLMTracker::getTotalCount();
-        $stats = LLMTracker::getStats('24h');
+        $platformFilter = sanitize_text_field($_GET['bv_platform'] ?? '');
+        $filterType = sanitize_text_field($_GET['bv_filter'] ?? '');
+        $mentions = $this->brandVisibility->getMentions($perPage, $offset, $platformFilter, $filterType);
+        $total = $this->brandVisibility->getTotalCount($platformFilter, $filterType);
         $pages = (int)ceil($total / $perPage);
+
+        $platformNames = [
+            'chatgpt' => 'ChatGPT',
+            'perplexity' => 'Perplexity',
+            'gemini' => 'Google Gemini',
+        ];
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-header p { color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .llm-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
-            .llm-stat-card { background: #f8fafc; border-radius: 8px; padding: 15px; text-align: center; border: 1px solid #e2e8f0; }
-            .llm-stat-value { font-size: 22px; font-weight: 700; color: #2563eb; }
-            .llm-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
-            .llm-log-table { width: 100%; border-collapse: collapse; }
-            .llm-log-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
-            .llm-log-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-            .llm-log-table tr:hover { background: #f8fafc; }
-            .llm-status-success { color: #00a32a; font-weight: 600; }
-            .llm-status-error { color: #d63638; font-weight: 600; }
-            .llm-prompt-preview { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .llm-pagination { margin-top: 20px; }
-            .llm-pagination a, .llm-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
-            .llm-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
-            .llm-pagination a:hover { background: #2563eb; color: #fff; }
-            .llm-pagination span.current { background: #2563eb; color: #fff; }
+            .bv-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; margin-bottom: 20px; }
+            .bv-stat-card { background: #f8fafc; border-radius: 8px; padding: 18px; text-align: center; border: 1px solid #e2e8f0; }
+            .bv-stat-value { font-size: 28px; font-weight: 700; color: #379fd3; }
+            .bv-stat-value.score { color: #16a34a; }
+            .bv-stat-value.positive { color: #16a34a; }
+            .bv-stat-value.negative { color: #dc2626; }
+            .bv-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+            .bv-table { width: 100%; border-collapse: collapse; }
+            .bv-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
+            .bv-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            .bv-table tr:hover { background: #f8fafc; }
+            .bv-badge-yes { background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+            .bv-badge-no { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+            .bv-badge-error { background: #fef3c7; color: #92400e; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+            .bv-sentiment-positive { color: #16a34a; font-weight: 600; }
+            .bv-sentiment-neutral { color: #64748b; font-weight: 600; }
+            .bv-sentiment-negative { color: #dc2626; font-weight: 600; }
+            .bv-platform-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+            .bv-platform-chatgpt { background: #e0e7ff; color: #3730a3; }
+            .bv-platform-perplexity { background: #fce7f3; color: #9d174d; }
+            .bv-platform-gemini { background: #dbeafe; color: #8f39ac; }
+            .bv-excerpt { max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
+            .bv-pagination { margin-top: 20px; }
+            .bv-pagination a, .bv-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
+            .bv-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
+            .bv-pagination a:hover { background: #379fd3; color: #fff; }
+            .bv-pagination span.current { background: #379fd3; color: #fff; }
+            .bv-settings-form table { width: 100%; }
+            .bv-settings-form th { text-align: left; padding: 8px 10px; width: 200px; vertical-align: top; }
+            .bv-settings-form td { padding: 8px 10px; }
+            .bv-settings-form input[type=text], .bv-settings-form textarea { width: 100%; max-width: 500px; }
+            .bv-settings-form textarea { height: 80px; }
+            .bv-filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+            .bv-filter-bar select { padding: 5px 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
+            .bv-period-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+            .bv-period-tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; text-decoration: none; background: #e2e8f0; color: #334155; }
+            .bv-period-tab.active { background: #379fd3; color: #fff; }
+            .bv-competitor-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+            .bv-competitor-name { min-width: 120px; font-size: 13px; font-weight: 500; }
+            .bv-competitor-bar-bg { flex: 1; background: #e2e8f0; border-radius: 4px; height: 20px; overflow: hidden; }
+            .bv-competitor-bar-fill { height: 100%; border-radius: 4px; background: #379fd3; transition: width 0.3s; }
+            .bv-competitor-count { min-width: 30px; text-align: right; font-size: 13px; font-weight: 600; }
+            .bv-scan-btn { background: #379fd3; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+            .bv-scan-btn:hover { background: #2a7ba8; }
+            .bv-scan-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+            .bv-empty { text-align: center; padding: 40px; color: #94a3b8; }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
-                <h1><?php esc_html_e('LLM Tracker', 'ai-seo-client'); ?></h1>
+                <h1><?php esc_html_e('Brand & AI Search Visibility', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('Track how often and in what context your brand is mentioned by AI-powered search engines and chatbots.', 'ai-seo-client'); ?></p>
             </div>
             <div class="sseo-ai-content">
+
+                <!-- Settings Card -->
                 <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('24h Statistics', 'ai-seo-client'); ?></h2>
-                    <div class="llm-stat-grid">
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value"><?php echo esc_html($stats['total']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Total Calls', 'ai-seo-client'); ?></div>
+                    <h2><?php esc_html_e('Configuration', 'ai-seo-client'); ?></h2>
+                    <form class="bv-settings-form" id="bv-settings-form">
+                        <table>
+                            <tr>
+                                <th><label for="bv-brand-name"><?php esc_html_e('Brand Name', 'ai-seo-client'); ?></label></th>
+                                <td><input type="text" id="bv-brand-name" value="<?php echo esc_attr($bvConfig['brand_name']); ?>" placeholder="<?php esc_attr_e('e.g. Acme Corp', 'ai-seo-client'); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-category"><?php esc_html_e('Category / Industry', 'ai-seo-client'); ?></label></th>
+                                <td><input type="text" id="bv-category" value="<?php echo esc_attr($bvConfig['category']); ?>" placeholder="<?php esc_attr_e('e.g. SEO tools, CRM software', 'ai-seo-client'); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-products"><?php esc_html_e('Product Names (one per line)', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-products" placeholder="Product A&#10;Product B"><?php echo esc_textarea($bvConfig['product_names']); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-competitors"><?php esc_html_e('Competitors (one per line)', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-competitors" placeholder="Competitor A&#10;Competitor B"><?php echo esc_textarea($bvConfig['competitors']); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label for="bv-queries"><?php esc_html_e('Search Queries (use {category} placeholder)', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-queries" placeholder="What are the best {category}?&#10;Which {category} would you recommend?"><?php echo esc_textarea($bvConfig['queries']); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th><label><?php esc_html_e('AI Platforms to Track', 'ai-seo-client'); ?></label></th>
+                                <td>
+                                    <?php foreach ($platformNames as $key => $label): ?>
+                                    <label style="margin-right: 20px;">
+                                        <input type="checkbox" class="bv-platform-checkbox" value="<?php echo esc_attr($key); ?>" <?php echo in_array($key, $bvConfig['platforms']) ? 'checked' : ''; ?>>
+                                        <?php echo esc_html($label); ?>
+                                    </label>
+                                    <?php endforeach; ?>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 15px;">
+                            <button type="button" class="button button-primary" id="bv-save-settings"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+                            <button type="button" class="bv-scan-btn" id="bv-run-scan" style="margin-left: 10px;">
+                                <?php esc_html_e('Run Scan Now', 'ai-seo-client'); ?>
+                            </button>
+                            <?php if ($lastScan): ?>
+                            <span style="margin-left: 15px; font-size: 13px; color: #64748b;">
+                                <?php esc_html_e('Last scan:', 'ai-seo-client'); ?> <?php echo esc_html($lastScan); ?>
+                            </span>
+                            <?php endif; ?>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- What does this tracker do and how to get found -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('What does AI Search Visibility do?', 'ai-seo-client'); ?></h2>
+                    <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
+
+                    <h3 style="margin-top: 25px;"><?php esc_html_e('How to get found in AI search / LLM answers', 'ai-seo-client'); ?></h3>
+                    <?php if (empty($recommendations)): ?>
+                        <p style="color: #666;"><?php esc_html_e('Save your brand settings above to receive personalized recommendations.', 'ai-seo-client'); ?></p>
+                    <?php else: ?>
+                        <ul style="list-style: disc; margin-left: 20px; padding-left: 0;">
+                            <?php foreach ($recommendations as $recommendation): ?>
+                                <li style="margin-bottom: 8px;"><?php echo esc_html($recommendation); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <?php if ($stats['total_scans'] > 0): ?>
+                <!-- Stats Card -->
+                <div class="sseo-ai-dashboard-card">
+                    <div class="bv-period-tabs">
+                        <?php foreach (['7d' => '7 days', '30d' => '30 days', '90d' => '90 days'] as $pkey => $plabel): ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-llm-tracker&period=' . $pkey)); ?>" class="bv-period-tab <?php echo $period === $pkey ? 'active' : ''; ?>"><?php echo esc_html($plabel); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                    <h2><?php esc_html_e('Visibility Overview', 'ai-seo-client'); ?></h2>
+                    <div class="bv-stat-grid">
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value score"><?php echo esc_html($stats['visibility_score']); ?>%</div>
+                            <div class="bv-stat-label"><?php esc_html_e('Visibility Score', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value llm-status-success"><?php echo esc_html($stats['success']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Success', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value"><?php echo esc_html($stats['brand_mentions']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Brand Mentions', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value llm-status-error"><?php echo esc_html($stats['failed']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Failed', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value"><?php echo esc_html($stats['total_scans']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Total Scans', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value"><?php echo esc_html($stats['avg_duration_ms']); ?>ms</div>
-                            <div class="llm-stat-label"><?php esc_html_e('Avg Duration', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value"><?php echo $stats['avg_position'] > 0 ? esc_html('#' . $stats['avg_position']) : '&mdash;'; ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
                         </div>
-                        <div class="llm-stat-card">
-                            <div class="llm-stat-value">$<?php echo esc_html($stats['total_cost']); ?></div>
-                            <div class="llm-stat-label"><?php esc_html_e('Est. Cost', 'ai-seo-client'); ?></div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value positive"><?php echo esc_html($stats['sentiment']['positive']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Positive', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div class="bv-stat-card">
+                            <div class="bv-stat-value negative"><?php echo esc_html($stats['sentiment']['negative']); ?></div>
+                            <div class="bv-stat-label"><?php esc_html_e('Negative', 'ai-seo-client'); ?></div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Platform Breakdown -->
+                <?php if (!empty($stats['platform_stats'])): ?>
                 <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Recent Logs', 'ai-seo-client'); ?> (<?php echo number_format($total); ?>)</h2>
+                    <h2><?php esc_html_e('Platform Breakdown', 'ai-seo-client'); ?></h2>
+                    <table class="bv-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Platform', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Total Scans', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Brand Mentions', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Visibility %', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($stats['platform_stats'] as $ps): ?>
+                            <tr>
+                                <td><span class="bv-platform-tag bv-platform-<?php echo esc_attr($ps['platform']); ?>"><?php echo esc_html($platformNames[$ps['platform']] ?? $ps['platform']); ?></span></td>
+                                <td><?php echo esc_html($ps['total']); ?></td>
+                                <td><?php echo esc_html($ps['mentions']); ?></td>
+                                <td><?php echo $ps['total'] > 0 ? esc_html(round(($ps['mentions'] / $ps['total']) * 100, 1) . '%') : '&mdash;'; ?></td>
+                                <td><?php echo $ps['avg_position'] ? esc_html('#' . round($ps['avg_position'], 1)) : '&mdash;'; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+
+                <!-- Competitor Comparison -->
+                <?php if (!empty($stats['top_competitors'])): ?>
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Competitor Mentions', 'ai-seo-client'); ?></h2>
+                    <?php
+                    $maxComp = max($stats['top_competitors']);
+                    if ($maxComp <= 0) { $maxComp = 1; }
+                    foreach ($stats['top_competitors'] as $compName => $compCount):
+                        $widthPct = round(($compCount / $maxComp) * 100);
+                    ?>
+                    <div class="bv-competitor-bar">
+                        <div class="bv-competitor-name"><?php echo esc_html($compName); ?></div>
+                        <div class="bv-competitor-bar-bg">
+                            <div class="bv-competitor-bar-fill" style="width: <?php echo esc_attr($widthPct); ?>%"></div>
+                        </div>
+                        <div class="bv-competitor-count"><?php echo esc_html($compCount); ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <?php endif; ?>
+
+                <!-- Mentions Table -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Mention Details', 'ai-seo-client'); ?> (<?php echo number_format($total); ?>)</h2>
+                    <?php if (empty($mentions)): ?>
+                    <div class="bv-empty">
+                        <p><?php esc_html_e('No scan data yet. Configure your brand settings above and run a scan to see results.', 'ai-seo-client'); ?></p>
+                    </div>
+                    <?php else: ?>
+                    <div class="bv-filter-bar">
+                        <form method="get" action="">
+                            <input type="hidden" name="page" value="ai-seo-llm-tracker">
+                            <select name="bv_platform">
+                                <option value=""><?php esc_html_e('All Platforms', 'ai-seo-client'); ?></option>
+                                <?php foreach ($platformNames as $key => $label): ?>
+                                <option value="<?php echo esc_attr($key); ?>" <?php echo $platformFilter === $key ? 'selected' : ''; ?>><?php echo esc_html($label); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <select name="bv_filter">
+                                <option value=""><?php esc_html_e('All Results', 'ai-seo-client'); ?></option>
+                                <option value="mentioned" <?php echo $filterType === 'mentioned' ? 'selected' : ''; ?>><?php esc_html_e('Brand Mentioned', 'ai-seo-client'); ?></option>
+                                <option value="not_mentioned" <?php echo $filterType === 'not_mentioned' ? 'selected' : ''; ?>><?php esc_html_e('Not Mentioned', 'ai-seo-client'); ?></option>
+                                <option value="errors" <?php echo $filterType === 'errors' ? 'selected' : ''; ?>><?php esc_html_e('Errors', 'ai-seo-client'); ?></option>
+                            </select>
+                            <button type="submit" class="button button-small"><?php esc_html_e('Filter', 'ai-seo-client'); ?></button>
+                        </form>
+                    </div>
                     <div style="overflow-x: auto;">
-                        <table class="llm-log-table">
+                        <table class="bv-table">
                             <thead>
                                 <tr>
-                                    <th><?php esc_html_e('ID', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Time', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Endpoint', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Model', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Tokens', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Duration', 'ai-seo-client'); ?></th>
-                                    <th><?php esc_html_e('Context', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Date', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Platform', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Mentioned', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Position', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Sentiment', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Competitors', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Excerpt', 'ai-seo-client'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($logs as $log): ?>
+                                <?php foreach ($mentions as $m): ?>
                                 <tr>
-                                    <td><?php echo esc_html($log['id']); ?></td>
-                                    <td><?php echo esc_html($log['timestamp']); ?></td>
-                                    <td><?php echo esc_html($log['endpoint'] ?? ''); ?></td>
-                                    <td><?php echo esc_html($log['model'] ?? ''); ?></td>
-                                    <td class="llm-status-<?php echo esc_attr($log['status']); ?>"><?php echo esc_html($log['status']); ?></td>
-                                    <td><?php echo esc_html(($log['tokens_input'] ?? 0) + ($log['tokens_output'] ?? 0)); ?></td>
-                                    <td><?php echo esc_html($log['duration_ms'] ?? 0); ?>ms</td>
-                                    <td class="llm-prompt-preview" title="<?php echo esc_attr($log['context'] ?? ''); ?>"><?php echo esc_html($log['context'] ?? ''); ?></td>
+                                    <td><?php echo esc_html($m['scan_date']); ?></td>
+                                    <td><span class="bv-platform-tag bv-platform-<?php echo esc_attr($m['platform']); ?>"><?php echo esc_html($platformNames[$m['platform']] ?? $m['platform']); ?></span></td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?php echo esc_attr($m['query_text']); ?>"><?php echo esc_html($m['query_text']); ?></td>
+                                    <td>
+                                        <?php if ($m['status'] === 'error'): ?>
+                                        <span class="bv-badge-error"><?php esc_html_e('Error', 'ai-seo-client'); ?></span>
+                                        <?php elseif ($m['brand_mentioned']): ?>
+                                        <span class="bv-badge-yes"><?php esc_html_e('Yes', 'ai-seo-client'); ?></span>
+                                        <?php else: ?>
+                                        <span class="bv-badge-no"><?php esc_html_e('No', 'ai-seo-client'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $m['mention_position'] > 0 ? esc_html('#' . $m['mention_position']) : '&mdash;'; ?></td>
+                                    <td class="bv-sentiment-<?php echo esc_attr($m['sentiment']); ?>"><?php echo esc_html(ucfirst($m['sentiment'])); ?></td>
+                                    <td style="max-width: 150px; font-size: 12px;"><?php echo esc_html($m['competitors_mentioned'] ?: '—'); ?></td>
+                                    <td class="bv-excerpt" title="<?php echo esc_attr($m['mention_excerpt']); ?>"><?php echo esc_html($m['mention_excerpt'] ?? ''); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                     <?php if ($pages > 1): ?>
-                    <div class="llm-pagination">
-                        <?php for ($i = 1; $i <= $pages; $i++): ?>
+                    <div class="bv-pagination">
+                        <?php
+                        $baseUrl = admin_url('admin.php?page=ai-seo-llm-tracker');
+                        if ($period) { $baseUrl .= '&period=' . $period; }
+                        if ($platformFilter) { $baseUrl .= '&bv_platform=' . $platformFilter; }
+                        if ($filterType) { $baseUrl .= '&bv_filter=' . $filterType; }
+                        for ($i = 1; $i <= $pages; $i++):
+                        ?>
                             <?php if ($i === $page): ?>
-                                <span class="current"><?php echo $i; ?></span>
+                            <span class="current"><?php echo $i; ?></span>
                             <?php else: ?>
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-llm-tracker&llm_page=' . $i)); ?>"><?php echo $i; ?></a>
+                            <a href="<?php echo esc_url($baseUrl . '&bv_page=' . $i); ?>"><?php echo $i; ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
                     </div>
                     <?php endif; ?>
+                    <?php endif; ?>
                 </div>
+
             </div>
         </div>
+        <script>
+        (function() {
+            var btn = document.getElementById('bv-run-scan');
+            var saveBtn = document.getElementById('bv-save-settings');
+            if (!btn) { return; }
+
+            btn.addEventListener('click', function() {
+                btn.disabled = true;
+                btn.textContent = '<?php echo esc_js(__('Scanning...', 'ai-seo-client')); ?>';
+
+                wp.apiFetch({
+                    path: 'sseo-ai/v1/brand-visibility/scan',
+                    method: 'POST'
+                }).then(function(res) {
+                    btn.disabled = false;
+                    btn.textContent = '<?php echo esc_js(__('Run Scan Now', 'ai-seo-client')); ?>';
+                    if (res.success) {
+                        alert('<?php echo esc_js(__('Scan complete!', 'ai-seo-client')); ?> ' + res.scanned + ' <?php echo esc_js(__('queries processed.', 'ai-seo-client')); ?>');
+                        location.reload();
+                    } else {
+                        alert('<?php echo esc_js(__('Scan completed with issues.', 'ai-seo-client')); ?>');
+                    }
+                }).catch(function(err) {
+                    btn.disabled = false;
+                    btn.textContent = '<?php echo esc_js(__('Run Scan Now', 'ai-seo-client')); ?>';
+                    alert('<?php echo esc_js(__('Scan failed:', 'ai-seo-client')); ?> ' + (err.message || 'Unknown error'));
+                });
+            });
+
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    var platforms = [];
+                    document.querySelectorAll('.bv-platform-checkbox:checked').forEach(function(cb) {
+                        platforms.push(cb.value);
+                    });
+
+                    wp.apiFetch({
+                        path: 'sseo-ai/v1/brand-visibility/settings',
+                        method: 'POST',
+                        data: {
+                            brand_name: document.getElementById('bv-brand-name').value,
+                            category: document.getElementById('bv-category').value,
+                            product_names: document.getElementById('bv-products').value,
+                            competitors: document.getElementById('bv-competitors').value,
+                            queries: document.getElementById('bv-queries').value,
+                            platforms: platforms
+                        }
+                    }).then(function() {
+                        saveBtn.textContent = '<?php echo esc_js(__('Saved!', 'ai-seo-client')); ?>';
+                        setTimeout(function() {
+                            saveBtn.textContent = '<?php echo esc_js(__('Save Settings', 'ai-seo-client')); ?>';
+                        }, 2000);
+                    }).catch(function(err) {
+                        alert('<?php echo esc_js(__('Failed to save:', 'ai-seo-client')); ?> ' + (err.message || 'Unknown error'));
+                    });
+                });
+            }
+        })();
+        </script>
         <?php
     }
 }

@@ -2,7 +2,9 @@
 /**
  * Plugin Name: Fyndable SmartSEO Dashboard
  * Description: Multi-tenant license and tenant management dashboard for Fyndable SmartSEO
- * Version: 1.4.0
+ * Version: 1.5.1
+ * Requires at least: 6.0
+ * Requires PHP: 8.0
  * Author: Fyndable
  * Text Domain: sseo-ai-saas
  * Domain Path: /languages
@@ -12,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_SAAS_VERSION', '1.4.0');
+define('SSEO_AI_SAAS_VERSION', '1.5.1');
 define('SSEO_AI_SAAS_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_SAAS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_SAAS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -51,6 +53,25 @@ register_activation_hook(__FILE__, function () {
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();
 });
+
+// Load translations
+add_action('init', function () {
+    // Generate MO files from PO files if needed (auto-regeneration so
+    // updated .po files are picked up without a manual build step).
+    require_once SSEO_AI_SAAS_PLUGIN_DIR . 'includes/translationhelper.php';
+
+    $languagesDir = SSEO_AI_SAAS_PLUGIN_DIR . 'languages/';
+    if (is_dir($languagesDir)) {
+        foreach ((array) glob($languagesDir . '*.po') as $poFile) {
+            $moFile = str_replace('.po', '.mo', $poFile);
+            if (!file_exists($moFile) || (file_exists($poFile) && filemtime($poFile) > filemtime($moFile))) {
+                \SSEOAISaaS\TranslationHelper::generateMoFile($poFile, $moFile);
+            }
+        }
+    }
+
+    load_plugin_textdomain('sseo-ai-saas', false, dirname(plugin_basename(__FILE__)) . '/languages');
+}, 5);
 
 // Initialize
 add_action('plugins_loaded', function () {

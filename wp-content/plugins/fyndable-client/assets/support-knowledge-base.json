@@ -1,0 +1,531 @@
+{
+  "version": "1.0",
+  "language": "nl",
+  "entries": [
+    {
+      "id": "license-activate",
+      "title": "Licentie activeren",
+      "category": "Eerste keer opzetten",
+      "keywords": ["licentie", "activeren", "license", "activate", "connection", "koppelen", "dashboard url", "license key", "sleutel"],
+      "answer": "**Licentie activeren**\n\nDe Connection-pagina koppelt je WordPress-site aan je Fyndable-licentie. Pas na activatie verschijnen de rest van de menu's.\n\n**Stappen:**\n1. Log in als beheerder in WordPress.\n2. Klik in het linker menu op **Fyndable → Connection**.\n3. Vul het **Dashboard URL**-veld in (bijv. `https://saas.jouwdomein.nl`).\n4. Plak je **license key** in het daarvoor bestemde veld.\n5. Klik op **Activate License**.\n6. Wacht tot het groene vinkje verschijnt.\n\n**Problemen:**\n- \"Invalid license\": controleer of de key geen spatie bevat en of het dashboard-URL correct is (inclusief `https://`).\n- \"Could not connect\": controleer of je server `wp_remote_get/post` mag uitvoeren en geen firewall het dashboard blokkeert.\n- Menu blijft leeg: herlaad de pagina (Ctrl+F5) of deactiveer en activeer de licentie opnieuw.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "onboarding-wizard",
+      "title": "Onboarding Wizard",
+      "category": "Eerste keer opzetten",
+      "keywords": ["onboarding", "wizard", "setup", "instellen", "basis", "starten", "wizard start niet"],
+      "answer": "**Onboarding Wizard**\n\nHelpt je om binnen een paar minuten de basis van Fyndable correct in te stellen.\n\n**Stappen:**\n1. Na activatie verschijnt automatisch de wizard. Klik **Start**.\n2. Stap 1 — **Licentie**: controleer of je licentie actief en herkend is.\n3. Stap 2 — **Basis-SEO**: vul title separators, sitenaam, social profielen en standaard Open Graph-afbeelding in.\n4. Stap 3 — **Content types**: vink aan voor welke post types SEO-tools actief moeten zijn (meestal `post`, `page` en eventueel `product`).\n5. Stap 4 — **Google-integraties**: koppel optioneel Search Console, GA4 of PageSpeed.\n6. Klik **Finish**.\n\n**Problemen:**\n- Wizard start niet op: ga handmatig naar `/wp-admin/admin.php?page=ai-seo-onboarding`.\n- Google-koppeling lukt niet: sla de wizard over en koppel later via **Integrations**.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "license-tiers",
+      "title": "Licentietiers",
+      "category": "Eerste keer opzetten",
+      "keywords": ["tier", "tiers", "licentie", "prijzen", "free", "starter", "professional", "business", "agency", "trial", "dev", "welke tier", "abonnement", "plan"],
+      "answer": "**Licentietiers**\n\n| Tier | Prijsindicatie | Kenmerkend voor |\n|------|----------------|-----------------|\n| Free | Gratis | Basis SEO-tools |\n| Starter | €9/maand | Kern SEO + Link Assistant, Redirect Manager, Alt-text, Rewriter |\n| Professional | €29/maand | Uitgebreide SEO + AI-tools, GSC, Rank Tracker, Schema, Local SEO |\n| Business | €79/maand | Volledige AI-content suite + Bulk Optimizer, Content Decay |\n| Agency | €199/maand | Multi-site, white-label, Plagiarism Checker, SEO Revisions |\n| Trial | 14 dagen | Volledige Professional-features |\n| DEV | Intern | Alle features, onbeperkte API |\n\nTwijfel je welke tier je hebt? Kijk in **Fyndable → Connection** of **Settings → License**."
+    },
+    {
+      "id": "dashboard-shell",
+      "title": "Dashboard Shell",
+      "category": "Navigatie & dashboard",
+      "keywords": ["dashboard", "shell", "navigatie", "menu", "sidebar", "iframe", "full-page", "exit", "terug naar wordpress"],
+      "answer": "**Dashboard Shell**\n\nFyndable vervangt de standaard WordPress-admin door een full-page dashboard met een linker sidebar.\n\n**Hoe te gebruiken:**\n1. Klik op **Fyndable** in het WordPress-menu om de shell te openen.\n2. Klik in de linker sidebar door de menu's.\n3. Wil je terug naar standaard WordPress? Klik rechtsboven op het **×**-icoon.\n\n**Problemen:**\n- Sidebar is leeg: je licentie is niet (meer) actief, of je tier heeft geen toegang tot dat menu. Controleer **Connection**.\n- Pagina laadt niet in het iframe: sommige WordPress-pagina's weigeren iframe-loading. Open de pagina dan via de linkerbalk buiten de shell.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "menu-items",
+      "title": "Beschikbare menu-items",
+      "category": "Navigatie & dashboard",
+      "keywords": ["menu", "menu-items", "overzicht", "features", "welke menu's", "dashboard", "content calendar", "ideas", "keywords", "link manager", "sitemaps", "support", "settings", "ai tools", "integrations"],
+      "answer": "**Beschikbare menu-items**\n\n| Menu | Beschrijving | Min. tier |\n|------|--------------|-----------|\n| Connection | Licentiestatus en dashboard-URL beheren | Free |\n| Dashboard | Site-overzicht met SEO-health score | Free |\n| Content Calendar | Redactionele kalender en workflow | Free |\n| Ideas | AI-ideeën voor content | Free |\n| Created Posts | Overzicht van AI-gegenereerde posts | Free |\n| Keywords | Keyword-bibliotheek en -onderzoek | Free |\n| Link Manager | Interne link-suggesties en wees pagina's | Free |\n| Competitors | Concurrentieanalyse | Free |\n| Sitemaps | Sitemap-overzicht, robots.txt en redirects | Free |\n| Bulk Optimizer | Bulk AI-optimalisatie van meta-gegevens | Business+ |\n| SEO Data | SE Ranking / Ahrefs dashboard | Free |\n| LLM Tracker | Merk-zichtbaarheid in AI-zoekmachines | Free |\n| Topic Clusters | Topic-cluster analyse | Professional+ |\n| Site Audit | Technische SEO-audit | Professional+ |\n| Rank Tracker | Dagelijkse positietracking | Professional+ |\n| Google Data | GSC + GA4 + Google Ads dashboard | Professional+ |\n| A/B Testing | Test varianten van titels/content | Professional+ |\n| AI Tools | Verzamelpagina AI-tools | Free |\n| Integrations | Koppelingen met externe diensten | Free |\n| Support | Supporttickets aanmaken en beheren | Free |\n| Settings | Plugin-instellingen | Free |\n\nMenu's die grijs of onzichtbaar zijn, horen bij een hogere tier."
+    },
+    {
+      "id": "truseo-score",
+      "title": "TruSEO Score",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["truseo", "seo score", "score", "analyse", "feedback", "realtime", "checklist", "editor", "meta box"],
+      "answer": "**TruSEO Score**\n\nGeeft je content een score van 0-100 op basis van titel, meta, koppenstructuur, keyworddichtheid, interne links en afbeeldingen.\n\n**Stappen:**\n1. Open een post of pagina.\n2. Scroll naar de Fyndable SEO-meta-box.\n3. Klap de **SEO Score**-sectie open.\n4. Lees de feedback: groen = goed, oranje = verbeterpunt, rood = belangrijk tekort.\n5. Pas titel, meta of structuur aan.\n6. Sla op en herhaal tot de score stabiel boven de 80 blijft.\n\n**Problemen:**\n- Score blijft laag: controleer of je een focus-keyword hebt ingevuld en of de koppenstructuur logisch is (H1 → H2 → H3).\n- Foutieve keyworddichtheid: gebruik je keyword natuurlijk; Fyndable waarschuwt bij over-optimalisatie.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "readability-score",
+      "title": "Readability Score",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["readability", "leesbaarheid", "flesch", "reading ease", "kincaid", "douma", "passive voice", "lange zinnen", "leesniveau"],
+      "answer": "**Readability Score**\n\nMeet hoe makkelijk je tekst leest. Je krijgt Flesch Reading Ease, Flesch-Kincaid Grade Level en de Nederlandse Flesch-Douma-score. Signaleert lange zinnen, passive voice en overbodige tussenwoordjes.\n\n**Stappen:**\n1. Bewerk een post.\n2. Open **Readability** in de meta-box.\n3. Bekijk de score en de specifieke verbeterpunten.\n4. Knip lange zinnen op, vervang passieve constructies en vermijd vakjargon.\n5. Herhaal totdat de indicator groen wordt.\n\n**Problemen:**\n- Score is té hoog: voor gespecialiseerde B2B-content mag de tekst lastiger zijn; richt je op heldere structuur.\n- Nederlandse tekst wordt als Engels geanalyseerd: controleer in **Settings → General** of de site-taal correct staat.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "smart-tags",
+      "title": "Smart Tags",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["smart tags", "seo title", "meta description", "focus keyword", "open graph", "og tags", "title genereren", "description genereren"],
+      "answer": "**Smart Tags**\n\nGenereert en beheert SEO-title, meta-description, focus keyword en Open Graph-tags. Je kunt dynamische variabelen gebruiken voor titles.\n\n**Stappen:**\n1. Open in de editor de **Smart Tags** accordion.\n2. Klik **Generate** voor een AI-voorstel.\n3. Bewerk title en description zodat ze aantrekkelijk én onder de 60/160 tekens blijven.\n4. Klik **Update**.\n\n**Problemen:**\n- Title wordt afgekapt in Google: houd title onder 60 tekens.\n- Description niet uniek: elke pagina moet een eigen description hebben. Gebruik de bulk-optimalisatie om dubbele descriptions op te sporen.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "lsi-keywords",
+      "title": "LSI Keywords",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["lsi", "lsi keywords", "semantisch", "synoniemen", "gerelateerde termen", "latent semantic", "keyword suggesties"],
+      "answer": "**LSI Keywords**\n\nLSI (Latent Semantic Indexing) keywords zijn gerelateerde termen en synoniemen. Door deze te verwerken, wordt je content semantischer en beter begrepen door zoekmachines.\n\n**Stappen:**\n1. Vul eerst een focus-keyword in bij Smart Tags of in het Keywords-paneel.\n2. Open **Keywords** (LSI) in de meta-box.\n3. Klik **Generate LSI Keywords**.\n4. Selecteer 3-5 relevante termen en verwerk die natuurlijk in je tekst.\n\n**Problemen:**\n- Suggesties zijn te algemeen: geef meer context op in het focus-keyword.\n- Keyword-stuffing: gebruik niet alle suggesties; kies alleen termen die echt passen.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "content-optimizer",
+      "title": "Content Optimizer",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["content optimizer", "optimize", "topic model", "serp analyse", "top-10", "missing terms", "overused", "score 0-100", "content analyse"],
+      "answer": "**Content Optimizer**\n\nAnalyseert de top-10 in Google voor een keyword en bouwt een topic-model. Scoort je tekst (0-100) tegen dat model. Je ziet precies welke termen je mist, overgebruikt of goed hebt verwerkt.\n\n**Stappen:**\n1. Ga naar **AI Tools → Content Optimizer** (of open het paneel in de editor).\n2. Voer je focus-keyword in.\n3. Klik **Analyze**.\n4. Bekijk de lijst met missing, overused en used terms.\n5. Werk je tekst bij.\n6. Klik **Re-analyze** om je score te verbeteren.\n\n**Problemen:**\n- Analyze geeft geen resultaat: controleer of je licentie actief is en of de SaaS-dashboard URL bereikbaar is.\n- Score verbetert niet: je gebruikt missende termen nog te weinig of te geforceerd; schrijf natuurlijke alinea's.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "content-brief",
+      "title": "Content Brief",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["content brief", "brief", "outline", "structuur", "koppen", "paa vragen", "entiteiten", "woordenaantal", "seo brief"],
+      "answer": "**Content Brief**\n\nGenereert een volledige SEO-brief op basis van topresultaten: structuur, koppen, vragen, entiteiten, gemiddelde lengte en interne-linkkansen.\n\n**Stappen:**\n1. Ga naar **AI Tools → Content Brief**.\n2. Voer het doel-keyword in.\n3. Klik **Generate Brief**.\n4. Lees de brief: H1, H2's, benodigde woordenaantal en PAA-vragen.\n5. Gebruik de brief als leidraad in de editor.\n\n**Problemen:**\n- Brief is te breed: specificeer je keyword.\n- AI haalt oude SERP-data op: data wordt 7 dagen gecachet; klik **Refresh**.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "ai-content-writer",
+      "title": "AI Content Writer",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["ai content writer", "artikel schrijven", "ai schrijven", "blog genereren", "content genereren", "auto content", "artikel type", "toon", "woordenaantal"],
+      "answer": "**AI Content Writer**\n\nSchrijft complete artikelen op basis van een keyword. Je kiest type (blog, how-to, review), toon, lengte en structuur. Fyndable voegt automatisch relevante interne links toe.\n\n**Stappen:**\n1. Ga naar **AI Tools → Content Writer**.\n2. Voer een keyword / topic in.\n3. Kies artikeltype, toon (formeel, vriendelijk, zakelijk) en gewenst aantal woorden.\n4. Klik **Generate**.\n5. Controleer het concept op feiten, leesbaarheid en merkstem.\n6. Publiceer of plan in.\n\n**Problemen:**\n- Output is te generiek: voeg extra instructies toe.\n- Foutieve feiten: AI kan hallucineren. Controleer alle cijfers, datums en claims.\n\nBeschikbaar: Business+."
+    },
+    {
+      "id": "content-rewriter",
+      "title": "Content Rewriter",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["content rewriter", "rewriter", "herschrijven", "parafraseren", "inkorten", "uitschrijven", "toon veranderen", "rewrite", "tekst herschrijven"],
+      "answer": "**Content Rewriter**\n\nHerschrijft bestaande tekst. Je kiest een modus: SEO-optimalisatie, leesbaarheid, uitschrijven, inkorten, parafraseren of toon veranderen.\n\n**Stappen:**\n1. Open een post of ga naar **AI Tools → Content Rewriter**.\n2. Selecteer de tekst die je wilt herschrijven.\n3. Kies de modus.\n4. Klik **Rewrite**.\n5. Plak de verbeterde tekst terug.\n\n**Problemen:**\n- Betekenis is veranderd: vergelijk altijd de originele en herschreven versie.\n- Output te kort: kies \"Expand\" in plaats van \"Rewrite\".\n\nBeschikbaar: Starter+."
+    },
+    {
+      "id": "ai-content-repurposer",
+      "title": "AI Content Repurposer",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["repurposer", "repurpose", "linkedin", "nieuwsbrief", "instagram", "samenvatting", "content distributie", "social media", "omzetten"],
+      "answer": "**AI Content Repurposer**\n\nZet een blog om naar andere formaten: LinkedIn-post, nieuwsbrief, Instagram-caption of samenvatting.\n\n**Stappen:**\n1. Ga naar **AI Tools → AI Repurposer**.\n2. Selecteer een bestaande post of plak content.\n3. Kies het doelformaat.\n4. Klik **Repurpose**.\n5. Bewerk tot het past bij het kanaal.\n\n**Problemen:**\n- Te formeel voor social: pas de toon aan of vraag expliciet om een \"casual variant\".\n\nBeschikbaar: Business+."
+    },
+    {
+      "id": "bulk-optimizer",
+      "title": "Bulk Optimizer",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["bulk optimizer", "bulk", "scan site", "missing title", "missing description", "og tags", "focus keyphrase", "bulk genereren", "meta-gegevens", "seo title genereren"],
+      "answer": "**Bulk Optimizer**\n\nScant je hele site op ontbrekende SEO-titles, meta-descriptions, Open Graph-tags en focus-keyphrases. Je kunt per post of in bulk AI-gegenereerde meta-gegevens laten invullen.\n\n**Stappen:**\n1. Ga naar **Bulk Optimizer**.\n2. Klik **Scan Site**.\n3. Bekijk de samenvatting: hoeveel posts missen title, description, OG of keyphrase.\n4. Filter op een specifiek probleem (bijv. **Missing Title**).\n5. Vink de velden aan die je wilt genereren.\n6. Selecteer posts en klik **Generate for Selected**.\n7. Controleer na afloop willekeurig enkele resultaten.\n\n**Problemen:**\n- Generatie stopt halverwege: herlaad de pagina en start opnieuw; reeds verwerkte posts blijven bewaard.\n- Output is niet relevant: controleer of de focus-keyphrase correct is.\n- Labels tonen \"Missing\" terwijl je net hebt gegenereerd: herlaad de pagina.\n\nBeschikbaar: Business+."
+    },
+    {
+      "id": "simple-content-generator",
+      "title": "Simple Content Generator",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["simple content generator", "ai content", "alinea", "intro", "cta", "snel genereren", "editor", "woordlimiet"],
+      "answer": "**Simple Content Generator**\n\nSnelle AI-generatie direct in de editor voor een alinea, intro of CTA.\n\n**Stappen:**\n1. Open in de editor de **AI Content** accordion.\n2. Beschrijf in het veld wat je nodig hebt.\n3. Stel het gewenste aantal woorden in.\n4. Klik **Generate**.\n5. Plak het resultaat in je content.\n\n**Problemen:**\n- Output is te lang of te kort: pas de woordlimiet in het paneel aan.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "eeat-validator",
+      "title": "E-E-A-T Validator",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["eeat", "e-e-a-t", "experience", "expertise", "authoritativeness", "trustworthiness", "ymyl", "auteur", "bronnen", "google richtlijnen"],
+      "answer": "**E-E-A-T Validator**\n\nControleert of je content voldoet aan Google's E-E-A-T richtlijnen: Experience, Expertise, Authoritativeness, Trustworthiness. Belangrijk voor YMYL-onderwerpen (gezondheid, financiën, juridisch).\n\n**Stappen:**\n1. Open in de editor de **E-E-A-T** accordion.\n2. Klik **Analyze**.\n3. Bekijk de scores per pijler.\n4. Voeg auteursinformatie, bronvermelding, datums en bewijs toe waar nodig.\n\n**Problemen:**\n- Score blijft laag: zorg voor een uitgebreide auteur-bio, externe bronnen en up-to-date informatie.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "plagiarism-checker",
+      "title": "Plagiarism Checker",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["plagiarism", "plagiaat", "originaliteit", "originality", "gekopieerd", "ai-detectie", "ai gegenereerd", "originaliteitsscore"],
+      "answer": "**Plagiarism Checker**\n\nControleert of tekst mogelijk gekopieerd is of sterk op AI-generatie lijkt. Geeft een originaliteitsscore.\n\n**Stappen:**\n1. Open in de editor de **Originality** accordion.\n2. Klik **Check Originality**.\n3. Bekijk de score en de aangeduide segmenten.\n4. Herschrijf twijfelachtige passages.\n\n**Problemen:**\n- AI-gegenereerde content wordt als \"unoriginal\" aangemerkt: gebruik de rewriter om de tekst menselijker te maken.\n\nBeschikbaar: Agency."
+    },
+    {
+      "id": "ai-image-generator",
+      "title": "AI Image Generator",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["ai image", "image generator", "afbeelding genereren", "featured image", "open graph image", "illustratie", "dall-e", "stability", "image api"],
+      "answer": "**AI Image Generator**\n\nGenereert featured images, Open Graph-afbeeldingen of illustraties op basis van een prompt.\n\n**Stappen:**\n1. Open in de editor de **AI Image** accordion.\n2. Kies het type afbeelding.\n3. Voer een prompt in.\n4. Klik **Generate Image**.\n5. Selecteer een resultaat en stel het in als featured image.\n\n**Problemen:**\n- Afbeeldingen genereren niet: controleer of de image-API (OpenAI/DALL-E of Stability) is geconfigureerd.\n- Merkwending klopt niet: voeg merktermen toe in de prompt.\n\nBeschikbaar: alle tiers (vereist geconfigureerde image-API)."
+    },
+    {
+      "id": "image-alt-generator",
+      "title": "Image Alt Generator",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["alt text", "alt generator", "alt-tekst", "toegankelijkheid", "image seo", "afbeelding beschrijving", "alt attribute"],
+      "answer": "**Image Alt Generator**\n\nGenereert beschrijvende alt-teksten voor afbeeldingen. Goed voor toegankelijkheid en image SEO.\n\n**Stappen:**\n1. Open de mediabibliotheek of een afbeelding in de editor.\n2. Klap de **Alt Text** accordion open.\n3. Klik **Generate Alt Text**.\n4. Bewerk de tekst zodat deze beschrijvend en beknopt is.\n\n**Problemen:**\n- Alt-text is te algemeen: voeg context toe zoals locatie of productnaam.\n- Keyword-stuffing in alt-text: houd het natuurlijk; alt is eerst voor toegankelijkheid.\n\nBeschikbaar: Starter+."
+    },
+    {
+      "id": "open-graph-social",
+      "title": "Open Graph & Social Sharing",
+      "category": "Content maken & optimaliseren",
+      "keywords": ["open graph", "og", "social sharing", "facebook", "linkedin", "twitter", "social preview", "share knoppen", "og image", "og title"],
+      "answer": "**Open Graph & Social Sharing**\n\nBepaalt hoe je pagina eruitziet als iemand de link deelt op Facebook, LinkedIn of Twitter/X. Social Sharing voegt eventueel share-knoppen toe.\n\n**Stappen:**\n1. Open in de editor de **Social Preview** accordion.\n2. Pas de Open Graph-title, -description en -image aan.\n3. Sla de post op.\n4. Test via de Facebook Sharing Debugger of LinkedIn Post Inspector.\n\n**Problemen:**\n- Social preview toont oude afbeelding: platforms cachen OG-data. Gebruik hun debugger om te verversen.\n- Image is te groot of te klein: gebruik afbeeldingen van 1200×630 px.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "ideas",
+      "title": "Ideas",
+      "category": "Ideeën, planning & content-decay",
+      "keywords": ["ideas", "ideeën", "content ideeën", "brainstorm", "topic", "generate ideas", "convert to draft", "schedule", "sterretje"],
+      "answer": "**Ideas**\n\nGenereert contentideeën op basis van een topic of keyword. Je kunt ideeën bewaren, bewerken, omzetten naar draft, outline of geplande post.\n\n**Stappen:**\n1. Ga naar **Ideas** in het menu.\n2. Typ een topic of keyword.\n3. Klik **Generate Ideas**.\n4. Klik het sterretje om ideeën op te slaan.\n5. Klik bij een idee op **Convert to Draft** of **Schedule**.\n\n**Problemen:**\n- Ideeën zijn te breed: geef een specifieker topic op.\n- AI geeft geen ideeën: controleer of je licentiequota niet is bereikt.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "created-posts",
+      "title": "Created Posts",
+      "category": "Ideeën, planning & content-decay",
+      "keywords": ["created posts", "gegenereerde posts", "concepten", "gepland", "gepubliceerd", "bulk publish", "bulk draft", "regenerate", "ai posts overzicht"],
+      "answer": "**Created Posts**\n\nCentraal overzicht van alle AI-gegenereerde posts, gesorteerd op status: concept, gepland, gepubliceerd, review nodig.\n\n**Stappen:**\n1. Ga naar **Created Posts**.\n2. Gebruik filters om snel concepten of geplande posts te vinden.\n3. Selecteer één of meer posts.\n4. Kies **Bulk Publish**, **Bulk Draft** of **Regenerate**.\n\n**Problemen:**\n- Post mist afbeeldingen: voeg handmatig een featured image toe of gebruik AI Image Generator.\n- Bulk-actie mislukt: herlaad de pagina en controleer of je voldoende rechten hebt.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "content-calendar",
+      "title": "Content Calendar",
+      "category": "Ideeën, planning & content-decay",
+      "keywords": ["content calendar", "kalender", "planning", "plannen", "workflow", "toewijzen", "team", "content gaps", "redactionele kalender"],
+      "answer": "**Content Calendar**\n\nEen visuele kalender waarin je posts plant, toewijst aan teamleden en content-gaps signaleert.\n\n**Stappen:**\n1. Ga naar **Content Calendar**.\n2. Klik op een datum om een nieuw idee of post toe te voegen.\n3. Sleep een bestaande post naar een andere datum om te verplaatsen.\n4. Open in de editor de **Workflow** accordion om status en toegewezen auteur in te stellen.\n\n**Problemen:**\n- Kalender is leeg: zorg dat er minimaal één post of idee bestaat.\n- Workflow-velden niet zichtbaar: deze zijn alleen zichtbaar bij Business+ tier.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "content-decay",
+      "title": "Content Decay Monitor",
+      "category": "Ideeën, planning & content-decay",
+      "keywords": ["content decay", "decay", "dalende posities", "verkeer verliezen", "verval", "position trends", "verversen", "update content"],
+      "answer": "**Content Decay Monitor**\n\nDetecteert pagina's die posities of verkeer verliezen. Geeft per post een historisch overzicht en verversingsadvies.\n\n**Stappen:**\n1. Ga naar **Content Decay** of open **Position Trends** in de editor.\n2. Sorteer op dalende posities of dalend verkeer.\n3. Klik een post aan.\n4. Lees het advies: bijv. \"werk statistieken bij\", \"breid het topic uit\" of \"verbeter interne links\".\n\n**Problemen:**\n- Geen data: koppel eerst Search Console of GA4 in **Integrations**.\n- Alle posts lijken te dalen: controleer of er een algoritme-update of seizoenspatroon is.\n\nBeschikbaar: Business+."
+    },
+    {
+      "id": "keywords-beheer",
+      "title": "Keywords-beheer",
+      "category": "Keywords & onderzoek",
+      "keywords": ["keywords", "keyword beheer", "keyword bibliotheek", "csv import", "export", "clusters", "add keyword", "keyword toevoegen"],
+      "answer": "**Keywords-beheer**\n\nCentrale bibliotheek voor al je keywords. Je kunt handmatig toevoegen, importeren via CSV, exporteren, clusters maken en vanuit een keyword contentideeën genereren.\n\n**Stappen:**\n1. Ga naar **Keywords**.\n2. Klik **Add Keyword**.\n3. Voer het keyword in, optioneel een cluster en zoekvolume.\n4. Klik **Save**.\n5. Selecteer keywords en klik **Generate Ideas** voor content-voorstellen.\n\n**Problemen:**\n- Keywords raken kwijt: gebruik de export-functie regelmatig als backup.\n- Importeren mislukt: zorg dat je CSV de kolommen `keyword` en optioneel `cluster` bevat.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "keyword-explorer",
+      "title": "Keyword Explorer",
+      "category": "Keywords & onderzoek",
+      "keywords": ["keyword explorer", "explorer", "seed keyword", "serp titelanalyse", "jaccard", "gerelateerde termen", "topic uitbreiding", "clusters ontdekken"],
+      "answer": "**Keyword Explorer**\n\nVergroot een seed-keyword met SERP-titelanalyse en groepeert gerelateerde termen op Jaccard-similarity. Handig om nieuwe hoeken voor content te ontdekken.\n\n**Stappen:**\n1. Ga naar **AI Tools → Keyword Explorer**.\n2. Voer een breed keyword in.\n3. Klik **Explore**.\n4. Bekijk clusters.\n\n**Problemen:**\n- Resultaten lijken willekeurig: gebruik een specifiekere seed of combineer met Keyword Difficulty.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "keyword-difficulty",
+      "title": "Keyword Difficulty",
+      "category": "Keywords & onderzoek",
+      "keywords": ["keyword difficulty", "difficulty", "moeilijkheid", "kans op ranken", "authority", "long-tail", "gepersonaliseerde score"],
+      "answer": "**Keyword Difficulty**\n\nBerekent de kans dat jij kunt ranken voor een keyword, gebaseerd op jouw eigen site's authority, bestaande content en interne linkstructuur.\n\n**Stappen:**\n1. Ga naar **AI Tools → Keyword Difficulty**.\n2. Voer een keyword in.\n3. Bekijk de gepersonaliseerde score en het advies.\n4. Als de score laag is, focus je eerst op long-tail varianten.\n\n**Problemen:**\n- Score is altijd hoog: bouw eerst authority door middelzware keywords te scoren.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "topic-clusters",
+      "title": "Topic Clusters",
+      "category": "Keywords & onderzoek",
+      "keywords": ["topic clusters", "pillar", "cluster", "topical authority", "pillar pagina", "hoofdtopic", "cluster artikelen"],
+      "answer": "**Topic Clusters**\n\nGenereert een pillar-cluster map: één hoofdtopic (pillar) met onderliggende artikelen (clusters). Helpt je om topische autoriteit op te bouwen.\n\n**Stappen:**\n1. Ga naar **Topic Clusters**.\n2. Voer een hoofdtopic in.\n3. Klik **Generate Cluster**.\n4. Bekijk de voorgestelde pillar en clusters.\n5. Maak de pillar-pagina eerst aan, daarna de cluster-artikelen, en link die naar de pillar.\n\n**Problemen:**\n- Cluster-ideeën overlappen: combineer of splits ze.\n- Te veel clusters: begin met 3-5 clusters per pillar.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "serp-competitor",
+      "title": "SERP Competitor",
+      "category": "Keywords & onderzoek",
+      "keywords": ["serp competitor", "serp analyse", "top-10 analyse", "topic gaps", "heatmap", "entiteiten", "concurrentie content"],
+      "answer": "**SERP Competitor**\n\nAnalyseert de top-10 in Google voor een keyword en vergelijkt die met jouw content. Je ziet topic-gaps, koppenstructuur en welke entiteiten concurrenten wel gebruiken.\n\n**Stappen:**\n1. Ga naar **AI Tools → SERP Competitor**.\n2. Voer een keyword in.\n3. Klik **Analyze**.\n4. Bekijk de heatmap: groen = jij hebt het onderwerp, rood = mist.\n5. Werk de rode velden in je content bij.\n\n**Problemen:**\n- Geen concurrerende data: controleer of het keyword in je land wordt gezocht en of de proxy verbinding werkt.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "competitor-research",
+      "title": "Competitor Research",
+      "category": "Keywords & onderzoek",
+      "keywords": ["competitor research", "concurrentieanalyse", "concurrent", "backlink profiel", "advertentiekopie", "ai-detectie", "keywords concurrent"],
+      "answer": "**Competitor Research**\n\nDiepgaande concurrentieanalyse: welke keywords een concurrent target, welke content ze publiceren, hun backlinkprofiel, advertentiekopieën en AI-gegenereerde content-detectie.\n\n**Stappen:**\n1. Ga naar **Competitors**.\n2. Voer een concurrentiedomein in.\n3. Klik **Analyze**.\n4. Bekijk de tabbladen: Keywords, Content, Backlinks, Ads.\n\n**Problemen:**\n- Data is verouderd: concurrentiedata wordt gecachet; klik **Refresh**.\n- Externe API-data ontbreekt: sommige metrics vereisen een Ahrefs- of Semrush-koppeling.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "link-manager",
+      "title": "Link Manager / Smart Internal Linking",
+      "category": "Link management",
+      "keywords": ["link manager", "smart internal linking", "interne links", "orphan pages", "wees pagina's", "anchor tekst", "link suggesties", "linkkansen"],
+      "answer": "**Link Manager / Smart Internal Linking**\n\nDetecteert wees-pagina's (orphans), scoort interne linkkansen en geeft geoptimaliseerde anchor-teksten.\n\n**Stappen:**\n1. Ga naar **Link Manager**.\n2. Bekijk het tabblad **Orphan Pages**.\n3. Klik een pagina aan om link-suggesties te zien.\n4. Klik **Add Link** of kopieer de anchor tekst en URL naar een geschikte post.\n\n**Problemen:**\n- Suggesties zijn irrelevant: pas het bron-keyword aan of verfijn de content van de doelpagina.\n- Orphan pages zijn bewust losstaand: sommige landingspagina's hoeven niet intern gelinkt te worden.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "link-genius",
+      "title": "Link Genius",
+      "category": "Link management",
+      "keywords": ["link genius", "auto linking", "automatische links", "link regels", "keyword naar url", "evergreen links", "auto internal links"],
+      "answer": "**Link Genius**\n\nAutomatische interne linkregels: je bepaalt welke woorden of zinnen automatisch linken naar welke URL. Handig voor evergreen links zoals productcategorieën.\n\n**Stappen:**\n1. Ga naar **Link Genius**.\n2. Schakel **Enable Link Genius** in.\n3. Voeg een regel toe: Keyword(s) → Doel-URL.\n4. Stel het maximum aantal links per pagina in.\n5. Sla op.\n\n**Problemen:**\n- Te veel automatische links: verlaag het maximum of gebruik exact-match.\n- Links breken na verwijdering doelpagina: controleer regelmatig of de doel-URL's nog bestaan.\n\nBeschikbaar: Starter+."
+    },
+    {
+      "id": "redirect-manager",
+      "title": "Redirect Manager",
+      "category": "Link management",
+      "keywords": ["redirect manager", "redirect", "301", "302", "omleiding", "404 voorkomen", "linkwaarde behouden", "redirects beheren"],
+      "answer": "**Redirect Manager**\n\nBeheert 301- en 302-omleidingen. Hiermee voorkom je 404-fouten en behoud je linkwaarde bij verwijderde of verplaatste pagina's.\n\n**Stappen:**\n1. Ga naar **Sitemaps → Redirect Manager**.\n2. Klik **Add Redirect**.\n3. Vul de bron-URL in (oud pad zonder domein).\n4. Vul de doel-URL in.\n5. Kies **301** (permanent) of **302** (tijdelijk).\n6. Sla op en test de redirect.\n\n**Problemen:**\n- Redirect werkt niet: controleer of de bron-URL geen querystring heeft en of er geen conflict is met bestaande pagina's.\n- Redirect-loops: zorg dat doel niet teruglinkt naar bron.\n\nBeschikbaar: Starter+."
+    },
+    {
+      "id": "backlink-analyzer",
+      "title": "Backlink Analyzer",
+      "category": "Link management",
+      "keywords": ["backlink analyzer", "backlinks", "backlink profiel", "domeinautoriteit", "verwijzende domeinen", "toxische links", "ahrefs", "semrush", "disavow"],
+      "answer": "**Backlink Analyzer**\n\nAnalyseert je backlinkprofiel via Ahrefs of Semrush. Je ziet domeinautoriteit, aantal verwijzende domeinen, toxische links en concurrentievergelijking.\n\n**Stappen:**\n1. Ga naar **SEO Data → Backlinks** of **AI Tools → Backlink Analyzer**.\n2. Voer een domein in.\n3. Klik **Analyze**.\n4. Bekijk de metrics en exporteer de lijst.\n\n**Problemen:**\n- API-key ontbreekt: voeg je Ahrefs- of Semrush-key toe in **Integrations**.\n- Data verschilt met dashboard: elke API gebruikt eigen index; vergelijk trends.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "advanced-backlinks",
+      "title": "Advanced Backlinks",
+      "category": "Link management",
+      "keywords": ["advanced backlinks", "gebroken backlinks", "concurrent backlink doelen", "anchor-text scoring", "link opportunities", "outreach", "linkbuilding"],
+      "answer": "**Advanced Backlinks**\n\nGeavanceerde backlinkanalyse: gebroken backlinks, concurrent backlink-doelen, anchor-text scoring en link-opportunities.\n\n**Stappen:**\n1. Ga naar **Advanced Backlinks**.\n2. Voer een concurrent of je eigen domein in.\n3. Bekijk de lijst met opportunities.\n4. Exporteer een prospect-lijst en start outreach.\n\n**Problemen:**\n- Opportunities zijn te algemeen: filter op domeinautoriteit en relevantie.\n- Outreach levert niets op: personaliseer je e-mail en bied waardevolle content aan.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "site-audit",
+      "title": "Technical SEO Auditor / Site Audit",
+      "category": "Technische SEO",
+      "keywords": ["site audit", "technical seo", "auditor", "audit", "crawlability", "crawl budget", "url structuur", "sitemap health", "robots.txt", "performance", "technische audit"],
+      "answer": "**Technical SEO Auditor / Site Audit**\n\nDoorloopt je hele site en controleert zes pijlers: crawlability, crawl budget, URL-structuur, sitemap-health, robots.txt en server/CDN-prestaties. Je krijgt per pijler een score en een lijst met concrete acties.\n\n**Stappen:**\n1. Ga naar **Site Audit**.\n2. Klik op **Run Full Technical Audit**.\n3. Wacht tot de scan is afgerond.\n4. Bekijk de scores: Crawlability, Performance, URL Structure, Sitemap Health.\n5. Scroll naar waarschuwingen (oranje) en fouten (rood).\n6. Klik **Fix** of volg het advies onder **Recommendation**.\n7. Pak de rode items als eerste aan.\n\n**Problemen:**\n- Audit blijft hangen: grotere sites duren langer. Laat het tabblad open staan.\n- Geen toegang tot robots.txt/sitemap: controleer of `home_url()` correct is ingesteld.\n- Crawl-budget is negatief: corrigeer duplicate content en thin content.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "techchecker",
+      "title": "TechChecker",
+      "category": "Technische SEO",
+      "keywords": ["techchecker", "tech checker", "url controle", "http status", "schema check", "json-ld check", "hreflang check", "redirect chains", "spot check"],
+      "answer": "**TechChecker**\n\nEen snelle controletool voor één specifieke URL: HTTP-status, schema/JSON-LD, hreflang-tags, robots.txt-toegang en redirect chains.\n\n**Stappen:**\n1. Open de **Tech Checker** vanuit de Site Audit of via de meta-box.\n2. Plak de URL die je wilt testen.\n3. Klik **Check**.\n4. Bekijk het rapport per controlepunt.\n\n**Problemen:**\n- URL geeft 404 terwijl pagina bestaat: controleer permalinks en eventuele redirect-conflicten.\n- Schema ontbreekt: voeg schema toe via de **Schema** accordion in de editor.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "xml-sitemap",
+      "title": "XML Sitemap",
+      "category": "Technische SEO",
+      "keywords": ["xml sitemap", "sitemap", "sitemap.xml", "crawlen", "indexeren", "google search console", "sitemap indienen", "routekaart"],
+      "answer": "**XML Sitemap**\n\nGenereert automatisch een XML-sitemap met alle publieke URLs. Zoekmachines gebruiken deze als routekaart om je site te crawlen.\n\n**Stappen:**\n1. Ga naar **Sitemaps**.\n2. Controleer of de hoofdsitemap actief is (meestal `https://jouwsite.nl/sitemap.xml`).\n3. Kopieer de URL.\n4. Dien deze in via **Google Search Console → Sitemaps**.\n\n**Problemen:**\n- Sitemap is leeg: controleer in **Settings → Post Types** welke post types zijn opgenomen.\n- Sitemap geeft 404: reset de permalinks via **Instellingen → Permalinks**.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "extended-sitemaps",
+      "title": "Extended Sitemaps",
+      "category": "Technische SEO",
+      "keywords": ["extended sitemaps", "video sitemap", "afbeelding sitemap", "nieuws sitemap", "rss sitemap", "auteur sitemap", "sitemap-video.xml"],
+      "answer": "**Extended Sitemaps**\n\nGenereert aanvullende sitemaps: video, afbeeldingen, nieuws, RSS en auteur.\n\n**Stappen:**\n1. Ga naar **Sitemaps**.\n2. Schakel de gewenste extra sitemaps in.\n3. Test de URL's (bijv. `https://jouwsite.nl/sitemap-video.xml`).\n4. Dien de aparte URL's in bij Google Search Console.\n\n**Problemen:**\n- Video-sitemap is leeg: zorg dat er video's embedded zijn in gepubliceerde posts.\n- Nieuws-sitemap is niet toegestaan: hiervoor moet je site zijn goedgekeurd door Google News.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "robots-txt-editor",
+      "title": "Robots.txt Editor",
+      "category": "Technische SEO",
+      "keywords": ["robots.txt", "robots editor", "crawl blokkeren", "disallow", "sitemap verwijzing", "indexeren voorkomen"],
+      "answer": "**Robots.txt Editor**\n\nBewerk `robots.txt` vanuit WordPress. Je bepaalt welke pagina's zoekmachines mogen crawlen en voegt de sitemap-URL toe.\n\n**Stappen:**\n1. Ga naar **Sitemaps → Robots.txt**.\n2. Bekijk de huidige inhoud.\n3. Voeg regels toe of pas ze aan, bijv. `Disallow: /wp-admin/`.\n4. Zorg dat er een regel `Sitemap: https://jouwsite.nl/sitemap.xml` staat.\n5. Klik **Save**.\n\n**Problemen:**\n- Hele site wordt geblokkeerd: pas op met `Disallow: /`. Test altijd.\n- Wijzigingen worden niet opgeslagen: controleer of je serverbestandsrechten toestaan dat WordPress robots.txt serveert.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "canonical-url",
+      "title": "Canonical URL",
+      "category": "Technische SEO",
+      "keywords": ["canonical", "canonical url", "duplicate content", "voorkeursversie", "paginering", "filters", "guest post canonical"],
+      "answer": "**Canonical URL**\n\nGeeft aan welke URL de voorkeursversie is van een pagina. Voorkomt duplicate-content-problemen bij paginering, filters en gelijke content.\n\n**Stappen:**\n1. Open in de editor de **Canonical URL** accordion.\n2. Vul een custom canonical in als de standaard niet correct is.\n3. Laat het veld leeg om automatisch de huidige URL te gebruiken.\n4. Sla op.\n\n**Problemen:**\n- Canonical verwijst naar verkeerde URL: controleer of alle varianten (met/without trailing slash, www/non-www) goed staan.\n- Google negeert canonical: canonical is een hint, geen commando; zorg dat de inhoud overeenkomt.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "hreflang",
+      "title": "Hreflang",
+      "category": "Technische SEO",
+      "keywords": ["hreflang", "taal tags", "regiotags", "meertalig", "wpml", "polylang", "translatepress", "x-default", "taalvariant"],
+      "answer": "**Hreflang**\n\nVoegt taal- en regiotags toe zodat zoekmachines de juiste taalvariant tonen. Ondersteunt WPML, Polylang, TranslatePress en handmatige mapping.\n\n**Stappen:**\n1. Open in de editor de **Hreflang** accordion.\n2. Koppel de vertaalde versies of vul handmatig `x-default` en taalcodes in.\n3. Sla op.\n4. Test met een hreflang-testtool.\n\n**Problemen:**\n- Hreflang-tags zijn inconsistent: zorg dat elke taalvariant terugverwijst naar de anderen.\n- Verkeerde taalcodes: gebruik `nl-nl`, niet alleen `nl`, tenzij je geen regiospecifieke variant hebt.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "international-seo",
+      "title": "International SEO",
+      "category": "Technische SEO",
+      "keywords": ["international seo", "internationaal", "land specifiek", "geo serp", "lokale aanbevelingen", "doelland", "meertalig onderzoek"],
+      "answer": "**International SEO**\n\nExtra tools voor internationaal SEO: land-specifiek keywordonderzoek, geo-SERP-analyse, currency/taal-optimalisatie en internationale link-suggesties.\n\n**Stappen:**\n1. Ga naar **AI Tools → International SEO**.\n2. Kies een doelland en taal.\n3. Voer een keyword in.\n4. Bekijk zoekvolume, concurrentie en lokale aanbevelingen.\n\n**Problemen:**\n- Geen lokale data: zorg dat je SE Ranking of Ahrefs is gekoppeld voor betrouwbaar volume.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "breadcrumbs",
+      "title": "Breadcrumbs",
+      "category": "Technische SEO",
+      "keywords": ["breadcrumbs", "kruimelpad", "breadcrumblist", "json-ld", "shortcode", "widget", "hiërarchie", "frontend"],
+      "answer": "**Breadcrumbs**\n\nGenereert frontend-kruimelpaden en JSON-LD BreadcrumbList schema.\n\n**Stappen:**\n1. Ga naar **Settings → Breadcrumbs**.\n2. Schakel breadcrumbs in.\n3. Kies of je ze via een shortcode, widget of template-functie wilt tonen.\n4. Test of het kruimelpad correct verschijnt.\n\n**Problemen:**\n- Breadcrumbs tonen verkeerde structuur: controleer je categorie- en paginahiërarchie.\n- Schema-fout: gebruik de Google Rich Results Test om het BreadcrumbList schema te valideren.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "404-monitor",
+      "title": "404 Monitor",
+      "category": "Technische SEO",
+      "keywords": ["404 monitor", "404", "gebroken links", "broken urls", "verloren verkeer", "404 fouten", "redirect 404"],
+      "answer": "**404 Monitor**\n\nHoudt 404-fouten bij die bezoekers en crawlers tegenkomen. Zo voorkom je verloren verkeer en een slechte gebruikerservaring.\n\n**Stappen:**\n1. Ga naar **Site Audit → 404 Monitor**.\n2. Bekijk de lijst met gebroken URL's, gesorteerd op aantal hits.\n3. Klik een URL aan.\n4. Maak een 301-redirect naar de meest relevante pagina of repareer de interne link.\n\n**Problemen:**\n- 404's door oude campagnes: check de bron (referrer) om te zien of er externe links naar die URL verwijzen.\n- Monitor blijft leeg: zorg dat de plugin logs bijhoudt; soms is er een conflict met caching-plugins.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "schema-markup",
+      "title": "Schema Markup Manager",
+      "category": "Schema & gespecialiseerde SEO",
+      "keywords": ["schema", "schema markup", "json-ld", "structured data", "rich snippets", "article", "product", "localbusiness", "review"],
+      "answer": "**Schema Markup Manager**\n\nVoegt gestructureerde data (JSON-LD) toe aan je pagina's. Zoekmachines gebruiken dit voor rich snippets: sterren, FAQ-uitklappers, carrousels en meer.\n\n**Stappen:**\n1. Open in de editor de **Schema** accordion.\n2. Klik **Add Schema**.\n3. Kies een type, bijv. Article, Product, LocalBusiness, Review.\n4. Vul de verplichte velden in.\n5. Klik **Validate** om te testen.\n6. Sla de post op.\n\n**Problemen:**\n- Fout in Google Rich Results Test: controleer of alle verplichte velden correct zijn ingevuld.\n- Dubbel schema: schakel conflicterende schema-plugins (Yoast, Rank Math) uit.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "faq-schema",
+      "title": "FAQ Schema",
+      "category": "Schema & gespecialiseerde SEO",
+      "keywords": ["faq schema", "faq", "vragen en antwoorden", "uitklapper", "serp faq", "faq block"],
+      "answer": "**FAQ Schema**\n\nMarkeert vragen en antwoorden zodat Google een FAQ-uitklapper in de SERP kan tonen.\n\n**Stappen:**\n1. Open de **FAQ Schema** accordion in de editor.\n2. Klik **Add Question**.\n3. Vul vraag en antwoord in.\n4. Herhaal voor elke FAQ.\n5. Sla op.\n\n**Problemen:**\n- FAQ wordt niet getoond: Google beslist zelf of FAQ-uitklappers getoond worden; zorg dat de antwoorden objectief en beknopt zijn.\n- Meer dan één FAQ-block per pagina: houdt het bij één block om schema-fouten te voorkomen.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "video-seo",
+      "title": "Video SEO",
+      "category": "Schema & gespecialiseerde SEO",
+      "keywords": ["video seo", "videoobject", "video schema", "video sitemap", "youtube", "video indexeren", "video rich snippet"],
+      "answer": "**Video SEO**\n\nVoegt VideoObject schema en video-sitemap-ondersteuning toe, zodat video's beter vindbaar worden in Google Video en YouTube-koppelingen.\n\n**Stappen:**\n1. Zorg dat een video is geëmbed in een post.\n2. Open **Video SEO** in de meta-box.\n3. Vul titel, beschrijving, upload- en duur-informatie in.\n4. Activeer de video-sitemap in **Sitemaps**.\n\n**Problemen:**\n- Video wordt niet geïndexeerd: zorg dat de video openbaar toegankelijk is en geen noindex heeft.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "local-seo",
+      "title": "Local SEO",
+      "category": "Schema & gespecialiseerde SEO",
+      "keywords": ["local seo", "lokaal", "local business", "bedrijfsnaam", "adres", "telefoon", "openingsuren", "local pack", "tandarts", "restaurant"],
+      "answer": "**Local SEO**\n\nOptimaliseert je site voor lokale zoekopdrachten: bedrijfsnaam, adres, telefoon, openingsuren en LocalBusiness schema.\n\n**Stappen:**\n1. Ga naar **Settings → Local SEO**.\n2. Vul bedrijfsnaam, adres, telefoonnummer, e-mail, openingsuren en URL's in.\n3. Kies je bedrijfstype (bijv. `LocalBusiness`, `Restaurant`, `Dentist`).\n4. Sla op.\n5. Open een post en voeg indien nodig **Local SEO** schema toe.\n\n**Problemen:**\n- NAP is inconsistent: zorg dat naam, adres en telefoon op elke pagina exact hetzelfde zijn.\n- Local pack blijft uit: dit vraagt ook Google Business Profile-optimalisatie; Fyndable helpt aan de site-kant.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "woocommerce-seo",
+      "title": "WooCommerce SEO",
+      "category": "Schema & gespecialiseerde SEO",
+      "keywords": ["woocommerce", "product schema", "review schema", "webshop", "productcategorie", "product seo", "rich snippets product"],
+      "answer": "**WooCommerce SEO**\n\nVoegt product- en review-schema toe, optimaliseert productcategorieën en biedt SEO-tools specifiek voor WooCommerce.\n\n**Stappen:**\n1. Ga naar **Settings → Post Types** en zorg dat `product` is ingeschakeld.\n2. Open een product in de editor.\n3. Vul SEO-titel, meta-description en product-schema in.\n4. Laat prijs, beschikbaarheid en SKU automatisch invullen.\n\n**Problemen:**\n- Prijs klopt niet in Google: Google moet je pagina opnieuw crawlen; vraag in Search Console een recrawl aan.\n- Schema-dubbelingen: schakel schema van WooCommerce zelf of Rank Math uit.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "rank-tracker",
+      "title": "Rank Tracker",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["rank tracker", "positietracking", "posities", "rankings", "keyword tracking", "dagelijks", "trend", "positie schommeling"],
+      "answer": "**Rank Tracker**\n\nVolgt dagelijks de posities van je belangrijkste keywords. Je ziet historische trends en eventuele positieschommelingen.\n\n**Stappen:**\n1. Ga naar **Rank Tracker**.\n2. Klik **Add Keyword**.\n3. Voer het keyword in en selecteer het land/apparaat.\n4. Fyndable checkt dagelijks de positie.\n5. Bekijk het trendoverzicht na een paar dagen.\n\n**Problemen:**\n- Positie is 0: het keyword is nog niet geïndexeerd of de ranking ligt buiten de top 100.\n- Data komt niet binnen: er is een dagelijkse cronjob nodig; controleer of WordPress-cron werkt.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "ai-search-visibility",
+      "title": "AI Search Visibility / LLM Tracker",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["ai search visibility", "llm tracker", "ai zoekmachines", "chatgpt", "perplexity", "gemini", "brand presence", "merk zichtbaarheid", "sentiment", "ai antwoorden"],
+      "answer": "**AI Search Visibility / LLM Tracker**\n\nMeet hoe vaak en in welke context je merk, producten of concurrenten worden genoemd in antwoorden van AI-zoekmachines en chatbots zoals ChatGPT, Perplexity en Google Gemini.\n\n**Stappen:**\n1. Ga naar **AI Search Visibility** (ook wel **LLM Tracker**).\n2. Vul je **brand name** in.\n3. Vul **product names** en **concurrenten** in, elk op een aparte regel.\n4. Vul je **categorie** in, bijv. \"SEO software\".\n5. Pas de voorbeeldvragen aan of gebruik de standaard set.\n6. Kies de platforms die je wilt scannen.\n7. Stel de frequentie in.\n8. Klik **Save Settings** en daarna **Run Scan**.\n9. Bekijk de resultaten.\n\n**Problemen:**\n- Scan geeft geen resultaten: controleer of je brand name exact is ingevuld en of je voldoende AI-credits/quota hebt.\n- Resultaten lijken willekeurig: AI-antwoorden zijn niet-deterministisch; gebruik meerdere scans.\n- Je merk wordt nooit genoemd: focus op brand building en PR.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "serp-feature-tracker",
+      "title": "SERP Feature Tracker",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["serp feature tracker", "serp features", "featured snippets", "paa", "video carrousels", "local pack", "rich results"],
+      "answer": "**SERP Feature Tracker**\n\nLaat zien in welke rich resultaten (featured snippets, PAA, video carrousels, local pack) je of je concurrenten verschijnen.\n\n**Stappen:**\n1. Ga naar **SERP Feature Tracker**.\n2. Voer een keyword in.\n3. Klik **Track**.\n4. Bekijk welke SERP-features er zijn en wie ze bezit.\n\n**Problemen:**\n- Data is af en toe leeg: SERP-features veranderen snel; gebruik de data als trend.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "content-performance",
+      "title": "Content Performance",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["content performance", "prestaties", "klikken", "impressies", "ctr", "verkeer", "search console", "ga4", "content daalt", "content groeit"],
+      "answer": "**Content Performance**\n\nKoppelt rankings aan verkeersdata uit Search Console en/of GA4. Je ziet welke content daalt, groeit of stilzit.\n\n**Stappen:**\n1. Koppel eerst **Search Console** en/of **GA4** in **Integrations**.\n2. Ga naar **Content Performance**.\n3. Filter op periode, auteur of post type.\n4. Analyseer klikken, impressies, CTR en gemiddelde positie.\n\n**Problemen:**\n- Geen data: controleer of de Google-integratie correct is en of er voldoende historie is.\n- Cijfers komen niet overeen: GSC- en GA4-metingen verschillen altijd; gebruik ze voor trends.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "seo-report-export",
+      "title": "SEO Report Export",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["seo report", "rapport", "export", "pdf", "csv", "html", "klantrapportage", "rapport genereren"],
+      "answer": "**SEO Report Export**\n\nExporteert SEO-rapporten naar PDF, CSV of HTML. Handig voor klantrapportages of interne reviews.\n\n**Stappen:**\n1. Ga naar **SEO Reports** (of via een **Export**-knop in een dashboard).\n2. Selecteer een template of periode.\n3. Klik **Generate**.\n4. Download het rapport.\n\n**Problemen:**\n- PDF-generatie mislukt: controleer of je server over voldoende geheugen beschikt.\n- Rapport is leeg: selecteer een periode waarin er daadwerkelijk data is verzameld.\n\nBeschikbaar: Agency."
+    },
+    {
+      "id": "seo-revisions",
+      "title": "SEO Revisions",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["seo revisions", "revisies", "snapshots", "versies", "terugzetten", "restore", "wijzigingen vergelijken", "title geschiedenis"],
+      "answer": "**SEO Revisions**\n\nSlaat snapshots van SEO-wijzigingen op (titles, meta, schema, canonical). Je kunt terug naar een eerdere versie of wijzigingen vergelijken.\n\n**Stappen:**\n1. Open een post.\n2. Bewerk SEO-velden en sla op.\n3. Ga naar **SEO Revisions**.\n4. Klik een datum aan om de oude waarden te zien.\n5. Klik **Restore** als je terug wilt.\n\n**Problemen:**\n- Geen revisies zichtbaar: de feature moet ingeschakeld zijn in **Settings → SEO Revisions**.\n- Terugzetten werkt niet: sommige velden vereisen een extra handmatige controle na restore.\n\nBeschikbaar: Agency."
+    },
+    {
+      "id": "ab-testing",
+      "title": "A/B Testing (SEO)",
+      "category": "Ranking, monitoring & rapportage",
+      "keywords": ["a/b testing", "ab testing", "split test", "title test", "description test", "variant", "ctr test", "statistische significantie"],
+      "answer": "**A/B Testing (SEO)**\n\nTest varianten van titles of descriptions en meet welke variant meer klikken of betere posities oplevert.\n\n**Stappen:**\n1. Ga naar **A/B Testing**.\n2. Kies een post en een element (title of description).\n3. Maak variant A en variant B.\n4. Stel de duur in (bijv. 30 dagen).\n5. Start de test.\n6. Na afloop bekijk je de winnaar en pas deze toe.\n\n**Problemen:**\n- Test duurt te lang: je hebt voldoende verkeer nodig voor statistische significantie.\n- Resultaten zijn niet significant: verleng de test of test op een post met meer verkeer.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "integrations",
+      "title": "External Integrations",
+      "category": "Integraties",
+      "keywords": ["integrations", "integraties", "koppelingen", "google search console", "ga4", "google ads", "pagespeed", "se ranking", "ahrefs", "indexnow", "google indexing api", "oauth", "api key"],
+      "answer": "**External Integrations**\n\nKoppelt externe diensten zoals Google Search Console, GA4, Google Ads, PageSpeed Insights, SE Ranking, Ahrefs, IndexNow en de Google Indexing API.\n\n**Stappen:**\n1. Ga naar **Integrations**.\n2. Kies de gewenste dienst.\n3. Volg de OAuth-stroom of voer een API-key in.\n4. Sla de koppeling op.\n5. Test in het bijbehorende dashboard of de data binnenkomt.\n\n**Problemen:**\n- OAuth laat geen juiste domein toe: zorg dat je domein is toegevoegd in de Google Cloud OAuth-instellingen.\n- API-quota is beperkt: zie **Settings → License** voor je quotum.\n- Scope-fouten: voor Direct Index heb je extra OAuth-scope `indexing` nodig.\n\nBeschikbaar: Professional+ voor de meeste integraties; PageSpeed en IndexNow in lagere tiers."
+    },
+    {
+      "id": "google-search-console",
+      "title": "Google Search Console",
+      "category": "Integraties",
+      "keywords": ["google search console", "gsc", "search console", "queries", "ctr", "posities", "indexstatus", "prestatiedata", "connect with google"],
+      "answer": "**Google Search Console**\n\nHaalt prestatiedata op uit GSC: queries, pagina's, CTR, posities en indexstatus.\n\n**Stappen:**\n1. Ga naar **Integrations → Google Search Console**.\n2. Klik **Connect with Google**.\n3. Kies het juiste property.\n4. Open **Google Data → Search Console**.\n\n**Problemen:**\n- Property niet zichtbaar: zorg dat je site is geverifieerd in GSC en dat je met een beheerdersaccount inlogt.\n- Data is 2-3 dagen achter: dit is normaal voor GSC.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "google-data",
+      "title": "Google Data / SEO Data",
+      "category": "Integraties",
+      "keywords": ["google data", "seo data", "gsc", "ga4", "google ads", "se ranking", "ahrefs", "dashboard", "grafieken", "tabellen"],
+      "answer": "**Google Data / SEO Data**\n\nCombineert data van GSC, GA4, Google Ads, SE Ranking en Ahrefs in één dashboard.\n\n**Stappen:**\n1. Koppel de gewenste diensten in **Integrations**.\n2. Ga naar **Google Data** of **SEO Data**.\n3. Kies periode en metrics.\n4. Bekijk de grafieken en tabellen.\n\n**Problemen:**\n- Sommige widgets blijven leeg: controleer of de desbetreffende API-koppeling actief is.\n- Data is inconsistent: dashboards cachen data; forceer een refresh via de knop in de widget.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "indexnow",
+      "title": "IndexNow",
+      "category": "Integraties",
+      "keywords": ["indexnow", "bing", "yandex", "snellere indexering", "api key", "ping", "indexnow-key.txt"],
+      "answer": "**IndexNow**\n\nStuurt automatisch zoekmachines (Bing, Yandex) een seintje wanneer je content wijzigt, zodat je sneller geïndexeerd wordt.\n\n**Stappen:**\n1. Ga naar **Integrations → IndexNow**.\n2. Schakel **Enable IndexNow** in.\n3. Genereer of upload je API-key.\n4. Sla op.\n5. Fyndable pingt nu automatisch bij publicatie en update.\n\n**Problemen:**\n- Key-bestand niet aangemaakt: Fyndable probeert automatisch `indexnow-key.txt` aan te maken; controleer of de uploads-map schrijfbaar is.\n- Bing toont geen wijzigingen: IndexNow is geen garantie; het duurt soms enkele uren tot dagen.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "direct-index",
+      "title": "Direct Index (Google Indexing API)",
+      "category": "Integraties",
+      "keywords": ["direct index", "google indexing api", "submit to google", "indexering aanvragen", "oauth indexing", "insufficient permission", "url not allowed", "quota"],
+      "answer": "**Direct Index (Google Indexing API)**\n\nVraagt direct bij Google indexering aan voor gepubliceerde of bijgewerkte posts via de Google Indexing API.\n\n**Stappen:**\n1. Ga naar **Integrations → Direct Index**.\n2. Koppel je Google-account met de juiste OAuth-scope (`https://www.googleapis.com/auth/indexing`).\n3. Open een gepubliceerde post in de editor.\n4. Klik in de meta-box op **Submit to Google**.\n5. Je ziet een succes- of foutmelding.\n\n**Problemen:**\n- \"Insufficient Permission\": de OAuth-scope voor indexing ontbreekt. Koppel je account opnieuw.\n- \"URL not allowed\": de URL is geen gepubliceerde post of pagina; bijlagen en concepten worden genegeerd.\n- Quota overschreden: het dagelijkse quotum is beperkt; prioriteer belangrijke posts.\n- Knop is niet zichtbaar: alleen voor gepubliceerde content en als Direct Index correct is geconfigureerd.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "pagespeed-insights",
+      "title": "PageSpeed Insights",
+      "category": "Integraties",
+      "keywords": ["pagespeed", "pagespeed insights", "core web vitals", "prestaties", "mobiel", "desktop", "lighthouse", "compressie", "caching"],
+      "answer": "**PageSpeed Insights**\n\nMeet Core Web Vitals en prestatiescores voor mobiel en desktop. Fyndable slaat de resultaten op zodat je trends kunt volgen.\n\n**Stappen:**\n1. Ga naar **Integrations → PageSpeed**.\n2. Voer een URL in.\n3. Klik **Analyze**.\n4. Bekijk de scores en aanbevelingen.\n\n**Problemen:**\n- API-quota is op: PageSpeed heeft een quotum; probeer het later opnieuw.\n- Scores schommelen: prestatie hangt af van netwerk en serverbelasting; meet meerdere keren.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "se-ranking-ahrefs",
+      "title": "SE Ranking / Ahrefs",
+      "category": "Integraties",
+      "keywords": ["se ranking", "ahrefs", "api key", "keyword data", "backlinks", "concurrentie inzichten", "externe seo tools"],
+      "answer": "**SE Ranking / Ahrefs**\n\nHaalt keyworddata, backlinks en concurrentie-inzichten op uit externe SEO-tools.\n\n**Stappen:**\n1. Ga naar **Integrations**.\n2. Voer je API-key van SE Ranking of Ahrefs in.\n3. Sla op.\n4. Gebruik de data in **Keywords**, **Competitors** en **Google Data**.\n\n**Problemen:**\n- API-key ongeldig: controleer of je de juiste key hebt (niet de login-wachtwoord).\n- Geen data voor Nederland/België: controleer in de tool zelf of je abonnement het juiste land ondersteunt.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "editor-assistant",
+      "title": "Editor Assistant",
+      "category": "Post-editor & SEO-meta-box",
+      "keywords": ["editor assistant", "gutenberg zijbalk", "ai acties", "title genereren", "alinea herschrijven", "samenvatting", "toon aanpassen", "afbeeldingen genereren", "conclusion"],
+      "answer": "**Editor Assistant**\n\nEen Gutenberg-zijbalk met AI-acties: genereer een title, herschrijf een alinea, maak een samenvatting, pas toon aan en genereer afbeeldingen.\n\n**Stappen:**\n1. Open een post in de Gutenberg-editor.\n2. Klik rechtsboven op het Fyndable-pictogram.\n3. Kies een actie, bijv. **Generate Conclusion**.\n4. Bekijk het resultaat en klik **Insert**.\n\n**Problemen:**\n- Zijbalk verschijnt niet: zorg dat Gutenberg actief is (werkt niet met de klassieke editor).\n- Actie levert geen output: controleer of je voldoende AI-credits hebt.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "unified-meta-box",
+      "title": "Unified SEO Meta-box",
+      "category": "Post-editor & SEO-meta-box",
+      "keywords": ["meta box", "unified meta box", "accordion", "smart tags", "truseo", "readability", "schema", "hreflang", "canonical", "eeat", "links", "lsi", "seo per pagina"],
+      "answer": "**Unified SEO Meta-box**\n\nDe Fyndable Post Meta Box vervangt losse meta-boxen door één overzichtelijk accordion-paneel. Hierin zitten Smart Tags, TruSEO, Readability, Schema, Hreflang, Canonical, EEAT, Links, LSI en meer.\n\n**Stappen:**\n1. Open een post of pagina.\n2. Scroll naar de Fyndable meta-box onder de editor.\n3. Klap de gewenste sectie open.\n4. Bewerk en sla op.\n\n**Problemen:**\n- Meta-box is niet zichtbaar: controleer **Settings → Post Types** of het huidige post type is ingeschakeld.\n- Accordion wilt niet openen: herlaad de pagina en controleer browserconsole op JavaScript-fouten.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "post-history-analytics",
+      "title": "Post-level History & Analytics",
+      "category": "Post-editor & SEO-meta-box",
+      "keywords": ["post history", "analytics", "posities", "klikken", "impressies", "score trends", "per post", "historische data"],
+      "answer": "**Post-level History & Analytics**\n\nToont per post historische data: posities, klikken, impressies en score-trends. Handig om te zien of wijzigingen effect hebben.\n\n**Stappen:**\n1. Open een post.\n2. Klap in de meta-box de **History** of **Analytics** sectie open.\n3. Bekijk de grafieken.\n\n**Problemen:**\n- Geen historie: data wordt pas bijgehouden nadat GSC is gekoppeld en er voldoende tijd is verstreken.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "settings",
+      "title": "Settings",
+      "category": "Instellingen, white-label & tools",
+      "keywords": ["settings", "instellingen", "sitenaam", "separators", "post types", "schema defaults", "sitemap", "social", "advanced", "tabbladen"],
+      "answer": "**Settings**\n\nCentrale plek voor alle plugin-instellingen: sitenaam, separators, post types, schema-defaults, sitemap, social en geavanceerde opties.\n\n**Stappen:**\n1. Ga naar **Settings**.\n2. Doorloop de tabbladen: General, Post Types, Social, Sitemap, Advanced.\n3. Pas de instellingen aan.\n4. Klik **Save**.\n\n**Problemen:**\n- Wijzigingen worden niet opgeslagen: controleer of je voldoende rechten hebt en er geen beveiligingsplugin de request blokkeert.\n- Instellingen conflicteren met andere SEO-plugin: gebruik slechts één SEO-plugin.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "white-label",
+      "title": "White-label / Fyndable Login",
+      "category": "Instellingen, white-label & tools",
+      "keywords": ["white label", "whitelabel", "fyndable login", "logo", "kleuren", "branding", "eigen merk", "agency", "login scherm"],
+      "answer": "**White-label / Fyndable Login**\n\nPas het login-scherm en het menu aan met je eigen logo, kleuren en tekst. Handig voor agencies die de plugin onder eigen merk willen aanbieden.\n\n**Stappen:**\n1. Ga naar **Settings → White Label**.\n2. Upload je logo.\n3. Pas de kleuren en teksten aan.\n4. Sla op.\n5. Log uit en in om het resultaat te zien.\n\n**Problemen:**\n- Logo wordt niet getoond: controleer of het bestand niet te groot is (max. 2 MB) en of het pad correct is.\n- Menu-namen blijven staan: leeg het browsercache en herlaad.\n\nBeschikbaar: Agency."
+    },
+    {
+      "id": "seo-importer",
+      "title": "SEO Importer",
+      "category": "Instellingen, white-label & tools",
+      "keywords": ["seo importer", "importer", "import", "yoast", "rank math", "all in one seo", "migratie", "meta-gegevens overzetten"],
+      "answer": "**SEO Importer**\n\nImporteert meta-gegevens uit andere SEO-plugins zoals Yoast, Rank Math of All in One SEO.\n\n**Stappen:**\n1. Ga naar **Settings → Importer**.\n2. Kies de bron-plugin.\n3. Klik **Import**.\n4. Controleer na afloop willekeurig enkele posts.\n\n**Problemen:**\n- Sommige velden ontbreken: niet alle plugins slaan dezelfde velden op; vul na import de rest handmatig aan.\n- Import loopt vast: importeer in batches bij grote sites.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "role-permissions",
+      "title": "Role-based Permissions",
+      "category": "Instellingen, white-label & tools",
+      "keywords": ["permissions", "rollen", "role based", "toegang", "rechten", "editor", "author", "governance", "wie mag wat"],
+      "answer": "**Role-based Permissions**\n\nBepaalt welke WordPress-rollen toegang hebben tot welke Fyndable-features.\n\n**Stappen:**\n1. Ga naar **Settings → Permissions**.\n2. Selecteer een rol (bijv. Editor, Author).\n3. Vink aan welke menu's en acties ze mogen gebruiken.\n4. Sla op.\n\n**Problemen:**\n- Gebruiker ziet menu ondanks restrictie: controleer of de gebruiker meerdere rollen heeft of een caching-plugin ingrijpt.\n\nBeschikbaar: Professional+."
+    },
+    {
+      "id": "support-tickets",
+      "title": "Support Tickets",
+      "category": "Instellingen, white-label & tools",
+      "keywords": ["support", "support tickets", "ticket", "ticket aanmaken", "new ticket", "prioriteit", "beschrijving", "screenshots", "historie"],
+      "answer": "**Support Tickets**\n\nMaakt supporttickets aan binnen Fyndable. Je kunt een onderwerp, prioriteit en beschrijving invoeren en historie volgen.\n\n**Stappen:**\n1. Ga naar **Support**.\n2. Klik **New Ticket**.\n3. Vul onderwerp, prioriteit en beschrijving in.\n4. Klik **Submit**.\n\n**Problemen:**\n- Ticket wordt niet verstuurd: controleer of je licentie actief is en of de support-API bereikbaar is.\n- Geen reactie: controleer je spamfolder of het ticketnummer.\n\nBeschikbaar: alle tiers."
+    },
+    {
+      "id": "faq-general",
+      "title": "Algemene FAQ",
+      "category": "FAQ",
+      "keywords": ["faq", "veelgestelde vragen", "yoast", "rank math", "naast", "menu's niet zichtbaar", "site audit frequentie", "google crawl forceren", "ai tools geen output", "klassieke editor", "gsc data verschil", "dashboard uitschakelen"],
+      "answer": "**Algemene FAQ**\n\n**Kan ik Fyndable gebruiken naast Yoast of Rank Math?**\nJa, maar we raden aan om één plugin als leidend SEO-hulpmiddel te gebruiken. Dubbele sitemaps, schema's en redirects kunnen conflicten veroorzaken.\n\n**Waarom zie ik bepaalde menu's niet?**\nControleer of je licentie actief is en of je tier toegang geeft tot dat menu. Trial en DEV tonen alle menu's.\n\n**Hoe vaak moet ik een Site Audit draaien?**\nMinimaal één keer per maand, of direct na grote wijzigingen.\n\n**Hoe forceer ik een Google-crawl?**\nGebruik **Direct Index** (Google Indexing API) voor belangrijke URLs. Vergeet niet dat het quotum beperkt is.\n\n**Mijn AI-tools genereren geen output, wat nu?**\nControleer je licentiequota, de SaaS-dashboard-verbinding en of de juiste API-key is geconfigureerd.\n\n**Werkt Fyndable met de klassieke editor?**\nDe Editor Assistant werkt alleen in Gutenberg. De SEO-meta-box werkt in zowel Gutenberg als de klassieke editor.\n\n**Hoe update ik white-label instellingen?**\nGa naar **Settings → White Label**, pas aan, log uit en opnieuw in.\n\n**Waarom verschilt GSC-data van de Fyndable dashboards?**\nDashboards cachen data en kunnen andere aggregaties gebruiken. Gebruik de cijfers voor trends.\n\n**Kan ik het dashboard volledig uitschakelen?**\nJa, via **Settings → Advanced** kun je de full-page dashboard-shell uitschakelen.\n\n**Wie kan ik vragen als het echt niet lukt?**\nMaak een ticket aan via **Support** in het Fyndable-menu."
+    },
+    {
+      "id": "site-audit-issues",
+      "title": "Site Audit issue-referentie",
+      "category": "Site Audit",
+      "keywords": ["site audit issues", "crawlability problemen", "crawl budget", "url structuur problemen", "sitemap health", "robots.txt problemen", "performance problemen", "404", "duplicate content", "thin content", "redirect chains", "orphan pages"],
+      "answer": "**Site Audit issue-referentie**\n\nDe Site Audit controleert zes gebieden. Hieronder de meest voorkomende problemen en oplossingen.\n\n**Crawlability:**\n- Robots.txt niet toegankelijk (Hoog): maak een `robots.txt` aan of gebruik de Robots.txt Editor.\n- XML-sitemap niet toegankelijk (Hoog): controleer de sitemap-URL, reset permalinks.\n- Redirect chains (Middel): herstel lange redirect-ketens; maximaal één 301.\n- Orphan pages (Middel): voeg interne links toe vanuit gerelateerde content.\n\n**Crawl Budget:**\n- Duplicate content (Hoog): voeg canonicals toe of gebruik noindex.\n- Thin content <300 tekens (Hoog): breid content uit of zet op noindex.\n- Negatief crawl budget (Hoog): corrigeer duplicate/thin content.\n\n**URL Structure:**\n- Lange URLs >75 tekens (Middel): verkort de slug.\n- Speciale tekens (Middel): gebruik alleen lowercase, cijfers en koppeltekens.\n\n**Sitemap Health:**\n- Sitemap onbereikbaar (Hoog): controleer sitemap-URL, permalinks en server.\n- Onbereikbare URL in sitemap (Hoog): verwijder de URL of maak een redirect.\n- XML-parseerfout (Hoog): repareer of hergenereer de sitemap.\n\n**Robots.txt:**\n- Robots.txt ontbreekt (Hoog): maak een aan met sitemap-verwijzing.\n- `Disallow: /` blokkeert alles (Hoog): verwijder of pas deze regel aan.\n\n**Performance:**\n- Server response time >500ms (Hoog): optimaliseer hosting, caching of database.\n- Geen compressie gzip/brotli (Hoog): schakel compressie in.\n- Geen CDN (Middel): overweeg Cloudflare of vergelijkbare CDN."
+    }
+  ]
+}

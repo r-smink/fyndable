@@ -16,10 +16,12 @@ namespace SSEOAIClient;
 class ExternalIntegrations
 {
     private Settings $settings;
+    private ReportDataCollector $reportCollector;
     
     public function __construct(Settings $settings)
     {
         $this->settings = $settings;
+        $this->reportCollector = new ReportDataCollector(new SeoReportExport($settings));
     }
     
     public function register(): void
@@ -30,17 +32,24 @@ class ExternalIntegrations
 
         // AJAX handler for saving Google config
         add_action('wp_ajax_sseo_ai_save_google_config', [$this, 'ajaxSaveGoogleConfig']);
-        
+
+        // Google Tag Manager front-end snippets
+        add_action('wp_head', [$this, 'renderGtmHeadScript'], 1);
+        add_action('wp_body_open', [$this, 'renderGtmBodyScript'], 1);
+
+        // Direct GA4 tracking snippet (alternative to GA4 via GTM)
+        add_action('wp_head', [$this, 'renderGa4TrackingScript'], 2);
+
         // Hooks for automatic notifications
         add_action('sseo_ai_rank_change', [$this, 'notifyRankChange'], 10, 3);
         add_action('sseo_ai_content_published', [$this, 'notifyContentPublished'], 10, 1);
         add_action('sseo_ai_seo_score_change', [$this, 'notifySeoScoreChange'], 10, 3);
-        
+
         // Scheduled reports
         add_action('sseo_ai_daily_report', [$this, 'sendDailyReport']);
         add_action('sseo_ai_weekly_report', [$this, 'sendWeeklyReport']);
         add_action('sseo_ai_monthly_report', [$this, 'sendMonthlyReport']);
-        
+
         // Schedule cron jobs
         if (!wp_next_scheduled('sseo_ai_daily_report')) {
             wp_schedule_event(strtotime('tomorrow 9:00'), 'daily', 'sseo_ai_daily_report');
@@ -110,11 +119,48 @@ class ExternalIntegrations
         // Ahrefs
         register_setting('sseo_ai_integrations', 'sseo_ai_ahrefs_api_key');
 
+        // DataForSEO
+        register_setting('sseo_ai_integrations', 'sseo_ai_dataforseo_api_key');
+
+        // Backlink provider preference
+        register_setting('sseo_ai_integrations', 'sseo_ai_backlink_provider', ['default' => 'dataforseo']);
+
         // Google Analytics 4
         register_setting('sseo_ai_integrations', 'sseo_ai_ga4_property_id');
 
+        // Google Analytics 4 measurement ID (for direct gtag.js tracking)
+        register_setting('sseo_ai_integrations', 'sseo_ai_ga4_measurement_id', [
+            'sanitize_callback' => function ($value) {
+                $value = sanitize_text_field($value ?? '');
+                return preg_match('/^G-[A-Z0-9]{7,}$/i', $value) ? strtoupper($value) : '';
+            },
+        ]);
+
+        // Google Tag Manager
+        register_setting('sseo_ai_integrations', 'sseo_ai_gtm_id', [
+            'sanitize_callback' => function ($value) {
+                $value = sanitize_text_field($value ?? '');
+                return preg_match('/^GTM-[A-Z0-9]{4,}$/i', $value) ? strtoupper($value) : '';
+            },
+        ]);
+
         // Google Ads
         register_setting('sseo_ai_integrations', 'sseo_ai_google_ads_customer_id');
+
+        // Direct Index (Google Indexing API)
+        register_setting('sseo_ai_integrations', 'sseo_direct_index_enabled', [
+            'default' => true,
+            'sanitize_callback' => fn($value) => $value === '1' || $value === true || $value === 1,
+        ]);
+        register_setting('sseo_ai_integrations', 'sseo_direct_index_post_types', [
+            'default' => [],
+            'sanitize_callback' => function ($value) {
+                if (!is_array($value)) {
+                    return [];
+                }
+                return array_values(array_filter(array_map('sanitize_text_field', $value)));
+            },
+        ]);
     }
     
     /**
@@ -145,7 +191,11 @@ class ExternalIntegrations
         
         $gdriveFolderId = get_option('sseo_ai_gdrive_folder_id', '');
         $gdriveAutoExport = get_option('sseo_ai_gdrive_auto_export', false);
-        
+
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $supportContact = $companyName . ' ' . __('support', 'ai-seo-client');
+
         // GSC settings
         $gscConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']);
         $gscSiteUrl = get_option('sseo_ai_client_gsc_site_url', home_url());
@@ -160,20 +210,39 @@ class ExternalIntegrations
         // Ahrefs
         $ahrefsApiKey = get_option('sseo_ai_ahrefs_api_key', '');
 
+        // DataForSEO
+        $dataforseoApiKey = get_option('sseo_ai_dataforseo_api_key', '');
+        $backlinkProvider = get_option('sseo_ai_backlink_provider', 'dataforseo');
+
         // Google Analytics 4
         $ga4PropertyId = get_option('sseo_ai_ga4_property_id', '');
         $ga4Connected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']) && !empty($ga4PropertyId);
+        $ga4MeasurementId = get_option('sseo_ai_ga4_measurement_id', '');
+
+        // Google Tag Manager
+        $gtmId = get_option('sseo_ai_gtm_id', '');
 
         // Google Ads
         $adsCustomerId = get_option('sseo_ai_google_ads_customer_id', '');
         $adsConnected = !empty(get_option('aiseoclient_gsc_tokens', [])['access_token']) && !empty($adsCustomerId);
+
+        // Direct Index
+        $directIndexEnabled = (bool) get_option('sseo_direct_index_enabled', true);
+        $directIndexPostTypes = (array) get_option('sseo_direct_index_post_types', []);
+        $allPublicPostTypes = get_post_types(['public' => true], 'objects');
+        $directIndex = new DirectIndex($this->settings, new HealthLogger());
+        $directIndexConnected = $directIndex->isConnected();
+        $directIndexHasScope = $directIndex->hasIndexingScope();
+        $directIndexQuotaUsed = $directIndex->getQuotaUsedToday();
+        $directIndexQuotaRemaining = max(0, DirectIndex::QUOTA_DAILY - $directIndexQuotaUsed);
+        $directIndexLog = array_slice($directIndex->getLog(), 0, 10);
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
             .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
             .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
@@ -252,6 +321,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoTestSlack()">
                         <?php esc_html_e('Test Slack Connection', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Zapier / Make.com -->
@@ -311,6 +383,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoAddCustomWebhook()">
                         <?php esc_html_e('Add Custom Webhook', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                     </div>
                     
@@ -374,6 +449,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoSendTestReport()">
                         <?php esc_html_e('Send Test Report', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Google Drive Export -->
@@ -408,6 +486,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoExportToGDrive()">
                         <?php esc_html_e('Export Now', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                         
                         <!-- Google Services (Search Console + Analytics 4 + Google Ads) -->
@@ -483,6 +564,46 @@ class ExternalIntegrations
                         </tr>
                     </table>
 
+                    <h3 style="margin-top: 20px;"><?php esc_html_e('Google Tag Manager', 'ai-seo-client'); ?></h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="gtm_id"><?php esc_html_e('GTM Container ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="gtm_id" name="sseo_ai_gtm_id"
+                                       value="<?php echo esc_attr($gtmId); ?>" class="regular-text"
+                                       placeholder="GTM-XXXXXXX">
+                                <p class="description">
+                                    <?php esc_html_e('Your GTM container ID. The snippet will be added to wp_head and after the opening body tag.', 'ai-seo-client'); ?>
+                                    <?php if ($gtmId): ?>
+                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GTM snippet active', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 20px;"><?php esc_html_e('Google Analytics 4 Tracking', 'ai-seo-client'); ?></h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="ga4_measurement_id"><?php esc_html_e('GA4 Measurement ID', 'ai-seo-client'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="ga4_measurement_id" name="sseo_ai_ga4_measurement_id"
+                                       value="<?php echo esc_attr($ga4MeasurementId); ?>" class="regular-text"
+                                       placeholder="G-XXXXXXXXXX">
+                                <p class="description">
+                                    <?php esc_html_e('Direct GA4 tracking snippet (gtag.js). Only use this if you do NOT track GA4 via the GTM container above, otherwise you will count visitors twice.', 'ai-seo-client'); ?>
+                                    <?php if ($ga4MeasurementId): ?>
+                                        <span style="color: #00a32a;">✓ <?php esc_html_e('GA4 gtag snippet active', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
                     <h3 style="margin-top: 20px;"><?php esc_html_e('Google Ads', 'ai-seo-client'); ?></h3>
                     <table class="form-table">
                         <tr>
@@ -503,8 +624,100 @@ class ExternalIntegrations
                         </tr>
                     </table>
                     <?php endif; ?>
+
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
-                        
+
+                        <!-- Direct Index (Google Indexing API) -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('Direct Index', 'ai-seo-client'); ?></h2>
+
+                            <?php if ($directIndexConnected && $directIndexHasScope): ?>
+                                <span class="notice notice-success inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
+                                    ✓ <?php esc_html_e('Google Indexing API scope granted', 'ai-seo-client'); ?>
+                                </span>
+                            <?php elseif ($directIndexConnected): ?>
+                                <span class="notice notice-warning inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
+                                    <?php esc_html_e('Connected, but the indexing scope is missing. Reconnect via the Google Services card above.', 'ai-seo-client'); ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="notice notice-error inline" style="margin: 0 0 15px 0; padding: 5px 10px; display: inline-block;">
+                                    <?php esc_html_e('Not connected. Connect your Google account in the Google Services card above.', 'ai-seo-client'); ?>
+                                </span>
+                            <?php endif; ?>
+
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row"><?php esc_html_e('Automatic Indexing', 'ai-seo-client'); ?></th>
+                                    <td>
+                                        <label>
+                                            <input type="checkbox" name="sseo_direct_index_enabled" value="1" <?php checked($directIndexEnabled); ?>>
+                                            <?php esc_html_e('Submit new/scheduled posts to Google automatically on publish', 'ai-seo-client'); ?>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php esc_html_e('Post Types', 'ai-seo-client'); ?></th>
+                                    <td>
+                                        <input type="hidden" name="sseo_direct_index_post_types[]" value="">
+                                        <?php foreach ($allPublicPostTypes as $postType): ?>
+                                            <?php if (in_array($postType->name, ['attachment'], true)) continue; ?>
+                                            <label style="display:block; margin-bottom:5px;">
+                                                <input type="checkbox" name="sseo_direct_index_post_types[]" value="<?php echo esc_attr($postType->name); ?>"
+                                                    <?php checked(empty($directIndexPostTypes) || in_array($postType->name, $directIndexPostTypes, true)); ?>>
+                                                <?php echo esc_html($postType->label); ?> <code><?php echo esc_html($postType->name); ?></code>
+                                            </label>
+                                        <?php endforeach; ?>
+                                        <p class="description">
+                                            <?php esc_html_e('Leave all checked to allow all public post types.', 'ai-seo-client'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php esc_html_e('Quota', 'ai-seo-client'); ?></th>
+                                    <td>
+                                        <?php echo esc_html(sprintf(__('Used today: %d / %d — Remaining: %d', 'ai-seo-client'), $directIndexQuotaUsed, DirectIndex::QUOTA_DAILY, $directIndexQuotaRemaining)); ?>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <?php if (!empty($directIndexLog)): ?>
+                                <h3 style="margin-top: 25px;"><?php esc_html_e('Recent Submissions', 'ai-seo-client'); ?></h3>
+                                <table class="wp-list-table widefat fixed striped" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th><?php esc_html_e('Time', 'ai-seo-client'); ?></th>
+                                            <th><?php esc_html_e('URL', 'ai-seo-client'); ?></th>
+                                            <th><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
+                                            <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($directIndexLog as $entry): ?>
+                                            <tr>
+                                                <td><?php echo esc_html($entry['time'] ?? ''); ?></td>
+                                                <td><?php echo esc_html($entry['url'] ?? ''); ?></td>
+                                                <td><?php echo esc_html($entry['type'] ?? ''); ?></td>
+                                                <td>
+                                                    <?php if (!empty($entry['success'])): ?>
+                                                        <span style="color:#00a32a;">✓</span>
+                                                    <?php else: ?>
+                                                        <span style="color:#d63638;">✗ <?php echo esc_html($entry['code'] ?? ''); ?></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php endif; ?>
+
+                            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                                <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                            </div>
+                        </div>
+
                         <!-- Notion Integration -->
                         <div class="sseo-ai-dashboard-card">
                             <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
@@ -540,6 +753,9 @@ class ExternalIntegrations
                     <button type="button" class="button" onclick="sseoSyncToNotion()">
                         <?php esc_html_e('Sync to Notion', 'ai-seo-client'); ?>
                     </button>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                 </div>
 
                         <!-- SE Ranking Integration -->
@@ -565,6 +781,9 @@ class ExternalIntegrations
                                     <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
                                 </a>
                             <?php endif; ?>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
 
                         <!-- Ahrefs Integration -->
@@ -590,13 +809,54 @@ class ExternalIntegrations
                                     <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
                                 </a>
                             <?php endif; ?>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
+                        </div>
+
+                        <!-- DataForSEO Integration -->
+                        <div class="sseo-ai-dashboard-card">
+                            <h2><?php esc_html_e('DataForSEO Backlinks', 'ai-seo-client'); ?></h2>
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <?php esc_html_e('DataForSEO API Credentials', 'ai-seo-client'); ?>
+                                    </th>
+                                    <td>
+                                        <p style="margin: 0;">
+                                            <span class="dashicons dashicons-yes-alt" style="color: #00a32a; vertical-align: middle;"></span>
+                                            <?php esc_html_e('Managed centrally via the Fyndable Portal.', 'ai-seo-client'); ?>
+                                        </p>
+                                        <p class="description">
+                                            <?php esc_html_e('DataForSEO credentials are configured in the Portal/SaaS Dashboard settings. Backlink data is fetched automatically through the Portal proxy — no client-side API key required.', 'ai-seo-client'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="backlink_provider"><?php esc_html_e('Preferred Backlink Provider', 'ai-seo-client'); ?></label>
+                                    </th>
+                                    <td>
+                                        <select id="backlink_provider" name="sseo_ai_backlink_provider">
+                                            <option value="dataforseo" <?php selected($backlinkProvider, 'dataforseo'); ?>><?php esc_html_e('DataForSEO (via Portal)', 'ai-seo-client'); ?></option>
+                                            <option value="ahrefs" <?php selected($backlinkProvider, 'ahrefs'); ?>><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></option>
+                                            <option value="seranking" <?php selected($backlinkProvider, 'seranking'); ?>><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></option>
+                                            <option value="semrush" <?php selected($backlinkProvider, 'semrush'); ?>><?php esc_html_e('Semrush', 'ai-seo-client'); ?></option>
+                                        </select>
+                                        <p class="description">
+                                            <?php esc_html_e('DataForSEO runs through the Portal proxy. Ahrefs, SE Ranking and Semrush use your own API keys configured below.', 'ai-seo-client'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                    </div>
                         </div>
                 
                         </div>
                     </div>
                 </div>
-                
-                <?php submit_button(__('Save Integration Settings', 'ai-seo-client')); ?>
             </form>
             </div>
         </div>
@@ -687,7 +947,7 @@ class ExternalIntegrations
             // Get SaaS dashboard URL and credentials
             wp.apiFetch({ path: '/sseo-ai/v1/google-status' }).then(function(status) {
                 if (!status.has_credentials) {
-                    alert('<?php esc_html_e('Google OAuth is not yet configured. Please contact Fyndable support.', 'ai-seo-client'); ?>');
+                    alert('<?php echo esc_js(sprintf(__('Google OAuth is not yet configured. Please contact %s.', 'ai-seo-client'), $supportContact)); ?>');
                     if (btn) btn.disabled = false;
                     return;
                 }
@@ -769,10 +1029,12 @@ class ExternalIntegrations
         }
         
         $channel = get_option('sseo_ai_slack_channel', '#seo');
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         
         $payload = [
             'channel' => $channel,
-            'username' => 'Fynable Bot',
+            'username' => $companyName . ' Bot',
             'icon_emoji' => ':chart_with_upwards_trend:',
             'text' => $message,
         ];
@@ -1045,18 +1307,129 @@ class ExternalIntegrations
      */
     private function generateReport(string $period): string
     {
-        // This would generate a comprehensive HTML report
-        // For now, a simple template
-        
-        $html = '<html><body>';
-        $html .= '<h1>' . sprintf(__('%s SEO Report', 'ai-seo-client'), ucfirst($period)) . '</h1>';
-        $html .= '<p>' . sprintf(__('Report for %s', 'ai-seo-client'), get_bloginfo('name')) . '</p>';
-        
-        // Add report sections here
-        
-        $html .= '</body></html>';
-        
+        $data = $this->reportCollector->collect($period);
+        $summary = $data['summary'];
+
+        $html = '<html><body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #1f2937;">';
+        $html .= '<div style="max-width: 640px; margin: 0 auto; padding: 24px;">';
+
+        // Header
+        $html .= '<h1 style="color: #111827; margin-bottom: 4px;">' . esc_html(sprintf(__('%s SEO Report', 'ai-seo-client'), ucfirst($period))) . '</h1>';
+        $html .= '<p style="color: #6b7280; margin-top: 0;">' . esc_html($summary['site_name']) . ' &mdash; ' . esc_html($summary['date']) . '</p>';
+
+        // Summary cards
+        $html .= $this->buildCardSection(__('Summary', 'ai-seo-client'), function () use ($summary, $data) {
+            return $this->buildMetricCard(__('Average SEO Score', 'ai-seo-client'), $summary['avg_score'] . '/100')
+                . $this->buildMetricCard(__('Total Posts Analyzed', 'ai-seo-client'), number_format_i18n($summary['total_posts']))
+                . $this->buildMetricCard(__('Posts with Issues', 'ai-seo-client'), number_format_i18n($summary['posts_with_issues']))
+                . $this->buildMetricCard(__('Tracked Keywords', 'ai-seo-client'), number_format_i18n($data['rank_data']['total_keywords']));
+        });
+
+        // Winnaars
+        if (!empty($data['winners'])) {
+            $html .= $this->buildCardSection(__('Top performing content', 'ai-seo-client'), function () use ($data) {
+                $out = '<ul style="padding-left: 20px; margin: 0;">';
+                foreach ($data['winners'] as $winner) {
+                    $out .= '<li><a href="' . esc_url($winner['url']) . '">' . esc_html($winner['title']) . '</a> ' . esc_html('(' . $winner['score'] . '/100)') . '</li>';
+                }
+                $out .= '</ul>';
+                return $out;
+            });
+        }
+
+        // Ranking winners
+        if (!empty($data['rank_data']['risers'])) {
+            $html .= $this->buildCardSection(__('Keywords moving up', 'ai-seo-client'), function () use ($data) {
+                $out = '<ul style="padding-left: 20px; margin: 0;">';
+                foreach ($data['rank_data']['risers'] as $r) {
+                    $change = '+' . absint($r['change']) . ' ' . __('positions', 'ai-seo-client');
+                    $out .= '<li>' . esc_html($r['keyword']) . ' <span style="color:#16a34a;">' . esc_html($change) . '</span> ' . esc_html('(' . $r['current'] . ')') . '</li>';
+                }
+                $out .= '</ul>';
+                return $out;
+            });
+        }
+
+        // Ranking losers
+        if (!empty($data['rank_data']['fallers'])) {
+            $html .= $this->buildCardSection(__('Keywords losing ground', 'ai-seo-client'), function () use ($data) {
+                $out = '<ul style="padding-left: 20px; margin: 0;">';
+                foreach ($data['rank_data']['fallers'] as $r) {
+                    $change = $r['change'] . ' ' . __('positions', 'ai-seo-client');
+                    $out .= '<li>' . esc_html($r['keyword']) . ' <span style="color:#dc2626;">' . esc_html($change) . '</span> ' . esc_html('(' . $r['current'] . ')') . '</li>';
+                }
+                $out .= '</ul>';
+                return $out;
+            });
+        }
+
+        // Technical scores
+        if ($data['technical']['has_data']) {
+            $html .= $this->buildCardSection(__('Technical health', 'ai-seo-client'), function () use ($data) {
+                $scores = $data['technical']['scores'];
+                $out = '<div style="display:flex; gap:16px; flex-wrap:wrap;">';
+                foreach ($scores as $label => $value) {
+                    $out .= '<div style="text-align:center; min-width:120px;"><strong style="font-size:22px;">' . esc_html($value) . '</strong><br><span style="font-size:12px; ">' . esc_html($label) . '</span></div>';
+                }
+                $out .= '</div>';
+                if (!empty($data['technical']['critical_issues'])) {
+                    $out .= '<h4 style="margin-top:16px; margin-bottom:4px;">' . esc_html__('Critical issues', 'ai-seo-client') . '</h4><ul style="padding-left:20px; margin:0;">';
+                    foreach ($data['technical']['critical_issues'] as $issue) {
+                        $out .= '<li>' . esc_html($issue['name']) . ': ' . esc_html($issue['details']) . '</li>';
+                    }
+                    $out .= '</ul>';
+                }
+                return $out;
+            });
+        }
+
+        // Action items
+        $html .= $this->buildCardSection(__('Opportunities & action items', 'ai-seo-client'), function () use ($summary, $data) {
+            $out = '<ul style="padding-left: 20px; margin: 0;">';
+            $out .= '<li><strong>' . esc_html__('Missing SEO titles:', 'ai-seo-client') . '</strong> ' . esc_html($summary['missing_seo_title']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            $out .= '<li><strong>' . esc_html__('Missing meta descriptions:', 'ai-seo-client') . '</strong> ' . esc_html($summary['missing_meta_desc']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            $out .= '<li><strong>' . esc_html__('Missing focus keyphrases:', 'ai-seo-client') . '</strong> ' . esc_html($summary['missing_keyphrase']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            $out .= '<li><strong>' . esc_html__('Thin content:', 'ai-seo-client') . '</strong> ' . esc_html($summary['thin_content']) . ' ' . esc_html__('posts', 'ai-seo-client') . '</li>';
+            if (!empty($data['action_items']['decay'])) {
+                $out .= '<li><strong>' . esc_html__('Declining posts:', 'ai-seo-client') . '</strong> ' . count($data['action_items']['decay']) . '</li>';
+            }
+            $out .= '</ul>';
+
+            if (!empty($data['action_items']['posts_with_issues'])) {
+                $out .= '<h4 style="margin-top:16px; margin-bottom:4px;">' . esc_html__('Pages to optimize', 'ai-seo-client') . '</h4>';
+                $out .= '<ul style="padding-left: 20px; margin: 0;">';
+                foreach (array_slice($data['action_items']['posts_with_issues'], 0, 5) as $post) {
+                    $out .= '<li><a href="' . esc_url($post['url']) . '">' . esc_html($post['title']) . '</a> ' . esc_html('(' . implode(', ', $post['issues']) . ')') . '</li>';
+                }
+                $out .= '</ul>';
+            }
+            return $out;
+        });
+
+        $html .= '<p style="margin-top: 24px; font-size: 13px; color: #6b7280;">' . esc_html__('Open the full report in the Fyndable dashboard for more details.', 'ai-seo-client') . ' <a href="' . esc_url(admin_url('admin.php?page=ai-seo-report')) . '">' . esc_html__('View report', 'ai-seo-client') . '</a></p>';
+        $html .= '</div></body></html>';
+
         return $html;
+    }
+
+    /**
+     * Build a report card section.
+     */
+    private function buildCardSection(string $title, callable $content): string
+    {
+        $html = '<div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin-bottom:20px;">';
+        $html .= '<h3 style="margin-top:0; margin-bottom:12px; color:#111827;">' . esc_html($title) . '</h3>';
+        $html .= $content();
+        $html .= '</div>';
+        return $html;
+    }
+
+    /**
+     * Build a single metric card.
+     */
+    private function buildMetricCard(string $label, string $value): string
+    {
+        return '<div style="display:inline-block; min-width:120px; margin-right:16px; margin-bottom:12px;"><div style="font-size:24px; font-weight:700; color:#111827;">' . esc_html($value) . '</div><div style="font-size:12px; color:#6b7280;">' . esc_html($label) . '</div></div>';
     }
     
     /**
@@ -1171,6 +1544,59 @@ class ExternalIntegrations
     }
     
     /**
+     * Render Google Tag Manager head script (wp_head)
+     */
+    public function renderGtmHeadScript(): void
+    {
+        $gtmId = get_option('sseo_ai_gtm_id', '');
+        if (!$gtmId) {
+            return;
+        }
+        echo "<!-- Google Tag Manager -->\n";
+        echo "<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\n";
+        echo "new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\n";
+        echo "j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=\n";
+        echo "'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n";
+        echo "})(window,document,'script','dataLayer','" . esc_js($gtmId) . "');</script>\n";
+        echo "<!-- End Google Tag Manager -->\n";
+    }
+
+    /**
+     * Render Google Tag Manager noscript iframe (wp_body_open)
+     */
+    public function renderGtmBodyScript(): void
+    {
+        $gtmId = get_option('sseo_ai_gtm_id', '');
+        if (!$gtmId) {
+            return;
+        }
+        echo "<!-- Google Tag Manager (noscript) -->\n";
+        echo "<noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id=" . esc_attr($gtmId) . "\"\n";
+        echo "height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript>\n";
+        echo "<!-- End Google Tag Manager (noscript) -->\n";
+    }
+
+    /**
+     * Render direct GA4 gtag.js snippet (wp_head)
+     */
+    public function renderGa4TrackingScript(): void
+    {
+        $measurementId = get_option('sseo_ai_ga4_measurement_id', '');
+        if (!$measurementId) {
+            return;
+        }
+        echo "<!-- Google tag (gtag.js) -->\n";
+        echo "<script async src=\"https://www.googletagmanager.com/gtag/js?id=" . esc_attr($measurementId) . "\"></script>\n";
+        echo "<script>\n";
+        echo "  window.dataLayer = window.dataLayer || [];\n";
+        echo "  function gtag(){dataLayer.push(arguments);}\n";
+        echo "  gtag('js', new Date());\n";
+        echo "  gtag('config', '" . esc_js($measurementId) . "');\n";
+        echo "</script>\n";
+        echo "<!-- End Google tag (gtag.js) -->\n";
+    }
+
+    /**
      * Register REST API routes
      */
     public function registerRestRoutes(): void
@@ -1205,8 +1631,10 @@ class ExternalIntegrations
      */
     public function restTestSlack(): array
     {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         $success = $this->sendSlackNotification(
-            ':wave: Test message from Fynable',
+            ':wave: ' . sprintf(__('Test message from %s', 'ai-seo-client'), $companyName),
             [[
                 'color' => 'good',
                 'text' => 'Your Slack integration is working correctly!',

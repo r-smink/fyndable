@@ -17,12 +17,14 @@ class ContentDecay
     private SnapshotRepository $snapshots;
     private GscClient $gscClient;
     private Settings $settings;
+    private ?LlmClient $llm = null;
     
-    public function __construct(SnapshotRepository $snapshots, GscClient $gscClient, Settings $settings)
+    public function __construct(SnapshotRepository $snapshots, GscClient $gscClient, Settings $settings, ?LlmClient $llm = null)
     {
         $this->snapshots = $snapshots;
         $this->gscClient = $gscClient;
         $this->settings = $settings;
+        $this->llm = $llm;
     }
     
     /**
@@ -614,7 +616,7 @@ class ContentDecay
             echo 'datasets: [{';
             echo 'label: "Position",';
             echo 'data: ' . wp_json_encode($trends['positions']) . ',';
-            echo 'borderColor: "#667eea",';
+            echo 'borderColor: "#379fd3",';
             echo 'tension: 0.4';
             echo '}]';
             echo '},';
@@ -778,7 +780,7 @@ class ContentDecay
                                 border-radius: 4px;
                                 font-size: 12px;
                                 font-weight: bold;
-                                text-transform: uppercase;
+                                
                                 <?php echo $this->getSeverityStyle($alert['severity']); ?>
                             ">
                                 <?php echo esc_html($alert['severity']); ?>
@@ -803,6 +805,17 @@ class ContentDecay
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Decay Suggestions Modal -->
+        <div id="decay-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;justify-content:center;align-items:center;">
+            <div style="background:#fff;border-radius:12px;padding:0;max-width:700px;width:90%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+                <div style="padding:15px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="margin:0;">🔧 <?php esc_html_e('Content Decay Fix', 'ai-seo-client'); ?></h3>
+                    <button type="button" onclick="closeDecayModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#64748b;">&times;</button>
+                </div>
+                <div id="decay-modal-body" style="padding:20px;overflow-y:auto;flex:1;"></div>
+            </div>
         </div>
         
         <script>
@@ -834,9 +847,109 @@ class ContentDecay
         }
         
         function showSuggestions(id) {
-            // Open modal with suggestions
-            // Implementation depends on your modal system
-            alert('<?php esc_html_e('Suggestions would appear in a modal here', 'ai-seo-client'); ?>');
+            var modal = document.getElementById('decay-modal');
+            var body = document.getElementById('decay-modal-body');
+            modal.style.display = 'block';
+            body.innerHTML = '<p style="text-align:center;color:#666;">Loading suggestions...</p>';
+
+            jQuery.ajax({
+                url: '<?php echo esc_url(rest_url("sseo-ai/v1/decay/") . ""); ?>' + id + '/suggestions',
+                method: 'GET',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>');
+                },
+                success: function(res) {
+                    var html = '<div style="margin-bottom:20px;">';
+                    html += '<h3 style="margin:0 0 5px 0;">' + res.post.title + '</h3>';
+                    html += '<p style="color:#666;font-size:13px;margin:0 0 15px 0;">Keyword: <code>' + res.alert.keyword + '</code> · Position change: -' + res.alert.position_change + ' · Severity: ' + res.alert.severity + '</p>';
+                    html += '</div>';
+
+                    html += '<h4>📋 Suggestions</h4><div style="margin-bottom:20px;">';
+                    res.suggestions.forEach(function(s) {
+                        var color = s.type === 'content_refresh' ? '#dc2626' : (s.type === 'internal_links' ? '#d97706' : '#379fd3');
+                        html += '<div style="padding:12px;margin:8px 0;background:#f8fafc;border-radius:8px;border-left:4px solid ' + color + ';">';
+                        html += '<strong>' + s.title + '</strong>';
+                        html += '<p style="margin:5px 0 0 0;font-size:13px;color:#64748b;">' + s.description + '</p>';
+                        if (s.link) html += '<a href="' + s.link + '" class="button button-small" style="margin-top:8px;">Take Action</a>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+
+                    html += '<div style="border-top:1px solid #e2e8f0;padding-top:15px;">';
+                    html += '<h4>🤖 AI Auto-Fix Proposal</h4>';
+                    html += '<p style="font-size:13px;color:#64748b;margin-bottom:10px;">Let AI analyze the content and propose specific improvements.</p>';
+                    html += '<button class="button button-primary" id="decay-autofix-btn" onclick="runAutoFix(' + id + ')">Run AI Analysis</button>';
+                    html += '<div id="decay-autofix-result" style="margin-top:15px;"></div>';
+                    html += '</div>';
+
+                    body.innerHTML = html;
+                },
+                error: function() {
+                    body.innerHTML = '<p style="color:#dc2626;">Failed to load suggestions.</p>';
+                }
+            });
+        }
+
+        function runAutoFix(id) {
+            var btn = document.getElementById('decay-autofix-btn');
+            var result = document.getElementById('decay-autofix-result');
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            result.innerHTML = '<p style="color:#666;">AI is analyzing the content...</p>';
+
+            jQuery.ajax({
+                url: '<?php echo esc_url(rest_url("sseo-ai/v1/decay/")); ?>' + id + '/auto-fix',
+                method: 'POST',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce("wp_rest"); ?>');
+                },
+                success: function(res) {
+                    var a = res.analysis;
+                    var html = '<div style="background:#f0fdf4;border:1px solid #16a34a;border-radius:8px;padding:15px;">';
+                    html += '<h4 style="margin:0 0 10px 0;">Diagnosis</h4>';
+                    html += '<p style="font-size:13px;margin:0 0 15px 0;">' + (a.diagnosis || '—') + '</p>';
+
+                    if (a.proposed_changes && a.proposed_changes.length) {
+                        html += '<h4 style="margin:10px 0 5px 0;">Proposed Changes</h4>';
+                        a.proposed_changes.forEach(function(c) {
+                            var pColor = c.priority === 'high' ? '#dc2626' : (c.priority === 'medium' ? '#d97706' : '#6c757d');
+                            html += '<div style="padding:8px;margin:4px 0;background:#fff;border-radius:4px;font-size:13px;">';
+                            html += '<span style="color:' + pColor + ';font-weight:600;font-size:11px;">' + c.priority + '</span> ';
+                            html += '<strong>' + c.section + ':</strong> ' + c.change;
+                            html += '</div>';
+                        });
+                    }
+
+                    if (a.new_meta_title) html += '<p style="margin:10px 0 5px 0;"><strong>New Meta Title:</strong> ' + a.new_meta_title + '</p>';
+                    if (a.new_meta_description) html += '<p style="margin:5px 0;"><strong>New Meta Description:</strong> ' + a.new_meta_description + '</p>';
+
+                    if (a.content_additions && a.content_additions.length) {
+                        html += '<h4 style="margin:10px 0 5px 0;">Content to Add</h4><ul style="margin:0;padding-left:20px;font-size:13px;">';
+                        a.content_additions.forEach(function(item) { html += '<li>' + item + '</li>'; });
+                        html += '</ul>';
+                    }
+                    if (a.content_updates && a.content_updates.length) {
+                        html += '<h4 style="margin:10px 0 5px 0;">Content to Update</h4><ul style="margin:0;padding-left:20px;font-size:13px;">';
+                        a.content_updates.forEach(function(item) { html += '<li>' + item + '</li>'; });
+                        html += '</ul>';
+                    }
+
+                    html += '<a href="' + res.edit_url + '" class="button button-primary" style="margin-top:15px;">Open Editor to Apply</a>';
+                    html += '</div>';
+                    result.innerHTML = html;
+                    btn.disabled = false;
+                    btn.textContent = 'Re-run Analysis';
+                },
+                error: function() {
+                    result.innerHTML = '<p style="color:#dc2626;">AI analysis failed. Please try again.</p>';
+                    btn.disabled = false;
+                    btn.textContent = 'Run AI Analysis';
+                }
+            });
+        }
+
+        function closeDecayModal() {
+            document.getElementById('decay-modal').style.display = 'none';
         }
         </script>
         <?php
@@ -916,6 +1029,22 @@ class ContentDecay
                 return current_user_can('edit_posts');
             },
         ]);
+
+        register_rest_route('sseo-ai/v1', '/decay/(?P<id>\d+)/suggestions', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetSuggestions'],
+            'permission_callback' => function () {
+                return current_user_can('edit_posts');
+            },
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/decay/(?P<id>\d+)/auto-fix', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restAutoFix'],
+            'permission_callback' => function () {
+                return current_user_can('edit_posts');
+            },
+        ]);
     }
     
     /**
@@ -954,6 +1083,97 @@ class ContentDecay
         return new \WP_REST_Response(['success' => true], 200);
     }
     
+    /**
+     * REST: Get suggestions for a specific alert
+     */
+    public function restGetSuggestions(\WP_REST_Request $request): \WP_REST_Response|\WP_Error
+    {
+        $id = (int) $request['id'];
+        global $wpdb;
+        $table = $wpdb->prefix . self::DECAY_TABLE;
+        $alert = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
+        if (!$alert) {
+            return new \WP_Error('not_found', __('Alert not found', 'ai-seo-client'), ['status' => 404]);
+        }
+        $post = get_post($alert->post_id);
+        if (!$post) {
+            return new \WP_Error('no_post', __('Post not found', 'ai-seo-client'), ['status' => 404]);
+        }
+        $suggestions = $this->generateSuggestions($post, $alert->keyword, (int) $alert->position_change);
+        return new \WP_REST_Response([
+            'alert' => $alert,
+            'post' => ['id' => $post->ID, 'title' => $post->post_title, 'edit_url' => get_edit_post_link($post->ID, '')],
+            'suggestions' => $suggestions,
+        ], 200);
+    }
+
+    /**
+     * REST: AI auto-fix proposal for decayed content
+     */
+    public function restAutoFix(\WP_REST_Request $request): \WP_REST_Response|\WP_Error
+    {
+        $id = (int) $request['id'];
+        global $wpdb;
+        $table = $wpdb->prefix . self::DECAY_TABLE;
+        $alert = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
+        if (!$alert) {
+            return new \WP_Error('not_found', __('Alert not found', 'ai-seo-client'), ['status' => 404]);
+        }
+        $post = get_post($alert->post_id);
+        if (!$post) {
+            return new \WP_Error('no_post', __('Post not found', 'ai-seo-client'), ['status' => 404]);
+        }
+
+        if (!$this->llm) {
+            return new \WP_Error('no_llm', __('AI features are not available', 'ai-seo-client'), ['status' => 503]);
+        }
+
+        $keyword = $alert->keyword;
+        $positionChange = (int) $alert->position_change;
+        $content = $post->post_content;
+        $plainContent = substr(wp_strip_all_tags($content), 0, 6000);
+
+        $prompt = <<<PROMPT
+You are an SEO content refresh expert. This article is losing rankings for "{$keyword}" (dropped {$positionChange} positions).
+
+Analyze the content and propose specific improvements. Return JSON:
+{
+    "diagnosis": "Why the content is likely losing rankings",
+    "proposed_changes": [
+        {"section": "which part", "change": "what to do", "priority": "high/medium/low"}
+    ],
+    "new_meta_title": "optimized title suggestion",
+    "new_meta_description": "optimized meta description",
+    "content_additions": ["topics or sections to add"],
+    "content_updates": ["outdated info to update"]
+}
+
+Current content:
+---
+{$plainContent}
+---
+
+Return ONLY the JSON.
+PROMPT;
+
+        $response = $this->llm->generateText($prompt, ['use_case' => 'analysis', 'max_tokens' => 2000]);
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $analysis = json_decode(trim($response), true);
+        if (!is_array($analysis)) {
+            return new \WP_Error('parse_error', __('Could not parse AI response', 'ai-seo-client'), ['status' => 500]);
+        }
+
+        return new \WP_REST_Response([
+            'alert_id' => $id,
+            'post_id' => $post->ID,
+            'edit_url' => get_edit_post_link($post->ID, ''),
+            'analysis' => $analysis,
+        ], 200);
+    }
+
     /**
      * Cleanup old data (older than 90 days)
      */

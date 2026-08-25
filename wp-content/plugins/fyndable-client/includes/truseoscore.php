@@ -19,6 +19,26 @@ class TruSEOSCORE
         add_action('save_post', [$this, 'saveSeoMeta'], 10, 2);
         add_action('enqueue_block_editor_assets', [$this, 'enqueueAssets']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
+        // Invalidate the site analysis dashboard cache when SEO meta changes
+        // (covers Gutenberg REST saves that bypass the classic-editor nonce check in saveSeoMeta).
+        add_action('updated_post_meta', [$this, 'invalidateDashboardCache'], 10, 4);
+        add_action('added_post_meta', [$this, 'invalidateDashboardCache'], 10, 4);
+    }
+
+    /**
+     * Clear the site analysis overview transient when SEO meta is updated.
+     *
+     * @param int    $metaId    Unused.
+     * @param int    $postId    Post ID whose meta changed.
+     * @param string $metaKey   Meta key that was updated/added.
+     * @param mixed  $metaValue Unused.
+     */
+    public function invalidateDashboardCache(int $metaId, int $postId, string $metaKey, $metaValue): void
+    {
+        $seoKeys = ['_sseo_ai_title', '_sseo_ai_description', '_sseo_ai_focus_keyphrase'];
+        if (in_array($metaKey, $seoKeys, true)) {
+            delete_transient('sseo_dashboard_overview_' . get_current_blog_id());
+        }
     }
 
     public function addMetaBoxes(): void
@@ -173,8 +193,8 @@ class TruSEOSCORE
                     data: { keyphrase: focusKeyphrase }
                 }).then(function(data) {
                     if (data.suggestions && data.suggestions.length > 0) {
-                        var html = '<div class="aiseo-suggestions-list" style="background:#f0f7ff;border-left:3px solid #2563eb;padding:10px 15px;margin:10px 0;border-radius:0 4px 4px 0;">';
-                        html += '<h4 style="margin-top:0;color:#2563eb;"><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul style="margin:0;">';
+                        var html = '<div class="aiseo-suggestions-list" style="background:#e8f4fa;border-left:3px solid #379fd3;padding:10px 15px;margin:10px 0;border-radius:0 4px 4px 0;">';
+                        html += '<h4 style="margin-top:0;color:#379fd3;"><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul style="margin:0;">';
                         data.suggestions.forEach(function(s) {
                             html += '<li style="margin:5px 0;">' + s + '</li>';
                         });
@@ -223,6 +243,9 @@ class TruSEOSCORE
         // Save score
         $score = $this->calculateScore($post, $_POST['aiseo_focus_keyphrase'] ?? '');
         update_post_meta($postId, '_sseo_ai_score', $score);
+
+        // Invalidate the site analysis dashboard cache so newly saved SEO meta is reflected.
+        delete_transient('sseo_dashboard_overview_' . get_current_blog_id());
     }
 
     public function calculateScore(\WP_Post $post, string $focusKeyphrase): int
@@ -230,8 +253,13 @@ class TruSEOSCORE
         $score = 0;
         $maxScore = 100;
 
+        // Rendered content supports Elementor, WPBakery and other page builders
+        $content = PageBuilderHelper::getContent($post);
+        $text = wp_strip_all_tags($content);
+        $textLower = strtolower($text);
+
         // Content length (max 15 points)
-        $wordCount = str_word_count(strip_tags($post->post_content));
+        $wordCount = str_word_count($text);
         if ($wordCount >= 1000) $score += 15;
         elseif ($wordCount >= 500) $score += 10;
         elseif ($wordCount >= 300) $score += 5;
@@ -239,21 +267,20 @@ class TruSEOSCORE
         // Focus keyphrase usage (max 20 points)
         if ($focusKeyphrase) {
             $keyphraseLower = strtolower($focusKeyphrase);
-            $contentLower = strtolower(strip_tags($post->post_content));
-            
+
             // In title (5 points)
             if (stripos($post->post_title, $focusKeyphrase) !== false) {
                 $score += 5;
             }
 
             // In first paragraph (5 points)
-            $firstPara = substr($contentLower, 0, 500);
+            $firstPara = substr($textLower, 0, 500);
             if (stripos($firstPara, $keyphraseLower) !== false) {
                 $score += 5;
             }
 
             // Density (max 10 points)
-            $count = substr_count($contentLower, $keyphraseLower);
+            $count = substr_count($textLower, $keyphraseLower);
             $density = $count / max(1, $wordCount) * 100;
             if ($density >= 0.5 && $density <= 2.5) {
                 $score += 10;
@@ -262,7 +289,7 @@ class TruSEOSCORE
             }
 
             // In headings (5 points)
-            if (preg_match('/<h[1-6][^>]*>.*?' . preg_quote($keyphraseLower, '/') . '.*?<\/h[1-6]>/i', $contentLower)) {
+            if (preg_match('/<h[1-6][^>]*>.*?' . preg_quote($keyphraseLower, '/') . '.*?<\/h[1-6]>/i', strtolower($content))) {
                 $score += 5;
             }
         }
@@ -274,21 +301,21 @@ class TruSEOSCORE
         if ($desc && strlen($desc) >= 120 && strlen($desc) <= 160) $score += 10;
 
         // Internal links (max 10 points)
-        $internalLinks = $this->countInternalLinks($post->post_content);
+        $internalLinks = $this->countInternalLinks($content);
         if ($internalLinks >= 3) $score += 10;
         elseif ($internalLinks >= 1) $score += 5;
 
         // Outbound links (max 5 points)
-        $outboundLinks = $this->countOutboundLinks($post->post_content);
+        $outboundLinks = $this->countOutboundLinks($content);
         if ($outboundLinks >= 1 && $outboundLinks <= 5) $score += 5;
 
         // Images with alt (max 10 points)
-        $images = $this->analyzeImages($post->post_content, $post->ID);
+        $images = $this->analyzeImages($content, $post->ID);
         $altRatio = $images['total'] > 0 ? $images['with_alt'] / $images['total'] : 0;
         $score += round($altRatio * 10);
 
         // Readability (max 10 points)
-        $readability = $this->calculateReadability($post->post_content);
+        $readability = $this->calculateReadability($content);
         if ($readability['flesch'] >= 60) $score += 10;
         elseif ($readability['flesch'] >= 40) $score += 5;
 
@@ -298,7 +325,7 @@ class TruSEOSCORE
         }
 
         // H1 usage (max 5 points)
-        $h1Count = preg_match_all('/<h1[^>]*>/i', $post->post_content);
+        $h1Count = preg_match_all('/<h1[^>]*>/i', $content);
         if ($h1Count === 1) $score += 5;
 
         return min($maxScore, max(0, $score));
@@ -307,7 +334,10 @@ class TruSEOSCORE
     public function getAnalysis(\WP_Post $post, string $focusKeyphrase): array
     {
         $analysis = [];
-        $content = strip_tags($post->post_content);
+
+        // Rendered content supports Elementor, WPBakery and other page builders
+        $htmlContent = PageBuilderHelper::getContent($post);
+        $content = wp_strip_all_tags($htmlContent);
         $contentLower = strtolower($content);
 
         // Content length
@@ -315,7 +345,7 @@ class TruSEOSCORE
         $analysis[] = [
             'label' => __('Content Length', 'ai-seo-client'),
             'status' => $wordCount >= 500 ? 'good' : ($wordCount >= 300 ? 'warning' : 'error'),
-            'message' => sprintf(__('%d words. %s', 'ai-seo-client'), $wordCount, 
+            'message' => sprintf(__('%d words. %s', 'ai-seo-client'), $wordCount,
                 $wordCount >= 500 ? __('Good length.', 'ai-seo-client') : __('Try to add more content.', 'ai-seo-client')),
         ];
 
@@ -348,7 +378,7 @@ class TruSEOSCORE
         }
 
         // Internal links
-        $internalCount = $this->countInternalLinks($post->post_content);
+        $internalCount = $this->countInternalLinks($htmlContent);
         $analysis[] = [
             'label' => __('Internal Links', 'ai-seo-client'),
             'status' => $internalCount >= 2 ? 'good' : 'warning',
@@ -356,7 +386,7 @@ class TruSEOSCORE
         ];
 
         // Images
-        $images = $this->analyzeImages($post->post_content, $post->ID);
+        $images = $this->analyzeImages($htmlContent, $post->ID);
         $analysis[] = [
             'label' => __('Images with Alt Text', 'ai-seo-client'),
             'status' => ($images['total'] === 0 || $images['with_alt'] === $images['total']) ? 'good' : 'warning',
@@ -364,7 +394,7 @@ class TruSEOSCORE
         ];
 
         // H1 usage
-        $h1Count = preg_match_all('/<h1[^>]*>/i', $post->post_content);
+        $h1Count = preg_match_all('/<h1[^>]*>/i', $htmlContent);
         $analysis[] = [
             'label' => __('H1 Heading', 'ai-seo-client'),
             'status' => $h1Count === 1 ? 'good' : 'error',
@@ -372,7 +402,7 @@ class TruSEOSCORE
         ];
 
         // Readability
-        $readability = $this->calculateReadability($content);
+        $readability = $this->calculateReadability($htmlContent);
         $analysis[] = [
             'label' => __('Readability', 'ai-seo-client'),
             'status' => $readability['flesch'] >= 50 ? 'good' : 'warning',
@@ -501,7 +531,8 @@ class TruSEOSCORE
 
     private function generateDefaultDescription(\WP_Post $post): string
     {
-        return wp_trim_words(strip_tags($post->post_content), 25, '');
+        $content = PageBuilderHelper::getContent($post);
+        return wp_trim_words(wp_strip_all_tags($content), 25, '');
     }
 
     private function getCanonicalUrl(\WP_Post $post): string
@@ -650,7 +681,8 @@ class TruSEOSCORE
         }
 
         // Add AI-powered content improvement suggestions
-        $wordCount = str_word_count(strip_tags($post->post_content));
+        $content = PageBuilderHelper::getContent($post);
+        $wordCount = str_word_count(wp_strip_all_tags($content));
         if ($wordCount < 500) {
             $suggestions[] = sprintf(
                 __('Consider expanding your content to at least 500 words. Currently at %d words.', 'ai-seo-client'),
@@ -658,7 +690,7 @@ class TruSEOSCORE
             );
         }
 
-        $internalLinks = $this->countInternalLinks($post->post_content);
+        $internalLinks = $this->countInternalLinks($content);
         if ($internalLinks < 2) {
             $suggestions[] = __('Add more internal links to related content on your site to improve topical authority.', 'ai-seo-client');
         }

@@ -26,7 +26,7 @@ class LicenseAdmin
      */
     public function register(): void
     {
-        // Main License Management menu
+        // License Management — registered as hidden parent (shell is top-level)
         add_menu_page(
             __('License Management', 'sseo-ai-saas'),
             __('Licenses', 'sseo-ai-saas'),
@@ -36,6 +36,10 @@ class LicenseAdmin
             'dashicons-admin-network',
             30
         );
+        // Hide from WP admin menu (shell provides navigation)
+        add_action('admin_head', function () {
+            echo '<style>#toplevel_page_sseo-ai-licenses { display: none !important; }</style>';
+        });
         
         add_submenu_page(
             'sseo-ai-licenses',
@@ -91,6 +95,16 @@ class LicenseAdmin
             'sseo-ai-license-features',
             [$this, 'renderLicenseFeaturesPage']
         );
+
+        // Agency Accounts
+        add_submenu_page(
+            'sseo-ai-licenses',
+            __('Agency Accounts', 'sseo-ai-saas'),
+            __('Agency Accounts', 'sseo-ai-saas'),
+            'manage_options',
+            'sseo-ai-agency-accounts',
+            [$this, 'renderAgencyAccountsPage']
+        );
     }
     
     /**
@@ -101,14 +115,14 @@ class LicenseAdmin
         if (strpos($hook, 'sseo-ai') === false) {
             return;
         }
-        
+
         wp_enqueue_style(
             'sseo-ai-license-admin',
             plugins_url('assets/license-admin.css', $this->pluginFile),
             [],
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.css')
         );
-        
+
         wp_enqueue_script(
             'sseo-ai-license-admin',
             plugins_url('assets/license-admin.js', $this->pluginFile),
@@ -116,6 +130,42 @@ class LicenseAdmin
             filemtime(plugin_dir_path($this->pluginFile) . 'assets/license-admin.js'),
             true
         );
+
+        // Apply global white-label colors to the SaaS admin pages. Agency pages
+        // are skipped because AgencyPortal::enqueueAssets() injects an
+        // agency-specific override there.
+        if (strpos($hook, 'sseo-ai-agency') !== false) {
+            return;
+        }
+
+        $wlEnabled = (bool) get_option('sseo_ai_saas_wl_enabled', false);
+        if (!$wlEnabled) {
+            return;
+        }
+
+        $primary = sanitize_hex_color(get_option('sseo_ai_saas_wl_primary_color', '#379fd3')) ?: '#379fd3';
+        $secondary = sanitize_hex_color(get_option('sseo_ai_saas_wl_secondary_color', '#8f39ac')) ?: '#8f39ac';
+
+        $gradient = sprintf('linear-gradient(135deg, %s 0%%, %s 100%%)', $primary, $secondary);
+
+        $css = ':root {
+            --sseo-primary: ' . $primary . ';
+            --sseo-blue: ' . $primary . ';
+        }
+        body[class*="sseo-ai"] {
+            background: ' . $gradient . ' !important;
+        }
+        .wrap.sseo-ai-license-admin {
+            background: ' . $gradient . ' !important;
+        }
+        .wrap.sseo-ai-license-admin > h1 {
+            background: ' . $gradient . ' !important;
+        }
+        .sseo-ai-upgrade-cta {
+            background: ' . $gradient . ' !important;
+        }';
+
+        wp_add_inline_style('sseo-ai-license-admin', $css);
     }
     
     /**
@@ -357,12 +407,14 @@ class LicenseAdmin
                             <th scope="row"><label for="license_tier"><?php esc_html_e('License Tier', 'sseo-ai-saas'); ?></label></th>
                             <td>
                                 <select name="license_tier" id="license_tier">
-                                    <option value="free"><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
                                     <option value="trial"><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
-                                    <option value="starter" selected><?php esc_html_e('Starter - €99/month', 'sseo-ai-saas'); ?></option>
-                                    <option value="professional"><?php esc_html_e('Professional - €199/month', 'sseo-ai-saas'); ?></option>
-                                    <option value="business"><?php esc_html_e('Business - €299/month', 'sseo-ai-saas'); ?></option>
-                                    <option value="agency"><?php esc_html_e('Agency - €499/month', 'sseo-ai-saas'); ?></option>
+                                    <option value="starter" selected><?php echo esc_html(sprintf(__('Starter - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('starter'), 0, ',', '.'))); ?></option>
+                                    <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
+                                        <option value="early_adopters"><?php echo esc_html(sprintf(__('Early Adopters - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('early_adopters'), 0, ',', '.'))); ?></option>
+                                    <?php endif; ?>
+                                    <option value="professional"><?php echo esc_html(sprintf(__('Professional - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('professional'), 0, ',', '.'))); ?></option>
+                                    <option value="business"><?php echo esc_html(sprintf(__('Business - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('business'), 0, ',', '.'))); ?></option>
+                                    <option value="agency"><?php echo esc_html(sprintf(__('Agency - €%s/month', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('agency'), 0, ',', '.'))); ?></option>
                                     <option value="dev"><?php esc_html_e('DEV - All Features (Internal Use Only)', 'sseo-ai-saas'); ?></option>
                                 </select>
                                 <p class="description"><?php esc_html_e('DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients.', 'sseo-ai-saas'); ?></p>
@@ -424,8 +476,8 @@ class LicenseAdmin
                 jQuery(document).ready(function($) {
                     var tierDefaults = <?php echo json_encode([
                         'rate_limits' => [
-                            'free' => LicenseKeyGenerator::getDefaultRateLimit('free'),
                             'starter' => LicenseKeyGenerator::getDefaultRateLimit('starter'),
+                            'early_adopters' => LicenseKeyGenerator::getDefaultRateLimit('early_adopters'),
                             'trial' => LicenseKeyGenerator::getDefaultRateLimit('trial'),
                             'professional' => LicenseKeyGenerator::getDefaultRateLimit('professional'),
                             'business' => LicenseKeyGenerator::getDefaultRateLimit('business'),
@@ -433,8 +485,8 @@ class LicenseAdmin
                             'dev' => LicenseKeyGenerator::getDefaultRateLimit('dev'),
                         ],
                         'api_limits' => [
-                            'free' => LicenseKeyGenerator::getDefaultApiLimit('free'),
                             'starter' => LicenseKeyGenerator::getDefaultApiLimit('starter'),
+                            'early_adopters' => LicenseKeyGenerator::getDefaultApiLimit('early_adopters'),
                             'trial' => LicenseKeyGenerator::getDefaultApiLimit('trial'),
                             'professional' => LicenseKeyGenerator::getDefaultApiLimit('professional'),
                             'business' => LicenseKeyGenerator::getDefaultApiLimit('business'),
@@ -442,7 +494,7 @@ class LicenseAdmin
                             'dev' => LicenseKeyGenerator::getDefaultApiLimit('dev'),
                         ],
                         'max_sites' => [
-                            'free' => 1, 'starter' => 1, 'trial' => 3,
+                            'starter' => 1, 'early_adopters' => 1, 'trial' => 3,
                             'professional' => 5, 'business' => 15, 'agency' => 50, 'dev' => 100,
                         ],
                     ]); ?>;
@@ -524,12 +576,14 @@ class LicenseAdmin
                     
                     <select name="tier">
                         <option value=""><?php esc_html_e('All Tiers', 'sseo-ai-saas'); ?></option>
-                        <option value="free" <?php selected($filters['tier'], 'free'); ?>><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
                         <option value="trial" <?php selected($filters['tier'], 'trial'); ?>><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
-                        <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php esc_html_e('Starter - €99', 'sseo-ai-saas'); ?></option>
-                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php esc_html_e('Professional - €199', 'sseo-ai-saas'); ?></option>
-                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php esc_html_e('Business - €299', 'sseo-ai-saas'); ?></option>
-                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php esc_html_e('Agency - €499', 'sseo-ai-saas'); ?></option>
+                        <option value="starter" <?php selected($filters['tier'], 'starter'); ?>><?php echo esc_html(sprintf(__('Starter - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('starter'), 0, ',', '.'))); ?></option>
+                        <?php if (get_option('sseo_ai_saas_early_adopters_enabled', false)): ?>
+                            <option value="early_adopters" <?php selected($filters['tier'], 'early_adopters'); ?>><?php echo esc_html(sprintf(__('Early Adopters - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('early_adopters'), 0, ',', '.'))); ?></option>
+                        <?php endif; ?>
+                        <option value="professional" <?php selected($filters['tier'], 'professional'); ?>><?php echo esc_html(sprintf(__('Professional - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('professional'), 0, ',', '.'))); ?></option>
+                        <option value="business" <?php selected($filters['tier'], 'business'); ?>><?php echo esc_html(sprintf(__('Business - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('business'), 0, ',', '.'))); ?></option>
+                        <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php echo esc_html(sprintf(__('Agency - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('agency'), 0, ',', '.'))); ?></option>
                     </select>
                     
                     <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="Search...">
@@ -538,7 +592,7 @@ class LicenseAdmin
                 </form>
                 
                 <div class="alignright">
-                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button">
+                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button button-export">
                         <?php esc_html_e('Export CSV', 'sseo-ai-saas'); ?>
                     </a>
                 </div>
@@ -670,10 +724,22 @@ class LicenseAdmin
                 <?php foreach ($tenants as $tenant): 
                     $usage = $this->tenants->getTenantUsage($tenant['tenant_key']);
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
+                    $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
+                    $onboardingCompletedAt = $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed_at', '');
                 ?>
                 <div class="sseo-ai-card tenant-usage-card">
                     <h3><?php echo esc_html($tenant['name']); ?></h3>
                     <p class="tenant-domain"><?php echo esc_html($tenant['domain'] ?: 'No domain'); ?></p>
+                    <p class="tenant-onboarding" style="font-size:12px;color:#666;">
+                        <?php if ($onboardingCompleted): ?>
+                            <span style="color:#00a32a;">&#10003; <?php esc_html_e('Wizard completed', 'sseo-ai-saas'); ?></span>
+                            <?php if ($onboardingCompletedAt): ?>
+                                <em><?php echo esc_html(human_time_diff(strtotime($onboardingCompletedAt), current_time('timestamp')) . ' ago'); ?></em>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span style="color:#f59e0b;">&#8226; <?php esc_html_e('Wizard not completed', 'sseo-ai-saas'); ?></span>
+                        <?php endif; ?>
+                    </p>
                     
                     <div class="usage-stats">
                         <div class="usage-stat">
@@ -686,7 +752,7 @@ class LicenseAdmin
                         <div class="usage-stat">
                             <span class="usage-label"><?php esc_html_e('Est. Cost', 'sseo-ai-saas'); ?></span>
                             <span class="usage-value">
-                                $<?php echo number_format($usage['api_cost'] ?? 0, 2); ?>
+                                &euro;<?php echo number_format($usage['api_cost'] ?? 0, 2); ?>
                             </span>
                         </div>
                         
@@ -742,6 +808,32 @@ class LicenseAdmin
             wp_die(__('License not found', 'sseo-ai-saas'));
         }
 
+        $noticeMessage = '';
+        $noticeType = 'info';
+
+        // Handle license e-mail assignment updates on this page.
+        if (
+            $_SERVER['REQUEST_METHOD'] === 'POST'
+            && !empty($_POST['sseo_ai_update_license_email'])
+            && check_admin_referer('sseo_ai_update_license_email')
+        ) {
+            $newEmail = sanitize_email($_POST['assigned_to'] ?? '');
+            if (!empty($newEmail) && is_email($newEmail)) {
+                $update = $this->licenseGenerator->updateLicense($licenseKey, ['assigned_to' => $newEmail]);
+                if (is_wp_error($update)) {
+                    $noticeMessage = $update->get_error_message();
+                    $noticeType = 'error';
+                } else {
+                    $noticeMessage = __('License email updated successfully.', 'sseo-ai-saas');
+                    $noticeType = 'success';
+                    $license = $this->licenseGenerator->getLicense($licenseKey);
+                }
+            } else {
+                $noticeMessage = __('Please enter a valid email address.', 'sseo-ai-saas');
+                $noticeType = 'error';
+            }
+        }
+
         $featureManager = new LicenseFeatureManager($this->tenants, $this->licenseGenerator);
         $featureData = $featureManager->getFeatureToggleData($licenseKey);
         
@@ -751,7 +843,37 @@ class LicenseAdmin
         ?>
         <div class="wrap sseo-ai-admin">
             <h1><?php echo esc_html(sprintf(__('Manage Features for License: %s', 'sseo-ai-saas'), substr($licenseKey, 0, 20) . '...')); ?></h1>
-            
+
+            <?php if ($noticeMessage): ?>
+                <div class="sseo-ai-notice <?php echo esc_attr($noticeType); ?>">
+                    <p><?php echo esc_html($noticeMessage); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <div class="sseo-ai-license-assign">
+                <h2><?php esc_html_e('License Assignment', 'sseo-ai-saas'); ?></h2>
+                <p class="description">
+                    <?php esc_html_e('Assign or update the customer email address for this license.', 'sseo-ai-saas'); ?>
+                </p>
+                <form method="post" action="">
+                    <?php wp_nonce_field('sseo_ai_update_license_email'); ?>
+                    <input type="hidden" name="sseo_ai_update_license_email" value="1">
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="assigned_to"><?php esc_html_e('Assigned To (Email)', 'sseo-ai-saas'); ?></label>
+                            </th>
+                            <td>
+                                <input type="email" name="assigned_to" id="assigned_to"
+                                       value="<?php echo esc_attr($license['assigned_to'] ?? ''); ?>"
+                                       class="regular-text" placeholder="customer@example.com">
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Update Assignment', 'sseo-ai-saas'), 'primary', 'sseo_ai_update_license_email_submit'); ?>
+                </form>
+            </div>
+
             <div class="sseo-ai-notice info">
                 <p><strong><?php esc_html_e('Tier:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(ucfirst($license['tier'] ?? 'starter')); ?></p>
                 <p><?php esc_html_e('Features with default tier access are pre-enabled. You can override these to enable/disable individual features.', 'sseo-ai-saas'); ?></p>
@@ -875,12 +997,50 @@ class LicenseAdmin
             </script>
 
             <style>
+            .wrap.sseo-ai-admin {
+                padding: 0 0 20px;
+                max-width: 1200px;
+            }
+            .sseo-ai-admin h1 {
+                color: #fff;
+                font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                margin: 0 20px 20px;
+                padding: 20px 0 10px;
+            }
+            #feature-toggle-container,
+            .sseo-ai-notice,
+            .sseo-ai-license-assign {
+                margin: 0 20px;
+            }
+            .sseo-ai-license-assign {
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 20px;
+            }
+            .sseo-ai-license-assign h2 {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
             .sseo-ai-admin .feature-category {
                 margin-bottom: 30px;
                 background: #fff;
                 border: 1px solid #c3c4c7;
                 border-radius: 4px;
                 padding: 15px;
+            }
+            .sseo-ai-admin .sseo-ai-notice {
+                padding: 12px 15px;
+                border-left: 4px solid #2271b1;
+                background: #f0f6fc;
+            }
+            .sseo-ai-admin .sseo-ai-notice.info {
+                border-left-color: #2271b1;
+                background: #f0f6fc;
+            }
+            .sseo-ai-admin .sseo-ai-notice.error {
+                border-left-color: #d63638;
+                background: #fcf0f1;
             }
             .sseo-ai-admin .category-title {
                 margin-top: 0;
@@ -919,6 +1079,135 @@ class LicenseAdmin
                 border-left-color: #2271b1;
             }
             </style>
+        </div>
+        <?php
+    }
+
+    public function renderAgencyAccountsPage(): void
+    {
+        $error = null;
+        $success = null;
+
+        if (isset($_POST['create_agency_account']) && wp_verify_nonce($_POST['_wpnonce'], 'create_agency_account')) {
+            $email = sanitize_email($_POST['agency_email'] ?? '');
+            $companyName = sanitize_text_field($_POST['agency_name'] ?? '');
+            $maxSubLicenses = (int)($_POST['max_sub_licenses'] ?? 10);
+            $tier = sanitize_text_field($_POST['agency_tier'] ?? 'agency');
+
+            if (empty($email) || !is_email($email)) {
+                $error = __('Valid email is required.', 'sseo-ai-saas');
+            } elseif (empty($companyName)) {
+                $error = __('Company name is required.', 'sseo-ai-saas');
+            } else {
+                    $tenantResult = $this->tenants->createTenant([
+                        'name' => $companyName,
+                        'email' => $email,
+                        'tier' => $tier,
+                        'status' => 'active',
+                    ]);
+
+                    if (is_wp_error($tenantResult)) {
+                        $error = $tenantResult->get_error_message();
+                    } else {
+                        $roleManager = new AgencyRoleManager($this->tenants);
+                        $userResult = $roleManager->createAgencyUser($email, $companyName, (int)$tenantResult['id'], $maxSubLicenses);
+
+                        if (is_wp_error($userResult)) {
+                            $error = $userResult->get_error_message();
+                        } else {
+                            $success = sprintf(
+                                __('Agency account created for %s with %d sub-license quota. A welcome email has been sent with login details.', 'sseo-ai-saas'),
+                                $email,
+                                $maxSubLicenses
+                            );
+                        }
+                    }
+                }
+        }
+
+        $agencyTenants = $this->tenants->getTenants(['tier' => 'agency'], 100, 0);
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <h1><?php esc_html_e('Agency Accounts', 'sseo-ai-saas'); ?></h1>
+
+            <?php if ($error): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
+            <?php endif; ?>
+            <?php if ($success): ?>
+                <div class="notice notice-success"><p><?php echo esc_html($success); ?></p></div>
+            <?php endif; ?>
+
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Create Agency Account', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Create a new agency partner. This creates an agency tenant and a WordPress user with the agency_partner role. The agency gets portal access to manage their own sub-licenses — no license is consumed for the agency itself.', 'sseo-ai-saas'); ?></p>
+                <form method="post">
+                    <?php wp_nonce_field('create_agency_account'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="agency_name"><?php esc_html_e('Agency Name', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="agency_name" id="agency_name" class="regular-text" required placeholder="Acme SEO Agency"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="agency_email"><?php esc_html_e('Agency Email', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="email" name="agency_email" id="agency_email" class="regular-text" required placeholder="contact@acme.com"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="agency_tier"><?php esc_html_e('Agency Tier', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select name="agency_tier" id="agency_tier">
+                                    <option value="agency" selected><?php esc_html_e('Agency', 'sseo-ai-saas'); ?></option>
+                                    <option value="business"><?php esc_html_e('Business', 'sseo-ai-saas'); ?></option>
+                                    <option value="professional"><?php esc_html_e('Professional', 'sseo-ai-saas'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="max_sub_licenses"><?php esc_html_e('Max Sub-Licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="max_sub_licenses" id="max_sub_licenses" value="10" min="1" max="100" class="small-text">
+                                <p class="description"><?php esc_html_e('Maximum number of sub-licenses this agency can generate.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Create Agency Account', 'sseo-ai-saas'), 'primary', 'create_agency_account'); ?>
+                </form>
+            </div>
+
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Existing Agency Tenants', 'sseo-ai-saas'); ?></h2>
+                <table class="wp-list-table widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Agency Name', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Email', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Sub-Licenses', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($agencyTenants)): ?>
+                            <tr><td colspan="6"><?php esc_html_e('No agency tenants yet.', 'sseo-ai-saas'); ?></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($agencyTenants as $t):
+                                $account = $this->tenants->getAgencyAccountByTenant((int)$t['id']);
+                                $licenseCount = $this->licenseGenerator->countLicensesByAgency((int)$t['id']);
+                                $maxSubs = $account ? (int)$account['max_sub_licenses'] : '-';
+                            ?>
+                                <tr>
+                                    <td><?php echo esc_html($t['name']); ?></td>
+                                    <td><?php echo esc_html($t['email']); ?></td>
+                                    <td><code><?php echo esc_html($t['license_key'] ?: '-'); ?></code></td>
+                                    <td><span class="badge badge-<?php echo esc_attr($t['status']); ?>"><?php echo esc_html(ucfirst($t['status'])); ?></span></td>
+                                    <td><?php echo esc_html($licenseCount . ' / ' . $maxSubs); ?></td>
+                                    <td><?php echo esc_html($t['created_at']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php
     }

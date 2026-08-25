@@ -388,11 +388,11 @@ class OpenGraph
             .aiseo-og-tab.active { color: #2271b1; border-bottom-color: #2271b1; }
             .aiseo-og-panel { display: none; }
             .aiseo-og-panel.active { display: block; }
-            .aiseo-og-preview { background: #f0f2f5; border-radius: 8px; overflow: hidden; max-width: 500px; margin: 15px 0; font-family: -apple-system, system-ui, sans-serif; }
+            .aiseo-og-preview { background: #f0f2f5; border-radius: 8px; overflow: hidden; max-width: 500px; margin: 15px 0; font-family: Outfit, -apple-system, system-ui, sans-serif; }
             .aiseo-og-preview-image { width: 100%; height: 260px; background: #e4e6eb; display: flex; align-items: center; justify-content: center; overflow: hidden; }
             .aiseo-og-preview-image img { width: 100%; height: 100%; object-fit: cover; }
             .aiseo-og-preview-body { padding: 12px 16px; }
-            .aiseo-og-preview-domain { font-size: 12px; color: #65676b; text-transform: uppercase; }
+            .aiseo-og-preview-domain { font-size: 12px; color: #65676b;  }
             .aiseo-og-preview-title { font-size: 16px; font-weight: 600; color: #1c1e21; margin: 3px 0; line-height: 1.3; }
             .aiseo-og-preview-desc { font-size: 14px; color: #65676b; line-height: 1.3; }
             .aiseo-twitter-preview { background: #fff; border: 1px solid #e1e8ed; border-radius: 14px; overflow: hidden; max-width: 500px; margin: 15px 0; }
@@ -655,7 +655,7 @@ Generate exactly this JSON format (no markdown, no code blocks):
 
 Return ONLY the JSON, nothing else.";
 
-        $result = $this->llm->call($prompt, null, null, 500);
+        $result = $this->llm->call($prompt, null, null, 500, [], 'meta_optimization');
         if (is_wp_error($result)) {
             return $result;
         }

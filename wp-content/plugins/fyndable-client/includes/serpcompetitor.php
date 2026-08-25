@@ -206,7 +206,7 @@ Identify 5-8 content gaps/opportunities.
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, null, 3000);
+        $result = $this->llm->call($prompt, null, null, 3000, [], 'content_analysis');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -342,7 +342,7 @@ Be specific and actionable. Identify 5-10 missing topics, 3-5 strengths, 3-5 opp
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, null, 2000);
+        $result = $this->llm->call($prompt, null, null, 2000, [], 'content_analysis');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -406,7 +406,7 @@ PROMPT;
                     <!-- Overview Cards -->
                     <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:20px;">
                         <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="serp-avg-words" style="font-size:28px;font-weight:bold;color:#2563eb;">—</div>
+                            <div id="serp-avg-words" style="font-size:28px;font-weight:bold;color:#379fd3;">—</div>
                             <div style="font-size:12px;color:#666;"><?php esc_html_e('Avg Word Count', 'ai-seo-client'); ?></div>
                         </div>
                         <div class="postbox" style="padding:15px;text-align:center;">
@@ -502,7 +502,7 @@ PROMPT;
                 // Competitors
                 var compHtml = '';
                 (data.competitor_profiles || []).slice(0, 10).forEach(function(c) {
-                    var typeColors = {guide:'#2563eb',listicle:'#059669',comparison:'#7c3aed',tutorial:'#d97706',product:'#dc2626',review:'#0891b2'};
+                    var typeColors = {guide:'#379fd3',listicle:'#059669',comparison:'#7c3aed',tutorial:'#d97706',product:'#dc2626',review:'#0891b2'};
                     compHtml += '<div style="padding:10px;margin-bottom:8px;background:#f9f9f9;border-radius:4px;border-left:3px solid ' + (typeColors[c.content_type]||'#999') + ';">' +
                         '<div style="display:flex;justify-content:space-between;"><strong>#' + c.position + ' ' + (c.domain || '') + '</strong>' +
                         '<span style="font-size:11px;padding:2px 6px;background:' + (typeColors[c.content_type]||'#e0e0e0') + ';color:#fff;border-radius:3px;">' + (c.content_type || '') + '</span></div>' +

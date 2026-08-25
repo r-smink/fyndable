@@ -16,11 +16,34 @@ class TopicCluster
 {
     private Settings $settings;
     private LlmClient $llm;
+    private ?ContentBrief $contentBrief = null;
+    private ?ContentOptimizer $contentOptimizer = null;
+    private ?SmartTags $smartTags = null;
+    private ?FAQSchema $faqSchema = null;
+    private ?OpenGraph $openGraph = null;
+    private ?TruSEOScore $truSEO = null;
+    private ?GeoContentScore $geoScore = null;
 
-    public function __construct(Settings $settings, LlmClient $llm)
-    {
+    public function __construct(
+        Settings $settings,
+        LlmClient $llm,
+        ?ContentBrief $contentBrief = null,
+        ?ContentOptimizer $contentOptimizer = null,
+        ?SmartTags $smartTags = null,
+        ?FAQSchema $faqSchema = null,
+        ?OpenGraph $openGraph = null,
+        ?TruSEOScore $truSEO = null,
+        ?GeoContentScore $geoScore = null
+    ) {
         $this->settings = $settings;
         $this->llm = $llm;
+        $this->contentBrief = $contentBrief;
+        $this->contentOptimizer = $contentOptimizer;
+        $this->smartTags = $smartTags;
+        $this->faqSchema = $faqSchema;
+        $this->openGraph = $openGraph;
+        $this->truSEO = $truSEO;
+        $this->geoScore = $geoScore;
     }
 
     public function register(): void
@@ -64,6 +87,7 @@ class TopicCluster
         register_rest_route('sseo-ai/v1', '/clusters/list', [
             'methods' => 'GET',
             'callback' => [$this, 'restListClusters'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
 
         register_rest_route('sseo-ai/v1', '/clusters/(?P<id>\d+)', [
@@ -89,7 +113,37 @@ class TopicCluster
                 'word_count' => ['type' => 'integer', 'required' => false, 'default' => 1500],
                 'content_type' => ['type' => 'string', 'required' => false, 'default' => 'article'],
                 'cluster_context' => ['type' => 'string', 'required' => false],
+                'cluster_id' => ['type' => 'integer', 'required' => false],
+                'cluster_role' => ['type' => 'string', 'required' => false],
+                'cluster_map_id' => ['type' => 'integer', 'required' => false],
+                'skip_cannibalism_check' => ['type' => 'boolean', 'required' => false, 'default' => false],
             ],
+        ]);
+
+        // Queue endpoints for background generation
+        register_rest_route('sseo-ai/v1', '/clusters/queue', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restQueueBulkGeneration'],
+            'permission_callback' => fn() => current_user_can('publish_posts'),
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/clusters/queue/(?P<queue_id>\d+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetQueueStatus'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/clusters/queue/(?P<queue_id>\d+)/cancel', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restCancelQueue'],
+            'permission_callback' => fn() => current_user_can('publish_posts'),
+        ]);
+
+        // Internal linking endpoint — re-link cluster posts after new content is added
+        register_rest_route('sseo-ai/v1', '/clusters/(?P<cluster_id>\d+)/interlink', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restInterlinkCluster'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
     }
 
@@ -103,23 +157,51 @@ class TopicCluster
         $wordCount = (int) ($request->get_param('word_count') ?: 1500);
         $contentType = sanitize_text_field($request->get_param('content_type') ?: 'article');
         $clusterContext = sanitize_textarea_field($request->get_param('cluster_context') ?: '');
+        $scheduleDate = sanitize_text_field($request->get_param('schedule_date') ?: '');
+        $clusterId = (int) ($request->get_param('cluster_id') ?: 0);
+        $clusterRole = sanitize_text_field($request->get_param('cluster_role') ?: '');
+        $clusterMapId = (int) ($request->get_param('cluster_map_id') ?: 0);
+        $skipCannibalismCheck = (bool) ($request->get_param('skip_cannibalism_check') ?: false);
 
         if (empty($title) || empty($keyword)) {
             return new \WP_Error('missing_params', __('Title and keyword are required', 'ai-seo-client'), ['status' => 400]);
         }
 
-        // Generate content using LLM
-        $content = $this->generateClusterPageContent($title, $keyword, $wordCount, $contentType, $clusterContext);
+        // 1.4 — Anti-cannibalisatie check
+        if (!$skipCannibalismCheck) {
+            $cannibalism = $this->checkCannibalism($keyword);
+            if ($cannibalism !== null) {
+                return new \WP_Error(
+                    'cannibalism_detected',
+                    sprintf(
+                        __('A post already targets the keyword "%s": "%s" (ID: %d). Consider updating that post instead of creating a new one, or set skip_cannibalism_check to true.', 'ai-seo-client'),
+                        $keyword,
+                        $cannibalism['title'],
+                        $cannibalism['post_id']
+                    ),
+                    ['status' => 409, 'existing_post' => $cannibalism]
+                );
+            }
+        }
+
+        // 1.3 — Use Content Brief for SERP-driven content generation
+        $briefData = null;
+        if ($this->contentBrief) {
+            $briefData = $this->contentBrief->generateBrief($keyword);
+            // Don't fail if brief generation fails — fall back to simple prompt
+        }
+
+        // Generate content using LLM (with brief data if available)
+        $content = $this->generateClusterPageContent($title, $keyword, $wordCount, $contentType, $clusterContext, $briefData);
         
         if (is_wp_error($content)) {
             return $content;
         }
 
-        // Create WordPress post draft
-        $postId = wp_insert_post([
+        // Determine post status and date based on scheduling
+        $postData = [
             'post_title'   => $title,
             'post_content' => $content['content'],
-            'post_status'  => 'draft',
             'post_type'    => 'post',
             'post_author'  => get_current_user_id(),
             'meta_input'   => [
@@ -129,10 +211,28 @@ class TopicCluster
                 '_sseo_ai_generated' => '1',
                 '_sseo_ai_generated_date' => current_time('mysql'),
             ],
-        ]);
+        ];
+
+        if (!empty($scheduleDate) && strtotime(get_gmt_from_date($scheduleDate)) > time()) {
+            $postData['post_status'] = 'future';
+            $postData['post_date']   = $scheduleDate;
+        } else {
+            $postData['post_status'] = 'draft';
+        }
+
+        $postId = wp_insert_post($postData);
 
         if (is_wp_error($postId)) {
             return $postId;
+        }
+
+        // 1.1 — Track cluster relationships in post meta
+        if ($clusterId > 0) {
+            update_post_meta($postId, '_sseo_ai_cluster_id', $clusterId);
+            update_post_meta($postId, '_sseo_ai_cluster_role', $clusterRole);
+            if ($clusterMapId > 0) {
+                update_post_meta($postId, '_sseo_ai_cluster_map_id', $clusterMapId);
+            }
         }
 
         // Add tags if available
@@ -140,7 +240,34 @@ class TopicCluster
             wp_set_post_tags($postId, $content['tags']);
         }
 
-        return [
+        // 1.1 — Inject internal links to other cluster posts that already exist
+        if ($clusterId > 0) {
+            $this->injectInternalLinks($postId, $clusterId, $keyword);
+        }
+
+        // Generate a featured image automatically when any image API key is configured
+        $imageAttachmentId = null;
+        if ($this->hasImageApiKey()) {
+            $generator = new AIImageGenerator($this->settings, $this->llm);
+            $imageAttachmentId = $generator->generateFeaturedImage($postId, 'photorealistic', $title, 100);
+        }
+
+        // 1.5 — Post-generation quality pipeline
+        $qualityScores = $this->runPostGenerationPipeline($postId, $keyword, $content['content']);
+
+        // Run fact check (fail gracefully — does not block content generation)
+        $factCheckReport = null;
+        try {
+            $factChecker = new FactChecker($this->llm);
+            $factCheckReport = $factChecker->checkPost($postId);
+            if (is_wp_error($factCheckReport)) {
+                $factCheckReport = null;
+            }
+        } catch (\Exception $e) {
+            $factCheckReport = null;
+        }
+
+        $result = [
             'success' => true,
             'post_id' => $postId,
             'edit_url' => get_edit_post_link($postId, ''),
@@ -148,20 +275,77 @@ class TopicCluster
             'title' => $title,
             'word_count' => $content['word_count'] ?? 0,
         ];
+
+        if ($factCheckReport !== null) {
+            $result['fact_check'] = $factCheckReport;
+        }
+
+        if ($imageAttachmentId) {
+            $result['image_attachment_id'] = $imageAttachmentId;
+        }
+
+        if ($qualityScores) {
+            $result['quality_scores'] = $qualityScores;
+        }
+
+        if ($briefData && !is_wp_error($briefData)) {
+            $result['brief_used'] = true;
+        }
+
+        return $result;
     }
 
     /**
      * Generate content for a cluster page
+     * @param array|null $briefData Content Brief data from ContentBrief::generateBrief()
      */
-    private function generateClusterPageContent(string $title, string $keyword, int $wordCount, string $contentType, string $clusterContext): array|\WP_Error
+    private function generateClusterPageContent(string $title, string $keyword, int $wordCount, string $contentType, string $clusterContext, ?array $briefData = null): array|\WP_Error
     {
+        // Build SERP-informed section from brief data
+        $briefSection = '';
+        if ($briefData && !is_wp_error($briefData)) {
+            $recommendedWords = $briefData['recommended_word_count'] ?? $wordCount;
+            $headings = $briefData['recommended_headings'] ?? [];
+            $questions = $briefData['recommended_questions'] ?? [];
+            $entities = $briefData['recommended_entities'] ?? [];
+            $lsi = $briefData['recommended_lsi'] ?? [];
+            $intent = $briefData['search_intent'] ?? '';
+            $angle = $briefData['content_angle'] ?? '';
+
+            $headingsStr = !empty($headings) ? implode("\n- ", array_slice($headings, 0, 10)) : '';
+            $questionsStr = !empty($questions) ? implode("\n- ", array_slice($questions, 0, 5)) : '';
+            $entitiesStr = !empty($entities) ? implode(', ', array_slice($entities, 0, 15)) : '';
+            $lsiStr = !empty($lsi) ? implode(', ', array_slice($lsi, 0, 15)) : '';
+
+            // 3.1 — Research-backed citations from SERP sources
+            $sources = $briefData['sources'] ?? [];
+            $sourcesStr = '';
+            if (!empty($sources)) {
+                $sourceLines = [];
+                foreach (array_slice($sources, 0, 5) as $src) {
+                    $sourceLines[] = "- {$src['title']} ({$src['domain']}) — {$src['url']}";
+                }
+                $sourcesStr = implode("\n", $sourceLines);
+            }
+
+            $briefSection = "\n\nSERP Analysis (from top-ranking pages):";
+            if ($intent) $briefSection .= "\nSearch Intent: {$intent}";
+            if ($angle) $briefSection .= "\nUnique Angle: {$angle}";
+            if ($recommendedWords) $briefSection .= "\nRecommended word count based on competitors: {$recommendedWords}";
+            if ($headingsStr) $briefSection .= "\nRecommended headings:\n- {$headingsStr}";
+            if ($questionsStr) $briefSection .= "\nQuestions to answer:\n- {$questionsStr}";
+            if ($entitiesStr) $briefSection .= "\nEntities to include: {$entitiesStr}";
+            if ($lsiStr) $briefSection .= "\nLSI/related terms to include: {$lsiStr}";
+            if ($sourcesStr) $briefSection .= "\n\nAuthoritative sources to cite (reference these naturally in the content):\n{$sourcesStr}";
+        }
+
         $prompt = <<<PROMPT
 You are an expert SEO content writer. Create a comprehensive, SEO-optimized {$contentType} for the topic: "{$title}"
 
 Target Keyword: {$keyword}
 Target Word Count: {$wordCount} words
 
-{$clusterContext}
+{$clusterContext}{$briefSection}
 
 Requirements:
 1. Write in a professional, engaging tone
@@ -171,6 +355,8 @@ Requirements:
 5. Add internal linking opportunities (suggest where to link to related content)
 6. Include a FAQ section at the end
 7. Write detailed, valuable content that satisfies search intent
+8. If SERP analysis is provided above, follow the recommended structure, entities, and questions closely
+9. If authoritative sources are listed above, cite them naturally in the content (e.g. "According to [Domain]..." or link to the source)
 
 Return a JSON response in this exact format:
 {
@@ -183,25 +369,561 @@ Return a JSON response in this exact format:
 IMPORTANT: Return ONLY the JSON, no markdown formatting, no code blocks.
 PROMPT;
 
-        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2)]);
-        
+        $response = $this->llm->generateText($prompt, ['max_tokens' => min(4000, $wordCount * 2), 'use_case' => 'content_generation']);
+
         if (is_wp_error($response)) {
             return $response;
         }
 
-        // Parse JSON response
-        $data = json_decode(trim($response), true);
-        if (!$data || !isset($data['content'])) {
-            // Try to extract content from non-JSON response
-            return [
-                'content' => $response,
-                'meta_description' => substr(strip_tags($response), 0, 160),
-                'tags' => [$keyword],
-                'word_count' => str_word_count(strip_tags($response)),
+        // Parse JSON response — LLMs often wrap JSON in markdown code blocks
+        $rawResponse = trim($response);
+        if (preg_match('/```(?:json)?\s*(.+?)\s*```/s', $rawResponse, $m)) {
+            $rawResponse = trim($m[1]);
+        }
+
+        $data = json_decode($rawResponse, true);
+
+        if ($data && isset($data['content'])) {
+            // Valid JSON received — verify content is not empty
+            if (trim(strip_tags($data['content'])) === '') {
+                return new \WP_Error('empty_content', __('AI returned empty content for this post', 'ai-seo-client'));
+            }
+            return $data;
+        }
+
+        // JSON parsing failed. If the response looks like JSON, return an error
+        // so the queue can retry instead of storing raw JSON as post content.
+        $looksLikeJson = (strpos(trim($rawResponse), '{') === 0 || strpos(trim($rawResponse), '[') === 0);
+        if ($looksLikeJson) {
+            return new \WP_Error('invalid_json', __('AI returned malformed JSON response', 'ai-seo-client'));
+        }
+
+        // Response is not JSON — treat it as HTML content directly
+        return [
+            'content' => $rawResponse,
+            'meta_description' => substr(strip_tags($rawResponse), 0, 160),
+            'tags' => [$keyword],
+            'word_count' => str_word_count(strip_tags($rawResponse)),
+        ];
+    }
+
+    /**
+     * Check whether any image generation API key is configured (generic or provider-specific).
+     * Used to decide whether to attempt featured image generation.
+     */
+    private function hasImageApiKey(): bool
+    {
+        $imageApi = get_option('sseo_ai_client_image_api', []);
+        if (!is_array($imageApi)) {
+            return false;
+        }
+        return !empty($imageApi['key'])
+            || !empty($imageApi['openrouter_key'])
+            || !empty($imageApi['openai_key'])
+            || !empty($imageApi['stability_key'])
+            || !empty($imageApi['openart_key']);
+    }
+
+    /**
+     * 1.4 — Check for keyword cannibalism: is there already a post targeting this keyword?
+     * Returns existing post data if found, null otherwise.
+     */
+    private function checkCannibalism(string $keyword): ?array
+    {
+        $normalizedKeyword = strtolower(trim($keyword));
+
+        // Check by exact focus keyphrase match
+        $existingPosts = get_posts([
+            'post_type' => 'post',
+            'post_status' => ['publish', 'draft', 'future', 'pending'],
+            'posts_per_page' => 1,
+            'meta_query' => [
+                [
+                    'key' => '_sseo_ai_focus_keyphrase',
+                    'value' => $normalizedKeyword,
+                    'compare' => 'LIKE',
+                ],
+            ],
+        ]);
+
+        if (!empty($existingPosts)) {
+            $post = $existingPosts[0];
+            $existingKeyword = strtolower(trim(get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true)));
+            // Check similarity
+            similar_text($existingKeyword, $normalizedKeyword, $percent);
+            if ($percent >= 80) {
+                return [
+                    'post_id' => $post->ID,
+                    'title' => $post->post_title,
+                    'edit_url' => get_edit_post_link($post->ID, ''),
+                    'focus_keyphrase' => get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true),
+                    'similarity' => round($percent, 1),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 1.1 — Get all posts belonging to a cluster
+     */
+    private function getClusterPosts(int $clusterId, int $excludePostId = 0): array
+    {
+        $posts = get_posts([
+            'post_type' => 'post',
+            'post_status' => ['publish', 'draft', 'future', 'pending'],
+            'posts_per_page' => 100,
+            'meta_query' => [
+                [
+                    'key' => '_sseo_ai_cluster_id',
+                    'value' => $clusterId,
+                    'compare' => '=',
+                ],
+            ],
+        ]);
+
+        $result = [];
+        foreach ($posts as $post) {
+            if ($post->ID === $excludePostId) continue;
+            $result[] = [
+                'id' => $post->ID,
+                'title' => $post->post_title,
+                'url' => get_permalink($post->ID),
+                'keyword' => get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true),
+                'role' => get_post_meta($post->ID, '_sseo_ai_cluster_role', true),
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * 1.1 — Inject internal links into a post's content, linking to other cluster posts.
+     * Scans for mentions of other cluster posts' keywords/titles and converts them to links.
+     */
+    private function injectInternalLinks(int $postId, int $clusterId, string $currentKeyword): void
+    {
+        $post = get_post($postId);
+        if (!$post) return;
+
+        $content = $post->post_content;
+        $clusterPosts = $this->getClusterPosts($clusterId, $postId);
+        if (empty($clusterPosts)) return;
+
+        $changed = false;
+        foreach ($clusterPosts as $clusterPost) {
+            // Use the cluster post's keyword or title as anchor text
+            $anchorCandidates = array_filter([
+                $clusterPost['keyword'] ?? '',
+                $clusterPost['title'] ?? '',
+            ]);
+
+            foreach ($anchorCandidates as $anchor) {
+                if (empty($anchor) || strlen($anchor) < 4) continue;
+
+                // Check if this anchor text appears in content and isn't already a link
+                $pattern = '/\b(' . preg_quote($anchor, '/') . ')\b(?![^<]*>|[^<>]*<\/a>)/i';
+                if (preg_match($pattern, $content)) {
+                    // Only add first occurrence to avoid over-linking
+                    $replacement = '<a href="' . esc_url($clusterPost['url']) . '">$1</a>';
+                    $newContent = preg_replace($pattern, $replacement, $content, 1);
+                    if ($newContent && $newContent !== $content) {
+                        $content = $newContent;
+                        $changed = true;
+                    }
+                    break; // Move to next cluster post
+                }
+            }
+        }
+
+        if ($changed) {
+            // Update post content without triggering a full re-save cycle
+            wp_update_post([
+                'ID' => $postId,
+                'post_content' => $content,
+            ], false);
+        }
+    }
+
+    /**
+     * 1.5 — Post-generation quality pipeline
+     * Runs TruSEO scoring, Smart Tags, FAQ Schema extraction, and OG meta generation.
+     */
+    private function runPostGenerationPipeline(int $postId, string $keyword, string $content): array
+    {
+        $scores = [];
+        $post = get_post($postId);
+        if (!$post) return $scores;
+
+        // TruSEO score calculation
+        if ($this->truSEO) {
+            try {
+                $score = $this->truSEO->calculateScore($post, $keyword);
+                update_post_meta($postId, '_sseo_ai_score', $score);
+                $scores['tru_seo'] = $score;
+            } catch (\Throwable $e) {
+                // Non-fatal: continue pipeline
+            }
+        }
+
+        // Smart Tags auto-generation
+        if ($this->smartTags) {
+            try {
+                $tags = $this->smartTags->generateTags($post);
+                if (!empty($tags)) {
+                    // Merge with any existing tags
+                    $existingTags = wp_get_post_tags($postId, ['fields' => 'names']);
+                    $allTags = array_unique(array_merge($existingTags, array_slice($tags, 0, 8)));
+                    wp_set_post_tags($postId, $allTags);
+                    $scores['tags_generated'] = count($tags);
+                }
+            } catch (\Throwable $e) {
+                // Non-fatal
+            }
+        }
+
+        // FAQ Schema extraction
+        if ($this->faqSchema) {
+            try {
+                $faqs = $this->faqSchema->extractFAQs($postId);
+                if (!empty($faqs)) {
+                    update_post_meta($postId, '_sseo_ai_auto_faqs', $faqs);
+                    $scores['faqs_extracted'] = count($faqs);
+                }
+            } catch (\Throwable $e) {
+                // Non-fatal
+            }
+        }
+
+        // Content Optimizer score (if available)
+        if ($this->contentOptimizer) {
+            try {
+                $optimizerResult = $this->contentOptimizer->scoreContent($keyword, $content, $post->post_title, $postId);
+                if (!is_wp_error($optimizerResult) && isset($optimizerResult['score'])) {
+                    update_post_meta($postId, '_sseo_ai_optimizer_score', $optimizerResult['score']);
+                    $scores['content_optimizer'] = $optimizerResult['score'];
+                }
+            } catch (\Throwable $e) {
+                // Non-fatal
+            }
+        }
+
+        // GEO content score (AI search citability)
+        if ($this->geoScore) {
+            try {
+                $geoResult = $this->geoScore->scoreContent($content, $keyword, $postId);
+                if (isset($geoResult['score'])) {
+                    $scores['geo_score'] = $geoResult['score'];
+                }
+            } catch (\Throwable $e) {
+                // Non-fatal
+            }
+        }
+
+        return $scores;
+    }
+
+    /**
+     * REST: Queue bulk generation for background processing (1.2)
+     * Creates a queue entry and lets WP-Cron process items.
+     */
+    public function restQueueBulkGeneration(\WP_REST_Request $request): array|\WP_Error
+    {
+        $pages = $request->get_param('pages');
+        $clusterId = (int) ($request->get_param('cluster_id') ?: 0);
+        $clusterMapId = (int) ($request->get_param('cluster_map_id') ?: 0);
+        $startDate = sanitize_text_field($request->get_param('start_date') ?: '');
+        $gapDays = (int) ($request->get_param('gap_days') ?: 3);
+
+        if (empty($pages) || !is_array($pages)) {
+            return new \WP_Error('missing_pages', __('Pages array is required', 'ai-seo-client'), ['status' => 400]);
+        }
+
+        // Create queue entry
+        $queues = get_option('sseo_ai_cluster_queues', []);
+        $queueId = count($queues) + 1;
+
+        $queueItems = [];
+        $scheduleDate = $startDate ? new \DateTime($startDate) : new \DateTime('+1 day');
+
+        foreach ($pages as $index => $page) {
+            $itemScheduleDate = clone $scheduleDate;
+            $itemScheduleDate->modify('+' . ($index * $gapDays) . ' days');
+
+            $queueItems[] = [
+                'title' => sanitize_text_field($page['title'] ?? ''),
+                'keyword' => sanitize_text_field($page['keyword'] ?? ''),
+                'word_count' => (int) ($page['word_count'] ?? 1500),
+                'content_type' => sanitize_text_field($page['content_type'] ?? 'article'),
+                'cluster_role' => sanitize_text_field($page['content_type'] ?? ''),
+                'schedule_date' => $itemScheduleDate->format('Y-m-d H:i:s'),
+                'status' => 'pending',
+                'post_id' => null,
+                'error' => null,
+                'attempts' => 0,
             ];
         }
 
-        return $data;
+        $queue = [
+            'id' => $queueId,
+            'cluster_id' => $clusterId,
+            'cluster_map_id' => $clusterMapId,
+            'items' => $queueItems,
+            'total' => count($queueItems),
+            'completed' => 0,
+            'failed' => 0,
+            'status' => 'pending',
+            'created_at' => current_time('mysql'),
+            'started_at' => null,
+            'completed_at' => null,
+        ];
+
+        $queues[] = $queue;
+        update_option('sseo_ai_cluster_queues', $queues);
+
+        // Schedule cron if not already scheduled
+        if (!wp_next_scheduled('sseo_ai_process_cluster_queue')) {
+            wp_schedule_event(time() + 60, 'sseo_ai_queue_interval', 'sseo_ai_process_cluster_queue');
+        }
+
+        return [
+            'success' => true,
+            'queue_id' => $queueId,
+            'total_items' => count($queueItems),
+            'message' => __('Queue created. Content will be generated in the background.', 'ai-seo-client'),
+        ];
+    }
+
+    /**
+     * REST: Get queue status (1.2)
+     */
+    public function restGetQueueStatus(\WP_REST_Request $request): array|\WP_Error
+    {
+        $queueId = (int) $request->get_param('queue_id');
+        $queues = get_option('sseo_ai_cluster_queues', []);
+
+        foreach ($queues as $queue) {
+            if (($queue['id'] ?? 0) === $queueId) {
+                $completed = 0;
+                $failed = 0;
+                $pending = 0;
+                $items = [];
+
+                foreach ($queue['items'] as $item) {
+                    $status = $item['status'] ?? 'pending';
+                    if ($status === 'completed') $completed++;
+                    elseif ($status === 'failed') $failed++;
+                    else $pending++;
+
+                    $items[] = [
+                        'title' => $item['title'],
+                        'keyword' => $item['keyword'],
+                        'status' => $status,
+                        'post_id' => $item['post_id'],
+                        'edit_url' => $item['post_id'] ? get_edit_post_link($item['post_id'], '') : null,
+                        'error' => $item['error'],
+                    ];
+                }
+
+                return [
+                    'queue_id' => $queueId,
+                    'status' => $queue['status'],
+                    'total' => $queue['total'],
+                    'completed' => $completed,
+                    'failed' => $failed,
+                    'pending' => $pending,
+                    'items' => $items,
+                    'created_at' => $queue['created_at'],
+                    'completed_at' => $queue['completed_at'],
+                ];
+            }
+        }
+
+        return new \WP_Error('not_found', __('Queue not found', 'ai-seo-client'), ['status' => 404]);
+    }
+
+    /**
+     * REST: Cancel a pending queue (1.2)
+     */
+    public function restCancelQueue(\WP_REST_Request $request): array|\WP_Error
+    {
+        $queueId = (int) $request->get_param('queue_id');
+        $queues = get_option('sseo_ai_cluster_queues', []);
+
+        foreach ($queues as &$queue) {
+            if (($queue['id'] ?? 0) === $queueId) {
+                $queue['status'] = 'cancelled';
+                foreach ($queue['items'] as &$item) {
+                    if ($item['status'] === 'pending') {
+                        $item['status'] = 'cancelled';
+                    }
+                }
+                update_option('sseo_ai_cluster_queues', $queues);
+                return ['success' => true, 'message' => __('Queue cancelled', 'ai-seo-client')];
+            }
+        }
+
+        return new \WP_Error('not_found', __('Queue not found', 'ai-seo-client'), ['status' => 404]);
+    }
+
+    /**
+     * REST: Re-run internal linking for all posts in a cluster (1.1)
+     */
+    public function restInterlinkCluster(\WP_REST_Request $request): array|\WP_Error
+    {
+        $clusterId = (int) $request->get_param('cluster_id');
+        if ($clusterId <= 0) {
+            return new \WP_Error('missing_id', __('Cluster ID is required', 'ai-seo-client'), ['status' => 400]);
+        }
+
+        $clusterPosts = $this->getClusterPosts($clusterId);
+        $linked = 0;
+
+        foreach ($clusterPosts as $clusterPost) {
+            $this->injectInternalLinks($clusterPost['id'], $clusterId, $clusterPost['keyword'] ?? '');
+            $linked++;
+        }
+
+        return [
+            'success' => true,
+            'cluster_id' => $clusterId,
+            'posts_processed' => $linked,
+            'message' => sprintf(__('Internal links updated for %d posts', 'ai-seo-client'), $linked),
+        ];
+    }
+
+    /**
+     * 1.2 — Process queue items via WP-Cron callback.
+     * Processes a limited number of items per run to avoid timeouts.
+     */
+    public function processQueueItems(): void
+    {
+        $queues = get_option('sseo_ai_cluster_queues', []);
+        if (empty($queues)) return;
+
+        $maxPerRun = (int) get_option('sseo_ai_queue_batch_size', 2);
+        $processed = 0;
+        $allDone = true;
+
+        foreach ($queues as &$queue) {
+            if ($queue['status'] !== 'pending' && $queue['status'] !== 'processing') continue;
+            $queue['status'] = 'processing';
+            if (!$queue['started_at']) {
+                $queue['started_at'] = current_time('mysql');
+            }
+
+            foreach ($queue['items'] as &$item) {
+                if ($item['status'] !== 'pending') continue;
+                if ($processed >= $maxPerRun) {
+                    $allDone = false;
+                    break;
+                }
+
+                $item['status'] = 'processing';
+                $item['attempts'] = ($item['attempts'] ?? 0) + 1;
+
+                try {
+                    // Generate content for this item
+                    $content = $this->generateClusterPageContent(
+                        $item['title'],
+                        $item['keyword'],
+                        $item['word_count'],
+                        $item['content_type'],
+                        ''
+                    );
+
+                    if (is_wp_error($content)) {
+                        throw new \Exception($content->get_error_message());
+                    }
+
+                    // Determine post status
+                    $postData = [
+                        'post_title' => $item['title'],
+                        'post_content' => $content['content'],
+                        'post_type' => 'post',
+                        'post_author' => get_current_user_id() ?: 1,
+                        'meta_input' => [
+                            '_sseo_ai_title' => $item['title'],
+                            '_sseo_ai_description' => $content['meta_description'] ?? '',
+                            '_sseo_ai_focus_keyphrase' => $item['keyword'],
+                            '_sseo_ai_generated' => '1',
+                            '_sseo_ai_generated_date' => current_time('mysql'),
+                            '_sseo_ai_cluster_id' => $queue['cluster_id'] ?? 0,
+                            '_sseo_ai_cluster_role' => $item['cluster_role'] ?? '',
+                        ],
+                    ];
+
+                    $scheduleDate = $item['schedule_date'] ?? '';
+                    if (!empty($scheduleDate) && strtotime(get_gmt_from_date($scheduleDate)) > time()) {
+                        $postData['post_status'] = 'future';
+                        $postData['post_date'] = $scheduleDate;
+                    } else {
+                        $postData['post_status'] = 'draft';
+                    }
+
+                    $postId = wp_insert_post($postData);
+
+                    if (is_wp_error($postId)) {
+                        throw new \Exception($postId->get_error_message());
+                    }
+
+                    // Add tags
+                    if (!empty($content['tags'])) {
+                        wp_set_post_tags($postId, $content['tags']);
+                    }
+
+                    // Inject internal links
+                    $clusterId = $queue['cluster_id'] ?? 0;
+                    if ($clusterId > 0) {
+                        $this->injectInternalLinks($postId, $clusterId, $item['keyword']);
+                    }
+
+                    // Quality pipeline
+                    $this->runPostGenerationPipeline($postId, $item['keyword'], $content['content']);
+
+                    // Featured image — always try to generate when any image API key is configured
+                    if ($this->hasImageApiKey()) {
+                        $generator = new AIImageGenerator($this->settings, $this->llm);
+                        $generator->generateFeaturedImage($postId, 'photorealistic', $item['title'], 100);
+                    }
+
+                    $item['status'] = 'completed';
+                    $item['post_id'] = $postId;
+                    $queue['completed'] = ($queue['completed'] ?? 0) + 1;
+                } catch (\Throwable $e) {
+                    $item['status'] = 'failed';
+                    $item['error'] = $e->getMessage();
+                    $queue['failed'] = ($queue['failed'] ?? 0) + 1;
+
+                    // Retry once more on next run if attempts < 2
+                    if ($item['attempts'] < 2) {
+                        $item['status'] = 'pending';
+                        $queue['failed'] = max(0, ($queue['failed'] ?? 0) - 1);
+                    }
+                }
+
+                $processed++;
+            }
+
+            // Check if queue is complete
+            $pendingItems = array_filter($queue['items'], fn($i) => $i['status'] === 'pending' || $i['status'] === 'processing');
+            if (empty($pendingItems)) {
+                $queue['status'] = 'completed';
+                $queue['completed_at'] = current_time('mysql');
+            } else {
+                $allDone = false;
+            }
+        }
+
+        update_option('sseo_ai_cluster_queues', $queues);
+
+        // Clear cron if all queues are done
+        if ($allDone) {
+            $timestamp = wp_next_scheduled('sseo_ai_process_cluster_queue');
+            if ($timestamp) {
+                wp_clear_scheduled_hook('sseo_ai_process_cluster_queue');
+            }
+        }
     }
 
     /**
@@ -291,23 +1013,60 @@ Requirements:
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, 'seo_expert', 4000);
+        $result = $this->llm->call($prompt, null, 'seo_expert', 4000, [], 'keyword_research');
         if (is_wp_error($result)) {
             return $result;
         }
 
-        $text = $result['text'] ?? '';
-        $text = preg_replace('/```json?\s*/', '', $text);
-        $text = preg_replace('/```\s*/', '', $text);
+        $data = $this->parseClusterJson($result['text'] ?? '');
+        if (is_wp_error($data)) {
+            // Retry once with a stricter prompt and lower temperature for reliability
+            $retryPrompt = $prompt . "\n\nIMPORTANT: Your previous response was not valid JSON. Return ONLY a valid JSON object starting with { and ending with }. No markdown, no code fences, no commentary.";
+            $retryResult = $this->llm->call($retryPrompt, null, 'seo_expert', 4000, [], 'keyword_research');
+            if (!is_wp_error($retryResult)) {
+                $data = $this->parseClusterJson($retryResult['text'] ?? '');
+            }
+        }
 
-        $data = json_decode(trim($text), true);
-        if (!$data || !isset($data['pillar_page'])) {
-            return new \WP_Error('parse_error', __('Failed to generate topic cluster', 'ai-seo-client'));
+        if (is_wp_error($data)) {
+            return $data;
         }
 
         $data['topic'] = $topic;
         $data['generated_at'] = current_time('mysql');
         $data['depth'] = $depth;
+
+        return $data;
+    }
+
+    /**
+     * Parse and validate the JSON returned by the LLM for a cluster map.
+     * Strips markdown fences, extracts the JSON object, and validates structure.
+     *
+     * @return array|\WP_Error
+     */
+    private function parseClusterJson(string $rawText): array|\WP_Error
+    {
+        $text = $rawText;
+        // Strip markdown code fences
+        $text = preg_replace('/^```(?:json)?\s*\n?/i', '', trim($text));
+        $text = preg_replace('/\n?```\s*$/', '', $text);
+
+        // Try to extract JSON if there's extra text around it
+        $jsonStart = strpos($text, '{');
+        $jsonEnd = strrpos($text, '}');
+        if ($jsonStart !== false && $jsonEnd !== false && $jsonEnd > $jsonStart) {
+            $text = substr($text, $jsonStart, $jsonEnd - $jsonStart + 1);
+        }
+
+        $data = json_decode(trim($text), true);
+        if (!$data || !isset($data['pillar_page'])) {
+            return new \WP_Error(
+                'parse_error',
+                __('De gegenereerde topic cluster kon niet worden geparseerd. De AI retourneerde geen geldige JSON. Probeer het opnieuw of verklein de depth instelling.', 'ai-seo-client')
+                    . ' Response: ' . substr($rawText, 0, 500)
+            );
+        }
 
         return $data;
     }
@@ -458,11 +1217,11 @@ PROMPT;
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
             .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
         </style>
         <div class="wrap sseo-ai-modern">
@@ -473,8 +1232,9 @@ PROMPT;
             
             <div class="sseo-ai-content">
                 <div style="max-width:1400px;">
+                    <?php DashboardSorter::begin('ai-seo-topic-clusters'); ?>
                     <!-- Generator -->
-                    <div class="postbox" style="padding:20px;">
+                    <div class="postbox" style="padding:20px;" data-card-id="tc-generator">
                     <h2 style="margin-top:0;"><?php esc_html_e('Generate Topic Cluster', 'ai-seo-client'); ?></h2>
                     <div style="display:flex;gap:10px;align-items:end;">
                         <div style="flex:1;">
@@ -502,6 +1262,7 @@ PROMPT;
                             </select>
                         </div>
                         <button type="button" class="button button-primary" id="tc-generate" style="height:30px;"><?php esc_html_e('Generate Map', 'ai-seo-client'); ?></button>
+                        <span id="tc-generate-spinner" class="spinner" style="float:none;margin:0 5px;"></span>
                         <button type="button" class="button" id="tc-audit" style="height:30px;"><?php esc_html_e('Audit Existing Content', 'ai-seo-client'); ?></button>
                     </div>
                 </div>
@@ -509,12 +1270,19 @@ PROMPT;
                 <!-- Audit Results -->
                 <div id="tc-audit-result" style="display:none;margin-top:20px;"></div>
 
+                <!-- Inline Error Message -->
+                <div id="tc-error-msg" style="display:none;margin-top:20px;padding:15px 20px;background:#fee2e2;border:1px solid #dc2626;border-radius:8px;color:#991b1b;">
+                    <strong>&#9888; <?php esc_html_e('Fout', 'ai-seo-client'); ?>:</strong>
+                    <span id="tc-error-text"></span>
+                    <button type="button" class="button button-small" style="float:right;" onclick="jQuery('#tc-error-msg').slideUp();">&times;</button>
+                </div>
+
                 <!-- Cluster Map -->
                 <div id="tc-result" style="display:none;margin-top:20px;">
                     <!-- Overview -->
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
                         <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="tc-total-pages" style="font-size:28px;font-weight:bold;color:#2563eb;">0</div>
+                            <div id="tc-total-pages" style="font-size:28px;font-weight:bold;color:#379fd3;">0</div>
                             <div style="font-size:12px;color:#666;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
                         </div>
                         <div class="postbox" style="padding:15px;text-align:center;">
@@ -531,8 +1299,18 @@ PROMPT;
                         </div>
                     </div>
 
+                    <!-- Priority Legend -->
+                    <div class="postbox" style="padding:15px;margin-bottom:20px;">
+                        <h3 style="margin:0 0 10px 0;font-size:16px;"><?php esc_html_e('Priority Legend', 'ai-seo-client'); ?></h3>
+                        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:13px;">
+                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#16a34a;"></span> <?php esc_html_e('High — high search volume or strong strategic value', 'ai-seo-client'); ?></span>
+                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#d97706;"></span> <?php esc_html_e('Medium — moderate priority', 'ai-seo-client'); ?></span>
+                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#6b7280;"></span> <?php esc_html_e('Low — lower priority / nice to have', 'ai-seo-client'); ?></span>
+                        </div>
+                    </div>
+
                     <!-- Pillar Page -->
-                    <div id="tc-pillar" class="postbox" style="padding:20px;border-left:4px solid #2563eb;"></div>
+                    <div id="tc-pillar" class="postbox" style="padding:20px;border-left:4px solid #379fd3;"></div>
 
                     <!-- Cluster Grid -->
                     <div id="tc-cluster-grid" style="margin-top:20px;"></div>
@@ -558,6 +1336,13 @@ PROMPT;
                                     <?php esc_html_e('Review All Pages', 'ai-seo-client'); ?>
                                 </button>
                                 <button type="button" class="button button-primary" id="tc-save"><?php esc_html_e('Save This Cluster Map', 'ai-seo-client'); ?></button>
+                                <span style="margin-left:10px;display:inline-flex;align-items:center;gap:5px;">
+                                    <label style="font-size:12px;color:#166534;"><?php esc_html_e('Start:', 'ai-seo-client'); ?></label>
+                                    <input type="date" id="tc-schedule-start" style="width:140px;" />
+                                    <label style="font-size:12px;color:#166534;margin-left:5px;"><?php esc_html_e('Gap (days):', 'ai-seo-client'); ?></label>
+                                    <input type="number" id="tc-schedule-gap" value="3" min="1" max="14" style="width:60px;" />
+                                </span>
+                                <button type="button" class="button" id="tc-sync-calendar" style="margin-left:5px;"><?php esc_html_e('Sync to Content Calendar', 'ai-seo-client'); ?></button>
                             </div>
                         </div>
                         <p style="margin:0;color:#166534;font-size:13px;">
@@ -568,13 +1353,22 @@ PROMPT;
                     <!-- Pages Review Table (Hidden by default) -->
                     <div id="tc-review-section" style="display:none;margin-top:20px;">
                         <div class="postbox" style="padding:20px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
                                 <h3 style="margin:0;">📄 <?php esc_html_e('All Pages in Cluster', 'ai-seo-client'); ?></h3>
-                                <div style="display:flex;gap:10px;">
+                                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                                    <div style="display:flex;gap:8px;align-items:center;">
+                                        <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Start date', 'ai-seo-client'); ?></label>
+                                        <input type="date" id="tc-schedule-start" class="small-text" style="font-size:12px;">
+                                        <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Gap (days)', 'ai-seo-client'); ?></label>
+                                        <input type="number" id="tc-schedule-gap" value="3" min="1" class="small-text" style="width:60px;font-size:12px;">
+                                    </div>
                                     <button type="button" class="button" id="tc-select-all"><?php esc_html_e('Select All', 'ai-seo-client'); ?></button>
                                     <button type="button" class="button" id="tc-deselect-all"><?php esc_html_e('Deselect All', 'ai-seo-client'); ?></button>
                                     <button type="button" class="button button-primary" id="tc-bulk-generate" style="background:#16a34a;border-color:#16a34a;">
                                         <?php esc_html_e('Generate Selected', 'ai-seo-client'); ?> (<span id="tc-selected-count">0</span>)
+                                    </button>
+                                    <button type="button" class="button button-primary" id="tc-generate-all" style="background:#0d6efd;border-color:#0d6efd;margin-left:5px;">
+                                        <?php esc_html_e('Generate All', 'ai-seo-client'); ?>
                                     </button>
                                 </div>
                             </div>
@@ -582,7 +1376,7 @@ PROMPT;
                             <!-- Stats -->
                             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
                                 <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
-                                    <div id="tc-review-total" style="font-size:24px;font-weight:bold;color:#2563eb;">0</div>
+                                    <div id="tc-review-total" style="font-size:24px;font-weight:bold;color:#379fd3;">0</div>
                                     <div style="font-size:12px;color:#64748b;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
                                 </div>
                                 <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
@@ -611,6 +1405,7 @@ PROMPT;
                                             <th style="width:100px;"><?php esc_html_e('Words', 'ai-seo-client'); ?></th>
                                             <th style="width:100px;"><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
                                             <th style="width:120px;"><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                            <th style="width:50px;text-align:center;"><?php esc_html_e('Delete', 'ai-seo-client'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody id="tc-pages-tbody">
@@ -621,7 +1416,19 @@ PROMPT;
 
                             <!-- Bulk Progress -->
                             <div id="tc-bulk-progress" style="display:none;margin-top:20px;padding:20px;background:#f0fdf4;border-radius:8px;">
-                                <h4 style="margin:0 0 15px 0;color:#166534;">⏳ <?php esc_html_e('Generating Content...', 'ai-seo-client'); ?></h4>
+                                <h4 style="margin:0 0 15px 0;color:#166534;">⏳ <?php esc_html_e('Generating Content in Background...', 'ai-seo-client'); ?></h4>
+                                <p style="margin:0 0 10px 0;font-size:13px;color:#166534;"><?php esc_html_e('Content is generated via WP-Cron. You can close this page — check back later or view your drafts/scheduled posts.', 'ai-seo-client'); ?></p>
+                                <div style="margin:0 0 15px 0;padding:15px;background:rgba(22,163,74,0.08);border-radius:8px;border:1px solid #16a34a;">
+                                    <p style="margin:0 0 10px 0;font-size:14px;color:#166534;font-style:italic;">
+                                        🏝️ <?php esc_html_e('Sit back and relax or book your next vacation to Bora Bora', 'ai-seo-client'); ?>
+                                    </p>
+                                    <a href="https://www.booking.com/searchresults.nl.html?ss=Bora+Bora%2C+Frans-Polynesi%C3%AB&efdco=1&label=gen173nr-10CAEoggI46AdIM1gEaKkBiAEBmAEzuAEXyAEM2AED6AEB-AEBiAIBqAIBuALu2PvTBsACAdICJGQ0ZmUxYWQ4LWFjNGYtNGYwOS05ODYzLWYyYjAxYmRkZDM4ONgCAeACAQ&aid=304142&lang=nl&sb=1&src_elem=sb&src=index&dest_id=3978&dest_type=region&ac_position=0&ac_click_type=b&ac_langcode=nl&ac_suggestion_list_length=5&search_selected=true&search_pageview_id=a33848f7b86208f0&ac_meta=GhBhMzM4NDhmN2I4NjIwOGYwIAAoATICbmw6CWJvcmEgYm9yYQ%3D%3D&group_adults=2&no_rooms=1&group_children=0"
+                                       target="_blank" rel="noopener noreferrer"
+                                       class="button button-primary"
+                                       style="background:#16a34a;border-color:#16a34a;text-decoration:none;">
+                                        <?php esc_html_e('Book your Bora Bora trip', 'ai-seo-client'); ?> →
+                                    </a>
+                                </div>
                                 <div style="background:#e2e8f0;border-radius:10px;height:24px;overflow:hidden;margin-bottom:10px;">
                                     <div id="tc-progress-bar" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;width:0%;transition:width 0.3s ease;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;">0%</div>
                                 </div>
@@ -640,6 +1447,7 @@ PROMPT;
                         <h3 style="margin-top:0;"><?php esc_html_e('Saved Cluster Maps', 'ai-seo-client'); ?></h3>
                         <div id="tc-saved-list"></div>
                     </div>
+                    <?php DashboardSorter::end('ai-seo-topic-clusters'); ?>
                 </div>
             </div>
         </div>
@@ -701,6 +1509,7 @@ PROMPT;
                 if (!topic) return;
                 var btn = $(this);
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
+                $('#tc-generate-spinner').addClass('is-active');
                 if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
@@ -713,9 +1522,10 @@ PROMPT;
                     $('#tc-result').show();
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
                 }).catch(function(err) {
-                    alert(err.message || 'Failed');
+                    showInlineError(err.message || '<?php echo esc_js(__('Failed to generate cluster map', 'ai-seo-client')); ?>');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
                 }).finally(function() {
+                    $('#tc-generate-spinner').removeClass('is-active');
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
@@ -759,7 +1569,7 @@ PROMPT;
                     $('#tc-audit-result').html(html).show();
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Audit Existing Content', 'ai-seo-client')); ?>');
                 }).catch(function(err) {
-                    alert(err.message || 'Failed');
+                    showInlineError(err.message || '<?php echo esc_js(__('Audit failed', 'ai-seo-client')); ?>');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Audit Existing Content', 'ai-seo-client')); ?>');
                 }).finally(function() {
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
@@ -767,7 +1577,7 @@ PROMPT;
             });
 
             // Generate content for cluster item
-            function generateClusterContent(title, keyword, wordCount, contentType, buttonElement) {
+            function generateClusterContent(title, keyword, wordCount, contentType, buttonElement, scheduleDate) {
                 var context = currentCluster ? 'Part of "' + (currentCluster.topic || '') + '" topic cluster. Related pages: ' +
                     ((currentCluster.clusters||[]).map(function(c) {
                         return (c.hub_page?.title||'') + ', ' + (c.supporting_pages||[]).map(function(s){return s.title;}).join(', ');
@@ -778,24 +1588,36 @@ PROMPT;
                 btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
                 if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
+                var payload = {
+                    title: title,
+                    keyword: keyword,
+                    word_count: wordCount || 1500,
+                    content_type: contentType || 'article',
+                    cluster_context: context,
+                    cluster_id: currentCluster ? (currentCluster.id || 0) : 0,
+                    cluster_role: contentType || ''
+                };
+                if (scheduleDate) {
+                    payload.schedule_date = scheduleDate;
+                }
+
                 wp.apiFetch({
                     path: '/sseo-ai/v1/clusters/generate-content',
                     method: 'POST',
-                    data: {
-                        title: title,
-                        keyword: keyword,
-                        word_count: wordCount || 1500,
-                        content_type: contentType || 'article',
-                        cluster_context: context
-                    }
+                    data: payload
                 }).then(function(res) {
-                    btn.prop('disabled', false).html('✓ <?php echo esc_js(__('Created Draft', 'ai-seo-client')); ?>');
+                    var statusLabel = scheduleDate ? '✓ <?php echo esc_js(__('Scheduled', 'ai-seo-client')); ?>' : '✓ <?php echo esc_js(__('Created Draft', 'ai-seo-client')); ?>';
+                    btn.prop('disabled', false).html(statusLabel);
                     btn.after(' <a href="' + res.edit_url + '" class="button button-small" style="margin-left:5px;"><?php echo esc_js(__('Edit', 'ai-seo-client')); ?></a>');
+                    if (res.quality_scores) {
+                        var scoreText = Object.entries(res.quality_scores).map(function(e) { return e[0] + ': ' + e[1]; }).join(', ');
+                        btn.after('<span style="margin-left:8px;font-size:11px;color:#64748b;">' + escapeHtml(scoreText) + '</span>');
+                    }
                     setTimeout(function() {
                         btn.text(originalText).prop('disabled', false);
                     }, 3000);
                 }).catch(function(err) {
-                    alert('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (err.message || '<?php echo esc_js(__('Failed to generate content', 'ai-seo-client')); ?>'));
+                    showInlineError('<?php echo esc_js(__('Error:', 'ai-seo-client')); ?> ' + (err.message || '<?php echo esc_js(__('Failed to generate content', 'ai-seo-client')); ?>'));
                     btn.prop('disabled', false).text(originalText);
                 }).finally(function() {
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
@@ -809,63 +1631,79 @@ PROMPT;
                 $('#tc-months').text(data.estimated_months || 0);
                 $('#tc-authority').text(data.topical_authority_score_potential || 0);
 
-                // Pillar with generate button
+                // Pillar with generate + delete button
                 var p = data.pillar_page || {};
                 $('#tc-pillar').html(
                     '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
                     '<div>' +
-                    '<h2 style="margin-top:0;color:#2563eb;">🏛️ ' + (p.title || 'Pillar Page') + '</h2>' +
+                    '<h2 style="margin-top:0;color:#379fd3;">🏛️ ' + (p.title || 'Pillar Page') + '</h2>' +
                     '<p>' + (p.description || '') + '</p>' +
                     '<div style="display:flex;gap:15px;font-size:13px;color:#666;">' +
                     '<span>🎯 ' + (p.target_keyword || '') + '</span>' +
                     '<span>📝 ' + (p.target_word_count || 3000) + ' words</span>' +
                     '<span>🔍 ' + (p.search_intent || '') + '</span></div>' +
                     '</div>' +
+                    '<div style="display:flex;gap:5px;align-items:center;">' +
                     '<button type="button" class="button button-primary tc-generate-content" ' +
                     'data-title="' + escapeHtml(p.title || '') + '" ' +
                     'data-keyword="' + escapeHtml(p.target_keyword || '') + '" ' +
                     'data-words="' + (p.target_word_count || 3000) + '" ' +
                     'data-type="pillar"><?php echo esc_js(__('Generate Content', 'ai-seo-client')); ?></button>' +
+                    '<button type="button" class="button button-small tc-delete-card" data-role="pillar" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;">&times;</button>' +
+                    '</div>' +
                     '</div>'
                 );
 
-                // Clusters with generate buttons
+                // Clusters with generate + delete buttons
                 var gridHtml = '';
-                var priorityColors = {high:'#dc2626',medium:'#d97706',low:'#059669'};
+                var priorityColors = {high:'#16a34a',medium:'#d97706',low:'#6b7280'};
+                var priorityTooltips = {
+                    high: '<?php echo esc_js(__('High priority: high search volume or strong strategic value', 'ai-seo-client')); ?>',
+                    medium: '<?php echo esc_js(__('Medium priority: moderate priority for your content plan', 'ai-seo-client')); ?>',
+                    low: '<?php echo esc_js(__('Low priority: lower search volume / nice to have', 'ai-seo-client')); ?>'
+                };
                 (data.clusters || []).forEach(function(cl, idx) {
                     gridHtml += '<div class="postbox" style="padding:15px;margin-bottom:15px;">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
                         '<h3 style="margin-top:0;">📂 ' + cl.name + '</h3>' +
+                        '<button type="button" class="button button-small tc-delete-card" data-role="cluster" data-cluster-idx="' + idx + '" title="<?php echo esc_js(__('Delete this cluster', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;">&times;</button>' +
+                        '</div>' +
                         '<p style="font-size:12px;color:#666;">' + (cl.description || '') + '</p>';
 
-                    // Hub with generate button
+                    // Hub with generate + delete button
                     var h = cl.hub_page || {};
-                    gridHtml += '<div style="padding:10px;background:#eff6ff;border-radius:6px;border-left:3px solid #2563eb;margin:10px 0;display:flex;justify-content:space-between;align-items:center;">' +
+                    gridHtml += '<div style="padding:10px;background:#eff6ff;border-radius:6px;border-left:3px solid #379fd3;margin:10px 0;display:flex;justify-content:space-between;align-items:center;">' +
                         '<div>' +
                         '<strong>Hub: ' + (h.title || '') + '</strong>' +
                         '<div style="font-size:11px;color:#666;margin-top:4px;">' +
                         '🎯 ' + (h.target_keyword || '') + ' · ' + (h.target_word_count || 0) + ' words · ' +
-                        '<span style="color:' + (priorityColors[h.priority]||'#999') + ';">' + (h.priority || '') + '</span></div>' +
+                        '<span style="color:' + (priorityColors[h.priority]||'#999') + ';" title="' + (priorityTooltips[h.priority] || '') + '">' + (h.priority || '') + '</span></div>' +
                         '</div>' +
+                        '<div style="display:flex;gap:5px;align-items:center;">' +
                         '<button type="button" class="button tc-generate-content" ' +
                         'data-title="' + escapeHtml(h.title || '') + '" ' +
                         'data-keyword="' + escapeHtml(h.target_keyword || '') + '" ' +
                         'data-words="' + (h.target_word_count || 1500) + '" ' +
                         'data-type="hub"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button>' +
+                        '<button type="button" class="button button-small tc-delete-card" data-role="hub" data-cluster-idx="' + idx + '" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;">&times;</button>' +
+                        '</div>' +
                         '</div>';
 
-                    // Supporting pages with generate buttons
-                    (cl.supporting_pages || []).forEach(function(sp) {
+                    // Supporting pages with generate + delete buttons
+                    (cl.supporting_pages || []).forEach(function(sp, spIdx) {
                         gridHtml += '<div style="padding:8px 10px;margin:4px 0 4px 20px;background:#f9f9f9;border-left:2px solid #93c5fd;border-radius:0 4px 4px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;">' +
                             '<div>' + sp.title +
                             '<div style="font-size:11px;color:#666;">' +
                             '🎯 ' + (sp.target_keyword || '') + ' · ' + (sp.target_word_count || 0) + 'w · ' +
                             '<span style="background:#e0e7ff;padding:1px 4px;border-radius:2px;font-size:10px;">' + (sp.content_type || '') + '</span>' +
                             '</div></div>' +
+                            '<div style="display:flex;gap:3px;align-items:center;">' +
                             '<button type="button" class="button button-small tc-generate-content" ' +
                             'data-title="' + escapeHtml(sp.title || '') + '" ' +
                             'data-keyword="' + escapeHtml(sp.target_keyword || '') + '" ' +
                             'data-words="' + (sp.target_word_count || 800) + '" ' +
                             'data-type="supporting"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button>' +
+                            '<button type="button" class="button button-small tc-delete-card" data-role="supporting" data-cluster-idx="' + idx + '" data-page-idx="' + spIdx + '" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;padding:1px 5px;">&times;</button>' +
                             '</div>';
                     });
                     gridHtml += '</div>';
@@ -884,6 +1722,30 @@ PROMPT;
                     );
                 });
 
+                // Bind delete-card buttons (pillar/hub/supporting/cluster)
+                $(document).off('click', '.tc-delete-card').on('click', '.tc-delete-card', function() {
+                    var role = $(this).data('role');
+                    var clusterIdx = $(this).data('cluster-idx');
+                    var pageIdx = $(this).data('page-idx');
+                    if (!confirm('<?php echo esc_js(__('Delete this topic from the cluster?', 'ai-seo-client')); ?>')) return;
+
+                    if (role === 'pillar') {
+                        delete currentCluster.pillar_page;
+                    } else if (role === 'cluster') {
+                        if (currentCluster.clusters) currentCluster.clusters.splice(clusterIdx, 1);
+                    } else if (role === 'hub') {
+                        if (currentCluster.clusters && currentCluster.clusters[clusterIdx]) {
+                            delete currentCluster.clusters[clusterIdx].hub_page;
+                        }
+                    } else if (role === 'supporting') {
+                        if (currentCluster.clusters && currentCluster.clusters[clusterIdx] && currentCluster.clusters[clusterIdx].supporting_pages) {
+                            currentCluster.clusters[clusterIdx].supporting_pages.splice(pageIdx, 1);
+                        }
+                    }
+                    // Re-render the cluster grid and review table
+                    renderCluster(currentCluster);
+                });
+
                 // Linking
                 var linkHtml = '';
                 (data.internal_linking_strategy || []).forEach(function(rule) {
@@ -894,15 +1756,33 @@ PROMPT;
                 // Calendar
                 var calHtml = '';
                 (data.content_calendar || []).forEach(function(w) {
-                    calHtml += '<div style="padding:12px;background:#f9f9f9;border-radius:6px;border-top:3px solid #2563eb;">' +
+                    calHtml += '<div style="padding:12px;background:#f9f9f9;border-radius:6px;border-top:3px solid #379fd3;">' +
                         '<strong>Week ' + w.week + '</strong><br>' +
                         '<span style="font-size:12px;color:#666;">' + w.action + '</span><br>' +
-                        '<span style="font-size:11px;color:#2563eb;">' + (w.pages || []).join(', ') + '</span></div>';
+                        '<span style="font-size:11px;color:#379fd3;">' + (w.pages || []).join(', ') + '</span></div>';
                 });
                 $('#tc-calendar').html(calHtml);
                 
                 // Populate review table
                 populateReviewTable(data);
+
+                // Set default schedule start date to tomorrow if empty
+                if (!$('#tc-schedule-start').val()) {
+                    var tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    var yyyy = tomorrow.getFullYear();
+                    var mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                    var dd = String(tomorrow.getDate()).padStart(2, '0');
+                    $('#tc-schedule-start').val(yyyy + '-' + mm + '-' + dd);
+                }
+
+                // Suggest gap based on content calendar (fallback to 3 days)
+                var totalPages = data.total_pages || (window.tcAllPages || []).length;
+                var months = data.estimated_months || 1;
+                if (totalPages && months) {
+                    var suggestedGap = Math.max(1, Math.round((months * 30) / totalPages));
+                    $('#tc-schedule-gap').val(suggestedGap);
+                }
             }
 
             // Review Table Population
@@ -965,12 +1845,17 @@ PROMPT;
             
             function renderReviewTable(pages) {
                 var html = '';
-                var priorityColors = {high:'#dc2626',medium:'#d97706',low:'#059669'};
+                var priorityColors = {high:'#16a34a',medium:'#d97706',low:'#6b7280'};
+                var priorityTooltips = {
+                    high: '<?php echo esc_js(__('High priority: high search volume or strong strategic value', 'ai-seo-client')); ?>',
+                    medium: '<?php echo esc_js(__('Medium priority: moderate priority for your content plan', 'ai-seo-client')); ?>',
+                    low: '<?php echo esc_js(__('Low priority: lower search volume / nice to have', 'ai-seo-client')); ?>'
+                };
                 var priorityLabels = {high:'<?php echo esc_js(__('High', 'ai-seo-client')); ?>',medium:'<?php echo esc_js(__('Medium', 'ai-seo-client')); ?>',low:'<?php echo esc_js(__('Low', 'ai-seo-client')); ?>'};
                 
                 pages.forEach(function(page) {
                     var typeBadge = '';
-                    if (page.typeClass === 'pillarp') typeBadge = '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">PILLAR</span>';
+                    if (page.typeClass === 'pillarp') typeBadge = '<span style="background:#e8f4fa;color:#8f39ac;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">PILLAR</span>';
                     else if (page.typeClass === 'hub') typeBadge = '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">HUB</span>';
                     else typeBadge = '<span style="background:#f3f4f6;color:#4b5563;padding:2px 8px;border-radius:4px;font-size:11px;">Supporting</span>';
                     
@@ -980,8 +1865,9 @@ PROMPT;
                         '<td>' + typeBadge + '</td>' +
                         '<td><code style="background:#f3f4f6;padding:2px 6px;border-radius:3px;font-size:11px;">' + escapeHtml(page.keyword || '-') + '</code></td>' +
                         '<td style="text-align:center;">' + page.words.toLocaleString() + '</td>' +
-                        '<td style="text-align:center;"><span style="color:' + priorityColors[page.priority] + ';font-weight:600;font-size:12px;">' + priorityLabels[page.priority] + '</span></td>' +
+                        '<td style="text-align:center;"><span style="color:' + priorityColors[page.priority] + ';font-weight:600;font-size:12px;" title="' + (priorityTooltips[page.priority] || '') + '">' + priorityLabels[page.priority] + '</span></td>' +
                         '<td style="text-align:center;" class="tc-status-cell"><span class="tc-status-pending" style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:12px;font-size:11px;"><?php echo esc_js(__('Pending', 'ai-seo-client')); ?></span></td>' +
+                        '<td style="text-align:center;"><button type="button" class="button button-small tc-delete-page" data-page-id="' + page.id + '" title="<?php echo esc_js(__('Delete this topic', 'ai-seo-client')); ?>" style="color:#dc2626;border-color:#fecaca;line-height:1;padding:2px 6px;">&times;</button></td>' +
                         '</tr>';
                 });
                 
@@ -1036,8 +1922,44 @@ PROMPT;
                 $('#tc-select-all-checkbox').prop('checked', false);
                 updateReviewStats();
             });
-            
-            // Bulk Generate
+
+            // Delete individual topic/page from the review table
+            $(document).on('click', '.tc-delete-page', function() {
+                var pageId = $(this).data('page-id');
+                if (!confirm('<?php echo esc_js(__('Delete this topic from the cluster?', 'ai-seo-client')); ?>')) return;
+                // Remove from window.tcAllPages
+                if (window.tcAllPages) {
+                    window.tcAllPages = window.tcAllPages.filter(function(p) { return p.id !== pageId; });
+                }
+                // Remove the row
+                $('tr[data-page-id="' + pageId + '"]').fadeOut(300, function() { $(this).remove(); });
+                updateReviewStats();
+            });
+
+            // Generate All — selects all pages then triggers bulk generate
+            $('#tc-generate-all').on('click', function() {
+                if (!window.tcAllPages || window.tcAllPages.length === 0) {
+                    showInlineError('<?php echo esc_js(__('No pages to generate. Generate a cluster map first.', 'ai-seo-client')); ?>');
+                    return;
+                }
+                $('.tc-page-checkbox').prop('checked', true);
+                $('#tc-select-all-checkbox').prop('checked', true);
+                updateReviewStats();
+                // Trigger the bulk generate flow
+                $('#tc-bulk-generate').trigger('click');
+            });
+
+            // Inline error display helper (replaces alert() for better UX)
+            function showInlineError(message) {
+                $('#tc-error-text').text(message);
+                $('#tc-error-msg').slideDown();
+                $('html, body').animate({
+                    scrollTop: $('#tc-error-msg').offset().top - 100
+                }, 300);
+            }
+            window.showInlineError = showInlineError;
+
+            // Bulk Generate — Queue-based background processing
             $('#tc-bulk-generate').on('click', function() {
                 var selectedIds = [];
                 $('.tc-page-checkbox:checked').each(function() {
@@ -1049,103 +1971,123 @@ PROMPT;
                     return;
                 }
 
-                if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages? This may take several minutes.', 'ai-seo-client')); ?>')) {
+                // Scheduling settings
+                var startDateInput = $('#tc-schedule-start').val();
+                var gapDays = parseInt($('#tc-schedule-gap').val(), 10) || 3;
+                if (!startDateInput) {
+                    var tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    var yyyy = tomorrow.getFullYear();
+                    var mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                    var dd = String(tomorrow.getDate()).padStart(2, '0');
+                    startDateInput = yyyy + '-' + mm + '-' + dd;
+                }
+
+                if (!confirm('<?php echo esc_js(__('Generate content for', 'ai-seo-client')); ?> ' + selectedIds.length + ' <?php echo esc_js(__('pages in the background? You can close this page — content will be generated and scheduled automatically.', 'ai-seo-client')); ?>')) {
                     return;
                 }
+
+                // Build pages array for queue
+                var pages = [];
+                selectedIds.forEach(function(pageId) {
+                    var page = window.tcAllPages.find(function(p) { return p.id === pageId; });
+                    if (page) {
+                        pages.push({
+                            title: page.title,
+                            keyword: page.keyword,
+                            word_count: page.words,
+                            content_type: page.content_type
+                        });
+                    }
+                });
 
                 // Show progress
                 $('#tc-bulk-progress').show();
                 $('#tc-bulk-results').hide().html('');
                 $('#tc-bulk-generate').prop('disabled', true);
-                if (typeof sseoShowLoader === 'function') sseoShowLoader();
-
-                var completed = 0;
-                var failed = 0;
-                var total = selectedIds.length;
-                var results = [];
-
-                function updateProgress() {
-                    var percent = Math.round((completed + failed) / total * 100);
-                    $('#tc-progress-bar').css('width', percent + '%').text(percent + '%');
-                    $('#tc-progress-text').text(completed + ' <?php echo esc_js(__('completed', 'ai-seo-client')); ?>, ' + failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>, ' + (total - completed - failed) + ' <?php echo esc_js(__('remaining', 'ai-seo-client')); ?>');
-                }
+                $('#tc-progress-bar').css('width', '0%').text('0%');
+                $('#tc-progress-text').text('<?php echo esc_js(__('Submitting to background queue...', 'ai-seo-client')); ?>');
+                $('#tc-progress-log').html('');
 
                 function log(message) {
                     var time = new Date().toLocaleTimeString();
                     $('#tc-progress-log').prepend('[' + time + '] ' + message + '\n');
                 }
 
-                function processNext(index) {
-                    if (index >= selectedIds.length) {
-                        // All done
-                        $('#tc-bulk-generate').prop('disabled', false);
-                        $('#tc-progress-text').text('<?php echo esc_js(__('Complete!', 'ai-seo-client')); ?> ' + completed + ' <?php echo esc_js(__('pages generated', 'ai-seo-client')); ?>');
-                        if (typeof sseoHideLoader === 'function') sseoHideLoader();
-                        
-                        // Show results
-                        var resultsHtml = '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:20px;">' +
-                            '<h4 style="margin:0 0 15px 0;color:#166534;">✅ <?php echo esc_js(__('Content Generation Complete!', 'ai-seo-client')); ?></h4>' +
-                            '<p><?php echo esc_js(__('Successfully generated', 'ai-seo-client')); ?> ' + completed + ' <?php echo esc_js(__('drafts. Go to Posts → Drafts to review and publish.', 'ai-seo-client')); ?></p>' +
-                            '<a href="<?php echo esc_url(admin_url('edit.php?post_status=draft&post_type=post')); ?>" class="button button-primary" style="background:#16a34a;border-color:#16a34a;"><?php echo esc_js(__('View Drafts', 'ai-seo-client')); ?></a>' +
-                            '</div>';
-                        $('#tc-bulk-results').html(resultsHtml).show();
-                        return;
+                // Submit to queue endpoint
+                wp.apiFetch({
+                    path: '/sseo-ai/v1/clusters/queue',
+                    method: 'POST',
+                    data: {
+                        pages: pages,
+                        cluster_id: currentCluster ? (currentCluster.id || 0) : 0,
+                        cluster_map_id: currentCluster ? (currentCluster.id || 0) : 0,
+                        start_date: startDateInput + ' 09:00:00',
+                        gap_days: gapDays
                     }
-                    
-                    var pageId = selectedIds[index];
-                    var page = window.tcAllPages.find(function(p) { return p.id === pageId; });
-                    if (!page) {
-                        failed++;
-                        updateProgress();
-                        processNext(index + 1);
-                        return;
-                    }
-                    
-                    // Update status to generating
-                    var $row = $('tr[data-page-id="' + pageId + '"]');
-                    $row.find('.tc-status-cell').html('<span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:12px;font-size:11px;">⏳ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
-                    
-                    log('<?php echo esc_js(__('Generating', 'ai-seo-client')); ?>: ' + page.title);
-                    
-                    // Get cluster context
-                    var context = currentCluster ? 'Part of "' + (currentCluster.topic || '') + '" topic cluster.' : '';
-                    
-                    wp.apiFetch({
-                        path: '/sseo-ai/v1/clusters/generate-content',
-                        method: 'POST',
-                        data: {
-                            title: page.title,
-                            keyword: page.keyword,
-                            word_count: page.words,
-                            content_type: page.content_type,
-                            cluster_context: context
-                        }
-                    }).then(function(res) {
-                        completed++;
-                        updateProgress();
-                        log('✅ <?php echo esc_js(__('Created', 'ai-seo-client')); ?>: ' + page.title);
-                        
-                        // Update row status
-                        $row.find('.tc-status-cell').html('<a href="' + res.edit_url + '" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:11px;text-decoration:none;">✓ <?php echo esc_js(__('Edit Draft', 'ai-seo-client')); ?></a>');
-                        $row.find('.tc-page-checkbox').prop('checked', false);
-                        
-                        // Continue to next
-                        setTimeout(function() { processNext(index + 1); }, 500);
-                    }).catch(function(err) {
-                        failed++;
-                        updateProgress();
-                        log('❌ <?php echo esc_js(__('Failed', 'ai-seo-client')); ?>: ' + page.title + ' - ' + (err.message || '<?php echo esc_js(__('Error', 'ai-seo-client')); ?>'));
-                        
-                        // Update row status
-                        $row.find('.tc-status-cell').html('<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:12px;font-size:11px;">❌ <?php echo esc_js(__('Failed', 'ai-seo-client')); ?></span>');
-                        
-                        // Continue to next
-                        setTimeout(function() { processNext(index + 1); }, 500);
+                }).then(function(res) {
+                    log('✅ <?php echo esc_js(__('Queue created with', 'ai-seo-client')); ?> ' + res.total_items + ' <?php echo esc_js(__('items', 'ai-seo-client')); ?>');
+                    $('#tc-progress-text').text('<?php echo esc_js(__('Queue active — generating in background...', 'ai-seo-client')); ?>');
+
+                    // Mark all selected rows as queued
+                    selectedIds.forEach(function(pageId) {
+                        var $row = $('tr[data-page-id="' + pageId + '"]');
+                        $row.find('.tc-status-cell').html('<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:12px;font-size:11px;">⏳ <?php echo esc_js(__('Queued', 'ai-seo-client')); ?></span>');
                     });
-                }
-                
-                // Start processing
-                processNext(0);
+
+                    // Poll for status
+                    var queueId = res.queue_id;
+                    var pollInterval = setInterval(function() {
+                        wp.apiFetch({
+                            path: '/sseo-ai/v1/clusters/queue/' + queueId
+                        }).then(function(status) {
+                            var percent = Math.round((status.completed + status.failed) / status.total * 100);
+                            $('#tc-progress-bar').css('width', percent + '%').text(percent + '%');
+                            $('#tc-progress-text').text(
+                                status.completed + ' <?php echo esc_js(__('completed', 'ai-seo-client')); ?>, ' +
+                                status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>, ' +
+                                status.pending + ' <?php echo esc_js(__('remaining', 'ai-seo-client')); ?>'
+                            );
+
+                            // Update row statuses
+                            status.items.forEach(function(item, idx) {
+                                var pageId = selectedIds[idx];
+                                if (!pageId) return;
+                                var $row = $('tr[data-page-id="' + pageId + '"]');
+
+                                if (item.status === 'completed') {
+                                    $row.find('.tc-status-cell').html('<a href="' + (item.edit_url || '#') + '" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:11px;text-decoration:none;">✓ <?php echo esc_js(__('Done', 'ai-seo-client')); ?></a>');
+                                } else if (item.status === 'failed') {
+                                    $row.find('.tc-status-cell').html('<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:12px;font-size:11px;">❌ <?php echo esc_js(__('Failed', 'ai-seo-client')); ?></span>');
+                                } else if (item.status === 'processing') {
+                                    $row.find('.tc-status-cell').html('<span style="background:#e8f4fa;color:#8f39ac;padding:3px 10px;border-radius:12px;font-size:11px;">⏳ <?php echo esc_js(__('Generating...', 'ai-seo-client')); ?></span>');
+                                }
+                            });
+
+                            // Check if done
+                            if (status.status === 'completed' || status.status === 'cancelled') {
+                                clearInterval(pollInterval);
+                                $('#tc-bulk-generate').prop('disabled', false);
+
+                                var resultsHtml = '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:20px;">' +
+                                    '<h4 style="margin:0 0 15px 0;color:#166534;">✅ <?php echo esc_js(__('Content Generation Complete!', 'ai-seo-client')); ?></h4>' +
+                                    '<p><?php echo esc_js(__('Generated', 'ai-seo-client')); ?> ' + status.completed + ' <?php echo esc_js(__('posts', 'ai-seo-client')); ?>' +
+                                    (status.failed > 0 ? ', ' + status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>' : '') + '.</p>' +
+                                    '<a href="<?php echo esc_url(admin_url('edit.php?post_status=future&post_type=post')); ?>" class="button button-primary" style="background:#16a34a;border-color:#16a34a;margin-right:10px;"><?php echo esc_js(__('View Scheduled Posts', 'ai-seo-client')); ?></a>' +
+                                    '<a href="<?php echo esc_url(admin_url('edit.php?post_status=draft&post_type=post')); ?>" class="button"><?php echo esc_js(__('View Drafts', 'ai-seo-client')); ?></a>' +
+                                    '</div>';
+                                $('#tc-bulk-results').html(resultsHtml).show();
+                                log('✅ <?php echo esc_js(__('Queue completed', 'ai-seo-client')); ?>: ' + status.completed + ' <?php echo esc_js(__('done', 'ai-seo-client')); ?>, ' + status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>');
+                            }
+                        }).catch(function(err) {
+                            log('❌ <?php echo esc_js(__('Polling error', 'ai-seo-client')); ?>: ' + (err.message || 'unknown'));
+                        });
+                    }, 5000); // Poll every 5 seconds
+                }).catch(function(err) {
+                    alert('<?php echo esc_js(__('Error creating queue', 'ai-seo-client')); ?>: ' + (err.message || 'unknown'));
+                    $('#tc-bulk-generate').prop('disabled', false);
+                    $('#tc-bulk-progress').hide();
+                });
             });
 
             // Escape HTML helper
@@ -1166,6 +2108,34 @@ PROMPT;
                 }).then(function() {
                     alert('<?php echo esc_js(__('Cluster saved!', 'ai-seo-client')); ?>');
                     loadSaved();
+                });
+            });
+
+            // Sync to Content Calendar
+            $('#tc-sync-calendar').on('click', function() {
+                if (!currentCluster) return;
+                var btn = $(this);
+                btn.prop('disabled', true).text('<?php echo esc_js(__('Syncing...', 'ai-seo-client')); ?>');
+                var startDate = $('#tc-schedule-start').val() || '';
+                var gapDays = parseInt($('#tc-schedule-gap').val(), 10) || 3;
+                wp.apiFetch({
+                    path: '/sseo-ai/v1/calendar/sync-cluster',
+                    method: 'POST',
+                    data: {
+                        cluster: currentCluster,
+                        start_date: startDate + ' 09:00:00',
+                        gap_days: gapDays
+                    }
+                }).then(function(res) {
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('Sync to Content Calendar', 'ai-seo-client')); ?>');
+                    var msg = '<?php echo esc_js(__("Synced", "ai-seo-client")); ?> ' + res.synced + '/' + res.total + ' <?php echo esc_js(__("pages to the content calendar as scheduled drafts.", "ai-seo-client")); ?>';
+                    if (res.errors.length) {
+                        msg += '\n<?php echo esc_js(__("Errors:", "ai-seo-client")); ?>\n' + res.errors.join('\n');
+                    }
+                    alert(msg);
+                }).catch(function(err) {
+                    btn.prop('disabled', false).text('<?php echo esc_js(__('Sync to Content Calendar', 'ai-seo-client')); ?>');
+                    alert(err.message || 'Sync failed');
                 });
             });
         });

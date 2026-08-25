@@ -6,8 +6,8 @@ namespace SSEOAIClient;
  * Unified Post Meta Box with Grouped Accordion
  * 
  * Replaces 20+ individual meta boxes on the post edit screen
- * with a single "Fyndable SEO" meta box containing grouped
- * accordion sections with Fyndable branding.
+ * with a single "Fyndable Smart SEO" meta box containing grouped
+ * accordion sections with custom branding.
  */
 class PostMetaBox
 {
@@ -60,6 +60,10 @@ class PostMetaBox
     {
         $postTypes = get_post_types(['public' => true]);
 
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $metaBoxTitle = $companyName . ' SEO';
+
         $hasNormal = false;
         $hasAttachment = false;
 
@@ -77,7 +81,7 @@ class PostMetaBox
             foreach ($postTypes as $postType) {
                 add_meta_box(
                     'fyndable_seo_meta',
-                    __('Fyndable SEO', 'ai-seo-client'),
+                    $metaBoxTitle,
                     [$this, 'renderMetaBox'],
                     $postType,
                     'normal',
@@ -89,7 +93,7 @@ class PostMetaBox
         if ($hasAttachment) {
             add_meta_box(
                 'fyndable_seo_meta_attachment',
-                __('Fyndable SEO', 'ai-seo-client'),
+                $metaBoxTitle,
                 [$this, 'renderAttachmentMetaBox'],
                 'attachment',
                 'normal',
@@ -110,6 +114,9 @@ class PostMetaBox
 
         wp_register_script('fyndable-post-metabox', false);
         wp_enqueue_script('fyndable-post-metabox');
+        wp_localize_script('fyndable-post-metabox', 'sseoAiLoaderText', [
+            'text' => __('AI is generating... Please wait.', 'ai-seo-client'),
+        ]);
         wp_add_inline_script('fyndable-post-metabox', $this->getInlineJS());
     }
 
@@ -143,13 +150,30 @@ class PostMetaBox
             return;
         }
 
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
+        $companyLogo = !empty($whiteLabel['company_logo']) ? $whiteLabel['company_logo'] : '';
+        $brandName = $companyName . ' Smart SEO';
+
         echo '<div class="fyndable-seo-container">';
 
         // Gradient header
         echo '<div class="fyndable-seo-header">';
-        echo '<span class="fyndable-seo-logo">Fyndable <strong>SmartSEO</strong></span>';
+        echo '<span class="fyndable-seo-logo">';
+        if ($companyLogo) {
+            echo '<img src="' . esc_url($companyLogo) . '" alt="' . esc_attr($companyName) . '" style="max-height: 22px; max-width: 160px; display: block; vertical-align: middle;">';
+        } else {
+            echo esc_html($brandName);
+        }
+        echo '</span>';
         echo '<span class="fyndable-seo-badge">' . esc_html__('Post Optimization', 'ai-seo-client') . '</span>';
         echo '</div>';
+
+        // Fact check badge (if a fact check has been run for this post)
+        $factCheckMeta = get_post_meta($post->ID, '_sseo_ai_fact_check', true);
+        if (is_array($factCheckMeta)) {
+            $this->renderFactCheckBadge($factCheckMeta);
+        }
 
         // Accordion groups
         foreach ($groupsWithItems as $gIndex => $group) {
@@ -204,9 +228,61 @@ class PostMetaBox
         echo '</div>';
     }
 
+    /**
+     * Render a fact-check warning badge from stored post meta.
+     */
+    private function renderFactCheckBadge(array $report): void
+    {
+        $verdict = $report['verdict'] ?? 'uncertain';
+        $warnings = $report['warnings'] ?? [];
+        $verdictColors = [
+            'supported' => '#16a34a',
+            'uncertain' => '#d97706',
+            'questionable' => '#dc2626',
+        ];
+        $verdictLabels = [
+            'supported' => __('Fact check: supported', 'ai-seo-client'),
+            'uncertain' => __('Fact check: uncertain', 'ai-seo-client'),
+            'questionable' => __('Fact check: questionable', 'ai-seo-client'),
+        ];
+        $color = $verdictColors[$verdict] ?? '#6b7280';
+        $label = $verdictLabels[$verdict] ?? __('Fact check: unknown', 'ai-seo-client');
+        $warningCount = count($warnings);
+
+        echo '<div class="sseo-fact-check-badge" style="padding:10px 14px;border-radius:8px;margin:10px 0;background:'
+            . $color . '15;border:1px solid ' . $color . '40;">';
+        echo '<div style="display:flex;align-items:center;gap:8px;">';
+        echo '<span style="color:' . $color . ';font-weight:600;">&#9888; ' . esc_html($label) . '</span>';
+        if ($warningCount > 0) {
+            echo '<span style="background:' . $color . ';color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;">'
+                . $warningCount . '</span>';
+        }
+        echo '</div>';
+
+        if (!empty($warnings)) {
+            echo '<ul style="margin:8px 0 0 0;padding-left:20px;color:#475569;font-size:13px;">';
+            foreach ($warnings as $warning) {
+                echo '<li>' . esc_html($warning) . '</li>';
+            }
+            echo '</ul>';
+        }
+
+        echo '<p style="margin:8px 0 0 0;font-size:11px;color:#6b7280;">'
+            . esc_html__('This is an AI self-assessment, not external fact verification.', 'ai-seo-client')
+            . '</p>';
+        echo '</div>';
+    }
+
     private function getInlineCSS(): string
     {
-        return <<<'CSS'
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $hasCustomBrand = !empty($whiteLabel['company_name']);
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
+        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
+        $headerGradient = $usePrimaryOnly ? $primaryColor : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+
+        $css = <<<'CSS'
 /* Container */
 .fyndable-seo-container { margin: -6px -12px -12px; }
 
@@ -214,13 +290,14 @@ class PostMetaBox
 .fyndable-seo-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 18px;
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
+    background: __HEADER_GRADIENT__;
     color: #fff;
 }
 .fyndable-seo-logo { font-size: 15px; letter-spacing: 0.3px; opacity: 0.95; }
 .fyndable-seo-logo strong { font-weight: 700; }
+.fyndable-seo-logo img { display: inline-block; vertical-align: middle; }
 .fyndable-seo-badge {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    font-size: 11px; font-weight: 600; 
     letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px;
     background: rgba(255,255,255,0.2); color: #fff;
 }
@@ -245,8 +322,8 @@ class PostMetaBox
 .fyndable-seo-chevron { font-size: 12px; color: #9ca3af; transition: transform 0.2s; }
 .fyndable-seo-group.open .fyndable-seo-chevron { transform: rotate(180deg); }
 .fyndable-seo-group.open .fyndable-seo-group-header {
-    background: #eef2ff; color: #1e40af;
-    border-left: 3px solid #3b82f6; padding-left: 15px;
+    background: #eef2ff; color: __PRIMARY__;
+    border-left: 3px solid __PRIMARY__; padding-left: 15px;
 }
 
 /* Group body */
@@ -265,9 +342,9 @@ class PostMetaBox
     border-bottom: 2px solid transparent; margin-bottom: -1px;
     transition: all 0.15s;
 }
-.fyndable-seo-subtab-nav li a:hover { color: #1e40af; background: #fff; }
+.fyndable-seo-subtab-nav li a:hover { color: __PRIMARY__; background: #fff; }
 .fyndable-seo-subtab-nav li.active a {
-    color: #1e40af; border-bottom-color: #3b82f6; background: #fff;
+    color: __PRIMARY__; border-bottom-color: __PRIMARY__; background: #fff;
     font-weight: 600;
 }
 .fyndable-seo-subtab-panel { padding: 16px 18px; }
@@ -281,7 +358,30 @@ class PostMetaBox
 #fyndable_seo_meta_attachment .postbox-header { display: none; }
 #fyndable_seo_meta .inside,
 #fyndable_seo_meta_attachment .inside { padding: 0; margin: 0; }
+
+/* Global AI loader overlay */
+#sseo-ai-loader-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 100001; justify-content: center; align-items: center;
+    flex-direction: column; backdrop-filter: blur(4px);
+}
+#sseo-ai-loader-overlay.active { display: flex !important; }
+#sseo-ai-loader-overlay .sseo-loader-spinner {
+    width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%; animation: sseo-spin 1s linear infinite;
+}
+#sseo-ai-loader-overlay .sseo-loader-text {
+    color: #fff; margin-top: 20px; font-size: 16px; font-weight: 500;
+    text-align: center; max-width: 300px; line-height: 1.5;
+}
+@keyframes sseo-spin { to { transform: rotate(360deg); } }
 CSS;
+
+        return str_replace(
+            ['__HEADER_GRADIENT__', '__PRIMARY__'],
+            [$headerGradient, $primaryColor],
+            $css
+        );
     }
 
     private function getInlineJS(): string
@@ -289,6 +389,16 @@ CSS;
         return <<<'JS'
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
+
+        // Inject global AI loader overlay if not present
+        if (!document.getElementById('sseo-ai-loader-overlay')) {
+            var overlay = document.createElement('div');
+            overlay.id = 'sseo-ai-loader-overlay';
+            overlay.innerHTML = '<div class="sseo-loader-spinner"></div><div class="sseo-loader-text">' + (window.sseoAiLoaderText ? window.sseoAiLoaderText.text : 'AI is generating...') + '</div>';
+            document.body.appendChild(overlay);
+        }
+        window.sseoShowLoader = function() { jQuery('#sseo-ai-loader-overlay').addClass('active'); };
+        window.sseoHideLoader = function() { jQuery('#sseo-ai-loader-overlay').removeClass('active'); };
 
         // Accordion group toggle (exclusive — opening one closes others)
         var container = document.querySelector('.fyndable-seo-container');
@@ -323,9 +433,10 @@ CSS;
         subtabLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 var subtabId = link.getAttribute('data-subtab');
                 var subtabContainer = link.closest('.fyndable-seo-subtabs');
-                if (!subtabContainer) return;
+                if (!subtabContainer) return false;
 
                 subtabContainer.querySelectorAll('.fyndable-seo-subtab-nav li').forEach(function(el) {
                     el.classList.remove('active');
@@ -335,6 +446,7 @@ CSS;
                 subtabContainer.querySelectorAll('.fyndable-seo-subtab-panel').forEach(function(panel) {
                     panel.style.display = panel.id === subtabId ? '' : 'none';
                 });
+                return false;
             });
         });
     });

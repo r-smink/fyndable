@@ -75,9 +75,9 @@
 			if (!postId) return;
 			apiFetch({ path: `/wp/v2/posts/${postId}` }).then((post) => {
 				if (post.meta) {
-					if (post.meta._aiseo_focus_keyphrase) setKeyphrase(post.meta._aiseo_focus_keyphrase);
-					if (post.meta._aiseo_title) setSeoTitle(post.meta._aiseo_title);
-					if (post.meta._aiseo_description) setSeoDesc(post.meta._aiseo_description);
+					if (post.meta._sseo_ai_focus_keyphrase) setKeyphrase(post.meta._sseo_ai_focus_keyphrase);
+					if (post.meta._sseo_ai_title) setSeoTitle(post.meta._sseo_ai_title);
+					if (post.meta._sseo_ai_description) setSeoDesc(post.meta._sseo_ai_description);
 				}
 			}).catch(() => {});
 		}, [postId]);
@@ -136,9 +136,9 @@
 				method: 'POST',
 				data: {
 					meta: {
-						_aiseo_focus_keyphrase: keyphrase,
-						_aiseo_title: seoTitle,
-						_aiseo_description: seoDesc,
+						_sseo_ai_focus_keyphrase: keyphrase,
+						_sseo_ai_title: seoTitle,
+						_sseo_ai_description: seoDesc,
 					}
 				}
 			}).then(() => {
@@ -187,6 +187,26 @@
 						wp.element.createElement('div', { style: { fontSize: 18, color: '#1a0dab', lineHeight: 1.3, marginBottom: 3 } }, previewTitle.substring(0, 60)),
 						wp.element.createElement('div', { style: { fontSize: 14, color: '#006621', marginBottom: 3 } }, siteUrl),
 						wp.element.createElement('div', { style: { fontSize: 14, color: '#4d5156', lineHeight: 1.4 } }, previewDesc.substring(0, 160))
+					)
+				),
+
+				// Social Preview
+				wp.element.createElement(PanelBody, { title: 'Social Preview', initialOpen: false },
+					wp.element.createElement('div', { style: { background: '#fff', border: '1px solid #ddd', borderRadius: 8, marginBottom: 12, overflow: 'hidden', fontFamily: 'arial, sans-serif' } },
+						wp.element.createElement('div', { style: { background: '#e4e6eb', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#65676b', fontSize: 13 } }, 'No image set'),
+						wp.element.createElement('div', { style: { padding: 10 } },
+							wp.element.createElement('div', { style: { fontSize: 12, color: '#65676b', textTransform: 'uppercase', marginBottom: 2 } }, siteUrl.replace(/^https?:\/\//, '')),
+							wp.element.createElement('div', { style: { fontSize: 15, color: '#050505', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, previewTitle.substring(0, 65)),
+							wp.element.createElement('div', { style: { fontSize: 13, color: '#65676b', lineHeight: 1.4 } }, previewDesc.substring(0, 155))
+						)
+					),
+					wp.element.createElement('div', { style: { background: '#fff', border: '1px solid #ddd', borderRadius: 12, overflow: 'hidden', fontFamily: 'arial, sans-serif' } },
+						wp.element.createElement('div', { style: { background: '#e4e6eb', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#65676b', fontSize: 13 } }, 'No image set'),
+						wp.element.createElement('div', { style: { padding: 10 } },
+							wp.element.createElement('div', { style: { fontSize: 13, color: '#536471', marginBottom: 2 } }, siteUrl.replace(/^https?:\/\//, '')),
+							wp.element.createElement('div', { style: { fontSize: 15, color: '#0f1419', fontWeight: 600, lineHeight: 1.3, marginBottom: 3 } }, previewTitle.substring(0, 70)),
+							wp.element.createElement('div', { style: { fontSize: 13, color: '#536471', lineHeight: 1.4 } }, previewDesc.substring(0, 160))
+						)
 					)
 				),
 

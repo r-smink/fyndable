@@ -15,6 +15,9 @@ class TenantRepository
     private const TENANT_USAGE_TABLE = 'sseo_ai_tenant_usage';
     private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
     private const GOOGLE_API_USAGE_TABLE = 'sseo_ai_google_api_usage';
+    private const SUPPORT_TICKETS_TABLE = 'sseo_ai_support_tickets';
+    private const SUPPORT_REPLIES_TABLE = 'sseo_ai_support_replies';
+    private const AGENCY_ACCOUNTS_TABLE = 'sseo_ai_agency_accounts';
     
     private ?string $currentTenantId = null;
     
@@ -28,7 +31,21 @@ class TenantRepository
         
         $charsetCollate = $wpdb->get_charset_collate();
         $prefix = $wpdb->prefix;
-        
+
+        // Pre-dbDelta migration: add 'inactive' to status enum.
+        // Must run BEFORE dbDelta to avoid dbDelta's broken ALTER that appends
+        // "DEFAULT CHARACTER SET ... COLLATE ..." (invalid with a DEFAULT value clause).
+        $tenantsTablePre = $prefix . self::TENANTS_TABLE;
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $tenantsTablePre))) {
+            $statusEnum = $wpdb->get_var($wpdb->prepare(
+                "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'status'",
+                $tenantsTablePre
+            ));
+            if ($statusEnum && strpos($statusEnum, 'inactive') === false) {
+                $wpdb->query("ALTER TABLE $tenantsTablePre MODIFY COLUMN status enum('active', 'inactive', 'suspended', 'cancelled') NOT NULL DEFAULT 'active'");
+            }
+        }
+
         // Main tenants table
         $sql1 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::TENANTS_TABLE . " (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -36,8 +53,8 @@ class TenantRepository
             name varchar(255) NOT NULL,
             domain varchar(255) DEFAULT NULL,
             email varchar(255) NOT NULL,
-            status enum('active', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
-            tier enum('free', 'trial', 'starter', 'professional', 'business', 'agency') NOT NULL DEFAULT 'free',
+            status enum('active', 'inactive', 'suspended', 'cancelled') NOT NULL DEFAULT 'active',
+            tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
             license_key varchar(255) DEFAULT NULL,
             max_sites int(11) NOT NULL DEFAULT 1,
             rate_limit int(11) NOT NULL DEFAULT 60,
@@ -48,12 +65,14 @@ class TenantRepository
             payment_status varchar(20) DEFAULT NULL,
             last_payment_at datetime DEFAULT NULL,
             metadata longtext DEFAULT NULL,
+            parent_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant ID for sub-tenants',
             PRIMARY KEY (id),
             UNIQUE KEY tenant_key (tenant_key),
             UNIQUE KEY license_key (license_key),
             KEY status (status),
             KEY tier (tier),
-            KEY expires_at (expires_at)
+            KEY expires_at (expires_at),
+            KEY parent_tenant_id (parent_tenant_id)
         ) $charsetCollate;";
         
         // Tenant settings (override global settings)
@@ -79,6 +98,10 @@ class TenantRepository
             serp_requests int(11) NOT NULL DEFAULT 0,
             content_generated int(11) NOT NULL DEFAULT 0,
             keywords_tracked int(11) NOT NULL DEFAULT 0,
+            ai_mentions int(11) NOT NULL DEFAULT 0,
+            llm_response_calls int(11) NOT NULL DEFAULT 0,
+            trends_requests int(11) NOT NULL DEFAULT 0,
+            backlinks_requests int(11) NOT NULL DEFAULT 0,
             last_updated datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY tenant_period (tenant_id, period),
@@ -91,7 +114,7 @@ class TenantRepository
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             license_key varchar(255) NOT NULL,
             license_type enum('test', 'free', 'paid', 'lifetime', 'trial') NOT NULL DEFAULT 'paid',
-            tier enum('free', 'trial', 'starter', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
+            tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter',
             status enum('active', 'used', 'revoked', 'expired') NOT NULL DEFAULT 'active',
             max_sites int(11) NOT NULL DEFAULT 1,
             rate_limit int(11) NOT NULL DEFAULT 60,
@@ -105,12 +128,15 @@ class TenantRepository
             expires_at datetime DEFAULT NULL,
             revoked_at datetime DEFAULT NULL,
             revoked_reason text DEFAULT NULL,
+            agency_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant that generated this sub-license',
+            key_prefix varchar(10) DEFAULT NULL COMMENT 'Custom prefix for agency sub-licenses',
             PRIMARY KEY (id),
             UNIQUE KEY license_key (license_key),
             KEY status (status),
             KEY license_type (license_type),
             KEY tier (tier),
-            KEY created_at (created_at)
+            KEY created_at (created_at),
+            KEY agency_tenant_id (agency_tenant_id)
         ) $charsetCollate;";
         
         dbDelta($sql1);
@@ -134,6 +160,84 @@ class TenantRepository
             KEY service (service)
         ) $charsetCollate;";
         dbDelta($sql5);
+
+        // Support ticket system
+        $sql6 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::SUPPORT_TICKETS_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tenant_id bigint(20) unsigned NOT NULL,
+            subject varchar(255) NOT NULL,
+            message longtext NOT NULL,
+            priority enum('low', 'middle', 'high') NOT NULL DEFAULT 'middle',
+            status enum('open', 'reaction', 'closed') NOT NULL DEFAULT 'open',
+            screenshots longtext DEFAULT NULL COMMENT 'JSON array of attachment URLs',
+            last_read_reply_id bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'Last reply ID read by the customer/agency',
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY tenant_id (tenant_id),
+            KEY status (status),
+            KEY priority (priority),
+            KEY created_at (created_at)
+        ) $charsetCollate;";
+
+        $sql7 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::SUPPORT_REPLIES_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            ticket_id bigint(20) unsigned NOT NULL,
+            is_staff tinyint(1) NOT NULL DEFAULT 0,
+            author_name varchar(255) DEFAULT NULL,
+            message longtext NOT NULL,
+            screenshots longtext DEFAULT NULL COMMENT 'JSON array of attachment URLs',
+            is_read tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Whether this staff reply has been read by the customer/agency',
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY ticket_id (ticket_id),
+            KEY is_staff (is_staff),
+            KEY is_read (is_read),
+            KEY created_at (created_at)
+        ) $charsetCollate;";
+
+        dbDelta($sql6);
+        dbDelta($sql7);
+
+        // Agency accounts table (links WP users to agency tenants)
+        $sql8 = "CREATE TABLE IF NOT EXISTS {$prefix}" . self::AGENCY_ACCOUNTS_TABLE . " (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) unsigned NOT NULL COMMENT 'WordPress user ID with agency_partner role',
+            tenant_id bigint(20) unsigned NOT NULL COMMENT 'Agency tenant ID',
+            max_sub_licenses int(11) NOT NULL DEFAULT 10 COMMENT 'Maximum sub-licenses this agency can generate',
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY user_id (user_id),
+            KEY tenant_id (tenant_id)
+        ) $charsetCollate;";
+        dbDelta($sql8);
+
+        // Invoices table (also created lazily by WebhookHandler, but ensure it exists on activation
+        // so the Bookkeeping admin page works before any payment is received).
+        $sql9 = "CREATE TABLE IF NOT EXISTS {$prefix}sseo_ai_invoices (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tenant_key varchar(64) NOT NULL,
+            provider varchar(20) NOT NULL,
+            amount decimal(10,2) NOT NULL,
+            currency varchar(3) NOT NULL DEFAULT 'EUR',
+            external_id varchar(255) DEFAULT NULL,
+            status enum('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
+            invoice_number varchar(50) DEFAULT NULL,
+            tier varchar(20) DEFAULT NULL,
+            billing_interval varchar(10) DEFAULT NULL,
+            description varchar(255) DEFAULT NULL,
+            mollie_subscription_id varchar(255) DEFAULT NULL,
+            pdf_path varchar(500) DEFAULT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            paid_at datetime DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY tenant_key (tenant_key),
+            KEY provider (provider),
+            KEY status (status),
+            KEY created_at (created_at),
+            KEY invoice_number (invoice_number)
+        ) $charsetCollate;";
+        dbDelta($sql9);
     }
     
     /**
@@ -194,13 +298,14 @@ class TenantRepository
             'domain' => !empty($data['domain']) ? sanitize_text_field($data['domain']) : null,
             'email' => sanitize_email($data['email']),
             'status' => $data['status'] ?? 'active',
-            'tier' => $data['tier'] ?? 'free',
+            'tier' => $data['tier'] ?? 'starter',
             'license_key' => !empty($data['license_key']) ? $data['license_key'] : null,
             'max_sites' => (int)($data['max_sites'] ?? 1),
             'rate_limit' => (int)($data['rate_limit'] ?? 60),
             'api_calls_limit' => (int)($data['api_calls_limit'] ?? 1000),
             'expires_at' => !empty($data['expires_at']) ? $data['expires_at'] : null,
             'metadata' => !empty($data['metadata']) ? wp_json_encode($data['metadata']) : null,
+            'parent_tenant_id' => !empty($data['parent_tenant_id']) ? (int)$data['parent_tenant_id'] : null,
         ]);
         
         if ($result === false) {
@@ -259,6 +364,28 @@ class TenantRepository
         
         return $row;
     }
+
+    /**
+     * Find a tenant by email address.
+     */
+    public function findTenantByEmail(string $email): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE email = %s ORDER BY id DESC LIMIT 1",
+            $email
+        ), ARRAY_A);
+
+        if (!$row) {
+            return null;
+        }
+
+        $row['metadata'] = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+
+        return $row;
+    }
     
     /**
      * Update tenant
@@ -296,6 +423,18 @@ class TenantRepository
         );
         
         return $result !== false;
+    }
+
+    /**
+     * Deactivate a tenant by clearing its domain and marking it inactive.
+     * This allows the license to be re-activated on a different URL.
+     */
+    public function deactivateTenant(string $tenantKey): bool
+    {
+        return $this->updateTenant($tenantKey, [
+            'status' => 'inactive',
+            'domain' => '',
+        ]);
     }
     
     /**
@@ -351,7 +490,16 @@ class TenantRepository
             $params[] = $search;
             $params[] = $search;
         }
-        
+
+        if (array_key_exists('parent_tenant_id', $filters)) {
+            if ($filters['parent_tenant_id'] === null) {
+                $where[] = 'parent_tenant_id IS NULL';
+            } else {
+                $where[] = 'parent_tenant_id = %d';
+                $params[] = (int)$filters['parent_tenant_id'];
+            }
+        }
+
         $whereClause = implode(' AND ', $where);
         
         $sql = "SELECT * FROM $table WHERE $whereClause ORDER BY created_at DESC LIMIT %d OFFSET %d";
@@ -389,6 +537,10 @@ class TenantRepository
         }
         
         $whereClause = implode(' AND ', $where);
+        
+        if (empty($params)) {
+            return (int)$wpdb->get_var("SELECT COUNT(*) FROM $table WHERE $whereClause");
+        }
         
         return (int)$wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table WHERE $whereClause",
@@ -532,7 +684,7 @@ class TenantRepository
     /**
      * Get tenant usage for period
      */
-    public function getTenantUsage(string $tenantKey, string $period = null): array
+    public function getTenantUsage(string $tenantKey, ?string $period = null): array
     {
         global $wpdb;
         $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
@@ -677,6 +829,64 @@ class TenantRepository
     {
         global $wpdb;
         
+        // Add parent_tenant_id to tenants table if missing
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+        $tenantsExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $tenantsTable));
+        if ($tenantsExists) {
+            $parentCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = %s 
+                AND COLUMN_NAME = 'parent_tenant_id'",
+                $tenantsTable
+            ));
+            if (empty($parentCol)) {
+                $wpdb->query("ALTER TABLE $tenantsTable ADD COLUMN parent_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant ID for sub-tenants' AFTER metadata");
+                $wpdb->query("ALTER TABLE $tenantsTable ADD KEY parent_tenant_id (parent_tenant_id)");
+            }
+
+            // Allow 'inactive' status value for disconnected licenses
+            $statusCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = %s
+                AND COLUMN_NAME = 'status'",
+                $tenantsTable
+            ));
+            if (!empty($statusCol) && strpos($statusCol[0]->COLUMN_TYPE, "'inactive'") === false) {
+                $charsetCollate = $wpdb->get_charset_collate();
+                $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN status enum('active','inactive','suspended','cancelled') NOT NULL DEFAULT 'active' $charsetCollate");
+            }
+        }
+        
+        // Add agency_tenant_id and key_prefix to license keys table if missing
+        $licenseTable = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        $licenseExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $licenseTable));
+        if ($licenseExists) {
+            $agencyCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = %s 
+                AND COLUMN_NAME = 'agency_tenant_id'",
+                $licenseTable
+            ));
+            if (empty($agencyCol)) {
+                $wpdb->query("ALTER TABLE $licenseTable ADD COLUMN agency_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant that generated this sub-license' AFTER revoked_reason");
+                $wpdb->query("ALTER TABLE $licenseTable ADD KEY agency_tenant_id (agency_tenant_id)");
+            }
+            
+            $prefixCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = %s 
+                AND COLUMN_NAME = 'key_prefix'",
+                $licenseTable
+            ));
+            if (empty($prefixCol)) {
+                $wpdb->query("ALTER TABLE $licenseTable ADD COLUMN key_prefix varchar(10) DEFAULT NULL COMMENT 'Custom prefix for agency sub-licenses' AFTER agency_tenant_id");
+            }
+        }
+        
         $tables = [
             'sseo_ai_snapshots',
             'sseo_ai_ai_overviews',
@@ -709,6 +919,50 @@ class TenantRepository
             if (empty($columnExists)) {
                 $wpdb->query("ALTER TABLE $fullTable ADD COLUMN tenant_id varchar(64) NULL AFTER id");
                 $wpdb->query("ALTER TABLE $fullTable ADD KEY tenant_id (tenant_id)");
+            }
+        }
+
+        // Ensure early_adopters tier is present in tier enum columns
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+        $licenseTable = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        $tenantsEnum = $wpdb->get_var($wpdb->prepare(
+            "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'tier'",
+            $tenantsTable
+        ));
+        if ($tenantsEnum && strpos($tenantsEnum, 'early_adopters') === false) {
+            $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter'");
+        }
+        $licenseEnum = $wpdb->get_var($wpdb->prepare(
+            "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'tier'",
+            $licenseTable
+        ));
+        if ($licenseEnum && strpos($licenseEnum, 'early_adopters') === false) {
+            $wpdb->query("ALTER TABLE $licenseTable MODIFY COLUMN tier enum('free', 'trial', 'starter', 'early_adopters', 'professional', 'business', 'agency') NOT NULL DEFAULT 'starter'");
+        }
+
+        // Add DataForSEO usage columns to tenant_usage table
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $usageExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $usageTable));
+        if ($usageExists) {
+            $newColumns = [
+                'ai_mentions'        => "ADD COLUMN ai_mentions int(11) NOT NULL DEFAULT 0 AFTER keywords_tracked",
+                'llm_response_calls' => "ADD COLUMN llm_response_calls int(11) NOT NULL DEFAULT 0 AFTER ai_mentions",
+                'trends_requests'    => "ADD COLUMN trends_requests int(11) NOT NULL DEFAULT 0 AFTER llm_response_calls",
+                'backlinks_requests' => "ADD COLUMN backlinks_requests int(11) NOT NULL DEFAULT 0 AFTER trends_requests",
+            ];
+
+            foreach ($newColumns as $columnName => $alterSql) {
+                $colExists = $wpdb->get_results($wpdb->prepare(
+                    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = %s
+                    AND COLUMN_NAME = %s",
+                    $usageTable,
+                    $columnName
+                ));
+                if (empty($colExists)) {
+                    $wpdb->query("ALTER TABLE $usageTable $alterSql");
+                }
             }
         }
     }
@@ -758,7 +1012,7 @@ class TenantRepository
     /**
      * Get Google API usage for a tenant in a period
      */
-    public function getGoogleApiUsage(string $tenantKey, string $period = null): array
+    public function getGoogleApiUsage(string $tenantKey, ?string $period = null): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
@@ -777,7 +1031,7 @@ class TenantRepository
     /**
      * Get Google API usage for all tenants in a period (for admin overview)
      */
-    public function getAllGoogleApiUsage(string $period = null): array
+    public function getAllGoogleApiUsage(?string $period = null): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
@@ -800,7 +1054,7 @@ class TenantRepository
     /**
      * Get Google API usage summary aggregated by service for a period
      */
-    public function getGoogleApiUsageSummary(string $period = null): array
+    public function getGoogleApiUsageSummary(?string $period = null): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
@@ -840,5 +1094,543 @@ class TenantRepository
             LIMIT %d",
             $tenant['id'], $months * 4
         ), ARRAY_A);
+    }
+
+    // -------------------------------------------------------------------------
+    // Invoice management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Get invoices for a tenant.
+     */
+    public function getInvoicesByTenantKey(string $tenantKey, int $limit = 50, int $offset = 0): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE tenant_key = %s ORDER BY created_at DESC LIMIT %d OFFSET %d",
+            $tenantKey, $limit, $offset
+        ), ARRAY_A) ?: [];
+    }
+
+    /**
+     * Get a single invoice by ID.
+     */
+    public function getInvoiceById(int $invoiceId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE id = %d",
+            $invoiceId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Get a single invoice by invoice number.
+     */
+    public function getInvoiceByNumber(string $invoiceNumber): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE invoice_number = %s",
+            $invoiceNumber
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Count invoices for a tenant.
+     */
+    public function countInvoicesByTenantKey(string $tenantKey): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sseo_ai_invoices';
+
+        return (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE tenant_key = %s",
+            $tenantKey
+        ));
+    }
+
+    // -------------------------------------------------------------------------
+    // Bookkeeping: admin invoice queries & profit aggregation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Get all invoices (admin view) with optional filters and tenant join.
+     *
+     * Supported filters:
+     *  - status   : paid|pending|failed|refunded
+     *  - provider : stripe|mollie
+     *  - tenant   : partial match on tenant name/email/domain
+     *  - period   : YYYY-MM (matches created_at)
+     *  - from / to: ISO date strings (inclusive)
+     */
+    public function getAllInvoices(array $filters = [], int $limit = 100, int $offset = 0): array
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $where = [];
+        $args = [];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'i.status = %s';
+            $args[] = sanitize_text_field($filters['status']);
+        }
+        if (!empty($filters['provider'])) {
+            $where[] = 'i.provider = %s';
+            $args[] = sanitize_text_field($filters['provider']);
+        }
+        if (!empty($filters['period'])) {
+            $where[] = 'DATE_FORMAT(i.created_at, %s) = %s';
+            $args[] = '%Y-%m';
+            $args[] = sanitize_text_field($filters['period']);
+        }
+        if (!empty($filters['from'])) {
+            $where[] = 'i.created_at >= %s';
+            $args[] = sanitize_text_field($filters['from']) . ' 00:00:00';
+        }
+        if (!empty($filters['to'])) {
+            $where[] = 'i.created_at <= %s';
+            $args[] = sanitize_text_field($filters['to']) . ' 23:59:59';
+        }
+        if (!empty($filters['tenant'])) {
+            $like = '%' . $wpdb->esc_like(sanitize_text_field($filters['tenant'])) . '%';
+            $where[] = '(t.name LIKE %s OR t.email LIKE %s OR t.domain LIKE %s OR i.tenant_key LIKE %s)';
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+        }
+
+        $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $args[] = $limit;
+        $args[] = $offset;
+
+        $sql = "SELECT i.*, t.name AS tenant_name, t.email AS tenant_email, t.domain AS tenant_domain
+                FROM $invTable AS i
+                LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key
+                $whereSql
+                ORDER BY i.created_at DESC, i.id DESC
+                LIMIT %d OFFSET %d";
+
+        return $wpdb->get_results($wpdb->prepare($sql, ...$args), ARRAY_A) ?: [];
+    }
+
+    /**
+     * Count all invoices matching the given filters.
+     */
+    public function countAllInvoices(array $filters = []): int
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $where = [];
+        $args = [];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'i.status = %s';
+            $args[] = sanitize_text_field($filters['status']);
+        }
+        if (!empty($filters['provider'])) {
+            $where[] = 'i.provider = %s';
+            $args[] = sanitize_text_field($filters['provider']);
+        }
+        if (!empty($filters['period'])) {
+            $where[] = 'DATE_FORMAT(i.created_at, %s) = %s';
+            $args[] = '%Y-%m';
+            $args[] = sanitize_text_field($filters['period']);
+        }
+        if (!empty($filters['from'])) {
+            $where[] = 'i.created_at >= %s';
+            $args[] = sanitize_text_field($filters['from']) . ' 00:00:00';
+        }
+        if (!empty($filters['to'])) {
+            $where[] = 'i.created_at <= %s';
+            $args[] = sanitize_text_field($filters['to']) . ' 23:59:59';
+        }
+        if (!empty($filters['tenant'])) {
+            $like = '%' . $wpdb->esc_like(sanitize_text_field($filters['tenant'])) . '%';
+            $where[] = '(t.name LIKE %s OR t.email LIKE %s OR t.domain LIKE %s OR i.tenant_key LIKE %s)';
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+            $args[] = $like;
+        }
+
+        $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $sql = "SELECT COUNT(*) FROM $invTable AS i LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key $whereSql";
+
+        return (int) ($whereSql === '' ? $wpdb->get_var($sql) : $wpdb->get_var($wpdb->prepare($sql, ...$args)));
+    }
+
+    /**
+     * Get a single invoice joined with its tenant row (admin view).
+     */
+    public function getInvoiceWithTenant(int $invoiceId): ?array
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT i.*, t.name AS tenant_name, t.email AS tenant_email, t.domain AS tenant_domain
+             FROM $invTable AS i
+             LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key
+             WHERE i.id = %d",
+            $invoiceId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Sum invoice revenue per tenant_key within a date range.
+     *
+     * Returns: [ ['tenant_key' => ..., 'tenant_name' => ..., 'tenant_email' => ...,
+     *             'tier' => ..., 'revenue' => float, 'currency' => 'EUR'], ... ]
+     */
+    public function getRevenueByTenant(string $from, string $to): array
+    {
+        global $wpdb;
+        $invTable = $wpdb->prefix . 'sseo_ai_invoices';
+        $tenTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT i.tenant_key,
+                    MAX(t.name) AS tenant_name,
+                    MAX(t.email) AS tenant_email,
+                    MAX(t.domain) AS tenant_domain,
+                    MAX(i.tier) AS tier,
+                    SUM(i.amount) AS revenue,
+                    MAX(i.currency) AS currency
+             FROM $invTable AS i
+             LEFT JOIN $tenTable AS t ON t.tenant_key = i.tenant_key
+             WHERE i.status = 'paid'
+               AND i.created_at >= %s
+               AND i.created_at <= %s
+             GROUP BY i.tenant_key
+             ORDER BY revenue DESC",
+            $from . ' 00:00:00',
+            $to . ' 23:59:59'
+        ), ARRAY_A) ?: [];
+
+        foreach ($rows as &$row) {
+            $row['revenue'] = (float) $row['revenue'];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Sum AI API cost per tenant within a date range.
+     *
+     * Combines sseo_ai_tenant_usage and sseo_ai_google_api_usage.
+     * Returns: [ tenant_id => float, ... ]
+     */
+    public function getCostByTenant(string $from, string $to): array
+    {
+        global $wpdb;
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $googleTable = $wpdb->prefix . self::GOOGLE_API_USAGE_TABLE;
+
+        $fromPeriod = substr($from, 0, 7);
+        $toPeriod = substr($to, 0, 7);
+
+        // tenant_usage tracks per YYYY-MM period
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT tenant_id, SUM(api_cost) AS cost
+             FROM $usageTable
+             WHERE period >= %s AND period <= %s
+             GROUP BY tenant_id",
+            $fromPeriod,
+            $toPeriod
+        ), ARRAY_A) ?: [];
+
+        $googleRows = $wpdb->get_results($wpdb->prepare(
+            "SELECT tenant_id, SUM(api_cost) AS cost
+             FROM $googleTable
+             WHERE period >= %s AND period <= %s
+             GROUP BY tenant_id",
+            $fromPeriod,
+            $toPeriod
+        ), ARRAY_A) ?: [];
+
+        $costs = [];
+        foreach ($rows as $row) {
+            $costs[(int) $row['tenant_id']] = (float) $row['cost'];
+        }
+        foreach ($googleRows as $row) {
+            $id = (int) $row['tenant_id'];
+            $costs[$id] = ($costs[$id] ?? 0) + (float) $row['cost'];
+        }
+
+        return $costs;
+    }
+
+    /**
+     * Total cost of GEO scans in a date range (currently unallocated per tenant,
+     * because sseo_ai_geo_scans has no tenant_id/cost columns yet).
+     *
+     * Returns 0.0 until per-scan cost tracking is added.
+     */
+    public function getTotalGeoScanCost(string $from, string $to): float
+    {
+        // Placeholder: sseo_ai_geo_scans has no cost column yet.
+        // Follow-up: add tenant_id + api_cost columns and book costs in geoscanner.php.
+        return 0.0;
+    }
+
+    // -------------------------------------------------------------------------
+    // Agency account management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create an agency account linking a WP user to an agency tenant.
+     */
+    public function createAgencyAccount(array $data): array|\WP_Error
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        if (empty($data['user_id']) || empty($data['tenant_id'])) {
+            return new \WP_Error('missing_fields', __('user_id and tenant_id are required', 'sseo-ai-saas'));
+        }
+
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table WHERE user_id = %d",
+            (int)$data['user_id']
+        ));
+
+        if ($existing) {
+            return new \WP_Error('duplicate', __('Agency account already exists for this user', 'sseo-ai-saas'));
+        }
+
+        $result = $wpdb->insert($table, [
+            'user_id' => (int)$data['user_id'],
+            'tenant_id' => (int)$data['tenant_id'],
+            'max_sub_licenses' => (int)($data['max_sub_licenses'] ?? 10),
+        ]);
+
+        if ($result === false) {
+            return new \WP_Error('db_error', __('Failed to create agency account', 'sseo-ai-saas'));
+        }
+
+        return [
+            'id' => $wpdb->insert_id,
+            'user_id' => (int)$data['user_id'],
+            'tenant_id' => (int)$data['tenant_id'],
+            'max_sub_licenses' => (int)($data['max_sub_licenses'] ?? 10),
+            'success' => true,
+        ];
+    }
+
+    /**
+     * Get agency account by WP user ID.
+     */
+    public function getAgencyAccount(int $userId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE user_id = %d",
+            $userId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Get agency account by tenant ID.
+     */
+    public function getAgencyAccountByTenant(int $tenantId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE tenant_id = %d",
+            $tenantId
+        ), ARRAY_A);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Update agency account settings.
+     */
+    public function updateAgencyAccount(int $accountId, array $data): bool
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::AGENCY_ACCOUNTS_TABLE;
+
+        $update = [];
+        if (isset($data['max_sub_licenses'])) {
+            $update['max_sub_licenses'] = (int)$data['max_sub_licenses'];
+        }
+
+        if (empty($update)) {
+            return false;
+        }
+
+        return $wpdb->update($table, $update, ['id' => $accountId]) !== false;
+    }
+
+    /**
+     * Get all sub-tenants for an agency tenant.
+     */
+    public function getSubTenants(int $agencyTenantId, int $limit = 50, int $offset = 0): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE parent_tenant_id = %d ORDER BY created_at DESC LIMIT %d OFFSET %d",
+            $agencyTenantId, $limit, $offset
+        ), ARRAY_A) ?: [];
+    }
+
+    /**
+     * Count sub-tenants for an agency tenant.
+     */
+    public function countSubTenants(int $agencyTenantId, array $filters = []): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $where = ['parent_tenant_id = %d'];
+        $params = [$agencyTenantId];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'status = %s';
+            $params[] = $filters['status'];
+        }
+
+        $sql = "SELECT COUNT(*) FROM $table WHERE " . implode(' AND ', $where);
+
+        return (int)$wpdb->get_var($wpdb->prepare($sql, $params));
+    }
+
+    /**
+     * Get sub-tenant IDs for an agency tenant.
+     */
+    public function getSubTenantIds(int $agencyTenantId): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT id FROM $table WHERE parent_tenant_id = %d",
+            $agencyTenantId
+        ), ARRAY_A) ?: [];
+
+        return array_map('intval', array_column($rows, 'id'));
+    }
+
+    /**
+     * Get aggregated API usage for all sub-tenants of an agency in a period.
+     */
+    public function getAgencySubTenantsUsage(int $agencyTenantId, ?string $period = null): array
+    {
+        global $wpdb;
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($period === null) {
+            $period = current_time('Y-m');
+        }
+
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT 
+                COALESCE(SUM(u.api_calls), 0) AS total_api_calls,
+                COALESCE(SUM(u.api_cost), 0) AS total_api_cost,
+                COALESCE(SUM(u.serp_requests), 0) AS total_serp_requests,
+                COALESCE(SUM(u.content_generated), 0) AS total_content_generated,
+                COALESCE(SUM(u.keywords_tracked), 0) AS total_keywords_tracked
+            FROM {$usageTable} u
+            INNER JOIN {$tenantsTable} t ON t.id = u.tenant_id
+            WHERE t.parent_tenant_id = %d AND u.period = %s",
+            $agencyTenantId, $period
+        ), ARRAY_A) ?: [
+            'total_api_calls' => 0,
+            'total_api_cost' => 0,
+            'total_serp_requests' => 0,
+            'total_content_generated' => 0,
+            'total_keywords_tracked' => 0,
+        ];
+    }
+
+    /**
+     * Get per-sub-tenant usage and cost breakdown for an agency in a period.
+     */
+    public function getSubTenantsUsageByPeriod(int $agencyTenantId, ?string $period = null, string $orderBy = 'api_cost'): array
+    {
+        global $wpdb;
+        $usageTable = $wpdb->prefix . self::TENANT_USAGE_TABLE;
+        $tenantsTable = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($period === null) {
+            $period = current_time('Y-m');
+        }
+
+        $orderColumn = in_array($orderBy, ['api_cost', 'api_calls', 'content_generated', 'serp_requests', 'keywords_tracked'], true) ? $orderBy : 'api_cost';
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT
+                t.id,
+                t.tenant_key,
+                t.name,
+                t.tier,
+                t.status,
+                t.domain,
+                t.api_calls_limit,
+                t.last_active,
+                COALESCE(u.api_calls, 0) AS api_calls,
+                COALESCE(u.api_cost, 0.0000) AS api_cost,
+                COALESCE(u.serp_requests, 0) AS serp_requests,
+                COALESCE(u.content_generated, 0) AS content_generated,
+                COALESCE(u.keywords_tracked, 0) AS keywords_tracked
+            FROM {$tenantsTable} t
+            LEFT JOIN {$usageTable} u ON u.tenant_id = t.id AND u.period = %s
+            WHERE t.parent_tenant_id = %d
+            ORDER BY u.{$orderColumn} DESC, t.name ASC",
+            $period, $agencyTenantId
+        ), ARRAY_A);
+
+        return $rows ?: [];
+    }
+
+    /**
+     * Get tenant by ID.
+     */
+    public function getTenantById(int $tenantId): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE id = %d",
+            $tenantId
+        ), ARRAY_A);
+
+        if (!$row) {
+            return null;
+        }
+
+        $row['metadata'] = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+
+        return $row;
     }
 }

@@ -100,7 +100,7 @@ class ExtendedSitemaps
     public function generateVideosSitemap(): string
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?xml-stylesheet type="text/xsl" href="' . plugins_url('assets/sitemap.xsl', __DIR__ . '/ai-seo-assistant.php') . '"?>' . "\n";
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl' . '"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">' . "\n";
 
         // Find posts with video embeds
@@ -142,7 +142,7 @@ class ExtendedSitemaps
         $newsPostType = $this->settings->get('news_post_type', 'post');
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?xml-stylesheet type="text/xsl" href="' . plugins_url('assets/sitemap.xsl', __DIR__ . '/ai-seo-assistant.php') . '"?>' . "\n";
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl' . '"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' . "\n";
 
         $posts = get_posts([
@@ -185,7 +185,7 @@ class ExtendedSitemaps
     public function generateImagesSitemap(): string
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?xml-stylesheet type="text/xsl" href="' . plugins_url('assets/sitemap.xsl', __DIR__ . '/ai-seo-assistant.php') . '"?>' . "\n";
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl' . '"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' . "\n";
 
         $posts = get_posts([
@@ -226,7 +226,7 @@ class ExtendedSitemaps
     public function generateAuthorsSitemap(): string
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?xml-stylesheet type="text/xsl" href="' . plugins_url('assets/sitemap.xsl', __DIR__ . '/ai-seo-assistant.php') . '"?>' . "\n";
+        $xml .= '<?xml-stylesheet type="text/xsl" href="' . SSEO_AI_CLIENT_PLUGIN_URL . 'assets/sitemap.xsl' . '"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
         $authors = get_users([

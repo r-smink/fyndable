@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'Outfit';
+    src: url('fonts/outfit/Outfit-Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
 /* SEO AI Client — Modern Admin Design System */
 
 /* ================================================
@@ -36,9 +43,9 @@ body[class*="aiseo"] #wpfooter {
    1. VARIABLES & BASE
    ================================================ */
 :root {
-    --sseo-primary: #FF4D00;
-    --sseo-primary-light: #fff5f0;
-    --sseo-primary-dark: #e64400;
+    --sseo-primary: #379fd3;
+    --sseo-primary-light: #e8f4fa;
+    --sseo-primary-dark: #2a7ba8;
     --sseo-success: #10b981;
     --sseo-success-light: #d1fae5;
     --sseo-warning: #f59e0b;
@@ -47,8 +54,8 @@ body[class*="aiseo"] #wpfooter {
     --sseo-danger-light: #fee2e2;
     --sseo-purple: #a855f7;
     --sseo-purple-light: #f3e8ff;
-    --sseo-blue: #3b82f6;
-    --sseo-blue-light: #dbeafe;
+    --sseo-blue: #379fd3;
+    --sseo-blue-light: #e8f4fa;
     --sseo-gray-50: #f9fafb;
     --sseo-gray-100: #f3f4f6;
     --sseo-gray-200: #e5e7eb;
@@ -70,11 +77,13 @@ body[class*="aiseo"] #wpfooter {
 .wrap.sseo-ai-modern {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    min-height: calc(100vh - 32px);
 }
 
 .sseo-ai-header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: transparent;
     color: #fff;
     padding: 30px 40px;
     margin: 0;
@@ -91,8 +100,7 @@ body[class*="aiseo"] #wpfooter {
 
 .sseo-ai-content {
     padding: 40px;
-    background: linear-gradient(135deg, #3b82f6 0%, #ec4899 50%, #FF4D00 100%);
-    min-height: calc(100vh - 150px);
+    background: transparent;
 }
 
 /* ================================================
@@ -146,7 +154,7 @@ body[class*="aiseo"] #wpfooter {
     font-size: 13px;
     font-weight: 600;
     color: var(--sseo-gray-500);
-    text-transform: uppercase;
+    
     letter-spacing: 0.05em;
     margin-bottom: 6px;
 }
@@ -190,7 +198,7 @@ body[class*="aiseo"] #wpfooter {
 .connection-form input:focus {
     border-color: var(--sseo-primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1);
 }
 
 .connection-form .button-primary {
@@ -209,7 +217,7 @@ body[class*="aiseo"] #wpfooter {
 
 .connection-form .button-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255, 77, 0, 0.3) !important;
+    box-shadow: 0 10px 20px rgba(55, 159, 211, 0.3) !important;
 }
 
 /* ================================================
@@ -237,7 +245,7 @@ body[class*="aiseo"] #wpfooter {
 
 .sseo-ai-dashboard-card .button-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255, 77, 0, 0.3) !important;
+    box-shadow: 0 10px 20px rgba(55, 159, 211, 0.3) !important;
 }
 
 .sseo-ai-dashboard-card h2 {
@@ -245,6 +253,34 @@ body[class*="aiseo"] #wpfooter {
     font-weight: 700;
     color: var(--sseo-gray-900);
     margin: 0 0 10px 0;
+}
+
+.sseo-ai-content .postbox {
+    border-radius: var(--sseo-radius);
+    overflow: hidden;
+}
+
+#sseo-sortable-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#sseo-sortable-cards > [data-card-id] {
+    cursor: grab;
+    transition: box-shadow 0.2s, transform 0.1s;
+}
+
+#sseo-sortable-cards > [data-card-id].sseo-dragging {
+    opacity: 0.7;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    transform: scale(1.01);
+    cursor: grabbing;
+}
+
+#sseo-sortable-cards > [data-card-id].sseo-drag-over {
+    border-top: 3px dashed var(--sseo-primary, #2271b1);
+    margin-top: -3px;
 }
 
 /* Two-column grid layout (used by multiple pages) */
@@ -271,7 +307,7 @@ a.ai-tool-card {
 a.ai-tool-card:hover {
     border-color: var(--sseo-primary);
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(255, 77, 0, 0.15);
+    box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15);
     text-decoration: none;
     color: inherit;
 }
@@ -383,7 +419,7 @@ a.ai-tool-card p {
 .sseo-ai-settings-form textarea:focus {
     border-color: var(--sseo-primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1);
 }
 
 .field-description {
@@ -490,7 +526,7 @@ a.ai-tool-card p {
 .aiseo-modern select:focus,
 .aiseo-modern textarea:focus {
     border-color: var(--aiseo-primary);
-    box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+    box-shadow: 0 0 0 2px rgba(55, 159, 211, .15);
     outline: none;
 }
 
@@ -509,7 +545,7 @@ a.ai-tool-card p {
     background: var(--aiseo-gray-50);
     font-weight: 600;
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: .05em;
     color: var(--aiseo-gray-500);
     border-bottom: 1px solid var(--aiseo-gray-200);
@@ -544,7 +580,7 @@ a.ai-tool-card p {
 .aiseo-stat-card .stat-label {
     font-size: 12px;
     color: var(--aiseo-gray-500);
-    text-transform: uppercase;
+    
     letter-spacing: .05em;
     margin-top: 4px;
 }
@@ -576,7 +612,7 @@ a.ai-tool-card p {
     border-radius: 20px;
     font-weight: 600;
     font-size: 12px;
-    text-transform: uppercase;
+    
     letter-spacing: .04em;
 }
 
@@ -759,16 +795,17 @@ a.ai-tool-card p {
 
 #sseo-ideas-page .credit-value {
     display: block;
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--sseo-gray-900);
-    line-height: 1;
+    line-height: 1.1;
+    white-space: nowrap;
 }
 
 #sseo-ideas-page .credit-label {
     font-size: 11px;
     color: var(--sseo-gray-500);
-    text-transform: uppercase;
+    
 }
 
 #sseo-ideas-page .upgrade-link {
@@ -1274,7 +1311,7 @@ a.ai-tool-card p {
     border-radius: 12px;
     font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
+    
 }
 
 #sseo-keywords-page .difficulty-badge.difficulty-low {
@@ -1522,4 +1559,105 @@ a.ai-tool-card p {
 .page-ellipsis {
     padding: 8px;
     color: var(--sseo-gray-500);
+}
+
+/* Mobile Responsive Refinements */
+@media (max-width: 782px) {
+    body #wpcontent .sseo-ai-header,
+    body #wpcontent .aiseo-header {
+        padding: 20px 24px !important;
+        margin: 0 !important;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    body #wpcontent .sseo-ai-header h1,
+    body #wpcontent .aiseo-header h1 {
+        font-size: 22px !important;
+    }
+    body #wpcontent .sseo-ai-content,
+    body #wpcontent .aiseo-modern {
+        padding: 24px !important;
+    }
+    #wpcontent .sseo-ai-dashboard-card,
+    #wpcontent .sseo-ai-connection-card,
+    #wpcontent .sseo-ai-settings-card {
+        padding: 24px !important;
+    }
+    #wpcontent .sseo-ai-connection-card {
+        padding: 32px 24px !important;
+    }
+    #wpcontent .sseo-ai-connection-card .connection-status h2,
+    #wpcontent .sseo-ai-connection-card h2 {
+        font-size: 24px !important;
+    }
+    .sseo-two-columns,
+    .aiseo-grid-2,
+    .aiseo-grid-3,
+    .aiseo-grid-4,
+    .aiseo-stats-grid,
+    [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+    .ai-tool-card {
+        padding: 18px;
+    }
+    .sseo-ai-notice {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    #wpcontent .connection-form .button-primary,
+    #wpcontent .sseo-ai-dashboard-card .button-primary,
+    #wpcontent .sseo-ai-settings-form .button-primary,
+    #wpcontent .sseo-ai-connection-card .button-primary {
+        width: 100% !important;
+        text-align: center;
+    }
+    .aiseo-modern .wp-list-table,
+    .ai-seo-client .wp-list-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    body #wpcontent .sseo-ai-header,
+    body #wpcontent .aiseo-header {
+        padding: 16px 16px !important;
+    }
+    body #wpcontent .sseo-ai-header h1,
+    body #wpcontent .aiseo-header h1 {
+        font-size: 20px !important;
+    }
+    body #wpcontent .sseo-ai-content,
+    body #wpcontent .aiseo-modern {
+        padding: 16px !important;
+    }
+    #wpcontent .sseo-ai-dashboard-card,
+    #wpcontent .sseo-ai-connection-card,
+    #wpcontent .sseo-ai-settings-card {
+        padding: 20px 16px !important;
+    }
+    #wpcontent .sseo-ai-connection-card {
+        padding: 24px 16px !important;
+    }
+    #wpcontent .sseo-ai-connection-card .connection-status h2,
+    #wpcontent .sseo-ai-connection-card h2 {
+        font-size: 20px !important;
+    }
+    .ai-tool-card {
+        padding: 16px;
+    }
+    .ai-tool-card h3 {
+        font-size: 16px;
+    }
+    .aiseo-stat-card .stat-value {
+        font-size: 24px;
+    }
+    .aiseo-stat-card .stat-label {
+        font-size: 10px;
+    }
+    .sseo-ai-notice {
+        padding: 12px;
+    }
 }

@@ -1,0 +1,415 @@
+@font-face {
+    font-family: 'Outfit';
+    src: url('fonts/outfit/Outfit-Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+.fyndable-signup-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.fyndable-signup-header {
+    text-align: center;
+    margin-bottom: 50px;
+    position: relative;
+}
+.fyndable-signup-lang-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.fyndable-signup-lang-toggle button {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color 0.15s, background 0.15s;
+}
+.fyndable-signup-lang-toggle button:hover {
+    color: #379fd3;
+    background: rgba(55, 159, 211, 0.08);
+}
+.fyndable-signup-lang-toggle button.active {
+    color: #fff;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+}
+.fyndable-signup-lang-sep {
+    color: #d1d5db;
+    font-size: 14px;
+}
+.fyndable-signup-header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 12px 0;
+}
+.fyndable-signup-header p {
+    color: #6b7280;
+    font-size: 18px;
+    margin: 0;
+}
+.fyndable-signup-billing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 40px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+}
+.fyndable-signup-billing-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.fyndable-signup-savings {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    
+    letter-spacing: 0.5px;
+}
+.fyndable-signup-toggle {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 30px;
+}
+.fyndable-signup-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.fyndable-signup-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e5e7eb;
+    border-radius: 30px;
+    transition: 0.3s;
+}
+.fyndable-signup-toggle-slider::before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.fyndable-signup-toggle input:checked + .fyndable-signup-toggle-slider {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+}
+.fyndable-signup-toggle input:checked + .fyndable-signup-toggle-slider::before {
+    transform: translateX(26px);
+}
+.fyndable-signup-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-bottom: 50px;
+}
+.fyndable-signup-plan {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    transition: all 0.2s;
+    position: relative;
+}
+.fyndable-signup-plan:hover {
+    border-color: #379fd3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(55, 159, 211, 0.1);
+}
+.fyndable-signup-plan.popular {
+    border-color: #379fd3;
+    box-shadow: 0 4px 12px rgba(55, 159, 211, 0.15);
+    padding-top: 44px;
+}
+.fyndable-signup-plan .badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 16px;
+    border-radius: 20px;
+    
+    letter-spacing: 0.5px;
+}
+.fyndable-signup-plan h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+.fyndable-signup-plan .price {
+    font-size: 42px;
+    font-weight: 800;
+    color: #111827;
+    margin: 12px 0;
+}
+.fyndable-signup-plan .price .period {
+    font-size: 16px;
+    font-weight: 400;
+    color: #6b7280;
+}
+.fyndable-signup-plan ul {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0;
+    text-align: left;
+}
+.fyndable-signup-plan ul li {
+    padding: 8px 0;
+    color: #374151;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fyndable-signup-plan ul li::before {
+    content: '\2713';
+    color: #10b981;
+    font-weight: 700;
+}
+.fyndable-signup-plan button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f3f4f6;
+    color: #374151;
+}
+.fyndable-signup-plan:hover button {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+}
+.fyndable-signup-plan.popular button,
+.fyndable-signup-plan button.selected {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+}
+.fyndable-signup-form {
+    max-width: 500px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 40px;
+}
+.fyndable-signup-form h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+.fyndable-signup-form .subtitle {
+    color: #6b7280;
+    margin-bottom: 30px;
+}
+.fyndable-signup-field {
+    margin-bottom: 20px;
+}
+.fyndable-signup-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+.fyndable-signup-field input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+.fyndable-signup-field input:focus,
+.fyndable-signup-field select:focus {
+    border-color: #379fd3;
+    outline: none;
+}
+.fyndable-signup-field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    background: #fff;
+    color: #374151;
+}
+.fyndable-signup-submit {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    color: #fff;
+    transition: opacity 0.2s;
+}
+.fyndable-signup-submit:hover {
+    opacity: 0.9;
+}
+.fyndable-signup-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.fyndable-signup-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+.fyndable-signup-success {
+    text-align: center;
+    padding: 40px;
+}
+.fyndable-signup-success .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+.fyndable-signup-success h2 {
+    font-size: 24px;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+.fyndable-signup-success .license-key {
+    background: #f0f9ff;
+    border: 2px dashed #379fd3;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+    font-family: monospace;
+    font-size: 18px;
+    color: #8f39ac;
+    word-break: break-all;
+}
+.fyndable-signup-success .instructions {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+.fyndable-signup-loading {
+    text-align: center;
+    padding: 60px;
+    color: #6b7280;
+}
+.fyndable-signup-step {
+    display: none;
+}
+.fyndable-signup-step.active {
+    display: block;
+}
+.fyndable-signup-back {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: inline-block;
+    cursor: pointer;
+}
+.fyndable-signup-back:hover {
+    color: #374151;
+}
+
+@media screen and (max-width: 600px) {
+    .fyndable-signup-container {
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+    .fyndable-signup-header {
+        margin-bottom: 30px;
+    }
+    .fyndable-signup-header h1 {
+        font-size: 28px;
+    }
+    .fyndable-signup-header p {
+        font-size: 16px;
+    }
+    .fyndable-signup-plans {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .fyndable-signup-plan {
+        padding: 24px 16px;
+    }
+    .fyndable-signup-form {
+        width: 100%;
+        max-width: 100%;
+        padding: 24px 16px;
+        box-sizing: border-box;
+    }
+    .fyndable-signup-field input {
+        font-size: 16px;
+    }
+}
+.fyndable-signup-field-row {
+    display: flex;
+    gap: 16px;
+}
+.fyndable-signup-field-row .fyndable-signup-field {
+    flex: 1;
+}
+.fyndable-signup-field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fff;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+.fyndable-signup-field select:focus {
+    outline: none;
+    border-color: #379fd3;
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1);
+}
+@media (max-width: 600px) {
+    .fyndable-signup-field-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}

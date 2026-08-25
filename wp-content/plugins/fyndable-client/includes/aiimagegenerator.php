@@ -344,7 +344,35 @@ class AIImageGenerator
         }
 
         function sseoRegenerateFeatured(postId) {
-            sseoGenerateFeatured(postId);
+            const style = jQuery('#image-style-' + postId).val() || 'photorealistic';
+            const context = jQuery('#image-context-' + postId).val() || '';
+            const wordCount = jQuery('#image-word-count-' + postId).val() || 100;
+
+            if (!confirm('<?php esc_html_e('Regenerate AI featured image?', 'ai-seo-client'); ?>')) {
+                return;
+            }
+
+            if (typeof sseoShowLoader === 'function') sseoShowLoader();
+            jQuery.post(ajaxurl, {
+                action: 'sseo_ai_generate_featured_image',
+                post_id: postId,
+                style: style,
+                context: context,
+                word_count: wordCount,
+                use_stored_prompt: 'true',
+                nonce: '<?php echo wp_create_nonce('sseo_images'); ?>'
+            }, function(response) {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                if (response.success) {
+                    alert('<?php esc_html_e('Featured image regenerated!', 'ai-seo-client'); ?>');
+                    location.reload();
+                } else {
+                    alert(response.data.message || 'Error regenerating image');
+                }
+            }).fail(function() {
+                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                alert('<?php esc_html_e('Request failed. Please try again.', 'ai-seo-client'); ?>');
+            });
         }
 
         function sseoGenerateSocialImages(postId) {
@@ -384,27 +412,40 @@ class AIImageGenerator
     /**
      * Generate featured image
      */
-    public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100): ?int
+    public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100, bool $useStoredPrompt = false): ?int
     {
         $post = get_post($postId);
-        
-        // Generate image prompt from content
-        $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
-        
+
+        // On regenerate, reuse the stored prompt from the original generation when no new context is provided
+        if ($useStoredPrompt && empty($context)) {
+            $storedPrompt = get_post_meta($postId, '_sseo_ai_image_prompt', true);
+            if (!empty($storedPrompt)) {
+                $prompt = $storedPrompt;
+            } else {
+                $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
+            }
+        } else {
+            // Generate image prompt from content
+            $prompt = $this->generateImagePrompt($post, $style, '1024x1024', $context, $wordCount);
+        }
+
         // Generate image using AI (DALL-E, Midjourney, Stable Diffusion, etc.)
         $imageUrl = $this->generateImageFromPrompt($prompt);
-        
+
         if (!$imageUrl) {
             return null;
         }
-        
+
         // Download and attach image
         $attachmentId = $this->downloadAndAttachImage($imageUrl, $post->ID, $post->post_title);
-        
+
         if ($attachmentId) {
             set_post_thumbnail($postId, $attachmentId);
+            // Store the prompt so regenerate can reuse it
+            update_post_meta($postId, '_sseo_ai_image_prompt', $prompt);
+            update_post_meta($postId, '_sseo_ai_image_prompt_date', current_time('mysql'));
         }
-        
+
         return $attachmentId;
     }
     
@@ -444,29 +485,35 @@ class AIImageGenerator
     }
     
     /**
-     * Generate image prompt from post content
+     * Generate image prompt from post content, incorporating photo portfolio
+     * references (logo, persons, environment, brand style) when configured.
      */
     private function generateImagePrompt(\WP_Post $post, string $style, string $size = '1024x1024', string $context = '', int $wordCount = 100): string
     {
+        // Build brand reference description from photo portfolio
+        $brandReferenceDesc = $this->getBrandReferenceDescription();
+
         if (!empty($context)) {
             $aiPrompt = "Generate a detailed image prompt for creating a {$style} image.
 
 User context: {$context}
 Target prompt length: approximately {$wordCount} words.
+{$brandReferenceDesc}
 
 Create a concise, descriptive prompt that captures the essence. Focus on visual elements, mood, and composition.";
         } else {
             $content = wp_strip_all_tags($post->post_content);
             $excerpt = substr($content, 0, 500);
-            
+
             $aiPrompt = "Generate a detailed image prompt for creating a {$style} image about:
 
 Title: {$post->post_title}
 Content: {$excerpt}
+{$brandReferenceDesc}
 
 Create a concise, descriptive prompt (max {$wordCount} words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
         }
-        
+
         $imagePrompt = $this->llm->generateText($aiPrompt, [
             'max_tokens' => max(150, (int)($wordCount * 2)),
             'track_extra' => [
@@ -475,13 +522,83 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
                 'context' => substr($context, 0, 100) ?: 'auto',
             ],
         ]);
-        
+
         if (is_wp_error($imagePrompt)) {
             // Fallback to simple prompt
-            return (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
+            $fallback = (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
+            if (!empty($brandReferenceDesc)) {
+                $fallback .= ". Match the brand's visual identity.";
+            }
+            return $fallback;
         }
-        
+
         return trim($imagePrompt) . ", {$style} style, {$size}, high quality";
+    }
+
+    /**
+     * Get brand reference descriptions from the photo portfolio.
+     *
+     * Uses a vision-capable LLM to describe each reference image (logo, person,
+     * environment, product, brand style) and caches the descriptions in a
+     * transient to avoid repeated vision API calls on every image generation.
+     *
+     * @return string Brand reference instructions to inject into the image prompt.
+     */
+    private function getBrandReferenceDescription(): string
+    {
+        $portfolio = get_option('sseo_ai_client_photo_portfolio', []);
+        if (empty($portfolio) || !is_array($portfolio)) {
+            return '';
+        }
+
+        // Check cache (1 week)
+        $cacheKey = 'sseo_ai_brand_ref_desc';
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_string($cached)) {
+            return $cached;
+        }
+
+        $typeLabels = [
+            'logo' => 'Logo / brand identity',
+            'person' => 'Person / team member',
+            'environment' => 'Building / environment / location',
+            'product' => 'Product',
+            'style' => 'Brand style / mood / color palette',
+        ];
+
+        $descriptions = [];
+        foreach ($portfolio as $ref) {
+            $url = $ref['url'] ?? '';
+            $type = $ref['type'] ?? 'style';
+            if (empty($url)) {
+                continue;
+            }
+
+            $label = $typeLabels[$type] ?? 'Reference image';
+            $visionPrompt = "Describe this image concisely for use as a brand style reference in AI image generation. "
+                . "Focus on: colors, visual style, mood, composition, key visual elements. "
+                . "This image is categorized as: {$label}. "
+                . "Provide a 1-2 sentence description.";
+
+            $result = $this->llm->callWithImage($visionPrompt, $url, null, 100, 'image_alt_text');
+
+            if (!is_wp_error($result) && !empty($result['text'])) {
+                $desc = trim($result['text']);
+                $descriptions[] = "{$label}: {$desc}";
+            }
+        }
+
+        if (empty($descriptions)) {
+            return '';
+        }
+
+        $brandDesc = "\nBRAND VISUAL REFERENCES (incorporate these in the generated image):\n"
+            . implode("\n", $descriptions)
+            . "\nEnsure the generated image aligns with these brand visual references where appropriate.\n";
+
+        set_transient($cacheKey, $brandDesc, WEEK_IN_SECONDS);
+
+        return $brandDesc;
     }
     
     /**
@@ -491,29 +608,176 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
     {
         // Get image API credentials from SaaS dashboard (stored during license activation)
         $imageApi = get_option('sseo_ai_client_image_api', []);
-        $provider = $imageApi['provider'] ?? '';
-        $apiKey = $imageApi['key'] ?? '';
-        $model = $imageApi['model'] ?? 'dall-e-3';
-        
-        // Debug logging
-        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: Retrieved credentials - Provider: ' . ($provider ?: 'empty') . ', Key exists: ' . (!empty($apiKey) ? 'yes' : 'no'));
-        
-        if (empty($provider) || empty($apiKey)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: No API provider or key configured. Please configure Image API in SaaS Dashboard Settings, then re-validate license.');
-            return null;
+        $primaryProvider = $this->resolveImageProvider($imageApi['provider'] ?? '', $imageApi['key'] ?? '', $imageApi['model'] ?? 'dall-e-3');
+
+        // Fallback order: OpenRouter -> OpenAI -> Stability AI. Primary provider is tried first.
+        $fallbackOrder = ['openrouter', 'openai', 'stability'];
+        $providers = [];
+        if (!empty($primaryProvider)) {
+            $providers[] = $primaryProvider;
         }
-        
+        foreach ($fallbackOrder as $provider) {
+            if ($provider !== $primaryProvider && !in_array($provider, $providers, true)) {
+                $providers[] = $provider;
+            }
+        }
+
+        $lastError = null;
+        foreach ($providers as $provider) {
+            $apiKey = $this->getImageProviderKey($provider, $imageApi);
+            $model = $this->mapModelForProvider($provider, $imageApi['model'] ?? 'dall-e-3');
+
+            if (empty($apiKey)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No API key for provider ' . $provider);
+                continue;
+            }
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Fyndable Image: Trying provider ' . $provider . ' with model ' . $model);
+            }
+
+            switch ($provider) {
+                case 'openai':
+                    $result = $this->generateWithOpenAI($prompt, $apiKey, $model);
+                    break;
+                case 'openrouter':
+                    $result = $this->generateWithOpenRouter($prompt, $apiKey, $model);
+                    break;
+                case 'stability':
+                    $result = $this->generateWithStabilityAI($prompt, $apiKey, $model);
+                    break;
+                case 'openart':
+                    $result = $this->generateWithOpenArt($prompt, $apiKey, $model);
+                    break;
+                default:
+                    $result = null;
+            }
+
+            if (!empty($result)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Provider ' . $provider . ' succeeded');
+                return $result;
+            }
+
+            $lastError = $provider;
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Fyndable Image: All image providers failed. Last attempted: ' . ($lastError ?? 'none'));
+        }
+
+        return null;
+    }
+
+    /**
+     * Pick the right API key for a provider from the stored image API config.
+     */
+    private function getImageProviderKey(string $provider, array $imageApi): ?string
+    {
+        $specific = $imageApi[$provider . '_key'] ?? '';
+        if (!empty($specific)) {
+            return $specific;
+        }
+
+        $generic = $imageApi['key'] ?? '';
+        if ($this->keyMatchesProvider($provider, $generic, $imageApi['model'] ?? '')) {
+            return $generic;
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect whether a given API key belongs to a specific image provider.
+     */
+    private function keyMatchesProvider(string $provider, string $apiKey, string $model): bool
+    {
+        if (empty($apiKey)) {
+            return false;
+        }
+
         switch ($provider) {
+            case 'openrouter':
+                return stripos($apiKey, 'sk-or-') === 0 || stripos($model, 'openai/') === 0;
             case 'openai':
-                return $this->generateWithOpenAI($prompt, $apiKey, $model);
-            
+                return (stripos($apiKey, 'sk-') === 0 && stripos($apiKey, 'sk-or-') !== 0) && stripos($model, 'openai/') !== 0;
             case 'stability':
-                return $this->generateWithStabilityAI($prompt, $apiKey, $model);
-            
+            case 'openart':
+                return !empty($apiKey);
             default:
-                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: Unknown provider - ' . $provider);
-                return null;
+                return false;
         }
+    }
+
+    /**
+     * Map a generic / OpenRouter model ID to a provider-specific image model.
+     */
+    private function mapModelForProvider(string $provider, string $model): string
+    {
+        if ($provider === 'openrouter') {
+            return $this->resolveOpenRouterImageModel($model)[0];
+        }
+
+        if ($provider === 'openai') {
+            $model = trim($model);
+            if (stripos($model, 'openai/') === 0) {
+                $base = substr($model, 7);
+                if (stripos($base, 'dall-e') === 0) {
+                    return $base;
+                }
+                if (stripos($base, 'gpt-image') === 0) {
+                    return 'dall-e-3';
+                }
+                return 'dall-e-3';
+            }
+            if (in_array(strtolower($model), ['dall-e-3', 'dall-e-2', 'dall-e-3-hd', 'gpt-image-1'], true)) {
+                return $model;
+            }
+            return 'dall-e-3';
+        }
+
+        if ($provider === 'stability') {
+            return 'stable-diffusion-xl';
+        }
+
+        return $model;
+    }
+
+    /**
+     * Resolve the image API provider from key/model hints.
+     *
+     * Falls back to the general AI provider settings when the stored image
+     * provider is empty or mismatched with the provided key.
+     */
+    private function resolveImageProvider(string $provider, string $apiKey, string $model): string
+    {
+        // Key-based hints
+        if (stripos($apiKey, 'sk-or-') === 0) {
+            return 'openrouter';
+        }
+        if (stripos($apiKey, 'sk-') === 0 && stripos($apiKey, 'sk-or-') !== 0) {
+            return 'openai';
+        }
+
+        // Model-based hints
+        if (stripos($model, 'openai/') === 0) {
+            return 'openrouter';
+        }
+        if (stripos($model, 'flux') !== false) {
+            return 'openart';
+        }
+
+        if (!empty($provider)) {
+            return $provider;
+        }
+
+        // Fall back to the general AI provider configured for the client
+        $modelRouting = get_option('sseo_ai_client_model_routing', []);
+        $defaultModel = is_array($modelRouting) ? ($modelRouting['content_generation'] ?? $model) : $model;
+        if (stripos($defaultModel, 'openai/') === 0) {
+            return 'openrouter';
+        }
+
+        return 'openrouter';
     }
     
     /**
@@ -529,7 +793,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
                 'Content-Type' => 'application/json',
             ],
             'body' => wp_json_encode([
-                'model' => 'dall-e-3',
+                'model' => $model,
                 'prompt' => $prompt,
                 'n' => 1,
                 'size' => '1024x1024',
@@ -539,20 +803,170 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         ]);
         
         if (is_wp_error($response)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: OpenAI API error - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenAI API error - ' . $response->get_error_message());
             return null;
         }
         
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (!isset($body['data'][0]['url'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: No image URL in OpenAI response - ' . print_r($body, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image URL in OpenAI response - ' . print_r($body, true));
             return null;
         }
         
         return $body['data'][0]['url'];
     }
     
+    /**
+     * Generate image with OpenRouter (unified Image API)
+     */
+    private function generateWithOpenRouter(string $prompt, string $apiKey, string $model): ?string
+    {
+        [$model, $quality] = $this->resolveOpenRouterImageModel($model);
+
+        $body = [
+            'model'   => $model,
+            'prompt'  => $prompt,
+            'n'       => 1,
+            'size'    => '1024x1024',
+        ];
+
+        if (!empty($quality) && $quality !== 'auto') {
+            $body['quality'] = $quality;
+        }
+
+        $response = wp_remote_post('https://openrouter.ai/api/v1/images', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+                'HTTP-Referer'  => home_url(),
+                'X-Title'       => get_bloginfo('name'),
+            ],
+            'body' => wp_json_encode($body),
+            'timeout' => 120,
+        ]);
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenRouter API error - ' . $response->get_error_message());
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenRouter response - ' . print_r($body, true));
+
+        $imageUrl = $body['data'][0]['url'] ?? '';
+        $b64 = $body['data'][0]['b64_json'] ?? '';
+
+        if (!empty($imageUrl)) {
+            return $imageUrl;
+        }
+
+        if (!empty($b64)) {
+            $imageData = base64_decode($b64);
+            if ($imageData === false) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Failed to decode OpenRouter base64 image');
+                return null;
+            }
+
+            $mediaType = $body['data'][0]['media_type'] ?? 'image/png';
+            $extension = 'png';
+            if (stripos($mediaType, 'svg') !== false) {
+                $extension = 'svg';
+            } elseif (stripos($mediaType, 'jpeg') !== false || stripos($mediaType, 'jpg') !== false) {
+                $extension = 'jpg';
+            } elseif (stripos($mediaType, 'webp') !== false) {
+                $extension = 'webp';
+            }
+
+            $tempFile = wp_tempnam('sseo-ai-image-' . time() . '.' . $extension);
+            file_put_contents($tempFile, $imageData);
+            return $tempFile;
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image URL or data in OpenRouter response - ' . print_r($body, true));
+        return null;
+    }
+
+    /**
+     * Resolve a model string to a valid OpenRouter image model ID and quality.
+     */
+    private function resolveOpenRouterImageModel(string $model): array
+    {
+        $model = trim($model);
+        $quality = 'auto';
+
+        $validModels = [
+            'openai/gpt-image-2',
+            'openai/gpt-image-1',
+            'openai/gpt-image-1-mini',
+            'openai/gpt-5-image',
+            'openai/gpt-5-image-mini',
+            'openai/gpt-5.4-image-2',
+            'google/gemini-3.1-flash-image',
+            'google/gemini-3.1-flash-lite-image',
+            'google/gemini-3.1-flash-image-preview',
+            'google/gemini-3-pro-image',
+            'google/gemini-3-pro-image-preview',
+            'google/gemini-2.5-flash-image',
+            'google/gemini-2.5-flash-image-preview',
+            'bytedance-seed/seedream-4.5',
+            'black-forest-labs/flux.2-pro',
+            'black-forest-labs/flux.2-flex',
+            'black-forest-labs/flux.2-max',
+            'black-forest-labs/flux.2-klein-4b',
+            'sourceful/riverflow-v2.5-pro',
+            'sourceful/riverflow-v2.5-fast',
+            'sourceful/riverflow-v2-pro',
+            'sourceful/riverflow-v2-fast',
+            'sourceful/riverflow-v2-max-preview',
+            'sourceful/riverflow-v2-standard-preview',
+            'sourceful/riverflow-v2-fast-preview',
+            'microsoft/mai-image-2.5',
+            'x-ai/grok-imagine-image-quality',
+            'recraft/recraft-v4.1-pro',
+            'recraft/recraft-v4.1',
+            'recraft/recraft-v4.1-pro-vector',
+            'recraft/recraft-v4.1-vector',
+            'recraft/recraft-v4.1-utility-pro',
+            'recraft/recraft-v4.1-utility',
+            'recraft/recraft-v4-pro',
+            'recraft/recraft-v4',
+            'recraft/recraft-v3',
+            'openrouter/auto',
+        ];
+
+        if (in_array(strtolower($model), array_map('strtolower', $validModels), true)) {
+            return [$model, $quality];
+        }
+
+        if (stripos($model, 'dall-e-3') === 0 || stripos($model, 'openai/dall-e-3') !== false) {
+            $quality = (stripos($model, 'hd') !== false) ? 'high' : 'auto';
+            return ['openai/gpt-image-2', $quality];
+        }
+
+        if (stripos($model, 'flux') !== false) {
+            if (stripos($model, 'schnell') !== false || stripos($model, 'fast') !== false || stripos($model, 'klein') !== false) {
+                return ['black-forest-labs/flux.2-klein-4b', $quality];
+            }
+            return ['black-forest-labs/flux.2-pro', $quality];
+        }
+
+        if (stripos($model, 'stable') !== false || stripos($model, 'sdxl') !== false) {
+            return ['black-forest-labs/flux.2-pro', $quality];
+        }
+
+        if (stripos($model, 'gemini') !== false) {
+            return ['google/gemini-3.1-flash-image', $quality];
+        }
+
+        if (stripos($model, 'seedream') !== false) {
+            return ['bytedance-seed/seedream-4.5', $quality];
+        }
+
+        return ['openai/gpt-image-2', $quality];
+    }
+
     /**
      * Generate image with Stability AI
      */
@@ -580,14 +994,14 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         ]);
         
         if (is_wp_error($response)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: Stability AI API error - ' . $response->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: Stability AI API error - ' . $response->get_error_message());
             return null;
         }
         
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (!isset($body['artifacts'][0]['base64'])) {
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fynable Image: No image data in Stability AI response - ' . print_r($body, true));
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image data in Stability AI response - ' . print_r($body, true));
             return null;
         }
         
@@ -601,7 +1015,47 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         
         return $tempFile; // Return temp file path instead of URL
     }
-    
+
+    /**
+     * Generate image with OpenArt (Flux models)
+     */
+    private function generateWithOpenArt(string $prompt, string $apiKey, string $model): ?string
+    {
+        $model = $model ?: 'flux-1-schnell';
+
+        $response = wp_remote_post('https://api.openart.ai/api/v1/generation', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'model'          => $model,
+                'prompt'         => $prompt,
+                'width'          => 1024,
+                'height'         => 1024,
+                'num_images'     => 1,
+                'guidance_scale' => 7,
+            ]),
+            'timeout' => 120,
+        ]);
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: OpenArt API error - ' . $response->get_error_message());
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        $imageUrl = $body['data'][0]['url'] ?? $body['images'][0]['url'] ?? $body['url'] ?? '';
+
+        if (empty($imageUrl)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: No image URL in OpenArt response - ' . print_r($body, true));
+            return null;
+        }
+
+        return $imageUrl;
+    }
+
     /**
      * Download and attach image
      */
@@ -611,20 +1065,61 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/image.php';
         
-        $tmp = download_url($imageUrl);
-        
-        if (is_wp_error($tmp)) {
-            return null;
+        // Some providers return a local temp file path (e.g. OpenRouter base64)
+        if (file_exists($imageUrl) && is_readable($imageUrl)) {
+            $tmp = $imageUrl;
+        } else {
+            $tmp = download_url($imageUrl);
+            if (is_wp_error($tmp)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: download_url error - ' . $tmp->get_error_message());
+                return null;
+            }
         }
-        
+
+        // Detect the real MIME type from the file contents. wp_tempnam() always
+        // appends .tmp, so pathinfo() on the temp path cannot be trusted.
+        $mime = function_exists('wp_get_image_mime') ? wp_get_image_mime($tmp) : false;
+        if (!$mime) {
+            $info = @getimagesize($tmp);
+            $mime = $info['mime'] ?? false;
+        }
+        if (!$mime) {
+            $firstBytes = @file_get_contents($tmp, false, null, 0, 200);
+            if ($firstBytes !== false && (stripos($firstBytes, '<?xml') !== false || stripos($firstBytes, '<svg') !== false)) {
+                $mime = 'image/svg+xml';
+            }
+        }
+
+        $extensionMap = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+            'image/avif' => 'avif',
+        ];
+
+        $extension = !empty($mime) ? ($extensionMap[$mime] ?? '') : '';
+        if (!$extension) {
+            $extension = pathinfo($tmp, PATHINFO_EXTENSION);
+            if (!$extension || $extension === 'tmp') {
+                $extension = 'png';
+            }
+        }
+
+        $safeTitle = sanitize_file_name($title) ?: 'image';
         $fileArray = [
-            'name' => sanitize_file_name($title) . '.jpg',
+            'name' => $safeTitle . '.' . $extension,
             'tmp_name' => $tmp,
+            'type' => $mime ?: 'image/png',
+            'error' => 0,
+            'size' => filesize($tmp) ?: 0,
         ];
         
         $attachmentId = media_handle_sideload($fileArray, $postId);
         
         if (is_wp_error($attachmentId)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable Image: media_handle_sideload error - ' . $attachmentId->get_error_message());
             @unlink($tmp);
             return null;
         }
@@ -699,12 +1194,13 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
         $context = sanitize_text_field($_POST['context'] ?? '');
         $wordCount = (int)($_POST['word_count'] ?? 100);
-        
+        $useStoredPrompt = isset($_POST['use_stored_prompt']) && $_POST['use_stored_prompt'] === 'true';
+
         if (!$postId) {
             wp_send_json_error(['message' => 'Post ID required']);
         }
-        
-        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount);
+
+        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount, $useStoredPrompt);
         
         if (!$attachmentId) {
             wp_send_json_error(['message' => 'Failed to generate image']);

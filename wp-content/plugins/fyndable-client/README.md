@@ -47,9 +47,9 @@
 | Module | File | Description |
 |--------|------|-------------|
 | **Schema Markup** | `schemamarkup.php` | JSON-LD structured data: Article, FAQ, HowTo, Product, Review, Recipe, Event, Local Business, Breadcrumb, Video. Auto-detect and manual override. Validation testing. |
-| **Local SEO** | `localseo.php` | Local business schema, NAP consistency checker, Google Business Profile integration, service area pages, opening hours, multi-location support. |
+| **Local SEO** | `localseo.php` | Local business schema, NAP consistency checker, Google Business Profile integration, service area pages, opening hours, multi-location support. New: configurable Local SERP radius/grid defaults. |
 | **404 Monitor** | `notfoundmonitor.php` | Real-time 404 error tracking with referrer, user agent, hit count. One-click redirect creation. Auto-cleanup of old entries. |
-| **Keyword Rank Tracker** | `ranktracker.php` | Daily SERP position tracking via API. Historical trend charts. Position change alerts. Track unlimited keywords. Country/language targeting. |
+| **Keyword Rank Tracker** | `ranktracker.php` | Daily SERP position tracking via API. Historical trend charts. Position change alerts. Track unlimited keywords. Country/language targeting. **Local SERP tab**: km-radius local pack and geo-grid scans around your business address. |
 | **SEO Report Export** | `seoreportexport.php` | Export site-wide SEO audits as CSV or printable PDF/HTML. Covers all posts: SEO score, meta data, issues, word count, focus keyphrase. |
 | **WooCommerce SEO** | `woocommerceseo.php` | Product schema (price, availability, reviews), AI product description generator, product-specific meta optimization, category SEO settings. |
 | **Content Optimizer** | `contentoptimizer.php` | **MarketMuse/SurferSEO killer.** NLP topic model with 30-50 weighted terms per keyword. Real-time 0-100 content score. Term heatmap (covered/missing/low/overused). Structure scoring (word count, headings, images, paragraphs). AI suggestion engine for missing terms. SurferSEO-style editor page. |
@@ -202,6 +202,8 @@ All endpoints use namespace `sseo-ai/v1`.
 - `POST /ranks/delete` — Remove tracked keyword
 - `GET /ranks/history/{id}` — Get position history
 - `POST /ranks/check-now` — Force rank check
+- `GET /local-serp/center` — Get configured business address/coordinates
+- `POST /local-serp/scan` — Run a local pack / geo-grid scan around coordinates
 
 ### A/B Testing
 - `GET /ab-tests` — List all tests

@@ -88,6 +88,7 @@ class KeywordExplorer
         $payload = [
             'related' => array_slice($ngrams + $related, 0, 25, true),
             'serp'    => $serpResults,
+            'trends'  => $this->fetchGoogleTrends($seed),
         ];
 
         // Store in options for later use
@@ -148,7 +149,7 @@ class KeywordExplorer
 
         // AI fallback
         $prompt = "For the keyword \"{$keyword}\", generate a realistic list of 15 Google search result titles. Return JSON array with objects having: title, link, snippet, position. Return ONLY valid JSON.";
-        $result = $this->llm->call($prompt, null, null, 2000);
+        $result = $this->llm->call($prompt, null, null, 2000, [], 'keyword_research');
         if (is_wp_error($result)) {
             return $result;
         }
@@ -160,6 +161,44 @@ class KeywordExplorer
 
         $parsed = json_decode($text, true);
         return is_array($parsed) ? array_slice($parsed, 0, 15) : [];
+    }
+
+    /**
+     * Fetch Google Trends data for a seed keyword via the Portal proxy.
+     * Returns interest-over-time and related queries when available.
+     */
+    private function fetchGoogleTrends(string $keyword): array
+    {
+        $cacheKey = 'aiseo_kwtrends_' . md5($keyword);
+        $cached = get_transient($cacheKey);
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
+        $response = $this->dashboardAPI->request('keywords/google-trends', [
+            'keywords'    => [$keyword],
+            'time_range'  => 'past_12_months',
+            'type'        => 'web',
+        ]);
+
+        if (is_wp_error($response) || empty($response['data'])) {
+            $empty = [];
+            set_transient($cacheKey, $empty, HOUR_IN_SECONDS);
+            return $empty;
+        }
+
+        $tasks = $response['data']['tasks'] ?? [];
+        $result = $tasks[0]['result'] ?? [];
+        $trends = $result[0] ?? [];
+
+        $payload = [
+            'interest_over_time' => $trends['interest_over_time']['timeline_data'] ?? [],
+            'related_queries'    => $trends['related_queries'] ?? [],
+            'related_topics'     => $trends['related_topics'] ?? [],
+        ];
+
+        set_transient($cacheKey, $payload, 6 * HOUR_IN_SECONDS);
+        return $payload;
     }
 
     /**

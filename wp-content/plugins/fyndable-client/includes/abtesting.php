@@ -163,8 +163,9 @@ class ABTesting
             }
         }
 
-        // Random assignment based on traffic split
-        $rand = mt_rand(1, 100);
+        // Random assignment based on traffic split.
+        // random_int() is cryptographically secure and avoids mt_rand() predictability.
+        $rand = random_int(1, 100);
         $cumulative = 0;
         foreach ($variants as $v) {
             $cumulative += (int) $v['traffic_split'];
@@ -466,6 +467,29 @@ class ABTesting
         $sessionId = $this->getSessionId();
 
         if (empty($testId) || empty($variantId)) {
+            return ['success' => false];
+        }
+
+        // Rate limit: max 30 conversion requests per minute per IP to prevent
+        // fake conversion flooding that would skew A/B test results.
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $rlKey = 'sseo_ab_rl_' . md5($ip);
+        $count = (int) get_transient($rlKey);
+        if ($count >= 30) {
+            return ['success' => false, 'error' => 'rate_limited'];
+        }
+        $count === 0 ? set_transient($rlKey, 1, 60) : set_transient($rlKey, $count + 1, 60);
+
+        // Validate that the variant belongs to an active test.
+        $variant = $wpdb->get_row($wpdb->prepare(
+            "SELECT v.id, t.status FROM {$this->variantsTable} v
+             JOIN {$this->testsTable} t ON t.id = v.test_id
+             WHERE v.id = %d AND v.test_id = %d AND t.status = 'active'
+             LIMIT 1",
+            $variantId, $testId
+        ), ARRAY_A);
+
+        if (!$variant) {
             return ['success' => false];
         }
 

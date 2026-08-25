@@ -38,11 +38,26 @@ class Settings
     }
 
     /**
-     * Get dashboard URL
+     * Get the baked-in default dashboard URL (overridable via wp-config.php).
+     */
+    public function getDefaultDashboardUrl(): string
+    {
+        return defined('SSEO_AI_DEFAULT_DASHBOARD_URL') ? SSEO_AI_DEFAULT_DASHBOARD_URL : '';
+    }
+
+    /**
+     * Get dashboard URL.
+     *
+     * Falls back to the baked-in default when no URL is stored in the option,
+     * so customers never need to type the dashboard domain.
      */
     public function getDashboardUrl(): string
     {
-        return get_option('sseo_ai_client_dashboard_url', '');
+        $stored = get_option('sseo_ai_client_dashboard_url', '');
+        if (!empty($stored)) {
+            return $stored;
+        }
+        return $this->getDefaultDashboardUrl();
     }
 
     /**

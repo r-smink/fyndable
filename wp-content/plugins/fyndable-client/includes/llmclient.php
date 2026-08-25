@@ -55,25 +55,26 @@ class LlmClient
         
         $tier = $status['tier'] ?? 'free';
         
-        // Tier-based model access
+        // Tier-based model access (OpenRouter multi-provider models)
         $models = [
-            'free' => ['gpt-3.5-turbo'],
-            'starter' => ['gpt-3.5-turbo'],
-            'trial' => ['gpt-3.5-turbo', 'gpt-4'],
-            'professional' => ['gpt-3.5-turbo', 'gpt-4'],
-            'business' => ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
-            'agency' => ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-5'],
+            'free' => ['openai/gpt-4o-mini'],
+            'starter' => ['openai/gpt-4o-mini', 'openai/gpt-4o'],
+            'trial' => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet'],
+            'professional' => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'deepseek/deepseek-chat'],
+            'business' => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'deepseek/deepseek-chat', 'anthropic/claude-3-haiku'],
+            'agency' => ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'deepseek/deepseek-chat', 'anthropic/claude-3-haiku', 'google/gemini-flash-1.5'],
         ];
-        
-        return $models[$tier] ?? ['gpt-3.5-turbo'];
+
+        return $models[$tier] ?? ['openai/gpt-4o-mini'];
     }
 
     /**
-     * Check if GPT-5 is available for this tenant
+     * Check if premium models are available for this tenant
      */
     public function isGpt5Available(): bool
     {
-        return in_array('gpt-5', $this->getAvailableModels());
+        $models = $this->getAvailableModels();
+        return in_array('anthropic/claude-3.5-sonnet', $models) || in_array('openai/gpt-4o', $models);
     }
 
     /**
@@ -160,7 +161,7 @@ class LlmClient
      * This ensures costs are tracked and limits are enforced
      * 
      * @param string $prompt User prompt
-     * @param string|null $model Model to use (gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-5)
+     * @param string|null $model Model to use (openai/gpt-4o-mini, openai/gpt-4o, anthropic/claude-3.5-sonnet, etc.)
      * @param string|null $systemRole System role override
      * @param int|null $maxTokens Max tokens
      * @param array $trackExtra Extra tracking data (endpoint, post_id, context)
@@ -171,7 +172,8 @@ class LlmClient
         ?string $model = null, 
         ?string $systemRole = null, 
         ?int $maxTokens = null,
-        array $trackExtra = []
+        array $trackExtra = [],
+        string $useCase = 'content_generation'
     ) {
         if (!$this->isAvailable()) {
             return new \WP_Error('not_licensed', __('AI features require an active license', 'ai-seo-client'));
@@ -212,13 +214,41 @@ class LlmClient
             );
         }
 
+        // Check SaaS dashboard per-function model routing (AI Model Routing per function)
+        $modelRouting = get_option('sseo_ai_client_model_routing', []);
+        if (empty($model) && is_array($modelRouting) && !empty($modelRouting[$useCase])) {
+            $model = $modelRouting[$useCase];
+        }
+
         // Validate requested model is available for tier
         $availableModels = $this->getAvailableModels();
-        $requestedModel = $model ?? 'gpt-3.5-turbo';
+        $requestedModel = $model ?? 'openai/gpt-4o-mini';
         
         if (!in_array($requestedModel, $availableModels)) {
             // Fallback to best available model
-            $requestedModel = $availableModels[count($availableModels) - 1] ?? 'gpt-3.5-turbo';
+            $requestedModel = $availableModels[count($availableModels) - 1] ?? 'openai/gpt-4o-mini';
+        }
+
+        // Always enforce sentence case for any use case that produces titles,
+        // headings, FAQ questions, meta titles or other visible copy. This
+        // prevents the LLM from defaulting to Title Case ("Every Word
+        // Capitalized") which looks unnatural in Dutch and most European
+        // languages. Only the first word of a title/heading and proper nouns
+        // should be capitalized.
+        if (in_array($useCase, ['content_generation', 'meta_optimization', 'faq_generation', 'analysis'], true)) {
+            $casingInstruction = "CASING REQUIREMENT (follow strictly):\n"
+                . "Use sentence case for ALL titles, headings, subheadings, FAQ questions and meta titles. "
+                . "Only the first word of a title/heading and proper nouns (brand names, place names, person names, acronyms) may be capitalized. "
+                . "Do NOT use Title Case (where every word is capitalized). Example correct: \"How to improve your SEO in 2026\". Example wrong: \"How To Improve Your SEO In 2026\".\n\n";
+            $prompt = $casingInstruction . $prompt;
+        }
+
+        // Inject brand voice instructions for content generation use cases
+        if (in_array($useCase, ['content_generation', 'analysis', 'keyword_research'], true)) {
+            $brandVoicePrompt = apply_filters('sseo_ai_brand_voice_prompt', '');
+            if (!empty($brandVoicePrompt)) {
+                $prompt = $brandVoicePrompt . $prompt;
+            }
         }
 
         // Build messages
@@ -237,12 +267,16 @@ class LlmClient
             $messages,
             $requestedModel,
             $maxTokens ?? 2000,
-            $this->settings->temperature()
+            $this->settings->temperature(),
+            $useCase
         );
 
         $durationMs = (int)((microtime(true) - $startTime) * 1000);
 
         if (is_wp_error($response)) {
+            $provider = $this->detectProvider($requestedModel);
+            $this->health->logProviderError($provider, $response->get_error_code(), $response->get_error_message());
+
             // Log error
             LLMTracker::log([
                 'prompt' => $prompt,
@@ -273,7 +307,7 @@ class LlmClient
             'text' => $response['content'] ?? '',
             'model' => $response['model'] ?? $requestedModel,
             'usage' => $response['usage'] ?? [],
-            'provider' => 'openai',
+            'provider' => $response['provider'] ?? 'openrouter',
         ];
 
         // Log success
@@ -308,14 +342,110 @@ class LlmClient
         $maxTokens = $options['max_tokens'] ?? 2000;
         $systemRole = $options['system_role'] ?? null;
         $trackExtra = $options['track_extra'] ?? [];
-        
-        $result = $this->call($prompt, $model, $systemRole, $maxTokens, $trackExtra);
+        $useCase = $options['use_case'] ?? 'content_generation';
+
+        // Casing + brand voice injection happens in call() so that direct
+        // callers of call() also benefit.
+        $result = $this->call($prompt, $model, $systemRole, $maxTokens, $trackExtra, $useCase);
         
         if (is_wp_error($result)) {
             return $result;
         }
-        
+
         return $result['text'] ?? '';
+    }
+
+    /**
+     * Call LLM with an image (vision support).
+     * Sends both text prompt and image URL to a vision-capable model.
+     *
+     * @param string $prompt Text prompt
+     * @param string $imageUrl URL of the image to analyze
+     * @param string|null $model Model override (must be vision-capable)
+     * @param int|null $maxTokens Max tokens
+     * @param string $useCase Use case for tracking
+     * @return array|\WP_Error ['text' => string, 'model' => string, 'usage' => array]
+     */
+    public function callWithImage(
+        string $prompt,
+        string $imageUrl,
+        ?string $model = null,
+        ?int $maxTokens = null,
+        string $useCase = 'image_alt_text'
+    ) {
+        if (!$this->isAvailable()) {
+            return new \WP_Error('not_licensed', __('AI features require an active license', 'ai-seo-client'));
+        }
+
+        // Use a vision-capable model by default
+        if (empty($model)) {
+            $model = 'openai/gpt-4o-mini'; // gpt-4o-mini supports vision
+        }
+
+        // Build messages with image content
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'You are an expert at analyzing images and writing concise, descriptive alt text for SEO and accessibility.',
+            ],
+            [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => $prompt],
+                    ['type' => 'image_url', 'image_url' => ['url' => $imageUrl]],
+                ],
+            ],
+        ];
+
+        $startTime = microtime(true);
+
+        $response = $this->dashboardAPI->aiGenerate(
+            $messages,
+            $model,
+            $maxTokens ?? 500,
+            0.3,
+            $useCase
+        );
+
+        $durationMs = (int)((microtime(true) - $startTime) * 1000);
+
+        if (is_wp_error($response)) {
+            LLMTracker::log([
+                'prompt' => $prompt . ' [image: ' . $imageUrl . ']',
+                'response' => '',
+                'model' => $model,
+                'endpoint' => 'llm.callWithImage',
+                'status' => 'error',
+                'error_message' => $response->get_error_message(),
+                'duration_ms' => $durationMs,
+                'context' => $useCase,
+            ]);
+            return $response;
+        }
+
+        $this->incrementRateLimit();
+
+        $result = [
+            'text' => $response['content'] ?? '',
+            'model' => $response['model'] ?? $model,
+            'usage' => $response['usage'] ?? [],
+            'provider' => $response['provider'] ?? 'openrouter',
+        ];
+
+        LLMTracker::log([
+            'prompt' => $prompt . ' [image]',
+            'response' => $result['text'],
+            'model' => $result['model'],
+            'tokens_input' => $result['usage']['prompt_tokens'] ?? $result['usage']['input_tokens'] ?? 0,
+            'tokens_output' => $result['usage']['completion_tokens'] ?? $result['usage']['output_tokens'] ?? 0,
+            'cost' => $result['usage']['cost'] ?? 0,
+            'endpoint' => 'llm.callWithImage',
+            'status' => 'success',
+            'duration_ms' => $durationMs,
+            'context' => $useCase,
+        ]);
+
+        return $result;
     }
 
     /**
@@ -323,7 +453,7 @@ class LlmClient
      */
     public function healthcheck(string $prompt = 'Test prompt')
     {
-        $res = $this->call($prompt, 'gpt-3.5-turbo'); // Use cheapest model for healthcheck
+        $res = $this->call($prompt, 'openai/gpt-4o-mini'); // Use cheapest model for healthcheck
         
         if (is_wp_error($res)) {
             return $res;
@@ -367,5 +497,35 @@ class LlmClient
     private function buildDefaultSystemPrompt(): string
     {
         return 'You are an AI SEO assistant. Help create optimized, engaging content that performs well in search engines.';
+    }
+
+    /**
+     * Detect the AI provider from a model identifier for error logging.
+     */
+    private function detectProvider(string $model): string
+    {
+        $model = strtolower($model);
+
+        if (strpos($model, '/') !== false) {
+            return 'openrouter';
+        }
+
+        if (strpos($model, 'gpt-') === 0 || strpos($model, 'text-') === 0) {
+            return 'openai';
+        }
+
+        if (strpos($model, 'claude') !== false) {
+            return 'anthropic';
+        }
+
+        if (strpos($model, 'deepseek') !== false) {
+            return 'deepseek';
+        }
+
+        if (strpos($model, 'gemini') !== false) {
+            return 'google';
+        }
+
+        return 'ai';
     }
 }

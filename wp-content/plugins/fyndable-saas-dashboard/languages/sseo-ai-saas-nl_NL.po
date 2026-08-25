@@ -1,0 +1,1785 @@
+﻿msgid ""
+msgstr ""
+"Project-Id-Version: Fyndable SaaS Dashboard\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-07 00:00+0000\n"
+"PO-Revision-Date: 2026-08-07 00:00+0000\n"
+"Last-Translator: Devin\n"
+"Language-Team: Dutch\n"
+"Language: nl_NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Devin Translation Script\n"
+
+msgid "— Select a page —"
+msgstr "— Selecteer een pagina —"
+
+msgid "\"Amount\" label"
+msgstr "\"Bedrag\" label"
+
+msgid "\"Billed to\" label"
+msgstr "\"Gefactureerd aan\" label"
+
+msgid "\"Description\" label"
+msgstr "\"Omschrijving\" label"
+
+msgid "\"From\" label"
+msgstr "\"Van\" label"
+
+msgid "\"Invoice\" label"
+msgstr "\"Factuur\" label"
+
+msgid "\"Paid on\" label"
+msgstr "\"Betaald op\" label"
+
+msgid "\"Period\" label"
+msgstr "\"Periode\" label"
+
+msgid "\"Subtotal\" label"
+msgstr "\"Subtotaal\" label"
+
+msgid "\"Total\" label"
+msgstr "\"Totaal\" label"
+
+msgid "\"VAT\" label"
+msgstr "\"BTW\" label"
+
+msgid "%1$d / %2$d used — %3$d remaining"
+msgstr "%1$d / %2$d gebruikt — %3$d resterend"
+
+msgid "%s items"
+msgstr "%s items"
+
+msgid "(unknown)"
+msgstr "(onbekend)"
+
+msgid "[%s] Notification"
+msgstr "[%s] Melding"
+
+msgid "[%s] Payment Failed: %s"
+msgstr "[%s] Betaling Mislukt: %s"
+
+msgid "[{{site_name}}] New reply on ticket #{{ticket_id}} from {{tenant_name}}"
+msgstr "[{{site_name}}] Nieuw antwoord op ticket #{{ticket_id}} van {{tenant_name}}"
+
+msgid "[{{site_name}}] New support ticket #{{ticket_id}} from {{tenant_name}}"
+msgstr "[{{site_name}}] Nieuwe support ticket #{{ticket_id}} van {{tenant_name}}"
+
+msgid "[{{site_name}}] Reply to your support ticket #{{ticket_id}}"
+msgstr "[{{site_name}}] Antwoord op je support ticket #{{ticket_id}}"
+
+msgid "{{company_name}} Alert"
+msgstr "{{company_name}} Melding"
+
+msgid "2 maanden gratis"
+msgstr "2 maanden gratis"
+
+msgid "A client replied to a support ticket"
+msgstr "Een klant heeft geantwoord op een support ticket"
+
+msgid "A reply has been added to your support ticket"
+msgstr "Er is een antwoord toegevoegd aan je support ticket"
+
+msgid "A valid email is required"
+msgstr "Een geldig e-mailadres is vereist"
+
+msgid "Actualiteit"
+msgstr "Actualiteit"
+
+msgid "Add Layout"
+msgstr "Layout Toevoegen"
+
+msgid "Address"
+msgstr "Adres"
+
+msgid "Admin: Technical Alert"
+msgstr "Beheerder: Technische Melding"
+
+msgid "Agency"
+msgstr "Agency"
+
+msgid "Agency account already exists for this user"
+msgstr "Agency account bestaat al voor deze gebruiker"
+
+msgid "Agency account created for %s with %d sub-license quota. A welcome email has been sent with login details."
+msgstr "Agency account aangemaakt voor %s met %d sub-licentie quota. Een welkomstmail is verzonden met inloggegevens."
+
+msgid "Agency account not found."
+msgstr "Agency account niet gevonden."
+
+msgid "Agency account not found. Please contact the administrator."
+msgstr "Agency account niet gevonden. Neem contact op met de beheerder."
+
+msgid "Agency Accounts"
+msgstr "Agency-accounts"
+
+msgid "Agency Partner"
+msgstr "Agency Partner"
+
+msgid "Agency Portal"
+msgstr "Agency-portaal"
+
+msgid "ago"
+msgstr "geleden"
+
+msgid "AI generation failed"
+msgstr "AI generatie mislukt"
+
+msgid "AI Models"
+msgstr "AI Modellen"
+
+msgid "AI service is temporarily unavailable due to recent failures. Please try again later."
+msgstr "AI service is tijdelijk niet beschikbaar door recente storingen. Probeer het later opnieuw."
+
+msgid "All AI models failed. Attempted: %s. Last error: %s"
+msgstr "Alle AI modellen faalden. Geprobeerd: %s. Laatste fout: %s"
+
+msgid "All Licenses"
+msgstr "Alle Licenties"
+
+msgid "All SERP providers failed"
+msgstr "Alle SERP providers faalden"
+
+msgid "Announcement"
+msgstr "Aankondiging"
+
+msgid "Are you sure you want to cancel your subscription? You will retain access until the end of your current billing period."
+msgstr "Weet je zeker dat je je abonnement wilt opzeggen? Je behoudt toegang tot het einde van je huidige factureringsperiode."
+
+msgid "Bookkeeping"
+msgstr "Boekhouding"
+
+msgid "Built-in layouts cannot be deleted."
+msgstr "Ingebouwde layouts kunnen niet worden verwijderd."
+
+msgid "Business"
+msgstr "Zakelijk"
+
+msgid "Chamber of Commerce (KvK)"
+msgstr "Kamer van Koophandel (KvK)"
+
+msgid "Checkout"
+msgstr "Afrekenen"
+
+msgid "Choose Logo"
+msgstr "Logo Kiezen"
+
+msgid "Choose the language for the Fyndable dashboard. This sets your WordPress profile language. The dashboard reloads in the selected language after saving. Site Default follows the site language setting."
+msgstr "Kies de taal voor het Fyndable-dashboard. Dit stelt je WordPress-profieltaal in. Het dashboard herlaadt in de geselecteerde taal na het opslaan. Standaard (site) volgt de sitetaalinstelling."
+
+msgid "Citeerwaardigheid"
+msgstr "Citeerwaardigheid"
+
+msgid "Client Details: %s"
+msgstr "Client Details: %s"
+
+msgid "Client plugin source not found."
+msgstr "Client plugin bron niet gevonden."
+
+msgid "Client Portal"
+msgstr "Client Portaal"
+
+msgid "Client version settings saved."
+msgstr "Client versie instellingen opgeslagen."
+
+msgid "Client Versions"
+msgstr "Client Versies"
+
+msgid "Closed"
+msgstr "Gesloten"
+
+msgid "Company name"
+msgstr "Bedrijfsnaam"
+
+msgid "Company Name"
+msgstr "Bedrijfsnaam"
+
+msgid "Company name is required to build a white-label package."
+msgstr "Bedrijfsnaam is vereist om een white-label pakket te bouwen."
+
+msgid "Company name is required."
+msgstr "Bedrijfsnaam is vereist."
+
+msgid "Concurrentieverschil"
+msgstr "Concurrentieverschil"
+
+msgid "Connect Google â€” %s"
+msgstr "Connect Google â€” %s"
+
+msgid "Content Analysis"
+msgstr "Content Analyse"
+
+msgid "Content Generation"
+msgstr "Content Generatie"
+
+msgid "Copied to clipboard!"
+msgstr "Gekopieerd naar klembord!"
+
+msgid "Cost Dashboard"
+msgstr "Kosten Dashboard"
+
+msgid "Could not create extraction directory."
+msgstr "Kon de extractie map niet aanmaken."
+
+msgid "Could not create SE Ranking SERP task"
+msgstr "Kon SE Ranking SERP taak niet aanmaken"
+
+msgid "Could not create the client versions directory: %s"
+msgstr "Kon de client versies map niet aanmaken: %s"
+
+msgid "Could not move uploaded file to %s"
+msgstr "Kon het geuploade bestand niet verplaatsen naar %s"
+
+msgid "Could not open client source zip."
+msgstr "Kon de client source zip niet openen."
+
+msgid "Could not send test email. Check the address and template."
+msgstr "Kon geen test-e-mail verzenden. Controleer het adres en sjabloon."
+
+msgid "Count must be between 1 and 100"
+msgstr "Aantal moet tussen 1 en 100 zijn"
+
+msgid "Create a WordPress page and add the shortcode %s to it, then select that page here. Paying customers are redirected to this page after login. If no page is selected, customers will be redirected to the homepage instead of getting a 404."
+msgstr "Maak een WordPress pagina aan en voeg de shortcode %s toe, selecteer deze pagina hier. Betalende klanten worden na het inloggen naar deze pagina doorgestuurd. Als er geen pagina is geselecteerd, worden klanten doorgestuurd naar de homepage in plaats van een 404 te krijgen."
+
+msgid "Create Agency Account"
+msgstr "Agency Account Aanmaken"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Default"
+msgstr "Standaard"
+
+msgid "Direct antwoord"
+msgstr "Direct antwoord"
+
+msgid "Early Adopters"
+msgstr "Early Adopters"
+
+msgid "Edit Layout"
+msgstr "Layout Bewerken"
+
+msgid "Edit Template: %s"
+msgstr "Sjabloon Bewerken: %s"
+
+msgid "E-E-A-T"
+msgstr "E-E-A-T"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Email or username"
+msgstr "E-mail of gebruikersnaam"
+
+msgid "Email Templates"
+msgstr "E-mail Sjablonen"
+
+msgid "Entiteiten"
+msgstr "Entiteiten"
+
+msgid "Entiteitsdekking"
+msgstr "Entiteitsdekking"
+
+msgid "Failed to create agency account"
+msgstr "Agency account aanmaken mislukt"
+
+msgid "Failed to create tenant"
+msgstr "Tenant aanmaken mislukt"
+
+msgid "Failed to create user account."
+msgstr "Gebruikersaccount aanmaken mislukt."
+
+msgid "Failed to generate any licenses"
+msgstr "Geen licenties kunnen genereren"
+
+msgid "Failed to generate license key"
+msgstr "Licentiesleutel genereren mislukt"
+
+msgid "FAQ Generation"
+msgstr "FAQ Generatie"
+
+msgid "Filter"
+msgstr "Filteren"
+
+msgid "Firecrawl scrape failed"
+msgstr "Firecrawl scrape mislukt"
+
+msgid "From"
+msgstr "Van"
+
+msgid "Fyndable Business"
+msgstr "Fyndable Business"
+
+msgid "Fyndable Customer"
+msgstr "Fyndable Klant"
+
+msgid "Fyndable Professional"
+msgstr "Fyndable Professional"
+
+msgid "Fyndable SmartSEO %s subscription"
+msgstr "Fyndable SmartSEO %s abonnement"
+
+msgid "Fyndable Starter"
+msgstr "Fyndable Starter"
+
+msgid "Gebruik je gestructureerde gegevens (schema) waardoor zoekmachines de inhoud beter begrijpen?"
+msgstr "Gebruik je gestructureerde gegevens (schema) waardoor zoekmachines de inhoud beter begrijpen?"
+
+msgid "Geeft je pagina meteen een duidelijk antwoord op de vraag van de bezoeker? AI-zoekmachines geven de voorkeur aan pagina's die de vraag direct beantwoorden."
+msgstr "Geeft je pagina meteen een duidelijk antwoord op de vraag van de bezoeker? AI-zoekmachines geven de voorkeur aan pagina's die de vraag direct beantwoorden."
+
+msgid "Generate Keys"
+msgstr "Sleutels Genereren"
+
+msgid "Generate License Keys"
+msgstr "Licentiesleutels Genereren"
+
+msgid "Generate Licenses"
+msgstr "Licenties Genereren"
+
+msgid "Generate Sub-License"
+msgstr "Sub-Licentie Genereren"
+
+msgid "GEO Readiness Scan"
+msgstr " GEO Readiness Scan"
+
+msgid "GEO Scan"
+msgstr "GEO-scan"
+
+msgid "Global White-Label"
+msgstr "Globale White-Label"
+
+msgid "Go to Dashboard"
+msgstr "Naar Dashboard"
+
+msgid "Google OAuth is not configured on the SaaS dashboard."
+msgstr "Google OAuth is niet geconfigureerd op het SaaS dashboard."
+
+msgid "Hello,
+\n
+\nA payment has failed for the following tenant:
+\n
+\nTenant: %s
+\nEmail: %s
+\nProvider: %s
+\nTime: %s
+\n
+\nPlease check the payment dashboard for more details.
+\n
+\n---
+\nThis is an automated message from %s"
+msgstr "Hello,
+\n
+\nA payment has failed for the following tenant:
+\n
+\nTenant: %s
+\nEmail: %s
+\nProvider: %s
+\nTime: %s
+\n
+\nPlease check the payment dashboard for more details.
+\n
+\n---
+\nThis is an automated message from %s"
+
+msgid "Hi %s,
+\n
+\nYour Fyndable SmartSEO account has been created! You can now manage your subscription, view invoices, download the plugin, and track your usage.
+\n
+\nSet your password and log in to your customer portal:
+\n%s
+\n
+\nAfter logging in, you can download the Fyndable plugin and find your license key in the License tab.
+\n
+\nIf you have any questions, feel free to reply to this email.
+\n
+\n— The Fyndable Team"
+msgstr "Hi %s,
+\n
+\nYour Fyndable SmartSEO account has been created! You can now manage your subscription, view invoices, download the plugin, and track your usage.
+\n
+\nSet your password and log in to your customer portal:
+\n%s
+\n
+\nAfter logging in, you can download the Fyndable plugin and find your license key in the License tab.
+\n
+\nIf you have any questions, feel free to reply to this email.
+\n
+\n— The Fyndable Team"
+
+msgid "High"
+msgstr "Hoog"
+
+msgid "Hoe goed dekt je tekst de belangrijkste entiteiten en onderwerpen rond het zoekwoord af?"
+msgstr "Hoe goed dekt je tekst de belangrijkste entiteiten en onderwerpen rond het zoekwoord af?"
+
+msgid "IBAN"
+msgstr "IBAN"
+
+msgid "Image Alt Text"
+msgstr "Afbeelding Alt Tekst"
+
+msgid "In welke opzichten komt jouw inhoud tekort ten opzichte van concurrenten die wel geciteerd worden?"
+msgstr "In welke opzichten komt jouw inhoud tekort ten opzichte van concurrenten die wel geciteerd worden?"
+
+msgid "Insufficient permissions."
+msgstr "Onvoldoende rechten."
+
+msgid "Interne links"
+msgstr "Interne links"
+
+msgid "Invalid credentials."
+msgstr "Ongeldige inloggegevens."
+
+msgid "Invalid language selected."
+msgstr "Ongeldige taal geselecteerd."
+
+msgid "Invalid OpenAI API key. Check your settings."
+msgstr "Ongeldige OpenAI API sleutel. Controleer je instellingen."
+
+msgid "Invalid OpenArt API key. Check your settings."
+msgstr "Ongeldige OpenArt API sleutel. Controleer je instellingen."
+
+msgid "Invalid OpenRouter API key. Check your settings."
+msgstr "Ongeldige OpenRouter API sleutel. Controleer je instellingen."
+
+msgid "Invalid or expired login link."
+msgstr "Ongeldige of verlopen inloglink."
+
+msgid "Invalid payment provider"
+msgstr "Ongeldige betalingsprovider"
+
+msgid "Invalid subscription tier"
+msgstr "Ongeldig abonnement tier"
+
+msgid "Invalid URL provided"
+msgstr "Ongeldige URL opgegeven"
+
+msgid "Invoice not found."
+msgstr "Factuur niet gevonden."
+
+msgid "Invoice Template"
+msgstr "Factuur Sjabloon"
+
+msgid "Invoices"
+msgstr "Facturen"
+
+msgid "Is de informatie recent en up-to-date? Verse content scoort vaak beter."
+msgstr "Is de informatie recent en up-to-date? Verse content scoort vaak beter."
+
+msgid "Is de pagina goed te gebruiken op een mobiele telefoon?"
+msgstr "Is de pagina goed te gebruiken op een mobiele telefoon?"
+
+msgid "Is de tekst makkelijk te lezen en te begrijpen voor een breed publiek?"
+msgstr "Is de tekst makkelijk te lezen en te begrijpen voor een breed publiek?"
+
+msgid "Is de tekst overzichtelijk opgebouwd met duidelijke koppen, paragrafen en lijsten?"
+msgstr "Is de tekst overzichtelijk opgebouwd met duidelijke koppen, paragrafen en lijsten?"
+
+msgid "Is je pagina een betrouwbare bron die andere websites of AI-systemen zouden willen citeren?"
+msgstr "Is je pagina een betrouwbare bron die andere websites of AI-systemen zouden willen citeren?"
+
+msgid "Jina Reader returned an empty response"
+msgstr "Jina Reader gaf een lege reactie"
+
+msgid "Jina Reader returned status %d"
+msgstr "Jina Reader gaf status %d"
+
+msgid "Keyword and target_url are required"
+msgstr "Zoekwoord en target_url zijn vereist"
+
+msgid "Keyword Research"
+msgstr "Zoekwoord Onderzoek"
+
+msgid "KvK"
+msgstr "KvK"
+
+msgid "Laat je pagina zien dat je expertise, autoriteit en betrouwbaarheid hebt over dit onderwerp. Zoekmachines vertrouwen content van betrouwbare bronnen meer."
+msgstr "Laat je pagina zien dat je expertise, autoriteit en betrouwbaarheid hebt over dit onderwerp. Zoekmachines vertrouwen content van betrouwbare bronnen meer."
+
+msgid "Leesbaarheid"
+msgstr "Leesbaarheid"
+
+msgid "License"
+msgstr "Licentie"
+
+msgid "License Dashboard"
+msgstr "Licentie Dashboard"
+
+msgid "License Expired Email"
+msgstr "Licentie Verlopen E-mail"
+
+msgid "License Features"
+msgstr "Licentie Functies"
+
+msgid "License key has been revoked"
+msgstr "Licentiesleutel is ingetrokken"
+
+msgid "License key has expired"
+msgstr "Licentiesleutel is verlopen"
+
+msgid "License key not found"
+msgstr "Licentiesleutel niet gevonden"
+
+msgid "License key required"
+msgstr "Licentiesleutel vereist"
+
+msgid "License Management"
+msgstr "Licentiebeheer"
+
+msgid "License not found"
+msgstr "Licentie niet gevonden"
+
+msgid "License revoked successfully."
+msgstr "Licentie succesvol ingetrokken."
+
+msgid "Licenses"
+msgstr "Licenties"
+
+msgid "Linkt de pagina naar andere relevante pagina's binnen je eigen website?"
+msgstr "Linkt de pagina naar andere relevante pagina's binnen je eigen website?"
+
+msgid "Loading..."
+msgstr "Laden..."
+
+msgid "Low"
+msgstr "Laag"
+
+msgid "Manage Features for License: %s"
+msgstr "Functies Beheren voor Licentie: %s"
+
+msgid "Meta Optimization"
+msgstr "Meta Optimalisatie"
+
+msgid "Metadata"
+msgstr "Metadata"
+
+msgid "Middle"
+msgstr "Midden"
+
+msgid "Minimal"
+msgstr "Minimal"
+
+msgid "Mobiel vriendelijk"
+msgstr "Mobiel vriendelijk"
+
+msgid "Mollie API connection failed: "
+msgstr "Mollie API connection failed: "
+
+msgid "Mollie API key is not configured"
+msgstr "Mollie API sleutel is niet geconfigureerd"
+
+msgid "Mollie API request failed (HTTP %d): %s"
+msgstr "Mollie API verzoek mislukt (HTTP %d): %s"
+
+msgid "Mollie customer not configured for this tenant"
+msgstr "Mollie klant niet geconfigureerd voor deze tenant"
+
+msgid "Mollie is set to %s mode but the API key does not start with \"%s\"."
+msgstr "Mollie is ingesteld op %s modus maar de API sleutel begint niet met \"%s\"."
+
+msgid "Mollie payment does not have a customer ID"
+msgstr "Mollie betaling heeft geen klant ID"
+
+msgid "Mollie subscription not configured for this tenant"
+msgstr "Mollie abonnement niet geconfigureerd voor deze tenant"
+
+msgid "Monthly API limit reached"
+msgstr "Maandelijkse API limiet bereikt"
+
+msgid "Name and email are required"
+msgstr "Naam en e-mail zijn vereist"
+
+msgid "Need help? <a href=\\\"{{support_url}}\\\">Contact support</a>"
+msgstr "Hulp nodig? <a href=\\\"{{support_url}}\\\">Neem contact op met support</a>"
+
+msgid "Never"
+msgstr "Nooit"
+
+msgid "New support ticket received"
+msgstr "Nieuwe support ticket ontvangen"
+
+msgid "No AI model candidates available for this request."
+msgstr "Geen AI model kandidaten beschikbaar voor dit verzoek."
+
+msgid "No AI provider is configured. Set up OpenRouter or OpenAI API key in SaaS settings."
+msgstr "Geen AI provider geconfigureerd. Stel OpenRouter of OpenAI API sleutel in in SaaS instellingen."
+
+msgid "No data to update"
+msgstr "Geen gegevens om bij te werken"
+
+msgid "No Mollie payments found for this customer"
+msgstr "Geen Mollie betalingen gevonden voor deze klant"
+
+msgid "No screenshot uploaded."
+msgstr "Geen screenshot geupload."
+
+msgid "No SE Ranking location for country %s"
+msgstr "Geen SE Ranking locatie voor land %s"
+
+msgid "No successful first payment found to base a subscription on"
+msgstr "Geen succesvolle eerste betaling gevonden om een abonnement op te baseren"
+
+msgid "No valid fields to update"
+msgstr "Geen geldige velden om bij te werken"
+
+msgid "No valid mandate found for Mollie customer. The payment method may not support recurring payments."
+msgstr "Geen geldig mandaat gevonden voor Mollie klant. De betalingsmethode ondersteunt mogelijk geen terugkerende betalingen."
+
+msgid "Noemt je tekst belangrijke personen, plaatsen, merken of begrippen die relevant zijn voor het onderwerp?"
+msgstr "Noemt je tekst belangrijke personen, plaatsen, merken of begrippen die relevant zijn voor het onderwerp?"
+
+msgid "Note: GEO scan costs of %1$s in this period are not yet allocated per tenant (per-tenant GEO cost tracking is a follow-up)."
+msgstr "Note: GEO scan costs of %1$s in this period are not yet allocated per tenant (per-tenant GEO cost tracking is a follow-up)."
+
+msgid "Open"
+msgstr "Open"
+
+msgid "OpenAI API key is not configured. Add it in SaaS Settings."
+msgstr "OpenAI API sleutel is niet geconfigureerd. Voeg deze toe in SaaS Instellingen."
+
+msgid "OpenAI rate limit reached. Try again shortly."
+msgstr "OpenAI rate limit bereikt. Probeer het zo opnieuw."
+
+msgid "OpenAI request failed: %s"
+msgstr "OpenAI verzoek mislukt: %s"
+
+msgid "OpenArt API key is not configured. Add it in SaaS Settings."
+msgstr "OpenArt API sleutel is niet geconfigureerd. Voeg deze toe in SaaS Instellingen."
+
+msgid "OpenArt credits exhausted. Top up your account."
+msgstr "OpenArt credits opgebruikt. Vul je account bij."
+
+msgid "OpenArt did not return an image URL."
+msgstr "OpenArt heeft geen afbeelding URL teruggegeven."
+
+msgid "OpenArt rate limit reached. Try again shortly."
+msgstr "OpenArt rate limit bereikt. Probeer het zo opnieuw."
+
+msgid "OpenArt request failed: %s"
+msgstr "OpenArt verzoek mislukt: %s"
+
+msgid "OpenRouter API key is not configured. Add it in SaaS Settings."
+msgstr "OpenRouter API sleutel is niet geconfigureerd. Voeg deze toe in SaaS Instellingen."
+
+msgid "OpenRouter credits exhausted. Top up at openrouter.ai."
+msgstr "OpenRouter credits opgebruikt. Vul bij op openrouter.ai."
+
+msgid "OpenRouter rate limit reached. Try again shortly."
+msgstr "OpenRouter rate limit bereikt. Probeer het zo opnieuw."
+
+msgid "OpenRouter request failed: %s"
+msgstr "OpenRouter verzoek mislukt: %s"
+
+msgid "Password"
+msgstr "Wachtwoord"
+
+msgid "Payment Confirmation"
+msgstr "Betaling Bevestiging"
+
+msgid "Payment could not be processed"
+msgstr "Betaling kon niet worden verwerkt"
+
+msgid "Payment Failed"
+msgstr "Betaling mislukt"
+
+msgid "Payment Failed — Action Required"
+msgstr "Payment Failed — Action Required"
+
+msgid "Payment failed for tenant: %s\\nProvider: %s\\nTenant Email: %s\\n\\nPlease check the payment dashboard."
+msgstr "Payment failed for tenant: %s\\nProvider: %s\\nTenant Email: %s\\n\\nPlease check the payment dashboard."
+
+msgid "Payment Failed: %s"
+msgstr "Betaling Mislukt: %s"
+
+msgid "Payment Receipt"
+msgstr "Betalingsbewijs"
+
+msgid "Payment Receipt — {{amount}}"
+msgstr "Payment Receipt — {{amount}}"
+
+msgid "Payment successful"
+msgstr "Betaling succesvol"
+
+msgid "Plan"
+msgstr "Abonnement"
+
+msgid "Please set a Company Name on the White-Label settings page first."
+msgstr "Stel eerst een bedrijfsnaam in op de White-Label instellingen pagina."
+
+msgid "Please upload a .zip file."
+msgstr "Upload een .zip bestand."
+
+msgid "Prefix is required and must be 1-6 alphanumeric characters."
+msgstr "Prefix is vereist en moet 1-6 alfanumerieke tekens zijn."
+
+msgid "Professional"
+msgstr "Professioneel"
+
+msgid "Profit"
+msgstr "Winst"
+
+msgid "Provide between 1 and 10 keywords"
+msgstr "Geef tussen 1 en 10 zoekwoorden op"
+
+msgid "Quota: %1$d / %2$d used — %3$d remaining"
+msgstr "Quota: %1$d / %2$d gebruikt — %3$d resterend"
+
+msgid "Reaction"
+msgstr "Reactie"
+
+msgid "Redirect to Mollie to complete the first payment."
+msgstr "Doorsturen naar Mollie om de eerste betaling te voltooien."
+
+msgid "Redirect to Stripe to complete payment setup."
+msgstr "Doorsturen naar Stripe om betalingsinstellingen te voltooien."
+
+msgid "Remember me"
+msgstr "Onthoud mij"
+
+msgid "Renew License"
+msgstr "Licentie Vernieuwen"
+
+msgid "Reply message is required."
+msgstr "Antwoordbericht is vereist."
+
+msgid "Revenue"
+msgstr "Omzet"
+
+msgid "SaaS Settings"
+msgstr "SaaS Instellingen"
+
+msgid "Save & Preview"
+msgstr "Opslaan & Voorbeeld"
+
+msgid "Save AI Models"
+msgstr "AI Modellen Opslaan"
+
+msgid "Save Brand Settings"
+msgstr "Merkinstellingen Opslaan"
+
+msgid "Save Checkout Settings"
+msgstr "Afrekeninstellingen Opslaan"
+
+msgid "Save Client Versions"
+msgstr "Client Versies Opslaan"
+
+msgid "Save Layout"
+msgstr "Layout Opslaan"
+
+msgid "Save Settings"
+msgstr "Instellingen Opslaan"
+
+msgid "Save Template"
+msgstr "Sjabloon Opslaan"
+
+msgid "Save Tenant White-Label Settings"
+msgstr "Tenant White-Label Instellingen Opslaan"
+
+msgid "Save White-Label Settings"
+msgstr "White-Label Instellingen Opslaan"
+
+msgid "Scan failed. Please try again."
+msgstr "Scan mislukt. Probeer het opnieuw."
+
+msgid "Scan niet gevonden."
+msgstr "Scan niet gevonden."
+
+msgid "Schema markup"
+msgstr "Schema markup"
+
+msgid "SE Ranking SERP task failed"
+msgstr "SE Ranking SERP taak mislukt"
+
+msgid "SE Ranking SERP task timed out"
+msgstr "SE Ranking SERP taak time-out"
+
+msgid "Security check failed"
+msgstr "Beveiligingscontrole mislukt"
+
+msgid "Security check failed."
+msgstr "Beveiligingscontrole mislukt."
+
+msgid "Select Company Logo"
+msgstr "Bedrijfslogo Selecteren"
+
+msgid "Send reply"
+msgstr "Antwoord versturen"
+
+msgid "Send test email"
+msgstr "Test-e-mail versturen"
+
+msgid "SERP provider %s is temporarily skipped due to recent failures"
+msgstr "SERP provider %s is tijdelijk overgeslagen door recente storingen"
+
+msgid "SERP service is not configured"
+msgstr "SERP service is niet geconfigureerd"
+
+msgid "SerpApi key is not configured"
+msgstr "SerpApi sleutel is niet geconfigureerd"
+
+msgid "Settings"
+msgstr "Instellingen"
+
+msgid "Showing usage for %s. Total values include all sub-tenants under your agency."
+msgstr "Gebruik weergegeven voor %s. Totale waarden omvatten alle sub-tenants onder je agency."
+
+msgid "Sign in"
+msgstr "Inloggen"
+
+msgid "Site Default"
+msgstr "Standaard (site)"
+
+msgid "Smart SEO"
+msgstr "Smart SEO"
+
+msgid "Something went wrong. Please try again."
+msgstr "Er ging iets mis. Probeer het opnieuw."
+
+msgid "Starter"
+msgstr "Startpakket"
+
+msgid "Stripe API request failed"
+msgstr "Stripe API verzoek mislukt"
+
+msgid "Stripe secret key is not configured"
+msgstr "Stripe secret sleutel is niet geconfigureerd"
+
+msgid "Structuur"
+msgstr "Structuur"
+
+msgid "Subject"
+msgstr "Onderwerp"
+
+msgid "Subject and message are required."
+msgstr "Onderwerp en bericht zijn vereist."
+
+msgid "Subscription cancelled successfully"
+msgstr "Abonnement succesvol opgezegd"
+
+msgid "Subscription cancelled successfully."
+msgstr "Abonnement succesvol opgezegd."
+
+msgid "Subscription upgraded to %s"
+msgstr "Abonnement opgewaardeerd naar %s"
+
+msgid "Successfully generated %1$d license keys. %2$d failed."
+msgstr "Succesvol %1$d licentiesleutels gegenereerd. %2$d mislukt."
+
+msgid "Support"
+msgstr "Ondersteuning"
+
+msgid "Support Tickets"
+msgstr "Supporttickets"
+
+msgid "Support: New Ticket (admin)"
+msgstr "Support: Nieuwe Ticket (beheerder)"
+
+msgid "Support: Reply to Customer"
+msgstr "Support: Antwoord aan Klant"
+
+msgid "Support: Reply to Staff"
+msgstr "Support: Antwoord aan Medewerker"
+
+msgid "Team"
+msgstr "Team"
+
+msgid "Team Management"
+msgstr "Team Beheer"
+
+msgid "Template not found."
+msgstr "Sjabloon niet gevonden."
+
+msgid "Temporary directory is not writable."
+msgstr "Tijdelijke map is niet schrijfbaar."
+
+msgid "Tenant"
+msgstr "Tenant"
+
+msgid "Tenant Detail"
+msgstr "Tenantdetails"
+
+msgid "Tenant has no email address for login."
+msgstr "Tenant heeft geen e-mailadres voor inloggen."
+
+msgid "Tenant is not active."
+msgstr "Tenant is niet actief."
+
+msgid "Tenant key already exists"
+msgstr "Tenant sleutel bestaat al"
+
+msgid "Tenant not found"
+msgstr "Tenant niet gevonden"
+
+msgid "Tenant not found or not part of your agency."
+msgstr "Tenant niet gevonden of geen onderdeel van je agency."
+
+msgid "Tenant not found."
+msgstr "Tenant niet gevonden."
+
+msgid "Tenant white-label settings saved successfully!"
+msgstr "Tenant white-label instellingen succesvol opgeslagen!"
+
+msgid "Tenants"
+msgstr "Tenants"
+
+msgid "TEST:"
+msgstr "TEST:"
+
+msgid "The AI model did not return a valid JSON response"
+msgstr "Het AI model gaf geen geldige JSON reactie"
+
+msgid "The client versions directory is not writable: %s"
+msgstr "De client versies map is niet schrijfbaar: %s"
+
+msgid "The uploaded zip does not appear to contain a WordPress plugin."
+msgstr "De geuploade zip bevat geen WordPress plugin."
+
+msgid "The ZipArchive PHP extension is required to build packages."
+msgstr "De ZipArchive PHP extensie is vereist om pakketten te bouwen."
+
+msgid "This is an automated email, please do not reply."
+msgstr "Dit is een geautomatiseerde e-mail, gelieve niet te antwoorden."
+
+msgid "This is an automated notification."
+msgstr "Dit is een geautomatiseerde melding."
+
+msgid "This license key has been revoked"
+msgstr "Deze licentiesleutel is ingetrokken"
+
+msgid "This license key has expired"
+msgstr "Deze licentiesleutel is verlopen"
+
+msgid "This tenant does not belong to your agency."
+msgstr "Deze tenant behoort niet tot je agency."
+
+msgid "Ticket"
+msgstr "Ticket"
+
+msgid "Ticket #%d: %s"
+msgstr "Ticket #%d: %s"
+
+msgid "Ticket not found."
+msgstr "Ticket niet gevonden."
+
+msgid "Transaction ID"
+msgstr "Transactie ID"
+
+msgid "Trial"
+msgstr "Proefperiode"
+
+msgid "Trial Expiring Email"
+msgstr "Trial Verloopt E-mail"
+
+msgid "Unable to create zip archive."
+msgstr "Kon geen zip archief aanmaken."
+
+msgid "Unknown OpenAI error"
+msgstr "Onbekende OpenAI fout"
+
+msgid "Unknown OpenArt error"
+msgstr "Onbekende OpenArt fout"
+
+msgid "Unknown OpenRouter error"
+msgstr "Onbekende OpenRouter fout"
+
+msgid "Unknown SERP provider"
+msgstr "Onbekende SERP provider"
+
+msgid "Unknown SerpApi error"
+msgstr "Onbekende SerpApi fout"
+
+msgid "Update Payment"
+msgstr "Betaling Bijwerken"
+
+msgid "Update ticket"
+msgstr "Ticket Bijwerken"
+
+msgid "Upgrade Now"
+msgstr "Nu Upgraden"
+
+msgid "Upgrade Plan"
+msgstr "Abonnement Upgraden"
+
+msgid "Uploaded client plugin zip: %s"
+msgstr "Client plugin zip geupload: %s"
+
+msgid "Usage & Costs"
+msgstr "Gebruik & Kosten"
+
+msgid "Usage Limit Reached"
+msgstr "Gebruikslimiet Bereikt"
+
+msgid "Usage Reports"
+msgstr "Gebruiksrapporten"
+
+msgid "Usage Statistics - %s"
+msgstr "Gebruiksstatistieken - %s"
+
+msgid "Use as logo"
+msgstr "Als logo gebruiken"
+
+msgid "Use this logo"
+msgstr "Dit logo gebruiken"
+
+msgid "user_id and tenant_id are required"
+msgstr "user_id and tenant_id are required"
+
+msgid "Valid email is required."
+msgstr "Geldig e-mailadres is vereist."
+
+msgid "VAT"
+msgstr "BTW"
+
+msgid "VAT number"
+msgstr "BTW-nummer"
+
+msgid "View All Licenses"
+msgstr "Alle Licenties Bekijken"
+
+msgid "View Details"
+msgstr "Details Bekijken"
+
+msgid "We were unable to process your payment of {{amount}}. Please update your payment method to avoid service interruption."
+msgstr "We konden je betaling van {{amount}} niet verwerken. Werk je betalingsmethode bij om serviceonderbreking te voorkomen."
+
+msgid "Website"
+msgstr "Website"
+
+msgid "Welcome aboard!"
+msgstr "Welkom aan boord!"
+
+msgid "Welcome Email"
+msgstr "Welkomstmail"
+
+msgid "Welcome to %s — sign in to your dashboard"
+msgstr "Welcome to %s — sign in to your dashboard"
+
+msgid "Welcome to {{site_name}} — Your SEO Journey Starts Here"
+msgstr "Welcome to {{site_name}} — Your SEO Journey Starts Here"
+
+msgid "Welcome to Fyndable SmartSEO — Your account is ready"
+msgstr "Welcome to Fyndable SmartSEO — Your account is ready"
+
+msgid "White-Label"
+msgstr "White-Label"
+
+msgid "White-Label Settings for: %s"
+msgstr "White-Label Instellingen voor: %s"
+
+msgid "WordPress uploads directory is unavailable: %s"
+msgstr "WordPress uploads map is niet beschikbaar: %s"
+
+msgid "You are already logged in. <a href=\"%s\" style=\"color:#379fd3;font-weight:600;\">Go to dashboard</a>"
+msgstr "You are already logged in. <a href=\"%s\" style=\"color:#379fd3;font-weight:600;\">Go to dashboard</a>"
+
+msgid "You do not have permission to download packages."
+msgstr "Je hebt geen rechten om pakketten te downloaden."
+
+msgid "You do not have permission to export invoices."
+msgstr "Je hebt geen rechten om facturen te exporteren."
+
+msgid "You do not have permission to generate login links."
+msgstr "Je hebt geen rechten om inloglinks te genereren."
+
+msgid "You do not have permission to manage client versions."
+msgstr "Je hebt geen rechten om client versies te beheren."
+
+msgid "You do not have permission to manage white-label settings."
+msgstr "Je hebt geen rechten om white-label instellingen te beheren."
+
+msgid "You do not have permission to preview invoices."
+msgstr "Je hebt geen rechten om facturen te bekijken."
+
+msgid "You do not have permission to run scans."
+msgstr "Je hebt geen rechten om scans uit te voeren."
+
+msgid "You do not have permission to view invoices."
+msgstr "Je hebt geen rechten om facturen te bekijken."
+
+msgid "You have reached your maximum sub-license quota."
+msgstr "Je hebt je maximale sub-licentie quota bereikt."
+
+msgid "You must be logged in."
+msgstr "Je moet ingelogd zijn."
+
+msgid "Your {{site_name}} License Has Expired"
+msgstr "Je {{site_name}} Licentie Is Verlopen"
+
+msgid "Your <strong>{{tier}}</strong> license has expired. Renew now to restore access to all SEO features."
+msgstr "Your <strong>{{tier}}</strong> license has expired. Renew now to restore access to all SEO features."
+
+msgid "Your license has expired"
+msgstr "Je licentie is verlopen"
+
+msgid "Your License Key"
+msgstr "Je Licentiesleutel"
+
+msgid "Your subscription has been cancelled. You will retain access until the end of your current billing period."
+msgstr "Je abonnement is opgezegd. Je behoudt toegang tot het einde van je huidige factureringsperiode."
+
+msgid "Your trial expires in {{days_left}} day(s)"
+msgstr "Je trial verloopt over {{days_left}} dag(en)"
+
+msgid "Zijn titel, omschrijving en andere meta-informatie aanwezig en relevant?"
+msgstr "Zijn titel, omschrijving en andere meta-informatie aanwezig en relevant?"
+
+msgid "💰 Revenue"
+msgstr "💰 Revenue"
+
+msgid "1-6 alphanumeric characters. Will be uppercased. Example: ACME produces ACME-AI-XXXX-XXXX-XXXX"
+msgstr "1-6 alfanumerieke tekens. Wordt hoofdletters. Voorbeeld: ACME wordt ACME-AI-XXXX-XXXX-XXXX"
+
+msgid "Account updated successfully."
+msgstr "Account succesvol bijgewerkt."
+
+msgid "Actions"
+msgstr "Acties"
+
+msgid "Active"
+msgstr "Actief"
+
+msgid "Active Sub-Tenants"
+msgstr "Actieve sub-tenants"
+
+msgid "Active Tenants"
+msgstr "Actieve tenants"
+
+msgid "Add licenses"
+msgstr "Licenties toevoegen"
+
+msgid "Add more sub-licenses"
+msgstr "Meer sub-licenties toevoegen"
+
+msgid "Additional licenses cost €49,99 each for the first 10 extra licenses (up to 20 total) and €34,99 each thereafter."
+msgstr "Extra licenties kosten € 49,99 per stuk voor de eerste 10 extra licenties (totaal maximaal 20) en daarna € 34,99 per stuk."
+
+msgid "Agency - €%s"
+msgstr "Agency - €%s"
+
+msgid "Agency - €%s/month"
+msgstr "Agency - €%s/maand"
+
+msgid "Agency Dashboard"
+msgstr "Agency-dashboard"
+
+msgid "Agency Email"
+msgstr "Agency-e-mail"
+
+msgid "Agency Name"
+msgstr "Agency-naam"
+
+msgid "Agency Tier"
+msgstr "Agency-niveau"
+
+msgid "AI Model Tier"
+msgstr "AI-modelniveau"
+
+msgid "All License Keys"
+msgstr "Alle licentiesleutels"
+
+msgid "All Priorities"
+msgstr "Alle prioriteiten"
+
+msgid "All Statuses"
+msgstr "Alle statussen"
+
+msgid "All Sub-Licenses"
+msgstr "Alle sub-licenties"
+
+msgid "All Tiers"
+msgstr "Alle tiers"
+
+msgid "All Types"
+msgstr "Alle types"
+
+msgid "Amount"
+msgstr "Bedrag"
+
+msgid "API Calls"
+msgstr "API-calls"
+
+msgid "API Calls Limit"
+msgstr "API-calls limiet"
+
+msgid "API Calls This Month"
+msgstr "API-calls deze maand"
+
+msgid "API Cost"
+msgstr "API-kosten"
+
+msgid "API Cost This Month"
+msgstr "API-kosten deze maand"
+
+msgid "API Use"
+msgstr "API-gebruik"
+
+msgid "Are you sure you want to revoke this license? This will also suspend the associated tenant."
+msgstr "Weet je zeker dat je deze licentie wilt intrekken? Dit schortt ook de gekoppelde tenant op."
+
+msgid "Assign or update the customer email address for this license."
+msgstr "Wijs een e-mailadres toe of werk het bij voor deze licentie."
+
+msgid "Assign To (Email)"
+msgstr "Toewijzen aan (e-mail)"
+
+msgid "Assigned To"
+msgstr "Toegewezen aan"
+
+msgid "Assigned To (Email)"
+msgstr "Toegewezen aan (e-mail)"
+
+msgid "Awaiting Reply"
+msgstr "Wacht op antwoord"
+
+msgid "Back to Tenants"
+msgstr "Terug naar tenants"
+
+msgid "Business - €%s"
+msgstr "Business - €%s"
+
+msgid "Business - €%s/month"
+msgstr "Business - €%s/maand"
+
+msgid "Chatbot"
+msgstr "Chatbot"
+
+msgid "City"
+msgstr "Stad"
+
+msgid "Client Email"
+msgstr "Klant-e-mail"
+
+msgid "Company Logo"
+msgstr "Bedrijfslogo"
+
+msgid "Content"
+msgstr "Content"
+
+msgid "Content Generated"
+msgstr "Gegenereerde content"
+
+msgid "Copy All to Clipboard"
+msgstr "Alles kopiëren naar klembord"
+
+msgid "Count"
+msgstr "Aantal"
+
+msgid "Country"
+msgstr "Land"
+
+msgid "Create a new agency partner. This creates an agency tenant and a WordPress user with the agency_partner role. The agency gets portal access to manage their own sub-licenses — no license is consumed for the agency itself."
+msgstr "Maak een nieuwe agency-partner aan. Dit maakt een agency-tenant en een WordPress-gebruiker met de agency_partner-rol aan. De agency krijgt portaltoegang om hun eigen sub-licenties te beheren — er wordt geen licentie verbruikt voor de agency zelf."
+
+msgid "Created"
+msgstr "Aangemaakt"
+
+msgid "Created Today"
+msgstr "Vandaag aangemaakt"
+
+msgid "Current Month"
+msgstr "Huidige maand"
+
+msgid "Current plan: %1$d / %2$d sub-licenses used."
+msgstr "Huidig plan: %1$d / %2$d sub-licenties gebruikt."
+
+msgid "Description"
+msgstr "Omschrijving"
+
+msgid "DEV - All Features (Internal Use Only)"
+msgstr "DEV - Alle functies (alleen intern gebruik)"
+
+msgid "DEV tier provides unlimited access to all features for internal development and testing. Do not distribute to clients."
+msgstr "DEV-tier biedt onbeperkte toegang tot alle functies voor interne ontwikkeling en testen. Niet distribueren aan klanten."
+
+msgid "Domain"
+msgstr "Domein"
+
+msgid "Download a ready-to-install, re-branded client plugin for your customers. Your company name is used as the plugin name."
+msgstr "Download een kant-en-klare, hermerkte client plugin voor je klanten. Je bedrijfsnaam wordt gebruikt als plugin-naam."
+
+msgid "Download White-Label Client (.zip)"
+msgstr "White-Label Client downloaden (.zip)"
+
+msgid "Early Adopters - €%s"
+msgstr "Early Adopters - €%s"
+
+msgid "Early Adopters - €%s/month"
+msgstr "Early Adopters - €%s/maand"
+
+msgid "Email for the sub-tenant account"
+msgstr "E-mail voor het sub-tenant account"
+
+msgid "Enabled by default based on license tier"
+msgstr "Standaard ingeschakeld op basis van licentieniveau"
+
+msgid "Error loading features: "
+msgstr "Fout bij laden functies:"
+
+msgid "Error: "
+msgstr "Fout:"
+
+msgid "Est. Cost"
+msgstr "Geschatte kosten"
+
+msgid "Existing Agency Tenants"
+msgstr "Bestaande agency-tenants"
+
+msgid "Exit"
+msgstr "Afsluiten"
+
+msgid "Exit to WordPress"
+msgstr "Terug naar WordPress"
+
+msgid "Expired"
+msgstr "Verlopen"
+
+msgid "Expires"
+msgstr "Verloopt"
+
+msgid "Expires After (days)"
+msgstr "Verloopt na (dagen)"
+
+msgid "Export CSV"
+msgstr "CSV exporteren"
+
+msgid "Extra Licenses"
+msgstr "Extra licenties"
+
+msgid "Failed to load features"
+msgstr "Functies laden mislukt"
+
+msgid "Features with default tier access are pre-enabled. You can override these to enable/disable individual features."
+msgstr "Functies met standaard toegang op tier-niveau zijn vooraf ingeschakeld. Je kunt deze overschrijven om individuele functies in of uit te schakelen."
+
+msgid "First Name"
+msgstr "Voornaam"
+
+msgid "Free"
+msgstr "Gratis"
+
+msgid "Free (Complimentary)"
+msgstr "Gratis (complimentary)"
+
+msgid "From Tier"
+msgstr "Van tier"
+
+msgid "Generate New License"
+msgstr "Nieuwe licentie genereren"
+
+msgid "Generate New License Keys"
+msgstr "Nieuwe licentiesleutels genereren"
+
+msgid "Generate New Sub-License"
+msgstr "Nieuwe sub-licentie genereren"
+
+msgid "Generate up to 100 licenses at once"
+msgstr "Genereer tot 100 licenties tegelijk"
+
+msgid "Generated License Key"
+msgstr "Gegenereerde licentiesleutel"
+
+msgid "Generated License Keys"
+msgstr "Gegenereerde licentiesleutels"
+
+msgid "Invoice #"
+msgstr "Factuur #"
+
+msgid "Invoice not found or not part of your account."
+msgstr "Factuur niet gevonden of niet onderdeel van je account."
+
+msgid "Last Active"
+msgstr "Laatst actief"
+
+msgid "Language"
+msgstr "Taal"
+
+msgid "Last Name"
+msgstr "Achternaam"
+
+msgid "Leave empty for no expiration"
+msgstr "Laat leeg voor geen vervaldatum"
+
+msgid "Leave empty for no expiration (from activation date)"
+msgstr "Laat leeg voor geen vervaldatum (vanaf activeringsdatum)"
+
+msgid "Legend:"
+msgstr "Legenda:"
+
+msgid "License Assignment"
+msgstr "Licentie-toewijzing"
+
+msgid "License email updated successfully."
+msgstr "Licentie-e-mail succesvol bijgewerkt."
+
+msgid "License Key"
+msgstr "Licentiesleutel"
+
+msgid "License key generated successfully!"
+msgstr "Licentiesleutel succesvol gegenereerd!"
+
+msgid "License Key Prefix"
+msgstr "Licentiesleutel-prefix"
+
+msgid "License Management Dashboard"
+msgstr "Licentiebeheer-dashboard"
+
+msgid "License Quota"
+msgstr "Licentiequota"
+
+msgid "License Tier"
+msgstr "Licentieniveau"
+
+msgid "License Type"
+msgstr "Licentietype"
+
+msgid "Licenses added successfully. The extra amount will be included in the next direct debit."
+msgstr "Licenties succesvol toegevoegd. Het extra bedrag wordt in de volgende automatische incasso verwerkt."
+
+msgid "Licenses by Status"
+msgstr "Licenties per status"
+
+msgid "Licenses by Type"
+msgstr "Licenties per type"
+
+msgid "Lifetime"
+msgstr "Lifetime"
+
+msgid "Lifetime (Never Expires)"
+msgstr "Lifetime (verloopt nooit)"
+
+msgid "Loading features..."
+msgstr "Functies laden..."
+
+msgid "Login"
+msgstr "Inloggen"
+
+msgid "Login as Tenant"
+msgstr "Inloggen als tenant"
+
+msgid "Logout"
+msgstr "Uitloggen"
+
+msgid "Manage Features"
+msgstr "Functies beheren"
+
+msgid "Manage Tenants"
+msgstr "Tenants beheren"
+
+msgid "Manually enabled/disabled by admin"
+msgstr "Handmatig in-/uitgeschakeld door beheerder"
+
+msgid "Max Sites"
+msgstr "Max. sites"
+
+msgid "Max Sub-Licenses"
+msgstr "Max. sub-licenties"
+
+msgid "Maximum API calls per hour"
+msgstr "Maximale API-calls per uur"
+
+msgid "Maximum API calls per month"
+msgstr "Maximale API-calls per maand"
+
+msgid "Maximum number of sub-licenses this agency can generate."
+msgstr "Maximaal aantal sub-licenties dat deze agency kan genereren."
+
+msgid "Monthly API Limit"
+msgstr "Maandelijkse API-limiet"
+
+msgid "My Account"
+msgstr "Mijn account"
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "Name for the sub-tenant"
+msgstr "Naam voor de sub-tenant"
+
+msgid "No agency tenants yet."
+msgstr "Nog geen agency-tenants."
+
+msgid "No invoices found."
+msgstr "Geen facturen gevonden."
+
+msgid "No sub-licenses generated yet."
+msgstr "Nog geen sub-licenties gegenereerd."
+
+msgid "No sub-tenants found."
+msgstr "Geen sub-tenants gevonden."
+
+msgid "No sub-tenants yet."
+msgstr "Nog geen sub-tenants."
+
+msgid "No support tickets found."
+msgstr "Geen supporttickets gevonden."
+
+msgid "No usage data yet."
+msgstr "Nog geen gebruiksgegevens."
+
+msgid "Not in this tier, can be manually enabled"
+msgstr "Niet in deze tier, kan handmatig worden ingeschakeld"
+
+msgid "Not Included"
+msgstr "Niet inbegrepen"
+
+msgid "Notes"
+msgstr "Notities"
+
+msgid "Number of extra licenses"
+msgstr "Aantal extra licenties"
+
+msgid "Number of Licenses"
+msgstr "Aantal licenties"
+
+msgid "Number of sites allowed per license"
+msgstr "Aantal sites toegestaan per licentie"
+
+msgid "Open Tickets"
+msgstr "Open tickets"
+
+msgid "Optional: Pre-assign to a customer email"
+msgstr "Optioneel: vooraf toewijzen aan klant-e-mail"
+
+msgid "Overridden"
+msgstr "Overschreven"
+
+msgid "Paid"
+msgstr "Betaald"
+
+msgid "Paid (Standard)"
+msgstr "Betaald (standaard)"
+
+msgid "Period"
+msgstr "Periode"
+
+msgid "Period:"
+msgstr "Periode:"
+
+msgid "Phone"
+msgstr "Telefoon"
+
+msgid "Please enter a valid email address."
+msgstr "Voer een geldig e-mailadres in."
+
+msgid "Please upload a valid image file (PNG, JPG, GIF or WEBP)."
+msgstr "Upload een geldig afbeeldingsbestand (PNG, JPG, GIF of WEBP)."
+
+msgid "Postal Code"
+msgstr "Postcode"
+
+msgid "Prefix"
+msgstr "Prefix"
+
+msgid "Premium (higher-quality models)"
+msgstr "Premium (hogere kwaliteit modellen)"
+
+msgid "Primary Color"
+msgstr "Primaire kleur"
+
+msgid "Print"
+msgstr "Afdrukken"
+
+msgid "Priority"
+msgstr "Prioriteit"
+
+msgid "Professional - €%s"
+msgstr "Professional - €%s"
+
+msgid "Professional - €%s/month"
+msgstr "Professional - €%s/maand"
+
+msgid "Quick Actions"
+msgstr "Snelle acties"
+
+msgid "Rate Limit"
+msgstr "Rate limit"
+
+msgid "Rate Limit (per hour)"
+msgstr "Rate limit (per uur)"
+
+msgid "Recent Licenses"
+msgstr "Recente licenties"
+
+msgid "Recent Sub-Tenants"
+msgstr "Recente sub-tenants"
+
+msgid "Recent Support Tickets"
+msgstr "Recente supporttickets"
+
+msgid "Recommended: 200x50px transparent PNG or JPG."
+msgstr "Aanbevolen: 200x50px transparante PNG of JPG."
+
+msgid "Revoke"
+msgstr "Intrekken"
+
+msgid "Revoked"
+msgstr "Ingetrokken"
+
+msgid "Save Account"
+msgstr "Account opslaan"
+
+msgid "Save failed"
+msgstr "Opslaan mislukt"
+
+msgid "Save Feature Overrides"
+msgstr "Feature-overschrijvingen opslaan"
+
+msgid "Saved successfully!"
+msgstr "Succesvol opgeslagen!"
+
+msgid "Saving..."
+msgstr "Bezig met opslaan..."
+
+msgid "Secondary Color"
+msgstr "Secundaire kleur"
+
+msgid "SERP"
+msgstr "SERP"
+
+msgid "SERP Requests"
+msgstr "SERP-verzoeken"
+
+msgid "Set a Company Name above and save your settings to enable the plugin download."
+msgstr "Stel hierboven een bedrijfsnaam in en sla je instellingen op om de plugin-download in te schakelen."
+
+msgid "Sort by:"
+msgstr "Sorteren op:"
+
+msgid "Standard (cost-effective models)"
+msgstr "Standaard (kostenefficiënte modellen)"
+
+msgid "Standard uses affordable models (GPT-4o-mini, Deepseek). Premium uses higher-quality models (GPT-4o, Claude 3.5)."
+msgstr "Standaard gebruikt betaalbare modellen (GPT-4o-mini, Deepseek). Premium gebruikt hogere kwaliteit modellen (GPT-4o, Claude 3.5)."
+
+msgid "Starter - €%s"
+msgstr "Starter - €%s"
+
+msgid "Starter - €%s/month"
+msgstr "Starter - €%s/maand"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Sub-Licenses"
+msgstr "Sub-licenties"
+
+msgid "Sub-Tenant Usage & Costs"
+msgstr "Sub-tenant gebruik & kosten"
+
+msgid "Sub-Tenants"
+msgstr "Sub-tenants"
+
+msgid "Sub-Tenants by Status"
+msgstr "Sub-tenants per status"
+
+msgid "Sub-Tenants by Tier"
+msgstr "Sub-tenants per tier"
+
+msgid "Support Email"
+msgstr "Support-e-mail"
+
+msgid "Support URL"
+msgstr "Support-URL"
+
+msgid "Tenant Details"
+msgstr "Tenantdetails"
+
+msgid "Tenant Key"
+msgstr "Tenant-sleutel"
+
+msgid "Tenant Management"
+msgstr "Tenantbeheer"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Test (Internal Testing)"
+msgstr "Test (interne testen)"
+
+msgid "The extra amount will be added to the next direct debit. You can use the licenses right away."
+msgstr "Het extra bedrag wordt aan de volgende automatische incasso toegevoegd. Je kunt de licenties direct gebruiken."
+
+msgid "The logo could not be saved on the server."
+msgstr "Het logo kon niet op de server worden opgeslagen."
+
+msgid "The uploaded logo is too large."
+msgstr "Het geüploade logo is te groot."
+
+msgid "This email is already in use."
+msgstr "Dit e-mailadres is al in gebruik."
+
+msgid "This Month"
+msgstr "Deze maand"
+
+msgid "Tier"
+msgstr "Tier"
+
+msgid "Tier:"
+msgstr "Tier:"
+
+msgid "To reduce the number of licenses, please contact support."
+msgstr "Neem contact op met support om het aantal licenties te verminderen."
+
+msgid "Total"
+msgstr "Totaal"
+
+msgid "Total Licenses"
+msgstr "Totaal aantal licenties"
+
+msgid "Trial (Time-limited)"
+msgstr "Trial (tijdelijk)"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Unknown error"
+msgstr "Onbekende fout"
+
+msgid "Update Assignment"
+msgstr "Toewijzing bijwerken"
+
+msgid "Updated"
+msgstr "Bijgewerkt"
+
+msgid "Usage History"
+msgstr "Gebruiksgeschiedenis"
+
+msgid "Used"
+msgstr "Gebruikt"
+
+msgid "View"
+msgstr "Bekijken"
+
+msgid "View All Tickets"
+msgstr "Alle tickets bekijken"
+
+msgid "View Tenants"
+msgstr "Tenants bekijken"
+
+msgid "White-Label Settings"
+msgstr "White-Label instellingen"
+
+msgid "White-label settings saved."
+msgstr "White-label instellingen opgeslagen."
+
+msgid "Wizard completed"
+msgstr "Wizard voltooid"
+
+msgid "Wizard not completed"
+msgstr "Wizard niet voltooid"
+
+msgid "You do not have permission to add licenses."
+msgstr "Je hebt geen rechten om licenties toe te voegen."
+
+msgid "You have reached your sub-license quota. Contact the administrator to increase your limit."
+msgstr "Je hebt je sub-licentiequota bereikt. Neem contact op met de beheerder om je limiet te verhogen."
+
+msgid "Your White-Label Client Plugin"
+msgstr "Jouw White-Label Client Plugin"

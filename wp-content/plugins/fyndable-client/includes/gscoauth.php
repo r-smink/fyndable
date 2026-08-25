@@ -11,7 +11,7 @@ namespace SSEOAIClient;
  * - Google Ads (adwords)
  * 
  * OAuth credentials (client ID, secret, dev token) are stored on the
- * Fyndable.ai SaaS Dashboard and never exposed to client sites.
+ * SaaS dashboard and never exposed to client sites.
  * The SaaS dashboard acts as a proxy for the token exchange.
  */
 class GscOAuth
@@ -73,7 +73,11 @@ class GscOAuth
             'permission_callback' => fn() => current_user_can('manage_options'),
         ]);
 
-        // Legacy callback (kept for backward compatibility with existing connected sites)
+        // Legacy callback (kept for backward compatibility with existing connected sites).
+        // NOTE: This endpoint MUST remain public (__return_true) because Google redirects
+        // the user's browser here after OAuth consent. Security is provided by the OAuth
+        // `state` parameter, which is validated with hash_equals() in restHandleCallback()
+        // against a server-side transient. This prevents CSRF and token interception.
         register_rest_route('sseo-ai/v1', '/gsc-callback', [
             'methods' => 'GET',
             'callback' => [$this, 'restHandleCallback'],
@@ -318,6 +322,7 @@ class GscOAuth
             return new \WP_Error('gsc_token', __('Invalid token response', 'ai-seo-client'));
         }
 
+        $tokens['created'] = time();
         update_option('aiseoclient_gsc_tokens', $tokens, false);
         return $tokens;
     }
@@ -350,6 +355,11 @@ class GscOAuth
         $body = json_decode(wp_remote_retrieve_body($resp), true);
         if (!is_array($body)) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
         $body['refresh_token'] = $refresh;
+        $body['created'] = time();
+        if (empty($body['scope'])) {
+            $existing = get_option('aiseoclient_gsc_tokens', []);
+            $body['scope'] = $existing['scope'] ?? '';
+        }
         update_option('aiseoclient_gsc_tokens', $body, false);
         return $body;
     }
@@ -357,13 +367,25 @@ class GscOAuth
     public function getAccessToken(): string
     {
         $tokens = get_option('aiseoclient_gsc_tokens', []);
-        if (!empty($tokens['access_token']) && isset($tokens['expires_in'])) {
-            return $tokens['access_token'];
+        $accessToken = $tokens['access_token'] ?? '';
+        $refreshToken = $tokens['refresh_token'] ?? '';
+        $expiresIn = $tokens['expires_in'] ?? 0;
+        $created = $tokens['created'] ?? 0;
+
+        // Use existing token if it is still valid (with 60s safety margin).
+        if ($accessToken && $created && $expiresIn && ($created + $expiresIn - 60) > time()) {
+            return $accessToken;
         }
-        $ref = $this->refresh();
-        if (is_wp_error($ref)) {
-            return '';
+
+        // Refresh proactively if we have a refresh token.
+        if ($refreshToken) {
+            $ref = $this->refresh();
+            if (!is_wp_error($ref)) {
+                return $ref['access_token'] ?? '';
+            }
         }
-        return $ref['access_token'] ?? '';
+
+        // Fallback to existing token if refresh is not possible.
+        return $accessToken;
     }
 }
