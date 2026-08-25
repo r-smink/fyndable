@@ -105,6 +105,7 @@ class Client
     private ?SerpChangeMonitor $serpMonitor = null;
     private ?SupportAssistant $supportAssistant = null;
     private ?PostAutoCleaner $postAutoCleaner = null;
+    private ?MobileApp $mobileApp = null;
 
     public function init(): void
     {
@@ -146,6 +147,10 @@ class Client
         // Demo mode (sandbox with dummy data)
         $this->demoMode = new DemoMode();
         $this->demoMode->register();
+
+        // Mobile App PWA — available regardless of license tier
+        $this->mobileApp = new MobileApp();
+        $this->mobileApp->register();
 
         // Initialize license validation
         add_action('init', [$this, 'initializeLicense']);
@@ -3020,6 +3025,97 @@ class Client
                                 <strong>✓</strong> <?php esc_html_e('License validated successfully! Image API credentials refreshed.', 'ai-seo-client'); ?>
                             </div>
                         <?php endif; ?>
+                        
+                        <!-- Mobile App QR Connection -->
+                        <div style="margin-top:30px;padding-top:30px;border-top:2px solid #f3f4f6;">
+                            <h3 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 8px 0;">📱 <?php esc_html_e('Verbind Mobile App', 'ai-seo-client'); ?></h3>
+                            <p style="font-size:14px;color:#6b7280;margin:0 0 16px 0;">
+                                <?php esc_html_e('Scan een QR-code met de Fyndable Mobile app om direct in te loggen. Er wordt automatisch een veilig Application Password aangemaakt.', 'ai-seo-client'); ?>
+                            </p>
+                            <button type="button" id="sseo-mobile-qr-btn" class="button button-primary" style="width:100%;">
+                                📱 <?php esc_html_e('Genereer QR-code voor Mobile App', 'ai-seo-client'); ?>
+                            </button>
+                            <p style="margin-top:8px;font-size:12px;color:#9ca3af;text-align:center;">
+                                <?php esc_html_e('Of open de web-app direct op:', 'ai-seo-client'); ?>
+                                <a href="<?php echo esc_url(home_url('/sseo-ai-mobile/')); ?>" target="_blank"><?php echo esc_html(home_url('/sseo-ai-mobile/')); ?></a>
+                            </p>
+                        </div>
+
+                        <!-- QR Modal -->
+                        <div id="sseo-qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100000;align-items:center;justify-content:center;">
+                            <div style="background:#fff;border-radius:16px;padding:40px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                                <h3 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 8px 0;">📱 Mobile App Verbinden</h3>
+                                <p style="font-size:14px;color:#6b7280;margin:0 0 20px 0;">Scan deze QR-code met de Fyndable Mobile app</p>
+                                <div id="sseo-qr-container" style="display:flex;justify-content:center;align-items:center;min-height:256px;margin:0 auto 20px;">
+                                    <div style="color:#9ca3af;">QR-code wordt gegenereerd…</div>
+                                </div>
+                                <div id="sseo-qr-error" style="display:none;color:#ef4444;font-size:14px;margin-bottom:16px;"></div>
+                                <button type="button" id="sseo-qr-close" class="button button-secondary" style="width:100%;">Sluiten</button>
+                            </div>
+                        </div>
+
+                        <script>
+                        (function() {
+                            var btn = document.getElementById('sseo-mobile-qr-btn');
+                            var modal = document.getElementById('sseo-qr-modal');
+                            var closeBtn = document.getElementById('sseo-qr-close');
+                            var container = document.getElementById('sseo-qr-container');
+                            var errorEl = document.getElementById('sseo-qr-error');
+                            if (!btn || !modal) return;
+
+                            function closeModal() { modal.style.display = 'none'; }
+                            closeBtn.addEventListener('click', closeModal);
+                            modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+                            btn.addEventListener('click', function() {
+                                modal.style.display = 'flex';
+                                container.innerHTML = '<div style="color:#9ca3af;">QR-code wordt gegenereerd…</div>';
+                                errorEl.style.display = 'none';
+
+                                fetch('<?php echo esc_url_raw(rest_url("sseo-ai/v1/mobile/generate-qr")); ?>', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-WP-Nonce': '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>',
+                                        'Content-Type': 'application/json'
+                                    }
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(data) {
+                                    if (!data.success) {
+                                        errorEl.textContent = data.message || 'Er ging iets mis';
+                                        errorEl.style.display = 'block';
+                                        container.innerHTML = '';
+                                        return;
+                                    }
+                                    var qrData = data.qr_data;
+                                    container.innerHTML = '';
+                                    var canvas = document.createElement('canvas');
+                                    container.appendChild(canvas);
+                                    if (typeof QRCode !== 'undefined') {
+                                        QRCode.toCanvas(canvas, qrData, { width: 256, margin: 2 }, function(err) {
+                                            if (err) {
+                                                container.innerHTML = '<div style="color:#ef4444;">QR generatie mislukt</div>';
+                                            }
+                                        });
+                                    } else {
+                                        var img = document.createElement('img');
+                                        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=' + encodeURIComponent(qrData);
+                                        img.style.width = '256px';
+                                        img.style.height = '256px';
+                                        img.style.borderRadius = '8px';
+                                        container.innerHTML = '';
+                                        container.appendChild(img);
+                                    }
+                                })
+                                .catch(function(err) {
+                                    errorEl.textContent = 'Netwerk fout: ' + err.message;
+                                    errorEl.style.display = 'block';
+                                    container.innerHTML = '';
+                                });
+                            });
+                        })();
+                        </script>
+                        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
                         
                         <div style="margin-top: 30px; display: flex; gap: 12px;">
                             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="flex: 1;">
