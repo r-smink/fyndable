@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.fyndable.mobile.data.api.AuthCredentials
 import com.fyndable.mobile.data.model.QrLoginPayload
 import com.fyndable.mobile.data.store.AuthStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -37,7 +39,7 @@ class LoginViewModel(private val authStore: AuthStore) : ViewModel() {
         _state.value = LoginState.Loading
         viewModelScope.launch {
             try {
-                val cleanUrl = siteUrl.trimEnd('/')
+                val cleanUrl = normalizeUrl(siteUrl)
                 val testUrl = "$cleanUrl/wp-json/sseo-ai/v1/keywords?limit=1"
                 val basic = Base64.encodeToString(
                     "$username:$password".toByteArray(),
@@ -54,18 +56,20 @@ class LoginViewModel(private val authStore: AuthStore) : ViewModel() {
                     .addHeader("Authorization", "Basic $basic")
                     .build()
 
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        authStore.saveCredentials(username, password, cleanUrl)
-                        _state.value = LoginState.Success
-                    } else {
-                        val errorBody = response.body?.string().orEmpty()
-                        val msg = if (response.code == 401 || response.code == 403) {
-                            "Ongeldige inloggegevens"
+                withContext(Dispatchers.IO) {
+                    client.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            authStore.saveCredentials(username, password, cleanUrl)
+                            _state.value = LoginState.Success
                         } else {
-                            "Server fout: ${response.code}"
+                            val errorBody = response.body?.string().orEmpty()
+                            val msg = if (response.code == 401 || response.code == 403) {
+                                "Ongeldige inloggegevens"
+                            } else {
+                                "Server fout: ${response.code}"
+                            }
+                            _state.value = LoginState.Error(msg)
                         }
-                        _state.value = LoginState.Error(msg)
                     }
                 }
             } catch (e: Exception) {
@@ -86,7 +90,7 @@ class LoginViewModel(private val authStore: AuthStore) : ViewModel() {
                     return@launch
                 }
 
-                val cleanUrl = payload.site.trimEnd('/')
+                val cleanUrl = normalizeUrl(payload.site)
                 val testUrl = "$cleanUrl/wp-json/sseo-ai/v1/keywords?limit=1"
                 val basic = Base64.encodeToString(
                     "${payload.user}:${payload.pass}".toByteArray(),
@@ -103,15 +107,17 @@ class LoginViewModel(private val authStore: AuthStore) : ViewModel() {
                     .addHeader("Authorization", "Basic $basic")
                     .build()
 
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        authStore.saveCredentials(payload.user, payload.pass, cleanUrl)
-                        _state.value = LoginState.Success
-                    } else {
-                        _state.value = LoginState.Error(
-                            if (response.code == 401 || response.code == 403)
-                                "Ongeldige inloggegevens" else "Server fout: ${response.code}"
-                        )
+                withContext(Dispatchers.IO) {
+                    client.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            authStore.saveCredentials(payload.user, payload.pass, cleanUrl)
+                            _state.value = LoginState.Success
+                        } else {
+                            _state.value = LoginState.Error(
+                                if (response.code == 401 || response.code == 403)
+                                    "Ongeldige inloggegevens" else "Server fout: ${response.code}"
+                            )
+                        }
                     }
                 }
             } catch (e: kotlinx.serialization.SerializationException) {
@@ -122,5 +128,13 @@ class LoginViewModel(private val authStore: AuthStore) : ViewModel() {
                 )
             }
         }
+    }
+
+    private fun normalizeUrl(url: String): String {
+        var u = url.trim().trimEnd('/')
+        if (!u.startsWith("http://") && !u.startsWith("https://")) {
+            u = "https://$u"
+        }
+        return u
     }
 }
