@@ -30,7 +30,8 @@ class LicenseValidator
      */
     public function getLicenseTier(): string
     {
-        return get_option('sseo_ai_client_license_tier', 'free');
+        $tier = strtolower(get_option('sseo_ai_client_license_tier', 'free'));
+        return $tier === 'development' ? 'dev' : $tier;
     }
 
     /**
