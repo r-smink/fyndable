@@ -243,7 +243,7 @@ class LlmsTxt
     // Cache invalidation
     // -------------------------------------------------------------------------
 
-    public function invalidateCache(int $postId, \WP_Post $post = null): void
+    public function invalidateCache(int $postId, ?\WP_Post $post = null): void
     {
         delete_transient(self::CACHE_KEY);
     }

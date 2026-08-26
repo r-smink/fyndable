@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fyndable_blue">#34A9DD</color>
+    <color name="fyndable_purple">#5B57A0</color>
+    <color name="fyndable_magenta">#8C3793</color>
+    <color name="fyndable_bg">#0F172A</color>
+    <color name="fyndable_surface">#1E293B</color>
+</resources>

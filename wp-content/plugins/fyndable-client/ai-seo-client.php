@@ -67,6 +67,7 @@ require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/seoimporter.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/onboardingwizard.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/updatechecker.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/demomode.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/mobileapp.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function () {

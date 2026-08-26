@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>{{BRAND}} Mobile</title>
+<link rel="manifest" href="{{HOME_URL}}/sseo-ai-mobile/manifest.json">
+<style>
+:root {
+  --primary: #379fd3;
+  --primary-dark: #2563eb;
+  --accent: #8f39ac;
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-light: #334155;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --radius: 12px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+}
+#app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.login-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; min-height: 100dvh; padding: 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+}
+.login-card {
+  background: var(--surface); border-radius: 20px; padding: 32px 24px;
+  width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-logo { text-align: center; margin-bottom: 24px; }
+.login-logo svg { width: 64px; height: 64px; }
+.login-logo h1 { color: var(--text); font-size: 22px; margin-top: 12px; }
+.login-logo p { color: var(--text-dim); font-size: 14px; margin-top: 4px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--surface-light);
+  border-radius: 10px; background: var(--bg); color: var(--text);
+  font-size: 16px; outline: none; transition: border-color .2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; border: none; border-radius: 10px; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: opacity .2s; text-decoration: none;
+}
+.btn:active { opacity: 0.7; }
+.btn-primary { background: var(--primary); color: #fff; width: 100%; }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--surface-light); color: var(--text); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn:disabled { opacity: 0.5; }
+.login-error {
+  background: rgba(239,68,68,0.15); border: 1px solid var(--danger);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
+  font-size: 13px; color: #fca5a5; display: none;
+}
+.login-help { margin-top: 20px; font-size: 12px; color: var(--text-dim); text-align: center; line-height: 1.5; }
+.app-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  padding: calc(12px + var(--safe-top)) 20px 12px; position: sticky; top: 0; z-index: 100;
+}
+.app-header h2 { color: #fff; font-size: 18px; font-weight: 700; }
+.app-header p { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 2px; }
+.app-content {
+  flex: 1; padding: 16px 16px calc(80px + var(--safe-bottom));
+  max-width: 600px; margin: 0 auto; width: 100%;
+}
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--surface); border-top: 1px solid var(--surface-light);
+  display: flex; padding-bottom: var(--safe-bottom);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 4px; cursor: pointer; transition: color .2s; color: var(--text-dim);
+  border: none; background: none; font-size: 10px;
+}
+.nav-item.active { color: var(--primary); }
+.nav-item svg { width: 24px; height: 24px; }
+.nav-item span { font-weight: 600; }
+.card {
+  background: var(--surface); border-radius: var(--radius); padding: 16px;
+  margin-bottom: 12px; border: 1px solid var(--surface-light);
+}
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.card-subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+.list-item {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--surface-light); gap: 12px;
+}
+.list-item:last-child { border-bottom: none; }
+.list-item-main { flex: 1; min-width: 0; }
+.list-item-title { font-size: 14px; font-weight: 600; word-break: break-word; }
+.list-item-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.list-item-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+}
+.badge-blue { background: rgba(55,159,211,0.2); color: #7dd3fc; }
+.badge-green { background: rgba(34,197,94,0.2); color: #86efac; }
+.badge-yellow { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.badge-red { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.badge-purple { background: rgba(143,57,172,0.2); color: #d8b4fe; }
+.badge-gray { background: rgba(148,163,184,0.2); color: #cbd5e1; }
+.search-bar { position: relative; margin-bottom: 16px; }
+.search-bar input {
+  width: 100%; padding: 12px 14px 12px 40px; border: 1px solid var(--surface-light);
+  border-radius: 10px; background: var(--bg); color: var(--text); font-size: 15px; outline: none;
+}
+.search-bar input:focus { border-color: var(--primary); }
+.search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-dim); }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tab {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  white-space: nowrap; cursor: pointer; border: 1px solid var(--surface-light);
+  background: var(--surface); color: var(--text-dim); transition: all .2s;
+}
+.tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 20px calc(24px + var(--safe-bottom));
+  width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto;
+}
+.modal-handle { width: 40px; height: 4px; background: var(--surface-light); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.spinner {
+  width: 24px; height: 24px; border: 3px solid var(--surface-light);
+  border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-center { display: flex; justify-content: center; align-items: center; padding: 40px; }
+.toast {
+  position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+  background: var(--surface-light); color: var(--text); padding: 12px 20px;
+  border-radius: 10px; font-size: 14px; z-index: 300; opacity: 0;
+  transition: opacity .3s; pointer-events: none; max-width: 90%; text-align: center;
+}
+.toast.show { opacity: 1; }
+.toast.success { background: var(--success); color: #fff; }
+.toast.error { background: var(--danger); color: #fff; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-dim); }
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty-state p { font-size: 14px; }
+.content-preview {
+  background: var(--bg); border-radius: 8px; padding: 14px; margin-top: 12px;
+  font-size: 14px; line-height: 1.6; max-height: 300px; overflow-y: auto;
+  border: 1px solid var(--surface-light);
+}
+.content-preview h1, .content-preview h2, .content-preview h3 { margin: 12px 0 6px; font-size: 16px; }
+.content-preview p { margin-bottom: 8px; }
+.content-preview ul, .content-preview ol { margin-left: 20px; margin-bottom: 8px; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 14px; border: 1px solid var(--surface-light); }
+.stat-value { font-size: 24px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.progress-bar { height: 6px; background: var(--surface-light); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width .3s; }
+.fab {
+  position: fixed; right: 16px; bottom: calc(76px + var(--safe-bottom));
+  width: 56px; height: 56px; border-radius: 50%; background: var(--primary);
+  color: #fff; border: none; box-shadow: 0 4px 12px rgba(55,159,211,0.4);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 90;
+}
+.fab:active { transform: scale(0.9); }
+.fab svg { width: 24px; height: 24px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+<script>
+(function() {
+  'use strict';
+  const REST_URL = '{{REST_URL}}';
+  const HOME_URL = '{{HOME_URL}}';
+  const BRAND = '{{BRAND}}';
+  let auth = null;
+  let currentScreen = 'keywords';
+  let state = { keywords: [], clusters: [], posts: [], ranks: [] };
+
+  function loadAuth() {
+    try { const raw = sessionStorage.getItem('sseo_mobile_auth'); if (raw) { auth = JSON.parse(raw); return true; } } catch(e) {}
+    return false;
+  }
+  function saveAuth(a) { auth = a; sessionStorage.setItem('sseo_mobile_auth', JSON.stringify(a)); }
+  function clearAuth() { auth = null; sessionStorage.removeItem('sseo_mobile_auth'); }
+
+  async function api(method, path, body) {
+    if (!auth) throw new Error('Niet ingelogd');
+    const baseUrl = (auth.site ? auth.site + '/wp-json/sseo-ai/v1' : REST_URL);
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + btoa(auth.user + ':' + auth.pass) } };
+    if (body) opts.body = JSON.stringify(body);
+    const resp = await fetch(baseUrl + path, opts);
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.message || data.error || 'Onbekende fout');
+    return data;
+  }
+
+  let toastTimer = null;
+  function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
+  }
+
+  function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  const icons = {
+    search: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+    keywords: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 7h6v6"/><path d="m10 14 5-5"/><path d="M21 7v6"/><path d="M3 21l6-6"/><path d="M3 3v6h6"/></svg>',
+    cluster: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="m12 8v4"/><path d="m12 12-5 4"/><path d="m12 12 5 4"/></svg>',
+    generate: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/><path d="m5.6 5.6 2.1 2.1"/><path d="m16.3 16.3 2.1 2.1"/><path d="m18.4 5.6-2.1 2.1"/><path d="m7.7 16.3-2.1 2.1"/></svg>',
+    posts: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
+    chart: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg>',
+    plus: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+    file: '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></svg>',
+  };
+
+  // ── Login ──
+  function renderLogin() {
+    document.getElementById('app').innerHTML = '<div class="login-screen"><div class="login-card"><div class="login-logo"><svg viewBox="0 0 175.82 174.85" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="175.82" y2="174.85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34A9DD"></stop><stop offset="50%" stop-color="#5B57A0"></stop><stop offset="100%" stop-color="#8C3793"></stop></linearGradient></defs><path d="M125.75,86.86l-14.53-7.49,47.82-23.34-4.95,52.8-13.4-11.44-30.68,36.24c-4.86,5.74-10.71,10.18-17.14,13.92-7.95,4.61-16.67,6.33-25.84,5.76-6.7-.42-12.85-2.53-18.75-5.01C11,132.57-7.31,90.54,6.7,52.48,18.04,21.68,47.23.98,80.67,2.04c31.92,1.01,59.91,21.78,69.71,52.29l-11.12,5.79c-3.51-11.71-10.09-21.98-19.29-30.19-10.8-9.63-24.33-14.81-38.79-15.58-18.2-.96-36.77,6.83-49.08,20.36-11.75,12.92-18.05,30.08-16.93,47.71,1.32,20.72,13.68,41.81,32.52,50.87,16.31,7.83,35.73,3.28,47.21-10.21l30.84-36.22Z" fill="url(#lg)"/><polygon points="97.46 53.6 97.46 42.43 66.29 42.43 62.94 42.43 53.63 42.43 53.63 107.85 66.29 107.85 66.29 81.05 95.88 81.05 95.88 69.88 66.29 69.88 66.29 53.6 97.46 53.6" fill="url(#lg)"/></svg><h1>' + BRAND + ' Mobile</h1><p>SEO on the go</p></div><div id="loginError" class="login-error"></div><button class="btn btn-primary" id="qrBtn" onclick="scanQr()" style="margin-bottom:16px;">📷 Scan QR-code</button><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><hr style="flex:1;border:none;border-top:1px solid var(--surface-light);"><span style="font-size:12px;color:var(--text-dim);">of handmatig</span><hr style="flex:1;border:none;border-top:1px solid var(--surface-light);"></div><div class="form-group"><label>WordPress site URL</label><input type="url" id="loginUrl" placeholder="https://jouw-site.nl" value="' + HOME_URL + '"></div><div class="form-group"><label>WordPress gebruikersnaam</label><input type="text" id="loginUser" placeholder="bijv. admin" autocomplete="username"></div><div class="form-group"><label>Application Password</label><input type="password" id="loginPass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" autocomplete="current-password"></div><button class="btn btn-secondary" id="loginBtn" onclick="doLogin()">Handmatig inloggen</button><div class="login-help">Scan de QR-code vanuit WordPress Admin &rarr; Fyndable &rarr; Connection<br>Of maak handmatig een Application Password aan via<br><b>Gebruikers &rarr; Profiel &rarr; Application Passwords</b></div></div></div>';
+  }
+
+  window.scanQr = async function() {
+    const errEl = document.getElementById('loginError');
+    errEl.style.display = 'none';
+
+    if (!('BarcodeDetector' in window)) {
+      errEl.textContent = 'QR-scanning niet ondersteund in deze browser. Gebruik de native app of log handmatig in.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.autoplay = true;
+      video.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:500;background:#000;';
+      document.body.appendChild(video);
+
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '✕ Annuleren';
+      closeBtn.style.cssText = 'position:fixed;top:calc(20px + env(safe-area-inset-top));right:20px;z-index:501;background:rgba(0,0,0,0.7);color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:14px;cursor:pointer;';
+      document.body.appendChild(closeBtn);
+
+      let scanning = true;
+      const cleanup = () => { scanning = false; stream.getTracks().forEach(t => t.stop()); video.remove(); closeBtn.remove(); };
+      closeBtn.onclick = cleanup;
+
+      const detect = async () => {
+        if (!scanning) return;
+        try {
+          const codes = await detector.detect(video);
+          if (codes.length > 0 && codes[0].rawValue) {
+            cleanup();
+            handleQrResult(codes[0].rawValue);
+            return;
+          }
+        } catch(e) {}
+        requestAnimationFrame(detect);
+      };
+      video.addEventListener('playing', detect);
+    } catch(e) {
+      errEl.textContent = 'Kan camera niet openen: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  async function handleQrResult(qrData) {
+    const errEl = document.getElementById('loginError');
+    errEl.style.display = 'none';
+    try {
+      const payload = JSON.parse(qrData);
+      if (!payload.site || !payload.user || !payload.pass) { throw new Error('Ongeldige QR-code'); }
+      const cleanUrl = payload.site.replace(/\/+$/, '');
+      const creds = btoa(payload.user + ':' + payload.pass);
+      const resp = await fetch(cleanUrl + '/wp-json/sseo-ai/v1/keywords?limit=1', { headers: { 'Authorization': 'Basic ' + creds } });
+      if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.message || 'Inloggen mislukt'); }
+      saveAuth({ user: payload.user, pass: payload.pass, site: cleanUrl });
+      await initApp();
+    } catch(e) {
+      errEl.textContent = e.message; errEl.style.display = 'block';
+    }
+  }
+
+  window.doLogin = async function() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    const siteUrl = (document.getElementById('loginUrl') ? document.getElementById('loginUrl').value.trim() : HOME_URL).replace(/\/+$/, '');
+    const errEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    if (!user || !pass) { errEl.textContent = 'Vul gebruikersnaam en wachtwoord in'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none'; btn.disabled = true; btn.textContent = 'Inloggen...';
+    try {
+      const creds = btoa(user + ':' + pass);
+      const resp = await fetch(siteUrl + '/wp-json/sseo-ai/v1/keywords?limit=1', { headers: { 'Authorization': 'Basic ' + creds } });
+      if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.message || 'Inloggen mislukt'); }
+      saveAuth({ user, pass, site: siteUrl }); await initApp();
+    } catch(e) {
+      errEl.textContent = e.message; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Handmatig inloggen';
+    }
+  };
+
+  // ── App Shell ──
+  async function initApp() { renderShell(); await navigateTo('keywords'); }
+
+  function renderShell() {
+    document.getElementById('app').innerHTML = '<div class="app-header" id="appHeader"><h2 id="screenTitle">Keywords</h2><p id="screenSubtitle">' + BRAND + ' Mobile</p></div><div class="app-content" id="appContent"><div class="loading-center"><div class="spinner"></div></div></div><button class="fab hidden" id="fab" onclick="fabAction()">' + icons.plus + '</button><div class="bottom-nav" id="bottomNav"><button class="nav-item active" data-screen="keywords" onclick="navigateTo(\'keywords\')">' + icons.keywords + '<span>Keywords</span></button><button class="nav-item" data-screen="clusters" onclick="navigateTo(\'clusters\')">' + icons.cluster + '<span>Clusters</span></button><button class="nav-item" data-screen="generate" onclick="navigateTo(\'generate\')">' + icons.generate + '<span>Genereer</span></button><button class="nav-item" data-screen="posts" onclick="navigateTo(\'posts\')">' + icons.posts + '<span>Berichten</span></button><button class="nav-item" data-screen="performance" onclick="navigateTo(\'performance\')">' + icons.chart + '<span>Prestaties</span></button></div>';
+  }
+
+  window.navigateTo = async function(screen) {
+    currentScreen = screen;
+    document.querySelectorAll('.nav-item').forEach(el => { el.classList.toggle('active', el.dataset.screen === screen); });
+    const titles = { keywords: ['Keywords', 'Onderzoek & beheer'], clusters: ['Topic Clusters', 'Pillar & cluster content'], generate: ['Content Generator', 'AI artikelen genereren'], posts: ['Berichten', 'Gemaakt, gepland & gepubliceerd'], performance: ['Prestaties', 'Rankings & scores'] };
+    const [title, sub] = titles[screen] || ['', ''];
+    document.getElementById('screenTitle').textContent = title;
+    document.getElementById('screenSubtitle').textContent = sub;
+    const fab = document.getElementById('fab');
+    fab.classList.toggle('hidden', !(screen === 'keywords' || screen === 'clusters' || screen === 'generate'));
+    const content = document.getElementById('appContent');
+    content.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+    try {
+      switch(screen) {
+        case 'keywords': await renderKeywords(); break;
+        case 'clusters': await renderClusters(); break;
+        case 'generate': await renderGenerate(); break;
+        case 'posts': await renderPosts(); break;
+        case 'performance': await renderPerformance(); break;
+      }
+    } catch(e) {
+      if (e.message.includes('Niet ingelogd') || e.message.includes('401') || e.message.includes('403')) { clearAuth(); renderLogin(); }
+      else content.innerHTML = '<div class="empty-state"><p>&#9888; ' + esc(e.message) + '</p></div>';
+    }
+  };
+
+  window.fabAction = function() {
+    if (currentScreen === 'keywords') showKeywordModal();
+    else if (currentScreen === 'clusters') showClusterModal();
+    else if (currentScreen === 'generate') navigateTo('generate');
+  };
+
+  // ── Keywords ──
+  async function renderKeywords() {
+    const data = await api('GET', '/keywords?limit=100');
+    state.keywords = data.keywords || data || [];
+    const content = document.getElementById('appContent');
+    if (!state.keywords.length) { content.innerHTML = '<div class="empty-state">' + icons.search + '<p>Nog geen keywords. Tik op + om een keyword toe te voegen of te genereren.</p></div>'; return; }
+    let html = '<div class="search-bar">' + icons.search + '<input type="text" id="kwSearch" placeholder="Zoek keywords..." oninput="filterKeywords()"></div><div id="kwList">';
+    state.keywords.forEach(kw => {
+      const diff = kw.difficulty || '';
+      const diffBadge = diff ? '<span class="badge ' + (diff <= 30 ? 'badge-green' : diff <= 60 ? 'badge-yellow' : 'badge-red') + '">' + esc(diff) + '</span>' : '';
+      const vol = kw.search_volume ? '<span class="badge badge-blue">Vol: ' + esc(kw.search_volume) + '</span>' : '';
+      const cluster = kw.cluster_name ? '<span class="badge badge-purple">' + esc(kw.cluster_name) + '</span>' : '';
+      html += '<div class="card"><div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(kw.keyword) + '</div><div class="list-item-meta">' + vol + diffBadge + cluster + '</div></div><button class="btn btn-sm btn-secondary" onclick="generateFromKeyword(\'' + esc(kw.keyword) + '\')">Genereer</button></div></div>';
+    });
+    html += '</div>';
+    content.innerHTML = html;
+  }
+
+  window.filterKeywords = function() {
+    const q = document.getElementById('kwSearch').value.toLowerCase();
+    const cards = document.querySelectorAll('#kwList .card');
+    state.keywords.forEach((kw, i) => { if (cards[i]) cards[i].style.display = kw.keyword.toLowerCase().includes(q) ? '' : 'none'; });
+  };
+
+  window.generateFromKeyword = function(kw) {
+    navigateTo('generate');
+    setTimeout(() => { const input = document.getElementById('genKeyword'); if (input) input.value = kw; }, 500);
+  };
+
+  function showKeywordModal() {
+    showModal('Keyword toevoegen', '<div class="form-group"><label>Keyword / onderwerp</label><input type="text" id="modalKw" placeholder="bijv. SEO tips voor beginners"></div><div class="form-group"><label>Search Volume (optioneel)</label><input type="number" id="modalKwVol" placeholder="bijv. 5400"></div><div class="form-group"><label>Difficulty (optioneel)</label><input type="number" id="modalKwDiff" placeholder="0-100" min="0" max="100"></div><div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="addKeyword()">Toevoegen</button><button class="btn btn-accent" onclick="generateKeywordsModal()">AI Genereren</button></div>');
+  }
+
+  window.addKeyword = async function() {
+    const kw = document.getElementById('modalKw').value.trim();
+    if (!kw) { toast('Vul een keyword in', 'error'); return; }
+    const body = { keyword: kw };
+    const vol = document.getElementById('modalKwVol').value;
+    const diff = document.getElementById('modalKwDiff').value;
+    if (vol) body.search_volume = parseInt(vol);
+    if (diff) body.difficulty = diff;
+    try { await api('POST', '/keywords/add', body); closeModal(); toast('Keyword toegevoegd', 'success'); await renderKeywords(); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  window.generateKeywordsModal = function() {
+    const kw = document.getElementById('modalKw').value.trim();
+    if (!kw) { toast('Vul een onderwerp in', 'error'); return; }
+    closeModal(); showGenerateKeywordsResult(kw);
+  };
+
+  async function showGenerateKeywordsResult(topic) {
+    showModal('Keywords genereren: ' + esc(topic), '<div class="loading-center"><div class="spinner"></div><p style="margin-left:12px;color:var(--text-dim)">Keywords worden gegenereerd...</p></div>');
+    try {
+      const data = await api('POST', '/keywords/generate', { topic, count: 20, language: 'nl' });
+      const kws = data.keywords || data || [];
+      if (!kws.length) { updateModalBody('<p>Geen keywords gevonden.</p>'); return; }
+      let html = '<div id="genKwList">';
+      kws.forEach(k => {
+        const kwText = typeof k === 'string' ? k : (k.keyword || k.keyword_name || '');
+        const vol = typeof k === 'object' ? (k.search_volume || k.volume || '') : '';
+        const diff = typeof k === 'object' ? (k.difficulty || '') : '';
+        html += '<div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(kwText) + '</div><div class="list-item-meta">' + (vol ? '<span class="badge badge-blue">Vol: ' + esc(vol) + '</span>' : '') + (diff ? '<span class="badge ' + (diff <= 30 ? 'badge-green' : diff <= 60 ? 'badge-yellow' : 'badge-red') + '">Diff: ' + esc(diff) + '</span>' : '') + '</div></div><button class="btn btn-sm btn-secondary" onclick="saveGenKw(\'' + esc(kwText) + '\')">Opslaan</button></div>';
+      });
+      html += '</div>';
+      updateModalBody(html);
+    } catch(e) { updateModalBody('<p style="color:var(--danger)">' + esc(e.message) + '</p>'); }
+  }
+
+  window.saveGenKw = async function(kw) {
+    try { await api('POST', '/keywords/add', { keyword: kw }); toast('Opgeslagen: ' + kw, 'success'); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  // ── Clusters ──
+  async function renderClusters() {
+    const data = await api('GET', '/clusters/list');
+    state.clusters = data.clusters || data || [];
+    const content = document.getElementById('appContent');
+    if (!state.clusters.length) { content.innerHTML = '<div class="empty-state">' + icons.cluster + '<p>Nog geen topic clusters. Tik op + om een cluster te genereren.</p></div>'; return; }
+    let html = '<div id="clusterList">';
+    state.clusters.forEach(cl => {
+      const items = cl.items || cl.cluster_items || [];
+      const itemCount = items.length || cl.item_count || 0;
+      html += '<div class="card" onclick="showClusterDetail(' + cl.id + ')" style="cursor:pointer"><div class="card-title">' + esc(cl.pillar_topic || cl.title || 'Onbekend') + '</div><div class="list-item-meta"><span class="badge badge-purple">' + itemCount + ' items</span><span class="badge badge-gray">' + esc(cl.status || 'concept') + '</span></div></div>';
+    });
+    html += '</div>';
+    content.innerHTML = html;
+  }
+
+  window.showClusterDetail = async function(id) {
+    showModal('Cluster details', '<div class="loading-center"><div class="spinner"></div></div>');
+    try {
+      const cl = await api('GET', '/clusters/' + id);
+      const items = cl.items || cl.cluster_items || [];
+      let html = '<div class="card"><div class="card-title">' + esc(cl.pillar_topic || cl.title || 'Cluster') + '</div><p style="color:var(--text-dim);font-size:13px">' + esc(cl.description || '') + '</p></div>';
+      if (items.length) {
+        html += '<div class="card-subtitle">Cluster items:</div>';
+        items.forEach(item => {
+          const role = item.role || item.cluster_role || '';
+          const status = item.status || item.post_status || '';
+          const statusBadge = status ? '<span class="badge ' + (status === 'published' ? 'badge-green' : status === 'scheduled' ? 'badge-yellow' : 'badge-gray') + '">' + esc(status) + '</span>' : '';
+          html += '<div class="card"><div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(item.title || item.keyword || '') + '</div><div class="list-item-meta">' + (role ? '<span class="badge badge-blue">' + esc(role) + '</span>' : '') + statusBadge + '</div></div>' + (status !== 'published' ? '<button class="btn btn-sm btn-primary" onclick="generateClusterContent(' + id + ',\'' + esc(item.title || item.keyword || '') + '\',\'' + esc(item.keyword || '') + '\')">Genereer</button>' : '') + '</div></div>';
+        });
+      } else html += '<div class="empty-state"><p>Geen items in dit cluster.</p></div>';
+      updateModalBody(html);
+    } catch(e) { updateModalBody('<p style="color:var(--danger)">' + esc(e.message) + '</p>'); }
+  };
+
+  window.generateClusterContent = async function(clusterId, title, keyword) {
+    closeModal();
+    showModal('Content genereren: ' + esc(title), '<div class="loading-center"><div class="spinner"></div><p style="margin-left:12px;color:var(--text-dim)">AI genereert content... Dit kan even duren.</p></div>');
+    try {
+      const data = await api('POST', '/clusters/generate-content', { title, keyword, word_count: 1500, cluster_id: clusterId });
+      const content = data.content || data.article || data.html || '';
+      const postId = data.post_id || data.id || null;
+      let html = '';
+      if (postId) html += '<div class="badge badge-green" style="margin-bottom:12px">&#10003; Opgeslagen als concept (ID: ' + postId + ')</div>';
+      html += '<div class="content-preview">' + content + '</div>';
+      if (postId) html += '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="schedulePost(' + postId + ')">Inplannen</button><button class="btn btn-secondary" onclick="closeModal()">Sluiten</button></div>';
+      else html += '<button class="btn btn-secondary" style="margin-top:16px" onclick="closeModal()">Sluiten</button>';
+      updateModalBody(html);
+    } catch(e) { updateModalBody('<p style="color:var(--danger)">' + esc(e.message) + '</p>'); }
+  };
+
+  function showClusterModal() {
+    showModal('Topic Cluster genereren', '<div class="form-group"><label>Pillar onderwerp</label><input type="text" id="modalClusterTopic" placeholder="bijv. digitale marketing"></div><div class="form-group"><label>Aantal cluster items</label><select id="modalClusterCount"><option value="5">5 items</option><option value="10" selected>10 items</option><option value="15">15 items</option><option value="20">20 items</option></select></div><div class="form-group"><label>Taal</label><select id="modalClusterLang"><option value="nl" selected>Nederlands</option><option value="en">Engels</option></select></div><button class="btn btn-primary" style="margin-top:16px" onclick="generateCluster()">Cluster genereren</button>');
+  }
+
+  window.generateCluster = async function() {
+    const topic = document.getElementById('modalClusterTopic').value.trim();
+    if (!topic) { toast('Vul een onderwerp in', 'error'); return; }
+    const count = document.getElementById('modalClusterCount').value;
+    const lang = document.getElementById('modalClusterLang').value;
+    closeModal();
+    showModal('Cluster genereren: ' + esc(topic), '<div class="loading-center"><div class="spinner"></div><p style="margin-left:12px;color:var(--text-dim)">AI maakt een topic cluster aan... Dit kan tot een minuut duren.</p></div>');
+    try { await api('POST', '/clusters/generate', { topic, count: parseInt(count), language: lang }); toast('Cluster gegenereerd!', 'success'); closeModal(); await renderClusters(); }
+    catch(e) { updateModalBody('<p style="color:var(--danger)">' + esc(e.message) + '</p>'); }
+  };
+
+  // ── Generate ──
+  async function renderGenerate() {
+    document.getElementById('appContent').innerHTML = '<div class="card"><div class="card-title">AI Artikel Generator</div><div class="form-group"><label>Focus keyword</label><input type="text" id="genKeyword" placeholder="bijv. SEO tips voor lokale bedrijven"></div><div class="form-group"><label>Titel (optioneel)</label><input type="text" id="genTitle" placeholder="bijv. 10 SEO tips voor lokale bedrijven"></div><div class="form-group"><label>Woordental</label><select id="genWordCount"><option value="500">~500 woorden</option><option value="1000">~1000 woorden</option><option value="1500" selected>~1500 woorden</option><option value="2000">~2000 woorden</option><option value="3000">~3000 woorden</option></select></div><div class="form-group"><label>Tone of voice</label><select id="genTone"><option value="professional" selected>Professioneel</option><option value="casual">Casual</option><option value="friendly">Vriendelijk</option><option value="technical">Technisch</option><option value="authoritative">Gezaghebbend</option></select></div><div class="form-group"><label><input type="checkbox" id="genFaq" checked> FAQ sectie toevoegen</label></div><div class="form-group"><label><input type="checkbox" id="genDraft" checked> Opslaan als concept</label></div><button class="btn btn-primary" onclick="generateArticle()" id="genBtn">Artikel genereren</button></div><div id="genResult"></div>';
+  }
+
+  window.generateArticle = async function() {
+    const kw = document.getElementById('genKeyword').value.trim();
+    if (!kw) { toast('Vul een keyword in', 'error'); return; }
+    const title = document.getElementById('genTitle').value.trim();
+    const wc = parseInt(document.getElementById('genWordCount').value);
+    const tone = document.getElementById('genTone').value;
+    const faq = document.getElementById('genFaq').checked;
+    const draft = document.getElementById('genDraft').checked;
+    const btn = document.getElementById('genBtn');
+    const result = document.getElementById('genResult');
+    btn.disabled = true; btn.textContent = 'Genereren...';
+    result.innerHTML = '<div class="loading-center"><div class="spinner"></div><p style="margin-left:12px;color:var(--text-dim)">AI schrijft je artikel... Dit kan 30-60 seconden duren.</p></div>';
+    try {
+      const body = { keyword: kw, word_count: wc, tone, include_faq: faq, create_draft: draft };
+      if (title) body.title = title;
+      const data = await api('POST', '/write-article', body);
+      const content = data.content || data.article || data.html || '';
+      const postId = data.post_id || data.id || null;
+      let html = '<div class="card"><div class="card-title">Resultaat</div>';
+      if (postId) html += '<div class="badge badge-green" style="margin-bottom:12px">&#10003; Opgeslagen als concept (ID: ' + postId + ')</div>';
+      html += '<div class="content-preview">' + content + '</div>';
+      if (postId) html += '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary btn-sm" onclick="schedulePost(' + postId + ')">Inplannen</button><button class="btn btn-secondary btn-sm" onclick="publishPost(' + postId + ')">Publiceren</button></div>';
+      html += '</div>';
+      result.innerHTML = html;
+      toast('Artikel gegenereerd!', 'success');
+    } catch(e) { result.innerHTML = '<div class="card"><p style="color:var(--danger)">' + esc(e.message) + '</p></div>'; }
+    finally { btn.disabled = false; btn.textContent = 'Artikel genereren'; }
+  };
+
+  // ── Posts ──
+  async function renderPosts() {
+    const data = await api('GET', '/created-posts?per_page=50');
+    state.posts = data.posts || data.items || data || [];
+    const stats = await api('GET', '/created-posts/stats').catch(() => ({}));
+    const content = document.getElementById('appContent');
+    const s = stats.stats || stats;
+    let statsHtml = '';
+    if (s && Object.keys(s).length) {
+      statsHtml = '<div class="stats-grid"><div class="stat-card"><div class="stat-value">' + (s.total || 0) + '</div><div class="stat-label">Totaal</div></div><div class="stat-card"><div class="stat-value">' + (s.published || 0) + '</div><div class="stat-label">Gepubliceerd</div></div><div class="stat-card"><div class="stat-value">' + (s.scheduled || s.future || 0) + '</div><div class="stat-label">Gepland</div></div><div class="stat-card"><div class="stat-value">' + (s.draft || 0) + '</div><div class="stat-label">Concept</div></div></div>';
+    }
+    if (!state.posts.length) { content.innerHTML = statsHtml + '<div class="empty-state">' + icons.file + '<p>Nog geen AI-gegenereerde berichten.</p></div>'; return; }
+    let html = statsHtml + '<div id="postsList">';
+    state.posts.forEach(post => {
+      const status = post.post_status || post.status || '';
+      const statusBadge = '<span class="badge ' + (status === 'publish' ? 'badge-green' : status === 'future' ? 'badge-yellow' : 'badge-gray') + '">' + esc(status) + '</span>';
+      const date = post.post_date || post.date || '';
+      const dateStr = date ? new Date(date).toLocaleDateString('nl-NL') : '';
+      html += '<div class="card" onclick="showPostDetail(' + (post.ID || post.id) + ')" style="cursor:pointer"><div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(post.post_title || post.title || 'Onbekend') + '</div><div class="list-item-meta">' + statusBadge + (dateStr ? '<span class="badge badge-gray">' + dateStr + '</span>' : '') + '</div></div></div></div>';
+    });
+    html += '</div>';
+    content.innerHTML = html;
+  }
+
+  window.showPostDetail = async function(id) {
+    showModal('Bericht details', '<div class="loading-center"><div class="spinner"></div></div>');
+    try {
+      const post = await api('GET', '/created-posts/' + id);
+      const p = post.post || post;
+      const title = p.post_title || p.title || 'Onbekend';
+      const status = p.post_status || p.status || '';
+      const content = p.post_content || p.content || '';
+      const date = p.post_date || p.date || '';
+      let html = '<div class="card-title">' + esc(title) + '</div><div class="list-item-meta" style="margin-bottom:12px"><span class="badge ' + (status === 'publish' ? 'badge-green' : status === 'future' ? 'badge-yellow' : 'badge-gray') + '">' + esc(status) + '</span>' + (date ? '<span class="badge badge-gray">' + new Date(date).toLocaleString('nl-NL') + '</span>' : '') + '</div>';
+      if (content) html += '<div class="content-preview">' + content.substring(0, 2000) + (content.length > 2000 ? '...' : '') + '</div>';
+      html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">';
+      if (status === 'draft') { html += '<button class="btn btn-primary btn-sm" onclick="schedulePost(' + id + ')">Inplannen</button><button class="btn btn-accent btn-sm" onclick="publishPost(' + id + ')">Publiceren</button>'; }
+      if (status === 'publish') html += '<button class="btn btn-secondary btn-sm" onclick="unpublishPost(' + id + ')">Depubliceren</button>';
+      html += '<button class="btn btn-danger btn-sm" onclick="deletePost(' + id + ')">Verwijderen</button></div>';
+      updateModalBody(html);
+    } catch(e) { updateModalBody('<p style="color:var(--danger)">' + esc(e.message) + '</p>'); }
+  };
+
+  window.schedulePost = function(id) {
+    const now = new Date(); now.setDate(now.getDate() + 1); now.setHours(10, 0, 0, 0);
+    const defaultDate = now.toISOString().slice(0, 16);
+    showModal('Bericht inplannen', '<div class="form-group"><label>Publicatiedatum</label><input type="datetime-local" id="scheduleDate" value="' + defaultDate + '"></div><div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="doSchedulePost(' + id + ')">Inplannen</button><button class="btn btn-secondary" onclick="closeModal()">Annuleren</button></div>');
+  };
+
+  window.doSchedulePost = async function(id) {
+    const dateStr = document.getElementById('scheduleDate').value;
+    if (!dateStr) { toast('Kies een datum', 'error'); return; }
+    try { await api('PUT', '/created-posts/' + id, { post_status: 'future', post_date: dateStr }); closeModal(); toast('Bericht ingepland!', 'success'); await renderPosts(); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  window.publishPost = async function(id) {
+    try { await api('PUT', '/created-posts/' + id, { post_status: 'publish' }); closeModal(); toast('Bericht gepubliceerd!', 'success'); await renderPosts(); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  window.unpublishPost = async function(id) {
+    try { await api('PUT', '/created-posts/' + id, { post_status: 'draft' }); closeModal(); toast('Bericht gedepubliceerd', 'success'); await renderPosts(); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  window.deletePost = async function(id) {
+    if (!confirm('Weet je zeker dat je dit bericht wilt verwijderen?')) return;
+    try { await api('DELETE', '/created-posts/' + id, { post_ids: [id] }); closeModal(); toast('Bericht verwijderd', 'success'); await renderPosts(); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  // ── Performance ──
+  async function renderPerformance() {
+    const content = document.getElementById('appContent');
+    content.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+    try {
+      const ranksData = await api('GET', '/ranks/keywords').catch(() => ({ keywords: [] }));
+      const ranks = ranksData.keywords || ranksData || [];
+      state.ranks = ranks;
+      let html = '';
+      if (ranks.length) {
+        const top3 = ranks.filter(r => parseInt(r.position || r.rank || 999) <= 3).length;
+        const top10 = ranks.filter(r => parseInt(r.position || r.rank || 999) <= 10).length;
+        const top100 = ranks.filter(r => parseInt(r.position || r.rank || 999) <= 100).length;
+        html = '<div class="stats-grid"><div class="stat-card"><div class="stat-value">' + top3 + '</div><div class="stat-label">Top 3</div></div><div class="stat-card"><div class="stat-value">' + top10 + '</div><div class="stat-label">Top 10</div></div><div class="stat-card"><div class="stat-value">' + top100 + '</div><div class="stat-label">Top 100</div></div><div class="stat-card"><div class="stat-value">' + ranks.length + '</div><div class="stat-label">Totaal</div></div></div>';
+      }
+      html += '<div class="tabs"><div class="tab active" onclick="switchPerfTab(\'ranks\',this)">Rankings</div><div class="tab" onclick="switchPerfTab(\'posts\',this)">Post scores</div></div><div id="perfRanks"' + (ranks.length ? '' : ' class="hidden"') + '>';
+      if (ranks.length) {
+        ranks.forEach(r => {
+          const pos = parseInt(r.position || r.rank || 0);
+          const posBadge = pos ? '<span class="badge ' + (pos <= 3 ? 'badge-green' : pos <= 10 ? 'badge-yellow' : pos <= 100 ? 'badge-red' : 'badge-gray') + '">#' + pos + '</span>' : '<span class="badge badge-gray">-</span>';
+          html += '<div class="card"><div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(r.keyword || r.keyword_name || '') + '</div><div class="list-item-meta">' + posBadge + '</div></div><button class="btn btn-sm btn-secondary" onclick="checkRankNow(\'' + esc(r.keyword || r.keyword_name || '') + '\')">Check</button></div></div>';
+        });
+      } else html += '<div class="empty-state">' + icons.chart + '<p>Nog geen rank tracking keywords.</p></div>';
+      html += '</div><div id="perfPosts" class="hidden"></div>';
+      content.innerHTML = html;
+    } catch(e) { content.innerHTML = '<div class="empty-state"><p>&#9888; ' + esc(e.message) + '</p></div>'; }
+  }
+
+  window.switchPerfTab = function(tab, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('perfRanks').classList.toggle('hidden', tab !== 'ranks');
+    document.getElementById('perfPosts').classList.toggle('hidden', tab !== 'posts');
+    if (tab === 'posts') loadPostPerformance();
+  };
+
+  async function loadPostPerformance() {
+    const el = document.getElementById('perfPosts');
+    el.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+    try {
+      const data = await api('GET', '/created-posts?per_page=10&post_status=publish');
+      const posts = data.posts || data.items || data || [];
+      if (!posts.length) { el.innerHTML = '<div class="empty-state"><p>Geen gepubliceerde berichten.</p></div>'; return; }
+      let html = '';
+      for (const post of posts.slice(0, 10)) {
+        const id = post.ID || post.id;
+        try {
+          const perf = await api('GET', '/performance/post/' + id);
+          const p = perf.performance || perf;
+          const score = p.score || p.seo_score || 0;
+          const scoreBadge = score >= 80 ? 'badge-green' : score >= 50 ? 'badge-yellow' : 'badge-red';
+          html += '<div class="card"><div class="list-item"><div class="list-item-main"><div class="list-item-title">' + esc(post.post_title || post.title || '') + '</div><div class="list-item-meta"><span class="badge ' + scoreBadge + '">SEO: ' + score + '</span>' + (p.impressions ? '<span class="badge badge-blue">' + p.impressions + ' imp</span>' : '') + (p.clicks ? '<span class="badge badge-purple">' + p.clicks + ' clicks</span>' : '') + '</div>' + (score ? '<div class="progress-bar"><div class="progress-fill" style="width:' + score + '%"></div></div>' : '') + '</div></div></div>';
+        } catch(e) {}
+      }
+      el.innerHTML = html || '<div class="empty-state"><p>Geen prestatie-data beschikbaar.</p></div>';
+    } catch(e) { el.innerHTML = '<p style="color:var(--danger)">' + esc(e.message) + '</p>'; }
+  }
+
+  window.checkRankNow = async function(kw) {
+    toast('Ranking check gestart...', 'success');
+    try { await api('POST', '/ranks/check-now', { keyword: kw }); toast('Ranking bijgewerkt!', 'success'); await renderPerformance(); }
+    catch(e) { toast(e.message, 'error'); }
+  };
+
+  // ── Modal ──
+  function showModal(title, body) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active'; overlay.id = 'modalOverlay';
+    overlay.innerHTML = '<div class="modal"><div class="modal-handle" onclick="closeModal()"></div><div class="modal-title">' + title + '</div><div id="modalBody">' + body + '</div></div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+    document.body.appendChild(overlay);
+  }
+  function updateModalBody(html) { const el = document.getElementById('modalBody'); if (el) el.innerHTML = html; }
+  window.closeModal = function() { const el = document.getElementById('modalOverlay'); if (el) el.remove(); };
+
+  // ── Init ──
+  if (loadAuth()) initApp(); else renderLogin();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register(HOME_URL + '/sseo-ai-mobile/sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
