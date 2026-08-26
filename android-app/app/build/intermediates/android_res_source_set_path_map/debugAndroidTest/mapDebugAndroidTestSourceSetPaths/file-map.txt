@@ -1,0 +1,6 @@
+com.fyndable.mobile.test.app-androidTest-0 A:\WorkSpace\Fyndable\android-app\app\build\generated\res\resValues\androidTest\debug
+com.fyndable.mobile.test.app-updated_navigation_xml-1 A:\WorkSpace\Fyndable\android-app\app\build\generated\updated_navigation_xml\debugAndroidTest
+com.fyndable.mobile.test.app-mergeDebugAndroidTestResources-2 A:\WorkSpace\Fyndable\android-app\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.fyndable.mobile.test.app-mergeDebugAndroidTestResources-3 A:\WorkSpace\Fyndable\android-app\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.fyndable.mobile.test.app-debugAndroidTest-4 A:\WorkSpace\Fyndable\android-app\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
+gradleHome-0 C:\Users\Rick\.gradle

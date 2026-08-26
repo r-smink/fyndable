@@ -102,7 +102,7 @@ fun LoginScreen(
                     FyndableLogo(size = 64)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Fyndable Mobile",
+                        text = "Fyndable Smart SEO",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )

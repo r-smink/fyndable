@@ -5,4 +5,10 @@
         <item name="android:navigationBarColor">@color/fyndable_surface</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
     </style>
+
+    <style name="Theme.Fyndable.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/fyndable_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Fyndable</item>
+    </style>
 </resources>

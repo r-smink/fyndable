@@ -4,7 +4,24 @@
             "outputFile": "com.fyndable.mobile.app-mergeDebugResources-2:/values-lt/values-lt.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\f036742609c753b297aaca8b5aef9ace\\transformed\\material3-release\\res\\values-lt\\values-lt.xml",
+                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\580fe031d3467840f238e26d3a6762eb\\transformed\\foundation-release\\res\\values-lt\\values-lt.xml",
+                    "from": {
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,142,230",
+                        "endColumns": "86,87,87",
+                        "endOffsets": "137,225,313"
+                    },
+                    "to": {
+                        "startLines": "2,87,88",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "105,9040,9128",
+                        "endColumns": "86,87,87",
+                        "endOffsets": "187,9123,9211"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\a64ac4f6fcb7a8697de557fd4300c48a\\transformed\\material3-release\\res\\values-lt\\values-lt.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -21,7 +38,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\ae49de9551ae0a8e45a394a1343219cc\\transformed\\core-1.18.0\\res\\values-lt\\values-lt.xml",
+                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\29d8265da401ca00ce6f74802862e6f3\\transformed\\core-1.18.0\\res\\values-lt\\values-lt.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -38,7 +55,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\23ea2e75f0de2fe2404b2673fbfb0364\\transformed\\ui-release\\res\\values-lt\\values-lt.xml",
+                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\6cd530d38389a95fb704377455fa62cf\\transformed\\ui-release\\res\\values-lt\\values-lt.xml",
                     "from": {
                         "startLines": "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -52,23 +69,6 @@
                         "startOffsets": "943,1036,1120,1218,1323,1418,1495,7917,8004,8088,8174,8262,8337,8425,8502,8579,8755,8835,8918",
                         "endColumns": "92,83,97,104,94,76,90,86,83,85,87,74,87,76,76,74,79,82,121",
                         "endOffsets": "1031,1115,1213,1318,1413,1490,1581,7999,8083,8169,8257,8332,8420,8497,8574,8649,8830,8913,9035"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\Rick\\.gradle\\caches\\9.5.0\\transforms\\8127aa7b77fc447a14641c10496c9063\\transformed\\foundation-release\\res\\values-lt\\values-lt.xml",
-                    "from": {
-                        "startLines": "2,3,4",
-                        "startColumns": "4,4,4",
-                        "startOffsets": "55,142,230",
-                        "endColumns": "86,87,87",
-                        "endOffsets": "137,225,313"
-                    },
-                    "to": {
-                        "startLines": "2,87,88",
-                        "startColumns": "4,4,4",
-                        "startOffsets": "105,9040,9128",
-                        "endColumns": "86,87,87",
-                        "endOffsets": "187,9123,9211"
                     }
                 }
             ]
