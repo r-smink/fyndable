@@ -22,6 +22,34 @@ class SocialSharing
         // Meta box moved to PostMetaBox tabbed container
         add_action('wp_head', [$this, 'injectOpenGraphTags'], 1);
         add_filter('the_content', [$this, 'addShareButtons'], 999);
+        add_action('save_post', [$this, 'saveMeta'], 10, 2);
+    }
+
+    /**
+     * Determine if share buttons should be displayed for the current post.
+     */
+    private function isEnabledForCurrentPost(?int $postId = null): bool
+    {
+        if (!is_singular(['post', 'page'])) {
+            return false;
+        }
+
+        $postId = $postId ?: (int) get_the_ID();
+        if (!$postId) {
+            return false;
+        }
+
+        $globalEnabled = get_option('sseo_ai_client_show_share_buttons', '1');
+        if ($globalEnabled !== '1') {
+            return false;
+        }
+
+        $disabled = get_post_meta($postId, '_sseo_ai_disable_share_buttons', true);
+        if ($disabled === '1') {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -47,6 +75,20 @@ class SocialSharing
      */
     public function renderMetaBox(\WP_Post $post): void
     {
+        wp_nonce_field('sseo_ai_save_social_meta', '_sseo_ai_social_meta_nonce');
+        $disabled = get_post_meta($post->ID, '_sseo_ai_disable_share_buttons', true) === '1';
+        ?>
+        <div class="form-field" style="margin-bottom: 16px;">
+            <label for="_sseo_ai_disable_share_buttons" style="display: inline-flex; align-items: center; gap: 6px;">
+                <input type="checkbox" name="_sseo_ai_disable_share_buttons" id="_sseo_ai_disable_share_buttons" value="1" <?php checked($disabled); ?>>
+                <?php esc_html_e('Hide share buttons on this page', 'ai-seo-client'); ?>
+            </label>
+            <p class="field-description" style="margin: 4px 0 0 24px; color: #666; font-size: 12px;">
+                <?php esc_html_e('When checked, the Fyndable share buttons will not be shown on this page.', 'ai-seo-client'); ?>
+            </p>
+        </div>
+        <?php
+
         $url = get_permalink($post->ID);
         $title = rawurlencode(get_the_title($post->ID));
         $excerpt = rawurlencode(wp_strip_all_tags(get_the_excerpt($post)));
@@ -85,12 +127,7 @@ class SocialSharing
      */
     public function addShareButtons(string $content): string
     {
-        if (!is_singular(['post', 'page']) || is_admin()) {
-            return $content;
-        }
-
-        $showButtons = get_option('sseo_ai_client_show_share_buttons', '1');
-        if ($showButtons !== '1') {
+        if (is_admin() || !$this->isEnabledForCurrentPost()) {
             return $content;
         }
 
@@ -129,6 +166,27 @@ class SocialSharing
         $html .= '</div></div>';
 
         return $content . $html;
+    }
+
+    /**
+     * Save social sharing per-post settings.
+     */
+    public function saveMeta(int $postId, \WP_Post $post): void
+    {
+        if (!isset($_POST['_sseo_ai_social_meta_nonce']) || !wp_verify_nonce($_POST['_sseo_ai_social_meta_nonce'], 'sseo_ai_save_social_meta')) {
+            return;
+        }
+
+        if (!current_user_can('edit_post', $postId)) {
+            return;
+        }
+
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        $disabled = isset($_POST['_sseo_ai_disable_share_buttons']) && $_POST['_sseo_ai_disable_share_buttons'] === '1' ? '1' : '0';
+        update_post_meta($postId, '_sseo_ai_disable_share_buttons', $disabled);
     }
 
     /**

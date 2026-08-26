@@ -202,6 +202,7 @@ class Client
         add_option('sseo_ai_client_dashboard_url', '');
         add_option('sseo_ai_client_license_status', 'inactive');
         add_option('sseo_ai_client_first_activation', time());
+        add_option('sseo_ai_client_show_share_buttons', '1');
         
         // Create rank tracker tables
         $settings = new Settings();
@@ -2193,6 +2194,7 @@ class Client
         $sslVerify = $this->settings->sslVerify();
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
+        $showShareButtons = get_option('sseo_ai_client_show_share_buttons', '1') === '1';
         $googlePlacesKey = get_option('sseo_ai_client_google_places_key', '');
 
         // Get rate limit status
@@ -2549,6 +2551,19 @@ class Client
                         </div>
 
                         <div class="settings-section">
+                            <h2><?php esc_html_e('Social & Sharing', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Configure the built-in social share buttons', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="show_share_buttons">
+                                    <input type="checkbox" name="show_share_buttons" id="show_share_buttons" value="1" <?php checked($showShareButtons, true); ?>>
+                                    <?php esc_html_e('Show social share buttons', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('When enabled, share buttons for Facebook, X, LinkedIn and WhatsApp are added to posts and pages.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
 
@@ -2814,6 +2829,7 @@ class Client
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_show_share_buttons', isset($_POST['show_share_buttons']) && $_POST['show_share_buttons'] === '1' ? '1' : '0');
         update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
 
         // Local business settings (used by Local SEO schema and Local SERP radius scans)
