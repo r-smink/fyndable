@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="fyndable_bg">#0F172A</color>
+    <color name="fyndable_blue">#34A9DD</color>
+    <color name="fyndable_magenta">#8C3793</color>
+    <color name="fyndable_purple">#5B57A0</color>
+    <color name="fyndable_surface">#1E293B</color>
+    <string name="app_name">Fyndable</string>
+    <string name="clusters_empty">Nog geen topic clusters. Tik op + om een cluster te genereren.</string>
+    <string name="clusters_generate">Topic Cluster genereren</string>
+    <string name="generate_button">Artikel genereren</string>
+    <string name="generate_keyword">Focus keyword</string>
+    <string name="generate_title">AI Artikel Generator</string>
+    <string name="generate_tone">Tone of voice</string>
+    <string name="generate_word_count">Woordental</string>
+    <string name="keywords_add">Keyword toevoegen</string>
+    <string name="keywords_empty">Nog geen keywords. Tik op + om een keyword toe te voegen of te genereren.</string>
+    <string name="keywords_generate">AI Genereren</string>
+    <string name="keywords_search">Zoek keywords…</string>
+    <string name="login_button">Inloggen</string>
+    <string name="login_error">Inloggen mislukt</string>
+    <string name="login_help">Maak een Application Password aan via WordPress Admin → Gebruikers → Profiel → Application Passwords</string>
+    <string name="login_password">Application Password</string>
+    <string name="login_subtitle">SEO on the go</string>
+    <string name="login_title">Fyndable Mobile</string>
+    <string name="login_username">WordPress gebruikersnaam</string>
+    <string name="nav_clusters">Clusters</string>
+    <string name="nav_generate">Genereer</string>
+    <string name="nav_keywords">Keywords</string>
+    <string name="nav_performance">Prestaties</string>
+    <string name="nav_posts">Berichten</string>
+    <string name="performance_empty">Nog geen rank tracking keywords.</string>
+    <string name="posts_empty">Nog geen AI-gegenereerde berichten.</string>
+    <style name="Theme.Fyndable" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/fyndable_bg</item>
+        <item name="android:navigationBarColor">@color/fyndable_surface</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>

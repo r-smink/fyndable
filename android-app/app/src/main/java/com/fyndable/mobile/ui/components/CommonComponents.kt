@@ -37,7 +37,7 @@ fun FyndableLogo(
     size: Int = 64,
 ) {
     Image(
-        painter = painterResource(R.drawable.ic_fyndable_logo),
+        painter = painterResource(R.mipmap.ic_launcher_foreground),
         contentDescription = "Fyndable",
         modifier = modifier.size(size.dp)
     )
@@ -53,7 +53,9 @@ fun FyndableGradientBackground(
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
-                    colors = listOf(FyndableBlue, FyndablePurple, FyndableMagenta)
+                    colors = listOf(FyndableBlue, FyndablePurple, FyndableMagenta),
+                    start = androidx.compose.ui.geometry.Offset.Zero,
+                    end = androidx.compose.ui.geometry.Offset.Infinite
                 )
             )
     ) {

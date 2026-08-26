@@ -2,6 +2,7 @@ package com.fyndable.mobile.ui.performance
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,13 +26,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fyndable.mobile.data.model.RankKeyword
 import com.fyndable.mobile.data.store.AuthStore
@@ -50,9 +51,9 @@ fun PerformanceScreen(
     authStore: AuthStore,
     viewModel: PerformanceViewModel = viewModel(factory = ScreenViewModelFactory(authStore))
 ) {
-    val state by viewModel.state.collectAsState()
-    val toast by viewModel.toast.collectAsState()
-    val isChecking by viewModel.isChecking.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val toast by viewModel.toast.collectAsStateWithLifecycle()
+    val isChecking by viewModel.isChecking.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -100,7 +101,7 @@ fun PerformanceScreen(
                                 StatsGrid(top3, top10, top100, s.ranks.size)
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                                    contentPadding = PaddingValues(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     items(s.ranks) { rank ->

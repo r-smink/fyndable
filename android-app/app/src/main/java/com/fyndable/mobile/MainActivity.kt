@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fyndable.mobile.data.store.AuthStore
 import com.fyndable.mobile.ui.navigation.AppNavigation
 import com.fyndable.mobile.ui.theme.FyndableTheme
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FyndableTheme {
-                val credentials by authStore.credentialsFlow.collectAsState(initial = null)
+                val credentials by authStore.credentialsFlow.collectAsStateWithLifecycle(initialValue = null)
                 AppNavigation(
                     authStore = authStore,
                     isAuthenticated = credentials != null,

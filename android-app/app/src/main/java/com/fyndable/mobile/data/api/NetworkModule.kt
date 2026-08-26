@@ -42,7 +42,7 @@ object NetworkModule {
             .build()
 
         val baseUrl = if (siteUrl.endsWith("/")) {
-            "$siteUrl/wp-json/sseo-ai/v1/"
+            "${siteUrl}wp-json/sseo-ai/v1/"
         } else {
             "$siteUrl/wp-json/sseo-ai/v1/"
         }
