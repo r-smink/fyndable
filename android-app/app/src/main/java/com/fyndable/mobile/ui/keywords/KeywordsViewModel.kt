@@ -39,8 +39,7 @@ class KeywordsViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getKeywords(100)
                 if (resp.isSuccessful) {
-                    val body = resp.body()
-                    val kws = body?.keywords ?: emptyList()
+                    val kws = resp.body() ?: emptyList()
                     _state.value = UiState.Success(kws)
                 } else {
                     _state.value = UiState.Error("Fout: ${resp.code()}")
@@ -74,7 +73,7 @@ class KeywordsViewModel(private val api: FyndableApi) : ViewModel() {
                 val resp = api.generateKeywords(GenerateKeywordsRequest(topic))
                 if (resp.isSuccessful) {
                     val body = resp.body()
-                    _generatedKeywords.value = body?.keywords ?: emptyList()
+                    _generatedKeywords.value = body ?: emptyList()
                 } else {
                     _toast.value = "Fout: ${resp.code()}"
                 }

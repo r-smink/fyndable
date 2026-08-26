@@ -44,7 +44,7 @@ class ClustersViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getClusters()
                 if (resp.isSuccessful) {
-                    _state.value = UiState.Success(resp.body()?.clusters ?: emptyList())
+                    _state.value = UiState.Success(resp.body() ?: emptyList())
                 } else {
                     _state.value = UiState.Error("Fout: ${resp.code()}")
                 }
@@ -60,14 +60,7 @@ class ClustersViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getCluster(cluster.id)
                 if (resp.isSuccessful) {
-                    val body = resp.body()
-                    val detailed = body?.clusters?.firstOrNull() ?: body?.let {
-                        Cluster(
-                            id = cluster.id,
-                            pillarTopic = it.clusters.firstOrNull()?.pillarTopic,
-                            items = it.clusters.firstOrNull()?.items ?: cluster.items
-                        )
-                    } ?: cluster
+                    val detailed = resp.body() ?: cluster
                     _selectedCluster.value = detailed
                 }
             } catch (e: Exception) {

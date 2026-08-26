@@ -24,6 +24,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.fyndable.mobile.data.store.AuthStore
 import com.fyndable.mobile.ui.clusters.ClustersScreen
+import com.fyndable.mobile.ui.components.FyndableGradientBackground
 import com.fyndable.mobile.ui.generate.GenerateScreen
 import com.fyndable.mobile.ui.keywords.KeywordsScreen
 import com.fyndable.mobile.ui.login.LoginScreen
@@ -83,25 +84,28 @@ fun AppNavigation(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Keywords.route,
+        FyndableGradientBackground(
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Keywords.route) {
-                KeywordsScreen(authStore = authStore)
-            }
-            composable(Screen.Clusters.route) {
-                ClustersScreen(authStore = authStore)
-            }
-            composable(Screen.Generate.route) {
-                GenerateScreen(authStore = authStore)
-            }
-            composable(Screen.Posts.route) {
-                PostsScreen(authStore = authStore)
-            }
-            composable(Screen.Performance.route) {
-                PerformanceScreen(authStore = authStore)
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Keywords.route
+            ) {
+                composable(Screen.Keywords.route) {
+                    KeywordsScreen(authStore = authStore)
+                }
+                composable(Screen.Clusters.route) {
+                    ClustersScreen(authStore = authStore)
+                }
+                composable(Screen.Generate.route) {
+                    GenerateScreen(authStore = authStore)
+                }
+                composable(Screen.Posts.route) {
+                    PostsScreen(authStore = authStore)
+                }
+                composable(Screen.Performance.route) {
+                    PerformanceScreen(authStore = authStore)
+                }
             }
         }
     }

@@ -34,7 +34,7 @@ class PerformanceViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getRanks()
                 if (resp.isSuccessful) {
-                    _state.value = UiState.Success(resp.body()?.keywords ?: emptyList())
+                    _state.value = UiState.Success(resp.body() ?: emptyList())
                 } else {
                     _state.value = UiState.Error("Fout: ${resp.code()}")
                 }

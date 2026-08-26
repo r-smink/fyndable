@@ -41,7 +41,7 @@ class PostsViewModel(private val api: FyndableApi) : ViewModel() {
                 val postsResp = api.getCreatedPosts(50)
                 val statsResp = api.getPostStats()
                 if (postsResp.isSuccessful) {
-                    val posts = postsResp.body()?.posts ?: postsResp.body()?.items ?: emptyList()
+                    val posts = postsResp.body() ?: emptyList()
                     val stats = if (statsResp.isSuccessful) statsResp.body()?.stats else null
                     _state.value = UiState.Success(posts, stats)
                 } else {

@@ -140,7 +140,7 @@ MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Rick\.gradle
 	android:dataExtractionRules
 		ADDED from A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:12:9-65
 	android:usesCleartextTraffic
-		ADDED from A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:19:9-45
+		ADDED from A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:19:9-44
 	android:name
 		ADDED from A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:10:9-36
 activity#com.fyndable.mobile.MainActivity
