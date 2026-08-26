@@ -335,6 +335,10 @@ class Client
         $this->externalIntegrations = new ExternalIntegrations($this->settings);
         $this->externalIntegrations->register();
         
+        // Google OAuth (used by Direct Index and External Integrations) - available to all tiers
+        $gscOAuth = new GscOAuth($this->settings);
+        $gscOAuth->register();
+        
         // Content Performance Monitor - available to all tiers
         $this->contentPerformanceMonitor = new ContentPerformanceMonitor($this->settings);
         $this->contentPerformanceMonitor->register();
@@ -464,10 +468,7 @@ class Client
             $this->keywordExplorer = new KeywordExplorer($this->settings, $this->dashboardAPI, $this->llmClient);
             $this->keywordExplorer->register();
             
-            // Google Search Console OAuth & Dashboard
-            $gscOAuth = new GscOAuth($this->settings);
-            $gscOAuth->register();
-            
+            // Google Search Console Dashboard
             $gscClient = new GscClient($this->settings);
             $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
             $this->gscDashboard->register();
