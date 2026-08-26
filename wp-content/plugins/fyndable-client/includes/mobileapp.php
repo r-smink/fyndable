@@ -51,9 +51,9 @@ class MobileApp
         $appName = 'Fyndable Mobile App';
 
         try {
-            $result = \WP_Application_Passwords::create_new(
+            $result = \WP_Application_Passwords::create_new_application_password(
                 $user->ID,
-                $appName
+                ['name' => $appName]
             );
 
             if (is_wp_error($result)) {
@@ -63,8 +63,8 @@ class MobileApp
                 ], 500);
             }
 
-            $password = $result['password'];
-            $uuid = $result['uuid'];
+            $password = $result[0];
+            $uuid = $result[1]['uuid'];
 
             $payload = [
                 'site'   => home_url(),
