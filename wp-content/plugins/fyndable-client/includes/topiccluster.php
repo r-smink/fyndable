@@ -953,29 +953,29 @@ You are a topical authority expert (like MarketMuse). Generate a complete topic 
 IMPORTANT: ALL content must be in {$langName} language. Use the exact topic "{$topic}" as provided - do NOT translate it to English. Return all titles, descriptions, keywords, and strategy in {$langName}.
 
 Create a pillar-cluster content architecture. Return JSON only (no markdown):
-{{
-    "pillar_page": {{
+{
+    "pillar_page": {
         "title": "Comprehensive pillar page title",
         "slug": "url-slug",
         "description": "What this pillar page covers",
         "target_keyword": "primary keyword",
         "target_word_count": 3000,
         "search_intent": "informational"
-    }},
+    },
     "clusters": [
-        {{
+        {
             "name": "Subtopic cluster name",
             "description": "What this cluster covers",
-            "hub_page": {{
+            "hub_page": {
                 "title": "Hub article title",
                 "slug": "url-slug",
                 "target_keyword": "cluster keyword",
                 "target_word_count": 2000,
                 "search_intent": "informational|transactional|commercial",
                 "priority": "high|medium|low"
-            }},
+            },
             "supporting_pages": [
-                {{
+                {
                     "title": "Supporting article title",
                     "slug": "url-slug",
                     "target_keyword": "long-tail keyword",
@@ -983,22 +983,22 @@ Create a pillar-cluster content architecture. Return JSON only (no markdown):
                     "search_intent": "informational|transactional|commercial",
                     "content_type": "guide|how-to|comparison|listicle|case-study|FAQ",
                     "priority": "high|medium|low"
-                }}
+                }
             ]
-        }}
+        }
     ],
     "internal_linking_strategy": [
         "Linking rule 1: Pillar links to all hub pages",
         "Linking rule 2: Hub pages link to their supporting pages and back to pillar"
     ],
     "content_calendar": [
-        {{"week": 1, "action": "Write pillar page", "pages": ["pillar slug"]}},
-        {{"week": 2, "action": "Write first hub pages", "pages": ["slug1", "slug2"]}}
+        {"week": 1, "action": "Write pillar page", "pages": ["pillar slug"]},
+        {"week": 2, "action": "Write first hub pages", "pages": ["slug1", "slug2"]}
     ],
     "total_pages": 25,
     "estimated_months": 3,
     "topical_authority_score_potential": 85
-}}
+}
 
 Requirements:
 - Generate {$subtopicCount} subtopic clusters
@@ -1064,7 +1064,6 @@ PROMPT;
             return new \WP_Error(
                 'parse_error',
                 __('De gegenereerde topic cluster kon niet worden geparseerd. De AI retourneerde geen geldige JSON. Probeer het opnieuw of verklein de depth instelling.', 'ai-seo-client')
-                    . ' Response: ' . substr($rawText, 0, 500)
             );
         }
 
