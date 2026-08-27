@@ -2,6 +2,8 @@ package com.fyndable.mobile.ui.keywords
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -48,7 +51,11 @@ import com.fyndable.mobile.ui.components.LoadingState
 import com.fyndable.mobile.ui.components.StatusBadge
 import com.fyndable.mobile.ui.theme.FyndableBlue
 import com.fyndable.mobile.ui.theme.DangerRed
+import com.fyndable.mobile.ui.theme.FyndableInk
 import com.fyndable.mobile.ui.theme.FyndableMagenta
+import com.fyndable.mobile.ui.theme.FyndablePurple
+import com.fyndable.mobile.ui.theme.Gray200
+import com.fyndable.mobile.ui.theme.Gray500
 import com.fyndable.mobile.ui.theme.SuccessGreen
 import com.fyndable.mobile.ui.theme.WarningAmber
 
@@ -94,9 +101,18 @@ fun KeywordsScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Zoek keywords…") },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                placeholder = { Text("Zoek keywords…", color = Gray500) },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Gray500) },
                 singleLine = true,
+                shape = RoundedCornerShape(6.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = FyndablePurple,
+                    unfocusedBorderColor = Gray200,
+                    focusedTextColor = FyndableInk,
+                    unfocusedTextColor = FyndableInk
+                ),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
@@ -243,9 +259,11 @@ fun KeywordsScreen(
 @Composable
 private fun KeywordCard(keyword: com.fyndable.mobile.data.model.Keyword) {
     Card(
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -256,7 +274,8 @@ private fun KeywordCard(keyword: com.fyndable.mobile.data.model.Keyword) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = keyword.keyword,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = FyndableInk
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

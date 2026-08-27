@@ -1,6 +1,7 @@
 package com.fyndable.mobile.ui.login
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,12 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -34,15 +36,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fyndable.mobile.data.store.AuthStore
 import com.fyndable.mobile.ui.components.FyndableGradientBackground
+import com.fyndable.mobile.ui.components.FyndableGradientButton
 import com.fyndable.mobile.ui.components.FyndableLogo
+import com.fyndable.mobile.ui.theme.FyndableInk
+import com.fyndable.mobile.ui.theme.FyndablePurple
+import com.fyndable.mobile.ui.theme.Gray200
+import com.fyndable.mobile.ui.theme.Gray500
+import com.fyndable.mobile.ui.theme.Gray900
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
@@ -96,27 +107,27 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Surface(
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White.copy(alpha = 0.97f),
+                shadowElevation = 16.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Logo
-                    FyndableLogo(size = 64)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    FyndableLogo(size = 56)
+                    Spacer(modifier = Modifier.height(14.dp))
                     Text(
                         text = "Fyndable Smart SEO",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Gray900
                     )
                     Text(
                         text = "SEO on the go",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Gray500
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -139,24 +150,28 @@ fun LoginScreen(
                     }
 
                     // QR scan button — primary action
-                    Button(
+                    FyndableGradientButton(
                         onClick = { launchQrScanner() },
                         enabled = state !is LoginViewModel.LoginState.Loading,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         if (state is LoginViewModel.LoginState.Loading) {
                             CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = Color.White,
                                 strokeWidth = 2.dp,
                                 modifier = Modifier.size(20.dp)
                             )
                         } else {
-                            Icon(Icons.Filled.QrCodeScanner, contentDescription = null)
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Text("Scan QR-code")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.QrCodeScanner, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Scan QR-code",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
 
@@ -190,8 +205,14 @@ fun LoginScreen(
                             keyboardType = KeyboardType.Uri,
                             imeAction = ImeAction.Next
                         ),
+                        shape = RoundedCornerShape(6.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedBorderColor = FyndablePurple,
+                            unfocusedBorderColor = Gray200,
+                            focusedTextColor = FyndableInk,
+                            unfocusedTextColor = FyndableInk
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -208,8 +229,14 @@ fun LoginScreen(
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
                         ),
+                        shape = RoundedCornerShape(6.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedBorderColor = FyndablePurple,
+                            unfocusedBorderColor = Gray200,
+                            focusedTextColor = FyndableInk,
+                            unfocusedTextColor = FyndableInk
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -228,8 +255,14 @@ fun LoginScreen(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
                         ),
+                        shape = RoundedCornerShape(6.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedBorderColor = FyndablePurple,
+                            unfocusedBorderColor = Gray200,
+                            focusedTextColor = FyndableInk,
+                            unfocusedTextColor = FyndableInk
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -240,9 +273,11 @@ fun LoginScreen(
                     OutlinedButton(
                         onClick = { viewModel.login(username, password, siteUrl) },
                         enabled = state !is LoginViewModel.LoginState.Loading,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        border = BorderStroke(2.dp, FyndablePurple),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FyndablePurple)
                     ) {
-                        Text("Handmatig inloggen")
+                        Text("Handmatig inloggen", fontWeight = FontWeight.SemiBold)
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -250,7 +285,7 @@ fun LoginScreen(
                     Text(
                         text = "Scan de QR-code vanuit WordPress Admin → Fyndable → Connection\nOf maak handmatig een Application Password aan via Gebruikers → Profiel",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Gray500,
                         textAlign = TextAlign.Center
                     )
                 }

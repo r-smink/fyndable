@@ -2,6 +2,8 @@ package com.fyndable.mobile.ui.clusters
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,6 +54,7 @@ import com.fyndable.mobile.ui.components.ErrorState
 import com.fyndable.mobile.ui.components.LoadingState
 import com.fyndable.mobile.ui.components.StatusBadge
 import com.fyndable.mobile.ui.theme.FyndableBlue
+import com.fyndable.mobile.ui.theme.FyndableInk
 import com.fyndable.mobile.ui.theme.FyndableMagenta
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -268,13 +271,16 @@ fun ClustersScreen(
 private fun ClusterCard(cluster: Cluster, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = cluster.pillarTopic ?: cluster.title ?: "Onbekend",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = FyndableInk
             )
             Spacer(modifier = Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

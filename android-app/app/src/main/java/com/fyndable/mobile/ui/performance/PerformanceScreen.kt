@@ -1,7 +1,11 @@
 package com.fyndable.mobile.ui.performance
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,7 +36,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fyndable.mobile.data.model.RankKeyword
@@ -43,6 +50,10 @@ import com.fyndable.mobile.ui.components.LoadingState
 import com.fyndable.mobile.ui.components.StatusBadge
 import com.fyndable.mobile.ui.theme.DangerRed
 import com.fyndable.mobile.ui.theme.FyndableBlue
+import com.fyndable.mobile.ui.theme.FyndableInk
+import com.fyndable.mobile.ui.theme.FyndablePurple
+import com.fyndable.mobile.ui.theme.Gray200
+import com.fyndable.mobile.ui.theme.Gray500
 import com.fyndable.mobile.ui.theme.SuccessGreen
 import com.fyndable.mobile.ui.theme.WarningAmber
 
@@ -69,16 +80,28 @@ fun PerformanceScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            TabRow(selectedTabIndex = selectedTab) {
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.White,
+                contentColor = Gray500,
+                indicator = {},
+                divider = {
+                    HorizontalDivider(thickness = 2.dp, color = Gray200)
+                }
+            ) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Rankings") }
+                    selectedContentColor = FyndablePurple,
+                    unselectedContentColor = Gray500,
+                    text = { Text("Rankings", fontWeight = FontWeight.SemiBold) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Post scores") }
+                    selectedContentColor = FyndablePurple,
+                    unselectedContentColor = Gray500,
+                    text = { Text("Post scores", fontWeight = FontWeight.SemiBold) }
                 )
             }
 
@@ -133,26 +156,52 @@ fun PerformanceScreen(
 
 @Composable
 private fun StatsGrid(top3: Int, top10: Int, top100: Int, total: Int) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        StatCard("Top 3", top3, Modifier.weight(1f), SuccessGreen)
-        StatCard("Top 10", top10, Modifier.weight(1f), WarningAmber)
-        StatCard("Top 100", top100, Modifier.weight(1f), DangerRed)
-        StatCard("Totaal", total, Modifier.weight(1f), FyndableBlue)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatCard("Top 3", top3, Modifier.weight(1f), SuccessGreen)
+            StatCard("Top 10", top10, Modifier.weight(1f), WarningAmber)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatCard("Top 100", top100, Modifier.weight(1f), DangerRed)
+            StatCard("Totaal", total, Modifier.weight(1f), FyndablePurple)
+        }
     }
 }
 
 @Composable
-private fun StatCard(label: String, value: Int, modifier: Modifier = Modifier, color: androidx.compose.ui.graphics.Color) {
+private fun StatCard(label: String, value: Int, modifier: Modifier = Modifier, color: Color) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text("$value", style = MaterialTheme.typography.titleLarge, color = color)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(color)
+            )
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    "$value",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Gray500,
+                    letterSpacing = 0.05.sp
+                )
+            }
         }
     }
 }
@@ -166,7 +215,9 @@ private fun RankCard(rank: RankKeyword, onCheck: () -> Unit) {
         else FyndableBlue
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -176,7 +227,8 @@ private fun RankCard(rank: RankKeyword, onCheck: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = rank.keyword ?: rank.keywordName ?: "",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = FyndableInk
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 if (pos > 0) {
