@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable
  * Description: Advanced AI-powered SEO plugin by Fyndable with comprehensive optimization features
- * Version: 1.8.0
+ * Version: 1.9.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Fyndable
