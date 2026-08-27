@@ -1333,6 +1333,10 @@ PROMPT;
      */
     public function processClusterMapQueueItems(): void
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+
         $queues = get_option('sseo_ai_cluster_map_queues', []);
         if (empty($queues)) return;
 

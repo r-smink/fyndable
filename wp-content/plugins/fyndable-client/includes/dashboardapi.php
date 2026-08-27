@@ -438,7 +438,7 @@ class DashboardAPI
                     'temperature' => $temperature,
                     'use_case' => $useCase,
                 ]),
-                'timeout' => 120,
+                'timeout' => 300,
                 'sslverify' => $this->getSslVerify(),
                 'redirection' => 0,
             ]

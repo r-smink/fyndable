@@ -30,7 +30,7 @@ class ApiGateway
     private const CIRCUIT_BREAKER_WINDOW = 900; // 15 minutes
 
     // AI request resilience
-    private const AI_TIMEOUT_SECONDS = 120;
+    private const AI_TIMEOUT_SECONDS = 300;
     private const AI_MAX_RETRIES = 3;
     private const AI_RETRY_BASE_MS = 500000; // 0.5 seconds
 
