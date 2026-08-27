@@ -12,10 +12,12 @@ namespace SSEOAIClient;
 class CreatedPosts
 {
     private Settings $settings;
+    private GscClient $gscClient;
 
     public function __construct(Settings $settings)
     {
         $this->settings = $settings;
+        $this->gscClient = new GscClient($settings);
     }
 
     public function register(): void
@@ -89,6 +91,13 @@ class CreatedPosts
         register_rest_route('sseo-ai/v1', '/created-posts/(?P<id>\d+)', [
             'methods' => 'PUT',
             'callback' => [$this, 'restUpdatePost'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+
+        // Get GSC metrics for a single post
+        register_rest_route('sseo-ai/v1', '/created-posts/(?P<id>\d+)/gsc-metrics', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetPostGscMetrics'],
             'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
     }
@@ -345,6 +354,100 @@ class CreatedPosts
             ],
             'languages' => $languageStats ?: [],
         ];
+    }
+
+    /**
+     * REST: Get GSC metrics for a single post
+     */
+    public function restGetPostGscMetrics(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $postId = (int) $request->get_param('id');
+
+        if (!current_user_can('edit_post', $postId)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => __('You do not have permission to view this post.', 'ai-seo-client'),
+            ], 403);
+        }
+
+        $post = get_post($postId);
+        if (!$post) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => __('Post not found.', 'ai-seo-client'),
+            ], 404);
+        }
+
+        if (!$this->gscClient->isConnected()) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'connected' => false,
+                'message' => __('Google Search Console is not connected.', 'ai-seo-client'),
+            ], 200);
+        }
+
+        $postUrl = get_permalink($postId);
+        if (!$postUrl || !str_starts_with($postUrl, 'http')) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'connected' => true,
+                'message' => __('Unable to determine post URL.', 'ai-seo-client'),
+            ], 200);
+        }
+
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-28 days'));
+
+        $data = $this->gscClient->query([
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'dimensions' => ['page'],
+            'dimensionFilterGroups' => [
+                [
+                    'groupType' => 'and',
+                    'filters' => [
+                        [
+                            'dimension' => 'page',
+                            'operator' => 'equals',
+                            'expression' => $postUrl,
+                        ],
+                    ],
+                ],
+            ],
+            'rowLimit' => 1,
+        ]);
+
+        if (is_wp_error($data)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'connected' => true,
+                'message' => $data->get_error_message(),
+            ], 200);
+        }
+
+        $rows = $data['rows'] ?? [];
+        if (empty($rows)) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'connected' => true,
+                'clicks' => 0,
+                'impressions' => 0,
+                'ctr' => 0.0,
+                'position' => 0.0,
+                'period' => ['start' => $startDate, 'end' => $endDate, 'days' => 28],
+            ], 200);
+        }
+
+        $row = $rows[0];
+        return new \WP_REST_Response([
+            'success' => true,
+            'connected' => true,
+            'clicks' => (int) ($row['clicks'] ?? 0),
+            'impressions' => (int) ($row['impressions'] ?? 0),
+            'ctr' => round((float) ($row['ctr'] ?? 0) * 100, 2),
+            'position' => round((float) ($row['position'] ?? 0), 1),
+            'period' => ['start' => $startDate, 'end' => $endDate, 'days' => 28],
+        ], 200);
     }
 
     /**

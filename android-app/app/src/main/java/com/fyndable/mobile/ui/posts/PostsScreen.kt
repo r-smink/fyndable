@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fyndable.mobile.data.model.CreatedPost
+import com.fyndable.mobile.data.model.PostMetrics
 import com.fyndable.mobile.data.model.PostStats
 import com.fyndable.mobile.data.store.AuthStore
 import com.fyndable.mobile.ui.ScreenViewModelFactory
@@ -57,6 +59,7 @@ fun PostsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selectedPost by viewModel.selectedPost.collectAsStateWithLifecycle()
+    val selectedMetrics by viewModel.selectedMetrics.collectAsStateWithLifecycle()
     val toast by viewModel.toast.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -71,6 +74,7 @@ fun PostsScreen(
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         when (val s = state) {
@@ -154,6 +158,8 @@ fun PostsScreen(
                     }
                     TextButton(onClick = { viewModel.deletePost(id) }) { Text("Verwijderen") }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                MetricsSection(metrics = selectedMetrics)
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
@@ -251,6 +257,76 @@ private fun PostCard(post: CreatedPost, onClick: () -> Unit) {
                     StatusBadge(it.take(10), FyndableBlue)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MetricsSection(metrics: PostMetrics?) {
+    when {
+        metrics == null -> {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.padding(8.dp), strokeWidth = 2.dp)
+            }
+        }
+        metrics.success == false || metrics.connected == false -> {
+            Text(
+                text = metrics.message ?: "Geen Search Console data beschikbaar.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        else -> {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Zoekprestaties (laatste 28 dagen)",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MetricCard(
+                        label = "Indrukken",
+                        value = (metrics.impressions ?: 0).toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "Kliks",
+                        value = (metrics.clicks ?: 0).toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "CTR",
+                        value = "${metrics.ctr ?: 0.0}%",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "Positie",
+                        value = metrics.position?.let { "%.1f".format(it) } ?: "-",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MetricCard(label: String, value: String, modifier: Modifier = Modifier) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        ) {
+            Text(value, style = MaterialTheme.typography.titleMedium, color = FyndableBlue)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

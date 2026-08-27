@@ -3,6 +3,7 @@ package com.fyndable.mobile.ui.keywords
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fyndable.mobile.data.api.FyndableApi
+import com.fyndable.mobile.data.api.JsonUtils
 import com.fyndable.mobile.data.model.AddKeywordRequest
 import com.fyndable.mobile.data.model.GenerateKeywordsRequest
 import com.fyndable.mobile.data.model.Keyword
@@ -39,7 +40,7 @@ class KeywordsViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getKeywords(100)
                 if (resp.isSuccessful) {
-                    val kws = resp.body() ?: emptyList()
+                    val kws = JsonUtils.decodeFlexibleList<Keyword>(resp.body())
                     _state.value = UiState.Success(kws)
                 } else {
                     _state.value = UiState.Error("Fout: ${resp.code()}")
@@ -72,8 +73,7 @@ class KeywordsViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.generateKeywords(GenerateKeywordsRequest(topic))
                 if (resp.isSuccessful) {
-                    val body = resp.body()
-                    _generatedKeywords.value = body ?: emptyList()
+                    _generatedKeywords.value = JsonUtils.decodeFlexibleList<Keyword>(resp.body())
                 } else {
                     _toast.value = "Fout: ${resp.code()}"
                 }

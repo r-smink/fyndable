@@ -9,10 +9,12 @@ import com.fyndable.mobile.data.model.GenerateClusterRequest
 import com.fyndable.mobile.data.model.GenerateContentRequest
 import com.fyndable.mobile.data.model.GenerateKeywordsRequest
 import com.fyndable.mobile.data.model.Keyword
+import com.fyndable.mobile.data.model.PostMetrics
 import com.fyndable.mobile.data.model.PostStatsResponse
 import com.fyndable.mobile.data.model.RankKeyword
 import com.fyndable.mobile.data.model.UpdatePostRequest
 import com.fyndable.mobile.data.model.WriteArticleRequest
+import kotlinx.serialization.json.JsonElement
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -26,23 +28,23 @@ interface FyndableApi {
 
     // ── Keywords ──
     @GET("keywords")
-    suspend fun getKeywords(@Query("limit") limit: Int = 100): Response<List<Keyword>>
+    suspend fun getKeywords(@Query("limit") limit: Int = 100): Response<JsonElement>
 
     @POST("keywords/add")
     suspend fun addKeyword(@Body body: AddKeywordRequest): Response<Keyword>
 
     @POST("keywords/generate")
-    suspend fun generateKeywords(@Body body: GenerateKeywordsRequest): Response<List<Keyword>>
+    suspend fun generateKeywords(@Body body: GenerateKeywordsRequest): Response<JsonElement>
 
     // ── Clusters ──
     @GET("clusters/list")
-    suspend fun getClusters(): Response<List<Cluster>>
+    suspend fun getClusters(): Response<JsonElement>
 
     @GET("clusters/{id}")
-    suspend fun getCluster(@Path("id") id: Int): Response<Cluster>
+    suspend fun getCluster(@Path("id") id: Int): Response<JsonElement>
 
     @POST("clusters/generate")
-    suspend fun generateCluster(@Body body: GenerateClusterRequest): Response<List<Cluster>>
+    suspend fun generateCluster(@Body body: GenerateClusterRequest): Response<JsonElement>
 
     @POST("clusters/generate-content")
     suspend fun generateClusterContent(@Body body: GenerateContentRequest): Response<ContentResult>
@@ -56,13 +58,16 @@ interface FyndableApi {
     suspend fun getCreatedPosts(
         @Query("per_page") perPage: Int = 50,
         @Query("post_status") postStatus: String? = null
-    ): Response<List<CreatedPost>>
+    ): Response<JsonElement>
 
     @GET("created-posts/stats")
-    suspend fun getPostStats(): Response<PostStatsResponse>
+    suspend fun getPostStats(): Response<JsonElement>
 
     @GET("created-posts/{id}")
     suspend fun getPost(@Path("id") id: Int): Response<CreatedPost>
+
+    @GET("created-posts/{id}/gsc-metrics")
+    suspend fun getPostGscMetrics(@Path("id") id: Int): Response<PostMetrics>
 
     @PUT("created-posts/{id}")
     suspend fun updatePost(
@@ -78,7 +83,7 @@ interface FyndableApi {
 
     // ── Ranks / Performance ──
     @GET("ranks/keywords")
-    suspend fun getRanks(): Response<List<RankKeyword>>
+    suspend fun getRanks(): Response<JsonElement>
 
     @POST("ranks/check-now")
     suspend fun checkRankNow(@Body body: Map<String, String>): Response<Unit>

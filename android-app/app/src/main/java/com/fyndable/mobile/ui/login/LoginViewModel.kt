@@ -110,7 +110,7 @@ class LoginViewModel(private val authStore: AuthStore) : ViewModel() {
                 withContext(Dispatchers.IO) {
                     client.newCall(request).execute().use { response ->
                         if (response.isSuccessful) {
-                            authStore.saveCredentials(payload.user, payload.pass, cleanUrl)
+                            authStore.saveCredentials(payload.user, payload.pass, cleanUrl, payload.uuid)
                             _state.value = LoginState.Success
                         } else {
                             _state.value = LoginState.Error(
