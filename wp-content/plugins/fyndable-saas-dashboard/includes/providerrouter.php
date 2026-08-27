@@ -231,6 +231,7 @@ class ProviderRouter
 
         $lastError = null;
         $attempted = [];
+        $hasTimeout = false;
 
         foreach ($candidates as $candidateModel) {
             $provider = $this->getProviderForModel($candidateModel);
@@ -240,6 +241,9 @@ class ProviderRouter
 
             if (is_wp_error($result)) {
                 $lastError = $result;
+                if ($result->get_error_code() === 'ai_timeout') {
+                    $hasTimeout = true;
+                }
                 continue;
             }
 
@@ -263,14 +267,24 @@ class ProviderRouter
         }
 
         if ($lastError instanceof \WP_Error) {
+            $errorCode = $hasTimeout ? 'ai_timeout' : 'model_fallback_exhausted';
+            $errorTemplate = $hasTimeout
+                ? __('AI request timed out. All models timed out. Attempted: %s. Last error: %s', 'sseo-ai-saas')
+                : __('All AI models failed. Attempted: %s. Last error: %s', 'sseo-ai-saas');
+
             return new \WP_Error(
-                'model_fallback_exhausted',
+                $errorCode,
                 sprintf(
-                    __('All AI models failed. Attempted: %s. Last error: %s', 'sseo-ai-saas'),
+                    $errorTemplate,
                     implode(' → ', $attempted),
                     $lastError->get_error_message()
                 ),
-                ['attempted' => $attempted, 'last_error' => $lastError->get_error_message()]
+                [
+                    'attempted' => $attempted,
+                    'last_error' => $lastError->get_error_message(),
+                    'last_error_code' => $lastError->get_error_code(),
+                    'timeout_detected' => $hasTimeout,
+                ]
             );
         }
 

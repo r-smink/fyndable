@@ -139,6 +139,25 @@ class TopicCluster
             'permission_callback' => fn() => current_user_can('publish_posts'),
         ]);
 
+        // Async cluster map generation endpoints
+        register_rest_route('sseo-ai/v1', '/clusters/generate-async', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restGenerateClusterAsync'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/clusters/map-queue/(?P<queue_id>\d+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetClusterMapQueueStatus'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/clusters/map-queue/(?P<queue_id>\d+)/cancel', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restCancelClusterMapQueue'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+
         // Internal linking endpoint — re-link cluster posts after new content is added
         register_rest_route('sseo-ai/v1', '/clusters/(?P<cluster_id>\d+)/interlink', [
             'methods' => 'POST',
@@ -1208,6 +1227,162 @@ PROMPT;
     public function restAuditExistingContent(\WP_REST_Request $request): array
     {
         return $this->auditExistingContent(sanitize_text_field($request->get_param('topic')));
+    }
+
+    /**
+     * REST: Queue a cluster map for async background generation.
+     * Returns immediately with a queue_id; the result is stored later.
+     */
+    public function restGenerateClusterAsync(\WP_REST_Request $request): array|\WP_Error
+    {
+        $topic = sanitize_text_field($request->get_param('topic'));
+        $depth = sanitize_text_field($request->get_param('depth') ?: 'standard');
+        $language = sanitize_text_field($request->get_param('language') ?: 'en');
+
+        if (empty($topic)) {
+            return new \WP_Error('missing_topic', __('Topic is required', 'ai-seo-client'), ['status' => 400]);
+        }
+
+        if (!in_array($depth, ['standard', 'deep'], true)) {
+            $depth = 'standard';
+        }
+
+        $queues = get_option('sseo_ai_cluster_map_queues', []);
+        $queueId = count($queues) + 1;
+
+        $queue = [
+            'id' => $queueId,
+            'topic' => $topic,
+            'depth' => $depth,
+            'language' => $language,
+            'status' => 'pending',
+            'result' => null,
+            'error' => null,
+            'created_at' => current_time('mysql'),
+            'started_at' => null,
+            'completed_at' => null,
+        ];
+
+        $queues[] = $queue;
+        update_option('sseo_ai_cluster_map_queues', $queues);
+
+        if (!wp_next_scheduled('sseo_ai_process_cluster_map_queue')) {
+            wp_schedule_event(time() + 60, 'sseo_ai_queue_interval', 'sseo_ai_process_cluster_map_queue');
+        }
+
+        return [
+            'success' => true,
+            'queue_id' => $queueId,
+            'status' => 'pending',
+            'message' => __('Cluster map generation queued. Poll /clusters/map-queue/{queue_id} for status.', 'ai-seo-client'),
+        ];
+    }
+
+    /**
+     * REST: Get status of an async cluster map queue.
+     */
+    public function restGetClusterMapQueueStatus(\WP_REST_Request $request): array|\WP_Error
+    {
+        $queueId = (int) $request->get_param('queue_id');
+        $queues = get_option('sseo_ai_cluster_map_queues', []);
+
+        foreach ($queues as $queue) {
+            if (($queue['id'] ?? 0) === $queueId) {
+                return [
+                    'queue_id' => $queueId,
+                    'status' => $queue['status'],
+                    'topic' => $queue['topic'],
+                    'depth' => $queue['depth'],
+                    'language' => $queue['language'],
+                    'result' => $queue['result'],
+                    'error' => $queue['error'],
+                    'created_at' => $queue['created_at'],
+                    'completed_at' => $queue['completed_at'],
+                ];
+            }
+        }
+
+        return new \WP_Error('not_found', __('Cluster map queue not found', 'ai-seo-client'), ['status' => 404]);
+    }
+
+    /**
+     * REST: Cancel a pending cluster map queue.
+     */
+    public function restCancelClusterMapQueue(\WP_REST_Request $request): array|\WP_Error
+    {
+        $queueId = (int) $request->get_param('queue_id');
+        $queues = get_option('sseo_ai_cluster_map_queues', []);
+
+        foreach ($queues as &$queue) {
+            if (($queue['id'] ?? 0) === $queueId) {
+                if ($queue['status'] === 'pending') {
+                    $queue['status'] = 'cancelled';
+                    update_option('sseo_ai_cluster_map_queues', $queues);
+                    return ['success' => true, 'message' => __('Cluster map queue cancelled', 'ai-seo-client')];
+                }
+                return new \WP_Error('not_cancelable', __('Only pending queues can be cancelled', 'ai-seo-client'), ['status' => 409]);
+            }
+        }
+
+        return new \WP_Error('not_found', __('Cluster map queue not found', 'ai-seo-client'), ['status' => 404]);
+    }
+
+    /**
+     * Process pending async cluster map queue items via WP-Cron.
+     * Generates one map per run to avoid timeouts.
+     */
+    public function processClusterMapQueueItems(): void
+    {
+        $queues = get_option('sseo_ai_cluster_map_queues', []);
+        if (empty($queues)) return;
+
+        $allDone = true;
+
+        foreach ($queues as &$queue) {
+            if ($queue['status'] !== 'pending' && $queue['status'] !== 'processing') continue;
+
+            $allDone = false;
+            $queue['status'] = 'processing';
+            if (!$queue['started_at']) {
+                $queue['started_at'] = current_time('mysql');
+            }
+
+            try {
+                $result = $this->generateCluster($queue['topic'], $queue['depth'], $queue['language']);
+
+                if (is_wp_error($result)) {
+                    throw new \Exception($result->get_error_message());
+                }
+
+                // Persist the generated cluster map
+                $clusters = get_option('aiseo_topic_clusters', []);
+                $result['id'] = count($clusters) + 1;
+                $result['saved_at'] = current_time('mysql');
+                $result['queue_id'] = $queue['id'];
+                $clusters[] = $result;
+                update_option('aiseo_topic_clusters', $clusters);
+
+                $queue['status'] = 'completed';
+                $queue['result'] = $result;
+                $queue['completed_at'] = current_time('mysql');
+            } catch (\Throwable $e) {
+                $queue['status'] = 'failed';
+                $queue['error'] = $e->getMessage();
+                $queue['completed_at'] = current_time('mysql');
+            }
+
+            // Only process one map per cron run to stay within time limits
+            break;
+        }
+
+        update_option('sseo_ai_cluster_map_queues', $queues);
+
+        if ($allDone) {
+            $timestamp = wp_next_scheduled('sseo_ai_process_cluster_map_queue');
+            if ($timestamp) {
+                wp_clear_scheduled_hook('sseo_ai_process_cluster_map_queue');
+            }
+        }
     }
 
     /**

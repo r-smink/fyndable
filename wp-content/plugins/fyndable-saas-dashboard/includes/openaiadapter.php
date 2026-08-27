@@ -75,13 +75,20 @@ class OpenAIAdapter
                 'temperature' => $temperature,
                 'max_tokens'  => $maxTokens,
             ]),
-            'timeout' => 90,
+            'timeout' => 120,
         ]);
 
         if (is_wp_error($response)) {
+            $message = $response->get_error_message();
+            if (stripos($message, 'timed out') !== false || stripos($message, 'timeout') !== false || stripos($message, 'cURL error 28') !== false) {
+                return new \WP_Error(
+                    'ai_timeout',
+                    sprintf(__('OpenAI request timed out after 120s: %s', 'sseo-ai-saas'), $message)
+                );
+            }
             return new \WP_Error(
                 'openai_request_failed',
-                sprintf(__('OpenAI request failed: %s', 'sseo-ai-saas'), $response->get_error_message())
+                sprintf(__('OpenAI request failed: %s', 'sseo-ai-saas'), $message)
             );
         }
 

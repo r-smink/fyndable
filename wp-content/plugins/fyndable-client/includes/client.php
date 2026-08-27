@@ -583,6 +583,7 @@ class Client
             );
             $this->topicCluster->register();
             add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
+            add_action('sseo_ai_process_cluster_map_queue', [$this->topicCluster, 'processClusterMapQueueItems']);
             add_filter('cron_schedules', function($schedules) {
                 $schedules['sseo_ai_queue_interval'] = [
                     'interval' => 120,

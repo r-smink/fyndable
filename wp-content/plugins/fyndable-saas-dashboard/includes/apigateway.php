@@ -281,11 +281,24 @@ class ApiGateway
             }
         }
 
-        $statusCode = ($lastError && $lastError->get_error_code() === 'no_provider') ? 503 : 502;
+        $errorCode = $lastError ? $lastError->get_error_code() : 'ai_request_failed';
+        $isTimeout = $errorCode === 'ai_timeout';
+        $statusCode = $lastError && $lastError->get_error_code() === 'no_provider' ? 503 : ($isTimeout ? 504 : 502);
+
+        $message = $lastError
+            ? $lastError->get_error_message()
+            : __('AI generation failed', 'sseo-ai-saas');
+
+        if ($isTimeout) {
+            $message = __('AI generation timed out. The request took too long to complete. Try again or use async processing for large clusters.', 'sseo-ai-saas');
+        }
+
         return new \WP_REST_Response([
             'success' => false,
-            'error' => $lastError ? $lastError->get_error_code() : 'ai_request_failed',
-            'message' => $lastError ? $lastError->get_error_message() : __('AI generation failed', 'sseo-ai-saas')
+            'error' => $errorCode,
+            'message' => $message,
+            'timeout' => $isTimeout,
+            'details' => $lastError ? ($lastError->get_error_data() ?? null) : null,
         ], $statusCode);
     }
 
