@@ -39,17 +39,23 @@ class SocialSharing
             return false;
         }
 
+        // Per-page override takes precedence
+        $postOverride = get_post_meta($postId, '_sseo_ai_share_buttons', true);
+        if ($postOverride === 'show') {
+            return true;
+        }
+        if ($postOverride === 'hide') {
+            return false;
+        }
+
+        // Legacy fallback for existing posts
+        $legacyDisabled = get_post_meta($postId, '_sseo_ai_disable_share_buttons', true);
+        if ($legacyDisabled === '1') {
+            return false;
+        }
+
         $globalEnabled = get_option('sseo_ai_client_show_share_buttons', '1');
-        if ($globalEnabled !== '1') {
-            return false;
-        }
-
-        $disabled = get_post_meta($postId, '_sseo_ai_disable_share_buttons', true);
-        if ($disabled === '1') {
-            return false;
-        }
-
-        return true;
+        return $globalEnabled === '1';
     }
 
     /**
@@ -76,15 +82,23 @@ class SocialSharing
     public function renderMetaBox(\WP_Post $post): void
     {
         wp_nonce_field('sseo_ai_save_social_meta', '_sseo_ai_social_meta_nonce');
-        $disabled = get_post_meta($post->ID, '_sseo_ai_disable_share_buttons', true) === '1';
+        $override = get_post_meta($post->ID, '_sseo_ai_share_buttons', true);
+        if ($override === '' && get_post_meta($post->ID, '_sseo_ai_disable_share_buttons', true) === '1') {
+            $override = 'hide';
+        }
+        $override = in_array($override, ['default', 'show', 'hide'], true) ? $override : 'default';
         ?>
         <div class="form-field" style="margin-bottom: 16px;">
-            <label for="_sseo_ai_disable_share_buttons" style="display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" name="_sseo_ai_disable_share_buttons" id="_sseo_ai_disable_share_buttons" value="1" <?php checked($disabled); ?>>
-                <?php esc_html_e('Hide share buttons on this page', 'ai-seo-client'); ?>
+            <label for="_sseo_ai_share_buttons" style="display: block; font-weight: 600; margin-bottom: 4px;">
+                <?php esc_html_e('Share buttons on this page', 'ai-seo-client'); ?>
             </label>
-            <p class="field-description" style="margin: 4px 0 0 24px; color: #666; font-size: 12px;">
-                <?php esc_html_e('When checked, the Fyndable share buttons will not be shown on this page.', 'ai-seo-client'); ?>
+            <select name="_sseo_ai_share_buttons" id="_sseo_ai_share_buttons" style="width: 100%;">
+                <option value="default" <?php selected($override, 'default'); ?>><?php esc_html_e('Follow global setting', 'ai-seo-client'); ?></option>
+                <option value="show" <?php selected($override, 'show'); ?>><?php esc_html_e('Always show', 'ai-seo-client'); ?></option>
+                <option value="hide" <?php selected($override, 'hide'); ?>><?php esc_html_e('Always hide', 'ai-seo-client'); ?></option>
+            </select>
+            <p class="field-description" style="margin: 4px 0 0; color: #666; font-size: 12px;">
+                <?php esc_html_e('Override the global "Show social share buttons" setting for this page.', 'ai-seo-client'); ?>
             </p>
         </div>
         <?php
@@ -185,8 +199,10 @@ class SocialSharing
             return;
         }
 
-        $disabled = isset($_POST['_sseo_ai_disable_share_buttons']) && $_POST['_sseo_ai_disable_share_buttons'] === '1' ? '1' : '0';
-        update_post_meta($postId, '_sseo_ai_disable_share_buttons', $disabled);
+        $override = isset($_POST['_sseo_ai_share_buttons']) ? sanitize_text_field($_POST['_sseo_ai_share_buttons']) : 'default';
+        $allowed = ['default', 'show', 'hide'];
+        $value = in_array($override, $allowed, true) ? $override : 'default';
+        update_post_meta($postId, '_sseo_ai_share_buttons', $value);
     }
 
     /**
