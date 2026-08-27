@@ -438,27 +438,48 @@ class DashboardAPI
                     'temperature' => $temperature,
                     'use_case' => $useCase,
                 ]),
-                'timeout' => 90,
+                'timeout' => 120,
                 'sslverify' => $this->getSslVerify(),
                 'redirection' => 0,
             ]
         );
 
         if (is_wp_error($response)) {
-            return new \WP_Error('connection_error', __('Could not connect to AI service.', 'ai-seo-client'));
+            $message = $response->get_error_message();
+            if (stripos($message, 'timed out') !== false || stripos($message, 'timeout') !== false || stripos($message, 'cURL error 28') !== false) {
+                return new \WP_Error(
+                    'ai_timeout',
+                    __('AI request timed out. Try async cluster generation for large maps.', 'ai-seo-client'),
+                    ['status' => 504, 'original_message' => $message]
+                );
+            }
+            return new \WP_Error(
+                'connection_error',
+                __('Could not connect to AI service.', 'ai-seo-client'),
+                ['status' => 502, 'original_message' => $message]
+            );
         }
 
         $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
 
         if ($statusCode === 429) {
-            return new \WP_Error('usage_exceeded', $body['message'] ?? __('Usage limit exceeded', 'ai-seo-client'));
+            return new \WP_Error('usage_exceeded', $body['message'] ?? __('Usage limit exceeded', 'ai-seo-client'), ['status' => 429]);
+        }
+
+        if ($statusCode === 504 || ($body['timeout'] ?? false)) {
+            return new \WP_Error(
+                'ai_timeout',
+                $body['message'] ?? __('AI request timed out. Try async cluster generation for large maps.', 'ai-seo-client'),
+                ['status' => 504]
+            );
         }
 
         if ($statusCode !== 200 || empty($body['success'])) {
             return new \WP_Error(
                 $body['error'] ?? 'ai_failed',
-                $body['message'] ?? __('AI generation failed', 'ai-seo-client')
+                $body['message'] ?? __('AI generation failed', 'ai-seo-client'),
+                ['status' => $statusCode ?: 502]
             );
         }
 

@@ -1398,6 +1398,8 @@ PROMPT;
             .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
             .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
             .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+            .tc-status-success { color: #16a34a; }
+            .tc-status-error { color: #dc2626; }
         </style>
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
@@ -1438,6 +1440,7 @@ PROMPT;
                         </div>
                         <button type="button" class="button button-primary" id="tc-generate" style="height:30px;"><?php esc_html_e('Generate Map', 'ai-seo-client'); ?></button>
                         <span id="tc-generate-spinner" class="spinner" style="float:none;margin:0 5px;"></span>
+                        <span id="tc-generate-status" style="margin-left:8px;font-weight:600;"></span>
                         <button type="button" class="button" id="tc-audit" style="height:30px;"><?php esc_html_e('Audit Existing Content', 'ai-seo-client'); ?></button>
                     </div>
                 </div>
@@ -1678,29 +1681,85 @@ PROMPT;
                 });
             });
 
-            // Generate
+            // Generate — async queue with polling
             $('#tc-generate').on('click', function() {
                 var topic = $('#tc-topic').val().trim();
                 if (!topic) return;
                 var btn = $(this);
-                btn.prop('disabled', true).text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
-                $('#tc-generate-spinner').addClass('is-active');
+                var status = $('#tc-generate-status');
+                var spinner = $('#tc-generate-spinner');
+                var depth = $('#tc-depth').val();
+                var language = $('#tc-language').val();
+
+                btn.prop('disabled', true).text('<?php echo esc_js(__('Queueing...', 'ai-seo-client')); ?>');
+                spinner.addClass('is-active');
+                status.text('').removeClass('tc-status-error tc-status-success');
                 if (typeof sseoShowLoader === 'function') sseoShowLoader();
 
                 wp.apiFetch({
-                    path: '/sseo-ai/v1/clusters/generate',
+                    path: '/sseo-ai/v1/clusters/generate-async',
                     method: 'POST',
-                    data: { topic: topic, depth: $('#tc-depth').val(), language: $('#tc-language').val() }
-                }).then(function(data) {
-                    currentCluster = data;
-                    renderCluster(data);
-                    $('#tc-result').show();
-                    btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                    data: { topic: topic, depth: depth, language: language }
+                }).then(function(res) {
+                    if (!res.queue_id) {
+                        throw new Error('<?php echo esc_js(__('Queue ID missing', 'ai-seo-client')); ?>');
+                    }
+                    status.text('<?php echo esc_js(__('Queued', 'ai-seo-client')); ?> #' + res.queue_id);
+                    btn.text('<?php echo esc_js(__('Generating...', 'ai-seo-client')); ?>');
+
+                    var attempts = 0;
+                    var maxAttempts = 120; // 10 minutes at 5 second intervals
+                    var pollInterval = setInterval(function() {
+                        attempts++;
+                        if (attempts > maxAttempts) {
+                            clearInterval(pollInterval);
+                            spinner.removeClass('is-active');
+                            btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                            status.addClass('tc-status-error').text('<?php echo esc_js(__('Timeout waiting for cluster map', 'ai-seo-client')); ?>');
+                            if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                            return;
+                        }
+
+                        wp.apiFetch({
+                            path: '/sseo-ai/v1/clusters/map-queue/' + res.queue_id,
+                            method: 'GET'
+                        }).then(function(state) {
+                            if (state.status === 'completed' && state.result) {
+                                clearInterval(pollInterval);
+                                currentCluster = state.result;
+                                renderCluster(state.result);
+                                $('#tc-result').show();
+                                spinner.removeClass('is-active');
+                                btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                                status.addClass('tc-status-success').text('<?php echo esc_js(__('Cluster map ready', 'ai-seo-client')); ?>');
+                                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                            } else if (state.status === 'failed') {
+                                clearInterval(pollInterval);
+                                spinner.removeClass('is-active');
+                                btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                                status.addClass('tc-status-error').text('<?php echo esc_js(__('Failed', 'ai-seo-client')); ?>: ' + (state.error || ''));
+                                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                            } else if (state.status === 'cancelled') {
+                                clearInterval(pollInterval);
+                                spinner.removeClass('is-active');
+                                btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                                status.text('<?php echo esc_js(__('Cancelled', 'ai-seo-client')); ?>');
+                                if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                            } else {
+                                status.text('<?php echo esc_js(__('Status', 'ai-seo-client')); ?>: ' + state.status + ' (#' + res.queue_id + ')');
+                            }
+                        }).catch(function(err) {
+                            clearInterval(pollInterval);
+                            spinner.removeClass('is-active');
+                            btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                            status.addClass('tc-status-error').text(err.message || '<?php echo esc_js(__('Status check failed', 'ai-seo-client')); ?>');
+                            if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                        });
+                    }, 5000);
                 }).catch(function(err) {
-                    showInlineError(err.message || '<?php echo esc_js(__('Failed to generate cluster map', 'ai-seo-client')); ?>');
+                    spinner.removeClass('is-active');
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
-                }).finally(function() {
-                    $('#tc-generate-spinner').removeClass('is-active');
+                    status.addClass('tc-status-error').text(err.message || '<?php echo esc_js(__('Failed to queue cluster map', 'ai-seo-client')); ?>');
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
                 });
             });
