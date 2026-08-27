@@ -3,6 +3,7 @@ package com.fyndable.mobile.ui.clusters
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fyndable.mobile.data.api.FyndableApi
+import com.fyndable.mobile.data.api.JsonUtils
 import com.fyndable.mobile.data.model.Cluster
 import com.fyndable.mobile.data.model.ClusterItem
 import com.fyndable.mobile.data.model.GenerateClusterRequest
@@ -12,6 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 class ClustersViewModel(private val api: FyndableApi) : ViewModel() {
 
@@ -44,7 +48,7 @@ class ClustersViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getClusters()
                 if (resp.isSuccessful) {
-                    _state.value = UiState.Success(resp.body()?.clusters ?: emptyList())
+                    _state.value = UiState.Success(JsonUtils.decodeFlexibleList<Cluster>(resp.body()))
                 } else {
                     _state.value = UiState.Error("Fout: ${resp.code()}")
                 }
@@ -61,13 +65,13 @@ class ClustersViewModel(private val api: FyndableApi) : ViewModel() {
                 val resp = api.getCluster(cluster.id)
                 if (resp.isSuccessful) {
                     val body = resp.body()
-                    val detailed = body?.clusters?.firstOrNull() ?: body?.let {
-                        Cluster(
-                            id = cluster.id,
-                            pillarTopic = it.clusters.firstOrNull()?.pillarTopic,
-                            items = it.clusters.firstOrNull()?.items ?: cluster.items
-                        )
-                    } ?: cluster
+                    val detailed = if (body is JsonArray) {
+                        JsonUtils.json.decodeFromJsonElement<List<Cluster>>(body).firstOrNull() ?: cluster
+                    } else if (body is JsonObject) {
+                        JsonUtils.json.decodeFromJsonElement<Cluster>(body)
+                    } else {
+                        cluster
+                    }
                     _selectedCluster.value = detailed
                 }
             } catch (e: Exception) {

@@ -5,13 +5,12 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 class AuthInterceptor(
-    private val authProvider: () -> AuthCredentials?
+    private val credentials: AuthCredentials?
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val creds = authProvider()
-        val request = if (creds != null) {
-            val basic = Credentials.basic(creds.username, creds.password)
+        val request = if (credentials != null) {
+            val basic = Credentials.basic(credentials.username, credentials.password)
             chain.request().newBuilder()
                 .addHeader("Authorization", basic)
                 .build()

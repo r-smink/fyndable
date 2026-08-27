@@ -1,8 +1,8 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.fyndable.mobile"
-4    android:versionCode="1"
-5    android:versionName="1.0.0" >
+4    android:versionCode="3"
+5    android:versionName="1.0.2" >
 6
 7    <uses-sdk
 7-->INJECTED
@@ -94,8 +94,8 @@
 51-->A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:17:9-35
 52        android:theme="@style/Theme.Fyndable"
 52-->A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:18:9-46
-53        android:usesCleartextTraffic="false" >
-53-->A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:19:9-45
+53        android:usesCleartextTraffic="true" >
+53-->A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:19:9-44
 54        <activity
 54-->A:\WorkSpace\Fyndable\android-app\app\src\main\AndroidManifest.xml:22:9-31:20
 55            android:name="com.fyndable.mobile.MainActivity"

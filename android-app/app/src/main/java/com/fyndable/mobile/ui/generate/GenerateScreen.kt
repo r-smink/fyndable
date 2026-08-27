@@ -58,7 +58,9 @@ fun GenerateScreen(
     var includeFaq by rememberSaveable { mutableStateOf(true) }
     var createDraft by rememberSaveable { mutableStateOf(true) }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

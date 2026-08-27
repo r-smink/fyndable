@@ -435,9 +435,9 @@ class RankTracker
 
                 <!-- Tabs -->
                 <div style="margin-bottom:20px;">
-                    <button type="button" class="button rank-tab active" data-tab="rank-tracker" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></button>
+                    <button type="button" class="button rank-tab active" data-tab="rank-tracker-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></button>
                     <?php if ($this->localSerp): ?>
-                        <button type="button" class="button rank-tab" data-tab="rank-local" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
+                        <button type="button" class="button rank-tab" data-tab="rank-local-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
                     <?php endif; ?>
                 </div>
 

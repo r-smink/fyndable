@@ -170,3 +170,22 @@ data class QrLoginPayload(
     val uuid: String? = null,
     val ts: Long? = null,
 )
+
+@Serializable
+data class PostMetrics(
+    val success: Boolean = true,
+    val connected: Boolean? = true,
+    val message: String? = null,
+    val clicks: Int? = null,
+    val impressions: Int? = null,
+    val ctr: Double? = null,
+    val position: Double? = null,
+    val period: PostMetricsPeriod? = null,
+)
+
+@Serializable
+data class PostMetricsPeriod(
+    val start: String? = null,
+    val end: String? = null,
+    val days: Int? = null,
+)

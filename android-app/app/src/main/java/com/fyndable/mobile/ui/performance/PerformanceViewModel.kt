@@ -3,6 +3,7 @@ package com.fyndable.mobile.ui.performance
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fyndable.mobile.data.api.FyndableApi
+import com.fyndable.mobile.data.api.JsonUtils
 import com.fyndable.mobile.data.model.RankKeyword
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +35,7 @@ class PerformanceViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val resp = api.getRanks()
                 if (resp.isSuccessful) {
-                    _state.value = UiState.Success(resp.body()?.keywords ?: emptyList())
+                    _state.value = UiState.Success(JsonUtils.decodeFlexibleList<RankKeyword>(resp.body()))
                 } else {
                     _state.value = UiState.Error("Fout: ${resp.code()}")
                 }

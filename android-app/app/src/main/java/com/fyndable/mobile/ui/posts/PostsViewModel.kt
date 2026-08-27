@@ -3,14 +3,18 @@ package com.fyndable.mobile.ui.posts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fyndable.mobile.data.api.FyndableApi
+import com.fyndable.mobile.data.api.JsonUtils
 import com.fyndable.mobile.data.model.CreatedPost
 import com.fyndable.mobile.data.model.DeletePostRequest
+import com.fyndable.mobile.data.model.PostMetrics
 import com.fyndable.mobile.data.model.PostStats
 import com.fyndable.mobile.data.model.UpdatePostRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 class PostsViewModel(private val api: FyndableApi) : ViewModel() {
 
@@ -26,6 +30,9 @@ class PostsViewModel(private val api: FyndableApi) : ViewModel() {
     private val _selectedPost = MutableStateFlow<CreatedPost?>(null)
     val selectedPost: StateFlow<CreatedPost?> = _selectedPost.asStateFlow()
 
+    private val _selectedMetrics = MutableStateFlow<PostMetrics?>(null)
+    val selectedMetrics: StateFlow<PostMetrics?> = _selectedMetrics.asStateFlow()
+
     private val _toast = MutableStateFlow<String?>(null)
     val toast: StateFlow<String?> = _toast.asStateFlow()
 
@@ -40,9 +47,19 @@ class PostsViewModel(private val api: FyndableApi) : ViewModel() {
             try {
                 val postsResp = api.getCreatedPosts(50)
                 val statsResp = api.getPostStats()
+                
                 if (postsResp.isSuccessful) {
-                    val posts = postsResp.body()?.posts ?: postsResp.body()?.items ?: emptyList()
-                    val stats = if (statsResp.isSuccessful) statsResp.body()?.stats else null
+                    val posts = JsonUtils.decodeFlexibleList<CreatedPost>(postsResp.body())
+                    
+                    var stats: PostStats? = null
+                    if (statsResp.isSuccessful) {
+                        val statsJson = statsResp.body()
+                        if (statsJson is JsonObject) {
+                            stats = statsJson["stats"]?.let { JsonUtils.json.decodeFromJsonElement<PostStats>(it) }
+                                ?: try { JsonUtils.json.decodeFromJsonElement<PostStats>(statsJson) } catch(e: Exception) { null }
+                        }
+                    }
+                    
                     _state.value = UiState.Success(posts, stats)
                 } else {
                     _state.value = UiState.Error("Fout: ${postsResp.code()}")
@@ -55,11 +72,17 @@ class PostsViewModel(private val api: FyndableApi) : ViewModel() {
 
     fun selectPost(post: CreatedPost) {
         _selectedPost.value = post
+        _selectedMetrics.value = null
         viewModelScope.launch {
             try {
-                val resp = api.getPost(post.ID ?: post.id ?: return@launch)
+                val postId = post.ID ?: post.id ?: return@launch
+                val resp = api.getPost(postId)
                 if (resp.isSuccessful) {
                     _selectedPost.value = resp.body()
+                }
+                val metricsResp = api.getPostGscMetrics(postId)
+                if (metricsResp.isSuccessful) {
+                    _selectedMetrics.value = metricsResp.body()
                 }
             } catch (e: Exception) {
                 _toast.value = e.message
@@ -67,7 +90,10 @@ class PostsViewModel(private val api: FyndableApi) : ViewModel() {
         }
     }
 
-    fun clearSelectedPost() { _selectedPost.value = null }
+    fun clearSelectedPost() {
+        _selectedPost.value = null
+        _selectedMetrics.value = null
+    }
 
     fun schedulePost(id: Int, dateTime: String) {
         _isLoading.value = true

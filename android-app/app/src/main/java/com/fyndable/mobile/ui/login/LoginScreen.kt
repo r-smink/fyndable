@@ -50,12 +50,19 @@ import com.journeyapps.barcodescanner.ScanOptions
 @Composable
 fun LoginScreen(
     authStore: AuthStore,
+    onLoginSuccess: () -> Unit = {},
     viewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(authStore))
 ) {
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var siteUrl by rememberSaveable { mutableStateOf("") }
     val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(state) {
+        if (state is LoginViewModel.LoginState.Success) {
+            onLoginSuccess()
+        }
+    }
 
     // QR scanner launcher using ZXing
     val qrLauncher = rememberLauncherForActivityResult(

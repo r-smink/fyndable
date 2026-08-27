@@ -53,8 +53,8 @@ fun FyndableGradientBackground(
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
-                    colors = listOf(FyndableBlue, FyndablePurple, FyndableMagenta),
-                    start = androidx.compose.ui.geometry.Offset.Zero,
+                    colors = listOf(Color(0xFF379FD3), Color(0xFF8F39AC)),
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
                     end = androidx.compose.ui.geometry.Offset.Infinite
                 )
             )
