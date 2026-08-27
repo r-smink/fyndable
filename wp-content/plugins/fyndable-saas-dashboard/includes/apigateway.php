@@ -137,6 +137,20 @@ class ApiGateway
             'callback' => [$this, 'handleBacklinksLive'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
+
+        // Google Places autocomplete proxy (client location settings)
+        register_rest_route('ai-seo-saas/v1', '/places/autocomplete', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handlePlaceAutocomplete'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // Google Geocoding proxy (client address autofill)
+        register_rest_route('ai-seo-saas/v1', '/places/geocode', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleGeocodeRequest'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
     }
 
     /**
@@ -1702,6 +1716,208 @@ class ApiGateway
             'australia' => 'au',
         ];
         return $map[strtolower($location)] ?? 'us';
+    }
+
+    /**
+     * Proxy Google Places autocomplete requests from clients.
+     * Keeps the Places API key on the SaaS side.
+     */
+    public function handlePlaceAutocomplete(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $body = $request->get_json_params() ?: $request->get_body_params();
+        $input = sanitize_text_field($body['input'] ?? '');
+
+        if (empty($input) || strlen($input) > 200) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_input',
+                'predictions' => [],
+            ], 400);
+        }
+
+        $apiKey = $this->settings->getGooglePlacesApiKey();
+        if (empty($apiKey)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'not_configured',
+                'predictions' => [],
+            ], 503);
+        }
+
+        $cacheKey = 'sseo_saas_places_' . md5($input);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return new \WP_REST_Response(['success' => true, 'predictions' => $cached], 200);
+        }
+
+        $language = sanitize_text_field($body['language'] ?? 'nl');
+        $components = sanitize_text_field($body['components'] ?? 'country:nl');
+        $types = sanitize_text_field($body['types'] ?? '(cities)');
+
+        $url = add_query_arg([
+            'input' => $input,
+            'key' => $apiKey,
+            'types' => $types,
+            'language' => $language,
+            'components' => $components,
+        ], 'https://maps.googleapis.com/maps/api/place/autocomplete/json');
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'sslverify' => true,
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'google_places_error',
+                'predictions' => [],
+            ], 502);
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (empty($data) || !isset($data['status']) || $data['status'] !== 'OK') {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $data['status'] ?? 'unknown',
+                'predictions' => [],
+            ], 502);
+        }
+
+        $predictions = array_map(function ($p) {
+            return [
+                'description' => $p['description'] ?? '',
+                'place_id' => $p['place_id'] ?? '',
+            ];
+        }, $data['predictions'] ?? []);
+
+        set_transient($cacheKey, $predictions, HOUR_IN_SECONDS);
+
+        return new \WP_REST_Response(['success' => true, 'predictions' => $predictions], 200);
+    }
+
+    /**
+     * Proxy Google Geocoding requests for client address autofill.
+     * Takes a free-form address query and returns parsed components + coordinates.
+     */
+    public function handleGeocodeRequest(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $body = $request->get_json_params() ?: $request->get_body_params();
+        $address = sanitize_text_field($body['address'] ?? '');
+
+        if (empty($address) || strlen($address) > 250) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_address',
+                'address' => [],
+                'coordinates' => [],
+            ], 400);
+        }
+
+        $apiKey = $this->settings->getGooglePlacesApiKey();
+        if (empty($apiKey)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'not_configured',
+                'address' => [],
+                'coordinates' => [],
+            ], 503);
+        }
+
+        $cacheKey = 'sseo_saas_geocode_' . md5($address);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached) && isset($cached['success'])) {
+            return new \WP_REST_Response($cached, 200);
+        }
+
+        $url = add_query_arg([
+            'address' => $address,
+            'key' => $apiKey,
+            'language' => 'nl',
+            'region' => 'nl',
+            'components' => 'country:NL',
+        ], 'https://maps.googleapis.com/maps/api/geocode/json');
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'sslverify' => true,
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'geocode_error',
+                'address' => [],
+                'coordinates' => [],
+            ], 502);
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (empty($data) || !isset($data['status']) || $data['status'] !== 'OK' || empty($data['results'][0])) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $data['status'] ?? 'unknown',
+                'address' => [],
+                'coordinates' => [],
+            ], 502);
+        }
+
+        $result = $data['results'][0];
+        $components = $this->parseGeocodeComponents($result['address_components'] ?? []);
+        $coordinates = [
+            'lat' => $result['geometry']['location']['lat'] ?? '',
+            'lng' => $result['geometry']['location']['lng'] ?? '',
+        ];
+
+        $output = [
+            'success' => true,
+            'address' => $components,
+            'coordinates' => $coordinates,
+        ];
+
+        set_transient($cacheKey, $output, HOUR_IN_SECONDS);
+
+        return new \WP_REST_Response($output, 200);
+    }
+
+    /**
+     * Parse Google Geocoding address_components into normalized fields.
+     */
+    private function parseGeocodeComponents(array $addressComponents): array
+    {
+        $components = [
+            'street' => '',
+            'city' => '',
+            'state' => '',
+            'postal' => '',
+            'country' => '',
+        ];
+
+        $streetNumber = '';
+        $route = '';
+
+        foreach ($addressComponents as $c) {
+            $types = $c['types'] ?? [];
+            if (in_array('street_number', $types, true)) {
+                $streetNumber = $c['long_name'] ?? '';
+            } elseif (in_array('route', $types, true)) {
+                $route = $c['long_name'] ?? '';
+            } elseif (in_array('locality', $types, true)) {
+                $components['city'] = $c['long_name'] ?? '';
+            } elseif (in_array('postal_town', $types, true) && empty($components['city'])) {
+                $components['city'] = $c['long_name'] ?? '';
+            } elseif (in_array('administrative_area_level_1', $types, true)) {
+                $components['state'] = $c['long_name'] ?? '';
+            } elseif (in_array('postal_code', $types, true)) {
+                $components['postal'] = $c['long_name'] ?? '';
+            } elseif (in_array('country', $types, true)) {
+                $components['country'] = $c['short_name'] ?? '';
+            }
+        }
+
+        $components['street'] = trim($streetNumber . ' ' . $route);
+
+        return $components;
     }
 
     /**

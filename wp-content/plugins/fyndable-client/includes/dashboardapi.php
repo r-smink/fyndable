@@ -549,6 +549,8 @@ class DashboardAPI
             'keywords/dataforseo-trends'=> '/keywords/dataforseo-trends',
             'backlinks/summary'         => '/backlinks/summary',
             'backlinks/live'            => '/backlinks/live',
+            'places/autocomplete'       => '/places/autocomplete',
+            'places/geocode'            => '/places/geocode',
         ];
 
         $route = $endpointMap[$endpoint] ?? '/' . ltrim($endpoint, '/');
@@ -597,6 +599,68 @@ class DashboardAPI
     public function makeRequest(string $endpoint, array $params = []): array|\WP_Error
     {
         return $this->request(ltrim($endpoint, '/'), $params);
+    }
+
+    /**
+     * Get location autocomplete predictions via the SaaS Google Places proxy.
+     *
+     * @return array|\WP_Error
+     */
+    public function getPlacePredictions(string $input, string $language = 'nl', string $components = 'country:nl'): array|\WP_Error
+    {
+        if (strlen($input) > 200) {
+            $input = substr($input, 0, 200);
+        }
+
+        $body = $this->request('places/autocomplete', [
+            'input' => $input,
+            'language' => $language,
+            'components' => $components,
+            'types' => '(cities)',
+        ]);
+
+        if (is_wp_error($body)) {
+            return $body;
+        }
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'places_failed',
+                $body['message'] ?? __('Could not fetch place predictions.', 'ai-seo-client')
+            );
+        }
+
+        return $body['predictions'] ?? [];
+    }
+
+    /**
+     * Geocode a free-form address via the SaaS Google Geocoding proxy.
+     *
+     * @return array|\WP_Error
+     */
+    public function geocodeAddress(string $address): array|\WP_Error
+    {
+        if (strlen($address) > 250) {
+            $address = substr($address, 0, 250);
+        }
+
+        $body = $this->request('places/geocode', ['address' => $address]);
+
+        if (is_wp_error($body)) {
+            return $body;
+        }
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'geocode_failed',
+                $body['message'] ?? __('Could not geocode address.', 'ai-seo-client')
+            );
+        }
+
+        return [
+            'address' => $body['address'] ?? [],
+            'coordinates' => $body['coordinates'] ?? [],
+        ];
     }
 
     /**

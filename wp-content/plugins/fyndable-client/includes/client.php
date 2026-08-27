@@ -183,6 +183,8 @@ class Client
         
         // Handle settings save
         add_action('admin_post_ai_seo_save_settings', [$this, 'handleSettingsSave']);
+        add_action('wp_ajax_sseo_ai_places_autocomplete', [$this, 'ajaxPlacesAutocomplete']);
+        add_action('wp_ajax_sseo_ai_geocode_address', [$this, 'ajaxGeocodeAddress']);
 
         // Health check - validate license periodically
         if (!wp_next_scheduled('sseo_ai_client_license_check')) {
@@ -2195,7 +2197,6 @@ class Client
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
         $showShareButtons = get_option('sseo_ai_client_show_share_buttons', '1') === '1';
-        $googlePlacesKey = get_option('sseo_ai_client_google_places_key', '');
 
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -2323,11 +2324,9 @@ class Client
                             <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
 
                             <div class="form-field">
-                                <label for="google_places_key"><?php esc_html_e('Google Places API Key (optional)', 'ai-seo-client'); ?></label>
-                                <input type="text" name="google_places_key" id="google_places_key"
-                                       value="<?php echo esc_attr($googlePlacesKey); ?>" class="regular-text"
-                                       placeholder="AIza...">
-                                <p class="field-description"><?php esc_html_e('Vul een Google Places API key in voor autocomplete-suggesties bij het typen van locaties. Zonder key werkt een eenvoudige fallback-lijst.', 'ai-seo-client'); ?></p>
+                                <p class="field-description" style="margin-top: 0;">
+                                    <?php esc_html_e('Locatie-autocomplete wordt centraal geleverd via het Fyndable SaaS-platform. Vraag de beheerder om een Google Places API key in het SaaS-dashboard in te stellen.', 'ai-seo-client'); ?>
+                                </p>
                             </div>
 
                             <div class="form-field">
@@ -2381,12 +2380,21 @@ class Client
                             </div>
 
                             <div class="form-field">
+                                <label><?php esc_html_e('Autofill Address', 'ai-seo-client'); ?></label>
+                                <p style="display:flex;gap:8px;margin:0;">
+                                    <input type="text" id="sseo-ai-house-number" placeholder="<?php esc_attr_e('Huisnummer', 'ai-seo-client'); ?>" style="flex:1;">
+                                    <button type="button" id="sseo-ai-geocode-btn" class="button" style="white-space:nowrap;"><?php esc_html_e('Zoek adres', 'ai-seo-client'); ?></button>
+                                </p>
+                                <p class="field-description"><?php esc_html_e('Vul huisnummer in (en pas eventueel de postcode hieronder aan) en klik op Zoek om straat, plaats, land en coördinaten automatisch in te vullen.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
                                 <label for="local_street"><?php esc_html_e('Address', 'ai-seo-client'); ?></label>
                                 <input type="text" name="local_street" id="local_street" value="<?php echo esc_attr($localOptions['local_street'] ?? ''); ?>" placeholder="Street">
                                 <p style="margin-top:8px;display:flex;gap:8px;">
                                     <input type="text" name="local_city" value="<?php echo esc_attr($localOptions['local_city'] ?? ''); ?>" placeholder="City" style="flex:2;">
                                     <input type="text" name="local_state" value="<?php echo esc_attr($localOptions['local_state'] ?? ''); ?>" placeholder="State/Province" style="flex:1;">
-                                    <input type="text" name="local_postal" value="<?php echo esc_attr($localOptions['local_postal'] ?? ''); ?>" placeholder="Postal code" style="flex:1;">
+                                    <input type="text" name="local_postal" id="local_postal" value="<?php echo esc_attr($localOptions['local_postal'] ?? ''); ?>" placeholder="Postal code" style="flex:1;">
                                     <input type="text" name="local_country" value="<?php echo esc_attr($localOptions['local_country'] ?? 'NL'); ?>" placeholder="Country" style="flex:1;">
                                 </p>
                             </div>
@@ -2666,9 +2674,9 @@ class Client
                             var hidden = document.getElementById('locations');
                             if (!container || !input || !hidden) return;
 
-                            var apiKey = '<?php echo esc_js($googlePlacesKey); ?>';
+                            var ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_places_autocomplete')); ?>';
                             var existingLocations = (hidden.value || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                            var autocomplete = null;
+                            var debounceTimer = null;
 
                             // Render existing tags
                             function renderTags() {
@@ -2702,43 +2710,70 @@ class Client
                                 renderTags();
                             }
 
-                            // Set up fallback datalist (common European cities)
-                            function setupFallback() {
-                                var datalist = document.createElement('datalist');
-                                datalist.id = 'locations-datalist';
+                            function getDatalist() {
+                                var list = document.getElementById('locations-datalist');
+                                if (!list) {
+                                    list = document.createElement('datalist');
+                                    list.id = 'locations-datalist';
+                                    document.body.appendChild(list);
+                                }
+                                return list;
+                            }
+
+                            function setCommonCities() {
+                                var list = getDatalist();
+                                list.innerHTML = '';
                                 var commonCities = ['Amsterdam','Rotterdam','Den Haag','Utrecht','Eindhoven','Tilburg','Groningen','Almere','Breda','Nijmegen','Enschede','Apeldoorn','Haarlem','Arnhem','Amersfoort','Zwolle','Zaanstad','Leeuwarden','Leiden','Maastricht','Dordrecht','Ede','Alkmaar','Emmen','Delft','Heerlen','Zoetermeer','Lelystad','Alphen aan den Rijn','Bergen op Zoom','Brussel','Antwerpen','Gent','Charleroi','Luik','Brugge','Leuven','Berlin','Hamburg','München','Köln','Frankfurt','Stuttgart','Düsseldorf','Paris','Lyon','Marseille','Toulouse','Nice','Lille','Bordeaux','London','Manchester','Birmingham','Leeds','Glasgow','Liverpool','Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Rome','Milan','Naples','Turin','Florence','Lisbon','Porto','Warsaw','Kraków','Wrocław','Poznań','Gdańsk'];
                                 commonCities.forEach(function(city) {
                                     var opt = document.createElement('option');
                                     opt.value = city;
-                                    datalist.appendChild(opt);
+                                    list.appendChild(opt);
                                 });
                                 input.setAttribute('list', 'locations-datalist');
-                                document.body.appendChild(datalist);
                             }
 
-                            // Initialize Google Places Autocomplete
-                            function initPlacesAutocomplete() {
-                                if (!apiKey || typeof google === 'undefined' || !google.maps || !google.maps.places) {
-                                    setupFallback();
+                            function updateDatalist(predictions) {
+                                var list = getDatalist();
+                                list.innerHTML = '';
+                                if (!Array.isArray(predictions) || predictions.length === 0) {
+                                    setCommonCities();
                                     return;
                                 }
-                                try {
-                                    autocomplete = new google.maps.places.Autocomplete(input, {
-                                        types: ['(cities)']
-                                    });
-                                    autocomplete.addListener('place_changed', function() {
-                                        var place = autocomplete.getPlace();
-                                        if (place && place.name) {
-                                            addLocation(place.name);
-                                            input.value = '';
-                                        }
-                                    });
-                                } catch (e) {
-                                    setupFallback();
-                                }
+                                predictions.forEach(function(p) {
+                                    if (!p || !p.description) return;
+                                    var opt = document.createElement('option');
+                                    opt.value = p.description;
+                                    list.appendChild(opt);
+                                });
+                                input.setAttribute('list', 'locations-datalist');
                             }
 
-                            // Allow Enter key to add location manually
+                            function fetchPredictions(query) {
+                                fetch(ajaxUrl + '&input=' + encodeURIComponent(query))
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        if (data && data.success && Array.isArray(data.predictions)) {
+                                            updateDatalist(data.predictions);
+                                        } else {
+                                            setCommonCities();
+                                        }
+                                    })
+                                    .catch(function() {
+                                        setCommonCities();
+                                    });
+                            }
+
+                            input.addEventListener('input', function() {
+                                var query = input.value.trim();
+                                if (query.length < 2) {
+                                    return;
+                                }
+                                clearTimeout(debounceTimer);
+                                debounceTimer = setTimeout(function() {
+                                    fetchPredictions(query);
+                                }, 300);
+                            });
+
                             input.addEventListener('keydown', function(e) {
                                 if (e.key === 'Enter' || e.key === ',') {
                                     e.preventDefault();
@@ -2749,7 +2784,6 @@ class Client
                                 }
                             });
 
-                            // Allow blur to add
                             input.addEventListener('blur', function() {
                                 if (input.value.trim()) {
                                     addLocation(input.value);
@@ -2757,31 +2791,66 @@ class Client
                                 }
                             });
 
-                            // Click on container focuses input
                             container.addEventListener('click', function() {
                                 input.focus();
                             });
 
                             renderTags();
-
-                            // If no API key, use fallback immediately
-                            if (!apiKey) {
-                                setupFallback();
-                            } else {
-                                // Expose callback for Google Maps script
-                                window.initLocationsAutocomplete = initPlacesAutocomplete;
-                                // If Google Maps already loaded (e.g. cached), init now
-                                if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-                                    initPlacesAutocomplete();
-                                }
-                                // Otherwise the callback=initLocationsAutocomplete in the script tag will fire
-                            }
+                            setCommonCities();
                         })();
                         </script>
 
-                        <?php if (!empty($googlePlacesKey)): ?>
-                        <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr($googlePlacesKey); ?>&libraries=places&callback=initLocationsAutocomplete" async defer></script>
-                        <?php endif; ?>
+                        <script>
+                        (function() {
+                            var geocodeBtn = document.getElementById('sseo-ai-geocode-btn');
+                            var houseInput = document.getElementById('sseo-ai-house-number');
+                            var postalInput = document.getElementById('local_postal');
+                            var streetInput = document.querySelector('[name="local_street"]');
+                            var cityInput = document.querySelector('[name="local_city"]');
+                            var stateInput = document.querySelector('[name="local_state"]');
+                            var countryInput = document.querySelector('[name="local_country"]');
+                            var latInput = document.getElementById('local_latitude');
+                            var lngInput = document.querySelector('[name="local_longitude"]');
+
+                            if (!geocodeBtn || !houseInput || !postalInput) return;
+
+                            var ajaxUrlBase = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_geocode_address&address=')); ?>';
+
+                            geocodeBtn.addEventListener('click', function() {
+                                var house = houseInput.value.trim();
+                                var postal = postalInput.value.trim();
+                                if (!house || !postal) {
+                                    alert('<?php echo esc_js(__('Vul huisnummer en postcode in.', 'ai-seo-client')); ?>');
+                                    return;
+                                }
+                                var query = house + ' ' + postal + ', NL';
+                                geocodeBtn.disabled = true;
+                                fetch(ajaxUrlBase + encodeURIComponent(query))
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        geocodeBtn.disabled = false;
+                                        if (!data || !data.success) {
+                                            alert(data && data.error ? data.error : '<?php echo esc_js(__('Adres kon niet worden opgezocht.', 'ai-seo-client')); ?>');
+                                            return;
+                                        }
+                                        var a = data.address || {};
+                                        var c = data.coordinates || {};
+                                        if (streetInput) streetInput.value = a.street || '';
+                                        if (cityInput) cityInput.value = a.city || '';
+                                        if (stateInput) stateInput.value = a.state || '';
+                                        if (postalInput) postalInput.value = a.postal || '';
+                                        if (countryInput) countryInput.value = a.country || '';
+                                        if (latInput) latInput.value = c.lat || '';
+                                        if (lngInput) lngInput.value = c.lng || '';
+                                    })
+                                    .catch(function() {
+                                        geocodeBtn.disabled = false;
+                                        alert('<?php echo esc_js(__('Adres opzoeken mislukt.', 'ai-seo-client')); ?>');
+                                    });
+                            });
+                        })();
+                        </script>
+
 
                     </form>
                 </div>
@@ -2808,7 +2877,6 @@ class Client
         update_option('sseo_ai_brand_voice', sanitize_text_field($_POST['brand_voice'] ?? ''));
         update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
-        update_option('sseo_ai_client_google_places_key', sanitize_text_field($_POST['google_places_key'] ?? ''));
 
         // Save photo portfolio references
         $photoPortfolio = [];
@@ -2860,6 +2928,54 @@ class Client
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
         exit;
+    }
+
+    /**
+     * AJAX handler for location autocomplete via the SaaS Google Places proxy.
+     */
+    public function ajaxPlacesAutocomplete(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json(['success' => false, 'predictions' => []]);
+        }
+
+        $input = sanitize_text_field($_REQUEST['input'] ?? '');
+        if (empty($input)) {
+            wp_send_json(['success' => true, 'predictions' => []]);
+        }
+
+        $predictions = $this->dashboardAPI->getPlacePredictions($input);
+        if (is_wp_error($predictions)) {
+            wp_send_json(['success' => false, 'predictions' => [], 'error' => $predictions->get_error_message()]);
+        }
+
+        wp_send_json(['success' => true, 'predictions' => $predictions]);
+    }
+
+    /**
+     * AJAX handler for address geocoding / autofill via the SaaS proxy.
+     */
+    public function ajaxGeocodeAddress(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json(['success' => false, 'error' => 'unauthorized', 'address' => [], 'coordinates' => []]);
+        }
+
+        $address = sanitize_text_field($_REQUEST['address'] ?? '');
+        if (empty($address) || strlen($address) > 250) {
+            wp_send_json(['success' => false, 'error' => 'invalid_address', 'address' => [], 'coordinates' => []]);
+        }
+
+        $result = $this->dashboardAPI->geocodeAddress($address);
+        if (is_wp_error($result)) {
+            wp_send_json(['success' => false, 'error' => $result->get_error_message(), 'address' => [], 'coordinates' => []]);
+        }
+
+        wp_send_json([
+            'success' => true,
+            'address' => $result['address'] ?? [],
+            'coordinates' => $result['coordinates'] ?? [],
+        ]);
     }
 
     /**
