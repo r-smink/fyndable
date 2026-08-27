@@ -69,6 +69,8 @@ class TruSEOSCORE
         $title = get_post_meta($post->ID, '_sseo_ai_title', true) ?: $this->generateDefaultTitle($post);
         $description = get_post_meta($post->ID, '_sseo_ai_description', true) ?: $this->generateDefaultDescription($post);
         $score = $this->calculateScore($post, $focusKeyphrase);
+        update_post_meta($post->ID, '_sseo_ai_score', $score);
+        delete_transient('sseo_dashboard_overview_' . get_current_blog_id());
         $analysis = $this->getAnalysis($post, $focusKeyphrase);
         
         wp_nonce_field('aiseo_truseo_save', 'aiseo_truseo_nonce');
