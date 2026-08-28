@@ -106,8 +106,8 @@ fun KeywordsScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(6.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     focusedBorderColor = FyndablePurple,
                     unfocusedBorderColor = Gray200,
                     focusedTextColor = FyndableInk,
@@ -261,7 +261,7 @@ private fun KeywordCard(keyword: com.fyndable.mobile.data.model.Keyword) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()

@@ -35,14 +35,14 @@ val DangerRedLight = Color(0xFFFEE2E2)
 val InfoBlue = Color(0xFF3B82F6)
 val InfoBlueLight = Color(0xFFDBEAFE)
 
-// Theme surfaces — light as the active design
-val LightBackground = Gray50
-val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Gray100
+// Theme surfaces — gradient background with semi-transparent white cards
+val LightBackground = FyndablePurple
+val LightSurface = Color.White.copy(alpha = 0.92f)
+val LightSurfaceVariant = Color.White.copy(alpha = 0.85f)
 val LightOnSurface = FyndableInk
 val LightOnSurfaceVariant = Gray500
-val DarkBackground = Gray50
-val DarkSurface = Color(0xFFFFFFFF)
-val DarkSurfaceVariant = Gray100
+val DarkBackground = FyndablePurple
+val DarkSurface = Color.White.copy(alpha = 0.92f)
+val DarkSurfaceVariant = Color.White.copy(alpha = 0.85f)
 val DarkOnSurface = FyndableInk
 val DarkOnSurfaceVariant = Gray500

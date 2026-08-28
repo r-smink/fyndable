@@ -17,3 +17,7 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# zip
+/wp-content/plugins/fyndable-client.zip
+/wp-content/plugins/fyndable-saas-dashboard.zip

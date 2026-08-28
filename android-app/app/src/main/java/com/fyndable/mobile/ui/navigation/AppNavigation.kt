@@ -52,8 +52,10 @@ import com.fyndable.mobile.data.store.AuthStore
 import com.fyndable.mobile.data.store.SiteAccount
 import com.fyndable.mobile.ui.ScreenViewModelFactory
 import com.fyndable.mobile.ui.clusters.ClustersScreen
+import com.fyndable.mobile.ui.theme.FyndableBlue
 import com.fyndable.mobile.ui.theme.FyndablePurple
 import com.fyndable.mobile.ui.theme.Gray400
+import com.fyndable.mobile.ui.components.FyndableGradientBackground
 import com.fyndable.mobile.ui.generate.GenerateScreen
 import com.fyndable.mobile.ui.keywords.KeywordsScreen
 import com.fyndable.mobile.ui.login.LoginScreen
@@ -106,9 +108,8 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    FyndableGradientBackground(
+        modifier = Modifier.fillMaxSize()
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -118,7 +119,7 @@ fun AppNavigation(
                         .fillMaxWidth()
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFF2A1533), Color(0xFF132A38)),
+                                colors = listOf(FyndablePurple, FyndableBlue),
                                 start = Offset(0f, 0f),
                                 end = Offset.Infinite
                             )
@@ -146,9 +147,9 @@ fun AppNavigation(
             },
             bottomBar = {
                 Surface(
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = Color.White.copy(alpha = 0.92f),
                     shadowElevation = 1.dp,
-                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                 ) {
                     NavigationBar(
                         containerColor = Color.Transparent,

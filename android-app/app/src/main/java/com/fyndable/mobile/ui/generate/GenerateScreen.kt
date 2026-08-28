@@ -73,7 +73,7 @@ fun GenerateScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("AI Artikel Generator", style = MaterialTheme.typography.titleLarge)
+            Text("AI Artikel Generator", style = MaterialTheme.typography.titleLarge, color = Color.White)
 
             OutlinedTextField(
                 value = keyword,
@@ -139,12 +139,12 @@ fun GenerateScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = includeFaq, onCheckedChange = { includeFaq = it })
-                Text("FAQ sectie toevoegen")
+                Text("FAQ sectie toevoegen", color = Color.White)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = createDraft, onCheckedChange = { createDraft = it })
-                Text("Opslaan als concept")
+                Text("Opslaan als concept", color = Color.White)
             }
 
             FyndableGradientButton(
@@ -186,7 +186,7 @@ fun GenerateScreen(
                 is GenerateViewModel.UiState.Success -> {
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {

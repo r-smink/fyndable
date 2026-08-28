@@ -109,7 +109,7 @@ fun LoginScreen(
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White.copy(alpha = 0.97f),
+                color = Color.White.copy(alpha = 0.92f),
                 shadowElevation = 16.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -82,7 +82,7 @@ fun PerformanceScreen(
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Gray500,
                 indicator = {},
                 divider = {
@@ -175,7 +175,7 @@ private fun StatsGrid(top3: Int, top10: Int, top100: Int, total: Int) {
 private fun StatCard(label: String, value: Int, modifier: Modifier = Modifier, color: Color) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
     ) {
@@ -216,7 +216,7 @@ private fun RankCard(rank: RankKeyword, onCheck: () -> Unit) {
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
