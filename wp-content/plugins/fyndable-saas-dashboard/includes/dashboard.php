@@ -45,6 +45,7 @@ class Dashboard
     private GeoScanner $geoScanner;
     private GeoScanReport $geoScanReport;
     private GeoScanAdmin $geoScanAdmin;
+    private Feedback $feedback;
 
     public function __construct()
     {
@@ -81,6 +82,8 @@ class Dashboard
 
         $this->supportTickets = new SupportTickets($this->tenants, $this->emailTemplateRepository);
         $this->supportAdmin = new SupportAdmin($this->tenants, $this->supportTickets);
+        $this->feedback = new Feedback($this->tenants);
+        $this->feedback->register();
         $this->dashboardShell = new SaaSDashboardShell($this->pluginFile);
         $this->emailTemplateAdmin = new EmailTemplateAdmin($this->emailTemplateRepository, new EmailTemplateRenderer($this->emailTemplateRepository, $this->tenants));
         $this->emailAutomation = new EmailAutomation($this->tenants, $this->emailTemplateRepository);
@@ -171,6 +174,7 @@ class Dashboard
         add_action('rest_api_init', [$this->apiGateway, 'register']);
         add_action('rest_api_init', [$this->webhookHandler, 'register']);
         add_action('rest_api_init', [$this->supportTickets, 'registerRoutes']);
+        add_action('rest_api_init', [$this->feedback, 'registerRoutes']);
         add_action('rest_api_init', [$this->updateServer, 'register']);
 
         // Register self-serve signup (REST + shortcode)
@@ -215,6 +219,7 @@ class Dashboard
         $this->geoScanRepository->maybeCreateTables();
         $this->emailTemplateRepository->maybeCreateTables();
         $this->emailTemplateRepository->seedDefaults();
+        $this->feedback->maybeCreateTable();
     }
 
     /**
