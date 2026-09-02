@@ -1278,6 +1278,73 @@ class DashboardAPI
     }
 
     /**
+     * Submit product feedback to the SaaS dashboard.
+     */
+    public function createFeedback(string $category, string $message, string $pageUrl, array $screenshots = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/feedback',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'category' => $category,
+                    'message' => $message,
+                    'page_url' => $pageUrl,
+                    'screenshots' => $screenshots,
+                ]),
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not submit feedback.', 'ai-seo-client'));
+    }
+
+    /**
+     * Get feedback entries for the current tenant.
+     */
+    public function getFeedback(): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/feedback',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not retrieve feedback.', 'ai-seo-client'));
+    }
+
+    /**
      * Report onboarding completion / current step to the SaaS dashboard.
      * Fails silently so the wizard flow is never interrupted.
      */

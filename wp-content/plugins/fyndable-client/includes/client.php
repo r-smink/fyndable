@@ -106,6 +106,7 @@ class Client
     private ?SupportAssistant $supportAssistant = null;
     private ?PostAutoCleaner $postAutoCleaner = null;
     private ?MobileApp $mobileApp = null;
+    private ?FeedbackPage $feedbackPage = null;
 
     public function init(): void
     {
@@ -115,6 +116,7 @@ class Client
         $this->healthLogger = new HealthLogger(new AlertNotifier());
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
         $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
+        $this->feedbackPage = new FeedbackPage($this->settings, $this->dashboardAPI);
 
         // Support Assistant (sticky chatbot widget with KB + LLM fallback + ticket escalation)
         $this->supportAssistant = new SupportAssistant(
@@ -991,6 +993,16 @@ class Client
                 'manage_options',
                 'ai-seo-support',
                 [$this, 'renderSupportPage']
+            );
+
+            // 9d. Feedback - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Feedback', 'ai-seo-client'),
+                __('💬 Feedback', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-feedback',
+                [$this, 'renderFeedbackPage']
             );
 
             // 9b. SEO Data Dashboard (SE Ranking / Ahrefs) - all tiers
@@ -3030,6 +3042,19 @@ class Client
         }
 
         $this->supportTickets->renderPage();
+    }
+
+    /**
+     * Render feedback page
+     */
+    public function renderFeedbackPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+
+        $this->feedbackPage->renderPage();
     }
 
     /**
