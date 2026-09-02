@@ -27,11 +27,11 @@
     <color name="androidx_core_secondary_text_default_material_light">#8a000000</color>
     <color name="call_notification_answer_color">#1d873b</color>
     <color name="call_notification_decline_color">#d93025</color>
-    <color name="fyndable_bg">#0F172A</color>
-    <color name="fyndable_blue">#34A9DD</color>
-    <color name="fyndable_magenta">#8C3793</color>
-    <color name="fyndable_purple">#5B57A0</color>
-    <color name="fyndable_surface">#1E293B</color>
+    <color name="fyndable_bg">#8F39AC</color>
+    <color name="fyndable_blue">#379FD3</color>
+    <color name="fyndable_magenta">#A855F7</color>
+    <color name="fyndable_purple">#8F39AC</color>
+    <color name="fyndable_surface">#379FD3</color>
     <color name="notification_action_color_filter">@color/androidx_core_secondary_text_default_material_light</color>
     <color name="notification_icon_bg_color">#ff9e9e9e</color>
     <color name="zxing_custom_possible_result_points">#903A89CF</color>
@@ -438,23 +438,14 @@
         <attr format="reference" name="fontProviderCerts"/>
         
         <attr name="fontProviderFetchStrategy">
-            <!-- The blocking font fetch works as follows.
-              First, check the local cache, then if the requested font is not cached, request the
-              font from the provider and wait until it is finished.  You can change the length of
-              the timeout by modifying fontProviderFetchTimeout.  If the timeout happens, the
-              default typeface will be used instead. -->
+            
             <enum name="blocking" value="0"/>
-            <!-- The async font fetch works as follows.
-              First, check the local cache, then if the requested font is not cached, trigger a
-              request the font and continue with layout inflation. Once the font fetch succeeds, the
-              target text view will be refreshed with the downloaded font data. The
-              fontProviderFetchTimeout will be ignored if async loading is specified. -->
+            
             <enum name="async" value="1"/>
         </attr>
         
         <attr format="integer" name="fontProviderFetchTimeout">
-            <!-- A special value for the timeout. In this case, the blocking font fetching will not
-              timeout and wait until a reply is received from the font provider. -->
+            
             <enum name="forever" value="-1"/>
         </attr>
         
