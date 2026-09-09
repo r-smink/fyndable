@@ -239,4 +239,101 @@ class Feedback
 
         return $clean;
     }
+
+    /**
+     * Get all feedback entries across all tenants (admin view).
+     */
+    public function getAllFeedback(array $filters = []): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::FEEDBACK_TABLE;
+        $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
+
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['category'])) {
+            $where[] = 'f.category = %s';
+            $params[] = $filters['category'];
+        }
+        if (!empty($filters['status'])) {
+            $where[] = 'f.status = %s';
+            $params[] = $filters['status'];
+        }
+        if (!empty($filters['search'])) {
+            $where[] = '(f.message LIKE %s OR t.name LIKE %s OR t.email LIKE %s)';
+            $like = '%' . $wpdb->esc_like($filters['search']) . '%';
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+        }
+
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $sql = "SELECT f.*, t.name AS tenant_name, t.email AS tenant_email, t.domain AS tenant_domain
+            FROM {$table} f
+            LEFT JOIN {$tenantsTable} t ON f.tenant_id = t.id
+            {$whereClause}
+            ORDER BY f.created_at DESC";
+
+        if (!empty($params)) {
+            $sql = $wpdb->prepare($sql, $params);
+        }
+
+        $results = $wpdb->get_results($sql, ARRAY_A);
+
+        if (empty($results)) {
+            return [];
+        }
+
+        foreach ($results as &$row) {
+            $row['screenshots'] = !empty($row['screenshots']) ? json_decode($row['screenshots'], true) : [];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get a single feedback entry by ID (admin view).
+     */
+    public function getFeedbackById(int $id): ?array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::FEEDBACK_TABLE;
+        $tenantsTable = $wpdb->prefix . 'sseo_ai_tenants';
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT f.*, t.name AS tenant_name, t.email AS tenant_email, t.domain AS tenant_domain, t.license_key AS tenant_license
+            FROM {$table} f
+            LEFT JOIN {$tenantsTable} t ON f.tenant_id = t.id
+            WHERE f.id = %d",
+            $id
+        ), ARRAY_A);
+
+        if (empty($row)) {
+            return null;
+        }
+
+        $row['screenshots'] = !empty($row['screenshots']) ? json_decode($row['screenshots'], true) : [];
+
+        return $row;
+    }
+
+    /**
+     * Update the status of a feedback entry.
+     */
+    public function updateFeedbackStatus(int $id, string $status): bool
+    {
+        $allowed = ['new', 'reviewed', 'resolved', 'archived'];
+        if (!in_array($status, $allowed, true)) {
+            return false;
+        }
+
+        global $wpdb;
+        $table = $wpdb->prefix . self::FEEDBACK_TABLE;
+
+        $wpdb->update($table, ['status' => $status], ['id' => $id], ['%s'], ['%d']);
+
+        return $wpdb->rows_affected > 0;
+    }
 }
