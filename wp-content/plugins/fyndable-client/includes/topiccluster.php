@@ -158,6 +158,14 @@ class TopicCluster
             'permission_callback' => fn() => current_user_can('edit_posts'),
         ]);
 
+        // Manually trigger processing of a specific cluster map queue item
+        // (useful when WP-Cron is unreliable or disabled)
+        register_rest_route('sseo-ai/v1', '/clusters/map-queue/(?P<queue_id>\d+)/process', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restProcessClusterMapQueueNow'],
+            'permission_callback' => fn() => current_user_can('edit_posts'),
+        ]);
+
         // Internal linking endpoint — re-link cluster posts after new content is added
         register_rest_route('sseo-ai/v1', '/clusters/(?P<cluster_id>\d+)/interlink', [
             'methods' => 'POST',
@@ -952,7 +960,7 @@ PROMPT;
     {
         $subtopicCount = $depth === 'deep' ? '20-30' : '10-15';
         $supportingCount = $depth === 'deep' ? '3-5' : '2-3';
-        
+
         // Language mapping for prompt
         $languageNames = [
             'en' => 'English',
@@ -966,8 +974,12 @@ PROMPT;
         ];
         $langName = $languageNames[$language] ?? 'English';
 
-        $prompt = <<<PROMPT
-You are a topical authority expert (like MarketMuse). Generate a complete topic cluster map for building topical authority around: "{$topic}"
+        // Phase 1: Generate the cluster skeleton — pillar page, cluster names,
+        // hub pages, internal linking strategy and content calendar.
+        // This is a smaller completion (~2000 tokens) that completes faster
+        // and is less likely to time out or produce truncated JSON.
+        $skeletonPrompt = <<<PROMPT
+You are a topical authority expert (like MarketMuse). Generate a topic cluster SKELETON for building topical authority around: "{$topic}"
 
 IMPORTANT: ALL content must be in {$langName} language. Use the exact topic "{$topic}" as provided - do NOT translate it to English. Return all titles, descriptions, keywords, and strategy in {$langName}.
 
@@ -993,17 +1005,7 @@ Create a pillar-cluster content architecture. Return JSON only (no markdown):
                 "search_intent": "informational|transactional|commercial",
                 "priority": "high|medium|low"
             }},
-            "supporting_pages": [
-                {{
-                    "title": "Supporting article title",
-                    "slug": "url-slug",
-                    "target_keyword": "long-tail keyword",
-                    "target_word_count": 1200,
-                    "search_intent": "informational|transactional|commercial",
-                    "content_type": "guide|how-to|comparison|listicle|case-study|FAQ",
-                    "priority": "high|medium|low"
-                }}
-            ]
+            "supporting_pages": []
         }}
     ],
     "internal_linking_strategy": [
@@ -1021,10 +1023,9 @@ Create a pillar-cluster content architecture. Return JSON only (no markdown):
 
 Requirements:
 - Generate {$subtopicCount} subtopic clusters
-- Each cluster should have 1 hub page and {$supportingCount} supporting pages
+- Each cluster has 1 hub page (supporting_pages will be filled in later — leave as empty array [])
 - Cover the topic comprehensively — leave no major subtopic unaddressed
 - Include a mix of search intents (informational, transactional, commercial)
-- Include a mix of content types
 - Prioritize by search volume potential and strategic importance
 - Internal linking strategy should create clear topical silos
 - Content calendar should be realistic (2-4 pages per week)
@@ -1032,16 +1033,16 @@ Requirements:
 Return ONLY valid JSON.
 PROMPT;
 
-        $result = $this->llm->call($prompt, null, 'seo_expert', 4000, [], 'keyword_research');
-        if (is_wp_error($result)) {
-            return $result;
+        $skeletonResult = $this->llm->call($skeletonPrompt, null, 'seo_expert', 2500, [], 'keyword_research');
+        if (is_wp_error($skeletonResult)) {
+            return $skeletonResult;
         }
 
-        $data = $this->parseClusterJson($result['text'] ?? '');
+        $data = $this->parseClusterJson($skeletonResult['text'] ?? '');
         if (is_wp_error($data)) {
-            // Retry once with a stricter prompt and lower temperature for reliability
-            $retryPrompt = $prompt . "\n\nIMPORTANT: Your previous response was not valid JSON. Return ONLY a valid JSON object starting with { and ending with }. No markdown, no code fences, no commentary.";
-            $retryResult = $this->llm->call($retryPrompt, null, 'seo_expert', 4000, [], 'keyword_research');
+            // Retry once with a stricter prompt for reliability
+            $retryPrompt = $skeletonPrompt . "\n\nIMPORTANT: Your previous response was not valid JSON. Return ONLY a valid JSON object starting with { and ending with }. No markdown, no code fences, no commentary.";
+            $retryResult = $this->llm->call($retryPrompt, null, 'seo_expert', 2500, [], 'keyword_research');
             if (!is_wp_error($retryResult)) {
                 $data = $this->parseClusterJson($retryResult['text'] ?? '');
             }
@@ -1051,11 +1052,117 @@ PROMPT;
             return $data;
         }
 
+        // Phase 2: Generate supporting pages for each cluster.
+        // Send the cluster skeleton and ask the AI to fill in supporting pages.
+        // This is a separate, smaller completion that is much less likely to time out.
+        $clustersJson = json_encode($data['clusters'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $supportingPrompt = <<<PROMPT
+You are a topical authority expert. For each cluster in the JSON below, generate {$supportingCount} supporting pages.
+
+IMPORTANT: ALL content must be in {$langName} language.
+
+Here are the clusters (each has a name, description, and hub_page):
+{$clustersJson}
+
+For each cluster, add a "supporting_pages" array with {$supportingCount} supporting page objects. Each supporting page:
+{{
+    "title": "Supporting article title",
+    "slug": "url-slug",
+    "target_keyword": "long-tail keyword",
+    "target_word_count": 1200,
+    "search_intent": "informational|transactional|commercial",
+    "content_type": "guide|how-to|comparison|listicle|case-study|FAQ",
+    "priority": "high|medium|low"
+}}
+
+Return a JSON array of clusters (same order as input) with the supporting_pages filled in:
+[
+    {{
+        "name": "cluster name (same as input)",
+        "supporting_pages": [ ... ]
+    }}
+]
+
+Include a mix of search intents and content types. Return ONLY valid JSON.
+PROMPT;
+
+        $supportingResult = $this->llm->call($supportingPrompt, null, 'seo_expert', 2500, [], 'keyword_research');
+
+        if (!is_wp_error($supportingResult)) {
+            $supportingData = $this->parseSupportingPagesJson($supportingResult['text'] ?? '', $data['clusters'] ?? []);
+            if (!is_wp_error($supportingData)) {
+                $data['clusters'] = $supportingData;
+                // Recalculate total_pages now that supporting pages are filled in
+                $totalPages = 1; // pillar
+                foreach ($data['clusters'] as $cluster) {
+                    $totalPages += 1; // hub
+                    $totalPages += count($cluster['supporting_pages'] ?? []);
+                }
+                $data['total_pages'] = $totalPages;
+            }
+            // If supporting page generation fails, keep the skeleton with empty
+            // supporting_pages — the cluster map is still useful with hubs only.
+        }
+
         $data['topic'] = $topic;
         $data['generated_at'] = current_time('mysql');
         $data['depth'] = $depth;
 
         return $data;
+    }
+
+    /**
+     * Parse the supporting pages JSON returned by phase 2 and merge it into
+     * the existing cluster skeleton. Maps supporting pages back to clusters
+     * by cluster name (case-insensitive, trimmed).
+     *
+     * @param string $rawText Raw LLM response
+     * @param array $skeletonClusters Clusters from phase 1 (with hub pages, empty supporting_pages)
+     * @return array|\WP_Error The clusters array with supporting_pages filled in
+     */
+    private function parseSupportingPagesJson(string $rawText, array $skeletonClusters): array|\WP_Error
+    {
+        $text = $rawText;
+        // Strip markdown code fences
+        $text = preg_replace('/^```(?:json)?\s*\n?/i', '', trim($text));
+        $text = preg_replace('/\n?```\s*$/', '', $text);
+
+        // Extract JSON array
+        $jsonStart = strpos($text, '[');
+        $jsonEnd = strrpos($text, ']');
+        if ($jsonStart !== false && $jsonEnd !== false && $jsonEnd > $jsonStart) {
+            $text = substr($text, $jsonStart, $jsonEnd - $jsonStart + 1);
+        }
+
+        $parsed = json_decode(trim($text), true);
+        if (!is_array($parsed)) {
+            return new \WP_Error('supporting_parse_error', 'Could not parse supporting pages JSON');
+        }
+
+        // Build a lookup map: normalized cluster name => supporting pages
+        $supportingMap = [];
+        foreach ($parsed as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $name = trim($entry['name'] ?? '');
+            $pages = $entry['supporting_pages'] ?? [];
+            if (!empty($name) && is_array($pages)) {
+                $supportingMap[strtolower($name)] = $pages;
+            }
+        }
+
+        // Merge supporting pages back into the skeleton clusters
+        foreach ($skeletonClusters as $idx => $cluster) {
+            $clusterName = trim($cluster['name'] ?? '');
+            $normalized = strtolower($clusterName);
+            if (isset($supportingMap[$normalized])) {
+                $skeletonClusters[$idx]['supporting_pages'] = $supportingMap[$normalized];
+            }
+        }
+
+        return $skeletonClusters;
     }
 
     /**
@@ -1270,6 +1377,12 @@ PROMPT;
             wp_schedule_event(time() + 60, 'sseo_ai_queue_interval', 'sseo_ai_process_cluster_map_queue');
         }
 
+        // Trigger WP-Cron immediately so the queue starts processing without
+        // waiting for the next page load to spawn the cron.
+        if (function_exists('spawn_cron')) {
+            spawn_cron();
+        }
+
         return [
             'success' => true,
             'queue_id' => $queueId,
@@ -1328,19 +1441,75 @@ PROMPT;
     }
 
     /**
+     * REST: Manually process a specific cluster map queue item immediately.
+     * Useful when WP-Cron is unreliable or disabled — the admin can trigger
+     * processing from the UI without waiting for the next cron tick.
+     */
+    public function restProcessClusterMapQueueNow(\WP_REST_Request $request): array|\WP_Error
+    {
+        $queueId = (int) $request->get_param('queue_id');
+        $queues = get_option('sseo_ai_cluster_map_queues', []);
+
+        $found = false;
+        foreach ($queues as $queue) {
+            if (($queue['id'] ?? 0) === $queueId) {
+                $found = true;
+                if (!in_array($queue['status'], ['pending', 'processing'], true)) {
+                    return new \WP_Error(
+                        'not_processable',
+                        sprintf(__('Queue status is "%s" — only pending/processing queues can be processed.', 'ai-seo-client'), $queue['status']),
+                        ['status' => 409]
+                    );
+                }
+                break;
+            }
+        }
+
+        if (!$found) {
+            return new \WP_Error('not_found', __('Cluster map queue not found', 'ai-seo-client'), ['status' => 404]);
+        }
+
+        // Process the queue synchronously (this call blocks until done)
+        $this->processClusterMapQueueItems();
+
+        // Re-read the queue to get the updated status
+        $queues = get_option('sseo_ai_cluster_map_queues', []);
+        foreach ($queues as $queue) {
+            if (($queue['id'] ?? 0) === $queueId) {
+                return [
+                    'success' => true,
+                    'queue_id' => $queueId,
+                    'status' => $queue['status'],
+                    'result' => $queue['result'],
+                    'error' => $queue['error'],
+                    'completed_at' => $queue['completed_at'] ?? null,
+                ];
+            }
+        }
+
+        return ['success' => true, 'queue_id' => $queueId, 'status' => 'unknown'];
+    }
+
+    /**
      * Process pending async cluster map queue items via WP-Cron.
      * Generates one map per run to avoid timeouts.
+     *
+     * On timeout, the queue is put back to "pending" (with an attempt counter)
+     * so the next cron run retries it, rather than permanently failing.
      */
     public function processClusterMapQueueItems(): void
     {
+        // Cluster map generation uses 600s timeout for the AI call chain,
+        // so give the PHP process enough runway.
         if (function_exists('set_time_limit')) {
-            @set_time_limit(300);
+            @set_time_limit(600);
         }
 
         $queues = get_option('sseo_ai_cluster_map_queues', []);
         if (empty($queues)) return;
 
         $allDone = true;
+        $maxAttempts = 3;
 
         foreach ($queues as &$queue) {
             if ($queue['status'] !== 'pending' && $queue['status'] !== 'processing') continue;
@@ -1351,11 +1520,19 @@ PROMPT;
                 $queue['started_at'] = current_time('mysql');
             }
 
+            $attempts = (int)($queue['attempts'] ?? 0);
+            error_log(sprintf(
+                'SSEO AI: Processing cluster map queue #%d (topic: %s, attempt: %d)',
+                $queue['id'],
+                $queue['topic'],
+                $attempts + 1
+            ));
+
             try {
                 $result = $this->generateCluster($queue['topic'], $queue['depth'], $queue['language']);
 
                 if (is_wp_error($result)) {
-                    throw new \Exception($result->get_error_message());
+                    throw new \Exception($result->get_error_message(), 0);
                 }
 
                 // Persist the generated cluster map
@@ -1369,10 +1546,30 @@ PROMPT;
                 $queue['status'] = 'completed';
                 $queue['result'] = $result;
                 $queue['completed_at'] = current_time('mysql');
+                error_log(sprintf('SSEO AI: Cluster map queue #%d completed successfully', $queue['id']));
             } catch (\Throwable $e) {
-                $queue['status'] = 'failed';
-                $queue['error'] = $e->getMessage();
-                $queue['completed_at'] = current_time('mysql');
+                $errorMsg = $e->getMessage();
+                $isTimeout = stripos($errorMsg, 'timed out') !== false || stripos($errorMsg, 'timeout') !== false;
+                $attempts = $attempts + 1;
+                $queue['attempts'] = $attempts;
+
+                if ($isTimeout && $attempts < $maxAttempts) {
+                    // On timeout, put the queue back to pending so the next cron
+                    // run retries it. Timeouts are often transient (slow model,
+                    // rate limit, network hiccup) and a retry may succeed.
+                    $queue['status'] = 'pending';
+                    $queue['error'] = sprintf(
+                        __('Timeout on attempt %d/%d. Will retry automatically.', 'ai-seo-client'),
+                        $attempts,
+                        $maxAttempts
+                    );
+                    error_log(sprintf('SSEO AI: Cluster map queue #%d timed out (attempt %d/%d), will retry', $queue['id'], $attempts, $maxAttempts));
+                } else {
+                    $queue['status'] = 'failed';
+                    $queue['error'] = $errorMsg;
+                    $queue['completed_at'] = current_time('mysql');
+                    error_log(sprintf('SSEO AI: Cluster map queue #%d failed: %s', $queue['id'], $errorMsg));
+                }
             }
 
             // Only process one map per cron run to stay within time limits
@@ -1713,13 +1910,14 @@ PROMPT;
 
                     var attempts = 0;
                     var maxAttempts = 120; // 10 minutes at 5 second intervals
+                    var pendingPolls = 0; // count consecutive "pending" polls
                     var pollInterval = setInterval(function() {
                         attempts++;
                         if (attempts > maxAttempts) {
                             clearInterval(pollInterval);
                             spinner.removeClass('is-active');
                             btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
-                            status.addClass('tc-status-error').text('<?php echo esc_js(__('Timeout waiting for cluster map', 'ai-seo-client')); ?>');
+                            status.addClass('tc-status-error').html('<?php echo esc_js(__('Timeout waiting for cluster map', 'ai-seo-client')); ?> <button type="button" class="button button-small tc-process-now" data-queue="' + res.queue_id + '" style="margin-left:10px;"><?php echo esc_js(__('Process now', 'ai-seo-client')); ?></button>');
                             if (typeof sseoHideLoader === 'function') sseoHideLoader();
                             return;
                         }
@@ -1741,7 +1939,7 @@ PROMPT;
                                 clearInterval(pollInterval);
                                 spinner.removeClass('is-active');
                                 btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
-                                status.addClass('tc-status-error').text('<?php echo esc_js(__('Failed', 'ai-seo-client')); ?>: ' + (state.error || ''));
+                                status.addClass('tc-status-error').html('<?php echo esc_js(__('Failed', 'ai-seo-client')); ?>: ' + (state.error || '') + ' <button type="button" class="button button-small tc-process-now" data-queue="' + res.queue_id + '" style="margin-left:10px;"><?php echo esc_js(__('Retry now', 'ai-seo-client')); ?></button>');
                                 if (typeof sseoHideLoader === 'function') sseoHideLoader();
                             } else if (state.status === 'cancelled') {
                                 clearInterval(pollInterval);
@@ -1750,7 +1948,15 @@ PROMPT;
                                 status.text('<?php echo esc_js(__('Cancelled', 'ai-seo-client')); ?>');
                                 if (typeof sseoHideLoader === 'function') sseoHideLoader();
                             } else {
-                                status.text('<?php echo esc_js(__('Status', 'ai-seo-client')); ?>: ' + state.status + ' (#' + res.queue_id + ')');
+                                pendingPolls++;
+                                var statusText = '<?php echo esc_js(__('Status', 'ai-seo-client')); ?>: ' + state.status + ' (#' + res.queue_id + ')';
+                                // After 6 consecutive pending polls (~30s), show a "Process now"
+                                // button so the user can manually trigger processing if WP-Cron
+                                // is not running reliably.
+                                if (pendingPolls >= 6 && state.status === 'pending') {
+                                    statusText += ' <button type="button" class="button button-small tc-process-now" data-queue="' + res.queue_id + '" style="margin-left:10px;"><?php echo esc_js(__('Process now', 'ai-seo-client')); ?></button>';
+                                }
+                                status.html(statusText);
                             }
                         }).catch(function(err) {
                             clearInterval(pollInterval);
@@ -1765,6 +1971,45 @@ PROMPT;
                     btn.prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
                     status.addClass('tc-status-error').text(err.message || '<?php echo esc_js(__('Failed to queue cluster map', 'ai-seo-client')); ?>');
                     if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                });
+            });
+
+            // Process now — manually trigger cluster map queue processing
+            // (useful when WP-Cron is unreliable or disabled)
+            $(document).on('click', '.tc-process-now', function() {
+                var queueId = $(this).data('queue');
+                var processBtn = $(this);
+                var status = $('#tc-generate-status');
+                var spinner = $('#tc-generate-spinner');
+                processBtn.prop('disabled', true).text('<?php echo esc_js(__('Processing...', 'ai-seo-client')); ?>');
+                spinner.addClass('is-active');
+                status.text('<?php echo esc_js(__('Processing cluster map...', 'ai-seo-client')); ?>').removeClass('tc-status-error tc-status-success');
+                if (typeof sseoShowLoader === 'function') sseoShowLoader();
+
+                wp.apiFetch({
+                    path: '/sseo-ai/v1/clusters/map-queue/' + queueId + '/process',
+                    method: 'POST'
+                }).then(function(state) {
+                    spinner.removeClass('is-active');
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                    if (state.status === 'completed' && state.result) {
+                        currentCluster = state.result;
+                        renderCluster(state.result);
+                        $('#tc-result').show();
+                        $('#tc-generate').prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                        status.addClass('tc-status-success').text('<?php echo esc_js(__('Cluster map ready', 'ai-seo-client')); ?>');
+                    } else if (state.status === 'failed') {
+                        $('#tc-generate').prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                        status.addClass('tc-status-error').html('<?php echo esc_js(__('Failed', 'ai-seo-client')); ?>: ' + (state.error || '') + ' <button type="button" class="button button-small tc-process-now" data-queue="' + queueId + '" style="margin-left:10px;"><?php echo esc_js(__('Retry now', 'ai-seo-client')); ?></button>');
+                    } else {
+                        $('#tc-generate').prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                        status.text('<?php echo esc_js(__('Status', 'ai-seo-client')); ?>: ' + state.status);
+                    }
+                }).catch(function(err) {
+                    spinner.removeClass('is-active');
+                    if (typeof sseoHideLoader === 'function') sseoHideLoader();
+                    $('#tc-generate').prop('disabled', false).text('<?php echo esc_js(__('Generate Map', 'ai-seo-client')); ?>');
+                    status.addClass('tc-status-error').text(err.message || '<?php echo esc_js(__('Processing failed', 'ai-seo-client')); ?>');
                 });
             });
 

@@ -411,8 +411,12 @@ class DashboardAPI
 
     /**
      * Generate AI content through dashboard proxy
+     *
+     * @param int $timeout HTTP timeout in seconds. Cluster map / keyword_research
+     *                     use cases benefit from a longer timeout (600s) because the
+     *                     SaaS dashboard retries multiple fallback models.
      */
-    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature, string $useCase = 'content_generation'): array|\WP_Error
+    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature, string $useCase = 'content_generation', int $timeout = 300): array|\WP_Error
     {
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
@@ -438,7 +442,7 @@ class DashboardAPI
                     'temperature' => $temperature,
                     'use_case' => $useCase,
                 ]),
-                'timeout' => 300,
+                'timeout' => $timeout,
                 'sslverify' => $this->getSslVerify(),
                 'redirection' => 0,
             ]

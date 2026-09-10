@@ -249,14 +249,25 @@ class ApiGateway
             ], 503);
         }
 
+        // Cluster map / keyword_research requests are large single completions
+        // that may need more runway, and should not be retried on timeout
+        // (retrying a timed-out large completion just wastes time).
+        $isLargeRequest = in_array($useCase, ['keyword_research', 'content_analysis'], true);
+        $timeLimit = $isLargeRequest ? 600 : self::AI_TIMEOUT_SECONDS;
+        $maxRetries = $isLargeRequest ? 1 : self::AI_MAX_RETRIES;
+
         // Give the AI request enough runway before PHP times out
         if (function_exists('set_time_limit')) {
-            @set_time_limit(self::AI_TIMEOUT_SECONDS);
+            @set_time_limit($timeLimit);
         }
 
         $lastError = null;
-        for ($attempt = 1; $attempt <= self::AI_MAX_RETRIES; $attempt++) {
-            $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature);
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            // Large requests (cluster maps) get a longer per-provider timeout and
+            // a limited fallback chain (3 models max) to avoid compounding delays.
+            $providerTimeout = $isLargeRequest ? 600 : 300;
+            $maxFallback = $isLargeRequest ? 3 : 0;
+            $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature, $providerTimeout, $maxFallback);
 
             if (!is_wp_error($result)) {
                 $this->recordProviderSuccess('ai', 'ai');
@@ -276,7 +287,14 @@ class ApiGateway
             $this->recordProviderFailure('ai', 'ai');
             $lastError = $result;
 
-            if ($attempt < self::AI_MAX_RETRIES) {
+            // Don't retry on timeout — a large completion that timed out will
+            // almost certainly time out again, and retrying just delays the
+            // inevitable failure for the waiting client.
+            if ($result->get_error_code() === 'ai_timeout') {
+                break;
+            }
+
+            if ($attempt < $maxRetries) {
                 usleep(min(4000000, self::AI_RETRY_BASE_MS * (2 ** ($attempt - 1))));
             }
         }

@@ -262,13 +262,18 @@ class LlmClient
 
         $startTime = microtime(true);
 
-        // Make request through dashboard proxy
+        // Make request through dashboard proxy.
+        // Cluster map / keyword_research requests are large single completions
+        // that the SaaS dashboard may retry across multiple fallback models,
+        // so they get a longer HTTP timeout (600s) than regular content (300s).
+        $aiTimeout = in_array($useCase, ['keyword_research', 'content_analysis'], true) ? 600 : 300;
         $response = $this->dashboardAPI->aiGenerate(
             $messages,
             $requestedModel,
             $maxTokens ?? 2000,
             $this->settings->temperature(),
-            $useCase
+            $useCase,
+            $aiTimeout
         );
 
         $durationMs = (int)((microtime(true) - $startTime) * 1000);
