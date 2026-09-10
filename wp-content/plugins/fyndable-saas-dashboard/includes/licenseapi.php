@@ -655,10 +655,13 @@ class LicenseAPI
 
         $settings = new \SSEOAISaaS\SaaSSettings();
 
+        $license = $this->licenseGenerator->getLicense($licenseKey);
+
         return new \WP_REST_Response([
             'success' => true,
             'valid' => $limits['valid'],
             'tier' => $tenant['tier'],
+            'type' => $license['license_type'] ?? 'paid',
             'status' => $tenant['status'],
             'email' => $tenant['email'] ?? null,
             'domain' => $tenant['domain'] ?? null,

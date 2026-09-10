@@ -71,6 +71,7 @@ class SignupCheckout
                 'tier' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'interval' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'payment_method' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'is_trial' => ['required' => false, 'type' => 'boolean'],
             ],
         ]);
 
@@ -256,6 +257,7 @@ class SignupCheckout
         $interval = $request->get_param('interval') ?: 'month';
         $interval = in_array($interval, ['month', 'year'], true) ? $interval : 'month';
         $paymentMethod = $request->get_param('payment_method') ?: null;
+        $isTrial = (bool) $request->get_param('is_trial');
 
         $plans = $this->getPlans();
         if (!isset($plans[$tier])) {
@@ -279,6 +281,18 @@ class SignupCheckout
                 'success' => false,
                 'message' => 'Self-serve checkout is currently disabled. Please contact us for a license key.',
             ], 400);
+        }
+
+        $trialEnabled = !empty(get_option('sseo_ai_saas_trial_enabled', '1'));
+        if ($isTrial && !$trialEnabled) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Trial signups are currently disabled.',
+            ], 400);
+        }
+
+        if ($isTrial) {
+            return $this->handleTrialSignup($name, $email, $street, $postalCode, $city, $country, $tier, $paymentMethod);
         }
 
         // Check if email already exists; allow retrying a failed/cancelled pending payment
@@ -355,6 +369,127 @@ class SignupCheckout
 
         // For paid tiers, create checkout session
         $checkoutResult = $this->paymentProcessor->createSubscription($tenantKey, $tier, $interval, $paymentMethod);
+
+        if (is_wp_error($checkoutResult)) {
+            $this->cleanupPendingSignup([
+                'tenant_key' => $tenantKey,
+                'id' => $tenantResult['id'] ?? 0,
+                'license_key' => $licenseKey,
+                'status' => 'pending_payment',
+            ]);
+
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => $checkoutResult->get_error_message(),
+            ], 500);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'tenant_key' => $tenantKey,
+            'license_key' => $licenseKey,
+            'requires_payment' => true,
+            'checkout_url' => $checkoutResult['checkout_url'] ?? '',
+            'payment_data' => $checkoutResult,
+        ], 200);
+    }
+
+    /**
+     * Handle a 14-day trial signup with a 1c mandate payment.
+     */
+    private function handleTrialSignup(
+        string $name,
+        string $email,
+        ?string $street,
+        ?string $postalCode,
+        ?string $city,
+        ?string $country,
+        string $tier,
+        ?string $paymentMethod
+    ): \WP_REST_Response {
+        $trialDays = (int) get_option('sseo_ai_saas_trial_days', 14);
+
+        // One trial per email: block if this email already has or had a trial license.
+        global $wpdb;
+        $licenseTable = $wpdb->prefix . 'sseo_ai_license_keys';
+        $existingTrial = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$licenseTable} WHERE assigned_to = %s AND license_type = 'trial' LIMIT 1",
+            $email
+        ));
+        if ($existingTrial) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'trial_already_used',
+                'message' => 'You have already used a trial with this email address.',
+            ], 409);
+        }
+
+        $limits = $this->getTierLimits($tier);
+
+        // Generate trial license for the selected tier
+        $licenseResult = $this->licenseGenerator->generateLicense([
+            'tier' => $tier,
+            'type' => 'trial',
+            'assigned_to' => $email,
+            'expires_days' => $trialDays,
+        ]);
+
+        if (is_wp_error($licenseResult)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to generate trial license key.',
+            ], 500);
+        }
+
+        $licenseKey = $licenseResult['license_key'] ?? '';
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + $trialDays * DAY_IN_SECONDS);
+
+        $tenantData = [
+            'name' => $name,
+            'email' => $email,
+            'tier' => $tier,
+            'license_key' => $licenseKey,
+            'status' => 'pending_payment',
+            'payment_status' => 'trial',
+            'max_sites' => $limits['max_sites'],
+            'rate_limit' => $limits['rate_limit'],
+            'api_calls_limit' => $limits['api_calls_limit'],
+            'expires_at' => $expiresAt,
+        ];
+
+        $tenantResult = $this->tenants->createTenant($tenantData);
+
+        if (is_wp_error($tenantResult)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => $tenantResult->get_error_message(),
+            ], 500);
+        }
+
+        $tenantKey = $tenantResult['tenant_key'];
+
+        // createTenant does not persist payment_status, so update it explicitly.
+        $this->tenants->updateTenant($tenantKey, ['payment_status' => 'trial']);
+
+        if (!empty($street)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_street', $street);
+        }
+        if (!empty($postalCode)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_postal_code', $postalCode);
+        }
+        if (!empty($city)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_city', $city);
+        }
+        if (!empty($country)) {
+            $this->tenants->setTenantSetting($tenantKey, 'address_country', $country);
+        }
+
+        $checkoutResult = $this->paymentProcessor->createTrialMollieCheckout(
+            $this->tenants->getTenant($tenantKey),
+            $tier,
+            $paymentMethod,
+            $trialDays
+        );
 
         if (is_wp_error($checkoutResult)) {
             $this->cleanupPendingSignup([
@@ -556,15 +691,28 @@ class SignupCheckout
         }
 
         // Activate the tenant if the webhook has not already done so.
-        if (($tenant['status'] ?? '') !== 'active' || ($tenant['payment_status'] ?? '') !== 'active') {
-            $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
-            $period = $interval === 'year' ? '+1 year' : '+1 month';
-            $this->tenants->updateTenant($tenantKey, [
-                'status' => 'active',
-                'payment_status' => 'active',
-                'last_payment_at' => current_time('mysql'),
-                'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
-            ]);
+        $currentPaymentStatus = $tenant['payment_status'] ?? '';
+        $alreadyActive = ($tenant['status'] ?? '') === 'active' && in_array($currentPaymentStatus, ['active', 'trial'], true);
+        if (!$alreadyActive) {
+            $isTrial = $currentPaymentStatus === 'trial' || ($payment['metadata']['type'] ?? '') === 'trial_mandate';
+            if ($isTrial) {
+                $trialDays = (int) $this->tenants->getTenantSetting($tenantKey, 'trial_days', 14);
+                $this->tenants->updateTenant($tenantKey, [
+                    'status' => 'active',
+                    'payment_status' => 'trial',
+                    'last_payment_at' => current_time('mysql'),
+                    'expires_at' => gmdate('Y-m-d H:i:s', time() + $trialDays * DAY_IN_SECONDS),
+                ]);
+            } else {
+                $interval = $this->tenants->getTenantSetting($tenantKey, 'subscription_interval', 'month');
+                $period = $interval === 'year' ? '+1 year' : '+1 month';
+                $this->tenants->updateTenant($tenantKey, [
+                    'status' => 'active',
+                    'payment_status' => 'active',
+                    'last_payment_at' => current_time('mysql'),
+                    'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
+                ]);
+            }
 
             do_action('sseo_ai_payment_success', $tenantKey, $this->getCurrencySymbol(strtoupper($payment['amount']['currency'] ?? 'EUR')) . ($payment['amount']['value'] ?? '0'), [
                 'tier' => $tenant['tier'],

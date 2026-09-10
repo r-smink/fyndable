@@ -137,7 +137,8 @@
                 html += '<li>' + escapeHtml(f) + '</li>';
             });
             html += '</ul>';
-            html += '<button data-tier="' + key + '">' + escapeHtml(plan.cta) + '</button>';
+            var btnLabel = trialEnabled ? 'Start 14-dagen trial' : plan.cta;
+            html += '<button data-tier="' + key + '">' + escapeHtml(btnLabel) + '</button>';
             html += '</div>';
         });
 
@@ -296,6 +297,7 @@
                 tier: selectedTier,
                 interval: selectedInterval,
                 payment_method: paymentProvider === 'mollie' ? selectedPaymentMethod : '',
+                is_trial: trialEnabled,
             }),
         })
             .then(function (r) { return r.json(); })
