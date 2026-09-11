@@ -2585,6 +2585,10 @@ class Client
                         </div>
 
                         <div class="settings-section">
+                            <?php do_action('sseo_ai_render_llmstxt_settings'); ?>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
 
@@ -2937,6 +2941,38 @@ class Client
         update_option('sseo_ai_client_autoclean_enabled', isset($_POST['autoclean_enabled']) && $_POST['autoclean_enabled'] === '1' ? '1' : '0');
         update_option('sseo_ai_client_autoclean_days', max(1, min(3650, (int) ($_POST['autoclean_days'] ?? 60))));
         update_option('sseo_ai_client_autoclean_max_clicks', max(0, (int) ($_POST['autoclean_max_clicks'] ?? 0)));
+
+        // llms.txt generator settings
+        update_option('sseo_ai_client_llmstxt_enabled', isset($_POST['sseo_ai_client_llmstxt_enabled']) && $_POST['sseo_ai_client_llmstxt_enabled'] === '1' ? '1' : '0');
+        $llmstxtPostTypes = $_POST['sseo_ai_client_llmstxt_post_types'] ?? ['post'];
+        if (!is_array($llmstxtPostTypes)) {
+            $llmstxtPostTypes = ['post'];
+        }
+        $validPostTypes = array_keys(get_post_types(['public' => true], 'names'));
+        $llmstxtPostTypes = array_values(array_filter(array_map('sanitize_text_field', $llmstxtPostTypes), function ($t) use ($validPostTypes) {
+            return in_array($t, $validPostTypes, true);
+        }));
+        if (empty($llmstxtPostTypes)) {
+            $llmstxtPostTypes = ['post'];
+        }
+        update_option('sseo_ai_client_llmstxt_post_types', $llmstxtPostTypes);
+        update_option('sseo_ai_client_llmstxt_max_items', max(1, min(1000, (int) ($_POST['sseo_ai_client_llmstxt_max_items'] ?? 100))));
+        update_option('sseo_ai_client_llmstxt_description', sanitize_text_field($_POST['sseo_ai_client_llmstxt_description'] ?? ''));
+        update_option('sseo_ai_client_llmstxt_include_excerpt', isset($_POST['sseo_ai_client_llmstxt_include_excerpt']) && $_POST['sseo_ai_client_llmstxt_include_excerpt'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_llmstxt_custom_sections', sanitize_textarea_field($_POST['sseo_ai_client_llmstxt_custom_sections'] ?? ''));
+        update_option('sseo_ai_client_llmstxt_full_enabled', isset($_POST['sseo_ai_client_llmstxt_full_enabled']) && $_POST['sseo_ai_client_llmstxt_full_enabled'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_llmstxt_full_max_chars', max(100, min(500000, (int) ($_POST['sseo_ai_client_llmstxt_full_max_chars'] ?? 50000))));
+        $llmstxtSelectedPages = $_POST['sseo_ai_client_llmstxt_selected_pages'] ?? [];
+        if (!is_array($llmstxtSelectedPages)) {
+            $llmstxtSelectedPages = [];
+        }
+        $llmstxtSelectedPages = array_values(array_filter(array_map('absint', $llmstxtSelectedPages)));
+        update_option('sseo_ai_client_llmstxt_selected_pages', $llmstxtSelectedPages);
+
+        // Invalidate llms.txt caches so changes take effect immediately
+        if ($this->llmsTxt instanceof LlmsTxt) {
+            $this->llmsTxt->invalidateCache(0);
+        }
 
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
