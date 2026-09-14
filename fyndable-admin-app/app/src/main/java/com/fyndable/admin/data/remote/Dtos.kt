@@ -210,8 +210,8 @@ data class LimitChecks(
 
 @Serializable
 data class LimitCheck(
-    val used: Int = 0,
-    val limit: Int = 0,
+    val used: Double = 0.0,
+    val limit: Double = 0.0,
     val exceeded: Boolean = false,
 )
 

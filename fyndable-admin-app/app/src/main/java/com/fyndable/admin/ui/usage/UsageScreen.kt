@@ -152,8 +152,8 @@ private fun UsageContent(tenants: List<UsageOverviewTenant>, modifier: Modifier)
 @Composable
 private fun UsageCard(tenant: UsageOverviewTenant) {
     val usage = tenant.usage
-    val apiCallsLimit = tenant.limits?.apiCalls?.limit ?: 0
-    val apiCallsUsed = tenant.limits?.apiCalls?.used ?: usage.apiCalls
+    val apiCallsLimit = tenant.limits?.apiCalls?.limit?.toInt() ?: 0
+    val apiCallsUsed = tenant.limits?.apiCalls?.used?.toInt() ?: usage.apiCalls
     val progress = if (apiCallsLimit > 0) (apiCallsUsed.toFloat() / apiCallsLimit).coerceIn(0f, 1f) else 0f
     val exceeded = tenant.limits?.apiCalls?.exceeded == true
 
