@@ -451,8 +451,10 @@ class SmartInternalLinking
             const link = '<a href="' + url + '">' + anchorText + '</a>';
 
             // Insert into editor
-            if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor')) {
-                // Gutenberg: find relevant anchor text in content and replace it
+            if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor') && wp.blocks && wp.blocks.parse) {
+                // Gutenberg: editPost({content}) only marks the post dirty; the block
+                // editor renders from the core/block-editor blocks store. Re-parse the
+                // modified content into blocks and reset the editor so the link shows up.
                 const content = wp.data.select('core/editor').getEditedPostContent();
                 let newContent;
                 const match = content.match(anchorRegex);
@@ -469,7 +471,12 @@ class SmartInternalLinking
                         newContent = content + '\n\n' + fallbackPara;
                     }
                 }
-                wp.data.dispatch('core/editor').editPost({ content: newContent });
+                const blocks = wp.blocks.parse(newContent);
+                if (blocks && blocks.length) {
+                    wp.data.dispatch('core/block-editor').resetBlocks(blocks);
+                } else {
+                    wp.data.dispatch('core/editor').editPost({ content: newContent });
+                }
             } else if (typeof tinymce !== 'undefined' && tinymce.activeEditor) {
                 // Classic editor: find relevant anchor text in content and replace it
                 const editor = tinymce.activeEditor;

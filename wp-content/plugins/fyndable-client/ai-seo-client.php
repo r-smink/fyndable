@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable
  * Description: Advanced AI-powered SEO plugin by Fyndable with comprehensive optimization features
- * Version: 2.1.0
+ * Version: 2.2.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Fyndable
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_CLIENT_VERSION', '2.1.0');
+define('SSEO_AI_CLIENT_VERSION', '2.2.0');
 define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -82,6 +82,10 @@ require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/feedback.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function () {
+    // Clear stale update cache so a re-activation after an update doesn't
+    // show a phantom update for the same version.
+    delete_transient('sseo_ai_update_check');
+
     if (is_multisite()) {
         // Network activation — run on all sites
         $sites = get_sites(['number' => 0]);
