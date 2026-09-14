@@ -179,71 +179,93 @@ class LSIKeywords
 
     public function suggestLSIKeywords(string $focusKeyphrase): array
     {
-        $cacheKey = 'aiseo_lsi_' . md5($focusKeyphrase);
+        $lang = $this->settings->contentLanguage();
+        $langName = $this->settings->contentLanguageName();
+        $cacheKey = 'aiseo_lsi_' . md5($focusKeyphrase . '_' . $lang);
         $cached = get_transient($cacheKey);
-        
+
         if ($cached !== false) {
             return $cached;
         }
 
         $prompt = "Generate 10-15 LSI (Latent Semantic Indexing) keywords and synonyms for SEO optimization related to: \"{$focusKeyphrase}\".
 
+IMPORTANT: Generate ALL keywords in {$langName}. Do NOT translate the focus keyphrase \"{$focusKeyphrase}\" — keep it exactly as provided. Output the keywords in {$langName} only.
+
 LSI keywords are semantically related terms that help search engines understand content context.
 
 Requirements:
 - Include synonyms and variations
-- Include related concepts and subtopics  
+- Include related concepts and subtopics
 - Include long-tail variations
 - Avoid exact duplicates
 - Each keyword should be 1-4 words
+- All keywords must be in {$langName}
 
 Output as a comma-separated list only.";
 
         $result = $this->llm->call($prompt, null, null, null, [], 'keyword_research');
-        
+
         if (is_wp_error($result)) {
             // Fallback: generate from common patterns
-            return $this->fallbackLSI($focusKeyphrase);
+            return $this->fallbackLSI($focusKeyphrase, $lang);
         }
 
         $text = $result['text'];
-        
+
         // Parse comma-separated list
         $keywords = array_map('trim', explode(',', $text));
         $keywords = array_filter($keywords, function($k) { return strlen($k) > 2; });
         $keywords = array_slice($keywords, 0, 15);
-        
+
         // Store for this post
         set_transient($cacheKey, $keywords, DAY_IN_SECONDS);
-        
+
         return $keywords;
     }
 
-    private function fallbackLSI(string $focusKeyphrase): array
+    private function fallbackLSI(string $focusKeyphrase, string $lang = 'nl'): array
     {
         $base = strtolower($focusKeyphrase);
         $words = explode(' ', $base);
         $variations = [];
 
-        // Common patterns
-        $patterns = [
-            'best ' . $base,
-            'top ' . $base,
-            $base . ' guide',
-            $base . ' tutorial',
-            $base . ' tips',
-            'how to ' . $base,
-            'what is ' . $base,
-            $base . ' review',
-            $base . ' vs',
-            $base . ' comparison',
-            'cheap ' . $base,
-            'affordable ' . $base,
-            'professional ' . $base,
-        ];
+        // Language-aware prefix/suffix patterns
+        if ($lang === 'nl') {
+            $patterns = [
+                'beste ' . $base,
+                'top ' . $base,
+                $base . ' gids',
+                $base . ' tips',
+                'hoe ' . $base,
+                'wat is ' . $base,
+                $base . ' review',
+                $base . ' vergelijken',
+                'goedkope ' . $base,
+                'betaalbare ' . $base,
+                'professionele ' . $base,
+            ];
+            $suffixes = ['software', 'tools', 'diensten', 'bedrijf', 'expert', 'bureau', 'adviseur'];
+        } else {
+            $patterns = [
+                'best ' . $base,
+                'top ' . $base,
+                $base . ' guide',
+                $base . ' tutorial',
+                $base . ' tips',
+                'how to ' . $base,
+                'what is ' . $base,
+                $base . ' review',
+                $base . ' vs',
+                $base . ' comparison',
+                'cheap ' . $base,
+                'affordable ' . $base,
+                'professional ' . $base,
+            ];
+            $suffixes = ['software', 'tools', 'services', 'company', 'expert', 'agency', 'consultant'];
+        }
 
         // Add suffixes/prefixes
-        $suffixes = ['software', 'tools', 'services', 'company', 'expert', 'agency', 'consultant'];
         foreach ($suffixes as $suffix) {
             if (strpos($base, $suffix) === false) {
                 $variations[] = $base . ' ' . $suffix;

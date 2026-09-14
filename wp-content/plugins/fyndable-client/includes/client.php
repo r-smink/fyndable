@@ -2208,6 +2208,7 @@ class Client
         $brandVoice = get_option('sseo_ai_brand_voice', '');
         $sslVerify = $this->settings->sslVerify();
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
+        $contentLanguage = $this->settings->contentLanguage();
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
         $showShareButtons = get_option('sseo_ai_client_show_share_buttons', '1') === '1';
 
@@ -2467,6 +2468,21 @@ class Client
                         <div class="settings-section">
                             <h2><?php esc_html_e('AI Prompt Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Custom instructions for AI content generation', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="content_language"><?php esc_html_e('Content Language', 'ai-seo-client'); ?></label>
+                                <select name="content_language" id="content_language">
+                                    <option value="nl" <?php selected($contentLanguage, 'nl'); ?>>Nederlands</option>
+                                    <option value="en" <?php selected($contentLanguage, 'en'); ?>>English</option>
+                                    <option value="de" <?php selected($contentLanguage, 'de'); ?>>Deutsch</option>
+                                    <option value="fr" <?php selected($contentLanguage, 'fr'); ?>>Français</option>
+                                    <option value="es" <?php selected($contentLanguage, 'es'); ?>>Español</option>
+                                    <option value="it" <?php selected($contentLanguage, 'it'); ?>>Italiano</option>
+                                    <option value="pt" <?php selected($contentLanguage, 'pt'); ?>>Português</option>
+                                    <option value="pl" <?php selected($contentLanguage, 'pl'); ?>>Polski</option>
+                                </select>
+                                <p class="field-description"><?php esc_html_e('Output language for AI-generated content such as LSI keywords. Defaults to the WordPress site language when not set.', 'ai-seo-client'); ?></p>
+                            </div>
 
                             <div class="form-field">
                                 <label for="default_word_count"><?php esc_html_e('Default Word Count', 'ai-seo-client'); ?></label>
@@ -2911,6 +2927,9 @@ class Client
         update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
 
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
+        $allowedLanguages = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt', 'pl'];
+        $contentLanguage = in_array($_POST['content_language'] ?? 'nl', $allowedLanguages, true) ? $_POST['content_language'] : 'nl';
+        update_option('sseo_ai_client_content_language', $contentLanguage);
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
@@ -3742,6 +3761,7 @@ class Client
             'chatgpt' => 'ChatGPT',
             'perplexity' => 'Perplexity',
             'gemini' => 'Google Gemini',
+            'claude' => 'Claude',
         ];
         ?>
         <style>
@@ -3773,6 +3793,7 @@ class Client
             .bv-platform-chatgpt { background: #e0e7ff; color: #3730a3; }
             .bv-platform-perplexity { background: #fce7f3; color: #9d174d; }
             .bv-platform-gemini { background: #dbeafe; color: #8f39ac; }
+            .bv-platform-claude { background: #fef3c7; color: #92400e; }
             .bv-excerpt { max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
             .bv-pagination { margin-top: 20px; }
             .bv-pagination a, .bv-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
@@ -3828,8 +3849,9 @@ class Client
                                 <td><textarea id="bv-competitors" placeholder="Competitor A&#10;Competitor B"><?php echo esc_textarea($bvConfig['competitors']); ?></textarea></td>
                             </tr>
                             <tr>
-                                <th><label for="bv-queries"><?php esc_html_e('Search Queries (use {category} placeholder)', 'ai-seo-client'); ?></label></th>
-                                <td><textarea id="bv-queries" placeholder="What are the best {category}?&#10;Which {category} would you recommend?"><?php echo esc_textarea($bvConfig['queries']); ?></textarea></td>
+                                <th><label for="bv-queries"><?php esc_html_e('Search Queries (placeholders: {category}, {brand}, {product}, {location}, {competitor})', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-queries" placeholder="What are the best {category}?&#10;Is {brand} a good {category}?&#10;Best {category} in {location}?&#10;How does {brand} compare to {competitor}?"><?php echo esc_textarea($bvConfig['queries']); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Placeholders are filled from the configuration above. {location} uses the city from Settings → Local Business. Empty values fall back to a generic term.', 'ai-seo-client'); ?></p></td>
                             </tr>
                             <tr>
                                 <th><label><?php esc_html_e('AI Platforms to Track', 'ai-seo-client'); ?></label></th>
@@ -3860,7 +3882,7 @@ class Client
                 <!-- What does this tracker do and how to get found -->
                 <div class="sseo-ai-dashboard-card">
                     <h2><?php esc_html_e('What does AI Search Visibility do?', 'ai-seo-client'); ?></h2>
-                    <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
+                    <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini, Claude) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
 
                     <h3 style="margin-top: 25px;"><?php esc_html_e('How to get found in AI search / LLM answers', 'ai-seo-client'); ?></h3>
                     <?php if (empty($recommendations)): ?>

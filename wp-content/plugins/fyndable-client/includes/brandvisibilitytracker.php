@@ -67,9 +67,9 @@ class BrandVisibilityTracker
             'brand_name' => '',
             'product_names' => '',
             'competitors' => '',
-            'queries' => "What are the best {category} tools?\nWhich {category} would you recommend?\nWhat are the top {category} options?\nCan you compare the best {category}?\nWhat should I look for in a {category}?",
+            'queries' => "What are the best {category} tools?\nWhich {category} would you recommend?\nWhat are the top {category} options?\nIs {brand} a good {category}?\nWhat is {product} best for?\nBest {category} in {location}\nHow does {brand} compare to {competitor}?",
             'category' => '',
-            'platforms' => ['chatgpt', 'perplexity', 'gemini'],
+            'platforms' => ['chatgpt', 'perplexity', 'gemini', 'claude'],
             'scan_frequency' => 'manual',
         ];
 
@@ -120,6 +120,11 @@ class BrandVisibilityTracker
                 'system_prompt' => 'You are Google Gemini, an AI assistant integrated into Google Search. A user is asking for recommendations. Provide a helpful, balanced answer. Mention specific brands and products when relevant. Be concise but thorough.',
                 'model' => 'gpt-4',
             ],
+            'claude' => [
+                'name' => 'Claude',
+                'system_prompt' => 'You are Claude, an AI assistant made by Anthropic. A user is asking you for recommendations. Answer as Claude naturally would — thoughtful, nuanced and helpful. Mention specific brands and products when relevant. Be objective and comprehensive.',
+                'model' => 'anthropic/claude-3-haiku',
+            ],
         ];
     }
 
@@ -135,7 +140,7 @@ class BrandVisibilityTracker
             return ['error' => 'No brand name configured'];
         }
 
-        $queries = $this->parseQueries($config['queries'], $config['category']);
+        $queries = $this->parseQueries($config['queries'], $config);
         $platforms = $config['platforms'];
         $personas = $this->getPlatformPersonas();
 
@@ -163,15 +168,47 @@ class BrandVisibilityTracker
     }
 
     /**
-     * Parse query templates, replacing {category} with actual category
+     * Parse query templates, replacing placeholders with configured values.
+     *
+     * Supported placeholders:
+     *  - {category}   -> Category / Industry from the BV settings
+     *  - {brand}      -> Brand Name from the BV settings (fallback: sseo_ai_brand_name)
+     *  - {product}    -> First product name from the BV settings
+     *  - {location}   -> Local Business city (Settings → Local Business → local_city)
+     *  - {competitor} -> First competitor from the BV settings
+     *
+     * Empty placeholder values fall back to a generic, readable term so the
+     * generated query stays natural.
      */
-    private function parseQueries(string $queriesText, string $category): array
+    private function parseQueries(string $queriesText, array $config): array
     {
         $lines = array_filter(array_map('trim', explode("\n", $queriesText)));
-        $category = $category ?: 'product/service';
 
-        return array_map(function ($line) use ($category) {
-            return str_replace('{category}', $category, $line);
+        $category = !empty($config['category']) ? $config['category'] : 'product/service';
+        $brand = !empty($config['brand_name']) ? $config['brand_name'] : (string)get_option('sseo_ai_brand_name', '');
+        $brand = $brand !== '' ? $brand : 'this brand';
+
+        // First non-empty line from the product_names textarea
+        $productNames = array_filter(array_map('trim', explode("\n", (string)($config['product_names'] ?? ''))));
+        $product = !empty($productNames) ? reset($productNames) : 'this product';
+
+        // First non-empty line from the competitors textarea
+        $competitorLines = array_filter(array_map('trim', explode("\n", (string)($config['competitors'] ?? ''))));
+        $competitor = !empty($competitorLines) ? reset($competitorLines) : 'the competition';
+
+        $location = (string)get_option('sseo_ai_client_local_city', '');
+        $location = $location !== '' ? $location : 'your area';
+
+        $replacements = [
+            '{category}'   => $category,
+            '{brand}'       => $brand,
+            '{product}'     => $product,
+            '{location}'    => $location,
+            '{competitor}'  => $competitor,
+        ];
+
+        return array_map(function ($line) use ($replacements) {
+            return strtr($line, $replacements);
         }, $lines);
     }
 
