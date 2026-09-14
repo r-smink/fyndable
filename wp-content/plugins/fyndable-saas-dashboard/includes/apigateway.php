@@ -976,7 +976,7 @@ class ApiGateway
             // Determine which column to increment based on metric
             $column = match ($metric) {
                 'serp_query'        => 'serp_requests',
-                'content_generated' => 'content_generated',
+                'content_generated', 'ai_generation' => 'content_generated',
                 'ai_mention'        => 'ai_mentions',
                 'llm_response'      => 'llm_response_calls',
                 'trends'            => 'trends_requests',
@@ -990,6 +990,14 @@ class ApiGateway
                 $cost,
                 $existing
             ));
+            // AI generation also counts as an API call
+            if ($metric === 'ai_generation') {
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$tableUsage} SET api_calls = api_calls + %d WHERE id = %d",
+                    $count,
+                    $existing
+                ));
+            }
         } else {
             $data = [
                 'tenant_id'           => $tenantId,
@@ -997,7 +1005,7 @@ class ApiGateway
                 'api_calls'           => in_array($metric, ['ai_generation', 'ai_keyword'], true) ? $count : 0,
                 'api_cost'            => $cost,
                 'serp_requests'       => ($metric === 'serp_query') ? $count : 0,
-                'content_generated'   => ($metric === 'content_generated') ? $count : 0,
+                'content_generated'   => in_array($metric, ['content_generated', 'ai_generation'], true) ? $count : 0,
                 'keywords_tracked'    => 0,
                 'ai_mentions'         => ($metric === 'ai_mention') ? $count : 0,
                 'llm_response_calls'  => ($metric === 'llm_response') ? $count : 0,

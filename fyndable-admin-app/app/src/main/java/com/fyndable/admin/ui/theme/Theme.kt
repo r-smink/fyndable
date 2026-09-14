@@ -16,13 +16,13 @@ import androidx.core.view.WindowCompat
 
 // Beautiful Claude-inspired color palette for Fyndable Ops
 val FyndableNavy = Color(0xFF1E293B)       // Deep slate navy for headers
-val FyndablePurple = Color(0xFF7C3AED)     // Vibrant purple for buttons
-val FyndableBlue = Color(0xFF2563EB)       // Blue for gradient
+val FyndableBlue = Color(0xFF379FD3)       // Fyndable brand blue
+val FyndablePurple = Color(0xFF8F39AC)     // Fyndable brand purple
 val FyndableBackground = Color(0xFFF8FAFC) // Very soft light grey background
 val FyndableSurface = Color(0xFFFFFFFF)    // Crisp white for cards
 
 private val LightColors = lightColorScheme(
-    primary = FyndablePurple,
+    primary = FyndableBlue,
     onPrimary = Color.White,
     primaryContainer = Color(0xFFEEF2FF),
     onPrimaryContainer = Color(0xFF4338CA),
@@ -39,7 +39,7 @@ private val LightColors = lightColorScheme(
 )
 
 private val DarkColors = darkColorScheme(
-    primary = FyndablePurple,
+    primary = FyndableBlue,
     onPrimary = Color.White,
     primaryContainer = Color(0xFF312E81),
     onPrimaryContainer = Color(0xFFE0E7FF),

@@ -638,7 +638,7 @@ class TenantRepository
                 'api_calls' => 'api_calls',
                 'api_cost' => 'api_cost',
                 'serp_requests' => 'serp_requests',
-                'content_generated' => 'content_generated',
+                'content_generated', 'ai_generation' => 'content_generated',
                 'keywords_tracked' => 'keywords_tracked',
                 default => null,
             };
@@ -666,7 +666,7 @@ class TenantRepository
                 'api_calls' => $metric === 'api_calls' ? $count : 0,
                 'api_cost' => $metric === 'api_cost' ? $cost : 0,
                 'serp_requests' => $metric === 'serp_requests' ? $count : 0,
-                'content_generated' => $metric === 'content_generated' ? $count : 0,
+                'content_generated' => in_array($metric, ['content_generated', 'ai_generation'], true) ? $count : 0,
                 'keywords_tracked' => $metric === 'keywords_tracked' ? $count : 0,
             ];
             

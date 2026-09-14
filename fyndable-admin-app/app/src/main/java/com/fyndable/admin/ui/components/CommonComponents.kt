@@ -195,7 +195,7 @@ fun FilterPill(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        color = if (selected) Color(0xFF7C3AED) else Color(0xFFF1F5F9),
+        color = if (selected) Color(0xFF8F39AC) else Color(0xFFF1F5F9),
         contentColor = if (selected) Color.White else Color(0xFF64748B)
     ) {
         Text(
@@ -221,7 +221,7 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
 @Composable
 fun StatusBadge(status: String, modifier: Modifier = Modifier) {
     val (textColor, bgColor) = when (status.lowercase().trim()) {
-        "active", "great" -> Color(0xFF10B981) to Color(0xFFD1FAE5)
+        "active", "used", "great" -> Color(0xFF10B981) to Color(0xFFD1FAE5)
         "trial", "pending", "needs work" -> Color(0xFFF59E0B) to Color(0xFFFEF3C7)
         "poor", "revoked", "suspended", "expired", "closed", "high" -> Color(0xFFEF4444) to Color(0xFFFEE2E2)
         "open" -> Color(0xFF3B82F6) to Color(0xFFDBEAFE)

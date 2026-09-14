@@ -149,7 +149,7 @@ fun LicensesScreen(viewModel: LicensesViewModel = hiltViewModel()) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showGenerateDialog = true },
-                containerColor = Color(0xFF7C3AED),
+                containerColor = Color(0xFF8F39AC),
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -175,7 +175,7 @@ fun LicensesScreen(viewModel: LicensesViewModel = hiltViewModel()) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color(0xFF1E293B),
                     unfocusedTextColor = Color(0xFF1E293B),
-                    focusedBorderColor = Color(0xFF7C3AED),
+                    focusedBorderColor = Color(0xFF8F39AC),
                     unfocusedBorderColor = Color(0xFFE2E8F0),
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White
@@ -233,7 +233,7 @@ private fun LicenseFiltersRow(
     selectedStatus: String,
     onStatusSelected: (String) -> Unit
 ) {
-    val statuses = listOf("All", "Active", "Trial", "Expired", "Revoked")
+    val statuses = listOf("All", "Active", "Used", "Trial", "Expired", "Revoked")
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -309,10 +309,10 @@ private fun LicenseCard(license: License, onRevoke: () -> Unit) {
                             Icons.Filled.ContentCopy,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = Color(0xFF7C3AED)
+                            tint = Color(0xFF8F39AC)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Copy", fontSize = 12.sp, color = Color(0xFF7C3AED))
+                        Text("Copy", fontSize = 12.sp, color = Color(0xFF8F39AC))
                     }
                 }
             }
@@ -364,7 +364,7 @@ private fun GenerateLicenseDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color(0xFF1E293B),
                         unfocusedTextColor = Color(0xFF1E293B),
-                        focusedBorderColor = Color(0xFF7C3AED),
+                        focusedBorderColor = Color(0xFF8F39AC),
                         unfocusedBorderColor = Color(0xFFE2E8F0),
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White
@@ -381,7 +381,7 @@ private fun GenerateLicenseDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color(0xFF1E293B),
                         unfocusedTextColor = Color(0xFF1E293B),
-                        focusedBorderColor = Color(0xFF7C3AED),
+                        focusedBorderColor = Color(0xFF8F39AC),
                         unfocusedBorderColor = Color(0xFFE2E8F0),
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White
@@ -403,7 +403,7 @@ private fun GenerateLicenseDialog(
                         )
                     )
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8F39AC)),
                 shape = RoundedCornerShape(8.dp)
             ) { Text("Generate", fontWeight = FontWeight.Bold) }
         },
@@ -429,7 +429,7 @@ private fun DropdownSelector(label: String, options: List<String>, selected: Str
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color(0xFF1E293B),
                 unfocusedTextColor = Color(0xFF1E293B),
-                focusedBorderColor = Color(0xFF7C3AED),
+                focusedBorderColor = Color(0xFF8F39AC),
                 unfocusedBorderColor = Color(0xFFE2E8F0),
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White
@@ -463,7 +463,7 @@ private fun RevokeDialog(license: License, onDismiss: () -> Unit, onConfirm: (St
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color(0xFF1E293B),
                         unfocusedTextColor = Color(0xFF1E293B),
-                        focusedBorderColor = Color(0xFF7C3AED),
+                        focusedBorderColor = Color(0xFF8F39AC),
                         unfocusedBorderColor = Color(0xFFE2E8F0),
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White

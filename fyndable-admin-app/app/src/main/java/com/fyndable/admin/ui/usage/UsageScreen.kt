@@ -195,7 +195,7 @@ private fun UsageCard(tenant: UsageOverviewTenant) {
                     text = "${String.format("%,d", apiCallsUsed)} / ${String.format("%,d", apiCallsLimit)}",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Black,
-                    color = if (exceeded) Color(0xFFEF4444) else Color(0xFF7C3AED)
+                    color = if (exceeded) Color(0xFFEF4444) else Color(0xFF8F39AC)
                 )
             }
             
@@ -206,7 +206,7 @@ private fun UsageCard(tenant: UsageOverviewTenant) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
-                color = if (exceeded) Color(0xFFEF4444) else Color(0xFF7C3AED),
+                color = if (exceeded) Color(0xFFEF4444) else Color(0xFF8F39AC),
                 trackColor = Color(0xFFEEF2FF),
                 strokeCap = StrokeCap.Round
             )

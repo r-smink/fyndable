@@ -161,18 +161,18 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
                         value = url,
                         onValueChange = { url = it },
                         label = { Text("Prospect URL") },
-                        leadingIcon = { Icon(Icons.Filled.Link, contentDescription = null, tint = Color(0xFF7C3AED)) },
+                        leadingIcon = { Icon(Icons.Filled.Link, contentDescription = null, tint = Color(0xFF8F39AC)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color(0xFF1E293B),
                             unfocusedTextColor = Color(0xFF1E293B),
-                            focusedBorderColor = Color(0xFF7C3AED),
+                            focusedBorderColor = Color(0xFF8F39AC),
                             unfocusedBorderColor = Color(0xFFE2E8F0),
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
-                            focusedLabelColor = Color(0xFF7C3AED),
+                            focusedLabelColor = Color(0xFF8F39AC),
                             unfocusedLabelColor = Color(0xFF94A3B8),
                         )
                     )
@@ -188,11 +188,11 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color(0xFF1E293B),
                             unfocusedTextColor = Color(0xFF1E293B),
-                            focusedBorderColor = Color(0xFF7C3AED),
+                            focusedBorderColor = Color(0xFF8F39AC),
                             unfocusedBorderColor = Color(0xFFE2E8F0),
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
-                            focusedLabelColor = Color(0xFF7C3AED),
+                            focusedLabelColor = Color(0xFF8F39AC),
                             unfocusedLabelColor = Color(0xFF94A3B8),
                         )
                     )
@@ -214,7 +214,7 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             LinearProgressIndicator(
                                 modifier = Modifier.fillMaxWidth(),
-                                color = Color(0xFF7C3AED),
+                                color = Color(0xFF8F39AC),
                                 trackColor = Color(0xFFEEF2FF)
                             )
                             Spacer(Modifier.height(8.dp))
@@ -235,7 +235,7 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
                                 .fillMaxWidth()
                                 .height(52.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8F39AC))
                         ) { Text("Start GEO Scan", fontWeight = FontWeight.Bold) }
                     }
                     
@@ -333,7 +333,7 @@ private fun LanguageSelector(selected: String, onSelect: (String) -> Unit, modif
             onValueChange = {},
             readOnly = true,
             label = { Text("Language") },
-            leadingIcon = { Icon(Icons.Filled.Language, contentDescription = null, tint = Color(0xFF7C3AED), modifier = Modifier.size(18.dp)) },
+            leadingIcon = { Icon(Icons.Filled.Language, contentDescription = null, tint = Color(0xFF8F39AC), modifier = Modifier.size(18.dp)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
             shape = RoundedCornerShape(12.dp),
@@ -341,11 +341,11 @@ private fun LanguageSelector(selected: String, onSelect: (String) -> Unit, modif
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color(0xFF1E293B),
                 unfocusedTextColor = Color(0xFF1E293B),
-                focusedBorderColor = Color(0xFF7C3AED),
+                focusedBorderColor = Color(0xFF8F39AC),
                 unfocusedBorderColor = Color(0xFFE2E8F0),
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedLabelColor = Color(0xFF7C3AED),
+                focusedLabelColor = Color(0xFF8F39AC),
                 unfocusedLabelColor = Color(0xFF94A3B8),
             )
         )
@@ -383,11 +383,11 @@ private fun ModelSelector(modifier: Modifier = Modifier) {
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color(0xFF1E293B),
                 unfocusedTextColor = Color(0xFF1E293B),
-                focusedBorderColor = Color(0xFF7C3AED),
+                focusedBorderColor = Color(0xFF8F39AC),
                 unfocusedBorderColor = Color(0xFFE2E8F0),
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedLabelColor = Color(0xFF7C3AED),
+                focusedLabelColor = Color(0xFF8F39AC),
                 unfocusedLabelColor = Color(0xFF94A3B8),
             )
         )
@@ -415,7 +415,7 @@ private fun ReportDialog(report: GeoScanReport, onDismiss: () -> Unit) {
         },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text(report.url, color = Color(0xFF7C3AED), fontWeight = FontWeight.Bold)
+                Text(report.url, color = Color(0xFF8F39AC), fontWeight = FontWeight.Bold)
                 Text("Scanned on ${report.scannedAt}", style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
                 
                 Spacer(Modifier.height(20.dp))
@@ -423,7 +423,7 @@ private fun ReportDialog(report: GeoScanReport, onDismiss: () -> Unit) {
                 SectionHeader("Findings")
                 report.findings.forEach { finding ->
                     Row(Modifier.padding(vertical = 4.dp)) {
-                        Text("• ", fontWeight = FontWeight.Black, color = Color(0xFF7C3AED))
+                        Text("• ", fontWeight = FontWeight.Black, color = Color(0xFF8F39AC))
                         Text(finding, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF334155))
                     }
                 }
@@ -454,7 +454,7 @@ private fun ReportDialog(report: GeoScanReport, onDismiss: () -> Unit) {
         confirmButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8F39AC)),
                 shape = RoundedCornerShape(8.dp)
             ) { Text("Done", fontWeight = FontWeight.Bold) }
         },

@@ -520,7 +520,7 @@ class Client
             $this->promptTemplateLibrary = new PromptTemplateLibrary($this->settings, $this->licenseValidator);
             $this->promptTemplateLibrary->register();
 
-            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary);
+            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary, $this->aiImageGenerator);
             $this->contentWriter->register();
             
             $this->aiRepurposer = new AIRepurposer($this->settings, $this->llmClient);

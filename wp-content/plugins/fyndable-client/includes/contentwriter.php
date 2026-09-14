@@ -15,19 +15,23 @@ class ContentWriter
     private Settings $settings;
     private ?ContentBrief $contentBrief;
     private ?PromptTemplateLibrary $templates;
+    private ?AIImageGenerator $imageGenerator;
 
-    public function __construct(LlmClient $llm, Settings $settings, ?ContentBrief $contentBrief = null, ?PromptTemplateLibrary $templates = null)
+    public function __construct(LlmClient $llm, Settings $settings, ?ContentBrief $contentBrief = null, ?PromptTemplateLibrary $templates = null, ?AIImageGenerator $imageGenerator = null)
     {
         $this->llm = $llm;
         $this->settings = $settings;
         $this->contentBrief = $contentBrief;
         $this->templates = $templates;
+        $this->imageGenerator = $imageGenerator;
     }
 
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         // Menu registration moved to Client class
+        // Auto-generate featured image after content generation
+        add_action('sseo_ai_auto_featured_image', [$this, 'autoGenerateFeaturedImage']);
     }
 
     public function addMenu(): void
@@ -608,6 +612,15 @@ Requirements:
             // Silently fail — fact checking is optional and non-blocking
         }
 
+        // Auto-generate a featured image if an AIImageGenerator is available
+        // and the post doesn't already have one. This runs in the background
+        // (non-blocking) so content generation is not delayed by image gen.
+        if ($this->imageGenerator && !has_post_thumbnail($postId)) {
+            // Schedule async featured image generation so it doesn't block
+            // the content generation response.
+            wp_schedule_single_event(time() + 5, 'sseo_ai_auto_featured_image', [$postId]);
+        }
+
         return $postId;
     }
 
@@ -667,7 +680,25 @@ Requirements:
         // Remove markdown code blocks
         $html = preg_replace('/```html\s*/', '', $html);
         $html = preg_replace('/```\s*/', '', $html);
-        
+
+        // Some models wrap their entire response in a JSON object like
+        // {"content": "...", "title": "..."}. Extract the content field if
+        // the response looks like JSON.
+        $trimmed = trim($html);
+        if (str_starts_with($trimmed, '{') && str_ends_with($trimmed, '}')) {
+            $decoded = json_decode($trimmed, true);
+            if (is_array($decoded) && isset($decoded['content']) && is_string($decoded['content'])) {
+                $html = $decoded['content'];
+            }
+        }
+
+        // Some models output literal \n as the two characters "backslash n"
+        // instead of an actual newline. Convert those to real newlines.
+        $html = str_replace(['\\r\\n', '\\n', '\\t'], ["\n", "\n", "\t"], $html);
+
+        // Strip any remaining JSON wrapper artifacts like {content: ""}
+        $html = preg_replace('/\{["\']?content["\']?\s*:\s*["\'][^"\']*["\']\s*\}/s', '', $html);
+
         // Ensure paragraphs are wrapped
         $html = trim($html);
         if (strpos($html, '<') === false) {
@@ -677,6 +708,36 @@ Requirements:
         }
 
         return $html;
+    }
+
+    /**
+     * Auto-generate a featured image for a post (called via cron).
+     * Fails gracefully — image generation is optional and non-blocking.
+     */
+    public function autoGenerateFeaturedImage(int $postId): void
+    {
+        if (!$this->imageGenerator) {
+            return;
+        }
+
+        $post = get_post($postId);
+        if (!$post) {
+            return;
+        }
+
+        // Skip if the post already has a featured image
+        if (has_post_thumbnail($postId)) {
+            return;
+        }
+
+        try {
+            $this->imageGenerator->generateFeaturedImage($postId);
+        } catch (\Exception $e) {
+            // Silently fail — featured image is optional
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Fyndable auto featured image failed: ' . $e->getMessage());
+            }
+        }
     }
 
     /**
