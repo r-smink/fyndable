@@ -64,23 +64,38 @@ class AiOverviewExtractor
             'output'        => 'json',
         ], 'https://serpapi.com/search');
 
-        $response = wp_remote_get($url, ['timeout' => 60]);
+        $lastError = null;
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            $response = wp_remote_get($url, ['timeout' => 30]);
 
-        if (is_wp_error($response)) {
-            return $response;
-        }
+            if (is_wp_error($response)) {
+                return $response;
+            }
 
-        $statusCode = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+            $statusCode = wp_remote_retrieve_response_code($response);
+            $body = json_decode(wp_remote_retrieve_body($response), true);
 
-        if ($statusCode !== 200 || !empty($body['error'])) {
+            if ($statusCode === 200 && empty($body['error'])) {
+                $result = $this->parse($body, $keyword);
+                $result['provider'] = 'serpapi';
+                return $result;
+            }
+
             $message = is_string($body['error'] ?? '') ? $body['error'] : __('Unknown SerpApi error', 'sseo-ai-saas');
-            return new \WP_Error('serpapi_error', $message);
+            $lastError = new \WP_Error('serpapi_error', $message);
+
+            // Retry once on rate limit / too many requests.
+            if ($statusCode === 429 || stripos($message, 'rate') !== false || stripos($message, 'limit') !== false) {
+                if ($attempt < 2) {
+                    sleep(2);
+                    continue;
+                }
+            }
+
+            break;
         }
 
-        $result = $this->parse($body, $keyword);
-        $result['provider'] = 'serpapi';
-        return $result;
+        return $lastError ?: new \WP_Error('serpapi_error', __('Unknown SerpApi error', 'sseo-ai-saas'));
     }
 
     /**

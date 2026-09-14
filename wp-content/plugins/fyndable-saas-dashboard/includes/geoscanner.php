@@ -40,6 +40,10 @@ class GeoScanner
      */
     public function scan(string $url, array $keywords, string $language = 'nl'): array|\WP_Error
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(600);
+        }
+
         $url = esc_url_raw($url);
 
         if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -62,12 +66,27 @@ class GeoScanner
         $pageText = $htmlResult['text'] ?? '';
 
         $keywordResults = [];
-        foreach ($keywords as $keyword) {
+        $failedKeywords = [];
+        foreach ($keywords as $index => $keyword) {
             $res = $this->aiExtractor->getForKeyword($keyword, $language);
             if (is_wp_error($res)) {
-                return $res;
+                $failedKeywords[] = [
+                    'keyword' => $keyword,
+                    'error'   => $res->get_error_message(),
+                ];
+                continue;
             }
             $keywordResults[] = $res;
+
+            // Small delay to reduce the chance of SerpApi rate limits when
+            // multiple keywords are scanned in quick succession.
+            if ($index < count($keywords) - 1) {
+                usleep(500000);
+            }
+        }
+
+        if (empty($keywordResults)) {
+            return new \WP_Error('all_keywords_failed', __('All keyword lookups failed. Please check your SERP provider settings and try again.', 'sseo-ai-saas'));
         }
 
         $llmResult = $this->analyzeWithLlm($pageText, $keywords, $keywordResults);
@@ -76,7 +95,7 @@ class GeoScanner
         }
 
         $targetHost = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
-        $report = $this->buildReport($url, $keywords, $language, $htmlResult, $keywordResults, $llmResult, $targetHost);
+        $report = $this->buildReport($url, $keywords, $language, $htmlResult, $keywordResults, $failedKeywords, $llmResult, $targetHost);
 
         $scanId = $this->repository->insert($url, $keywords, $language, $report);
 
@@ -186,6 +205,7 @@ AI Overview context:
         string $language,
         array $htmlResult,
         array $keywordResults,
+        array $failedKeywords,
         array $llmResult,
         string $targetHost
     ): array {
@@ -247,6 +267,7 @@ AI Overview context:
             'entity_coverage'               => (int)($llmResult['breakdown']['entity_coverage'] ?? 0),
             'competitive_gap'               => (int)($llmResult['breakdown']['competitive_gap'] ?? 0),
             'keywords_analysis'             => $keywordsAnalysis,
+            'failed_keywords'               => $failedKeywords,
             'page_text_preview'             => mb_substr($htmlResult['text'] ?? '', 0, 500),
             'html_source'                   => $htmlResult['source'] ?? 'unknown',
             'usage'                         => $llmResult['usage'] ?? [],
