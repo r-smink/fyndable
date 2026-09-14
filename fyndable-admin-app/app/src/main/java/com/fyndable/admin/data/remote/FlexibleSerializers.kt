@@ -42,6 +42,26 @@ object FlexibleIntMapSerializer : KSerializer<Map<String, Int>> by FlexibleMapSe
 object FlexibleRevenueTierMapSerializer : KSerializer<Map<String, RevenueTier>> by FlexibleMapSerializer(RevenueTier.serializer())
 object FlexibleNestedStringMapSerializer : KSerializer<Map<String, Map<String, String>>> by FlexibleMapSerializer(FlexibleStringMapSerializer)
 
+object LimitCheckFlexibleSerializer : KSerializer<LimitCheck?> {
+    private val delegate = LimitCheck.serializer()
+    override val descriptor: SerialDescriptor = delegate.descriptor
+
+    override fun serialize(encoder: Encoder, value: LimitCheck?) {
+        if (value != null) delegate.serialize(encoder, value)
+    }
+
+    override fun deserialize(decoder: Decoder): LimitCheck? {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: throw SerializationException("Only JsonDecoder is supported")
+        val element = jsonDecoder.decodeJsonElement()
+        return when {
+            element is JsonObject -> jsonDecoder.json.decodeFromJsonElement(delegate, element)
+            element.jsonArray.isEmpty() -> null
+            else -> throw SerializationException("Expected JSON object for LimitCheck, got ${element}")
+        }
+    }
+}
+
 /**
  * Deserializes LimitChecks from a JSON object. An empty JSON array `[]` is
  * treated as `null`.

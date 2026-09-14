@@ -85,26 +85,39 @@ class AiModelsViewModel @Inject constructor(
     fun load() {
         _state.value = AiModelsState.Loading
         viewModelScope.launch {
-            when (val result = repository.get()) {
-                is ApiResult.Success -> _state.value = AiModelsState.Success(result.data)
-                is ApiResult.Error -> _state.value = AiModelsState.Error(result.message)
+            _state.value = try {
+                when (val result = repository.get()) {
+                    is ApiResult.Success -> AiModelsState.Success(result.data)
+                    is ApiResult.Error -> AiModelsState.Error(result.message)
+                }
+            } catch (e: Exception) {
+                AiModelsState.Error(e.message ?: e.toString())
             }
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
-            repository.refresh()
-            load()
+            try {
+                repository.refresh()
+                load()
+            } catch (e: Exception) {
+                _state.value = AiModelsState.Error(e.message ?: e.toString())
+            }
         }
     }
 
     fun save(standard: Map<String, String>, premium: Map<String, String>, onDone: (Boolean) -> Unit) {
         saving = true
         viewModelScope.launch {
-            when (val result = repository.save(SaveAiModelsRequest(standard, premium))) {
-                is ApiResult.Success -> { saving = false; load(); onDone(true) }
-                is ApiResult.Error -> { saving = false; onDone(false) }
+            try {
+                when (val result = repository.save(SaveAiModelsRequest(standard, premium))) {
+                    is ApiResult.Success -> { saving = false; load(); onDone(true) }
+                    is ApiResult.Error -> { saving = false; onDone(false) }
+                }
+            } catch (e: Exception) {
+                saving = false
+                onDone(false)
             }
         }
     }

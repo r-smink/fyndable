@@ -66,9 +66,13 @@ class UsageViewModel @Inject constructor(
     fun load() {
         _state.value = UsageState.Loading
         viewModelScope.launch {
-            when (val result = repository.overview()) {
-                is ApiResult.Success -> _state.value = UsageState.Success(result.data.tenants)
-                is ApiResult.Error -> _state.value = UsageState.Error(result.message)
+            _state.value = try {
+                when (val result = repository.overview()) {
+                    is ApiResult.Success -> UsageState.Success(result.data.tenants)
+                    is ApiResult.Error -> UsageState.Error(result.message)
+                }
+            } catch (e: Exception) {
+                UsageState.Error(e.message ?: e.toString())
             }
         }
     }

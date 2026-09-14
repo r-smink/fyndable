@@ -202,7 +202,9 @@ data class TenantLimits(
 
 @Serializable
 data class LimitChecks(
+    @Serializable(with = LimitCheckFlexibleSerializer::class)
     @SerialName("api_calls") val apiCalls: LimitCheck? = null,
+    @Serializable(with = LimitCheckFlexibleSerializer::class)
     @SerialName("api_cost") val apiCost: LimitCheck? = null,
 )
 
