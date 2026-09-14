@@ -196,6 +196,7 @@ data class UsageData(
 data class TenantLimits(
     val valid: Boolean = true,
     val error: String? = null,
+    @Serializable(with = LimitChecksFlexibleSerializer::class)
     val checks: LimitChecks? = null,
 )
 
@@ -249,6 +250,7 @@ data class UsageOverviewTenant(
     val tier: String,
     val email: String,
     val usage: UsageData,
+    @Serializable(with = LimitChecksFlexibleSerializer::class)
     val limits: LimitChecks? = null,
     val onboarding: OnboardingInfo,
 )
@@ -271,6 +273,7 @@ data class RevenueStats(
     @SerialName("new_this_month") val newThisMonth: Int = 0,
     @SerialName("churned_this_month") val churnedThisMonth: Int = 0,
     @SerialName("trial_conversion_rate") val trialConversionRate: Double = 0.0,
+    @Serializable(with = FlexibleRevenueTierMapSerializer::class)
     @SerialName("revenue_by_tier") val revenueByTier: Map<String, RevenueTier> = emptyMap(),
     @SerialName("mrr_trend") val mrrTrend: List<MrrTrendPoint> = emptyList(),
 )
@@ -390,6 +393,7 @@ data class GeoScanReport(
     val language: String = "nl",
     @SerialName("scanned_at") val scannedAt: String = "",
     val score: Int = 0,
+    @Serializable(with = FlexibleIntMapSerializer::class)
     val breakdown: Map<String, Int> = emptyMap(),
     val findings: List<String> = emptyList(),
     val recommendations: List<String> = emptyList(),
@@ -433,39 +437,52 @@ data class CompetitorCitation(
 @Serializable
 data class AiModelsResponse(
     val success: Boolean,
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("use_cases") val useCases: Map<String, String> = emptyMap(),
     val standard: ModelTier,
     val premium: ModelTier,
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("all_models") val allModels: Map<String, String> = emptyMap(),
     @SerialName("all_model_count") val allModelCount: Int = 0,
 )
 
 @Serializable
 data class ModelTier(
+    @Serializable(with = FlexibleStringMapSerializer::class)
     val routing: Map<String, String> = emptyMap(),
+    @Serializable(with = FlexibleStringMapSerializer::class)
     val defaults: Map<String, String> = emptyMap(),
+    @Serializable(with = FlexibleStringMapSerializer::class)
     val models: Map<String, String> = emptyMap(),
 )
 
 @Serializable
 data class SaveAiModelsRequest(
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("standard_routing") val standardRouting: Map<String, String>? = null,
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("premium_routing") val premiumRouting: Map<String, String>? = null,
 )
 
 @Serializable
 data class SaveAiModelsResponse(
     val success: Boolean,
+    @Serializable(with = FlexibleNestedStringMapSerializer::class)
     val saved: Map<String, Map<String, String>> = emptyMap(),
+    @Serializable(with = FlexibleStringMapSerializer::class)
     val standard: Map<String, String> = emptyMap(),
+    @Serializable(with = FlexibleStringMapSerializer::class)
     val premium: Map<String, String> = emptyMap(),
 )
 
 @Serializable
 data class RefreshAiModelsResponse(
     val success: Boolean,
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("all_models") val allModels: Map<String, String> = emptyMap(),
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("standard_models") val standardModels: Map<String, String> = emptyMap(),
+    @Serializable(with = FlexibleStringMapSerializer::class)
     @SerialName("premium_models") val premiumModels: Map<String, String> = emptyMap(),
     @SerialName("all_model_count") val allModelCount: Int = 0,
 )
