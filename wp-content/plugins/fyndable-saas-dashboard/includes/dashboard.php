@@ -47,6 +47,7 @@ class Dashboard
     private GeoScanAdmin $geoScanAdmin;
     private Feedback $feedback;
     private FeedbackAdmin $feedbackAdmin;
+    private AdminApi $adminApi;
 
     public function __construct()
     {
@@ -147,6 +148,18 @@ class Dashboard
             $this->geoScanReport
         );
 
+        // Admin REST API (consumed by the internal Android management app).
+        $this->adminApi = new AdminApi(
+            $this->licenseGenerator,
+            $this->tenants,
+            $this->supportTickets,
+            $this->geoScanner,
+            $this->geoScanRepository,
+            $this->providerRouter,
+            $this->saasSettings,
+            $this->revenueDashboard
+        );
+
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
         add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
@@ -179,6 +192,7 @@ class Dashboard
         add_action('rest_api_init', [$this->supportTickets, 'registerRoutes']);
         add_action('rest_api_init', [$this->feedback, 'registerRoutes']);
         add_action('rest_api_init', [$this->updateServer, 'register']);
+        add_action('rest_api_init', [$this->adminApi, 'register']);
 
         // Register self-serve signup (REST + shortcode)
         $this->signupCheckout->register();
