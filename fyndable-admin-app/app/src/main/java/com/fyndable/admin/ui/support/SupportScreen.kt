@@ -1,24 +1,31 @@
 package com.fyndable.admin.ui.support
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,10 +34,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,8 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +66,7 @@ import com.fyndable.admin.data.repo.SupportRepository
 import com.fyndable.admin.ui.components.EmptyState
 import com.fyndable.admin.ui.components.ErrorView
 import com.fyndable.admin.ui.components.LoadingIndicator
+import com.fyndable.admin.ui.components.OpsHeader
 import com.fyndable.admin.ui.components.SectionHeader
 import com.fyndable.admin.ui.components.StatusBadge
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -124,7 +137,6 @@ fun SupportScreen(viewModel: SupportViewModel = hiltViewModel()) {
     val detailTicket by viewModel.detailState.collectAsStateWithLifecycle()
     var selectedTicketId by remember { mutableStateOf<Int?>(null) }
     var search by remember { mutableStateOf("") }
-    var statusFilter by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         if (listState is TicketListState.Loading) viewModel.loadList()
@@ -143,30 +155,30 @@ fun SupportScreen(viewModel: SupportViewModel = hiltViewModel()) {
         return
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Support Tickets") }) }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = search,
-                    onValueChange = { search = it },
-                    label = { Text("Search") },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
+    Scaffold(
+        topBar = { OpsHeader(title = "Support Tickets") },
+        containerColor = Color(0xFFF8FAFC)
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            OutlinedTextField(
+                value = search,
+                onValueChange = { 
+                    search = it
+                    viewModel.loadList(search = it.ifBlank { null })
+                },
+                placeholder = { Text("Search tickets...") },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFF94A3B8)) },
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFF1E293B),
+                    unfocusedTextColor = Color(0xFF1E293B),
+                    focusedBorderColor = Color(0xFF6366F1),
+                    unfocusedBorderColor = Color(0xFFE2E8F0),
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
                 )
-                OutlinedTextField(
-                    value = statusFilter,
-                    onValueChange = { statusFilter = it },
-                    label = { Text("Status") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = { viewModel.loadList(statusFilter.ifBlank { null }, null, search.ifBlank { null }) }) {
-                Text("Apply Filters")
-            }
-            Spacer(Modifier.height(8.dp))
+            )
 
             when (val s = listState) {
                 is TicketListState.Loading -> LoadingIndicator()
@@ -175,7 +187,10 @@ fun SupportScreen(viewModel: SupportViewModel = hiltViewModel()) {
                     if (s.tickets.isEmpty()) {
                         EmptyState("No tickets found")
                     } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
                             items(s.tickets) { ticket ->
                                 TicketCard(ticket) {
                                     selectedTicketId = ticket.id
@@ -194,20 +209,57 @@ fun SupportScreen(viewModel: SupportViewModel = hiltViewModel()) {
 private fun TicketCard(ticket: Ticket, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(1.dp),
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFF1F5F9))
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("#${ticket.id}", fontWeight = FontWeight.Bold)
+                Text(
+                    text = ticket.subject,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color(0xFF1E293B),
+                    modifier = Modifier.weight(1f)
+                )
                 StatusBadge(ticket.status)
             }
-            Text(ticket.subject, fontWeight = FontWeight.SemiBold)
-            Text(ticket.tenantName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Priority: ${ticket.priority}", style = MaterialTheme.typography.labelMedium)
-            Text(ticket.updatedAt, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
-            TextButton(onClick = onClick) { Text("View") }
+            Text(
+                text = ticket.tenantName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6366F1),
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val priorityColor = when(ticket.priority.lowercase()) {
+                        "high" -> Color(0xFFEF4444)
+                        "medium" -> Color(0xFFF59E0B)
+                        else -> Color(0xFF10B981)
+                    }
+                    Box(modifier = Modifier.size(8.dp).background(priorityColor, CircleShape))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "${ticket.priority.uppercase()} PRIORITY",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF94A3B8)
+                    )
+                }
+                Text(
+                    text = ticket.updatedAt.split(" ")[0], // Simplified date
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF94A3B8)
+                )
+            }
         }
     }
 }
@@ -221,107 +273,138 @@ private fun TicketDetailScreen(
     onBack: () -> Unit,
 ) {
     var replyText by remember { mutableStateOf("") }
-    var showStatusDialog by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text("Ticket #$ticketId") },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            },
-        )
-    }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { 
+                    Column {
+                        Text("Ticket #$ticketId", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(ticket?.tenantName ?: "", fontSize = 12.sp, color = Color.White.copy(alpha = 0.7f))
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1E293B),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        containerColor = Color(0xFFF8FAFC)
+    ) { padding ->
         if (ticket == null) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Color(0xFF6366F1))
             }
             return@Scaffold
         }
 
-        Column(
-            Modifier.fillMaxSize().padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
-        ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(ticket.subject, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                StatusBadge(ticket.status)
-            }
-            Text("${ticket.tenantName} (${ticket.tenantEmail})", style = MaterialTheme.typography.bodyMedium)
-            Text("Created: ${ticket.createdAt}", style = MaterialTheme.typography.labelMedium)
-            Spacer(Modifier.height(12.dp))
-
-            SectionHeader("Original Message")
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                Text(ticket.message, modifier = Modifier.padding(12.dp))
-            }
-
-            Spacer(Modifier.height(16.dp))
-            SectionHeader("Conversation")
-            ticket.replies.forEach { reply ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            Column(
+                Modifier.weight(1f).padding(horizontal = 16.dp).verticalScroll(rememberScrollState()),
+            ) {
+                Spacer(Modifier.height(16.dp))
+                
+                // Original Message
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (reply.isStaff == 1) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surface
-                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
-                    Column(Modifier.padding(12.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(
-                                if (reply.isStaff == 1) (reply.authorName ?: "Support") else ticket.tenantName,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(reply.createdAt, style = MaterialTheme.typography.labelMedium)
+                    Column(Modifier.padding(16.dp)) {
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Initial Request", fontWeight = FontWeight.Black, fontSize = 10.sp, color = Color(0xFF94A3B8))
+                            Text(ticket.createdAt, fontSize = 10.sp, color = Color(0xFF94A3B8))
                         }
-                        Spacer(Modifier.height(4.dp))
-                        Text(reply.message)
+                        Spacer(Modifier.height(8.dp))
+                        Text(ticket.message, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF334155))
                     }
                 }
-            }
 
-            Spacer(Modifier.height(16.dp))
-            SectionHeader("Reply")
-            OutlinedTextField(
-                value = replyText,
-                onValueChange = { replyText = it },
-                label = { Text("Message") },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = {
-                        if (replyText.isNotBlank()) {
-                            viewModel.reply(ticketId, replyText) { success ->
-                                if (success) replyText = ""
+                Spacer(Modifier.height(24.dp))
+                SectionHeader("Conversation")
+                
+                ticket.replies.forEach { reply ->
+                    val isStaff = reply.isStaff == 1
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalAlignment = if (isStaff) Alignment.End else Alignment.Start
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(
+                                topStart = 16.dp, 
+                                topEnd = 16.dp, 
+                                bottomStart = if (isStaff) 16.dp else 4.dp, 
+                                bottomEnd = if (isStaff) 4.dp else 16.dp
+                            ),
+                            color = if (isStaff) Color(0xFF6366F1) else Color(0xFFF1F5F9),
+                            contentColor = if (isStaff) Color.White else Color(0xFF334155),
+                            border = if (!isStaff) BorderStroke(1.dp, Color(0xFFE2E8F0)) else null
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(reply.message, style = MaterialTheme.typography.bodyMedium)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = reply.createdAt.split(" ")[1], // Show time only
+                                    fontSize = 10.sp,
+                                    color = if (isStaff) Color.White.copy(alpha = 0.7f) else Color(0xFF94A3B8),
+                                    modifier = Modifier.align(Alignment.End)
+                                )
                             }
                         }
-                    },
-                ) { Text("Send Reply") }
-                TextButton(onClick = { showStatusDialog = true }) { Text("Update Status") }
-            }
-        }
-    }
-
-    if (showStatusDialog) {
-        AlertDialog(
-            onDismissRequest = { showStatusDialog = false },
-            title = { Text("Update Status") },
-            text = {
-                Column {
-                    listOf("open", "reaction", "closed").forEach { status ->
-                        TextButton(
-                            onClick = {
-                                viewModel.updateTicket(ticketId, status, null)
-                                showStatusDialog = false
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text(status.replaceFirstChar { it.uppercase() }) }
                     }
                 }
-            },
-            confirmButton = { TextButton(onClick = { showStatusDialog = false }) { Text("Cancel") } },
-        )
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Reply area
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = replyText,
+                        onValueChange = { replyText = it },
+                        placeholder = { Text("Type a reply...") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(24.dp),
+                        maxLines = 4,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF1E293B),
+                            unfocusedTextColor = Color(0xFF1E293B),
+                            focusedBorderColor = Color(0xFF6366F1),
+                            unfocusedBorderColor = Color(0xFFE2E8F0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        )
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    IconButton(
+                        onClick = {
+                            if (replyText.isNotBlank()) {
+                                viewModel.reply(ticketId, replyText) { success ->
+                                    if (success) replyText = ""
+                                }
+                            }
+                        },
+                        modifier = Modifier.size(48.dp).background(Color(0xFF6366F1), CircleShape)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = Color.White)
+                    }
+                }
+            }
+        }
     }
 }

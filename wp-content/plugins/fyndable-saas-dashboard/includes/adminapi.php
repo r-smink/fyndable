@@ -453,7 +453,11 @@ class AdminApi
             'success' => true,
             'tenant' => $tenant,
             'usage' => $usage,
-            'limits' => $limits,
+            'limits' => [
+                'valid' => $limits['valid'] ?? true,
+                'error' => $limits['error'] ?? null,
+                'checks' => (object)($limits['checks'] ?? []),
+            ],
             'onboarding' => [
                 'completed' => $onboardingCompleted,
                 'completed_at' => $onboardingCompletedAt,
@@ -508,7 +512,7 @@ class AdminApi
                     'content_generated' => (int) ($usage['content_generated'] ?? 0),
                     'keywords_tracked' => (int) ($usage['keywords_tracked'] ?? 0),
                 ],
-                'limits' => $limits['checks'] ?? [],
+                'limits' => (object)($limits['checks'] ?? []),
                 'onboarding' => [
                     'completed' => $onboardingCompleted,
                     'completed_at' => $onboardingCompletedAt,
@@ -525,9 +529,11 @@ class AdminApi
 
     public function getRevenueStats(\WP_REST_Request $request): \WP_REST_Response
     {
+        $stats = $this->revenueDashboard->getStats();
+        $stats['revenue_by_tier'] = (object)($stats['revenue_by_tier'] ?? []);
         return new \WP_REST_Response([
             'success' => true,
-            'stats' => $this->revenueDashboard->getStats(),
+            'stats' => $stats,
         ], 200);
     }
 
@@ -740,18 +746,18 @@ class AdminApi
 
         return new \WP_REST_Response([
             'success' => true,
-            'use_cases' => $useCases,
+            'use_cases' => (object)$useCases,
             'standard' => [
-                'routing' => $standardRouting,
-                'defaults' => $standardDefaults,
-                'models' => $standardModels,
+                'routing' => (object)$standardRouting,
+                'defaults' => (object)$standardDefaults,
+                'models' => (object)$standardModels,
             ],
             'premium' => [
-                'routing' => $premiumRouting,
-                'defaults' => $premiumDefaults,
-                'models' => $premiumModels,
+                'routing' => (object)$premiumRouting,
+                'defaults' => (object)$premiumDefaults,
+                'models' => (object)$premiumModels,
             ],
-            'all_models' => $allModels,
+            'all_models' => (object)$allModels,
             'all_model_count' => count($allModels),
         ], 200);
     }
@@ -784,9 +790,9 @@ class AdminApi
 
         return new \WP_REST_Response([
             'success' => true,
-            'saved' => $saved,
-            'standard' => get_option('sseo_ai_saas_standard_routing', []),
-            'premium' => get_option('sseo_ai_saas_premium_routing', []),
+            'saved' => (object)$saved,
+            'standard' => (object)get_option('sseo_ai_saas_standard_routing', []),
+            'premium' => (object)get_option('sseo_ai_saas_premium_routing', []),
         ], 200);
     }
 
@@ -798,9 +804,9 @@ class AdminApi
 
         return new \WP_REST_Response([
             'success' => true,
-            'all_models' => $allModels,
-            'standard_models' => $standardModels,
-            'premium_models' => $premiumModels,
+            'all_models' => (object)$allModels,
+            'standard_models' => (object)$standardModels,
+            'premium_models' => (object)$premiumModels,
             'all_model_count' => count($allModels),
         ], 200);
     }

@@ -1,9 +1,7 @@
 package com.fyndable.admin.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -15,63 +13,60 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
-// Fyndable brand colors (from SaaS dashboard white-label defaults)
-val FyndablePrimary = Color(0xFF379FD3)
-val FyndableSecondary = Color(0xFF8F39AC)
-val FyndablePrimaryDark = Color(0xFF1E7BA8)
-val FyndableSecondaryDark = Color(0xFF6E2A86)
+// Beautiful Claude-inspired color palette for Fyndable Ops
+val FyndableNavy = Color(0xFF1E293B)       // Deep slate navy for headers
+val FyndablePurple = Color(0xFF6366F1)     // Vibrant indigo/purple for buttons
+val FyndableBackground = Color(0xFFF8FAFC) // Very soft light grey background
+val FyndableSurface = Color(0xFFFFFFFF)    // Crisp white for cards
 
 private val LightColors = lightColorScheme(
-    primary = FyndablePrimary,
+    primary = FyndablePurple,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD0EAF5),
-    onPrimaryContainer = Color(0xFF003547),
-    secondary = FyndableSecondary,
+    primaryContainer = Color(0xFFEEF2FF),
+    onPrimaryContainer = Color(0xFF4338CA),
+    secondary = FyndableNavy,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFEFD9F5),
-    onSecondaryContainer = Color(0xFF2D0A3A),
-    background = Color(0xFFF7F9FC),
-    onBackground = Color(0xFF1A1C1E),
-    surface = Color.White,
-    onSurface = Color(0xFF1A1C1E),
-    surfaceVariant = Color(0xFFE3E7EC),
-    onSurfaceVariant = Color(0xFF44474E),
-    error = Color(0xFFBA1A1A),
+    background = FyndableBackground,
+    onBackground = Color(0xFF0F172A),
+    surface = FyndableSurface,
+    onSurface = Color(0xFF0F172A),
+    surfaceVariant = Color(0xFFF1F5F9),
+    onSurfaceVariant = Color(0xFF64748B),
+    error = Color(0xFFEF4444),
     onError = Color.White,
 )
 
 private val DarkColors = darkColorScheme(
-    primary = FyndablePrimaryDark,
+    primary = FyndablePurple,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFF004D6E),
-    onPrimaryContainer = Color(0xFFC5E7FF),
-    secondary = FyndableSecondaryDark,
+    primaryContainer = Color(0xFF312E81),
+    onPrimaryContainer = Color(0xFFE0E7FF),
+    secondary = FyndableNavy,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFF4A1A5E),
-    onSecondaryContainer = Color(0xFFEFD9F5),
-    background = Color(0xFF111316),
-    onBackground = Color(0xFFE3E7EC),
-    surface = Color(0xFF1A1C1E),
-    onSurface = Color(0xFFE3E7EC),
-    surfaceVariant = Color(0xFF44474E),
-    onSurfaceVariant = Color(0xFFC3C7CF),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
+    background = Color(0xFF0F172A),
+    onBackground = Color(0xFFF8FAFC),
+    surface = Color(0xFF1E293B),
+    onSurface = Color(0xFFF8FAFC),
+    surfaceVariant = Color(0xFF334155),
+    onSurfaceVariant = Color(0xFF94A3B8),
+    error = Color(0xFFF87171),
+    onError = Color.White,
 )
 
 @Composable
 fun FyndableAdminTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = if (darkTheme) DarkColors else LightColors
+    // The UI uses hardcoded light colors throughout (white cards, light grey
+    // backgrounds). Dark theme would make text invisible. Force light mode.
+    val colorScheme = LightColors
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
         }
     }
 

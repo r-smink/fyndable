@@ -1,31 +1,44 @@
 package com.fyndable.admin.ui.geoscan
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,8 +47,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +62,8 @@ import com.fyndable.admin.data.repo.GeoScanRepository
 import com.fyndable.admin.ui.components.EmptyState
 import com.fyndable.admin.ui.components.ErrorView
 import com.fyndable.admin.ui.components.LoadingIndicator
+import com.fyndable.admin.ui.components.OpsHeader
+import com.fyndable.admin.ui.components.ScoreGauge
 import com.fyndable.admin.ui.components.SectionHeader
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -116,60 +133,122 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
         if (recentState is RecentScansState.Loading) viewModel.loadRecent()
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("GEO Readiness Scan") }) }) { padding ->
+    Scaffold(
+        topBar = { OpsHeader(title = "GEO Scan") },
+        containerColor = Color(0xFFF8FAFC)
+    ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState()),
         ) {
-            SectionHeader("New Scan")
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = BorderStroke(1.dp, Color(0xFFF1F5F9))
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Text("Quick GEO Scan", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color(0xFF1E293B))
+                    Text("Analyze search visibility for any prospect", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF64748B))
+                    Spacer(Modifier.height(20.dp))
 
-            OutlinedTextField(
-                value = url,
-                onValueChange = { url = it },
-                label = { Text("Prospect URL") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = keywords,
-                onValueChange = { keywords = it },
-                label = { Text("Keywords (one per line, max 10)") },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("nl" to "Dutch", "en" to "English").forEach { (code, label) ->
-                    TextButton(onClick = { language = code }) {
-                        Text(if (language == code) "[$label]" else label)
+                    OutlinedTextField(
+                        value = url,
+                        onValueChange = { url = it },
+                        label = { Text("Prospect URL") },
+                        leadingIcon = { Icon(Icons.Filled.Link, contentDescription = null, tint = Color(0xFF6366F1)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF1E293B),
+                            unfocusedTextColor = Color(0xFF1E293B),
+                            focusedBorderColor = Color(0xFF6366F1),
+                            unfocusedBorderColor = Color(0xFFE2E8F0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedLabelColor = Color(0xFF6366F1),
+                            unfocusedLabelColor = Color(0xFF94A3B8),
+                        )
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = keywords,
+                        onValueChange = { keywords = it },
+                        label = { Text("Target Keywords (one per line)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color(0xFF1E293B),
+                            unfocusedTextColor = Color(0xFF1E293B),
+                            focusedBorderColor = Color(0xFF6366F1),
+                            unfocusedBorderColor = Color(0xFFE2E8F0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedLabelColor = Color(0xFF6366F1),
+                            unfocusedLabelColor = Color(0xFF94A3B8),
+                        )
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LanguageSelector(
+                            selected = language,
+                            onSelect = { language = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        // Mock model selector as per guidelines
+                        ModelSelector(modifier = Modifier.weight(1f))
+                    }
+                    
+                    Spacer(Modifier.height(20.dp))
+                    
+                    if (viewModel.scanning) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Color(0xFF6366F1),
+                                trackColor = Color(0xFFEEF2FF)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text("Analyzing search landscape... (30-60s)", fontSize = 12.sp, color = Color(0xFF64748B))
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                val kwList = keywords.lines().map { it.trim() }.filter { it.isNotBlank() }
+                                if (url.isNotBlank() && kwList.isNotEmpty()) {
+                                    viewModel.runScan(url, kwList, language) { report ->
+                                        if (report != null) reportDialog = report
+                                    }
+                                }
+                            },
+                            enabled = url.isNotBlank() && keywords.lines().any { it.isNotBlank() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                        ) { Text("Start GEO Scan", fontWeight = FontWeight.Bold) }
+                    }
+                    
+                    viewModel.scanError?.let {
+                        Spacer(Modifier.height(12.dp))
+                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            if (viewModel.scanning) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(4.dp))
-                Text("Scanning… this can take 30-90 seconds", style = MaterialTheme.typography.bodyMedium)
-            } else {
-                Button(
-                    onClick = {
-                        val kwList = keywords.lines().map { it.trim() }.filter { it.isNotBlank() }
-                        if (url.isNotBlank() && kwList.isNotEmpty()) {
-                            viewModel.runScan(url, kwList, language) { report ->
-                                if (report != null) reportDialog = report
-                            }
-                        }
-                    },
-                    enabled = url.isNotBlank() && keywords.lines().any { it.isNotBlank() },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Start Scan") }
-            }
-            viewModel.scanError?.let {
-                Spacer(Modifier.height(8.dp))
-                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-            }
 
-            Spacer(Modifier.height(24.dp))
-            SectionHeader("Recent Scans")
+            PaddingValues(horizontal = 16.dp).let {
+                SectionHeader("Recent Scans", modifier = Modifier.padding(horizontal = 16.dp))
+            }
 
             when (val s = recentState) {
                 is RecentScansState.Loading -> LoadingIndicator()
@@ -178,10 +257,13 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
                     if (s.scans.isEmpty()) {
                         EmptyState("No scans yet")
                     } else {
-                        s.scans.forEach { scan -> ScanCard(scan) { reportDialog = scan.result } }
+                        Column(Modifier.padding(horizontal = 16.dp)) {
+                            s.scans.forEach { scan -> ScanCard(scan) { reportDialog = scan.result } }
+                        }
                     }
                 }
             }
+            Spacer(Modifier.height(32.dp))
         }
     }
 
@@ -193,19 +275,129 @@ fun GeoScanScreen(viewModel: GeoScanViewModel = hiltViewModel()) {
 @Composable
 private fun ScanCard(scan: GeoScanSummary, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(1.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFF1F5F9))
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(scan.url, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text("${scan.score ?: 0}/100", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ScoreGauge(score = scan.score ?: 0, size = 48.dp)
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text(scan.url, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B), maxLines = 1)
+                Text(
+                    text = scan.keywords.take(40) + (if(scan.keywords.length > 40) "..." else ""),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF64748B)
+                )
             }
-            Text(scan.keywords, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(scan.createdAt, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(4.dp))
-            TextButton(onClick = onClick) { Text("View Report") }
+            Column(horizontalAlignment = Alignment.End) {
+                val statusText = when {
+                    (scan.score ?: 0) >= 80 -> "GREAT"
+                    (scan.score ?: 0) >= 50 -> "NEEDS WORK"
+                    else -> "POOR"
+                }
+                val statusColor = when {
+                    (scan.score ?: 0) >= 80 -> Color(0xFF10B981)
+                    (scan.score ?: 0) >= 50 -> Color(0xFFF59E0B)
+                    else -> Color(0xFFEF4444)
+                }
+                Text(statusText, fontWeight = FontWeight.Black, fontSize = 10.sp, color = statusColor)
+                Text(scan.createdAt.split(" ")[0], style = MaterialTheme.typography.labelSmall, color = Color(0xFF94A3B8))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LanguageSelector(selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    val options = listOf("nl" to "Dutch", "en" to "English", "de" to "German", "fr" to "French")
+    val selectedLabel = options.find { it.first == selected }?.second ?: selected
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selectedLabel,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Language") },
+            leadingIcon = { Icon(Icons.Filled.Language, contentDescription = null, tint = Color(0xFF6366F1), modifier = Modifier.size(18.dp)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            shape = RoundedCornerShape(12.dp),
+            textStyle = MaterialTheme.typography.bodyMedium,
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color(0xFF1E293B),
+                unfocusedTextColor = Color(0xFF1E293B),
+                focusedBorderColor = Color(0xFF6366F1),
+                unfocusedBorderColor = Color(0xFFE2E8F0),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedLabelColor = Color(0xFF6366F1),
+                unfocusedLabelColor = Color(0xFF94A3B8),
+            )
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { (code, label) ->
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = { onSelect(code); expanded = false }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModelSelector(modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    var selected by remember { mutableStateOf("GPT-4o (Precise)") }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("AI Model") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            shape = RoundedCornerShape(12.dp),
+            textStyle = MaterialTheme.typography.bodyMedium,
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color(0xFF1E293B),
+                unfocusedTextColor = Color(0xFF1E293B),
+                focusedBorderColor = Color(0xFF6366F1),
+                unfocusedBorderColor = Color(0xFFE2E8F0),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedLabelColor = Color(0xFF6366F1),
+                unfocusedLabelColor = Color(0xFF94A3B8),
+            )
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf("GPT-4o (Precise)", "Claude 3.5 Sonnet", "Gemini 1.5 Pro").forEach { model ->
+                DropdownMenuItem(
+                    text = { Text(model) },
+                    onClick = { selected = model; expanded = false }
+                )
+            }
         }
     }
 }
@@ -214,53 +406,59 @@ private fun ScanCard(scan: GeoScanSummary, onClick: () -> Unit) {
 private fun ReportDialog(report: GeoScanReport, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("GEO Report — ${report.score}/100") },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Scan Report", fontWeight = FontWeight.Black)
+                Spacer(Modifier.weight(1f))
+                ScoreGauge(score = report.score, size = 56.dp)
+            }
+        },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text("URL: ${report.url}", style = MaterialTheme.typography.labelMedium)
-                Text("Scanned: ${report.scannedAt}", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(12.dp))
-
-                SectionHeader("Score Breakdown")
-                report.breakdown.forEach { (key, value) ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(key.replace("_", " ").replaceFirstChar { it.uppercase() })
-                        Text("$value", fontWeight = FontWeight.SemiBold)
+                Text(report.url, color = Color(0xFF6366F1), fontWeight = FontWeight.Bold)
+                Text("Scanned on ${report.scannedAt}", style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
+                
+                Spacer(Modifier.height(20.dp))
+                
+                SectionHeader("Findings")
+                report.findings.forEach { finding ->
+                    Row(Modifier.padding(vertical = 4.dp)) {
+                        Text("• ", fontWeight = FontWeight.Black, color = Color(0xFF6366F1))
+                        Text(finding, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF334155))
                     }
                 }
 
-                if (report.strengths.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    SectionHeader("Strengths")
-                    report.strengths.forEach { Text("• $it") }
-                }
-                if (report.weaknesses.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    SectionHeader("Weaknesses")
-                    report.weaknesses.forEach { Text("• $it") }
-                }
-                if (report.priorityRankedRecommendations.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    SectionHeader("Priority Recommendations")
-                    report.priorityRankedRecommendations.forEachIndexed { i, rec ->
-                        Text("${i + 1}. $rec")
-                    }
-                }
-                if (report.findings.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    SectionHeader("Findings")
-                    report.findings.forEach { Text("• $it") }
-                }
-                if (report.keywordsAnalysis.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    SectionHeader("Keyword Analysis")
-                    report.keywordsAnalysis.forEach { ka ->
-                        Text("• ${ka.keyword}", fontWeight = FontWeight.SemiBold)
-                        Text("  AI Overview: ${if (ka.hasAiOverview) "Yes" else "No"} · Cited: ${if (ka.targetCited) "Yes" else "No"}")
+                Spacer(Modifier.height(16.dp))
+                SectionHeader("Recommendations")
+                report.priorityRankedRecommendations.forEach { rec ->
+                    Surface(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFF0F9FF),
+                        border = BorderStroke(1.dp, Color(0xFFBAE6FD))
+                    ) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                            Checkbox(
+                                checked = false, 
+                                onCheckedChange = {}, 
+                                modifier = Modifier.size(20.dp).padding(top = 2.dp),
+                                colors = CheckboxDefaults.colors(uncheckedColor = Color(0xFF0EA5E9))
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(rec, style = MaterialTheme.typography.bodySmall, color = Color(0xFF0369A1))
+                        }
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("Done", fontWeight = FontWeight.Bold) }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color.White
     )
 }

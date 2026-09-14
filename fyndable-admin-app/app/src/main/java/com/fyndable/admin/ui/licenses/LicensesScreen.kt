@@ -1,24 +1,33 @@
 package com.fyndable.admin.ui.licenses
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -27,35 +36,37 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Button
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.fyndable.admin.data.remote.GenerateLicenseRequest
-import com.fyndable.admin.data.remote.LicenseListResponse
 import com.fyndable.admin.data.remote.License
 import com.fyndable.admin.data.repo.ApiResult
 import com.fyndable.admin.data.repo.LicenseRepository
 import com.fyndable.admin.ui.components.EmptyState
 import com.fyndable.admin.ui.components.ErrorView
+import com.fyndable.admin.ui.components.FilterPill
 import com.fyndable.admin.ui.components.LoadingIndicator
+import com.fyndable.admin.ui.components.OpsHeader
 import com.fyndable.admin.ui.components.StatusBadge
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -85,7 +96,7 @@ class LicensesViewModel @Inject constructor(
         private set
 
     fun setFilters(status: String?, tier: String?, search: String) {
-        statusFilter = status?.takeIf { it.isNotBlank() }
+        statusFilter = status?.takeIf { it != "All" && it.isNotBlank() }
         tierFilter = tier?.takeIf { it.isNotBlank() }
         searchQuery = search
         load()
@@ -133,23 +144,43 @@ fun LicensesScreen(viewModel: LicensesViewModel = hiltViewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Licenses") })
+            OpsHeader(title = "License Keys")
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showGenerateDialog = true }) {
+            FloatingActionButton(
+                onClick = { showGenerateDialog = true },
+                containerColor = Color(0xFF6366F1),
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Generate")
             }
         },
+        containerColor = Color(0xFFF8FAFC)
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             // Filters
-            LicenseFilters(
-                status = viewModel.statusFilter ?: "",
-                tier = viewModel.tierFilter ?: "",
-                search = viewModel.searchQuery,
-                onApply = { s, t, q -> viewModel.setFilters(s, t, q) },
+            LicenseFiltersRow(
+                selectedStatus = viewModel.statusFilter ?: "All",
+                onStatusSelected = { viewModel.setFilters(it, viewModel.tierFilter, viewModel.searchQuery) }
             )
-            Spacer(Modifier.height(8.dp))
+            
+            OutlinedTextField(
+                value = viewModel.searchQuery,
+                onValueChange = { viewModel.setFilters(viewModel.statusFilter, viewModel.tierFilter, it) },
+                placeholder = { Text("Search by domain or email...") },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFF94A3B8)) },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFF1E293B),
+                    unfocusedTextColor = Color(0xFF1E293B),
+                    focusedBorderColor = Color(0xFF6366F1),
+                    unfocusedBorderColor = Color(0xFFE2E8F0),
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
+            )
 
             when (val s = state) {
                 is LicensesState.Loading -> LoadingIndicator()
@@ -158,7 +189,10 @@ fun LicensesScreen(viewModel: LicensesViewModel = hiltViewModel()) {
                     if (s.licenses.isEmpty()) {
                         EmptyState("No licenses found")
                     } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
                             items(s.licenses) { license ->
                                 LicenseCard(
                                     license = license,
@@ -176,11 +210,8 @@ fun LicensesScreen(viewModel: LicensesViewModel = hiltViewModel()) {
         GenerateLicenseDialog(
             onDismiss = { showGenerateDialog = false },
             onGenerate = { req ->
-                viewModel.generate(req) { success, keys ->
+                viewModel.generate(req) { success, _ ->
                     showGenerateDialog = false
-                    if (!success) {
-                        // Could show a snackbar; for now re-open not needed
-                    }
                 }
             },
         )
@@ -198,45 +229,21 @@ fun LicensesScreen(viewModel: LicensesViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun LicenseFilters(
-    status: String,
-    tier: String,
-    search: String,
-    onApply: (String, String, String) -> Unit,
+private fun LicenseFiltersRow(
+    selectedStatus: String,
+    onStatusSelected: (String) -> Unit
 ) {
-    var statusVal by remember(status) { mutableStateOf(status) }
-    var tierVal by remember(tier) { mutableStateOf(tier) }
-    var searchVal by remember(search) { mutableStateOf(search) }
-
-    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        OutlinedTextField(
-            value = searchVal,
-            onValueChange = { searchVal = it },
-            label = { Text("Search") },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = statusVal,
-                onValueChange = { statusVal = it },
-                label = { Text("Status") },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
+    val statuses = listOf("All", "Active", "Trial", "Expired", "Revoked")
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        items(statuses) { status ->
+            FilterPill(
+                text = status,
+                selected = selectedStatus.equals(status, ignoreCase = true),
+                onClick = { onStatusSelected(status) }
             )
-            OutlinedTextField(
-                value = tierVal,
-                onValueChange = { tierVal = it },
-                label = { Text("Tier") },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = { onApply(statusVal, tierVal, searchVal) }) {
-            Text("Apply Filters")
         }
     }
 }
@@ -246,31 +253,80 @@ private fun LicenseCard(license: License, onRevoke: () -> Unit) {
     val clipboard = LocalClipboardManager.current
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(1.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFF1F5F9))
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = license.licenseKey.take(24) + "…",
+                    text = license.assignedTo?.takeIf { it.isNotBlank() } ?: "No Domain Assigned",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E293B)
                 )
                 StatusBadge(license.status)
             }
+            
             Spacer(Modifier.height(4.dp))
-            Text("${license.tier.replaceFirstChar { it.uppercase() }} · ${license.licenseType}", style = MaterialTheme.typography.bodyMedium)
-            license.assignedTo?.takeIf { it.isNotBlank() }?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "${license.tier.uppercase()} · ${license.licenseType.uppercase()}",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF94A3B8),
+                letterSpacing = 0.5.sp
+            )
+            
+            Spacer(Modifier.height(16.dp))
+            
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFF8FAFC),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = license.licenseKey,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF475569),
+                        maxLines = 1
+                    )
+                    TextButton(
+                        onClick = { clipboard.setText(AnnotatedString(license.licenseKey)) },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFF6366F1)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text("Copy", fontSize = 12.sp, color = Color(0xFF6366F1))
+                    }
+                }
             }
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { clipboard.setText(AnnotatedString(license.licenseKey)) }) { Text("Copy Key") }
-                if (license.status != "revoked") {
-                    TextButton(onClick = onRevoke) { Text("Revoke") }
+            
+            if (license.status != "revoked") {
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onRevoke,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2), contentColor = Color(0xFFEF4444)),
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = null
+                ) {
+                    Text("Revoke License", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -282,54 +338,78 @@ private fun GenerateLicenseDialog(
     onDismiss: () -> Unit,
     onGenerate: (GenerateLicenseRequest) -> Unit,
 ) {
-    var count by remember { mutableStateOf("1") }
-    var type by remember { mutableStateOf("paid") }
     var tier by remember { mutableStateOf("starter") }
-    var maxSites by remember { mutableStateOf("1") }
-    var apiLimit by remember { mutableStateOf("0") }
-    var expiresDays by remember { mutableStateOf("") }
     var assignedTo by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Generate License Keys") },
+        title = { Text("Generate License Key", fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(value = count, onValueChange = { count = it }, label = { Text("Count (1-100)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                DropdownSelector(label = "Type", options = listOf("test", "free", "trial", "paid", "lifetime"), selected = type, onSelect = { type = it })
-                Spacer(Modifier.height(8.dp))
-                DropdownSelector(label = "Tier", options = listOf("trial", "starter", "early_adopters", "professional", "business", "agency", "dev"), selected = tier, onSelect = { tier = it })
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = maxSites, onValueChange = { maxSites = it }, label = { Text("Max Sites") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = apiLimit, onValueChange = { apiLimit = it }, label = { Text("API Limit (0 = tier default)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = expiresDays, onValueChange = { expiresDays = it }, label = { Text("Expires (days, blank = never)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = assignedTo, onValueChange = { assignedTo = it }, label = { Text("Assigned To (email)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+                DropdownSelector(
+                    label = "License Tier",
+                    options = listOf("trial", "starter", "early_adopters", "professional", "business", "agency", "dev"),
+                    selected = tier,
+                    onSelect = { tier = it }
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = assignedTo,
+                    onValueChange = { assignedTo = it },
+                    label = { Text("Customer Email / Domain") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color(0xFF1E293B),
+                        unfocusedTextColor = Color(0xFF1E293B),
+                        focusedBorderColor = Color(0xFF6366F1),
+                        unfocusedBorderColor = Color(0xFFE2E8F0),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    )
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text("Internal Notes") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    minLines = 2,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color(0xFF1E293B),
+                        unfocusedTextColor = Color(0xFF1E293B),
+                        focusedBorderColor = Color(0xFF6366F1),
+                        unfocusedBorderColor = Color(0xFFE2E8F0),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    )
+                )
             }
         },
         confirmButton = {
-            Button(onClick = {
-                onGenerate(
-                    GenerateLicenseRequest(
-                        count = count.toIntOrNull()?.coerceIn(1, 100) ?: 1,
-                        type = type,
-                        tier = tier,
-                        maxSites = maxSites.toIntOrNull() ?: 1,
-                        apiCallsLimit = apiLimit.toIntOrNull() ?: 0,
-                        expiresDays = expiresDays.toIntOrNull(),
-                        assignedTo = assignedTo,
-                        notes = notes,
+            Button(
+                onClick = {
+                    onGenerate(
+                        GenerateLicenseRequest(
+                            count = 1,
+                            type = if (tier == "trial") "trial" else "paid",
+                            tier = tier,
+                            maxSites = 1,
+                            assignedTo = assignedTo,
+                            notes = notes,
+                        )
                     )
-                )
-            }) { Text("Generate") }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("Generate", fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White
     )
 }
 
@@ -339,16 +419,25 @@ private fun DropdownSelector(label: String, options: List<String>, selected: Str
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
-            value = selected,
+            value = selected.replaceFirstChar { it.uppercase() },
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color(0xFF1E293B),
+                unfocusedTextColor = Color(0xFF1E293B),
+                focusedBorderColor = Color(0xFF6366F1),
+                unfocusedBorderColor = Color(0xFFE2E8F0),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { opt ->
-                DropdownMenuItem(text = { Text(opt) }, onClick = { onSelect(opt); expanded = false })
+                DropdownMenuItem(text = { Text(opt.replaceFirstChar { it.uppercase() }) }, onClick = { onSelect(opt); expanded = false })
             }
         }
     }
@@ -359,15 +448,38 @@ private fun RevokeDialog(license: License, onDismiss: () -> Unit, onConfirm: (St
     var reason by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Revoke License") },
+        title = { Text("Revoke License", color = Color(0xFFEF4444)) },
         text = {
             Column {
-                Text("Revoke ${license.licenseKey.take(24)}…?")
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = reason, onValueChange = { reason = it }, label = { Text("Reason") }, modifier = Modifier.fillMaxWidth())
+                Text("Are you sure you want to revoke the license for:")
+                Text(license.assignedTo ?: license.licenseKey, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = { reason = it },
+                    label = { Text("Reason for revocation") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color(0xFF1E293B),
+                        unfocusedTextColor = Color(0xFF1E293B),
+                        focusedBorderColor = Color(0xFF6366F1),
+                        unfocusedBorderColor = Color(0xFFE2E8F0),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    )
+                )
             }
         },
-        confirmButton = { Button(onClick = { onConfirm(reason.ifBlank { "Revoked via admin app" }) }) { Text("Revoke") } },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(reason.ifBlank { "Revoked via admin app" }) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                shape = RoundedCornerShape(8.dp)
+            ) { Text("Revoke Now", fontWeight = FontWeight.Bold) }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White
     )
 }
