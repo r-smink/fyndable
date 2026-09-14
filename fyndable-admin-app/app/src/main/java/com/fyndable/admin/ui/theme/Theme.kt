@@ -2,6 +2,7 @@ package com.fyndable.admin.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -15,7 +16,8 @@ import androidx.core.view.WindowCompat
 
 // Beautiful Claude-inspired color palette for Fyndable Ops
 val FyndableNavy = Color(0xFF1E293B)       // Deep slate navy for headers
-val FyndablePurple = Color(0xFF6366F1)     // Vibrant indigo/purple for buttons
+val FyndablePurple = Color(0xFF7C3AED)     // Vibrant purple for buttons
+val FyndableBlue = Color(0xFF2563EB)       // Blue for gradient
 val FyndableBackground = Color(0xFFF8FAFC) // Very soft light grey background
 val FyndableSurface = Color(0xFFFFFFFF)    // Crisp white for cards
 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -48,6 +49,8 @@ import androidx.lifecycle.viewModelScope
 import com.fyndable.admin.data.prefs.CredentialStore
 import com.fyndable.admin.data.repo.ApiResult
 import com.fyndable.admin.data.repo.LicenseRepository
+import com.fyndable.admin.ui.theme.FyndableBlue
+import com.fyndable.admin.ui.theme.FyndablePurple
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,7 +109,7 @@ fun LoginScreen(
     var loading by remember { mutableStateOf(false) }
 
     val gradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFF6366F1), Color(0xFF4338CA))
+        colors = listOf(FyndablePurple, FyndableBlue)
     )
 
     Column(
@@ -166,11 +169,10 @@ fun LoginScreen(
             }
         }
 
-        Spacer(Modifier.height(-40.dp)) // Pull card up
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .offset(y = (-40).dp)
                 .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -200,18 +202,18 @@ fun LoginScreen(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("WordPress Username") },
-                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = Color(0xFF6366F1)) },
+                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = FyndablePurple) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color(0xFF1E293B),
                         unfocusedTextColor = Color(0xFF1E293B),
-                        focusedBorderColor = Color(0xFF6366F1),
+                        focusedBorderColor = FyndablePurple,
                         unfocusedBorderColor = Color(0xFFE2E8F0),
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
-                        focusedLabelColor = Color(0xFF6366F1),
+                        focusedLabelColor = FyndablePurple,
                         unfocusedLabelColor = Color(0xFF94A3B8),
                     )
                 )
@@ -221,7 +223,7 @@ fun LoginScreen(
                     value = appPassword,
                     onValueChange = { appPassword = it },
                     label = { Text("Application Password") },
-                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = Color(0xFF6366F1)) },
+                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = FyndablePurple) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -230,11 +232,11 @@ fun LoginScreen(
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color(0xFF1E293B),
                         unfocusedTextColor = Color(0xFF1E293B),
-                        focusedBorderColor = Color(0xFF6366F1),
+                        focusedBorderColor = FyndablePurple,
                         unfocusedBorderColor = Color(0xFFE2E8F0),
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
-                        focusedLabelColor = Color(0xFF6366F1),
+                        focusedLabelColor = FyndablePurple,
                         unfocusedLabelColor = Color(0xFF94A3B8),
                     )
                 )
@@ -269,7 +271,7 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                    colors = ButtonDefaults.buttonColors(containerColor = FyndablePurple)
                 ) {
                     if (loading) {
                         CircularProgressIndicator(

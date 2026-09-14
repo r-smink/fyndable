@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fyndable.admin.ui.theme.FyndableBlue
+import com.fyndable.admin.ui.theme.FyndablePurple
 
 @Composable
 fun LoadingIndicator(modifier: Modifier = Modifier) {
@@ -77,7 +79,7 @@ fun OpsHeader(
             .fillMaxWidth()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1E293B), Color(0xFF0F172A))
+                    colors = listOf(FyndablePurple, FyndableBlue)
                 )
             )
             .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -193,7 +195,7 @@ fun FilterPill(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        color = if (selected) Color(0xFF6366F1) else Color(0xFFF1F5F9),
+        color = if (selected) Color(0xFF7C3AED) else Color(0xFFF1F5F9),
         contentColor = if (selected) Color.White else Color(0xFF64748B)
     ) {
         Text(

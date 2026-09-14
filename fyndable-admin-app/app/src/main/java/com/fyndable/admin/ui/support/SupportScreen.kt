@@ -173,7 +173,7 @@ fun SupportScreen(viewModel: SupportViewModel = hiltViewModel()) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color(0xFF1E293B),
                     unfocusedTextColor = Color(0xFF1E293B),
-                    focusedBorderColor = Color(0xFF6366F1),
+                    focusedBorderColor = Color(0xFF7C3AED),
                     unfocusedBorderColor = Color(0xFFE2E8F0),
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White
@@ -230,7 +230,7 @@ private fun TicketCard(ticket: Ticket, onClick: () -> Unit) {
             Text(
                 text = ticket.tenantName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6366F1),
+                color = Color(0xFF7C3AED),
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(12.dp))
@@ -299,7 +299,7 @@ private fun TicketDetailScreen(
     ) { padding ->
         if (ticket == null) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFF6366F1))
+                CircularProgressIndicator(color = Color(0xFF7C3AED))
             }
             return@Scaffold
         }
@@ -343,7 +343,7 @@ private fun TicketDetailScreen(
                                 bottomStart = if (isStaff) 16.dp else 4.dp, 
                                 bottomEnd = if (isStaff) 4.dp else 16.dp
                             ),
-                            color = if (isStaff) Color(0xFF6366F1) else Color(0xFFF1F5F9),
+                            color = if (isStaff) Color(0xFF7C3AED) else Color(0xFFF1F5F9),
                             contentColor = if (isStaff) Color.White else Color(0xFF334155),
                             border = if (!isStaff) BorderStroke(1.dp, Color(0xFFE2E8F0)) else null
                         ) {
@@ -384,7 +384,7 @@ private fun TicketDetailScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color(0xFF1E293B),
                             unfocusedTextColor = Color(0xFF1E293B),
-                            focusedBorderColor = Color(0xFF6366F1),
+                            focusedBorderColor = Color(0xFF7C3AED),
                             unfocusedBorderColor = Color(0xFFE2E8F0),
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White
@@ -399,7 +399,7 @@ private fun TicketDetailScreen(
                                 }
                             }
                         },
-                        modifier = Modifier.size(48.dp).background(Color(0xFF6366F1), CircleShape)
+                        modifier = Modifier.size(48.dp).background(Color(0xFF7C3AED), CircleShape)
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = Color.White)
                     }

@@ -146,7 +146,7 @@ private fun AiModelsContent(
     var premiumRouting by remember(data) { mutableStateOf(data.premium.routing.ifEmpty { data.premium.defaults }) }
 
     val gradient = Brush.horizontalGradient(
-        colors = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
+        colors = listOf(Color(0xFF7C3AED), Color(0xFF8B5CF6))
     )
 
     Column(
@@ -239,7 +239,7 @@ private fun AiModelsContent(
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
         ) {
             Text(
                 text = if (viewModel.saving) "Updating Models..." else "Save Changes",
@@ -317,7 +317,7 @@ private fun ModelSelector(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color(0xFF1E293B),
                 unfocusedTextColor = Color(0xFF1E293B),
-                focusedBorderColor = Color(0xFF6366F1),
+                focusedBorderColor = Color(0xFF7C3AED),
                 unfocusedBorderColor = Color(0xFFE2E8F0),
                 focusedContainerColor = Color(0xFFF8FAFC),
                 unfocusedContainerColor = Color(0xFFF8FAFC)
