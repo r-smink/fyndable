@@ -37,10 +37,10 @@ class FlexibleMapSerializer<V>(private val valueSerializer: KSerializer<V>) : KS
     }
 }
 
-val FlexibleStringMapSerializer = FlexibleMapSerializer(String.serializer())
-val FlexibleIntMapSerializer = FlexibleMapSerializer(Int.serializer())
-val FlexibleRevenueTierMapSerializer = FlexibleMapSerializer(RevenueTier.serializer())
-val FlexibleNestedStringMapSerializer = FlexibleMapSerializer(FlexibleStringMapSerializer)
+object FlexibleStringMapSerializer : KSerializer<Map<String, String>> by FlexibleMapSerializer(String.serializer())
+object FlexibleIntMapSerializer : KSerializer<Map<String, Int>> by FlexibleMapSerializer(Int.serializer())
+object FlexibleRevenueTierMapSerializer : KSerializer<Map<String, RevenueTier>> by FlexibleMapSerializer(RevenueTier.serializer())
+object FlexibleNestedStringMapSerializer : KSerializer<Map<String, Map<String, String>>> by FlexibleMapSerializer(FlexibleStringMapSerializer)
 
 /**
  * Deserializes LimitChecks from a JSON object. An empty JSON array `[]` is
