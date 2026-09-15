@@ -62,7 +62,7 @@ class Shop extends Model
      */
     public function hasAccessToken(): bool
     {
-        return !empty($this->access_token);
+        return ! empty($this->access_token);
     }
 
     /**
@@ -70,6 +70,6 @@ class Shop extends Model
      */
     public function hasLicense(): bool
     {
-        return !empty($this->license_key) && !empty($this->tenant_key);
+        return ! empty($this->license_key) && ! empty($this->tenant_key);
     }
 }

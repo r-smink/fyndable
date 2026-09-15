@@ -26,6 +26,7 @@ class CheckRankingsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 600;
+
     public int $tries = 1;
 
     public function __construct(
@@ -35,7 +36,7 @@ class CheckRankingsJob implements ShouldQueue
     public function handle(): void
     {
         $shop = Shop::find($this->shopId);
-        if (!$shop || !$shop->hasLicense()) {
+        if (! $shop || ! $shop->hasLicense()) {
             return;
         }
 
@@ -67,6 +68,7 @@ class CheckRankingsJob implements ShouldQueue
                         'keyword' => $tracked->keyword,
                         'error' => $result['error'],
                     ]);
+
                     continue;
                 }
 

@@ -24,8 +24,8 @@ class LicenseService
     /**
      * Activate a Fyndable license for a shop.
      *
-     * @param Shop $shop
-     * @param string $licenseKey
+     * @param  Shop  $shop
+     * @param  string  $licenseKey
      * @return array{success: bool, message?: string}
      */
     public function activate(Shop $shop, string $licenseKey): array
@@ -51,12 +51,12 @@ class LicenseService
     /**
      * Validate the stored license (cached for 1 hour).
      *
-     * @param Shop $shop
+     * @param  Shop  $shop
      * @return array{valid: bool, tier?: string}
      */
     public function validate(Shop $shop): array
     {
-        if (!$shop->hasLicense()) {
+        if (! $shop->hasLicense()) {
             return ['valid' => false];
         }
 
@@ -71,6 +71,7 @@ class LicenseService
         if (isset($result['error'])) {
             // Network error — keep current status, don't invalidate
             Log::warning('LicenseService: validation network error', ['error' => $result['error']]);
+
             return ['valid' => true, 'tier' => $shop->license_tier, 'cached' => false];
         }
 
@@ -103,18 +104,20 @@ class LicenseService
     public function getTier(Shop $shop): string
     {
         $result = $this->validate($shop);
+
         return $result['tier'] ?? 'free';
     }
 
     /**
      * Check if the shop meets a minimum tier.
      *
-     * @param Shop $shop
-     * @param array $allowedTiers e.g. ['professional', 'business', 'agency']
+     * @param  Shop  $shop
+     * @param  array  $allowedTiers  e.g. ['professional', 'business', 'agency']
      */
     public function hasTier(Shop $shop, array $allowedTiers): bool
     {
         $tier = $this->getTier($shop);
+
         return in_array($tier, $allowedTiers, true);
     }
 

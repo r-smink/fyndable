@@ -2,6 +2,7 @@
 
 use App\Jobs\CheckRankingsJob;
 use App\Models\Shop;
+use App\Services\LlmsTxtGenerator;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -36,7 +37,7 @@ Schedule::call(function () {
         ->get();
 
     foreach ($shops as $shop) {
-        $generator = app(\App\Services\LlmsTxtGenerator::class);
+        $generator = app(LlmsTxtGenerator::class);
         $generator->invalidate($shop);
     }
 })->dailyAt('03:00')->name('daily-llmstxt-refresh');

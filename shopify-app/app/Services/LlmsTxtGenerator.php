@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\LlmsTxtSettings;
 use App\Models\Shop;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 /**
  * LlmsTxtGenerator
@@ -24,7 +23,9 @@ use Illuminate\Support\Str;
 class LlmsTxtGenerator
 {
     private const CACHE_KEY_SUMMARY = 'llmstxt:summary:';
+
     private const CACHE_KEY_FULL = 'llmstxt:full:';
+
     private const CACHE_TTL = 21600; // 6 hours
 
     public function __construct(
@@ -36,7 +37,7 @@ class LlmsTxtGenerator
      */
     public function getSummary(Shop $shop, LlmsTxtSettings $settings): string
     {
-        $key = self::CACHE_KEY_SUMMARY . $shop->id;
+        $key = self::CACHE_KEY_SUMMARY.$shop->id;
         $cached = Cache::get($key);
         if (is_string($cached) && $cached !== '') {
             return $cached;
@@ -53,7 +54,7 @@ class LlmsTxtGenerator
      */
     public function getFull(Shop $shop, LlmsTxtSettings $settings): string
     {
-        $key = self::CACHE_KEY_FULL . $shop->id;
+        $key = self::CACHE_KEY_FULL.$shop->id;
         $cached = Cache::get($key);
         if (is_string($cached) && $cached !== '') {
             return $cached;
@@ -70,8 +71,8 @@ class LlmsTxtGenerator
      */
     public function invalidate(Shop $shop): void
     {
-        Cache::forget(self::CACHE_KEY_SUMMARY . $shop->id);
-        Cache::forget(self::CACHE_KEY_FULL . $shop->id);
+        Cache::forget(self::CACHE_KEY_SUMMARY.$shop->id);
+        Cache::forget(self::CACHE_KEY_FULL.$shop->id);
     }
 
     /**
@@ -93,7 +94,7 @@ class LlmsTxtGenerator
         // Products
         if ($settings->include_products) {
             $products = $this->fetcher->getProducts($shop, $settings->max_products);
-            if (!empty($products)) {
+            if (! empty($products)) {
                 $lines[] = '## Products';
                 $lines[] = '';
                 foreach ($products as $product) {
@@ -115,7 +116,7 @@ class LlmsTxtGenerator
         // Collections
         if ($settings->include_collections) {
             $collections = $this->fetcher->getCollections($shop, $settings->max_collections);
-            if (!empty($collections)) {
+            if (! empty($collections)) {
                 $lines[] = '## Collections';
                 $lines[] = '';
                 foreach ($collections as $collection) {
@@ -137,7 +138,7 @@ class LlmsTxtGenerator
         // Pages
         if ($settings->include_pages) {
             $pages = $this->fetcher->getPages($shop, $settings->max_pages);
-            if (!empty($pages)) {
+            if (! empty($pages)) {
                 $lines[] = '## Pages';
                 $lines[] = '';
                 foreach ($pages as $page) {
@@ -159,7 +160,7 @@ class LlmsTxtGenerator
         // Blog articles
         if ($settings->include_blogs) {
             $articles = $this->fetcher->getArticles($shop, $settings->max_articles);
-            if (!empty($articles)) {
+            if (! empty($articles)) {
                 $lines[] = '## Blog';
                 $lines[] = '';
                 foreach ($articles as $article) {
@@ -218,7 +219,7 @@ class LlmsTxtGenerator
         // Products
         if ($settings->include_products) {
             $products = $this->fetcher->getProducts($shop, $settings->max_products);
-            if (!empty($products)) {
+            if (! empty($products)) {
                 $lines[] = '## Products';
                 $lines[] = '';
                 foreach ($products as $product) {
@@ -231,7 +232,7 @@ class LlmsTxtGenerator
         // Collections
         if ($settings->include_collections) {
             $collections = $this->fetcher->getCollections($shop, $settings->max_collections);
-            if (!empty($collections)) {
+            if (! empty($collections)) {
                 $lines[] = '## Collections';
                 $lines[] = '';
                 foreach ($collections as $collection) {
@@ -244,7 +245,7 @@ class LlmsTxtGenerator
         // Pages
         if ($settings->include_pages) {
             $pages = $this->fetcher->getPages($shop, $settings->max_pages);
-            if (!empty($pages)) {
+            if (! empty($pages)) {
                 $lines[] = '## Pages';
                 $lines[] = '';
                 foreach ($pages as $page) {
@@ -257,7 +258,7 @@ class LlmsTxtGenerator
         // Blog articles
         if ($settings->include_blogs) {
             $articles = $this->fetcher->getArticles($shop, $settings->max_articles);
-            if (!empty($articles)) {
+            if (! empty($articles)) {
                 $lines[] = '## Blog';
                 $lines[] = '';
                 foreach ($articles as $article) {
@@ -281,37 +282,37 @@ class LlmsTxtGenerator
 
         // Add product specs
         $specs = [];
-        if (!empty($product['vendor'])) {
+        if (! empty($product['vendor'])) {
             $specs[] = "Vendor: {$product['vendor']}";
         }
-        if (!empty($product['productType'])) {
+        if (! empty($product['productType'])) {
             $specs[] = "Type: {$product['productType']}";
         }
-        if (!empty($product['tags'])) {
+        if (! empty($product['tags'])) {
             $tags = is_array($product['tags']) ? implode(', ', $product['tags']) : $product['tags'];
             $specs[] = "Tags: {$tags}";
         }
 
         // Price from first variant
         $variants = $product['variants']['edges'] ?? [];
-        if (!empty($variants)) {
+        if (! empty($variants)) {
             $firstVariant = $variants[0]['node'] ?? [];
-            if (!empty($firstVariant['price'])) {
+            if (! empty($firstVariant['price'])) {
                 $specs[] = "Price: {$firstVariant['price']}";
             }
-            if (!empty($firstVariant['compareAtPrice'])) {
+            if (! empty($firstVariant['compareAtPrice'])) {
                 $specs[] = "Compare at: {$firstVariant['compareAtPrice']}";
             }
         }
 
         $fullBody = $body;
-        if (!empty($specs)) {
-            $fullBody .= "\n\n" . implode("\n", $specs);
+        if (! empty($specs)) {
+            $fullBody .= "\n\n".implode("\n", $specs);
         }
 
         $fullBody = trim(preg_replace('/\s+/', ' ', $fullBody));
         if (mb_strlen($fullBody) > $maxChars) {
-            $fullBody = mb_substr($fullBody, 0, $maxChars - 3) . '...';
+            $fullBody = mb_substr($fullBody, 0, $maxChars - 3).'...';
         }
 
         return [
@@ -330,16 +331,16 @@ class LlmsTxtGenerator
         $url = $collection['onlineStoreUrl'] ?: "{$siteDomain}/collections/{$collection['handle']}";
         $title = trim($collection['title']);
         $body = $this->stripHtml($collection['description'] ?? '');
-        $productCount = $collection['productsCount'] ?? '';
+        $productCount = (int) ($collection['productsCount']['count'] ?? 0);
 
         $fullBody = $body;
-        if ($productCount !== '') {
+        if ($productCount > 0) {
             $fullBody .= "\n\nProducts in collection: {$productCount}";
         }
 
         $fullBody = trim(preg_replace('/\s+/', ' ', $fullBody));
         if (mb_strlen($fullBody) > $maxChars) {
-            $fullBody = mb_substr($fullBody, 0, $maxChars - 3) . '...';
+            $fullBody = mb_substr($fullBody, 0, $maxChars - 3).'...';
         }
 
         return [
@@ -361,7 +362,7 @@ class LlmsTxtGenerator
 
         $body = trim(preg_replace('/\s+/', ' ', $body));
         if (mb_strlen($body) > $maxChars) {
-            $body = mb_substr($body, 0, $maxChars - 3) . '...';
+            $body = mb_substr($body, 0, $maxChars - 3).'...';
         }
 
         return [
@@ -384,7 +385,7 @@ class LlmsTxtGenerator
 
         $body = trim(preg_replace('/\s+/', ' ', $body));
         if (mb_strlen($body) > $maxChars) {
-            $body = mb_substr($body, 0, $maxChars - 3) . '...';
+            $body = mb_substr($body, 0, $maxChars - 3).'...';
         }
 
         return [
@@ -403,8 +404,9 @@ class LlmsTxtGenerator
         $text = $this->stripHtml($text);
         $text = trim(preg_replace('/\s+/', ' ', $text));
         if (mb_strlen($text) > 200) {
-            return mb_substr($text, 0, 197) . '...';
+            return mb_substr($text, 0, 197).'...';
         }
+
         return $text;
     }
 
@@ -415,6 +417,7 @@ class LlmsTxtGenerator
     {
         $text = strip_tags($html);
         $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
         return trim($text);
     }
 }

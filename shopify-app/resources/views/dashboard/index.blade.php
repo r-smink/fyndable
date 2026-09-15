@@ -145,6 +145,11 @@
                 <button class="btn secondary" onclick="generateDescription('short')">Short Description</button>
                 <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
                 <button class="btn secondary" onclick="generateSchema()">Generate Schema</button>
+                <p style="margin-top: 10px; color: #637381; font-size: 13px;">
+                    Note: to output the generated JSON-LD on your storefront, enable the
+                    <strong>Fyndable SEO Schema</strong> app embed in the Shopify theme editor
+                    (Online Store → Themes → Customize → App embeds).
+                </p>
                 <div id="product-result" style="margin-top: 20px;"></div>
             </div>
         </div>

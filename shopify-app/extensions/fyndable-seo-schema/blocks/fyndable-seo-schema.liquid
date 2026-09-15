@@ -1,0 +1,13 @@
+{% if product.metafields.fyndable.product_schema.value %}
+<script type="application/ld+json">
+  {{ product.metafields.fyndable.product_schema.value | json }}
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Fyndable SEO schema",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}

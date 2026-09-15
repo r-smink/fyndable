@@ -17,7 +17,7 @@ class ProductControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_save_meta_sends_owner_id_in_metafields(): void
+    public function test_save_meta_sends_product_update_with_seo(): void
     {
         $shop = Shop::create([
             'shop_domain' => 'test-shop.myshopify.com',
@@ -31,8 +31,8 @@ class ProductControllerTest extends TestCase
         Http::fake([
             '*' => Http::response([
                 'data' => [
-                    'metafieldsSet' => [
-                        'metafields' => [['id' => 'gid://shopify/Metafield/1']],
+                    'productUpdate' => [
+                        'product' => ['id' => 'gid://shopify/Product/123'],
                         'userErrors' => [],
                     ],
                 ],
@@ -59,9 +59,13 @@ class ProductControllerTest extends TestCase
 
         Http::assertSent(function ($request) use ($shop) {
             return str_contains($request->url(), "https://{$shop->shop_domain}/admin/api/")
-                && $request['variables']['metafields'][0]['ownerId'] === 'gid://shopify/Product/123'
-                && $request['variables']['metafields'][0]['namespace'] === 'seo'
-                && $request['variables']['metafields'][0]['key'] === 'title';
+                && str_contains($request['query'], 'productUpdate')
+                && $request['variables']['product']['id'] === 'gid://shopify/Product/123'
+                && $request['variables']['product']['seo']['title'] === 'SEO Title';
+        });
+
+        Http::assertNotSent(function ($request) {
+            return str_contains($request['query'] ?? '', 'metafieldsSet');
         });
     }
 }

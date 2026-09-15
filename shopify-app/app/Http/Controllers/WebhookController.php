@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Shop;
+use App\Services\LlmsTxtGenerator;
+use App\Services\ShopifySignature;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -17,11 +20,12 @@ use Illuminate\Support\Facades\Log;
  */
 class WebhookController extends Controller
 {
-    public function handle(Request $request): \Illuminate\Http\Response
+    public function handle(Request $request): Response
     {
         // Verify webhook HMAC
-        if (!$this->verifyWebhook($request)) {
+        if (! $this->verifyWebhook($request)) {
             Log::warning('Webhook HMAC verification failed');
+
             return response('Unauthorized', 401);
         }
 
@@ -30,8 +34,9 @@ class WebhookController extends Controller
         $payload = $request->json()->all();
 
         $shop = Shop::findByDomain($shopDomain);
-        if (!$shop) {
+        if (! $shop) {
             Log::warning('Webhook for unknown shop', ['shop' => $shopDomain]);
+
             return response('OK', 200);
         }
 
@@ -73,7 +78,7 @@ class WebhookController extends Controller
     private function handleContentChange(Shop $shop): void
     {
         try {
-            $generator = app(\App\Services\LlmsTxtGenerator::class);
+            $generator = app(LlmsTxtGenerator::class);
             $generator->invalidate($shop);
             Log::info('llms.txt cache invalidated', ['shop' => $shop->shop_domain]);
         } catch (\Exception $e) {
@@ -102,7 +107,7 @@ class WebhookController extends Controller
         $hmac = $request->header('X-Shopify-Hmac-Sha256', '');
         $body = $request->getContent();
 
-        $signature = new \App\Services\ShopifySignature(config('shopify.api_secret'));
+        $signature = new ShopifySignature(config('shopify.api_secret'));
 
         return $signature->verifyWebhook($hmac, $body);
     }

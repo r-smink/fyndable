@@ -27,7 +27,7 @@ class LicenseController extends Controller
     public function status(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -35,7 +35,7 @@ class LicenseController extends Controller
 
         return [
             'has_license' => $shop->hasLicense(),
-            'license_key' => $shop->license_key ? (substr($shop->license_key, 0, 8) . '...' . substr($shop->license_key, -4)) : null,
+            'license_key' => $shop->license_key ? (substr($shop->license_key, 0, 8).'...'.substr($shop->license_key, -4)) : null,
             'tier' => $validation['tier'] ?? 'free',
             'valid' => $validation['valid'] ?? false,
             'validated_at' => $shop->license_validated_at?->toIso8601String(),
@@ -51,7 +51,7 @@ class LicenseController extends Controller
     public function activate(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -73,7 +73,7 @@ class LicenseController extends Controller
     public function deactivate(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 

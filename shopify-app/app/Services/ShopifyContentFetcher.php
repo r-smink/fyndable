@@ -21,14 +21,14 @@ class ShopifyContentFetcher
 
     public function __construct()
     {
-        $this->apiVersion = config('shopify.api_version', '2025-01');
+        $this->apiVersion = config('shopify.api_version', '2026-07');
     }
 
     /**
      * Fetch products from the shop.
      *
-     * @param Shop $shop
-     * @param int $limit Max number of products to fetch.
+     * @param  Shop  $shop
+     * @param  int  $limit  Max number of products to fetch.
      * @return array<int, array>
      */
     public function getProducts(Shop $shop, int $limit = 100): array
@@ -76,8 +76,8 @@ class ShopifyContentFetcher
     /**
      * Fetch collections from the shop.
      *
-     * @param Shop $shop
-     * @param int $limit
+     * @param  Shop  $shop
+     * @param  int  $limit
      * @return array<int, array>
      */
     public function getCollections(Shop $shop, int $limit = 100): array
@@ -94,7 +94,7 @@ class ShopifyContentFetcher
                 description
                 descriptionHtml
                 onlineStoreUrl
-                productsCount
+                productsCount { count precision }
                 image { url altText }
               }
             }
@@ -108,8 +108,8 @@ class ShopifyContentFetcher
     /**
      * Fetch pages from the shop.
      *
-     * @param Shop $shop
-     * @param int $limit
+     * @param  Shop  $shop
+     * @param  int  $limit
      * @return array<int, array>
      */
     public function getPages(Shop $shop, int $limit = 50): array
@@ -139,8 +139,8 @@ class ShopifyContentFetcher
     /**
      * Fetch blog articles from all blogs.
      *
-     * @param Shop $shop
-     * @param int $limit Max total articles across all blogs.
+     * @param  Shop  $shop
+     * @param  int  $limit  Max total articles across all blogs.
      * @return array<int, array>
      */
     public function getArticles(Shop $shop, int $limit = 250): array
@@ -205,6 +205,25 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Get the shop's total product count.
+     *
+     * @param  Shop  $shop
+     * @return int
+     */
+    public function getProductCount(Shop $shop): int
+    {
+        $query = <<<'GRAPHQL'
+        query getProductCount {
+          productsCount(limit: null) { count precision }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query);
+
+        return (int) ($response['data']['productsCount']['count'] ?? 0);
+    }
+
+    /**
      * Get shop details (name, currency, country, domain).
      */
     public function getShopDetails(Shop $shop): array
@@ -239,10 +258,10 @@ class ShopifyContentFetcher
     /**
      * Execute a GraphQL query with pagination for a top-level connection.
      *
-     * @param Shop $shop
-     * @param string $query GraphQL query with $first and $after variables.
-     * @param string $connectionKey The connection field name (e.g. "products").
-     * @param int $limit Max items to fetch.
+     * @param  Shop  $shop
+     * @param  string  $query  GraphQL query with $first and $after variables.
+     * @param  string  $connectionKey  The connection field name (e.g. "products").
+     * @param  int  $limit  Max items to fetch.
      * @return array<int, array>
      */
     private function paginate(Shop $shop, string $query, string $connectionKey, int $limit): array
@@ -264,7 +283,7 @@ class ShopifyContentFetcher
             }
 
             $connection = $response['data'][$connectionKey] ?? null;
-            if (!$connection) {
+            if (! $connection) {
                 break;
             }
 
@@ -277,7 +296,7 @@ class ShopifyContentFetcher
 
             $pageInfo = $connection['pageInfo'] ?? [];
             $cursor = $pageInfo['endCursor'] ?? null;
-        } while (!empty($cursor) && ($pageInfo['hasNextPage'] ?? false) && count($items) < $limit);
+        } while (! empty($cursor) && ($pageInfo['hasNextPage'] ?? false) && count($items) < $limit);
 
         return $items;
     }
@@ -300,7 +319,7 @@ class ShopifyContentFetcher
             }
 
             $connection = $response['data']['blog']['articles'] ?? null;
-            if (!$connection) {
+            if (! $connection) {
                 break;
             }
 
@@ -315,7 +334,7 @@ class ShopifyContentFetcher
 
             $pageInfo = $connection['pageInfo'] ?? [];
             $cursor = $pageInfo['endCursor'] ?? null;
-        } while (!empty($cursor) && ($pageInfo['hasNextPage'] ?? false) && count($items) < $limit);
+        } while (! empty($cursor) && ($pageInfo['hasNextPage'] ?? false) && count($items) < $limit);
 
         return $items;
     }
@@ -327,7 +346,7 @@ class ShopifyContentFetcher
      */
     private function graphql(Shop $shop, string $query, array $variables = []): array
     {
-        if (!$shop->hasAccessToken()) {
+        if (! $shop->hasAccessToken()) {
             return ['error' => 'no_access_token'];
         }
 
@@ -345,16 +364,18 @@ class ShopifyContentFetcher
                 ]);
         } catch (ConnectionException $e) {
             Log::error('ShopifyContentFetcher: HTTP error', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 
         if ($response->failed()) {
-            return ['error' => 'http_' . $response->status()];
+            return ['error' => 'http_'.$response->status()];
         }
 
         $body = $response->json();
         if (isset($body['errors'])) {
             Log::error('ShopifyContentFetcher: GraphQL errors', ['errors' => $body['errors']]);
+
             return ['error' => 'graphql_errors', 'details' => $body['errors']];
         }
 

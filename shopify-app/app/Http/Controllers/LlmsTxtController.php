@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LlmsTxtSettings;
 use App\Models\Shop;
+use App\Services\LlmsTxtGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -21,7 +22,7 @@ use Illuminate\Http\Response;
 class LlmsTxtController extends Controller
 {
     public function __construct(
-        private \App\Services\LlmsTxtGenerator $generator
+        private LlmsTxtGenerator $generator
     ) {}
 
     /**
@@ -30,12 +31,12 @@ class LlmsTxtController extends Controller
     public function summary(Request $request): Response
     {
         $shop = $this->resolveShop($request);
-        if (!$shop) {
+        if (! $shop) {
             return response('Not found', 404);
         }
 
         $settings = LlmsTxtSettings::getForShop($shop->id);
-        if (!$settings->enabled) {
+        if (! $settings->enabled) {
             return response('Not found', 404);
         }
 
@@ -50,12 +51,12 @@ class LlmsTxtController extends Controller
     public function full(Request $request): Response
     {
         $shop = $this->resolveShop($request);
-        if (!$shop) {
+        if (! $shop) {
             return response('Not found', 404);
         }
 
         $settings = LlmsTxtSettings::getForShop($shop->id);
-        if (!$settings->enabled || !$settings->full_enabled) {
+        if (! $settings->enabled || ! $settings->full_enabled) {
             return response('Not found', 404);
         }
 
@@ -70,7 +71,7 @@ class LlmsTxtController extends Controller
     public function status(Request $request): array
     {
         $shop = $this->resolveShop($request);
-        if (!$shop) {
+        if (! $shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -104,7 +105,7 @@ class LlmsTxtController extends Controller
     public function updateSettings(Request $request): array
     {
         $shop = $this->resolveShop($request);
-        if (!$shop) {
+        if (! $shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -139,7 +140,7 @@ class LlmsTxtController extends Controller
     public function regenerate(Request $request): array
     {
         $shop = $this->resolveShop($request);
-        if (!$shop) {
+        if (! $shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -162,7 +163,7 @@ class LlmsTxtController extends Controller
     public function preview(Request $request): array
     {
         $shop = $this->resolveShop($request);
-        if (!$shop) {
+        if (! $shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -172,7 +173,7 @@ class LlmsTxtController extends Controller
 
         // Return first 5000 chars for preview
         $preview = mb_strlen($summary) > 5000
-            ? mb_substr($summary, 0, 5000) . "\n\n... (truncated for preview)"
+            ? mb_substr($summary, 0, 5000)."\n\n... (truncated for preview)"
             : $summary;
 
         return [
@@ -187,8 +188,9 @@ class LlmsTxtController extends Controller
     private function resolveShop(Request $request): ?Shop
     {
         $shopDomain = $request->query('shop', '');
-        if (!empty($shopDomain)) {
+        if (! empty($shopDomain)) {
             $shopDomain = strtolower(trim($shopDomain));
+
             return Shop::findByDomain($shopDomain);
         }
 
@@ -206,7 +208,7 @@ class LlmsTxtController extends Controller
      */
     private function textResponse(string $content): Response
     {
-        $etag = '"' . md5($content) . '"';
+        $etag = '"'.md5($content).'"';
 
         $inm = request()->header('If-None-Match', '');
         if ($inm && trim($inm, '"') === trim($etag, '"')) {

@@ -195,7 +195,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Save SEO meta to Shopify product metafields.
+     * Save SEO meta to the product's native Shopify SEO fields.
      *
      * POST /api/products/{productId}/save-meta
      * Body: { title: "...", description: "..." }
@@ -218,15 +218,15 @@ class ProductController extends Controller
             return ['error' => 'nothing_to_save'];
         }
 
-        $metafields = [];
+        $seo = [];
         if (! empty($title)) {
-            $metafields[] = $this->metafieldInput('seo', 'title', $title, 'single_line_text_field');
+            $seo['title'] = $title;
         }
         if (! empty($description)) {
-            $metafields[] = $this->metafieldInput('seo', 'description', $description, 'multi_line_text_field');
+            $seo['description'] = $description;
         }
 
-        $result = $this->createMetafields($shop, 'product', $productId, $metafields);
+        $result = $this->updateProduct($shop, $productId, ['seo' => $seo]);
 
         return $result
             ? ['success' => true]
@@ -450,6 +450,68 @@ class ProductController extends Controller
     }
 
     /**
+     * Update a product via the Admin API productUpdate mutation.
+     *
+     * @param  string  $productId  Numeric ID or full GID.
+     * @param  array  $fields  ProductUpdateInput fields (merged with `id`).
+     */
+    private function updateProduct(Shop $shop, string $productId, array $fields): bool
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation updateProduct($product: ProductUpdateInput!) {
+          productUpdate(product: $product) {
+            product { id }
+            userErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        $gid = str_starts_with($productId, 'gid://')
+            ? $productId
+            : "gid://shopify/Product/{$productId}";
+
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($endpoint, [
+                    'query' => $mutation,
+                    'variables' => ['product' => ['id' => $gid] + $fields],
+                ]);
+        } catch (ConnectionException $e) {
+            Log::error('Product update failed', ['error' => $e->getMessage()]);
+
+            return false;
+        }
+
+        if ($response->failed()) {
+            Log::error('Product update HTTP error', ['status' => $response->status()]);
+
+            return false;
+        }
+
+        $body = $response->json();
+        if (! empty($body['errors'])) {
+            Log::error('Product update GraphQL errors', ['errors' => $body['errors']]);
+
+            return false;
+        }
+
+        $errors = $body['data']['productUpdate']['userErrors'] ?? [];
+        if (! empty($errors)) {
+            Log::error('Product update user errors', ['errors' => $errors]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Create metafields on a Shopify resource via the Admin API.
      */
     private function createMetafields(Shop $shop, string $ownerType, string $ownerId, array $metafields): bool
@@ -464,7 +526,8 @@ class ProductController extends Controller
         GRAPHQL;
 
         // Shopify GIDs use the case-sensitive resource type (e.g. "Product")
-        $gid = "gid://shopify/Product/{$ownerId}";
+        $resourceType = ucfirst($ownerType);
+        $gid = str_starts_with($ownerId, 'gid://') ? $ownerId : "gid://shopify/{$resourceType}/{$ownerId}";
 
         $metafields = array_map(
             fn (array $metafield) => ['ownerId' => $gid] + $metafield,
@@ -496,6 +559,12 @@ class ProductController extends Controller
         }
 
         $body = $response->json();
+        if (! empty($body['errors'])) {
+            Log::error('Metafield GraphQL errors', ['errors' => $body['errors']]);
+
+            return false;
+        }
+
         $errors = $body['data']['metafieldsSet']['userErrors'] ?? [];
         if (! empty($errors)) {
             Log::error('Metafield user errors', ['errors' => $errors]);

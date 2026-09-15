@@ -32,7 +32,7 @@ class RankTrackerController extends Controller
     public function listKeywords(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -52,11 +52,11 @@ class RankTrackerController extends Controller
     public function addKeyword(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
-        if (!$this->license->hasTier($shop, ['professional', 'business', 'agency', 'trial', 'dev'])) {
+        if (! $this->license->hasTier($shop, ['professional', 'business', 'agency', 'trial', 'dev'])) {
             return ['error' => 'tier_too_low', 'message' => 'Rank tracking requires Professional tier or higher.'];
         }
 
@@ -97,12 +97,12 @@ class RankTrackerController extends Controller
     public function deleteKeyword(Request $request, int $id): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
         $keyword = TrackedKeyword::where('shop_id', $shop->id)->where('id', $id)->first();
-        if (!$keyword) {
+        if (! $keyword) {
             return ['error' => 'not_found'];
         }
 
@@ -119,11 +119,11 @@ class RankTrackerController extends Controller
     public function checkRankings(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
-        if (!$this->license->isActive($shop)) {
+        if (! $this->license->isActive($shop)) {
             return ['error' => 'license_inactive'];
         }
 
@@ -140,12 +140,12 @@ class RankTrackerController extends Controller
     public function keywordHistory(Request $request, int $id): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
         $keyword = TrackedKeyword::where('shop_id', $shop->id)->where('id', $id)->first();
-        if (!$keyword) {
+        if (! $keyword) {
             return ['error' => 'not_found'];
         }
 
@@ -168,16 +168,16 @@ class RankTrackerController extends Controller
     public function stats(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
         $keywords = TrackedKeyword::where('shop_id', $shop->id)->get();
         $total = $keywords->count();
-        $top3 = $keywords->filter(fn($k) => $k->last_position !== null && $k->last_position <= 3)->count();
-        $top10 = $keywords->filter(fn($k) => $k->last_position !== null && $k->last_position <= 10)->count();
-        $top100 = $keywords->filter(fn($k) => $k->last_position !== null && $k->last_position <= 100)->count();
-        $notRanked = $keywords->filter(fn($k) => $k->last_position === null)->count();
+        $top3 = $keywords->filter(fn ($k) => $k->last_position !== null && $k->last_position <= 3)->count();
+        $top10 = $keywords->filter(fn ($k) => $k->last_position !== null && $k->last_position <= 10)->count();
+        $top100 = $keywords->filter(fn ($k) => $k->last_position !== null && $k->last_position <= 100)->count();
+        $notRanked = $keywords->filter(fn ($k) => $k->last_position === null)->count();
 
         $improved = 0;
         $declined = 0;
@@ -189,8 +189,11 @@ class RankTrackerController extends Controller
             if ($last->count() >= 2) {
                 $current = $last->first()->position;
                 $previous = $last->last()->position;
-                if ($current < $previous) $improved++;
-                elseif ($current > $previous) $declined++;
+                if ($current < $previous) {
+                    $improved++;
+                } elseif ($current > $previous) {
+                    $declined++;
+                }
             }
         }
 

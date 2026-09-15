@@ -58,8 +58,7 @@ class DashboardController extends Controller
         $licenseStatus = $this->license->validate($shop);
 
         // Get product count
-        $products = $this->fetcher->getProducts($shop, 1);
-        $productCount = count($products);
+        $productCount = $this->fetcher->getProductCount($shop);
 
         // Get tracked keyword stats
         $keywordCount = TrackedKeyword::where('shop_id', $shop->id)->count();

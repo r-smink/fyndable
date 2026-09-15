@@ -141,7 +141,7 @@ class BulkOptimizeJob implements ShouldQueue
     }
 
     /**
-     * Optimize a product title via AI and save to metafields.
+     * Optimize a product title via AI and save it to the product.
      */
     private function optimizeTitle(Shop $shop, SaasProxyClient $saas, string $productGid): bool
     {
@@ -170,7 +170,7 @@ class BulkOptimizeJob implements ShouldQueue
 
         $title = trim($result['text']);
 
-        return $this->saveMetafield($shop, 'product', $productGid, 'seo', 'title', $title, 'single_line_text_field');
+        return $this->updateProduct($shop, $productGid, ['title' => $title]);
     }
 
     /**
@@ -200,7 +200,7 @@ class BulkOptimizeJob implements ShouldQueue
 
         $description = trim($result['text']);
 
-        return $this->saveMetafield($shop, 'product', $productGid, 'seo', 'description', $description, 'multi_line_text_field');
+        return $this->updateProduct($shop, $productGid, ['seo' => ['description' => $description]]);
     }
 
     /**
@@ -209,11 +209,25 @@ class BulkOptimizeJob implements ShouldQueue
     private function generateAltText(Shop $shop, SaasProxyClient $saas, string $productGid): bool
     {
         $product = $this->getProductMinimal($shop, $productGid);
-        if (! $product || empty($product['featuredImage']['url'])) {
+        if (! $product) {
             return false;
         }
 
-        $imageUrl = $product['featuredImage']['url'];
+        // Pick the first image media node with a usable URL
+        $mediaId = null;
+        $imageUrl = null;
+        foreach ($product['media']['nodes'] ?? [] as $node) {
+            if (($node['mediaContentType'] ?? '') === 'IMAGE' && ! empty($node['image']['url'])) {
+                $mediaId = $node['id'];
+                $imageUrl = $node['image']['url'];
+                break;
+            }
+        }
+
+        if (! $mediaId || ! $imageUrl) {
+            return false;
+        }
+
         $productName = $product['title'];
 
         $messages = [
@@ -231,7 +245,7 @@ class BulkOptimizeJob implements ShouldQueue
 
         $altText = trim($result['text']);
 
-        return $this->saveMetafield($shop, 'product', $productGid, 'fyndable', 'image_alt_text', $altText, 'single_line_text_field');
+        return $this->updateMediaAlt($shop, $productGid, $mediaId, $altText);
     }
 
     /**
@@ -265,8 +279,9 @@ class BulkOptimizeJob implements ShouldQueue
         }
 
         $description = trim($result['text']);
+        $descriptionHtml = nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
-        return $this->saveMetafield($shop, 'product', $productGid, 'fyndable', 'optimized_description', $description, 'multi_line_text_field');
+        return $this->updateProduct($shop, $productGid, ['descriptionHtml' => $descriptionHtml]);
     }
 
     /**
@@ -283,7 +298,14 @@ class BulkOptimizeJob implements ShouldQueue
             productType
             vendor
             tags
-            featuredImage { url altText }
+            media(first: 10) {
+              nodes {
+                id
+                alt
+                mediaContentType
+                ... on MediaImage { image { url } }
+              }
+            }
           }
         }
         GRAPHQL;
@@ -312,14 +334,17 @@ class BulkOptimizeJob implements ShouldQueue
     }
 
     /**
-     * Save a metafield to a Shopify resource.
+     * Update a product via the Admin API productUpdate mutation.
+     *
+     * @param  string  $productGid  Full product GID.
+     * @param  array  $fields  ProductUpdateInput fields (merged with `id`).
      */
-    private function saveMetafield(Shop $shop, string $ownerType, string $ownerGid, string $namespace, string $key, string $value, string $type): bool
+    private function updateProduct(Shop $shop, string $productGid, array $fields): bool
     {
         $mutation = <<<'GRAPHQL'
-        mutation setMetafield($metafields: [MetafieldsSetInput!]!) {
-          metafieldsSet(metafields: $metafields) {
-            metafields { id }
+        mutation updateProduct($product: ProductUpdateInput!) {
+          productUpdate(product: $product) {
+            product { id }
             userErrors { field message }
           }
         }
@@ -335,15 +360,57 @@ class BulkOptimizeJob implements ShouldQueue
                 ])
                 ->post($endpoint, [
                     'query' => $mutation,
+                    'variables' => ['product' => ['id' => $productGid] + $fields],
+                ]);
+        } catch (ConnectionException $e) {
+            return false;
+        }
+
+        if ($response->failed()) {
+            return false;
+        }
+
+        $body = $response->json();
+        if (! empty($body['errors'])) {
+            return false;
+        }
+
+        $errors = $body['data']['productUpdate']['userErrors'] ?? [];
+
+        return empty($errors);
+    }
+
+    /**
+     * Update a product media item's alt text via productUpdateMedia.
+     *
+     * This mutation is deprecated by Shopify but is intentionally used because
+     * it works with the existing write_products scope.
+     */
+    private function updateMediaAlt(Shop $shop, string $productGid, string $mediaId, string $alt): bool
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation updateMediaAlt($productId: ID!, $media: [UpdateMediaInput!]!) {
+          productUpdateMedia(productId: $productId, media: $media) {
+            media { id alt }
+            mediaUserErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($endpoint, [
+                    'query' => $mutation,
                     'variables' => [
-                        'metafields' => [
-                            [
-                                'ownerId' => $ownerGid,
-                                'namespace' => $namespace,
-                                'key' => $key,
-                                'value' => $value,
-                                'type' => $type,
-                            ],
+                        'productId' => $productGid,
+                        'media' => [
+                            ['id' => $mediaId, 'alt' => $alt],
                         ],
                     ],
                 ]);
@@ -355,7 +422,12 @@ class BulkOptimizeJob implements ShouldQueue
             return false;
         }
 
-        $errors = $response->json('data.metafieldsSet.userErrors', []);
+        $body = $response->json();
+        if (! empty($body['errors'])) {
+            return false;
+        }
+
+        $errors = $body['data']['productUpdateMedia']['mediaUserErrors'] ?? [];
 
         return empty($errors);
     }

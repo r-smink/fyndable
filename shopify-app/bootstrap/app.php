@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\VerifyShopifySession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'shopify.session' => \App\Http\Middleware\VerifyShopifySession::class,
+            'shopify.session' => VerifyShopifySession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

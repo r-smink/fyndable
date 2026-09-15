@@ -4,8 +4,10 @@ namespace Tests\Unit;
 
 use App\Jobs\BulkOptimizeJob;
 use App\Models\Shop;
+use App\Services\SaasProxyClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Mockery;
 use Tests\TestCase;
 
@@ -79,5 +81,133 @@ class BulkOptimizeJobTest extends TestCase
         $this->assertIsArray($written);
         $this->assertSame('cancelled', $written['status']);
         $this->assertArrayNotHasKey('completed_at', $written);
+    }
+
+    public function test_titles_action_sends_product_update_with_title(): void
+    {
+        $shop = $this->makeShop();
+        $jobKey = "bulk:{$shop->id}:titles";
+        Cache::put($jobKey, ['status' => 'running', 'total' => 1], 3600);
+
+        $saas = Mockery::mock(SaasProxyClient::class);
+        $saas->shouldReceive('aiGenerate')->andReturn(['text' => 'Better SEO Title']);
+        $this->app->instance(SaasProxyClient::class, $saas);
+
+        Http::fake(function ($request) {
+            if (str_contains($request['query'], 'productUpdate')) {
+                return Http::response([
+                    'data' => ['productUpdate' => ['product' => ['id' => 'gid://shopify/Product/1'], 'userErrors' => []]],
+                ], 200);
+            }
+
+            return Http::response([
+                'data' => ['product' => [
+                    'id' => 'gid://shopify/Product/1',
+                    'title' => 'Old Title',
+                    'description' => 'Desc',
+                    'productType' => 'Shoes',
+                    'vendor' => 'Acme',
+                    'tags' => [],
+                    'media' => ['nodes' => []],
+                ]],
+            ], 200);
+        });
+
+        (new BulkOptimizeJob($shop->id, 'titles', ['gid://shopify/Product/1']))->handle();
+
+        Http::assertSent(function ($request) {
+            return str_contains($request['query'], 'productUpdate')
+                && $request['variables']['product']['id'] === 'gid://shopify/Product/1'
+                && $request['variables']['product']['title'] === 'Better SEO Title';
+        });
+    }
+
+    public function test_meta_action_sends_product_update_with_seo_description(): void
+    {
+        $shop = $this->makeShop();
+        $jobKey = "bulk:{$shop->id}:meta";
+        Cache::put($jobKey, ['status' => 'running', 'total' => 1], 3600);
+
+        $saas = Mockery::mock(SaasProxyClient::class);
+        $saas->shouldReceive('aiGenerate')->andReturn(['text' => 'New meta description']);
+        $this->app->instance(SaasProxyClient::class, $saas);
+
+        Http::fake(function ($request) {
+            if (str_contains($request['query'], 'productUpdate')) {
+                return Http::response([
+                    'data' => ['productUpdate' => ['product' => ['id' => 'gid://shopify/Product/1'], 'userErrors' => []]],
+                ], 200);
+            }
+
+            return Http::response([
+                'data' => ['product' => [
+                    'id' => 'gid://shopify/Product/1',
+                    'title' => 'Title',
+                    'description' => 'Desc',
+                    'productType' => '',
+                    'vendor' => '',
+                    'tags' => [],
+                    'media' => ['nodes' => []],
+                ]],
+            ], 200);
+        });
+
+        (new BulkOptimizeJob($shop->id, 'meta', ['gid://shopify/Product/1']))->handle();
+
+        Http::assertSent(function ($request) {
+            return str_contains($request['query'], 'productUpdate')
+                && $request['variables']['product']['id'] === 'gid://shopify/Product/1'
+                && $request['variables']['product']['seo']['description'] === 'New meta description';
+        });
+    }
+
+    public function test_alt_text_action_sends_product_update_media(): void
+    {
+        $shop = $this->makeShop();
+        $jobKey = "bulk:{$shop->id}:alt_text";
+        Cache::put($jobKey, ['status' => 'running', 'total' => 1], 3600);
+
+        $saas = Mockery::mock(SaasProxyClient::class);
+        $saas->shouldReceive('aiGenerate')->andReturn(['text' => 'A descriptive alt text']);
+        $this->app->instance(SaasProxyClient::class, $saas);
+
+        Http::fake(function ($request) {
+            if (str_contains($request['query'], 'productUpdateMedia')) {
+                return Http::response([
+                    'data' => ['productUpdateMedia' => [
+                        'media' => [['id' => 'gid://shopify/MediaImage/9', 'alt' => 'A descriptive alt text']],
+                        'mediaUserErrors' => [],
+                    ]],
+                ], 200);
+            }
+
+            return Http::response([
+                'data' => ['product' => [
+                    'id' => 'gid://shopify/Product/1',
+                    'title' => 'Title',
+                    'description' => 'Desc',
+                    'productType' => '',
+                    'vendor' => '',
+                    'tags' => [],
+                    'media' => ['nodes' => [
+                        [
+                            'id' => 'gid://shopify/MediaImage/9',
+                            'alt' => null,
+                            'mediaContentType' => 'IMAGE',
+                            'image' => ['url' => 'https://cdn.example.com/img.jpg'],
+                        ],
+                    ]],
+                ]],
+            ], 200);
+        });
+
+        (new BulkOptimizeJob($shop->id, 'alt_text', ['gid://shopify/Product/1']))->handle();
+
+        Http::assertSent(function ($request) {
+            return str_contains($request['query'], 'productUpdateMedia')
+                && $request['variables']['productId'] === 'gid://shopify/Product/1'
+                && $request['variables']['media'][0]['id'] === 'gid://shopify/MediaImage/9'
+                && $request['variables']['media'][0]['alt'] === 'A descriptive alt text';
+        });
     }
 }

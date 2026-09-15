@@ -71,8 +71,8 @@ class SaasProxyClient
     /**
      * Validate a tenant's license status (cached 1h by caller).
      *
-     * @param string $licenseKey
-     * @param string $tenantKey
+     * @param  string  $licenseKey
+     * @param  string  $tenantKey
      * @return array{valid: bool, tier?: string, ...}|array{error: string}
      */
     public function validateLicense(string $licenseKey, string $tenantKey): array
@@ -114,13 +114,13 @@ class SaasProxyClient
     /**
      * Generate AI content via the SaaS dashboard proxy.
      *
-     * @param string $licenseKey
-     * @param string $tenantKey
-     * @param array $messages OpenAI-style messages array.
-     * @param string $model Model identifier (e.g. "openai/gpt-4o-mini").
-     * @param int $maxTokens
-     * @param float $temperature
-     * @param string $useCase Tracking label (e.g. "product_description").
+     * @param  string  $licenseKey
+     * @param  string  $tenantKey
+     * @param  array  $messages  OpenAI-style messages array.
+     * @param  string  $model  Model identifier (e.g. "openai/gpt-4o-mini").
+     * @param  int  $maxTokens
+     * @param  float  $temperature
+     * @param  string  $useCase  Tracking label (e.g. "product_description").
      * @return array{text: string, model: string, usage: array}|array{error: string}
      */
     public function aiGenerate(
@@ -172,12 +172,12 @@ class SaasProxyClient
     /**
      * Check a keyword ranking via the SaaS dashboard SERP proxy.
      *
-     * @param string $licenseKey
-     * @param string $tenantKey
-     * @param string $keyword
-     * @param string $url The URL to find in SERP results.
-     * @param string $country
-     * @param string $language
+     * @param  string  $licenseKey
+     * @param  string  $tenantKey
+     * @param  string  $keyword
+     * @param  string  $url  The URL to find in SERP results.
+     * @param  string  $country
+     * @param  string  $language
      * @return array{position?: int, results?: array, ...}|array{error: string}
      */
     public function serpRankCheck(
@@ -219,11 +219,11 @@ class SaasProxyClient
     /**
      * Run a SERP query (for SERP feature tracking / competitor analysis).
      *
-     * @param string $licenseKey
-     * @param string $tenantKey
-     * @param string $keyword
-     * @param string $country
-     * @param string $language
+     * @param  string  $licenseKey
+     * @param  string  $tenantKey
+     * @param  string  $keyword
+     * @param  string  $country
+     * @param  string  $language
      * @return array|array{error: string}
      */
     public function serpQuery(
@@ -263,10 +263,10 @@ class SaasProxyClient
     /**
      * Run a local pack / geo-grid scan.
      *
-     * @param string $licenseKey
-     * @param string $tenantKey
-     * @param array $params {keyword, latitude, longitude, radius, grid_size, ...}
-     * @param bool $grid Whether to use the grid endpoint (vs local-pack).
+     * @param  string  $licenseKey
+     * @param  string  $tenantKey
+     * @param  array  $params  {keyword, latitude, longitude, radius, grid_size, ...}
+     * @param  bool  $grid  Whether to use the grid endpoint (vs local-pack).
      * @return array|array{error: string}
      */
     public function localSerpScan(string $licenseKey, string $tenantKey, array $params, bool $grid = false): array
