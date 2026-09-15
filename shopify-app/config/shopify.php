@@ -4,7 +4,7 @@ return [
     'app_name' => env('SHOPIFY_APP_NAME', 'Fyndable SEO'),
     'api_key' => env('SHOPIFY_API_KEY', ''),
     'api_secret' => env('SHOPIFY_API_SECRET', ''),
-    'scopes' => env('SHOPIFY_SCOPES', 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects'),
+    'scopes' => env('SHOPIFY_SCOPES', 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy'),
     'redirect_uri' => env('SHOPIFY_REDIRECT_URI', '/auth/callback'),
     'webhook_uri' => env('SHOPIFY_WEBHOOK_URI', '/webhooks'),
     'api_version' => env('SHOPIFY_API_VERSION', '2026-07'),
