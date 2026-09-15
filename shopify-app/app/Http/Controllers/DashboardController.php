@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LlmsTxtSettings;
 use App\Models\Shop;
+use App\Models\TrackedKeyword;
 use App\Services\LicenseService;
 use App\Services\ShopifyContentFetcher;
+use App\Services\ShopifySignature;
 use Illuminate\Http\Request;
 
 /**
@@ -22,23 +25,21 @@ class DashboardController extends Controller
 
     /**
      * Render the embedded app dashboard (App Bridge + Polaris).
+     *
+     * This is the initial HTML shell — it cannot carry a bearer token, so it
+     * only validates the `shop` query param and renders the view. All data is
+     * loaded via /api/* endpoints protected by the session-token middleware.
      */
     public function index(Request $request)
     {
-        $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
-            return redirect()->route('install.form');
+        $shopDomain = ShopifySignature::normalizeShopDomain((string) $request->query('shop', ''));
+        if ($shopDomain === null) {
+            abort(400, 'Invalid or missing shop parameter.');
         }
 
-        $licenseStatus = $this->license->validate($shop);
-        $shopDetails = $this->fetcher->getShopDetails($shop);
-
         return view('dashboard.index', [
-            'shop' => $shop,
-            'license' => $licenseStatus,
-            'shopDetails' => $shopDetails,
             'apiKey' => config('shopify.api_key'),
-            'shopDomain' => $shop->shop_domain,
+            'shopDomain' => $shopDomain,
         ]);
     }
 
@@ -50,7 +51,7 @@ class DashboardController extends Controller
     public function overview(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -61,14 +62,14 @@ class DashboardController extends Controller
         $productCount = count($products);
 
         // Get tracked keyword stats
-        $keywordCount = \App\Models\TrackedKeyword::where('shop_id', $shop->id)->count();
-        $top10 = \App\Models\TrackedKeyword::where('shop_id', $shop->id)
+        $keywordCount = TrackedKeyword::where('shop_id', $shop->id)->count();
+        $top10 = TrackedKeyword::where('shop_id', $shop->id)
             ->whereNotNull('last_position')
             ->where('last_position', '<=', 10)
             ->count();
 
         // llms.txt status
-        $llmsSettings = \App\Models\LlmsTxtSettings::getForShop($shop->id);
+        $llmsSettings = LlmsTxtSettings::getForShop($shop->id);
 
         return [
             'shop' => [

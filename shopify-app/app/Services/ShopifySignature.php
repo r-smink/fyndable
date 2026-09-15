@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -39,7 +37,7 @@ class ShopifySignature
 
         $pairs = [];
         foreach ($params as $key => $value) {
-            $pairs[] = $key . '=' . $value;
+            $pairs[] = $key.'='.$value;
         }
         $message = implode('&', $pairs);
 
@@ -63,90 +61,73 @@ class ShopifySignature
     /**
      * Verify an App Bridge session token (JWT) issued by Shopify.
      *
-     * Fetches the shop's JWKS, verifies the RS256 signature, and validates
-     * the `dest` (shop domain), `iss` (issuer), and expiry claims.
+     * Shopify signs session tokens with HS256 using the app's API secret.
+     * Validates the `aud` (app API key), `dest`/`iss` (shop domain), and
+     * expiry claims (verified by the JWT library with a 60s leeway).
      *
-     * @param string $token The JWT string from the Authorization header.
-     * @param string $shopDomain Optional shop domain to validate against `dest`.
+     * @param  string  $token  The JWT string from the Authorization header.
+     * @param  string  $shopDomain  Optional shop domain to validate against `dest`.
      * @return array|null Decoded payload if valid, null otherwise.
      */
     public function verifySessionToken(string $token, string $shopDomain = ''): ?array
     {
-        // Extract header to get the key ID (kid) and the shop domain
-        $parts = explode('.', $token);
-        if (count($parts) !== 3) {
-            return null;
-        }
-
-        $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
-        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
-        if (!is_array($header) || !is_array($payload)) {
-            return null;
-        }
-
-        // The token's `dest` must match the shop domain we expect
-        $tokenShop = $payload['dest'] ?? '';
-        $tokenShop = preg_replace('#^https?://#', '', $tokenShop);
-
-        if ($shopDomain && strtolower($tokenShop) !== strtolower($shopDomain)) {
-            Log::warning('App Bridge token dest mismatch', ['expected' => $shopDomain, 'got' => $tokenShop]);
-            return null;
-        }
-
-        $shopDomain = $shopDomain ?: $tokenShop;
-        $kid = $header['kid'] ?? '';
-
         try {
-            $keys = $this->getJwks($shopDomain);
-            $key = $kid ? ($keys[$kid] ?? null) : null;
-            if ($key === null && !empty($keys)) {
-                // If no kid match, try the first available key
-                $key = reset($keys);
-            }
-
-            if ($key === null) {
-                Log::error('No Shopify JWKS key available', ['shop' => $shopDomain, 'kid' => $kid]);
-                return null;
-            }
-
             JWT::$leeway = 60; // 60 seconds clock skew
-            $decoded = JWT::decode($token, $key);
-
-            return (array)$decoded;
+            $decoded = JWT::decode($token, new Key($this->apiSecret, 'HS256'));
         } catch (\Exception $e) {
             Log::warning('App Bridge token verification failed', ['error' => $e->getMessage()]);
+
             return null;
         }
+
+        $payload = (array) $decoded;
+
+        // The token must be issued for this app
+        $apiKey = (string) config('shopify.api_key');
+        $aud = $payload['aud'] ?? null;
+        $audValues = is_array($aud) ? $aud : [$aud];
+        if ($apiKey === '' || ! in_array($apiKey, $audValues, true)) {
+            Log::warning('App Bridge token aud mismatch');
+
+            return null;
+        }
+
+        // `dest` and `iss` must both resolve to the same *.myshopify.com host
+        $dest = self::normalizeShopDomain((string) ($payload['dest'] ?? ''));
+        $iss = self::normalizeShopDomain((string) ($payload['iss'] ?? ''));
+        if ($dest === null || $iss === null || $dest !== $iss) {
+            Log::warning('App Bridge token dest/iss invalid or mismatched', [
+                'dest' => $payload['dest'] ?? null,
+                'iss' => $payload['iss'] ?? null,
+            ]);
+
+            return null;
+        }
+
+        if ($shopDomain !== '') {
+            $expected = self::normalizeShopDomain($shopDomain);
+            if ($expected === null || $expected !== $dest) {
+                Log::warning('App Bridge token dest mismatch', ['expected' => $shopDomain, 'got' => $dest]);
+
+                return null;
+            }
+        }
+
+        return $payload;
     }
 
     /**
-     * Fetch and parse the Shopify JWKS for a shop, with caching.
-     *
-     * @return array<string, object> Firebase JWT key objects keyed by kid.
+     * Normalize a shop domain (or URL containing one) to a *.myshopify.com hostname.
+     * Returns null when the input does not contain a valid myshopify.com host.
      */
-    private function getJwks(string $shopDomain): array
+    public static function normalizeShopDomain(string $domain): ?string
     {
-        $cacheKey = 'shopify:jwks:' . $shopDomain;
-        $cached = Cache::get($cacheKey);
-        if (is_array($cached)) {
-            return $cached;
+        $domain = strtolower(trim($domain));
+        $host = parse_url(str_contains($domain, '://') ? $domain : 'https://'.$domain, PHP_URL_HOST);
+        if (! is_string($host) || ! preg_match('/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/', $host)) {
+            return null;
         }
 
-        try {
-            $response = Http::timeout(10)->get("https://{$shopDomain}/.well-known/jwks.json");
-            if ($response->failed()) {
-                return [];
-            }
-
-            $jwks = $response->json();
-            $keys = JWK::parseKeySet($jwks);
-
-            Cache::put($cacheKey, $keys, 86400); // 24h
-
-            return $keys;
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch Shopify JWKS', ['shop' => $shopDomain, 'error' => $e->getMessage()]);
-            return [];
-        }
+        return $host;
     }
 }

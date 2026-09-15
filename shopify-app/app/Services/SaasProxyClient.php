@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 class SaasProxyClient
 {
     private string $dashboardUrl;
+
     private string $namespace;
 
     public function __construct()
@@ -31,9 +32,9 @@ class SaasProxyClient
     /**
      * Activate a Fyndable license for a Shopify shop.
      *
-     * @param string $licenseKey The Fyndable license key (uppercase).
-     * @param string $shopDomain The Shopify shop domain (e.g. store.myshopify.com).
-     * @param string $shopName Optional shop display name.
+     * @param  string  $licenseKey  The Fyndable license key (uppercase).
+     * @param  string  $shopDomain  The Shopify shop domain (e.g. store.myshopify.com).
+     * @param  string  $shopName  Optional shop display name.
      * @return array{success: bool, tenant_key?: string, tier?: string, ...}|array{error: string}
      */
     public function activateLicense(string $licenseKey, string $shopDomain, string $shopName = ''): array
@@ -51,6 +52,7 @@ class SaasProxyClient
                 ]);
         } catch (ConnectionException $e) {
             Log::error('SaasProxyClient: license activation failed', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 
@@ -59,7 +61,7 @@ class SaasProxyClient
         }
 
         $body = $response->json();
-        if (!is_array($body) || !($body['success'] ?? false)) {
+        if (! is_array($body) || ! ($body['success'] ?? false)) {
             return ['error' => $body['message'] ?? 'activation_failed'];
         }
 
@@ -89,6 +91,7 @@ class SaasProxyClient
                 ]);
         } catch (ConnectionException $e) {
             Log::warning('SaasProxyClient: license validation failed (network)', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 
@@ -97,7 +100,7 @@ class SaasProxyClient
         }
 
         $body = $response->json();
-        if (!is_array($body)) {
+        if (! is_array($body)) {
             return ['error' => 'invalid_response'];
         }
 
@@ -147,15 +150,18 @@ class SaasProxyClient
                 ]);
         } catch (ConnectionException $e) {
             Log::error('SaasProxyClient: AI generate failed', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 
         if ($response->failed()) {
             $body = $response->json();
+
             return ['error' => $body['message'] ?? 'ai_failed', 'status' => $response->status()];
         }
 
         $body = $response->json();
+
         return [
             'text' => $body['text'] ?? $body['content'] ?? '',
             'model' => $body['model'] ?? $model,
@@ -193,12 +199,13 @@ class SaasProxyClient
                 ])
                 ->post($endpoint, [
                     'keyword' => $keyword,
-                    'url' => $url,
+                    'target_url' => $url,
                     'country' => $country,
                     'language' => $language,
                 ]);
         } catch (ConnectionException $e) {
             Log::error('SaasProxyClient: SERP rank-check failed', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 
@@ -242,6 +249,7 @@ class SaasProxyClient
                 ]);
         } catch (ConnectionException $e) {
             Log::error('SaasProxyClient: SERP query failed', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 
@@ -276,6 +284,7 @@ class SaasProxyClient
                 ->post($endpoint, $params);
         } catch (ConnectionException $e) {
             Log::error('SaasProxyClient: local SERP failed', ['error' => $e->getMessage()]);
+
             return ['error' => 'connection_failed'];
         }
 

@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Shop;
+use App\Services\ShopifyContentFetcher;
+use App\Services\ShopifySignature;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Shopify\Utils;
 
 /**
  * AuthController
@@ -24,12 +27,11 @@ class AuthController extends Controller
      */
     public function install(Request $request): RedirectResponse
     {
-        $shopDomain = $request->query('shop', '');
-        if (empty($shopDomain)) {
-            abort(400, 'Missing shop parameter.');
+        $shopDomain = ShopifySignature::normalizeShopDomain($request->query('shop', ''));
+        if ($shopDomain === null) {
+            abort(400, 'Invalid or missing shop parameter.');
         }
 
-        $shopDomain = $this->normalizeDomain($shopDomain);
         $apiKey = config('shopify.api_key');
         $scopes = config('shopify.scopes');
         $redirectUri = url(config('shopify.redirect_uri'));
@@ -40,11 +42,14 @@ class AuthController extends Controller
             ['is_installed' => false]
         );
 
-        $authorizeUrl = "https://{$shopDomain}/admin/oauth/authorize?" . http_build_query([
+        $state = bin2hex(random_bytes(32));
+        $request->session()->put('shopify_oauth_state', $state);
+
+        $authorizeUrl = "https://{$shopDomain}/admin/oauth/authorize?".http_build_query([
             'client_id' => $apiKey,
             'scope' => $scopes,
             'redirect_uri' => $redirectUri,
-            'state' => csrf_token(),
+            'state' => $state,
         ]);
 
         return redirect($authorizeUrl);
@@ -55,12 +60,19 @@ class AuthController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        $shopDomain = $this->normalizeDomain($request->query('shop', ''));
+        $shopDomain = ShopifySignature::normalizeShopDomain($request->query('shop', ''));
         $code = $request->query('code', '');
         $hmac = $request->query('hmac', '');
 
-        if (empty($shopDomain) || empty($code)) {
+        if ($shopDomain === null || empty($code)) {
             abort(400, 'Missing required OAuth parameters.');
+        }
+
+        // Verify the OAuth state nonce issued in install() to prevent CSRF
+        $expectedState = $request->session()->pull('shopify_oauth_state');
+        $state = (string) $request->query('state', '');
+        if (empty($expectedState) || empty($state) || ! hash_equals($expectedState, $state)) {
+            abort(403, 'OAuth state mismatch.');
         }
 
         // Verify HMAC
@@ -88,12 +100,11 @@ class AuthController extends Controller
 
         Log::info('Shopify app installed', ['shop' => $shopDomain]);
 
-        // Redirect to the embedded app dashboard
-        $appUrl = config('shopify.is_embedded')
-            ? "https://{$shopDomain}/apps/" . config('shopify.api_key')
-            : route('dashboard', ['shop' => $shopDomain]);
-
-        return redirect($appUrl);
+        // Redirect to the embedded app dashboard (App Bridge loads the session token)
+        return redirect()->route('dashboard', [
+            'shop' => $shopDomain,
+            'host' => $request->query('host', ''),
+        ]);
     }
 
     /**
@@ -106,19 +117,21 @@ class AuthController extends Controller
         $apiSecret = config('shopify.api_secret');
 
         try {
-            $response = \Illuminate\Support\Facades\Http::timeout(30)
+            $response = Http::timeout(30)
                 ->post($endpoint, [
                     'client_id' => $apiKey,
                     'client_secret' => $apiSecret,
                     'code' => $code,
                 ]);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             Log::error('OAuth token exchange failed', ['error' => $e->getMessage()]);
+
             return null;
         }
 
         if ($response->failed()) {
             Log::error('OAuth token exchange HTTP error', ['status' => $response->status()]);
+
             return null;
         }
 
@@ -130,9 +143,9 @@ class AuthController extends Controller
      */
     private function verifyHmac(Request $request): void
     {
-        $signature = new \App\Services\ShopifySignature(config('shopify.api_secret'));
+        $signature = new ShopifySignature(config('shopify.api_secret'));
 
-        if (!$signature->verifyOAuth($request)) {
+        if (! $signature->verifyOAuth($request)) {
             Log::warning('HMAC verification failed', ['shop' => $request->query('shop', '')]);
             abort(403, 'HMAC verification failed.');
         }
@@ -144,10 +157,10 @@ class AuthController extends Controller
     private function updateShopDetails(Shop $shop): void
     {
         try {
-            $fetcher = app(\App\Services\ShopifyContentFetcher::class);
+            $fetcher = app(ShopifyContentFetcher::class);
             $details = $fetcher->getShopDetails($shop);
 
-            if (!empty($details)) {
+            if (! empty($details)) {
                 $shop->shop_name = $details['name'] ?? $shop->shop_name;
                 $shop->currency = $details['currency'] ?? $shop->currency;
                 $shop->country_code = $details['country'] ?? $shop->country_code;
@@ -183,11 +196,11 @@ class AuthController extends Controller
             'app/uninstalled',
         ];
 
-        $endpoint = "https://{$shop->shop_domain}/admin/api/" . config('shopify.api_version') . "/webhooks.json";
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/webhooks.json';
 
         foreach ($topics as $topic) {
             try {
-                \Illuminate\Support\Facades\Http::timeout(15)
+                Http::timeout(15)
                     ->withHeaders([
                         'X-Shopify-Access-Token' => $shop->access_token,
                         'Content-Type' => 'application/json',
@@ -203,22 +216,5 @@ class AuthController extends Controller
                 Log::warning('Webhook registration failed', ['topic' => $topic, 'error' => $e->getMessage()]);
             }
         }
-    }
-
-    /**
-     * Normalize a Shopify domain (lowercase, strip protocol/path).
-     */
-    private function normalizeDomain(string $domain): string
-    {
-        $domain = strtolower(trim($domain));
-        $domain = preg_replace('#^https?://#', '', $domain);
-        $domain = preg_replace('#/.*$#', '', $domain);
-
-        // Ensure it ends with .myshopify.com if not a custom domain
-        if (!str_contains($domain, '.') ) {
-            $domain .= '.myshopify.com';
-        }
-
-        return $domain;
     }
 }

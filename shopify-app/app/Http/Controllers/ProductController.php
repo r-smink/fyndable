@@ -6,6 +6,7 @@ use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use App\Services\ShopifyContentFetcher;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 class ProductController extends Controller
 {
     private const METAFIELD_NAMESPACE = 'fyndable';
+
     private const METAFIELD_NAMESPACE_SEO = 'seo';
 
     public function __construct(
@@ -39,11 +41,11 @@ class ProductController extends Controller
     public function generateDescription(Request $request, string $productId): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
-        if (!$this->license->isActive($shop)) {
+        if (! $this->license->isActive($shop)) {
             return ['error' => 'license_inactive'];
         }
 
@@ -88,11 +90,11 @@ class ProductController extends Controller
     public function generateMeta(Request $request, string $productId): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
-        if (!$this->license->isActive($shop)) {
+        if (! $this->license->isActive($shop)) {
             return ['error' => 'license_inactive'];
         }
 
@@ -142,11 +144,11 @@ class ProductController extends Controller
     public function generateAltText(Request $request, string $productId): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
-        if (!$this->license->isActive($shop)) {
+        if (! $this->license->isActive($shop)) {
             return ['error' => 'license_inactive'];
         }
 
@@ -201,8 +203,12 @@ class ProductController extends Controller
     public function saveMeta(Request $request, string $productId): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
         }
 
         $title = $request->input('title', '');
@@ -213,10 +219,10 @@ class ProductController extends Controller
         }
 
         $metafields = [];
-        if (!empty($title)) {
+        if (! empty($title)) {
             $metafields[] = $this->metafieldInput('seo', 'title', $title, 'single_line_text_field');
         }
-        if (!empty($description)) {
+        if (! empty($description)) {
             $metafields[] = $this->metafieldInput('seo', 'description', $description, 'multi_line_text_field');
         }
 
@@ -235,8 +241,12 @@ class ProductController extends Controller
     public function generateSchema(Request $request, string $productId): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
         }
 
         $product = $this->getProduct($shop, $productId);
@@ -279,23 +289,23 @@ class ProductController extends Controller
 
         // Image
         $featuredImage = $product['featuredImage'] ?? null;
-        if ($featuredImage && !empty($featuredImage['url'])) {
+        if ($featuredImage && ! empty($featuredImage['url'])) {
             $schema['image'] = $featuredImage['url'];
         }
 
         // Brand (vendor)
-        if (!empty($product['vendor'])) {
+        if (! empty($product['vendor'])) {
             $schema['brand'] = ['@type' => 'Brand', 'name' => $product['vendor']];
         }
 
         // Category
-        if (!empty($product['productType'])) {
+        if (! empty($product['productType'])) {
             $schema['category'] = $product['productType'];
         }
 
         // Offers from variants
         $variants = $product['variants']['edges'] ?? [];
-        if (!empty($variants)) {
+        if (! empty($variants)) {
             $prices = [];
             $available = true;
             foreach ($variants as $edge) {
@@ -303,7 +313,7 @@ class ProductController extends Controller
                 if (isset($v['price'])) {
                     $prices[] = (float) $v['price'];
                 }
-                if (!$v['availableForSale']) {
+                if (! $v['availableForSale']) {
                     $available = false;
                 }
             }
@@ -349,13 +359,13 @@ class ProductController extends Controller
         $length = $type === 'short' ? '1-2 sentences (max 100 words)' : '3-5 paragraphs (max 500 words)';
 
         return "Write an SEO-optimized product description for the following product. Length: {$length}.\n\n"
-            . "Product: {$title}\n"
-            . "Vendor: {$vendor}\n"
-            . "Type: {$productType}\n"
-            . "Tags: {$tags}\n"
-            . "Price: {$price}\n"
-            . "Existing description: {$existingDesc}\n\n"
-            . "Focus on benefits, features, and include relevant keywords naturally. Do not use HTML tags.";
+            ."Product: {$title}\n"
+            ."Vendor: {$vendor}\n"
+            ."Type: {$productType}\n"
+            ."Tags: {$tags}\n"
+            ."Price: {$price}\n"
+            ."Existing description: {$existingDesc}\n\n"
+            .'Focus on benefits, features, and include relevant keywords naturally. Do not use HTML tags.';
     }
 
     /**
@@ -369,12 +379,12 @@ class ProductController extends Controller
         $existingDesc = strip_tags($product['description'] ?? '');
 
         return "Generate SEO meta title and description for this product.\n\n"
-            . "Product: {$title}\n"
-            . "Vendor: {$vendor}\n"
-            . "Type: {$productType}\n"
-            . "Description: {$existingDesc}\n\n"
-            . "Meta title: max 60 characters. Meta description: max 155 characters.\n"
-            . 'Respond as JSON: {"title": "...", "description": "..."}';
+            ."Product: {$title}\n"
+            ."Vendor: {$vendor}\n"
+            ."Type: {$productType}\n"
+            ."Description: {$existingDesc}\n\n"
+            ."Meta title: max 60 characters. Meta description: max 155 characters.\n"
+            .'Respond as JSON: {"title": "...", "description": "..."}';
     }
 
     /**
@@ -410,7 +420,7 @@ class ProductController extends Controller
         }
         GRAPHQL;
 
-        $endpoint = "https://{$shop->shop_domain}/admin/api/" . config('shopify.api_version') . "/graphql.json";
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
 
         try {
             $response = Http::timeout(30)
@@ -422,17 +432,17 @@ class ProductController extends Controller
                     'query' => $query,
                     'variables' => ['id' => "gid://shopify/Product/{$productId}"],
                 ]);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             return ['error' => 'connection_failed'];
         }
 
         if ($response->failed()) {
-            return ['error' => 'http_' . $response->status()];
+            return ['error' => 'http_'.$response->status()];
         }
 
         $body = $response->json();
         $product = $body['data']['product'] ?? null;
-        if (!$product) {
+        if (! $product) {
             return ['error' => 'product_not_found'];
         }
 
@@ -453,9 +463,15 @@ class ProductController extends Controller
         }
         GRAPHQL;
 
-        $gid = "gid://shopify/{$ownerType}/{$ownerId}";
+        // Shopify GIDs use the case-sensitive resource type (e.g. "Product")
+        $gid = "gid://shopify/Product/{$ownerId}";
 
-        $endpoint = "https://{$shop->shop_domain}/admin/api/" . config('shopify.api_version') . "/graphql.json";
+        $metafields = array_map(
+            fn (array $metafield) => ['ownerId' => $gid] + $metafield,
+            $metafields
+        );
+
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
 
         try {
             $response = Http::timeout(30)
@@ -467,20 +483,23 @@ class ProductController extends Controller
                     'query' => $mutation,
                     'variables' => ['metafields' => $metafields],
                 ]);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             Log::error('Metafield creation failed', ['error' => $e->getMessage()]);
+
             return false;
         }
 
         if ($response->failed()) {
             Log::error('Metafield HTTP error', ['status' => $response->status()]);
+
             return false;
         }
 
         $body = $response->json();
         $errors = $body['data']['metafieldsSet']['userErrors'] ?? [];
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             Log::error('Metafield user errors', ['errors' => $errors]);
+
             return false;
         }
 
@@ -511,6 +530,7 @@ class ProductController extends Controller
         $text = trim($text);
 
         $parsed = json_decode($text, true);
+
         return is_array($parsed) ? $parsed : [];
     }
 }

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fyndable SEO</title>
-    <script src="https://unpkg.com/@shopify/app-bridge@4"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge-ui@4"></script>
+    <meta name="shopify-api-key" content="{{ $apiKey }}">
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f6f6f7; color: #202223; }
@@ -224,17 +224,8 @@
 
     <script>
         const API_BASE = '/api';
-        const shopDomain = '{{ $shopDomain }}';
-        const apiKey = '{{ $apiKey }}';
-
-        // Initialize Shopify App Bridge
-        if (window.AppBridge) {
-            const app = AppBridge.createApp({
-                apiKey: apiKey,
-                host: new URLSearchParams(window.location.search).get('host') || btoa(shopDomain),
-            });
-            AppBridge.actions.TitleBar.create(app, { title: 'Fyndable SEO' });
-        }
+        const shopDomain = @json($shopDomain);
+        const apiKey = @json($apiKey);
 
         // Tab switching
         function showTab(tabId) {

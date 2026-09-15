@@ -37,19 +37,19 @@ class BulkOptimizerController extends Controller
     public function optimize(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
-        if (!$this->license->isActive($shop)) {
+        if (! $this->license->isActive($shop)) {
             return ['error' => 'license_inactive'];
         }
 
         $action = $request->input('action', 'meta');
-        $limit = min((int) $request->input('limit', 100), 500);
+        $limit = max(1, min((int) $request->input('limit', 100), 500));
         $validActions = ['titles', 'meta', 'alt_text', 'descriptions'];
 
-        if (!in_array($action, $validActions, true)) {
+        if (! in_array($action, $validActions, true)) {
             return ['error' => 'invalid_action', 'valid_actions' => $validActions];
         }
 
@@ -65,7 +65,7 @@ class BulkOptimizerController extends Controller
             return ['error' => 'no_products'];
         }
 
-        $productIds = array_map(fn($p) => $p['id'], $products);
+        $productIds = array_map(fn ($p) => $p['id'], $products);
 
         // Initialize progress tracking
         Cache::put($jobKey, [
@@ -97,7 +97,7 @@ class BulkOptimizerController extends Controller
     public function progress(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -105,7 +105,7 @@ class BulkOptimizerController extends Controller
         $jobKey = "bulk:{$shop->id}:{$action}";
 
         $progress = Cache::get($jobKey);
-        if (!$progress) {
+        if (! $progress) {
             return ['status' => 'idle', 'message' => 'No bulk job running.'];
         }
 
@@ -121,7 +121,7 @@ class BulkOptimizerController extends Controller
     public function cancel(Request $request): array
     {
         $shop = $request->attributes->get('shop');
-        if (!$shop instanceof Shop) {
+        if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
         }
 
@@ -129,7 +129,7 @@ class BulkOptimizerController extends Controller
         $jobKey = "bulk:{$shop->id}:{$action}";
 
         $progress = Cache::get($jobKey);
-        if (!$progress) {
+        if (! $progress) {
             return ['error' => 'no_job_running'];
         }
 
