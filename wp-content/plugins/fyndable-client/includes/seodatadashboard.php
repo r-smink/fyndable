@@ -68,6 +68,15 @@ class SEODataDashboard
         return $source !== '' ? $source : $this->defaultSource();
     }
 
+    /**
+     * Check if a DataForSEO data source is configured.
+     */
+    private function isDataForSEOConfigured(): bool
+    {
+        return !empty(get_option('sseo_ai_dataforseo_api_key', ''))
+            || get_option('sseo_ai_backlink_provider') === 'dataforseo';
+    }
+
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
@@ -296,6 +305,7 @@ class SEODataDashboard
         $ahKey = get_option('sseo_ai_ahrefs_api_key', '');
         $seConnected = !empty($seKey);
         $ahConnected = !empty($ahKey);
+        $dfConnected = $this->isDataForSEOConfigured();
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -346,6 +356,11 @@ class SEODataDashboard
                     <span class="connection-badge connected">Ahrefs: Connected</span>
                     <?php else: ?>
                     <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">Ahrefs: Not Connected</a>
+                    <?php endif; ?>
+                    <?php if ($dfConnected): ?>
+                    <span class="connection-badge connected">DataForSEO: Connected</span>
+                    <?php else: ?>
+                    <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">DataForSEO: Not Connected</a>
                     <?php endif; ?>
                 </div>
             </div>
