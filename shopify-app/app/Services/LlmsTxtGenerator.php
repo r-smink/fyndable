@@ -81,8 +81,8 @@ class LlmsTxtGenerator
     public function generateSummary(Shop $shop, LlmsTxtSettings $settings): string
     {
         $shopDetails = $this->fetcher->getShopDetails($shop);
-        $siteName = $shopDetails['name'] ?: $shop->shop_name ?: $shop->shop_domain;
-        $siteDomain = rtrim($shopDetails['domain'] ?: "https://{$shop->shop_domain}", '/');
+        $siteName = ($shopDetails['name'] ?? '') ?: $shop->shop_name ?: $shop->shop_domain;
+        $siteDomain = rtrim(($shopDetails['domain'] ?? '') ?: "https://{$shop->shop_domain}", '/');
         $description = $settings->description ?: __('SEO-optimized Shopify store');
 
         $lines = [];
@@ -98,8 +98,8 @@ class LlmsTxtGenerator
                 $lines[] = '## Products';
                 $lines[] = '';
                 foreach ($products as $product) {
-                    $url = $product['onlineStoreUrl'] ?: "{$siteDomain}/products/{$product['handle']}";
-                    $title = trim($product['title']);
+                    $url = ($product['onlineStoreUrl'] ?? '') ?: "{$siteDomain}/products/".($product['handle'] ?? '');
+                    $title = trim($product['title'] ?? '');
                     $entry = "- [{$title}]({$url})";
                     if ($settings->include_excerpt) {
                         $excerpt = $this->makeExcerpt($product['description'] ?? '');
@@ -120,8 +120,8 @@ class LlmsTxtGenerator
                 $lines[] = '## Collections';
                 $lines[] = '';
                 foreach ($collections as $collection) {
-                    $url = $collection['onlineStoreUrl'] ?: "{$siteDomain}/collections/{$collection['handle']}";
-                    $title = trim($collection['title']);
+                    $url = ($collection['onlineStoreUrl'] ?? '') ?: "{$siteDomain}/collections/".($collection['handle'] ?? '');
+                    $title = trim($collection['title'] ?? '');
                     $entry = "- [{$title}]({$url})";
                     if ($settings->include_excerpt) {
                         $excerpt = $this->makeExcerpt($collection['description'] ?? '');
@@ -142,8 +142,8 @@ class LlmsTxtGenerator
                 $lines[] = '## Pages';
                 $lines[] = '';
                 foreach ($pages as $page) {
-                    $url = $page['url'] ?: "{$siteDomain}/pages/{$page['handle']}";
-                    $title = trim($page['title']);
+                    $url = ($page['url'] ?? '') ?: "{$siteDomain}/pages/".($page['handle'] ?? '');
+                    $title = trim($page['title'] ?? '');
                     $entry = "- [{$title}]({$url})";
                     if ($settings->include_excerpt) {
                         $excerpt = $this->makeExcerpt($page['bodySummary'] ?? $page['body'] ?? '');
@@ -165,8 +165,8 @@ class LlmsTxtGenerator
                 $lines[] = '';
                 foreach ($articles as $article) {
                     $blogHandle = $article['_blog_handle'] ?? 'news';
-                    $url = $article['url'] ?: "{$siteDomain}/blogs/{$blogHandle}/{$article['handle']}";
-                    $title = trim($article['title']);
+                    $url = ($article['url'] ?? '') ?: "{$siteDomain}/blogs/{$blogHandle}/".($article['handle'] ?? '');
+                    $title = trim($article['title'] ?? '');
                     $entry = "- [{$title}]({$url})";
                     if ($settings->include_excerpt) {
                         $excerpt = $this->makeExcerpt($article['excerpt'] ?? $article['content'] ?? '');
@@ -205,8 +205,8 @@ class LlmsTxtGenerator
     public function generateFull(Shop $shop, LlmsTxtSettings $settings): string
     {
         $shopDetails = $this->fetcher->getShopDetails($shop);
-        $siteName = $shopDetails['name'] ?: $shop->shop_name ?: $shop->shop_domain;
-        $siteDomain = rtrim($shopDetails['domain'] ?: "https://{$shop->shop_domain}", '/');
+        $siteName = ($shopDetails['name'] ?? '') ?: $shop->shop_name ?: $shop->shop_domain;
+        $siteDomain = rtrim(($shopDetails['domain'] ?? '') ?: "https://{$shop->shop_domain}", '/');
         $description = $settings->description ?: __('SEO-optimized Shopify store');
         $maxChars = $settings->full_max_chars ?: 50000;
 
@@ -276,8 +276,8 @@ class LlmsTxtGenerator
      */
     private function formatProductFull(array $product, string $siteDomain, int $maxChars): array
     {
-        $url = $product['onlineStoreUrl'] ?: "{$siteDomain}/products/{$product['handle']}";
-        $title = trim($product['title']);
+        $url = ($product['onlineStoreUrl'] ?? '') ?: "{$siteDomain}/products/".($product['handle'] ?? '');
+        $title = trim($product['title'] ?? '');
         $body = $this->stripHtml($product['description'] ?? '');
 
         // Add product specs
@@ -328,8 +328,8 @@ class LlmsTxtGenerator
      */
     private function formatCollectionFull(array $collection, string $siteDomain, int $maxChars): array
     {
-        $url = $collection['onlineStoreUrl'] ?: "{$siteDomain}/collections/{$collection['handle']}";
-        $title = trim($collection['title']);
+        $url = ($collection['onlineStoreUrl'] ?? '') ?: "{$siteDomain}/collections/".($collection['handle'] ?? '');
+        $title = trim($collection['title'] ?? '');
         $body = $this->stripHtml($collection['description'] ?? '');
         $productCount = (int) ($collection['productsCount']['count'] ?? 0);
 
@@ -356,8 +356,8 @@ class LlmsTxtGenerator
      */
     private function formatPageFull(array $page, string $siteDomain, int $maxChars): array
     {
-        $url = $page['url'] ?: "{$siteDomain}/pages/{$page['handle']}";
-        $title = trim($page['title']);
+        $url = ($page['url'] ?? '') ?: "{$siteDomain}/pages/".($page['handle'] ?? '');
+        $title = trim($page['title'] ?? '');
         $body = $this->stripHtml($page['body'] ?? '');
 
         $body = trim(preg_replace('/\s+/', ' ', $body));
@@ -379,8 +379,8 @@ class LlmsTxtGenerator
     private function formatArticleFull(array $article, string $siteDomain, int $maxChars): array
     {
         $blogHandle = $article['_blog_handle'] ?? 'news';
-        $url = $article['url'] ?: "{$siteDomain}/blogs/{$blogHandle}/{$article['handle']}";
-        $title = trim($article['title']);
+        $url = ($article['url'] ?? '') ?: "{$siteDomain}/blogs/{$blogHandle}/".($article['handle'] ?? '');
+        $title = trim($article['title'] ?? '');
         $body = $this->stripHtml($article['content'] ?? '');
 
         $body = trim(preg_replace('/\s+/', ' ', $body));

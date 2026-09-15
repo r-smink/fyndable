@@ -202,6 +202,38 @@ Shopify App Proxy serves llms.txt at `/apps/fyndable/llms.txt` (not root `/llms.
 - App Proxy path is `/apps/fyndable/llms.txt` — configure App Proxy + theme app extension in Shopify Partner Dashboard
 - SaaS platform filter shows `unknown` for licenses that have not been activated yet
 
+### Queue worker setup (production VPS)
+Bulk optimization (`BulkOptimizeJob`) and rank checks (`CheckRankingsJob`) run as queued jobs. Without a running queue worker, these jobs are enqueued but never execute — the API returns success but nothing happens.
+
+**Option A — Supervisor (recommended for production):**
+```ini
+[program:shopify-queue]
+command=php /path/to/shopify-app/artisan queue:work --tries=1 --timeout=1800
+directory=/path/to/shopify-app
+autostart=true
+autorestart=true
+user=www-data
+```
+Install Supervisor (`apt install supervisor`), save to `/etc/supervisor/conf.d/shopify-queue.conf`, then:
+```bash
+supervisorctl reread && supervisorctl update && supervisorctl start shopify-queue
+```
+
+**Option B — Quick fix (small catalogs only):**
+Set `QUEUE_CONNECTION=sync` in `.env` so jobs run synchronously within the HTTP request. This makes bulk optimize slow for large catalogs but works without a worker.
+
+**Scheduler (daily rank checks):**
+Add to crontab:
+```
+* * * * * cd /path/to/shopify-app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+### Bug fixes (2026-09-15)
+- **App Bridge v4 restored** — commit `d87c24a` replaced App Bridge v4 with v2 and removed `createApp()`, breaking all authenticated API calls. Restored v4 CDN with `authenticatedFetch` so the session ID token is sent as `Authorization: Bearer` header.
+- **LlmsTxtGenerator error handling** — `generateSummary()` and `generateFull()` accessed `$shopDetails['name']` and `$shopDetails['domain']` with `?:` (ternary) which throws `ErrorException` on missing keys. Fixed to use `??` (null coalescing). Also fixed all `$product['onlineStoreUrl']`, `$collection['title']`, etc. accesses.
+- **ShopifyContentFetcher error handling** — `getShopDetails()` returned `[]` on error, causing downstream 500s. Now returns sensible defaults. `getProductCount()` now checks for errors before accessing `$response['data']`.
+- **Deprecated GraphQL argument removed** — `metafields(first: 10, namespace: "seo")` in the products query had a deprecated `namespace` argument. Removed to avoid GraphQL errors on newer API versions.
+
 ### Security hardening completed
 - `ShopifySignature` service verifies OAuth callback HMAC without URL-encoding values (per Shopify spec)
 - `ShopifySignature` verifies webhook HMAC over raw request body

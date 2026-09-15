@@ -61,7 +61,7 @@ class ShopifyContentFetcher
                     }
                   }
                 }
-                metafields(first: 10, namespace: "seo") {
+                metafields(first: 10) {
                   edges { node { key value } }
                 }
               }
@@ -220,6 +220,10 @@ class ShopifyContentFetcher
 
         $response = $this->graphql($shop, $query);
 
+        if (isset($response['error'])) {
+            return 0;
+        }
+
         return (int) ($response['data']['productsCount']['count'] ?? 0);
     }
 
@@ -242,7 +246,13 @@ class ShopifyContentFetcher
 
         $response = $this->graphql($shop, $query);
         if (isset($response['error'])) {
-            return [];
+            // Return sensible defaults so callers can safely use array access
+            return [
+                'name' => '',
+                'domain' => "https://{$shop->shop_domain}",
+                'currency' => 'USD',
+                'country' => '',
+            ];
         }
 
         $shopData = $response['data']['shop'] ?? [];

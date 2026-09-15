@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fyndable SEO</title>
     <meta name="shopify-api-key" content="{{ $apiKey }}">
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script src="https://unpkg.com/@shopify/app-bridge@4"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f6f6f7; color: #202223; }
@@ -232,6 +232,29 @@
         const shopDomain = @json($shopDomain);
         const apiKey = @json($apiKey);
 
+        // Initialize Shopify App Bridge v4 and set up authenticated fetch.
+        // App Bridge automatically injects the session ID token into the
+        // Authorization header for requests to the app's own domain.
+        let app = null;
+        let authFetch = null;
+        try {
+            const AppBridge = window['app-bridge'] || window.AppBridge;
+            if (AppBridge && AppBridge.default) {
+                const createApp = AppBridge.default;
+                const host = new URLSearchParams(window.location.search).get('host') || btoa(shopDomain);
+                app = createApp({ apiKey: apiKey, host: host });
+                if (AppBridge.actions && AppBridge.actions.TitleBar) {
+                    AppBridge.actions.TitleBar.create(app, { title: 'Fyndable SEO' });
+                }
+                // authenticatedFetch wraps fetch() so the Bearer token is added automatically
+                if (AppBridge.utilities && AppBridge.utilities.authenticatedFetch) {
+                    authFetch = AppBridge.utilities.authenticatedFetch(app);
+                }
+            }
+        } catch (e) {
+            console.warn('App Bridge init failed, falling back to native fetch', e);
+        }
+
         // Tab switching
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -246,10 +269,12 @@
             if (tabId === 'license') loadLicenseStatus();
         }
 
-        // API helper
+        // API helper — uses App Bridge authenticatedFetch when available so the
+        // Shopify session ID token is sent as the Authorization: Bearer header.
         async function api(path, options = {}) {
             const url = `${API_BASE}${path}${path.includes('?') ? '&' : '?'}shop=${encodeURIComponent(shopDomain)}`;
-            const response = await fetch(url, {
+            const fetchFn = authFetch || window.fetch;
+            const response = await fetchFn(url, {
                 ...options,
                 headers: { 'Content-Type': 'application/json', ...options.headers },
             });
