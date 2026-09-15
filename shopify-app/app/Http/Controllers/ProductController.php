@@ -49,37 +49,47 @@ class ProductController extends Controller
             return ['error' => 'license_inactive'];
         }
 
-        $type = $request->input('type', 'long');
-        $product = $this->getProduct($shop, $productId);
-        if (isset($product['error'])) {
-            return $product;
+        try {
+            $type = $request->input('type', 'long');
+            $product = $this->getProduct($shop, $productId);
+            if (isset($product['error'])) {
+                return $product;
+            }
+
+            $prompt = $this->buildDescriptionPrompt($product, $type, $request->input('context', ''));
+            $messages = [
+                ['role' => 'system', 'content' => 'You are an expert e-commerce copywriter who writes SEO-optimized product descriptions.'],
+                ['role' => 'user', 'content' => $prompt],
+            ];
+
+            $result = $this->saas->aiGenerate(
+                $shop->license_key,
+                $shop->tenant_key,
+                $messages,
+                'openai/gpt-4o-mini',
+                $type === 'short' ? 300 : 1000,
+                0.7,
+                'product_description'
+            );
+
+            if (isset($result['error'])) {
+                return $result;
+            }
+
+            return [
+                'success' => true,
+                'description' => $result['text'],
+                'type' => $type,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('generateDescription failed', [
+                'product_id' => $productId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return ['error' => 'generate_failed', 'message' => $e->getMessage()];
         }
-
-        $prompt = $this->buildDescriptionPrompt($product, $type, $request->input('context', ''));
-        $messages = [
-            ['role' => 'system', 'content' => 'You are an expert e-commerce copywriter who writes SEO-optimized product descriptions.'],
-            ['role' => 'user', 'content' => $prompt],
-        ];
-
-        $result = $this->saas->aiGenerate(
-            $shop->license_key,
-            $shop->tenant_key,
-            $messages,
-            'openai/gpt-4o-mini',
-            $type === 'short' ? 300 : 1000,
-            0.7,
-            'product_description'
-        );
-
-        if (isset($result['error'])) {
-            return $result;
-        }
-
-        return [
-            'success' => true,
-            'description' => $result['text'],
-            'type' => $type,
-        ];
     }
 
     /**
@@ -98,41 +108,53 @@ class ProductController extends Controller
             return ['error' => 'license_inactive'];
         }
 
-        $product = $this->getProduct($shop, $productId);
-        if (isset($product['error'])) {
-            return $product;
+        try {
+            $product = $this->getProduct($shop, $productId);
+            if (isset($product['error'])) {
+                return $product;
+            }
+
+            $prompt = $this->buildMetaPrompt($product, $request->input('context', ''));
+            $messages = [
+                ['role' => 'system', 'content' => 'You are an SEO expert. Generate a concise meta title (max 60 chars) and meta description (max 155 chars) for a product. Respond in JSON: {"title": "...", "description": "..."}'],
+                ['role' => 'user', 'content' => $prompt],
+            ];
+
+            $result = $this->saas->aiGenerate(
+                $shop->license_key,
+                $shop->tenant_key,
+                $messages,
+                'openai/gpt-4o-mini',
+                300,
+                0.5,
+                'product_meta'
+            );
+
+            if (isset($result['error'])) {
+                return $result;
+            }
+
+            // Parse JSON response
+            $text = $result['text'] ?? '';
+            $parsed = json_decode($text, true);
+            if (! is_array($parsed)) {
+                return ['error' => 'ai_parse_failed', 'raw' => $text];
+            }
+
+            return [
+                'success' => true,
+                'title' => $parsed['title'] ?? '',
+                'description' => $parsed['description'] ?? '',
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('generateMeta failed', [
+                'product_id' => $productId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return ['error' => 'generate_failed', 'message' => $e->getMessage()];
         }
-
-        $prompt = $this->buildMetaPrompt($product, $request->input('context', ''));
-        $messages = [
-            ['role' => 'system', 'content' => 'You are an SEO expert. Generate a concise meta title (max 60 chars) and meta description (max 155 chars) for a product. Respond in JSON: {"title": "...", "description": "..."}'],
-            ['role' => 'user', 'content' => $prompt],
-        ];
-
-        $result = $this->saas->aiGenerate(
-            $shop->license_key,
-            $shop->tenant_key,
-            $messages,
-            'openai/gpt-4o-mini',
-            300,
-            0.5,
-            'product_meta'
-        );
-
-        if (isset($result['error'])) {
-            return $result;
-        }
-
-        // Try to parse JSON response
-        $text = $result['text'];
-        $parsed = $this->parseJsonResponse($text);
-
-        return [
-            'success' => true,
-            'title' => $parsed['title'] ?? '',
-            'description' => $parsed['description'] ?? '',
-            'raw' => $text,
-        ];
     }
 
     /**
