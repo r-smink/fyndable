@@ -75,28 +75,37 @@ class LlmsTxtController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
-        $settings = LlmsTxtSettings::getForShop($shop->id);
-        $summarySize = strlen($this->generator->getSummary($shop, $settings));
-        $fullSize = $settings->full_enabled ? strlen($this->generator->getFull($shop, $settings)) : 0;
+        try {
+            $settings = LlmsTxtSettings::getForShop($shop->id);
+            $summarySize = strlen($this->generator->getSummary($shop, $settings));
+            $fullSize = $settings->full_enabled ? strlen($this->generator->getFull($shop, $settings)) : 0;
 
-        return [
-            'enabled' => $settings->enabled,
-            'full_enabled' => $settings->full_enabled,
-            'include_products' => $settings->include_products,
-            'include_collections' => $settings->include_collections,
-            'include_pages' => $settings->include_pages,
-            'include_blogs' => $settings->include_blogs,
-            'max_products' => $settings->max_products,
-            'max_pages' => $settings->max_pages,
-            'max_articles' => $settings->max_articles,
-            'max_collections' => $settings->max_collections,
-            'full_max_chars' => $settings->full_max_chars,
-            'include_excerpt' => $settings->include_excerpt,
-            'description' => $settings->description,
-            'custom_sections' => $settings->custom_sections,
-            'summary_size' => $summarySize,
-            'full_size' => $fullSize,
-        ];
+            return [
+                'enabled' => $settings->enabled,
+                'full_enabled' => $settings->full_enabled,
+                'include_products' => $settings->include_products,
+                'include_collections' => $settings->include_collections,
+                'include_pages' => $settings->include_pages,
+                'include_blogs' => $settings->include_blogs,
+                'max_products' => $settings->max_products,
+                'max_pages' => $settings->max_pages,
+                'max_articles' => $settings->max_articles,
+                'max_collections' => $settings->max_collections,
+                'full_max_chars' => $settings->full_max_chars,
+                'include_excerpt' => $settings->include_excerpt,
+                'description' => $settings->description,
+                'custom_sections' => $settings->custom_sections,
+                'summary_size' => $summarySize,
+                'full_size' => $fullSize,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('LlmsTxtController::status failed', [
+                'shop_id' => $shop->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['error' => 'status_failed', 'message' => $e->getMessage()];
+        }
     }
 
     /**
@@ -144,17 +153,26 @@ class LlmsTxtController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
-        $this->generator->invalidate($shop);
-        $settings = LlmsTxtSettings::getForShop($shop->id);
+        try {
+            $this->generator->invalidate($shop);
+            $settings = LlmsTxtSettings::getForShop($shop->id);
 
-        $summarySize = strlen($this->generator->getSummary($shop, $settings));
-        $fullSize = $settings->full_enabled ? strlen($this->generator->getFull($shop, $settings)) : 0;
+            $summarySize = strlen($this->generator->getSummary($shop, $settings));
+            $fullSize = $settings->full_enabled ? strlen($this->generator->getFull($shop, $settings)) : 0;
 
-        return [
-            'success' => true,
-            'summary_size' => $summarySize,
-            'full_size' => $fullSize,
-        ];
+            return [
+                'success' => true,
+                'summary_size' => $summarySize,
+                'full_size' => $fullSize,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('LlmsTxtController::regenerate failed', [
+                'shop_id' => $shop->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['error' => 'regenerate_failed', 'message' => $e->getMessage()];
+        }
     }
 
     /**
@@ -167,19 +185,28 @@ class LlmsTxtController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
-        $settings = LlmsTxtSettings::getForShop($shop->id);
-        $this->generator->invalidate($shop);
-        $summary = $this->generator->getSummary($shop, $settings);
+        try {
+            $settings = LlmsTxtSettings::getForShop($shop->id);
+            $this->generator->invalidate($shop);
+            $summary = $this->generator->getSummary($shop, $settings);
 
-        // Return first 5000 chars for preview
-        $preview = mb_strlen($summary) > 5000
-            ? mb_substr($summary, 0, 5000)."\n\n... (truncated for preview)"
-            : $summary;
+            // Return first 5000 chars for preview
+            $preview = mb_strlen($summary) > 5000
+                ? mb_substr($summary, 0, 5000)."\n\n... (truncated for preview)"
+                : $summary;
 
-        return [
-            'content' => $preview,
-            'full_size' => mb_strlen($summary),
-        ];
+            return [
+                'content' => $preview,
+                'full_size' => mb_strlen($summary),
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('LlmsTxtController::preview failed', [
+                'shop_id' => $shop->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['error' => 'preview_failed', 'message' => $e->getMessage()];
+        }
     }
 
     /**

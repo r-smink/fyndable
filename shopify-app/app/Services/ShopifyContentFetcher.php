@@ -214,7 +214,7 @@ class ShopifyContentFetcher
     {
         $query = <<<'GRAPHQL'
         query getProductCount {
-          productsCount(limit: null) { count precision }
+          productsCount { count precision }
         }
         GRAPHQL;
 
