@@ -370,7 +370,10 @@ class ShopifyContentFetcher
                 ])
                 ->post($endpoint, [
                     'query' => $query,
-                    'variables' => $variables,
+                    // Shopify expects variables as a JSON object ({}, not []).
+                    // Empty PHP array [] encodes to [] in JSON, which Shopify
+                    // rejects with "Invalid variables parameter."
+                    'variables' => empty($variables) ? new \stdClass() : $variables,
                 ]);
         } catch (ConnectionException $e) {
             Log::error('ShopifyContentFetcher: HTTP error', ['error' => $e->getMessage()]);
