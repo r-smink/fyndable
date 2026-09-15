@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RankHistory extends Model
 {
+    protected $table = 'rank_history';
+
     protected $fillable = [
         'tracked_keyword_id',
         'position',
