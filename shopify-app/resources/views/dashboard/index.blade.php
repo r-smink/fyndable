@@ -141,6 +141,10 @@
                     <label for="product-id">Product ID (Shopify GID or numeric ID)</label>
                     <input type="text" id="product-id" placeholder="e.g. 123456789">
                 </div>
+                <div class="form-group">
+                    <label for="product-context">Additional context (optional — keywords, target audience, tone, brand guidelines)</label>
+                    <textarea id="product-context" rows="3" placeholder="e.g. Target audience: outdoor enthusiasts. Tone: adventurous and eco-friendly. Focus on sustainability and durability."></textarea>
+                </div>
                 <button class="btn" onclick="generateDescription('long')">Generate Description</button>
                 <button class="btn secondary" onclick="generateDescription('short')">Short Description</button>
                 <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
@@ -281,9 +285,9 @@
             }
             document.getElementById('overview-stats').innerHTML = `
                 <div class="stat"><div class="label">License Tier</div><div class="value purple">${data.license?.tier || 'free'}</div></div>
-                <div class="stat"><div class="label">Products</div><div class="value blue">${data.product_count}</div></div>
-                <div class="stat"><div class="label">Tracked Keywords</div><div class="value">${data.tracked_keywords}</div></div>
-                <div class="stat"><div class="label">Top 10 Rankings</div><div class="value green">${data.top_10_keywords}</div></div>
+                <div class="stat"><div class="label">Products</div><div class="value blue">${data.product_count ?? 0}</div></div>
+                <div class="stat"><div class="label">Tracked Keywords</div><div class="value">${data.tracked_keywords ?? 0}</div></div>
+                <div class="stat"><div class="label">Top 10 Rankings</div><div class="value green">${data.top_10_keywords ?? 0}</div></div>
                 <div class="stat"><div class="label">llms.txt</div><div class="value ${data.llms_txt_enabled ? 'green' : 'red'}">${data.llms_txt_enabled ? 'Enabled' : 'Disabled'}</div></div>
             `;
         }
@@ -369,7 +373,7 @@
             document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
             const data = await api(`/products/${productId}/generate-description`, {
                 method: 'POST',
-                body: JSON.stringify({ type }),
+                body: JSON.stringify({ type, context: document.getElementById('product-context').value }),
             });
             if (data.success) {
                 lastGeneratedDescription = data.description;
@@ -402,7 +406,10 @@
             if (!productId) { alert('Enter a product ID'); return; }
             lastProductId = productId;
             document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
-            const data = await api(`/products/${productId}/generate-meta`, { method: 'POST' });
+            const data = await api(`/products/${productId}/generate-meta`, {
+                method: 'POST',
+                body: JSON.stringify({ context: document.getElementById('product-context').value }),
+            });
             if (data.success) {
                 lastGeneratedMeta = data;
                 document.getElementById('product-result').innerHTML = `

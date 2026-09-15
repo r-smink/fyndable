@@ -78,14 +78,21 @@ class BulkOptimizerController extends Controller
             'status' => 'running',
         ], 3600);
 
-        // Dispatch the job
-        BulkOptimizeJob::dispatch($shop->id, $action, $productIds);
+        // Run synchronously so no queue worker is needed
+        BulkOptimizeJob::dispatchSync($shop->id, $action, $productIds);
+
+        // Read the final progress from cache
+        $finalProgress = Cache::get($jobKey, ['status' => 'unknown']);
 
         return [
             'success' => true,
             'job' => $action,
             'total' => count($productIds),
-            'message' => 'Bulk optimization started. Check progress with GET /api/bulk/progress.',
+            'processed' => $finalProgress['processed'] ?? 0,
+            'succeeded' => $finalProgress['succeeded'] ?? 0,
+            'failed' => $finalProgress['failed'] ?? 0,
+            'status' => $finalProgress['status'] ?? 'completed',
+            'message' => 'Bulk optimization completed.',
         ];
     }
 
