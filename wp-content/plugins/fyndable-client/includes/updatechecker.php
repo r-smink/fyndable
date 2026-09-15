@@ -29,6 +29,32 @@ class UpdateChecker
         add_filter('plugin_row_meta', [$this, 'addUpdateMeta'], 10, 2);
         add_action('admin_action_sseo_ai_force_update_check', [$this, 'handleForceCheck']);
         add_action('admin_notices', [$this, 'renderForceCheckNotice']);
+        // Clear the update cache after the plugin is updated so the stale
+        // "has_update" result doesn't persist for the remaining cache TTL.
+        add_action('upgrader_process_complete', [$this, 'clearCacheAfterUpgrade'], 10, 2);
+    }
+
+    /**
+     * Clear the update check cache after a plugin upgrade completes.
+     */
+    public function clearCacheAfterUpgrade($upgrader, $hookExtra): void
+    {
+        if (!is_array($hookExtra) || ($hookExtra['action'] ?? '') !== 'update') {
+            return;
+        }
+        if (($hookExtra['type'] ?? '') !== 'plugin') {
+            return;
+        }
+
+        // Clear for any plugin update (our own or others) — cheap and safe.
+        // For a targeted clear, check $hookExtra['plugins'] against our basename.
+        $pluginFile = plugin_basename(SSEO_AI_CLIENT_PLUGIN_FILE);
+        $plugins = $hookExtra['plugins'] ?? [];
+        if (!empty($plugins) && is_array($plugins) && !in_array($pluginFile, $plugins, true)) {
+            return;
+        }
+
+        delete_transient(self::CACHE_KEY);
     }
 
     /**
@@ -49,6 +75,17 @@ class UpdateChecker
         // Use cached result to avoid API call on every page load
         $cached = get_transient(self::CACHE_KEY);
         if ($cached !== false && is_array($cached)) {
+            // Re-verify against the currently installed version. The cache may
+            // be stale if the plugin was just updated to the same (or a newer)
+            // version than what the cache says is "latest".
+            $cachedLatest = $cached['latest_version'] ?? '';
+            if (!empty($cachedLatest) && version_compare($cachedLatest, SSEO_AI_CLIENT_VERSION, '<=')) {
+                // Installed version is up to date or newer than the cached
+                // "latest" — clear the stale cache and don't show an update.
+                delete_transient(self::CACHE_KEY);
+                return $transient;
+            }
+
             if (!empty($cached['has_update']) && !empty($cached['download_url'])) {
                 $transient = $this->addUpdateToTransient($transient, $cached);
             }
@@ -79,10 +116,17 @@ class UpdateChecker
     {
         $pluginFile = plugin_basename(SSEO_AI_CLIENT_PLUGIN_FILE);
 
+        $newVersion = $result['latest_version'] ?? SSEO_AI_CLIENT_VERSION;
+
+        // Safety net: never show an "update" to the same or older version.
+        if (version_compare($newVersion, SSEO_AI_CLIENT_VERSION, '<=')) {
+            return $transient;
+        }
+
         $obj = new \stdClass();
         $obj->slug = 'fyndable-client';
         $obj->plugin = $pluginFile;
-        $obj->new_version = $result['latest_version'] ?? SSEO_AI_CLIENT_VERSION;
+        $obj->new_version = $newVersion;
         $obj->url = get_option('sseo_ai_client_dashboard_url', '');
         $obj->package = $result['download_url'] ?? '';
         $obj->tested = get_bloginfo('version');

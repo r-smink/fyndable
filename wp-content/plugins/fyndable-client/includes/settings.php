@@ -94,6 +94,47 @@ class Settings
     }
 
     /**
+     * Get the configured content language code (e.g. 'nl', 'en').
+     *
+     * Falls back to the WordPress site locale when no option is stored,
+     * so the plugin defaults to the language the site is installed in.
+     */
+    public function contentLanguage(): string
+    {
+        $stored = get_option('sseo_ai_client_content_language', '');
+        if (!empty($stored)) {
+            return $stored;
+        }
+
+        $locale = strtolower((string)get_locale());
+        // e.g. nl_NL -> nl, en_US -> en
+        $code = substr($locale, 0, 2);
+        $allowed = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt', 'pl'];
+        return in_array($code, $allowed, true) ? $code : 'nl';
+    }
+
+    /**
+     * Get the human-readable name of the configured content language
+     * (used in LLM prompts, e.g. "Dutch", "English").
+     */
+    public function contentLanguageName(): string
+    {
+        $names = [
+            'nl' => 'Dutch',
+            'en' => 'English',
+            'de' => 'German',
+            'fr' => 'French',
+            'es' => 'Spanish',
+            'it' => 'Italian',
+            'pt' => 'Portuguese',
+            'pl' => 'Polish',
+        ];
+
+        $code = $this->contentLanguage();
+        return $names[$code] ?? 'Dutch';
+    }
+
+    /**
      * Get AI temperature setting
      */
     public function temperature(): float

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.0 (2026-09-01)
+
+### Major Release
+- Bump major version to 2.0.0.
+
 ## v1.8.0 (2026-08-19)
 
 ### New Features

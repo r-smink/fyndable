@@ -106,6 +106,7 @@ class Client
     private ?SupportAssistant $supportAssistant = null;
     private ?PostAutoCleaner $postAutoCleaner = null;
     private ?MobileApp $mobileApp = null;
+    private ?FeedbackPage $feedbackPage = null;
 
     public function init(): void
     {
@@ -115,6 +116,7 @@ class Client
         $this->healthLogger = new HealthLogger(new AlertNotifier());
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
         $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
+        $this->feedbackPage = new FeedbackPage($this->settings, $this->dashboardAPI);
 
         // Support Assistant (sticky chatbot widget with KB + LLM fallback + ticket escalation)
         $this->supportAssistant = new SupportAssistant(
@@ -183,6 +185,8 @@ class Client
         
         // Handle settings save
         add_action('admin_post_ai_seo_save_settings', [$this, 'handleSettingsSave']);
+        add_action('wp_ajax_sseo_ai_places_autocomplete', [$this, 'ajaxPlacesAutocomplete']);
+        add_action('wp_ajax_sseo_ai_geocode_address', [$this, 'ajaxGeocodeAddress']);
 
         // Health check - validate license periodically
         if (!wp_next_scheduled('sseo_ai_client_license_check')) {
@@ -516,7 +520,7 @@ class Client
             $this->promptTemplateLibrary = new PromptTemplateLibrary($this->settings, $this->licenseValidator);
             $this->promptTemplateLibrary->register();
 
-            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary);
+            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary, $this->aiImageGenerator);
             $this->contentWriter->register();
             
             $this->aiRepurposer = new AIRepurposer($this->settings, $this->llmClient);
@@ -581,6 +585,7 @@ class Client
             );
             $this->topicCluster->register();
             add_action('sseo_ai_process_cluster_queue', [$this->topicCluster, 'processQueueItems']);
+            add_action('sseo_ai_process_cluster_map_queue', [$this->topicCluster, 'processClusterMapQueueItems']);
             add_filter('cron_schedules', function($schedules) {
                 $schedules['sseo_ai_queue_interval'] = [
                     'interval' => 120,
@@ -988,6 +993,16 @@ class Client
                 'manage_options',
                 'ai-seo-support',
                 [$this, 'renderSupportPage']
+            );
+
+            // 9d. Feedback - all tiers
+            add_submenu_page(
+                'fyndable-dashboard',
+                __('Feedback', 'ai-seo-client'),
+                __('💬 Feedback', 'ai-seo-client'),
+                'manage_options',
+                'ai-seo-feedback',
+                [$this, 'renderFeedbackPage']
             );
 
             // 9b. SEO Data Dashboard (SE Ranking / Ahrefs) - all tiers
@@ -2193,9 +2208,9 @@ class Client
         $brandVoice = get_option('sseo_ai_brand_voice', '');
         $sslVerify = $this->settings->sslVerify();
         $defaultWordCount = (int) get_option('sseo_ai_client_default_word_count', 500);
+        $contentLanguage = $this->settings->contentLanguage();
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
         $showShareButtons = get_option('sseo_ai_client_show_share_buttons', '1') === '1';
-        $googlePlacesKey = get_option('sseo_ai_client_google_places_key', '');
 
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -2323,11 +2338,9 @@ class Client
                             <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
 
                             <div class="form-field">
-                                <label for="google_places_key"><?php esc_html_e('Google Places API Key (optional)', 'ai-seo-client'); ?></label>
-                                <input type="text" name="google_places_key" id="google_places_key"
-                                       value="<?php echo esc_attr($googlePlacesKey); ?>" class="regular-text"
-                                       placeholder="AIza...">
-                                <p class="field-description"><?php esc_html_e('Vul een Google Places API key in voor autocomplete-suggesties bij het typen van locaties. Zonder key werkt een eenvoudige fallback-lijst.', 'ai-seo-client'); ?></p>
+                                <p class="field-description" style="margin-top: 0;">
+                                    <?php esc_html_e('Locatie-autocomplete wordt centraal geleverd via het Fyndable SaaS-platform. Vraag de beheerder om een Google Places API key in het SaaS-dashboard in te stellen.', 'ai-seo-client'); ?>
+                                </p>
                             </div>
 
                             <div class="form-field">
@@ -2381,12 +2394,21 @@ class Client
                             </div>
 
                             <div class="form-field">
+                                <label><?php esc_html_e('Autofill Address', 'ai-seo-client'); ?></label>
+                                <p style="display:flex;gap:8px;margin:0;">
+                                    <input type="text" id="sseo-ai-house-number" placeholder="<?php esc_attr_e('Huisnummer', 'ai-seo-client'); ?>" style="flex:1;">
+                                    <button type="button" id="sseo-ai-geocode-btn" class="button" style="white-space:nowrap;"><?php esc_html_e('Zoek adres', 'ai-seo-client'); ?></button>
+                                </p>
+                                <p class="field-description"><?php esc_html_e('Vul huisnummer in (en pas eventueel de postcode hieronder aan) en klik op Zoek om straat, plaats, land en coördinaten automatisch in te vullen.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <div class="form-field">
                                 <label for="local_street"><?php esc_html_e('Address', 'ai-seo-client'); ?></label>
                                 <input type="text" name="local_street" id="local_street" value="<?php echo esc_attr($localOptions['local_street'] ?? ''); ?>" placeholder="Street">
                                 <p style="margin-top:8px;display:flex;gap:8px;">
                                     <input type="text" name="local_city" value="<?php echo esc_attr($localOptions['local_city'] ?? ''); ?>" placeholder="City" style="flex:2;">
                                     <input type="text" name="local_state" value="<?php echo esc_attr($localOptions['local_state'] ?? ''); ?>" placeholder="State/Province" style="flex:1;">
-                                    <input type="text" name="local_postal" value="<?php echo esc_attr($localOptions['local_postal'] ?? ''); ?>" placeholder="Postal code" style="flex:1;">
+                                    <input type="text" name="local_postal" id="local_postal" value="<?php echo esc_attr($localOptions['local_postal'] ?? ''); ?>" placeholder="Postal code" style="flex:1;">
                                     <input type="text" name="local_country" value="<?php echo esc_attr($localOptions['local_country'] ?? 'NL'); ?>" placeholder="Country" style="flex:1;">
                                 </p>
                             </div>
@@ -2446,6 +2468,21 @@ class Client
                         <div class="settings-section">
                             <h2><?php esc_html_e('AI Prompt Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Custom instructions for AI content generation', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="content_language"><?php esc_html_e('Content Language', 'ai-seo-client'); ?></label>
+                                <select name="content_language" id="content_language">
+                                    <option value="nl" <?php selected($contentLanguage, 'nl'); ?>>Nederlands</option>
+                                    <option value="en" <?php selected($contentLanguage, 'en'); ?>>English</option>
+                                    <option value="de" <?php selected($contentLanguage, 'de'); ?>>Deutsch</option>
+                                    <option value="fr" <?php selected($contentLanguage, 'fr'); ?>>Français</option>
+                                    <option value="es" <?php selected($contentLanguage, 'es'); ?>>Español</option>
+                                    <option value="it" <?php selected($contentLanguage, 'it'); ?>>Italiano</option>
+                                    <option value="pt" <?php selected($contentLanguage, 'pt'); ?>>Português</option>
+                                    <option value="pl" <?php selected($contentLanguage, 'pl'); ?>>Polski</option>
+                                </select>
+                                <p class="field-description"><?php esc_html_e('Output language for AI-generated content such as LSI keywords. Defaults to the WordPress site language when not set.', 'ai-seo-client'); ?></p>
+                            </div>
 
                             <div class="form-field">
                                 <label for="default_word_count"><?php esc_html_e('Default Word Count', 'ai-seo-client'); ?></label>
@@ -2564,6 +2601,10 @@ class Client
                         </div>
 
                         <div class="settings-section">
+                            <?php do_action('sseo_ai_render_llmstxt_settings'); ?>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
 
@@ -2666,9 +2707,9 @@ class Client
                             var hidden = document.getElementById('locations');
                             if (!container || !input || !hidden) return;
 
-                            var apiKey = '<?php echo esc_js($googlePlacesKey); ?>';
+                            var ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_places_autocomplete')); ?>';
                             var existingLocations = (hidden.value || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                            var autocomplete = null;
+                            var debounceTimer = null;
 
                             // Render existing tags
                             function renderTags() {
@@ -2702,43 +2743,70 @@ class Client
                                 renderTags();
                             }
 
-                            // Set up fallback datalist (common European cities)
-                            function setupFallback() {
-                                var datalist = document.createElement('datalist');
-                                datalist.id = 'locations-datalist';
+                            function getDatalist() {
+                                var list = document.getElementById('locations-datalist');
+                                if (!list) {
+                                    list = document.createElement('datalist');
+                                    list.id = 'locations-datalist';
+                                    document.body.appendChild(list);
+                                }
+                                return list;
+                            }
+
+                            function setCommonCities() {
+                                var list = getDatalist();
+                                list.innerHTML = '';
                                 var commonCities = ['Amsterdam','Rotterdam','Den Haag','Utrecht','Eindhoven','Tilburg','Groningen','Almere','Breda','Nijmegen','Enschede','Apeldoorn','Haarlem','Arnhem','Amersfoort','Zwolle','Zaanstad','Leeuwarden','Leiden','Maastricht','Dordrecht','Ede','Alkmaar','Emmen','Delft','Heerlen','Zoetermeer','Lelystad','Alphen aan den Rijn','Bergen op Zoom','Brussel','Antwerpen','Gent','Charleroi','Luik','Brugge','Leuven','Berlin','Hamburg','München','Köln','Frankfurt','Stuttgart','Düsseldorf','Paris','Lyon','Marseille','Toulouse','Nice','Lille','Bordeaux','London','Manchester','Birmingham','Leeds','Glasgow','Liverpool','Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Rome','Milan','Naples','Turin','Florence','Lisbon','Porto','Warsaw','Kraków','Wrocław','Poznań','Gdańsk'];
                                 commonCities.forEach(function(city) {
                                     var opt = document.createElement('option');
                                     opt.value = city;
-                                    datalist.appendChild(opt);
+                                    list.appendChild(opt);
                                 });
                                 input.setAttribute('list', 'locations-datalist');
-                                document.body.appendChild(datalist);
                             }
 
-                            // Initialize Google Places Autocomplete
-                            function initPlacesAutocomplete() {
-                                if (!apiKey || typeof google === 'undefined' || !google.maps || !google.maps.places) {
-                                    setupFallback();
+                            function updateDatalist(predictions) {
+                                var list = getDatalist();
+                                list.innerHTML = '';
+                                if (!Array.isArray(predictions) || predictions.length === 0) {
+                                    setCommonCities();
                                     return;
                                 }
-                                try {
-                                    autocomplete = new google.maps.places.Autocomplete(input, {
-                                        types: ['(cities)']
-                                    });
-                                    autocomplete.addListener('place_changed', function() {
-                                        var place = autocomplete.getPlace();
-                                        if (place && place.name) {
-                                            addLocation(place.name);
-                                            input.value = '';
-                                        }
-                                    });
-                                } catch (e) {
-                                    setupFallback();
-                                }
+                                predictions.forEach(function(p) {
+                                    if (!p || !p.description) return;
+                                    var opt = document.createElement('option');
+                                    opt.value = p.description;
+                                    list.appendChild(opt);
+                                });
+                                input.setAttribute('list', 'locations-datalist');
                             }
 
-                            // Allow Enter key to add location manually
+                            function fetchPredictions(query) {
+                                fetch(ajaxUrl + '&input=' + encodeURIComponent(query))
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        if (data && data.success && Array.isArray(data.predictions)) {
+                                            updateDatalist(data.predictions);
+                                        } else {
+                                            setCommonCities();
+                                        }
+                                    })
+                                    .catch(function() {
+                                        setCommonCities();
+                                    });
+                            }
+
+                            input.addEventListener('input', function() {
+                                var query = input.value.trim();
+                                if (query.length < 2) {
+                                    return;
+                                }
+                                clearTimeout(debounceTimer);
+                                debounceTimer = setTimeout(function() {
+                                    fetchPredictions(query);
+                                }, 300);
+                            });
+
                             input.addEventListener('keydown', function(e) {
                                 if (e.key === 'Enter' || e.key === ',') {
                                     e.preventDefault();
@@ -2749,7 +2817,6 @@ class Client
                                 }
                             });
 
-                            // Allow blur to add
                             input.addEventListener('blur', function() {
                                 if (input.value.trim()) {
                                     addLocation(input.value);
@@ -2757,31 +2824,66 @@ class Client
                                 }
                             });
 
-                            // Click on container focuses input
                             container.addEventListener('click', function() {
                                 input.focus();
                             });
 
                             renderTags();
-
-                            // If no API key, use fallback immediately
-                            if (!apiKey) {
-                                setupFallback();
-                            } else {
-                                // Expose callback for Google Maps script
-                                window.initLocationsAutocomplete = initPlacesAutocomplete;
-                                // If Google Maps already loaded (e.g. cached), init now
-                                if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-                                    initPlacesAutocomplete();
-                                }
-                                // Otherwise the callback=initLocationsAutocomplete in the script tag will fire
-                            }
+                            setCommonCities();
                         })();
                         </script>
 
-                        <?php if (!empty($googlePlacesKey)): ?>
-                        <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr($googlePlacesKey); ?>&libraries=places&callback=initLocationsAutocomplete" async defer></script>
-                        <?php endif; ?>
+                        <script>
+                        (function() {
+                            var geocodeBtn = document.getElementById('sseo-ai-geocode-btn');
+                            var houseInput = document.getElementById('sseo-ai-house-number');
+                            var postalInput = document.getElementById('local_postal');
+                            var streetInput = document.querySelector('[name="local_street"]');
+                            var cityInput = document.querySelector('[name="local_city"]');
+                            var stateInput = document.querySelector('[name="local_state"]');
+                            var countryInput = document.querySelector('[name="local_country"]');
+                            var latInput = document.getElementById('local_latitude');
+                            var lngInput = document.querySelector('[name="local_longitude"]');
+
+                            if (!geocodeBtn || !houseInput || !postalInput) return;
+
+                            var ajaxUrlBase = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_geocode_address&address=')); ?>';
+
+                            geocodeBtn.addEventListener('click', function() {
+                                var house = houseInput.value.trim();
+                                var postal = postalInput.value.trim();
+                                if (!house || !postal) {
+                                    alert('<?php echo esc_js(__('Vul huisnummer en postcode in.', 'ai-seo-client')); ?>');
+                                    return;
+                                }
+                                var query = house + ' ' + postal + ', NL';
+                                geocodeBtn.disabled = true;
+                                fetch(ajaxUrlBase + encodeURIComponent(query))
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        geocodeBtn.disabled = false;
+                                        if (!data || !data.success) {
+                                            alert(data && data.error ? data.error : '<?php echo esc_js(__('Adres kon niet worden opgezocht.', 'ai-seo-client')); ?>');
+                                            return;
+                                        }
+                                        var a = data.address || {};
+                                        var c = data.coordinates || {};
+                                        if (streetInput) streetInput.value = a.street || '';
+                                        if (cityInput) cityInput.value = a.city || '';
+                                        if (stateInput) stateInput.value = a.state || '';
+                                        if (postalInput) postalInput.value = a.postal || '';
+                                        if (countryInput) countryInput.value = a.country || '';
+                                        if (latInput) latInput.value = c.lat || '';
+                                        if (lngInput) lngInput.value = c.lng || '';
+                                    })
+                                    .catch(function() {
+                                        geocodeBtn.disabled = false;
+                                        alert('<?php echo esc_js(__('Adres opzoeken mislukt.', 'ai-seo-client')); ?>');
+                                    });
+                            });
+                        })();
+                        </script>
+
 
                     </form>
                 </div>
@@ -2808,7 +2910,6 @@ class Client
         update_option('sseo_ai_brand_voice', sanitize_text_field($_POST['brand_voice'] ?? ''));
         update_option('sseo_ai_targeted_audience', sanitize_textarea_field($_POST['targeted_audience'] ?? ''));
         update_option('sseo_ai_locations', sanitize_textarea_field($_POST['locations'] ?? ''));
-        update_option('sseo_ai_client_google_places_key', sanitize_text_field($_POST['google_places_key'] ?? ''));
 
         // Save photo portfolio references
         $photoPortfolio = [];
@@ -2826,6 +2927,9 @@ class Client
         update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
 
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
+        $allowedLanguages = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt', 'pl'];
+        $contentLanguage = in_array($_POST['content_language'] ?? 'nl', $allowedLanguages, true) ? $_POST['content_language'] : 'nl';
+        update_option('sseo_ai_client_content_language', $contentLanguage);
         update_option('sseo_ai_prompt_settings', sanitize_textarea_field($_POST['prompt_settings'] ?? ''));
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
@@ -2857,9 +2961,89 @@ class Client
         update_option('sseo_ai_client_autoclean_days', max(1, min(3650, (int) ($_POST['autoclean_days'] ?? 60))));
         update_option('sseo_ai_client_autoclean_max_clicks', max(0, (int) ($_POST['autoclean_max_clicks'] ?? 0)));
 
+        // llms.txt generator settings
+        update_option('sseo_ai_client_llmstxt_enabled', isset($_POST['sseo_ai_client_llmstxt_enabled']) && $_POST['sseo_ai_client_llmstxt_enabled'] === '1' ? '1' : '0');
+        $llmstxtPostTypes = $_POST['sseo_ai_client_llmstxt_post_types'] ?? ['post'];
+        if (!is_array($llmstxtPostTypes)) {
+            $llmstxtPostTypes = ['post'];
+        }
+        $validPostTypes = array_keys(get_post_types(['public' => true], 'names'));
+        $llmstxtPostTypes = array_values(array_filter(array_map('sanitize_text_field', $llmstxtPostTypes), function ($t) use ($validPostTypes) {
+            return in_array($t, $validPostTypes, true);
+        }));
+        if (empty($llmstxtPostTypes)) {
+            $llmstxtPostTypes = ['post'];
+        }
+        update_option('sseo_ai_client_llmstxt_post_types', $llmstxtPostTypes);
+        update_option('sseo_ai_client_llmstxt_max_items', max(1, min(1000, (int) ($_POST['sseo_ai_client_llmstxt_max_items'] ?? 100))));
+        update_option('sseo_ai_client_llmstxt_description', sanitize_text_field($_POST['sseo_ai_client_llmstxt_description'] ?? ''));
+        update_option('sseo_ai_client_llmstxt_include_excerpt', isset($_POST['sseo_ai_client_llmstxt_include_excerpt']) && $_POST['sseo_ai_client_llmstxt_include_excerpt'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_llmstxt_custom_sections', sanitize_textarea_field($_POST['sseo_ai_client_llmstxt_custom_sections'] ?? ''));
+        update_option('sseo_ai_client_llmstxt_full_enabled', isset($_POST['sseo_ai_client_llmstxt_full_enabled']) && $_POST['sseo_ai_client_llmstxt_full_enabled'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_llmstxt_full_max_chars', max(100, min(500000, (int) ($_POST['sseo_ai_client_llmstxt_full_max_chars'] ?? 50000))));
+        $llmstxtSelectedPages = $_POST['sseo_ai_client_llmstxt_selected_pages'] ?? [];
+        if (!is_array($llmstxtSelectedPages)) {
+            $llmstxtSelectedPages = [];
+        }
+        $llmstxtSelectedPages = array_values(array_filter(array_map('absint', $llmstxtSelectedPages)));
+        update_option('sseo_ai_client_llmstxt_selected_pages', $llmstxtSelectedPages);
+
+        // Invalidate llms.txt caches so changes take effect immediately
+        if ($this->llmsTxt instanceof LlmsTxt) {
+            $this->llmsTxt->invalidateCache(0);
+        }
+
         // Redirect back with success message
         wp_redirect(admin_url('admin.php?page=ai-seo-settings&settings-updated=1'));
         exit;
+    }
+
+    /**
+     * AJAX handler for location autocomplete via the SaaS Google Places proxy.
+     */
+    public function ajaxPlacesAutocomplete(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json(['success' => false, 'predictions' => []]);
+        }
+
+        $input = sanitize_text_field($_REQUEST['input'] ?? '');
+        if (empty($input)) {
+            wp_send_json(['success' => true, 'predictions' => []]);
+        }
+
+        $predictions = $this->dashboardAPI->getPlacePredictions($input);
+        if (is_wp_error($predictions)) {
+            wp_send_json(['success' => false, 'predictions' => [], 'error' => $predictions->get_error_message()]);
+        }
+
+        wp_send_json(['success' => true, 'predictions' => $predictions]);
+    }
+
+    /**
+     * AJAX handler for address geocoding / autofill via the SaaS proxy.
+     */
+    public function ajaxGeocodeAddress(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json(['success' => false, 'error' => 'unauthorized', 'address' => [], 'coordinates' => []]);
+        }
+
+        $address = sanitize_text_field($_REQUEST['address'] ?? '');
+        if (empty($address) || strlen($address) > 250) {
+            wp_send_json(['success' => false, 'error' => 'invalid_address', 'address' => [], 'coordinates' => []]);
+        }
+
+        $result = $this->dashboardAPI->geocodeAddress($address);
+        if (is_wp_error($result)) {
+            wp_send_json(['success' => false, 'error' => $result->get_error_message(), 'address' => [], 'coordinates' => []]);
+        }
+
+        wp_send_json([
+            'success' => true,
+            'address' => $result['address'] ?? [],
+            'coordinates' => $result['coordinates'] ?? [],
+        ]);
     }
 
     /**
@@ -2913,6 +3097,19 @@ class Client
         }
 
         $this->supportTickets->renderPage();
+    }
+
+    /**
+     * Render feedback page
+     */
+    public function renderFeedbackPage(): void
+    {
+        if (!$this->licenseValidator->isLicenseValid()) {
+            $this->renderLicenseRequiredNotice();
+            return;
+        }
+
+        $this->feedbackPage->renderPage();
     }
 
     /**
@@ -3564,6 +3761,7 @@ class Client
             'chatgpt' => 'ChatGPT',
             'perplexity' => 'Perplexity',
             'gemini' => 'Google Gemini',
+            'claude' => 'Claude',
         ];
         ?>
         <style>
@@ -3595,6 +3793,7 @@ class Client
             .bv-platform-chatgpt { background: #e0e7ff; color: #3730a3; }
             .bv-platform-perplexity { background: #fce7f3; color: #9d174d; }
             .bv-platform-gemini { background: #dbeafe; color: #8f39ac; }
+            .bv-platform-claude { background: #fef3c7; color: #92400e; }
             .bv-excerpt { max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
             .bv-pagination { margin-top: 20px; }
             .bv-pagination a, .bv-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
@@ -3650,8 +3849,9 @@ class Client
                                 <td><textarea id="bv-competitors" placeholder="Competitor A&#10;Competitor B"><?php echo esc_textarea($bvConfig['competitors']); ?></textarea></td>
                             </tr>
                             <tr>
-                                <th><label for="bv-queries"><?php esc_html_e('Search Queries (use {category} placeholder)', 'ai-seo-client'); ?></label></th>
-                                <td><textarea id="bv-queries" placeholder="What are the best {category}?&#10;Which {category} would you recommend?"><?php echo esc_textarea($bvConfig['queries']); ?></textarea></td>
+                                <th><label for="bv-queries"><?php esc_html_e('Search Queries (placeholders: {category}, {brand}, {product}, {location}, {competitor})', 'ai-seo-client'); ?></label></th>
+                                <td><textarea id="bv-queries" placeholder="What are the best {category}?&#10;Is {brand} a good {category}?&#10;Best {category} in {location}?&#10;How does {brand} compare to {competitor}?"><?php echo esc_textarea($bvConfig['queries']); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Placeholders are filled from the configuration above. {location} uses the city from Settings → Local Business. Empty values fall back to a generic term.', 'ai-seo-client'); ?></p></td>
                             </tr>
                             <tr>
                                 <th><label><?php esc_html_e('AI Platforms to Track', 'ai-seo-client'); ?></label></th>
@@ -3682,7 +3882,7 @@ class Client
                 <!-- What does this tracker do and how to get found -->
                 <div class="sseo-ai-dashboard-card">
                     <h2><?php esc_html_e('What does AI Search Visibility do?', 'ai-seo-client'); ?></h2>
-                    <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
+                    <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini, Claude) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
 
                     <h3 style="margin-top: 25px;"><?php esc_html_e('How to get found in AI search / LLM answers', 'ai-seo-client'); ?></h3>
                     <?php if (empty($recommendations)): ?>

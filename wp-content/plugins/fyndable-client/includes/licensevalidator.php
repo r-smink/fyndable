@@ -142,6 +142,13 @@ class LicenseValidator
 
             if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable License Validator: Validation failed, marking invalid. Body: ' . substr($rawBody, 0, 200));
             update_option('sseo_ai_client_license_status', 'invalid');
+
+            // If this was a trial, remove all generated data from the client site.
+            $licenseType = get_option('sseo_ai_client_license_type', '');
+            if ($licenseType === 'trial') {
+                (new TrialCleanup())->run();
+            }
+
             return;
         }
 

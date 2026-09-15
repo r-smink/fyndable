@@ -526,6 +526,12 @@ class WebhookHandler
                 'last_payment_at' => current_time('mysql'),
                 'expires_at' => gmdate('Y-m-d H:i:s', strtotime($period)),
             ]);
+
+            // Convert trial license into a paid license on the first real recurring payment.
+            if (!empty($tenant['license_key']) && ($tenant['payment_status'] ?? '') === 'trial') {
+                $licenseGenerator = new LicenseKeyGenerator($this->tenants);
+                $licenseGenerator->updateLicense($tenant['license_key'], ['license_type' => 'paid']);
+            }
         }
 
         // Create invoice record for this Mollie payment

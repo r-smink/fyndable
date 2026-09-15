@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable SmartSEO Dashboard
  * Description: Multi-tenant license and tenant management dashboard for Fyndable SmartSEO
- * Version: 1.5.1
+ * Version: 1.6.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Fyndable

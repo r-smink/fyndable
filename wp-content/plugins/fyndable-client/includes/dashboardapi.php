@@ -411,8 +411,12 @@ class DashboardAPI
 
     /**
      * Generate AI content through dashboard proxy
+     *
+     * @param int $timeout HTTP timeout in seconds. Cluster map / keyword_research
+     *                     use cases benefit from a longer timeout (600s) because the
+     *                     SaaS dashboard retries multiple fallback models.
      */
-    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature, string $useCase = 'content_generation'): array|\WP_Error
+    public function aiGenerate(array $messages, string $model, int $maxTokens, float $temperature, string $useCase = 'content_generation', int $timeout = 300): array|\WP_Error
     {
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
@@ -438,27 +442,48 @@ class DashboardAPI
                     'temperature' => $temperature,
                     'use_case' => $useCase,
                 ]),
-                'timeout' => 90,
+                'timeout' => $timeout,
                 'sslverify' => $this->getSslVerify(),
                 'redirection' => 0,
             ]
         );
 
         if (is_wp_error($response)) {
-            return new \WP_Error('connection_error', __('Could not connect to AI service.', 'ai-seo-client'));
+            $message = $response->get_error_message();
+            if (stripos($message, 'timed out') !== false || stripos($message, 'timeout') !== false || stripos($message, 'cURL error 28') !== false) {
+                return new \WP_Error(
+                    'ai_timeout',
+                    __('AI request timed out. Try async cluster generation for large maps.', 'ai-seo-client'),
+                    ['status' => 504, 'original_message' => $message]
+                );
+            }
+            return new \WP_Error(
+                'connection_error',
+                __('Could not connect to AI service.', 'ai-seo-client'),
+                ['status' => 502, 'original_message' => $message]
+            );
         }
 
         $statusCode = wp_remote_retrieve_response_code($response);
         $body = json_decode(wp_remote_retrieve_body($response), true);
 
         if ($statusCode === 429) {
-            return new \WP_Error('usage_exceeded', $body['message'] ?? __('Usage limit exceeded', 'ai-seo-client'));
+            return new \WP_Error('usage_exceeded', $body['message'] ?? __('Usage limit exceeded', 'ai-seo-client'), ['status' => 429]);
+        }
+
+        if ($statusCode === 504 || ($body['timeout'] ?? false)) {
+            return new \WP_Error(
+                'ai_timeout',
+                $body['message'] ?? __('AI request timed out. Try async cluster generation for large maps.', 'ai-seo-client'),
+                ['status' => 504]
+            );
         }
 
         if ($statusCode !== 200 || empty($body['success'])) {
             return new \WP_Error(
                 $body['error'] ?? 'ai_failed',
-                $body['message'] ?? __('AI generation failed', 'ai-seo-client')
+                $body['message'] ?? __('AI generation failed', 'ai-seo-client'),
+                ['status' => $statusCode ?: 502]
             );
         }
 
@@ -549,6 +574,8 @@ class DashboardAPI
             'keywords/dataforseo-trends'=> '/keywords/dataforseo-trends',
             'backlinks/summary'         => '/backlinks/summary',
             'backlinks/live'            => '/backlinks/live',
+            'places/autocomplete'       => '/places/autocomplete',
+            'places/geocode'            => '/places/geocode',
         ];
 
         $route = $endpointMap[$endpoint] ?? '/' . ltrim($endpoint, '/');
@@ -597,6 +624,68 @@ class DashboardAPI
     public function makeRequest(string $endpoint, array $params = []): array|\WP_Error
     {
         return $this->request(ltrim($endpoint, '/'), $params);
+    }
+
+    /**
+     * Get location autocomplete predictions via the SaaS Google Places proxy.
+     *
+     * @return array|\WP_Error
+     */
+    public function getPlacePredictions(string $input, string $language = 'nl', string $components = 'country:nl'): array|\WP_Error
+    {
+        if (strlen($input) > 200) {
+            $input = substr($input, 0, 200);
+        }
+
+        $body = $this->request('places/autocomplete', [
+            'input' => $input,
+            'language' => $language,
+            'components' => $components,
+            'types' => '(cities)',
+        ]);
+
+        if (is_wp_error($body)) {
+            return $body;
+        }
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'places_failed',
+                $body['message'] ?? __('Could not fetch place predictions.', 'ai-seo-client')
+            );
+        }
+
+        return $body['predictions'] ?? [];
+    }
+
+    /**
+     * Geocode a free-form address via the SaaS Google Geocoding proxy.
+     *
+     * @return array|\WP_Error
+     */
+    public function geocodeAddress(string $address): array|\WP_Error
+    {
+        if (strlen($address) > 250) {
+            $address = substr($address, 0, 250);
+        }
+
+        $body = $this->request('places/geocode', ['address' => $address]);
+
+        if (is_wp_error($body)) {
+            return $body;
+        }
+
+        if (empty($body['success'])) {
+            return new \WP_Error(
+                $body['error'] ?? 'geocode_failed',
+                $body['message'] ?? __('Could not geocode address.', 'ai-seo-client')
+            );
+        }
+
+        return [
+            'address' => $body['address'] ?? [],
+            'coordinates' => $body['coordinates'] ?? [],
+        ];
     }
 
     /**
@@ -1190,6 +1279,73 @@ class DashboardAPI
         $body .= "--{$boundary}--\r\n";
 
         return $body;
+    }
+
+    /**
+     * Submit product feedback to the SaaS dashboard.
+     */
+    public function createFeedback(string $category, string $message, string $pageUrl, array $screenshots = []): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/feedback',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'category' => $category,
+                    'message' => $message,
+                    'page_url' => $pageUrl,
+                    'screenshots' => $screenshots,
+                ]),
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not submit feedback.', 'ai-seo-client'));
+    }
+
+    /**
+     * Get feedback entries for the current tenant.
+     */
+    public function getFeedback(): array|\WP_Error
+    {
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('not_configured', __('Dashboard not configured', 'ai-seo-client'));
+        }
+
+        $dashboardUrl = $this->normalizeDashboardUrl($dashboardUrl);
+        $response = wp_remote_get(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/feedback',
+            [
+                'headers' => [
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ],
+                'timeout' => 30,
+                'sslverify' => $this->getSslVerify(),
+                'redirection' => 0,
+            ]
+        );
+
+        return $this->handleSupportResponse($response, __('Could not retrieve feedback.', 'ai-seo-client'));
     }
 
     /**

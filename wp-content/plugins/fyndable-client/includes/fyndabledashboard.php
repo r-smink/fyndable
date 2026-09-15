@@ -159,6 +159,11 @@ class DashboardShell
                 'label' => __('Support', 'ai-seo-client'),
                 'icon' => '&#128172;',
             ];
+            $this->menuItems[] = [
+                'slug' => 'ai-seo-feedback',
+                'label' => __('Feedback', 'ai-seo-client'),
+                'icon' => '&#128172;',
+            ];
         }
 
         $this->menuItems[] = [

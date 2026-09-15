@@ -1,0 +1,294 @@
+:root {
+    --fynn-primary: #4F46E5;
+    --fynn-primary-hover: #4338CA;
+    --fynn-bg: #ffffff;
+    --fynn-text: #1f2937;
+    --fynn-border: #e5e7eb;
+    --fynn-user-bg: #4F46E5;
+    --fynn-user-text: #ffffff;
+    --fynn-assistant-bg: #f3f4f6;
+    --fynn-assistant-text: #1f2937;
+    --fynn-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+}
+
+#fynn-chat-root {
+    --fynn-panel-width: 380px;
+    --fynn-panel-height: 560px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.fynn-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--fynn-primary), var(--fynn-primary-hover));
+    color: #fff;
+    box-shadow: var(--fynn-shadow);
+    cursor: pointer;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fynn-fab:hover {
+    transform: scale(1.05);
+}
+
+.fynn-avatar {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.2);
+    transition: background-image 0.25s ease-in-out;
+}
+
+.fynn-avatar[data-pose="idle"] {
+    background-image: url('../fynn-poses/idle.svg');
+}
+
+.fynn-avatar[data-pose="listening"] {
+    background-image: url('../fynn-poses/listening.svg');
+}
+
+.fynn-avatar[data-pose="thinking"] {
+    background-image: url('../fynn-poses/thinking.svg');
+}
+
+.fynn-avatar[data-pose="found"] {
+    background-image: url('../fynn-poses/found.svg');
+}
+
+.fynn-avatar[data-pose="expert"] {
+    background-image: url('../fynn-poses/expert.svg');
+}
+
+.fynn-avatar[data-pose="celebration"] {
+    background-image: url('../fynn-poses/celebration.svg');
+}
+
+.fynn-avatar[data-pose="wave"] {
+    background-image: url('../fynn-poses/wave.svg');
+}
+
+.fynn-panel {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: var(--fynn-panel-width);
+    max-width: calc(100vw - 48px);
+    height: var(--fynn-panel-height);
+    max-height: calc(100vh - 120px);
+    background: var(--fynn-bg);
+    border-radius: 16px;
+    box-shadow: var(--fynn-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99998;
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+}
+
+.fynn-panel.fynn-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px);
+}
+
+.fynn-header {
+    padding: 16px;
+    background: linear-gradient(135deg, var(--fynn-primary), var(--fynn-primary-hover));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.fynn-header .fynn-avatar {
+    background-color: rgba(255,255,255,0.25);
+}
+
+.fynn-header-info {
+    flex: 1;
+}
+
+.fynn-name {
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.fynn-status {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.fynn-close {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fynn-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.fynn-message {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    line-height: 1.5;
+    font-size: 14px;
+    word-wrap: break-word;
+    animation: fynn-fade-in 0.25s ease;
+}
+
+@keyframes fynn-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fynn-message--user {
+    align-self: flex-end;
+    background: var(--fynn-user-bg);
+    color: var(--fynn-user-text);
+    border-bottom-right-radius: 4px;
+}
+
+.fynn-message--assistant {
+    align-self: flex-start;
+    background: var(--fynn-assistant-bg);
+    color: var(--fynn-assistant-text);
+    border-bottom-left-radius: 4px;
+}
+
+.fynn-message--error {
+    align-self: flex-start;
+    background: #fee2e2;
+    color: #991b1b;
+    border-bottom-left-radius: 4px;
+}
+
+.fynn-message--thinking {
+    opacity: 0.6;
+    animation: fynn-pulse 1.2s infinite;
+}
+
+@keyframes fynn-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.fynn-suggestions {
+    padding: 0 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.fynn-suggestion {
+    border: 1px solid var(--fynn-border);
+    background: #fff;
+    color: var(--fynn-primary);
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.fynn-suggestion:hover {
+    background: #eef2ff;
+    border-color: var(--fynn-primary);
+}
+
+.fynn-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--fynn-border);
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.fynn-input {
+    flex: 1;
+    border: 1px solid var(--fynn-border);
+    border-radius: 24px;
+    padding: 10px 16px;
+    font-size: 14px;
+    outline: none;
+    color: var(--fynn-text);
+}
+
+.fynn-input:focus {
+    border-color: var(--fynn-primary);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+.fynn-send {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: var(--fynn-primary);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+}
+
+.fynn-send:hover {
+    background: var(--fynn-primary-hover);
+}
+
+.fynn-send:disabled,
+.fynn-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .fynn-fab {
+        bottom: 16px;
+        right: 16px;
+    }
+    .fynn-panel {
+        bottom: 90px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: none;
+        height: 70vh;
+    }
+}

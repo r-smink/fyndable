@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable
  * Description: Advanced AI-powered SEO plugin by Fyndable with comprehensive optimization features
- * Version: 1.8.0
+ * Version: 2.2.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Fyndable
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('SSEO_AI_CLIENT_VERSION', '1.8.0');
+define('SSEO_AI_CLIENT_VERSION', '2.2.0');
 define('SSEO_AI_CLIENT_PLUGIN_FILE', __FILE__);
 define('SSEO_AI_CLIENT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSEO_AI_CLIENT_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -48,6 +48,16 @@ spl_autoload_register(function ($class) {
     }
 });
 
+// Load translations before any included files call __()/_e() so
+// WordPress 6.7+ does not trigger _load_textdomain_just_in_time too early.
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/translationhelper.php';
+$earlyMoFile = SSEO_AI_CLIENT_PLUGIN_DIR . 'languages/ai-seo-client-nl_NL.mo';
+$earlyPoFile = SSEO_AI_CLIENT_PLUGIN_DIR . 'languages/ai-seo-client-nl_NL.po';
+if (!file_exists($earlyMoFile) || (file_exists($earlyPoFile) && filemtime($earlyPoFile) > filemtime($earlyMoFile))) {
+    \SSEOAIClient\TranslationHelper::generateMoFile($earlyPoFile, $earlyMoFile);
+}
+load_plugin_textdomain('ai-seo-client', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
 // Explicitly require core files to ensure they're loaded
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/settings.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/licensevalidator.php';
@@ -68,9 +78,14 @@ require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/onboardingwizard.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/updatechecker.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/demomode.php';
 require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/mobileapp.php';
+require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/feedback.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function () {
+    // Clear stale update cache so a re-activation after an update doesn't
+    // show a phantom update for the same version.
+    delete_transient('sseo_ai_update_check');
+
     if (is_multisite()) {
         // Network activation — run on all sites
         $sites = get_sites(['number' => 0]);
@@ -101,27 +116,6 @@ register_deactivation_hook(__FILE__, function () {
         wp_clear_scheduled_hook('sseo_ai_rank_check_cron');
     }
 });
-
-// Load text domain for translations — run on plugins_loaded with priority 5
-// so the textdomain is available before the Client is initialized at default
-// priority on the same hook.
-add_action('plugins_loaded', function () {
-    // Generate MO files from PO files if needed
-    require_once SSEO_AI_CLIENT_PLUGIN_DIR . 'includes/translationhelper.php';
-
-    $moFile = SSEO_AI_CLIENT_PLUGIN_DIR . 'languages/ai-seo-client-nl_NL.mo';
-    $poFile = SSEO_AI_CLIENT_PLUGIN_DIR . 'languages/ai-seo-client-nl_NL.po';
-
-    // Generate MO file if it doesn't exist or PO file is newer
-    if (!file_exists($moFile) || (file_exists($poFile) && filemtime($poFile) > filemtime($moFile))) {
-        $result = \SSEOAIClient\TranslationHelper::generateMoFile($poFile, $moFile);
-        if (!$result && defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Fyndable: Failed to generate MO file from ' . $poFile);
-        }
-    }
-
-    load_plugin_textdomain('ai-seo-client', false, dirname(plugin_basename(__FILE__)) . '/languages');
-}, 5);
 
 // Initialize plugin
 add_action('plugins_loaded', function () {

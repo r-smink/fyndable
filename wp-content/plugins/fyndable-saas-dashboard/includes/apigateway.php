@@ -30,7 +30,7 @@ class ApiGateway
     private const CIRCUIT_BREAKER_WINDOW = 900; // 15 minutes
 
     // AI request resilience
-    private const AI_TIMEOUT_SECONDS = 120;
+    private const AI_TIMEOUT_SECONDS = 300;
     private const AI_MAX_RETRIES = 3;
     private const AI_RETRY_BASE_MS = 500000; // 0.5 seconds
 
@@ -137,6 +137,20 @@ class ApiGateway
             'callback' => [$this, 'handleBacklinksLive'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
+
+        // Google Places autocomplete proxy (client location settings)
+        register_rest_route('ai-seo-saas/v1', '/places/autocomplete', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handlePlaceAutocomplete'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // Google Geocoding proxy (client address autofill)
+        register_rest_route('ai-seo-saas/v1', '/places/geocode', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleGeocodeRequest'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
     }
 
     /**
@@ -235,14 +249,25 @@ class ApiGateway
             ], 503);
         }
 
+        // Cluster map / keyword_research requests are large single completions
+        // that may need more runway, and should not be retried on timeout
+        // (retrying a timed-out large completion just wastes time).
+        $isLargeRequest = in_array($useCase, ['keyword_research', 'content_analysis'], true);
+        $timeLimit = $isLargeRequest ? 600 : self::AI_TIMEOUT_SECONDS;
+        $maxRetries = $isLargeRequest ? 1 : self::AI_MAX_RETRIES;
+
         // Give the AI request enough runway before PHP times out
         if (function_exists('set_time_limit')) {
-            @set_time_limit(self::AI_TIMEOUT_SECONDS);
+            @set_time_limit($timeLimit);
         }
 
         $lastError = null;
-        for ($attempt = 1; $attempt <= self::AI_MAX_RETRIES; $attempt++) {
-            $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature);
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            // Large requests (cluster maps) get a longer per-provider timeout and
+            // a limited fallback chain (3 models max) to avoid compounding delays.
+            $providerTimeout = $isLargeRequest ? 600 : 300;
+            $maxFallback = $isLargeRequest ? 3 : 0;
+            $result = $this->providerRouter->routeRequest($messages, $model, $useCase, $maxTokens, $temperature, $providerTimeout, $maxFallback);
 
             if (!is_wp_error($result)) {
                 $this->recordProviderSuccess('ai', 'ai');
@@ -262,16 +287,36 @@ class ApiGateway
             $this->recordProviderFailure('ai', 'ai');
             $lastError = $result;
 
-            if ($attempt < self::AI_MAX_RETRIES) {
+            // Don't retry on timeout — a large completion that timed out will
+            // almost certainly time out again, and retrying just delays the
+            // inevitable failure for the waiting client.
+            if ($result->get_error_code() === 'ai_timeout') {
+                break;
+            }
+
+            if ($attempt < $maxRetries) {
                 usleep(min(4000000, self::AI_RETRY_BASE_MS * (2 ** ($attempt - 1))));
             }
         }
 
-        $statusCode = ($lastError && $lastError->get_error_code() === 'no_provider') ? 503 : 502;
+        $errorCode = $lastError ? $lastError->get_error_code() : 'ai_request_failed';
+        $isTimeout = $errorCode === 'ai_timeout';
+        $statusCode = $lastError && $lastError->get_error_code() === 'no_provider' ? 503 : ($isTimeout ? 504 : 502);
+
+        $message = $lastError
+            ? $lastError->get_error_message()
+            : __('AI generation failed', 'sseo-ai-saas');
+
+        if ($isTimeout) {
+            $message = __('AI generation timed out. The request took too long to complete. Try again or use async processing for large clusters.', 'sseo-ai-saas');
+        }
+
         return new \WP_REST_Response([
             'success' => false,
-            'error' => $lastError ? $lastError->get_error_code() : 'ai_request_failed',
-            'message' => $lastError ? $lastError->get_error_message() : __('AI generation failed', 'sseo-ai-saas')
+            'error' => $errorCode,
+            'message' => $message,
+            'timeout' => $isTimeout,
+            'details' => $lastError ? ($lastError->get_error_data() ?? null) : null,
         ], $statusCode);
     }
 
@@ -931,7 +976,7 @@ class ApiGateway
             // Determine which column to increment based on metric
             $column = match ($metric) {
                 'serp_query'        => 'serp_requests',
-                'content_generated' => 'content_generated',
+                'content_generated', 'ai_generation' => 'content_generated',
                 'ai_mention'        => 'ai_mentions',
                 'llm_response'      => 'llm_response_calls',
                 'trends'            => 'trends_requests',
@@ -945,6 +990,14 @@ class ApiGateway
                 $cost,
                 $existing
             ));
+            // AI generation also counts as an API call
+            if ($metric === 'ai_generation') {
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$tableUsage} SET api_calls = api_calls + %d WHERE id = %d",
+                    $count,
+                    $existing
+                ));
+            }
         } else {
             $data = [
                 'tenant_id'           => $tenantId,
@@ -952,7 +1005,7 @@ class ApiGateway
                 'api_calls'           => in_array($metric, ['ai_generation', 'ai_keyword'], true) ? $count : 0,
                 'api_cost'            => $cost,
                 'serp_requests'       => ($metric === 'serp_query') ? $count : 0,
-                'content_generated'   => ($metric === 'content_generated') ? $count : 0,
+                'content_generated'   => in_array($metric, ['content_generated', 'ai_generation'], true) ? $count : 0,
                 'keywords_tracked'    => 0,
                 'ai_mentions'         => ($metric === 'ai_mention') ? $count : 0,
                 'llm_response_calls'  => ($metric === 'llm_response') ? $count : 0,
@@ -1702,6 +1755,208 @@ class ApiGateway
             'australia' => 'au',
         ];
         return $map[strtolower($location)] ?? 'us';
+    }
+
+    /**
+     * Proxy Google Places autocomplete requests from clients.
+     * Keeps the Places API key on the SaaS side.
+     */
+    public function handlePlaceAutocomplete(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $body = $request->get_json_params() ?: $request->get_body_params();
+        $input = sanitize_text_field($body['input'] ?? '');
+
+        if (empty($input) || strlen($input) > 200) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_input',
+                'predictions' => [],
+            ], 400);
+        }
+
+        $apiKey = $this->settings->getGooglePlacesApiKey();
+        if (empty($apiKey)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'not_configured',
+                'predictions' => [],
+            ], 503);
+        }
+
+        $cacheKey = 'sseo_saas_places_' . md5($input);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return new \WP_REST_Response(['success' => true, 'predictions' => $cached], 200);
+        }
+
+        $language = sanitize_text_field($body['language'] ?? 'nl');
+        $components = sanitize_text_field($body['components'] ?? 'country:nl');
+        $types = sanitize_text_field($body['types'] ?? '(cities)');
+
+        $url = add_query_arg([
+            'input' => $input,
+            'key' => $apiKey,
+            'types' => $types,
+            'language' => $language,
+            'components' => $components,
+        ], 'https://maps.googleapis.com/maps/api/place/autocomplete/json');
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'sslverify' => true,
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'google_places_error',
+                'predictions' => [],
+            ], 502);
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (empty($data) || !isset($data['status']) || $data['status'] !== 'OK') {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $data['status'] ?? 'unknown',
+                'predictions' => [],
+            ], 502);
+        }
+
+        $predictions = array_map(function ($p) {
+            return [
+                'description' => $p['description'] ?? '',
+                'place_id' => $p['place_id'] ?? '',
+            ];
+        }, $data['predictions'] ?? []);
+
+        set_transient($cacheKey, $predictions, HOUR_IN_SECONDS);
+
+        return new \WP_REST_Response(['success' => true, 'predictions' => $predictions], 200);
+    }
+
+    /**
+     * Proxy Google Geocoding requests for client address autofill.
+     * Takes a free-form address query and returns parsed components + coordinates.
+     */
+    public function handleGeocodeRequest(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $body = $request->get_json_params() ?: $request->get_body_params();
+        $address = sanitize_text_field($body['address'] ?? '');
+
+        if (empty($address) || strlen($address) > 250) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_address',
+                'address' => [],
+                'coordinates' => [],
+            ], 400);
+        }
+
+        $apiKey = $this->settings->getGooglePlacesApiKey();
+        if (empty($apiKey)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'not_configured',
+                'address' => [],
+                'coordinates' => [],
+            ], 503);
+        }
+
+        $cacheKey = 'sseo_saas_geocode_' . md5($address);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached) && isset($cached['success'])) {
+            return new \WP_REST_Response($cached, 200);
+        }
+
+        $url = add_query_arg([
+            'address' => $address,
+            'key' => $apiKey,
+            'language' => 'nl',
+            'region' => 'nl',
+            'components' => 'country:NL',
+        ], 'https://maps.googleapis.com/maps/api/geocode/json');
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'sslverify' => true,
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'geocode_error',
+                'address' => [],
+                'coordinates' => [],
+            ], 502);
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (empty($data) || !isset($data['status']) || $data['status'] !== 'OK' || empty($data['results'][0])) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $data['status'] ?? 'unknown',
+                'address' => [],
+                'coordinates' => [],
+            ], 502);
+        }
+
+        $result = $data['results'][0];
+        $components = $this->parseGeocodeComponents($result['address_components'] ?? []);
+        $coordinates = [
+            'lat' => $result['geometry']['location']['lat'] ?? '',
+            'lng' => $result['geometry']['location']['lng'] ?? '',
+        ];
+
+        $output = [
+            'success' => true,
+            'address' => $components,
+            'coordinates' => $coordinates,
+        ];
+
+        set_transient($cacheKey, $output, HOUR_IN_SECONDS);
+
+        return new \WP_REST_Response($output, 200);
+    }
+
+    /**
+     * Parse Google Geocoding address_components into normalized fields.
+     */
+    private function parseGeocodeComponents(array $addressComponents): array
+    {
+        $components = [
+            'street' => '',
+            'city' => '',
+            'state' => '',
+            'postal' => '',
+            'country' => '',
+        ];
+
+        $streetNumber = '';
+        $route = '';
+
+        foreach ($addressComponents as $c) {
+            $types = $c['types'] ?? [];
+            if (in_array('street_number', $types, true)) {
+                $streetNumber = $c['long_name'] ?? '';
+            } elseif (in_array('route', $types, true)) {
+                $route = $c['long_name'] ?? '';
+            } elseif (in_array('locality', $types, true)) {
+                $components['city'] = $c['long_name'] ?? '';
+            } elseif (in_array('postal_town', $types, true) && empty($components['city'])) {
+                $components['city'] = $c['long_name'] ?? '';
+            } elseif (in_array('administrative_area_level_1', $types, true)) {
+                $components['state'] = $c['long_name'] ?? '';
+            } elseif (in_array('postal_code', $types, true)) {
+                $components['postal'] = $c['long_name'] ?? '';
+            } elseif (in_array('country', $types, true)) {
+                $components['country'] = $c['short_name'] ?? '';
+            }
+        }
+
+        $components['street'] = trim($streetNumber . ' ' . $route);
+
+        return $components;
     }
 
     /**

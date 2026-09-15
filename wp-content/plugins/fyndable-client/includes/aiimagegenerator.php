@@ -702,7 +702,8 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
                 return (stripos($apiKey, 'sk-') === 0 && stripos($apiKey, 'sk-or-') !== 0) && stripos($model, 'openai/') !== 0;
             case 'stability':
             case 'openart':
-                return !empty($apiKey);
+                // Don't reuse an OpenRouter key (sk-or-...) against Stability/OpenArt.
+                return !empty($apiKey) && stripos($apiKey, 'sk-or-') !== 0;
             default:
                 return false;
         }
@@ -828,7 +829,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
             'model'   => $model,
             'prompt'  => $prompt,
             'n'       => 1,
-            'size'    => '1024x1024',
+            'size'    => $this->openRouterSizeForModel($model),
         ];
 
         if (!empty($quality) && $quality !== 'auto') {
@@ -965,6 +966,25 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         }
 
         return ['openai/gpt-image-2', $quality];
+    }
+
+    /**
+     * Choose an OpenRouter image size appropriate for the model.
+     *
+     * Some models (e.g. bytedance-seed/seedream-4.5) require a minimum number
+     * of output pixels and reject 1024x1024 (1,048,576 px). seedream-4.5 needs
+     * at least 3,686,400 px, so we send 2048x2048 (4,194,304 px) for it.
+     */
+    private function openRouterSizeForModel(string $model): string
+    {
+        $model = strtolower(trim($model));
+
+        // seedream-4.5 requires >= 3,686,400 output pixels.
+        if (stripos($model, 'seedream') !== false) {
+            return '2048x2048';
+        }
+
+        return '1024x1024';
     }
 
     /**

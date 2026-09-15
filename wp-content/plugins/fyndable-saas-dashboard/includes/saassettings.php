@@ -202,6 +202,9 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_model', ['default' => 'google/gemini-flash-1.5']);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_language', ['default' => 'nl']);
 
+        // Google Places (shared proxy for client autocomplete)
+        register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_places_api_key', ['sanitize_callback' => 'sanitize_text_field']);
+
         // Customer portal settings
         register_setting('sseo_ai_saas_billing', 'sseo_ai_saas_customer_portal_page', ['default' => 0, 'sanitize_callback' => 'absint']);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_vat_rate', ['default' => 21, 'sanitize_callback' => function($v) { return (float) $v; }]);
@@ -380,6 +383,14 @@ class SaaSSettings
     public function getFirecrawlApiKey(): string
     {
         return get_option('sseo_ai_saas_firecrawl_api_key', '');
+    }
+
+    /**
+     * Get Google Places API key for shared client autocomplete
+     */
+    public function getGooglePlacesApiKey(): string
+    {
+        return get_option('ai_seo_saas_google_places_api_key', '');
     }
 
     /**
@@ -744,6 +755,17 @@ class SaaSSettings
                                     <option value="nl" <?php selected($this->getGeoLanguage(), 'nl'); ?>><?php esc_html_e('Dutch', 'sseo-ai-saas'); ?></option>
                                     <option value="en" <?php selected($this->getGeoLanguage(), 'en'); ?>><?php esc_html_e('English', 'sseo-ai-saas'); ?></option>
                                 </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="google_places_api_key"><?php esc_html_e('Google Places API Key', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="ai_seo_saas_google_places_api_key" id="google_places_api_key"
+                                       value="<?php echo esc_attr($this->getGooglePlacesApiKey()); ?>" class="regular-text"
+                                       placeholder="AIza...">
+                                <p class="description">
+                                    <?php esc_html_e('Shared key for client location autocomplete. The key is never exposed to client sites.', 'sseo-ai-saas'); ?>
+                                </p>
                             </td>
                         </tr>
                     </table>

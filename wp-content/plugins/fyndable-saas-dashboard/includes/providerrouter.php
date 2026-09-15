@@ -210,6 +210,8 @@ class ProviderRouter
      * @param string $useCase Use-case key for model routing
      * @param int $maxTokens Max output tokens
      * @param float $temperature Temperature
+     * @param int $timeout Per-provider HTTP timeout in seconds (default 300)
+     * @param int $maxFallbackAttempts Max number of fallback models to try (0 = unlimited)
      * @return array|\WP_Error ['content', 'model', 'usage', 'provider']
      */
     public function routeRequest(
@@ -217,7 +219,9 @@ class ProviderRouter
         ?string $model,
         string $useCase,
         int $maxTokens,
-        float $temperature
+        float $temperature,
+        int $timeout = 300,
+        int $maxFallbackAttempts = 0
     ): array|\WP_Error {
         // Build ordered list of candidate models: explicit/routing model + fallback chain
         $candidates = $this->getModelCandidates($model, $useCase);
@@ -229,17 +233,30 @@ class ProviderRouter
             );
         }
 
+        // Limit the number of fallback models tried for large requests to avoid
+        // compounding timeout delays (each fallback model can take up to $timeout seconds).
+        if ($maxFallbackAttempts > 0 && count($candidates) > $maxFallbackAttempts) {
+            $candidates = array_slice($candidates, 0, $maxFallbackAttempts);
+        }
+
         $lastError = null;
         $attempted = [];
+        $hasTimeout = false;
 
         foreach ($candidates as $candidateModel) {
             $provider = $this->getProviderForModel($candidateModel);
             $attempted[] = $candidateModel . '(' . $provider . ')';
 
-            $result = $this->executeProviderChat($provider, $messages, $candidateModel, $maxTokens, $temperature);
+            $result = $this->executeProviderChat($provider, $messages, $candidateModel, $maxTokens, $temperature, $timeout);
 
             if (is_wp_error($result)) {
                 $lastError = $result;
+                if ($result->get_error_code() === 'ai_timeout') {
+                    $hasTimeout = true;
+                    // Stop trying fallback models after a timeout — the next model
+                    // will likely also be slow for the same large completion.
+                    break;
+                }
                 continue;
             }
 
@@ -263,14 +280,24 @@ class ProviderRouter
         }
 
         if ($lastError instanceof \WP_Error) {
+            $errorCode = $hasTimeout ? 'ai_timeout' : 'model_fallback_exhausted';
+            $errorTemplate = $hasTimeout
+                ? __('AI request timed out. All models timed out. Attempted: %s. Last error: %s', 'sseo-ai-saas')
+                : __('All AI models failed. Attempted: %s. Last error: %s', 'sseo-ai-saas');
+
             return new \WP_Error(
-                'model_fallback_exhausted',
+                $errorCode,
                 sprintf(
-                    __('All AI models failed. Attempted: %s. Last error: %s', 'sseo-ai-saas'),
+                    $errorTemplate,
                     implode(' → ', $attempted),
                     $lastError->get_error_message()
                 ),
-                ['attempted' => $attempted, 'last_error' => $lastError->get_error_message()]
+                [
+                    'attempted' => $attempted,
+                    'last_error' => $lastError->get_error_message(),
+                    'last_error_code' => $lastError->get_error_code(),
+                    'timeout_detected' => $hasTimeout,
+                ]
             );
         }
 
@@ -288,17 +315,18 @@ class ProviderRouter
         array $messages,
         string $model,
         int $maxTokens,
-        float $temperature
+        float $temperature,
+        int $timeout = 300
     ): array|\WP_Error {
         switch ($provider) {
             case 'openrouter':
-                return $this->openRouter->chat($messages, $model, $maxTokens, $temperature);
+                return $this->openRouter->chat($messages, $model, $maxTokens, $temperature, $timeout);
             case 'openai':
                 return $this->openAi->chat($messages, $model, $maxTokens, $temperature);
             default:
                 // Fallback to OpenRouter if configured, else OpenAI
                 if ($this->openRouter->isConfigured()) {
-                    return $this->openRouter->chat($messages, $model, $maxTokens, $temperature);
+                    return $this->openRouter->chat($messages, $model, $maxTokens, $temperature, $timeout);
                 }
                 if ($this->openAi->isConfigured()) {
                     return $this->openAi->chat($messages, $model, $maxTokens, $temperature);

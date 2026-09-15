@@ -476,7 +476,7 @@ class LicenseKeyGenerator
             return new \WP_Error('invalid_key', __('License key not found', 'sseo-ai-saas'));
         }
         
-        $allowed = ['assigned_to', 'notes', 'max_sites', 'rate_limit', 'api_calls_limit'];
+        $allowed = ['assigned_to', 'notes', 'max_sites', 'rate_limit', 'api_calls_limit', 'license_type'];
         $update = [];
         
         foreach ($allowed as $field) {

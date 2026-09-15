@@ -362,10 +362,19 @@ class PaymentProcessor
             return $pricing;
         }
 
-        $period = $interval === 'year' ? 'P1Y' : 'P1M';
-        $startDate = (new \DateTime('now', new \DateTimeZone('UTC')))
-            ->add(new \DateInterval($period))
-            ->format('Y-m-d');
+        $isTrialMandate = ($payment['metadata']['type'] ?? '') === 'trial_mandate';
+        if ($isTrialMandate) {
+            $trialDays = max(1, (int) ($payment['metadata']['trial_days'] ?? 14));
+            $startDate = (new \DateTime('now', new \DateTimeZone('UTC')))
+                ->add(new \DateInterval('P' . $trialDays . 'D'))
+                ->format('Y-m-d');
+            $period = 'P' . $trialDays . 'D';
+        } else {
+            $period = $interval === 'year' ? 'P1Y' : 'P1M';
+            $startDate = (new \DateTime('now', new \DateTimeZone('UTC')))
+                ->add(new \DateInterval($period))
+                ->format('Y-m-d');
+        }
 
         $subscription = $this->mollieRequest('customers/' . $customerId . '/subscriptions', [
             'amount' => $this->mollieAmount($pricing['amount']),
@@ -390,13 +399,23 @@ class PaymentProcessor
         $this->tenants->setTenantSetting($tenantKey, 'subscription_interval', $interval);
         $this->tenants->setTenantSetting($tenantKey, 'mollie_interval', $mollieInterval);
 
-        $expiresPeriod = $interval === 'year' ? '+1 year' : '+1 month';
-        $this->tenants->updateTenant($tenantKey, [
-            'status' => 'active',
-            'payment_status' => 'active',
-            'last_payment_at' => current_time('mysql'),
-            'expires_at' => gmdate('Y-m-d H:i:s', strtotime($expiresPeriod)),
-        ]);
+        if ($isTrialMandate) {
+            $trialDays = max(1, (int) ($payment['metadata']['trial_days'] ?? 14));
+            $this->tenants->updateTenant($tenantKey, [
+                'status' => 'active',
+                'payment_status' => 'trial',
+                'last_payment_at' => current_time('mysql'),
+                'expires_at' => gmdate('Y-m-d H:i:s', time() + $trialDays * DAY_IN_SECONDS),
+            ]);
+        } else {
+            $expiresPeriod = $interval === 'year' ? '+1 year' : '+1 month';
+            $this->tenants->updateTenant($tenantKey, [
+                'status' => 'active',
+                'payment_status' => 'active',
+                'last_payment_at' => current_time('mysql'),
+                'expires_at' => gmdate('Y-m-d H:i:s', strtotime($expiresPeriod)),
+            ]);
+        }
 
         return $subscription;
     }
@@ -1011,5 +1030,72 @@ class PaymentProcessor
                 'value' => number_format($newAmount, 2, '.', ''),
             ],
         ], 'PATCH');
+    }
+
+    /**
+     * Create a 1c Mollie first payment to verify the mandate for a trial.
+     */
+    public function createTrialMollieCheckout(array $tenant, string $tier, ?string $paymentMethod = null, int $trialDays = 14): array|\WP_Error
+    {
+        if (empty($this->mollieApiKey)) {
+            return new \WP_Error('mollie_not_configured', __('Mollie API key is not configured', 'sseo-ai-saas'));
+        }
+
+        $expectedPrefix = $this->mollieMode === 'test' ? 'test_' : 'live_';
+        if (strpos($this->mollieApiKey, $expectedPrefix) !== 0) {
+            return new \WP_Error(
+                'mollie_key_mismatch',
+                sprintf(__('Mollie is set to %s mode but the API key does not start with "%s".', 'sseo-ai-saas'), $this->mollieMode, $expectedPrefix)
+            );
+        }
+
+        $customer = $this->createMollieCustomer($tenant);
+        if (is_wp_error($customer)) {
+            return $customer;
+        }
+
+        $customerId = $customer['id'];
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_customer_id', $customerId);
+
+        $paymentParams = [
+            'amount' => $this->mollieAmount(0.01),
+            'customerId' => $customerId,
+            'sequenceType' => 'first',
+            'description' => sprintf(__('Fyndable SmartSEO %s trial mandate', 'sseo-ai-saas'), ucfirst($tier)),
+            'redirectUrl' => $this->getReturnUrl($tenant['tenant_key'], 'mollie'),
+            'webhookUrl' => $this->getWebhookUrl('mollie'),
+            'metadata' => [
+                'tenant_key' => $tenant['tenant_key'],
+                'tier' => $tier,
+                'type' => 'trial_mandate',
+                'trial_days' => $trialDays,
+            ],
+        ];
+
+        if (!empty($paymentMethod)) {
+            $paymentParams['method'] = $paymentMethod;
+        }
+
+        $payment = $this->mollieRequest('payments', $paymentParams);
+
+        if (is_wp_error($payment)) {
+            return $payment;
+        }
+
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_payment_id', $payment['id']);
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'trial_tier', $tier);
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'trial_days', (string) $trialDays);
+
+        return [
+            'provider' => 'mollie',
+            'tenant_key' => $tenant['tenant_key'],
+            'tier' => $tier,
+            'amount' => 0.01,
+            'currency' => $this->currency,
+            'status' => 'pending_payment',
+            'message' => __('Redirect to Mollie to verify your payment method for the trial.', 'sseo-ai-saas'),
+            'checkout_url' => $payment['_links']['checkout']['href'] ?? '',
+            'trial_days' => $trialDays,
+        ];
     }
 }

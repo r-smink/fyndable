@@ -51,9 +51,10 @@ class OpenRouterAdapter
      * @param string $model OpenRouter model identifier (e.g. "openai/gpt-4o")
      * @param int $maxTokens Max output tokens
      * @param float $temperature Temperature (0-2)
+     * @param int $timeout HTTP timeout in seconds (default 300, cluster maps use 600)
      * @return array|\WP_Error ['content', 'model', 'usage']
      */
-    public function chat(array $messages, string $model, int $maxTokens, float $temperature): array|\WP_Error
+    public function chat(array $messages, string $model, int $maxTokens, float $temperature, int $timeout = 300): array|\WP_Error
     {
         $apiKey = $this->getApiKey();
 
@@ -80,13 +81,20 @@ class OpenRouterAdapter
                 'temperature' => $temperature,
                 'max_tokens'  => $maxTokens,
             ]),
-            'timeout' => 90,
+            'timeout' => $timeout,
         ]);
 
         if (is_wp_error($response)) {
+            $message = $response->get_error_message();
+            if (stripos($message, 'timed out') !== false || stripos($message, 'timeout') !== false || stripos($message, 'cURL error 28') !== false) {
+                return new \WP_Error(
+                    'ai_timeout',
+                    sprintf(__('OpenRouter request timed out after %ds: %s', 'sseo-ai-saas'), $timeout, $message)
+                );
+            }
             return new \WP_Error(
                 'openrouter_request_failed',
-                sprintf(__('OpenRouter request failed: %s', 'sseo-ai-saas'), $response->get_error_message())
+                sprintf(__('OpenRouter request failed: %s', 'sseo-ai-saas'), $message)
             );
         }
 

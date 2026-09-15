@@ -2,6 +2,8 @@ package com.fyndable.mobile.ui.generate
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -33,11 +34,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fyndable.mobile.data.store.AuthStore
 import com.fyndable.mobile.ui.ScreenViewModelFactory
+import com.fyndable.mobile.ui.components.FyndableGradientButton
 import com.fyndable.mobile.ui.components.LoadingState
 import com.fyndable.mobile.ui.components.StatusBadge
 import com.fyndable.mobile.ui.theme.FyndableBlue
@@ -69,7 +73,7 @@ fun GenerateScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("AI Artikel Generator", style = MaterialTheme.typography.titleLarge)
+            Text("AI Artikel Generator", style = MaterialTheme.typography.titleLarge, color = Color.White)
 
             OutlinedTextField(
                 value = keyword,
@@ -135,15 +139,15 @@ fun GenerateScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = includeFaq, onCheckedChange = { includeFaq = it })
-                Text("FAQ sectie toevoegen")
+                Text("FAQ sectie toevoegen", color = Color.White)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = createDraft, onCheckedChange = { createDraft = it })
-                Text("Opslaan als concept")
+                Text("Opslaan als concept", color = Color.White)
             }
 
-            Button(
+            FyndableGradientButton(
                 onClick = {
                     viewModel.generateArticle(
                         keyword = keyword,
@@ -159,12 +163,17 @@ fun GenerateScreen(
             ) {
                 if (state is GenerateViewModel.UiState.Loading) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(20.dp)
                     )
                 } else {
-                    Text("Artikel genereren")
+                    Text(
+                        "Artikel genereren",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
                 }
             }
 
@@ -176,7 +185,9 @@ fun GenerateScreen(
                 }
                 is GenerateViewModel.UiState.Success -> {
                     Card(
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {

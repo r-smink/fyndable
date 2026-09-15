@@ -28,7 +28,8 @@ class EEATValidator
         // Meta box moved to PostMetaBox tabbed container
         add_action('save_post', [$this, 'saveMetaBox'], 10, 2);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        
+        add_action('wp_ajax_sseo_ai_get_eeat_recommendations', [$this, 'ajaxGetEEATRecommendations']);
+
         // User profile fields
         add_action('show_user_profile', [$this, 'addAuthorExpertiseFields']);
         add_action('edit_user_profile', [$this, 'addAuthorExpertiseFields']);
@@ -1071,5 +1072,98 @@ class EEATValidator
     public function restGetSiteEEAT(): array
     {
         return ['eeat' => $this->analyzeSiteEEAT()];
+    }
+
+    /**
+     * AJAX: Get AI E-E-A-T recommendations for a post.
+     *
+     * Backs the "Get AI Recommendations" button in the E-E-A-T meta box.
+     * Falls back to a static list derived from identifyEEATIssues() when the
+     * LLM call fails so the button always returns a useful response.
+     */
+    public function ajaxGetEEATRecommendations(): void
+    {
+        check_ajax_referer('sseo_eeat', 'nonce');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => __('Unauthorized', 'ai-seo-client')]);
+        }
+
+        $postId = (int) ($_POST['post_id'] ?? 0);
+        $post = get_post($postId);
+        if (!$post) {
+            wp_send_json_error(['message' => __('Post not found', 'ai-seo-client')]);
+        }
+
+        $analysis = $this->analyzePostEEAT($post);
+        $issues = $analysis['issues'] ?? [];
+
+        $scores = [
+            'experience'        => $analysis['experience'] ?? 0,
+            'expertise'         => $analysis['expertise'] ?? 0,
+            'authoritativeness' => $analysis['authoritativeness'] ?? 0,
+            'trustworthiness'   => $analysis['trustworthiness'] ?? 0,
+            'overall'           => $analysis['overall'] ?? 0,
+        ];
+
+        // Build a clean bullet list for the prompt.
+        $issuesList = $issues ? "- " . implode("\n- ", array_map('strval', $issues)) : __('None detected.', 'ai-seo-client');
+
+        $title = $post->post_title;
+        $excerpt = wp_strip_all_tags($post->post_content);
+        if (function_exists('mb_substr')) {
+            $excerpt = mb_substr($excerpt, 0, 800);
+        } else {
+            $excerpt = substr($excerpt, 0, 800);
+        }
+
+        $prompt = "You are an SEO expert reviewing a blog post for Google E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness).
+
+Post title: {$title}
+Excerpt: {$excerpt}
+
+Current E-E-A-T scores (0-100):
+- Experience: {$scores['experience']}
+- Expertise: {$scores['expertise']}
+- Authoritativeness: {$scores['authoritativeness']}
+- Trustworthiness: {$scores['trustworthiness']}
+- Overall: {$scores['overall']}
+
+Detected issues:
+{$issuesList}
+
+Provide 4-6 concrete, actionable recommendations to improve this post's E-E-A-T. For each recommendation, give a short bold heading followed by one sentence of guidance. Return the result as an HTML <ul> with <li> items (use <strong> for the heading). Do not wrap the response in a code block or any extra tags.";
+
+        $result = $this->llm->generateText($prompt, [
+            'max_tokens' => 800,
+            'use_case'   => 'content_generation',
+            'track_extra' => [
+                'endpoint' => 'eeat.recommendations',
+                'post_id'  => $postId,
+            ],
+        ]);
+
+        if (!is_wp_error($result) && trim($result) !== '') {
+            $html = trim($result);
+            // Ensure it's a list; if the model returned plain text lines, wrap them.
+            if (stripos($html, '<ul') === false && stripos($html, '<li') === false) {
+                $lines = array_filter(array_map('trim', preg_split('/\r?\n/', $html)));
+                $html = '<ul><li>' . implode('</li><li>', array_map('esc_html', $lines)) . '</li></ul>';
+            }
+            wp_send_json_success(['recommendations' => wp_kses_post($html)]);
+        }
+
+        // Fallback: build a static list from the detected issues.
+        if (!empty($issues)) {
+            $html = '<ul style="list-style: disc; padding-left: 20px;">';
+            foreach ($issues as $issue) {
+                $html .= '<li>' . esc_html($issue) . '</li>';
+            }
+            $html .= '</ul>';
+        } else {
+            $html = '<p>' . esc_html__('No major E-E-A-T issues detected. Keep adding first-hand experience, citations, and author credentials.', 'ai-seo-client') . '</p>';
+        }
+
+        wp_send_json_success(['recommendations' => $html]);
     }
 }
