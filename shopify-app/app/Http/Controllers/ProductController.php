@@ -234,6 +234,38 @@ class ProductController extends Controller
     }
 
     /**
+     * Save a product description to Shopify.
+     *
+     * POST /api/products/{productId}/save-description
+     * Body: { description: "...", html: true|false }
+     */
+    public function saveDescription(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $description = $request->input('description', '');
+        if (empty($description)) {
+            return ['error' => 'nothing_to_save'];
+        }
+
+        // Convert plain text to HTML (line breaks to <br>)
+        $descriptionHtml = nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+
+        $result = $this->updateProduct($shop, $productId, ['descriptionHtml' => $descriptionHtml]);
+
+        return $result
+            ? ['success' => true]
+            : ['error' => 'save_failed'];
+    }
+
+    /**
      * Generate and save Product JSON-LD schema to metafields.
      *
      * POST /api/products/{productId}/generate-schema

@@ -36,6 +36,7 @@ Route::middleware(['shopify.session'])->group(function () {
 
     // Products
     Route::post('/products/{productId}/generate-description', [ProductController::class, 'generateDescription']);
+    Route::post('/products/{productId}/save-description', [ProductController::class, 'saveDescription']);
     Route::post('/products/{productId}/generate-meta', [ProductController::class, 'generateMeta']);
     Route::post('/products/{productId}/generate-alt-text', [ProductController::class, 'generateAltText']);
     Route::post('/products/{productId}/save-meta', [ProductController::class, 'saveMeta']);

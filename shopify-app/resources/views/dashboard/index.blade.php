@@ -358,30 +358,74 @@
         }
 
         // Products
+        let lastProductId = null;
+        let lastGeneratedDescription = null;
+        let lastGeneratedMeta = null;
+
         async function generateDescription(type) {
             const productId = document.getElementById('product-id').value;
             if (!productId) { alert('Enter a product ID'); return; }
+            lastProductId = productId;
             document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
             const data = await api(`/products/${productId}/generate-description`, {
                 method: 'POST',
                 body: JSON.stringify({ type }),
             });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Generated ${type} description:</div><div class="preview">${data.description}</div>`;
+                lastGeneratedDescription = data.description;
+                document.getElementById('product-result').innerHTML = `
+                    <div class="alert success">Generated ${type} description:</div>
+                    <div class="preview">${data.description}</div>
+                    <button class="btn" style="margin-top: 10px;" onclick="saveDescription()">Save to Shopify</button>
+                `;
             } else {
                 document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || data.message || 'Unknown'}</div>`;
+            }
+        }
+
+        async function saveDescription() {
+            if (!lastProductId || !lastGeneratedDescription) { alert('Nothing to save'); return; }
+            document.getElementById('product-result').innerHTML += '<div class="loading">Saving...</div>';
+            const data = await api(`/products/${lastProductId}/save-description`, {
+                method: 'POST',
+                body: JSON.stringify({ description: lastGeneratedDescription }),
+            });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = `<div class="alert success">Description saved to Shopify!</div>`;
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Save failed: ${data.error || data.message || 'Unknown'}</div>`;
             }
         }
 
         async function generateMeta() {
             const productId = document.getElementById('product-id').value;
             if (!productId) { alert('Enter a product ID'); return; }
+            lastProductId = productId;
             document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
             const data = await api(`/products/${productId}/generate-meta`, { method: 'POST' });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Meta tags generated:</div><div class="preview">Title: ${data.title}\n\nDescription: ${data.description}</div>`;
+                lastGeneratedMeta = data;
+                document.getElementById('product-result').innerHTML = `
+                    <div class="alert success">Meta tags generated:</div>
+                    <div class="preview">Title: ${data.title}\n\nDescription: ${data.description}</div>
+                    <button class="btn" style="margin-top: 10px;" onclick="saveMeta()">Save to Shopify</button>
+                `;
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || data.message || 'Unknown'}</div>`;
+            }
+        }
+
+        async function saveMeta() {
+            if (!lastProductId || !lastGeneratedMeta) { alert('Nothing to save'); return; }
+            document.getElementById('product-result').innerHTML += '<div class="loading">Saving...</div>';
+            const data = await api(`/products/${lastProductId}/save-meta`, {
+                method: 'POST',
+                body: JSON.stringify({ title: lastGeneratedMeta.title, description: lastGeneratedMeta.description }),
+            });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = `<div class="alert success">Meta tags saved to Shopify!</div>`;
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Save failed: ${data.error || data.message || 'Unknown'}</div>`;
             }
         }
 
