@@ -478,7 +478,7 @@ class Client
             $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
             $this->gscDashboard->register();
 
-            // Google Data Dashboard (GSC + GA4 + Google Ads unified)
+            // Google Data Dashboard (GSC + GA4 unified)
             $this->googleDataDashboard = new GoogleDataDashboard($this->settings);
             $this->googleDataDashboard->register();
             
@@ -1767,7 +1767,7 @@ class Client
     }
 
     /**
-     * Render Google Data Dashboard page (GSC + GA4 + Google Ads)
+     * Render Google Data Dashboard page (GSC + GA4)
      */
     public function renderGoogleDataPage(): void
     {

@@ -83,33 +83,34 @@ class GoogleDataDashboard
             ],
         ]);
 
-        register_rest_route('sseo-ai/v1', '/google/ads/overview', [
-            'methods' => 'GET',
-            'callback' => [$this, 'restGetAdsOverview'],
-            'permission_callback' => fn() => current_user_can('manage_options'),
-            'args' => [
-                'days' => ['type' => 'integer', 'default' => 30],
-            ],
-        ]);
+        // Google Ads routes disabled — temporarily hidden for later stage.
+        // register_rest_route('sseo-ai/v1', '/google/ads/overview', [
+        //     'methods' => 'GET',
+        //     'callback' => [$this, 'restGetAdsOverview'],
+        //     'permission_callback' => fn() => current_user_can('manage_options'),
+        //     'args' => [
+        //         'days' => ['type' => 'integer', 'default' => 30],
+        //     ],
+        // ]);
 
-        register_rest_route('sseo-ai/v1', '/google/ads/daily', [
-            'methods' => 'GET',
-            'callback' => [$this, 'restGetAdsDaily'],
-            'permission_callback' => fn() => current_user_can('manage_options'),
-            'args' => [
-                'days' => ['type' => 'integer', 'default' => 30],
-            ],
-        ]);
+        // register_rest_route('sseo-ai/v1', '/google/ads/daily', [
+        //     'methods' => 'GET',
+        //     'callback' => [$this, 'restGetAdsDaily'],
+        //     'permission_callback' => fn() => current_user_can('manage_options'),
+        //     'args' => [
+        //         'days' => ['type' => 'integer', 'default' => 30],
+        //     ],
+        // ]);
 
-        register_rest_route('sseo-ai/v1', '/google/ads/keywords', [
-            'methods' => 'GET',
-            'callback' => [$this, 'restGetAdsKeywords'],
-            'permission_callback' => fn() => current_user_can('manage_options'),
-            'args' => [
-                'days' => ['type' => 'integer', 'default' => 30],
-                'limit' => ['type' => 'integer', 'default' => 20],
-            ],
-        ]);
+        // register_rest_route('sseo-ai/v1', '/google/ads/keywords', [
+        //     'methods' => 'GET',
+        //     'callback' => [$this, 'restGetAdsKeywords'],
+        //     'permission_callback' => fn() => current_user_can('manage_options'),
+        //     'args' => [
+        //         'days' => ['type' => 'integer', 'default' => 30],
+        //         'limit' => ['type' => 'integer', 'default' => 20],
+        //     ],
+        // ]);
 
         register_rest_route('sseo-ai/v1', '/google/ga4/properties', [
             'methods' => 'GET',
@@ -117,11 +118,12 @@ class GoogleDataDashboard
             'permission_callback' => fn() => current_user_can('manage_options'),
         ]);
 
-        register_rest_route('sseo-ai/v1', '/google/ads/customers', [
-            'methods' => 'GET',
-            'callback' => [$this, 'restListAdsCustomers'],
-            'permission_callback' => fn() => current_user_can('manage_options'),
-        ]);
+        // Google Ads customers route disabled — temporarily hidden for later stage.
+        // register_rest_route('sseo-ai/v1', '/google/ads/customers', [
+        //     'methods' => 'GET',
+        //     'callback' => [$this, 'restListAdsCustomers'],
+        //     'permission_callback' => fn() => current_user_can('manage_options'),
+        // ]);
     }
 
     /**
@@ -300,7 +302,8 @@ class GoogleDataDashboard
     {
         $gscConnected = $this->gscClient->isConnected();
         $ga4Connected = $this->ga4Client->isConnected();
-        $adsConnected = $this->adsClient->isConnected();
+        // Google Ads temporarily disabled for later stage.
+        $adsConnected = false;
         $anyConnected = $gscConnected || $ga4Connected || $adsConnected;
         $ga4PropertyId = get_option('sseo_ai_ga4_property_id', '');
         $adsCustomerId = get_option('sseo_ai_google_ads_customer_id', '');
@@ -331,7 +334,7 @@ class GoogleDataDashboard
         <div class="wrap sseo-ai-modern">
             <div class="sseo-ai-header">
                 <h1><?php esc_html_e('Google Data Dashboard', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Unified data from Google Search Console, Analytics 4, and Google Ads.', 'ai-seo-client'); ?></p>
+                <p><?php esc_html_e('Unified data from Google Search Console and Analytics 4.', 'ai-seo-client'); ?></p>
             </div>
 
             <div class="sseo-ai-content">
@@ -347,9 +350,11 @@ class GoogleDataDashboard
                         <span class="google-service-badge <?php echo $ga4Connected ? 'connected' : 'disconnected'; ?>">
                             <?php echo $ga4Connected ? '✓' : '✗'; ?> Analytics 4
                         </span>
+                        <!-- Google Ads badge hidden — temporarily disabled for later stage.
                         <span class="google-service-badge <?php echo $adsConnected ? 'connected' : 'disconnected'; ?>">
                             <?php echo $adsConnected ? '✓' : '✗'; ?> Google Ads
                         </span>
+                        -->
                     </div>
 
                     <?php if (!$anyConnected): ?>
@@ -369,7 +374,7 @@ class GoogleDataDashboard
                             <p class="description"><?php esc_html_e('Numeric property ID from GA4 (found in Admin → Property Settings).', 'ai-seo-client'); ?></p>
                         </div>
 
-                        <!-- Google Ads config -->
+                        <!-- Google Ads config hidden — temporarily disabled for later stage.
                         <div style="padding: 15px; background: #fef3c7; border-radius: 8px;">
                             <label><strong><?php esc_html_e('Google Ads Customer ID', 'ai-seo-client'); ?></strong></label><br>
                             <input type="text" id="ads-customer-id" value="<?php echo esc_attr($adsCustomerId); ?>" placeholder="123-456-7890" style="width: 200px; margin-top: 5px;">
@@ -378,6 +383,7 @@ class GoogleDataDashboard
                             </button>
                             <select id="ads-customer-select" style="display:none; margin-left: 10px; max-width: 200px;"></select>
                         </div>
+                        -->
                         <button type="button" class="button button-primary" id="google-save-config" style="margin-top: 15px;">
                             <?php esc_html_e('Save Configuration', 'ai-seo-client'); ?>
                         </button>
@@ -390,7 +396,9 @@ class GoogleDataDashboard
                     <div class="google-tabs">
                         <button class="google-tab active" data-tab="overview"><?php esc_html_e('Overview', 'ai-seo-client'); ?></button>
                         <button class="google-tab" data-tab="ga4"><?php esc_html_e('Analytics 4', 'ai-seo-client'); ?></button>
+                        <!-- Google Ads tab hidden — temporarily disabled for later stage.
                         <button class="google-tab" data-tab="ads"><?php esc_html_e('Google Ads', 'ai-seo-client'); ?></button>
+                        -->
                     </div>
 
                     <!-- Overview Panel -->
@@ -418,7 +426,7 @@ class GoogleDataDashboard
                         <?php endif; ?>
                     </div>
 
-                    <!-- Google Ads Panel -->
+                    <!-- Google Ads Panel hidden — temporarily disabled for later stage.
                     <div class="google-panel" id="panel-ads">
                         <?php if ($adsConnected): ?>
                             <h3><?php esc_html_e('Campaign Performance', 'ai-seo-client'); ?></h3>
@@ -435,6 +443,7 @@ class GoogleDataDashboard
                             </p>
                         <?php endif; ?>
                     </div>
+                    -->
                 </div>
 
                 <!-- Search Console -->
@@ -538,9 +547,10 @@ class GoogleDataDashboard
                 if (tab === 'ga4' && !$('#ga4-daily-chart').data('loaded')) {
                     loadGA4Data();
                 }
-                if (tab === 'ads' && !$('#ads-overview').data('loaded')) {
-                    loadAdsData();
-                }
+                // Google Ads tab disabled — temporarily hidden for later stage.
+                // if (tab === 'ads' && !$('#ads-overview').data('loaded')) {
+                //     loadAdsData();
+                // }
             });
 
             // Load overview
@@ -567,12 +577,13 @@ class GoogleDataDashboard
                         stats.push({ label: 'GA4 Conversions', value: formatNum(data.ga4.conversions) });
                     }
 
-                    if (data.ads) {
-                        stats.push({ label: 'Ads Clicks', value: formatNum(data.ads.total_clicks) });
-                        stats.push({ label: 'Ads Impressions', value: formatNum(data.ads.total_impressions) });
-                        stats.push({ label: 'Ads Cost', value: '$' + data.ads.total_cost });
-                        stats.push({ label: 'Ads Conversions', value: formatNum(data.ads.total_conversions) });
-                    }
+                    // Google Ads stats disabled — temporarily hidden for later stage.
+                    // if (data.ads) {
+                    //     stats.push({ label: 'Ads Clicks', value: formatNum(data.ads.total_clicks) });
+                    //     stats.push({ label: 'Ads Impressions', value: formatNum(data.ads.total_impressions) });
+                    //     stats.push({ label: 'Ads Cost', value: '$' + data.ads.total_cost });
+                    //     stats.push({ label: 'Ads Conversions', value: formatNum(data.ads.total_conversions) });
+                    // }
 
                     if (!stats.length) {
                         html = '<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">No data available. Check your connections.</div>';
@@ -695,54 +706,55 @@ class GoogleDataDashboard
                 });
             }
 
-            function loadAdsData() {
-                // Campaign overview
-                wp.apiFetch({ path: 'sseo-ai/v1/google/ads/overview?days=30' }).then(function(data) {
-                    $('#ads-overview').data('loaded', true);
-                    if (data.error) { $('#ads-overview').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
-                    var html = '<div class="google-stat-grid" style="margin-bottom: 20px;">';
-                    html += statCard('Total Clicks', formatNum(data.total_clicks));
-                    html += statCard('Impressions', formatNum(data.total_impressions));
-                    html += statCard('Total Cost', '$' + data.total_cost);
-                    html += statCard('Conversions', formatNum(data.total_conversions));
-                    html += statCard('Avg CTR', data.avg_ctr + '%');
-                    html += statCard('Cost/Conv', '$' + data.cost_per_conversion);
-                    html += '</div>';
-
-                    if (data.campaigns && data.campaigns.length) {
-                        html += '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Campaign</th><th>Status</th><th>Clicks</th><th>Impr.</th><th>Cost</th><th>CTR</th><th>Conv.</th></tr></thead><tbody>';
-                        data.campaigns.forEach(function(c) {
-                            html += '<tr><td><strong>' + $('<span>').text(c.name).html() + '</strong></td><td>' + c.status + '</td><td>' + formatNum(c.clicks) + '</td><td>' + formatNum(c.impressions) + '</td><td>$' + c.cost + '</td><td>' + c.ctr + '%</td><td>' + c.conversions + '</td></tr>';
-                        });
-                        html += '</tbody></table>';
-                    }
-                    $('#ads-overview').html(html);
-                });
-
-                // Daily
-                wp.apiFetch({ path: 'sseo-ai/v1/google/ads/daily?days=30' }).then(function(data) {
-                    if (data.error) { $('#ads-daily').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
-                    if (!data.daily || !data.daily.length) { $('#ads-daily').html('<p style="color:#64748b;">No data</p>'); return; }
-                    var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Date</th><th>Clicks</th><th>Impressions</th><th>Cost</th><th>Conversions</th></tr></thead><tbody>';
-                    data.daily.forEach(function(d) {
-                        html += '<tr><td>' + d.date + '</td><td>' + formatNum(d.clicks) + '</td><td>' + formatNum(d.impressions) + '</td><td>$' + d.cost + '</td><td>' + d.conversions + '</td></tr>';
-                    });
-                    html += '</tbody></table>';
-                    $('#ads-daily').html(html);
-                });
-
-                // Keywords
-                wp.apiFetch({ path: 'sseo-ai/v1/google/ads/keywords?days=30&limit=20' }).then(function(data) {
-                    if (data.error) { $('#ads-keywords').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
-                    if (!data.keywords || !data.keywords.length) { $('#ads-keywords').html('<p style="color:#64748b;">No data</p>'); return; }
-                    var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Keyword</th><th>Match Type</th><th>Clicks</th><th>Impr.</th><th>Cost</th><th>CTR</th><th>CPC</th></tr></thead><tbody>';
-                    data.keywords.forEach(function(k) {
-                        html += '<tr><td><strong>' + $('<span>').text(k.keyword).html() + '</strong></td><td>' + k.match_type + '</td><td>' + formatNum(k.clicks) + '</td><td>' + formatNum(k.impressions) + '</td><td>$' + k.cost + '</td><td>' + k.ctr + '%</td><td>$' + k.avg_cpc + '</td></tr>';
-                    });
-                    html += '</tbody></table>';
-                    $('#ads-keywords').html(html);
-                });
-            }
+            // Google Ads data loading disabled — temporarily hidden for later stage.
+            // function loadAdsData() {
+            //     // Campaign overview
+            //     wp.apiFetch({ path: 'sseo-ai/v1/google/ads/overview?days=30' }).then(function(data) {
+            //         $('#ads-overview').data('loaded', true);
+            //         if (data.error) { $('#ads-overview').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
+            //         var html = '<div class="google-stat-grid" style="margin-bottom: 20px;">';
+            //         html += statCard('Total Clicks', formatNum(data.total_clicks));
+            //         html += statCard('Impressions', formatNum(data.total_impressions));
+            //         html += statCard('Total Cost', '$' + data.total_cost);
+            //         html += statCard('Conversions', formatNum(data.total_conversions));
+            //         html += statCard('Avg CTR', data.avg_ctr + '%');
+            //         html += statCard('Cost/Conv', '$' + data.cost_per_conversion);
+            //         html += '</div>';
+            //
+            //         if (data.campaigns && data.campaigns.length) {
+            //             html += '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Campaign</th><th>Status</th><th>Clicks</th><th>Impr.</th><th>Cost</th><th>CTR</th><th>Conv.</th></tr></thead><tbody>';
+            //             data.campaigns.forEach(function(c) {
+            //                 html += '<tr><td><strong>' + $('<span>').text(c.name).html() + '</strong></td><td>' + c.status + '</td><td>' + formatNum(c.clicks) + '</td><td>' + formatNum(c.impressions) + '</td><td>$' + c.cost + '</td><td>' + c.ctr + '%</td><td>' + c.conversions + '</td></tr>';
+            //             });
+            //             html += '</tbody></table>';
+            //         }
+            //         $('#ads-overview').html(html);
+            //     });
+            //
+            //     // Daily
+            //     wp.apiFetch({ path: 'sseo-ai/v1/google/ads/daily?days=30' }).then(function(data) {
+            //         if (data.error) { $('#ads-daily').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
+            //         if (!data.daily || !data.daily.length) { $('#ads-daily').html('<p style="color:#64748b;">No data</p>'); return; }
+            //         var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Date</th><th>Clicks</th><th>Impressions</th><th>Cost</th><th>Conversions</th></tr></thead><tbody>';
+            //         data.daily.forEach(function(d) {
+            //             html += '<tr><td>' + d.date + '</td><td>' + formatNum(d.clicks) + '</td><td>' + formatNum(d.impressions) + '</td><td>$' + d.cost + '</td><td>' + d.conversions + '</td></tr>';
+            //         });
+            //         html += '</tbody></table>';
+            //         $('#ads-daily').html(html);
+            //     });
+            //
+            //     // Keywords
+            //     wp.apiFetch({ path: 'sseo-ai/v1/google/ads/keywords?days=30&limit=20' }).then(function(data) {
+            //         if (data.error) { $('#ads-keywords').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
+            //         if (!data.keywords || !data.keywords.length) { $('#ads-keywords').html('<p style="color:#64748b;">No data</p>'); return; }
+            //         var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Keyword</th><th>Match Type</th><th>Clicks</th><th>Impr.</th><th>Cost</th><th>CTR</th><th>CPC</th></tr></thead><tbody>';
+            //         data.keywords.forEach(function(k) {
+            //             html += '<tr><td><strong>' + $('<span>').text(k.keyword).html() + '</strong></td><td>' + k.match_type + '</td><td>' + formatNum(k.clicks) + '</td><td>' + formatNum(k.impressions) + '</td><td>$' + k.cost + '</td><td>' + k.ctr + '%</td><td>$' + k.avg_cpc + '</td></tr>';
+            //         });
+            //         html += '</tbody></table>';
+            //         $('#ads-keywords').html(html);
+            //     });
+            // }
 
             // Save config
             $('#google-save-config').on('click', function() {
@@ -752,7 +764,8 @@ class GoogleDataDashboard
                 jQuery.post(ajaxurl, {
                     action: 'sseo_ai_save_google_config',
                     ga4_property_id: $('#ga4-property-id').val(),
-                    ads_customer_id: $('#ads-customer-id').val(),
+                    // ads_customer_id disabled — temporarily hidden for later stage.
+                    // ads_customer_id: $('#ads-customer-id').val(),
                     nonce: '<?php echo wp_create_nonce('sseo_google_config'); ?>'
                 }, function(response) {
                     btn.prop('disabled', false).text('Save Configuration');
@@ -787,28 +800,28 @@ class GoogleDataDashboard
                 });
             });
 
-            // List Ads customers
-            $('#ads-list-customers').on('click', function() {
-                var btn = $(this);
-                btn.prop('disabled', true).text('Loading...');
-                wp.apiFetch({ path: 'sseo-ai/v1/google/ads/customers' }).then(function(data) {
-                    btn.prop('disabled', false).text('<?php esc_html_e('List Available Accounts', 'ai-seo-client'); ?>');
-                    if (data.error) { alert(data.error); return; }
-                    if (!data.customers || !data.customers.length) { alert('<?php esc_html_e('No accounts found.', 'ai-seo-client'); ?>'); return; }
-                    var select = $('#ads-customer-select');
-                    select.empty().show();
-                    data.customers.forEach(function(c) {
-                        var formatted = c.substring(0, 3) + '-' + c.substring(3, 6) + '-' + c.substring(6);
-                        select.append('<option value="' + formatted + '">' + formatted + '</option>');
-                    });
-                    select.on('change', function() {
-                        $('#ads-customer-id').val($(this).val());
-                    });
-                }).catch(function(err) {
-                    btn.prop('disabled', false).text('<?php esc_html_e('List Available Accounts', 'ai-seo-client'); ?>');
-                    alert(err.message || 'Failed to list accounts');
-                });
-            });
+            // List Ads customers disabled — temporarily hidden for later stage.
+            // $('#ads-list-customers').on('click', function() {
+            //     var btn = $(this);
+            //     btn.prop('disabled', true).text('Loading...');
+            //     wp.apiFetch({ path: 'sseo-ai/v1/google/ads/customers' }).then(function(data) {
+            //         btn.prop('disabled', false).text('<?php esc_html_e('List Available Accounts', 'ai-seo-client'); ?>');
+            //         if (data.error) { alert(data.error); return; }
+            //         if (!data.customers || !data.customers.length) { alert('<?php esc_html_e('No accounts found.', 'ai-seo-client'); ?>'); return; }
+            //         var select = $('#ads-customer-select');
+            //         select.empty().show();
+            //         data.customers.forEach(function(c) {
+            //             var formatted = c.substring(0, 3) + '-' + c.substring(3, 6) + '-' + c.substring(6);
+            //             select.append('<option value="' + formatted + '">' + formatted + '</option>');
+            //         });
+            //         select.on('change', function() {
+            //             $('#ads-customer-id').val($(this).val());
+            //         });
+            //     }).catch(function(err) {
+            //         btn.prop('disabled', false).text('<?php esc_html_e('List Available Accounts', 'ai-seo-client'); ?>');
+            //         alert(err.message || 'Failed to list accounts');
+            //     });
+            // });
 
             function formatNum(n) {
                 if (!n) return '0';

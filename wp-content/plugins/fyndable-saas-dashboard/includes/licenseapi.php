@@ -243,7 +243,7 @@ class LicenseAPI
             'permission_callback' => function() { return current_user_can('manage_options'); },
             'args' => [
                 'license_key' => ['required' => true, 'type' => 'string'],
-                'features' => ['required' => true, 'type' => 'array'],
+                'features' => ['required' => true, 'type' => 'object'],
             ],
         ]);
 
