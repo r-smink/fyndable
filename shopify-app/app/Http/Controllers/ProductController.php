@@ -56,7 +56,7 @@ class ProductController extends Controller
                 return $product;
             }
 
-            $prompt = $this->buildDescriptionPrompt($product, $type, $request->input('context', ''));
+            $prompt = $this->buildDescriptionPrompt($product, $type, $request->input('context', '') ?? '');
             $messages = [
                 ['role' => 'system', 'content' => 'You are an expert e-commerce copywriter who writes SEO-optimized product descriptions.'],
                 ['role' => 'user', 'content' => $prompt],
@@ -114,7 +114,7 @@ class ProductController extends Controller
                 return $product;
             }
 
-            $prompt = $this->buildMetaPrompt($product, $request->input('context', ''));
+            $prompt = $this->buildMetaPrompt($product, $request->input('context', '') ?? '');
             $messages = [
                 ['role' => 'system', 'content' => 'You are an SEO expert. Generate a concise meta title (max 60 chars) and meta description (max 155 chars) for a product. Respond in JSON: {"title": "...", "description": "..."}'],
                 ['role' => 'user', 'content' => $prompt],
