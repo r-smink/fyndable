@@ -239,7 +239,7 @@ class ShopifyContentFetcher
             primaryDomain { url }
             myshopifyDomain
             currencyCode
-            billingAddress { country }
+            shopAddress { country }
           }
         }
         GRAPHQL;
@@ -261,7 +261,7 @@ class ShopifyContentFetcher
             'name' => $shopData['name'] ?? '',
             'domain' => $shopData['primaryDomain']['url'] ?? "https://{$shop->shop_domain}",
             'currency' => $shopData['currencyCode'] ?? 'USD',
-            'country' => $shopData['billingAddress']['country'] ?? '',
+            'country' => $shopData['shopAddress']['country'] ?? '',
         ];
     }
 
