@@ -10,7 +10,7 @@ namespace SSEOAISaaS;
  */
 class TenantRepository
 {
-    private const TENANTS_TABLE = 'sseo_ai_tenants';
+    public const TENANTS_TABLE = 'sseo_ai_tenants';
     private const TENANT_SETTINGS_TABLE = 'sseo_ai_tenant_settings';
     private const TENANT_USAGE_TABLE = 'sseo_ai_tenant_usage';
     private const LICENSE_KEYS_TABLE = 'sseo_ai_license_keys';
@@ -919,6 +919,23 @@ class TenantRepository
             ));
             if (empty($prefixCol)) {
                 $wpdb->query("ALTER TABLE $licenseTable ADD COLUMN key_prefix varchar(10) DEFAULT NULL COMMENT 'Custom prefix for agency sub-licenses' AFTER agency_tenant_id");
+            }
+        }
+        
+        // Add is_read column to support_replies table if missing (used for unread staff reply counts)
+        $repliesTable = $wpdb->prefix . self::SUPPORT_REPLIES_TABLE;
+        $repliesExists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $repliesTable));
+        if ($repliesExists) {
+            $isReadCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = %s
+                AND COLUMN_NAME = 'is_read'",
+                $repliesTable
+            ));
+            if (empty($isReadCol)) {
+                $wpdb->query("ALTER TABLE $repliesTable ADD COLUMN is_read tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Whether this staff reply has been read by the customer/agency' AFTER screenshots");
+                $wpdb->query("ALTER TABLE $repliesTable ADD KEY is_read (is_read)");
             }
         }
         
