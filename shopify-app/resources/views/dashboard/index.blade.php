@@ -274,17 +274,30 @@
         async function api(path, options = {}) {
             const url = `${API_BASE}${path}${path.includes('?') ? '&' : '?'}shop=${encodeURIComponent(shopDomain)}`;
             const fetchFn = authFetch || window.fetch;
-            const response = await fetchFn(url, {
-                ...options,
-                headers: { 'Content-Type': 'application/json', ...options.headers },
-            });
-            return response.json();
+            try {
+                const response = await fetchFn(url, {
+                    ...options,
+                    headers: { 'Content-Type': 'application/json', ...options.headers },
+                });
+                // Handle non-JSON responses (e.g. 500 HTML error pages)
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await response.text();
+                    return { error: 'server_error', message: `HTTP ${response.status}: ${text.substring(0, 200)}` };
+                }
+                return response.json();
+            } catch (e) {
+                return { error: 'request_failed', message: e.message };
+            }
         }
 
         // Overview
         async function loadOverview() {
             const data = await api('/dashboard/overview');
-            if (data.error) return;
+            if (data.error) {
+                document.getElementById('overview-stats').innerHTML = `<div class="alert error">Error: ${data.error} — ${data.message || ''}</div>`;
+                return;
+            }
             document.getElementById('overview-stats').innerHTML = `
                 <div class="stat"><div class="label">License Tier</div><div class="value purple">${data.license?.tier || 'free'}</div></div>
                 <div class="stat"><div class="label">Products</div><div class="value blue">${data.product_count}</div></div>
@@ -297,7 +310,10 @@
         // llms.txt
         async function loadLlmsTxtStatus() {
             const data = await api('/llmstxt/status');
-            if (data.error) return;
+            if (data.error) {
+                document.getElementById('llmstxt-status').innerHTML = `<div class="alert error">Error: ${data.error} — ${data.message || ''}</div>`;
+                return;
+            }
             document.getElementById('llmstxt-enabled').checked = data.enabled;
             document.getElementById('llmstxt-full-enabled').checked = data.full_enabled;
             document.getElementById('llmstxt-products').checked = data.include_products;
@@ -335,6 +351,8 @@
             if (data.success) {
                 alert('Settings saved!');
                 loadLlmsTxtStatus();
+            } else {
+                alert('Error: ' + (data.error || data.message || 'Unknown error'));
             }
         }
 
@@ -343,6 +361,8 @@
             if (data.success) {
                 alert(`Regenerated! Summary: ${(data.summary_size / 1024).toFixed(1)} KB, Full: ${(data.full_size / 1024).toFixed(1)} KB`);
                 loadLlmsTxtStatus();
+            } else {
+                alert('Error: ' + (data.error || data.message || 'Unknown error'));
             }
         }
 
@@ -351,6 +371,8 @@
             if (data.content) {
                 document.getElementById('llmstxt-preview').textContent = data.content;
                 document.getElementById('llmstxt-preview-card').style.display = 'block';
+            } else {
+                alert('Error: ' + (data.error || data.message || 'No content returned'));
             }
         }
 
