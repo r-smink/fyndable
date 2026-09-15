@@ -100,7 +100,7 @@ fun UsageScreen(viewModel: UsageViewModel = hiltViewModel()) {
 private fun UsageContent(tenants: List<UsageOverviewTenant>, modifier: Modifier) {
     val totalCalls = tenants.sumOf { it.usage.apiCalls }
     val activeTenants = tenants.size
-    val avgCost = if (activeTenants > 0) tenants.sumOf { it.usage.apiCost } / activeTenants else 0.0
+    val totalCost = tenants.sumOf { it.usage.apiCost }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -125,8 +125,8 @@ private fun UsageContent(tenants: List<UsageOverviewTenant>, modifier: Modifier)
             }
             Spacer(Modifier.height(12.dp))
             StatCard(
-                title = "Avg. AI Cost per Scan",
-                value = "€${"%,.2f".format(avgCost)}",
+                title = "Total API Cost (Month)",
+                value = "€${"%,.2f".format(totalCost)}",
                 modifier = Modifier.fillMaxWidth()
             )
         }
