@@ -66,13 +66,15 @@ class TenantRepository
             last_payment_at datetime DEFAULT NULL,
             metadata longtext DEFAULT NULL,
             parent_tenant_id bigint(20) unsigned DEFAULT NULL COMMENT 'Agency tenant ID for sub-tenants',
+            platform varchar(20) NOT NULL DEFAULT 'wordpress' COMMENT 'wordpress|shopify|webflow',
             PRIMARY KEY (id),
             UNIQUE KEY tenant_key (tenant_key),
             UNIQUE KEY license_key (license_key),
             KEY status (status),
             KEY tier (tier),
             KEY expires_at (expires_at),
-            KEY parent_tenant_id (parent_tenant_id)
+            KEY parent_tenant_id (parent_tenant_id),
+            KEY platform (platform)
         ) $charsetCollate;";
         
         // Tenant settings (override global settings)
@@ -306,6 +308,7 @@ class TenantRepository
             'expires_at' => !empty($data['expires_at']) ? $data['expires_at'] : null,
             'metadata' => !empty($data['metadata']) ? wp_json_encode($data['metadata']) : null,
             'parent_tenant_id' => !empty($data['parent_tenant_id']) ? (int)$data['parent_tenant_id'] : null,
+            'platform' => in_array($data['platform'] ?? '', ['wordpress', 'shopify', 'webflow'], true) ? $data['platform'] : 'wordpress',
         ]);
         
         if ($result === false) {
@@ -397,7 +400,7 @@ class TenantRepository
         
         $allowedFields = ['name', 'domain', 'email', 'status', 'tier', 'max_sites', 
                          'rate_limit', 'api_calls_limit', 'expires_at', 'license_key',
-                         'payment_status', 'last_payment_at', 'last_active'];
+                         'payment_status', 'last_payment_at', 'last_active', 'platform'];
         
         $update = [];
         foreach ($allowedFields as $field) {
@@ -483,6 +486,11 @@ class TenantRepository
             $params[] = $filters['tier'];
         }
         
+        if (!empty($filters['platform'])) {
+            $where[] = 'platform = %s';
+            $params[] = $filters['platform'];
+        }
+        
         if (!empty($filters['search'])) {
             $where[] = '(name LIKE %s OR email LIKE %s OR tenant_key LIKE %s)';
             $search = '%' . $wpdb->esc_like($filters['search']) . '%';
@@ -534,6 +542,20 @@ class TenantRepository
         if (!empty($filters['tier'])) {
             $where[] = 'tier = %s';
             $params[] = $filters['tier'];
+        }
+        
+        if (!empty($filters['platform'])) {
+            $where[] = 'platform = %s';
+            $params[] = $filters['platform'];
+        }
+        
+        if (!empty($filters['search'])) {
+            $where[] = '(name LIKE %s OR email LIKE %s OR tenant_key LIKE %s OR domain LIKE %s)';
+            $search = '%' . $wpdb->esc_like($filters['search']) . '%';
+            $params[] = $search;
+            $params[] = $search;
+            $params[] = $search;
+            $params[] = $search;
         }
         
         $whereClause = implode(' AND ', $where);
@@ -856,6 +878,19 @@ class TenantRepository
             if (!empty($statusCol) && strpos($statusCol[0]->COLUMN_TYPE, "'inactive'") === false) {
                 $charsetCollate = $wpdb->get_charset_collate();
                 $wpdb->query("ALTER TABLE $tenantsTable MODIFY COLUMN status enum('active','inactive','suspended','cancelled') NOT NULL DEFAULT 'active' $charsetCollate");
+            }
+
+            // Add platform column for multi-platform support (wordpress|shopify|webflow)
+            $platformCol = $wpdb->get_results($wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = %s
+                AND COLUMN_NAME = 'platform'",
+                $tenantsTable
+            ));
+            if (empty($platformCol)) {
+                $wpdb->query("ALTER TABLE $tenantsTable ADD COLUMN platform varchar(20) NOT NULL DEFAULT 'wordpress' COMMENT 'wordpress|shopify|webflow' AFTER parent_tenant_id");
+                $wpdb->query("ALTER TABLE $tenantsTable ADD KEY platform (platform)");
             }
         }
         

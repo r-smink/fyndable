@@ -113,11 +113,12 @@ class AdminApi
             'callback' => [$this, 'listTenants'],
             'permission_callback' => $perm,
             'args' => [
-                'status' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
-                'tier'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
-                'search' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
-                'limit'  => ['type' => 'integer', 'default' => 100],
-                'offset' => ['type' => 'integer', 'default' => 0],
+                'status'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tier'     => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'platform' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'search'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'limit'    => ['type' => 'integer', 'default' => 100],
+                'offset'   => ['type' => 'integer', 'default' => 0],
             ],
         ]);
 
@@ -413,9 +414,10 @@ class AdminApi
     public function listTenants(\WP_REST_Request $request): \WP_REST_Response
     {
         $filters = array_filter([
-            'status' => $request->get_param('status'),
-            'tier'   => $request->get_param('tier'),
-            'search' => $request->get_param('search'),
+            'status'   => $request->get_param('status'),
+            'tier'     => $request->get_param('tier'),
+            'search'   => $request->get_param('search'),
+            'platform' => $request->get_param('platform'),
         ]);
 
         $limit = max(1, min(500, (int) $request->get_param('limit')));

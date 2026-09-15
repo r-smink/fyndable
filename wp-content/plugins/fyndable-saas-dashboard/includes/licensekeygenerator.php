@@ -204,13 +204,21 @@ class LicenseKeyGenerator
             $metadata['reactivated_at'] = current_time('mysql');
             $metadata['license_type'] = $license['license_type'] ?? ($metadata['license_type'] ?? 'paid');
 
-            $this->tenants->updateTenant($existingTenant['tenant_key'], [
+            $updateData = [
                 'status' => 'active',
                 'last_active' => current_time('mysql'),
                 'domain' => $activationData['site_url'] ?? $existingTenant['domain'] ?? null,
                 'name' => $activationData['site_name'] ?? $existingTenant['name'] ?? null,
                 'metadata' => $metadata,
-            ]);
+            ];
+
+            // Update platform if provided (e.g. re-activating a Shopify license from a WP site)
+            $platform = $activationData['platform'] ?? '';
+            if (!empty($platform) && in_array($platform, ['wordpress', 'shopify', 'webflow'], true)) {
+                $updateData['platform'] = $platform;
+            }
+
+            $this->tenants->updateTenant($existingTenant['tenant_key'], $updateData);
             
             return [
                 'success' => true,
@@ -237,6 +245,11 @@ class LicenseKeyGenerator
         );
         
         // Create tenant for this license
+        $platform = $activationData['platform'] ?? 'wordpress';
+        if (!in_array($platform, ['wordpress', 'shopify', 'webflow'], true)) {
+            $platform = 'wordpress';
+        }
+
         $tenantResult = $this->tenants->createTenant([
             'name' => $activationData['site_name'] ?? 'Unknown Site',
             'domain' => $activationData['site_url'] ?? null,
@@ -248,6 +261,7 @@ class LicenseKeyGenerator
             'api_calls_limit' => $license['api_calls_limit'],
             'expires_at' => $expiresAt,
             'status' => 'active',
+            'platform' => $platform,
             'metadata' => [
                 'activated_from' => $activationData['site_url'] ?? 'unknown',
                 'ip_address' => $activationData['ip_address'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown',
@@ -375,53 +389,65 @@ class LicenseKeyGenerator
     {
         global $wpdb;
         $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
-        
+        $tenantsTable = $wpdb->prefix . TenantRepository::TENANTS_TABLE;
+
         $where = ['1=1'];
         $params = [];
-        
+
         if (!empty($filters['status'])) {
-            $where[] = 'status = %s';
+            $where[] = 'lk.status = %s';
             $params[] = $filters['status'];
         }
-        
+
         if (!empty($filters['type'])) {
-            $where[] = 'license_type = %s';
+            $where[] = 'lk.license_type = %s';
             $params[] = $filters['type'];
         }
-        
+
         if (!empty($filters['tier'])) {
-            $where[] = 'tier = %s';
+            $where[] = 'lk.tier = %s';
             $params[] = $filters['tier'];
         }
-        
+
         if (!empty($filters['search'])) {
-            $where[] = '(license_key LIKE %s OR assigned_to LIKE %s OR notes LIKE %s)';
+            $where[] = '(lk.license_key LIKE %s OR lk.assigned_to LIKE %s OR lk.notes LIKE %s)';
             $search = '%' . $wpdb->esc_like($filters['search']) . '%';
             $params[] = $search;
             $params[] = $search;
             $params[] = $search;
         }
-        
+
         if (!empty($filters['created_by'])) {
-            $where[] = 'created_by = %d';
+            $where[] = 'lk.created_by = %d';
             $params[] = (int)$filters['created_by'];
         }
 
         if (array_key_exists('agency_tenant_id', $filters)) {
             if ($filters['agency_tenant_id'] === null) {
-                $where[] = 'agency_tenant_id IS NULL';
+                $where[] = 'lk.agency_tenant_id IS NULL';
             } else {
-                $where[] = 'agency_tenant_id = %d';
+                $where[] = 'lk.agency_tenant_id = %d';
                 $params[] = (int)$filters['agency_tenant_id'];
             }
         }
-        
+
+        if (!empty($filters['platform'])) {
+            $where[] = 'IFNULL(t.platform, %s) = %s';
+            $params[] = 'unknown';
+            $params[] = $filters['platform'];
+        }
+
         $whereClause = implode(' AND ', $where);
-        
-        $sql = "SELECT * FROM $table WHERE $whereClause ORDER BY created_at DESC LIMIT %d OFFSET %d";
+
+        $sql = "SELECT lk.*, IFNULL(t.platform, 'unknown') AS platform
+                FROM $table AS lk
+                LEFT JOIN $tenantsTable AS t ON t.license_key = lk.license_key
+                WHERE $whereClause
+                ORDER BY lk.created_at DESC
+                LIMIT %d OFFSET %d";
         $params[] = $limit;
         $params[] = $offset;
-        
+
         return $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A) ?: [];
     }
     
@@ -432,35 +458,66 @@ class LicenseKeyGenerator
     {
         global $wpdb;
         $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
-        
+        $tenantsTable = $wpdb->prefix . TenantRepository::TENANTS_TABLE;
+
         $where = ['1=1'];
         $params = [];
-        
+
         if (!empty($filters['status'])) {
-            $where[] = 'status = %s';
+            $where[] = 'lk.status = %s';
             $params[] = $filters['status'];
         }
-        
+
         if (!empty($filters['type'])) {
-            $where[] = 'license_type = %s';
+            $where[] = 'lk.license_type = %s';
             $params[] = $filters['type'];
         }
-        
+
         if (!empty($filters['tier'])) {
-            $where[] = 'tier = %s';
+            $where[] = 'lk.tier = %s';
             $params[] = $filters['tier'];
         }
-        
-        $whereClause = implode(' AND ', $where);
-        
-        if (empty($params)) {
-            return (int)$wpdb->get_var("SELECT COUNT(*) FROM $table WHERE $whereClause");
+
+        if (!empty($filters['search'])) {
+            $where[] = '(lk.license_key LIKE %s OR lk.assigned_to LIKE %s OR lk.notes LIKE %s)';
+            $search = '%' . $wpdb->esc_like($filters['search']) . '%';
+            $params[] = $search;
+            $params[] = $search;
+            $params[] = $search;
         }
-        
-        return (int)$wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $table WHERE $whereClause",
-            $params
-        ));
+
+        if (!empty($filters['created_by'])) {
+            $where[] = 'lk.created_by = %d';
+            $params[] = (int)$filters['created_by'];
+        }
+
+        if (array_key_exists('agency_tenant_id', $filters)) {
+            if ($filters['agency_tenant_id'] === null) {
+                $where[] = 'lk.agency_tenant_id IS NULL';
+            } else {
+                $where[] = 'lk.agency_tenant_id = %d';
+                $params[] = (int)$filters['agency_tenant_id'];
+            }
+        }
+
+        if (!empty($filters['platform'])) {
+            $where[] = 'IFNULL(t.platform, %s) = %s';
+            $params[] = 'unknown';
+            $params[] = $filters['platform'];
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "SELECT COUNT(*)
+                FROM $table AS lk
+                LEFT JOIN $tenantsTable AS t ON t.license_key = lk.license_key
+                WHERE $whereClause";
+
+        if (empty($params)) {
+            return (int)$wpdb->get_var($sql);
+        }
+
+        return (int)$wpdb->get_var($wpdb->prepare($sql, $params));
     }
     
     /**
@@ -505,6 +562,7 @@ class LicenseKeyGenerator
             'by_status' => $wpdb->get_results("SELECT status, COUNT(*) as count FROM $table GROUP BY status", ARRAY_A),
             'by_type' => $wpdb->get_results("SELECT license_type, COUNT(*) as count FROM $table GROUP BY license_type", ARRAY_A),
             'by_tier' => $wpdb->get_results("SELECT tier, COUNT(*) as count FROM $table GROUP BY tier", ARRAY_A),
+            'by_platform' => $this->getLicensePlatformStats(),
             'created_today' => (int)$wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM $table WHERE DATE(created_at) = %s",
                 current_time('Y-m-d')
@@ -517,6 +575,22 @@ class LicenseKeyGenerator
     }
     
     /**
+     * Get license activation breakdown by platform (joined from tenants table).
+     */
+    public function getLicensePlatformStats(): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::LICENSE_KEYS_TABLE;
+        $tenantsTable = $wpdb->prefix . TenantRepository::TENANTS_TABLE;
+
+        return $wpdb->get_results("SELECT IFNULL(t.platform, 'unknown') AS platform, COUNT(*) as count
+            FROM $table AS lk
+            LEFT JOIN $tenantsTable AS t ON t.license_key = lk.license_key
+            WHERE lk.status IN ('used', 'active')
+            GROUP BY t.platform", ARRAY_A) ?: [];
+    }
+    
+    /**
      * Export licenses to CSV
      */
     public function exportLicenses(array $filters = []): string
@@ -526,7 +600,7 @@ class LicenseKeyGenerator
         $output = fopen('php://temp', 'r+');
         
         // Header
-        fputcsv($output, ['License Key', 'Type', 'Tier', 'Status', 'Max Sites', 'Rate Limit', 'API Limit', 
+        fputcsv($output, ['License Key', 'Type', 'Tier', 'Status', 'Platform', 'Max Sites', 'Rate Limit', 'API Limit', 
                          'Assigned To', 'Created At', 'Activated At', 'Expires At']);
         
         foreach ($licenses as $license) {
@@ -535,6 +609,7 @@ class LicenseKeyGenerator
                 $license['license_type'],
                 $license['tier'],
                 $license['status'],
+                $license['platform'] ?? 'unknown',
                 $license['max_sites'],
                 $license['rate_limit'],
                 $license['api_calls_limit'],

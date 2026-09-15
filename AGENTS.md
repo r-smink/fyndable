@@ -126,3 +126,84 @@ Caches: transient `sseo_ai_llmstxt_cache` (summary) and `sseo_ai_llmstxt_full_ca
 REST: `GET /sseo-ai/v1/llmstxt/status` and `POST /sseo-ai/v1/llmstxt/regenerate` now include `full_enabled`, `full_url`, `full_exists`, `full_size`, `selected_pages_count`.
 
 Note: the settings UI is rendered via `do_action('sseo_ai_render_llmstxt_settings')` in `renderSettingsPage()` (placed between "Social & Sharing" and "Advanced Settings").
+
+## Shopify App (Laravel 11)
+
+A separate Laravel 11 application lives in `shopify-app/` and provides the Fyndable SEO app for the Shopify platform. It reuses the SaaS dashboard (portal.fyndable.ai) for licensing, AI, and SERP — it does NOT have its own provider keys.
+
+### Stack
+- Laravel 11.56.1, PHP 8.2
+- `shopify/shopify-api` v6.1.1 (abandoned — revisit before production)
+- SQLite for local dev (switch to MySQL for production)
+- Queue jobs for bulk optimization and rank checks
+
+### Key files
+- `shopify-app/config/shopify.php` — Shopify + SaaS config
+- `shopify-app/app/Services/SaasProxyClient.php` — talks to portal.fyndable.ai (license, AI, SERP)
+- `shopify-app/app/Services/LicenseService.php` — license activation/validation (cached 1h)
+- `shopify-app/app/Services/ShopifyContentFetcher.php` — Shopify Admin GraphQL (products, collections, pages, blogs)
+- `shopify-app/app/Services/LlmsTxtGenerator.php` — generates /llms.txt and /llms-full.txt (cached 6h)
+- `shopify-app/app/Http/Controllers/AuthController.php` — Shopify OAuth install + callback
+- `shopify-app/app/Http/Controllers/WebhookController.php` — content change + app/uninstalled webhooks
+- `shopify-app/app/Http/Controllers/LlmsTxtController.php` — serves llms.txt files + settings API
+- `shopify-app/app/Http/Controllers/ProductController.php` — AI descriptions, meta, alt text, JSON-LD schema
+- `shopify-app/app/Http/Controllers/BulkOptimizerController.php` — bulk SEO optimization
+- `shopify-app/app/Http/Controllers/RankTrackerController.php` — keyword rank tracking
+- `shopify-app/app/Http/Controllers/DashboardController.php` — embedded app dashboard
+- `shopify-app/app/Http/Controllers/LicenseController.php` — license activation UI
+- `shopify-app/app/Http/Middleware/VerifyShopifySession.php` — resolves shop from query/JWT
+- `shopify-app/app/Jobs/BulkOptimizeJob.php` — background bulk optimization
+- `shopify-app/app/Jobs/CheckRankingsJob.php` — daily rank checks (scheduled 06:00 UTC)
+- `shopify-app/resources/views/dashboard/index.blade.php` — App Bridge + Polaris dashboard
+
+### Database tables (migrations in `database/migrations/`)
+- `shops` — shop_domain, access_token, scope, license_key, tenant_key, license_tier, is_installed, is_uninstalled
+- `tracked_keywords` — shop_id, keyword, url, country, language, last_position, best_position
+- `rank_history` — tracked_keyword_id, position, search_engine, result_url, serp_features, checked_at
+- `llmstxt_settings` — shop_id, enabled, full_enabled, include_products/collections/pages/blogs, max_*, description, custom_sections
+
+### Routes
+- `GET /install` — Shopify OAuth start
+- `GET /auth/callback` — OAuth callback (HMAC verified)
+- `POST /webhooks` — Shopify webhooks (HMAC verified)
+- `GET /dashboard` — embedded app UI
+- `GET /api/llms.txt` / `/api/llms-full.txt` — public llms serving (shop via query param)
+- `GET /api/dashboard/overview` — dashboard stats
+- `GET|POST /api/license/*` — license status/activate/deactivate
+- `GET|POST /api/llmstxt/*` — llms.txt settings/status/regenerate/preview
+- `POST /api/products/{id}/*` — AI description/meta/alt-text/schema generation
+- `POST /api/bulk/*` — bulk optimizer (start/progress/cancel)
+- `GET|POST|DELETE /api/rank-tracker/*` — keyword CRUD + rank check
+
+### Shopify App Proxy for llms.txt
+Shopify App Proxy serves llms.txt at `/apps/fyndable/llms.txt` (not root `/llms.txt`). The Laravel app exposes `/api/llms.txt?shop=...` which the App Proxy forwards to. A theme app extension or redirect snippet is needed for root-level serving — documented for merchants in the dashboard.
+
+### SaaS dashboard changes (Phase 7)
+- `tenantrepository.php` — added `platform` column (wordpress|shopify|webflow) to tenants table + migration in `migrateExistingTables()`
+- `licenseapi.php` — `/license/activate` now accepts `platform` parameter
+- `licensekeygenerator.php` — `activateLicense()` passes platform to createTenant/updateTenant; `getLicenses()`/`countLicenses()` join with tenants to expose `platform`; added `getLicensePlatformStats()`
+- `adminapi.php` — `/admin/tenants` now supports `platform` filter
+- `tenantrepository.php` — `getTenants()` supports platform filter; `countTenants()` supports platform + search filters; `updateTenant()` allows platform field
+- `licenseadmin.php` — Tenants and All Licenses admin pages show `Platform` column; both pages have a Platform filter; dashboard shows `Licenses by Platform` stats; licenses export includes `Platform`
+
+### Environment variables (shopify-app/.env)
+- `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` — from Shopify Partner Dashboard
+- `SHOPIFY_SCOPES` — read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects
+- `SHOPIFY_API_VERSION` — 2025-01
+- `SAAS_DASHBOARD_URL` — https://portal.fyndable.ai
+- `SAAS_API_NAMESPACE` — ai-seo-saas/v1
+
+### Known issues / TODO before production
+- `shopify/shopify-api` v6.1.1 is abandoned — consider `shopify/shopify-app-php`
+- Composer security advisories were disabled during install — run `composer audit` and fix advisories
+- No test suite yet — needs OAuth, webhook, GraphQL, llms, and SaaS proxy tests
+- Queue worker must be running for bulk optimization and rank checks (`php artisan queue:work`)
+- Scheduler must be running for daily rank checks (`php artisan schedule:run` via cron)
+- App Proxy path is `/apps/fyndable/llms.txt` — configure App Proxy + theme app extension in Shopify Partner Dashboard
+- SaaS platform filter shows `unknown` for licenses that have not been activated yet
+
+### Security hardening completed
+- `ShopifySignature` service verifies OAuth callback HMAC without URL-encoding values (per Shopify spec)
+- `ShopifySignature` verifies webhook HMAC over raw request body
+- `VerifyShopifySession` verifies App Bridge session tokens via JWKS from `https://{shop}/.well-known/jwks.json` using `firebase/php-jwt` v7
+

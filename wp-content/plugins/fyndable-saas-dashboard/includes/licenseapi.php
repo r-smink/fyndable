@@ -68,6 +68,14 @@ class LicenseAPI
                     'type' => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
+                'platform' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function ($v) {
+                        return in_array(strtolower($v), ['wordpress', 'shopify', 'webflow', ''], true);
+                    },
+                ],
             ],
         ]);
 
@@ -390,10 +398,12 @@ class LicenseAPI
         $licenseKey = $request->get_param('license_key');
         $siteUrl = $request->get_param('site_url');
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
+        $platform = $request->get_param('platform') ?: 'wordpress';
 
         error_log('SSEO AI Dashboard: License activation request received');
         error_log('SSEO AI Dashboard: License Key: ' . substr($licenseKey, 0, 15) . '...');
         error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
+        error_log('SSEO AI Dashboard: Platform: ' . $platform);
 
         // Get client IP
         $ipAddress = $this->getClientIp();
@@ -402,6 +412,7 @@ class LicenseAPI
             'site_url' => $siteUrl,
             'site_name' => $siteName,
             'ip_address' => $ipAddress,
+            'platform' => $platform,
         ];
 
         $result = $this->licenseGenerator->activateLicense($licenseKey, $activationData);
