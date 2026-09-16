@@ -1,0 +1,4 @@
+{
+  "name": "Fyndable SEO schema",
+  "description": "Outputs the JSON-LD schema saved by Fyndable SEO as a product/collection/page/article metafield."
+}
