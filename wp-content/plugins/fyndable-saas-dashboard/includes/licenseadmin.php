@@ -837,7 +837,8 @@ class LicenseAdmin
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
                     $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
                     $onboardingCompletedAt = $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed_at', '');
-                    $apiCallsCheck = $limits['checks']['api_calls'] ?? ['exceeded' => false, 'limit' => (int) ($tenant['api_calls_limit'] ?? 0)];
+                    $limitsChecks = $limits['checks'] ?? [];
+                    $apiCallsCheck = $limitsChecks['api_calls'] ?? ['exceeded' => false, 'limit' => (int) ($tenant['api_calls_limit'] ?? 0)];
                 ?>
                 <div class="sseo-ai-card tenant-usage-card">
                     <h3><?php echo esc_html($tenant['name']); ?></h3>
@@ -857,8 +858,8 @@ class LicenseAdmin
                     <div class="usage-stats">
                         <div class="usage-stat">
                             <span class="usage-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></span>
-                            <span class="usage-value <?php echo $apiCallsCheck['exceeded'] ? 'exceeded' : ''; ?>">
-                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($apiCallsCheck['limit']); ?>
+                            <span class="usage-value <?php echo !empty($apiCallsCheck['exceeded']) ? 'exceeded' : ''; ?>">
+                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($apiCallsCheck['limit'] ?? 0); ?>
                             </span>
                         </div>
                         
