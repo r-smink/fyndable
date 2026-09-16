@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'shopify.session' => VerifyShopifySession::class,
         ]);
+        // Shopify webhooks are POST requests from Shopify servers without a
+        // CSRF token — exclude them from Laravel's VerifyCsrfToken middleware.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks',
+            'webhooks/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

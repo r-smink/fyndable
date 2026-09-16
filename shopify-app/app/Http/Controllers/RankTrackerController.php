@@ -127,9 +127,10 @@ class RankTrackerController extends Controller
             return ['error' => 'license_inactive'];
         }
 
-        CheckRankingsJob::dispatch($shop->id);
+        // Run synchronously so no queue worker is needed
+        CheckRankingsJob::dispatchSync($shop->id);
 
-        return ['success' => true, 'message' => 'Rank check started.'];
+        return ['success' => true, 'message' => 'Rank check completed.'];
     }
 
     /**

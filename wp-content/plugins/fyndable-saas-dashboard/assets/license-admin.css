@@ -935,6 +935,31 @@ body[class*="sseo-ai"] {
     color: #fff;
 }
 
+/* Platform badges */
+.badge-platform-wordpress {
+    background: var(--sseo-blue-light);
+    color: var(--sseo-blue);
+}
+
+.badge-platform-shopify {
+    background: var(--sseo-success-light);
+    color: var(--sseo-success);
+}
+
+.badge-platform-webflow {
+    background: var(--sseo-purple-light);
+    color: var(--sseo-purple);
+}
+
+.badge-platform-unknown {
+    background: var(--sseo-gray-100);
+    color: var(--sseo-gray-500);
+}
+
+.sseo-ai-license-admin .tenant-platform {
+    margin: 0 0 10px 0;
+}
+
 /* Generated licenses */
 .sseo-ai-license-admin .generated-licenses {
     background: var(--sseo-success-light);

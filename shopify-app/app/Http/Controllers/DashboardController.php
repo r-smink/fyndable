@@ -55,33 +55,43 @@ class DashboardController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
-        $licenseStatus = $this->license->validate($shop);
+        try {
+            $licenseStatus = $this->license->validate($shop);
 
-        // Get product count
-        $productCount = $this->fetcher->getProductCount($shop);
+            // Get product count
+            $productCount = $this->fetcher->getProductCount($shop);
 
-        // Get tracked keyword stats
-        $keywordCount = TrackedKeyword::where('shop_id', $shop->id)->count();
-        $top10 = TrackedKeyword::where('shop_id', $shop->id)
-            ->whereNotNull('last_position')
-            ->where('last_position', '<=', 10)
-            ->count();
+            // Get tracked keyword stats
+            $keywordCount = TrackedKeyword::where('shop_id', $shop->id)->count();
+            $top10 = TrackedKeyword::where('shop_id', $shop->id)
+                ->whereNotNull('last_position')
+                ->where('last_position', '<=', 10)
+                ->count();
 
-        // llms.txt status
-        $llmsSettings = LlmsTxtSettings::getForShop($shop->id);
+            // llms.txt status
+            $llmsSettings = LlmsTxtSettings::getForShop($shop->id);
 
-        return [
-            'shop' => [
-                'domain' => $shop->shop_domain,
-                'name' => $shop->shop_name,
-                'currency' => $shop->currency,
-            ],
-            'license' => $licenseStatus,
-            'product_count' => $productCount,
-            'tracked_keywords' => $keywordCount,
-            'top_10_keywords' => $top10,
-            'llms_txt_enabled' => $llmsSettings->enabled,
-            'llms_txt_full_enabled' => $llmsSettings->full_enabled,
-        ];
+            return [
+                'shop' => [
+                    'domain' => $shop->shop_domain,
+                    'name' => $shop->shop_name,
+                    'currency' => $shop->currency,
+                ],
+                'license' => $licenseStatus,
+                'product_count' => $productCount,
+                'tracked_keywords' => $keywordCount,
+                'top_10_keywords' => $top10,
+                'llms_txt_enabled' => $llmsSettings->enabled,
+                'llms_txt_full_enabled' => $llmsSettings->full_enabled,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('DashboardController::overview failed', [
+                'shop_id' => $shop->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return ['error' => 'overview_failed', 'message' => $e->getMessage()];
+        }
     }
 }

@@ -649,7 +649,7 @@ class LicenseAdmin
                         <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
                         <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
                         <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
-                        <td><?php echo esc_html(ucfirst($license['platform'] ?? 'Unknown')); ?></td>
+                        <td><span class="badge badge-platform-<?php echo esc_attr($license['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($license['platform'] ?? 'Unknown')); ?></span></td>
                         <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
@@ -837,10 +837,12 @@ class LicenseAdmin
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
                     $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
                     $onboardingCompletedAt = $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed_at', '');
+                    $apiCallsCheck = $limits['checks']['api_calls'] ?? ['exceeded' => false, 'limit' => (int) ($tenant['api_calls_limit'] ?? 0)];
                 ?>
                 <div class="sseo-ai-card tenant-usage-card">
                     <h3><?php echo esc_html($tenant['name']); ?></h3>
                     <p class="tenant-domain"><?php echo esc_html($tenant['domain'] ?: 'No domain'); ?></p>
+                    <p class="tenant-platform"><span class="badge badge-platform-<?php echo esc_attr($tenant['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($tenant['platform'] ?? 'Unknown')); ?></span></p>
                     <p class="tenant-onboarding" style="font-size:12px;color:#666;">
                         <?php if ($onboardingCompleted): ?>
                             <span style="color:#00a32a;">&#10003; <?php esc_html_e('Wizard completed', 'sseo-ai-saas'); ?></span>
@@ -855,8 +857,8 @@ class LicenseAdmin
                     <div class="usage-stats">
                         <div class="usage-stat">
                             <span class="usage-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></span>
-                            <span class="usage-value <?php echo $limits['checks']['api_calls']['exceeded'] ? 'exceeded' : ''; ?>">
-                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($limits['checks']['api_calls']['limit']); ?>
+                            <span class="usage-value <?php echo $apiCallsCheck['exceeded'] ? 'exceeded' : ''; ?>">
+                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($apiCallsCheck['limit']); ?>
                             </span>
                         </div>
                         
