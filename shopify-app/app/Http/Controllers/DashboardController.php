@@ -37,9 +37,13 @@ class DashboardController extends Controller
             abort(400, 'Invalid or missing shop parameter.');
         }
 
-        return view('dashboard.index', [
+        return response(view('dashboard.index', [
             'apiKey' => config('shopify.api_key'),
             'shopDomain' => $shopDomain,
+        ]), 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
         ]);
     }
 
