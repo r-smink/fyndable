@@ -20,6 +20,7 @@ class BulkOptimizeJobTest extends TestCase
         return Shop::create([
             'shop_domain' => 'test-shop.myshopify.com',
             'access_token' => 'shpat_test',
+            'token_expires_at' => now()->addHour(),
             'license_key' => 'FYND-TEST',
             'tenant_key' => 'tenant-test',
             'is_installed' => true,

@@ -91,6 +91,14 @@ class AuthController extends Controller
         $shop = Shop::firstOrCreate(['shop_domain' => $shopDomain]);
         $shop->access_token = $accessToken;
         $shop->scope = $tokenData['scope'] ?? '';
+
+        // The code grant may return an expiring offline token (with a refresh
+        // token); store those when present. A null token_expires_at marks a
+        // legacy non-expiring token — the next session request exchanges it.
+        $expiresIn = (int) ($tokenData['expires_in'] ?? 0);
+        $shop->token_expires_at = $expiresIn > 0 ? now()->addSeconds($expiresIn) : null;
+        $shop->refresh_token = $tokenData['refresh_token'] ?? null;
+
         $shop->is_installed = true;
         $shop->is_uninstalled = false;
         $shop->save();
@@ -116,7 +124,7 @@ class AuthController extends Controller
     /**
      * Exchange the OAuth code for a permanent access token.
      *
-     * @return array{access_token: ?string, scope: string}|null
+     * @return array{access_token: ?string, scope: string, expires_in: mixed, refresh_token: ?string}|null
      */
     private function exchangeCodeForToken(string $shopDomain, string $code): ?array
     {
@@ -146,6 +154,8 @@ class AuthController extends Controller
         return [
             'access_token' => $response->json('access_token'),
             'scope' => (string) $response->json('scope', ''),
+            'expires_in' => $response->json('expires_in'),
+            'refresh_token' => $response->json('refresh_token'),
         ];
     }
 

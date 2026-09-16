@@ -29,6 +29,7 @@ class VerifyShopifySessionTest extends TestCase
         Shop::create([
             'shop_domain' => self::SHOP,
             'access_token' => 'shpat_test',
+            'token_expires_at' => now()->addHour(),
             'is_installed' => true,
             'is_uninstalled' => false,
         ]);

@@ -14,6 +14,8 @@ class Shop extends Model
     protected $fillable = [
         'shop_domain',
         'access_token',
+        'refresh_token',
+        'token_expires_at',
         'scope',
         'license_key',
         'tenant_key',
@@ -29,12 +31,14 @@ class Shop extends Model
 
     protected $hidden = [
         'access_token',
+        'refresh_token',
     ];
 
     protected $casts = [
         'is_installed' => 'boolean',
         'is_uninstalled' => 'boolean',
         'license_validated_at' => 'datetime',
+        'token_expires_at' => 'datetime',
     ];
 
     public function trackedKeywords(): HasMany
@@ -63,6 +67,21 @@ class Shop extends Model
     public function hasAccessToken(): bool
     {
         return ! empty($this->access_token);
+    }
+
+    /**
+     * Whether the stored token can call the Admin API right now.
+     *
+     * Shopify rejects non-expiring offline tokens, so only tokens minted via
+     * token exchange (which carry an expiry) count as usable. A null
+     * token_expires_at marks a legacy token that must be exchanged or
+     * refreshed first.
+     */
+    public function hasUsableToken(): bool
+    {
+        return ! empty($this->access_token)
+            && $this->token_expires_at !== null
+            && $this->token_expires_at->isFuture();
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Shop;
 use App\Services\ShopifySignature;
+use App\Services\ShopifyTokenService;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,6 +57,13 @@ class VerifyShopifySession
 
         if (! $shop->is_installed || $shop->is_uninstalled) {
             return response()->json(['error' => 'shop_not_installed'], 403);
+        }
+
+        // Shopify rejects non-expiring offline tokens. While a merchant
+        // session is active, swap the verified ID token for a fresh expiring
+        // access token whenever the stored one is missing or expired.
+        if (! $shop->hasUsableToken()) {
+            app(ShopifyTokenService::class)->exchange($shop, $token);
         }
 
         $request->attributes->set('shop', $shop);

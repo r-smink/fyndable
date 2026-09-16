@@ -54,9 +54,14 @@ class ShopifyUrlRedirect
 
     private function findRedirect(Shop $shop, string $base, string $path): ?array
     {
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
+            return null;
+        }
+
         $response = Http::timeout(15)
             ->withHeaders([
-                'X-Shopify-Access-Token' => $shop->access_token,
+                'X-Shopify-Access-Token' => $accessToken,
                 'Content-Type' => 'application/json',
             ])
             ->get("{$base}/redirects.json", ['path' => $path, 'limit' => 1]);
@@ -80,9 +85,14 @@ class ShopifyUrlRedirect
 
     private function createRedirect(Shop $shop, string $base, string $path, string $target): array
     {
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
+            return ['path' => $path, 'status' => 'error', 'message' => 'no usable access token'];
+        }
+
         $response = Http::timeout(15)
             ->withHeaders([
-                'X-Shopify-Access-Token' => $shop->access_token,
+                'X-Shopify-Access-Token' => $accessToken,
                 'Content-Type' => 'application/json',
             ])
             ->post("{$base}/redirects.json", [
@@ -118,9 +128,14 @@ class ShopifyUrlRedirect
 
     private function updateRedirect(Shop $shop, string $base, int $id, string $path, string $target): array
     {
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
+            return ['path' => $path, 'status' => 'error', 'message' => 'no usable access token'];
+        }
+
         $response = Http::timeout(15)
             ->withHeaders([
-                'X-Shopify-Access-Token' => $shop->access_token,
+                'X-Shopify-Access-Token' => $accessToken,
                 'Content-Type' => 'application/json',
             ])
             ->put("{$base}/redirects/{$id}.json", [

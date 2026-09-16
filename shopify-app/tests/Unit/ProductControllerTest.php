@@ -23,6 +23,7 @@ class ProductControllerTest extends TestCase
         return Shop::create(array_merge([
             'shop_domain' => 'test-shop.myshopify.com',
             'access_token' => 'shpat_test',
+            'token_expires_at' => now()->addHour(),
             'license_key' => 'FYND-TEST',
             'tenant_key' => 'tenant-test',
             'scope' => 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy',

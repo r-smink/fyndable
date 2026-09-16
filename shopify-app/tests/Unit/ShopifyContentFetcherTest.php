@@ -21,6 +21,7 @@ class ShopifyContentFetcherTest extends TestCase
         $shop = Shop::create([
             'shop_domain' => 'test-shop.myshopify.com',
             'access_token' => 'shpat_test',
+            'token_expires_at' => now()->addHour(),
             'is_installed' => true,
             'is_uninstalled' => false,
         ]);
@@ -53,6 +54,7 @@ class ShopifyContentFetcherTest extends TestCase
         $shop = Shop::create([
             'shop_domain' => 'test-shop.myshopify.com',
             'access_token' => 'shpat_test',
+            'token_expires_at' => now()->addHour(),
             'is_installed' => true,
             'is_uninstalled' => false,
         ]);
@@ -90,6 +92,7 @@ class ShopifyContentFetcherTest extends TestCase
         $shop = Shop::create([
             'shop_domain' => 'test-shop.myshopify.com',
             'access_token' => 'shpat_test',
+            'token_expires_at' => now()->addHour(),
             'is_installed' => true,
             'is_uninstalled' => false,
         ]);

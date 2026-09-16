@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Shop;
 use App\Services\SaasProxyClient;
+use App\Services\ShopifyTokenService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -310,12 +311,17 @@ class BulkOptimizeJob implements ShouldQueue
         }
         GRAPHQL;
 
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
+            return null;
+        }
+
         $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
 
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'X-Shopify-Access-Token' => $accessToken,
                     'Content-Type' => 'application/json',
                 ])
                 ->post($endpoint, [
@@ -350,12 +356,17 @@ class BulkOptimizeJob implements ShouldQueue
         }
         GRAPHQL;
 
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
+            return false;
+        }
+
         $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
 
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'X-Shopify-Access-Token' => $accessToken,
                     'Content-Type' => 'application/json',
                 ])
                 ->post($endpoint, [
@@ -397,12 +408,17 @@ class BulkOptimizeJob implements ShouldQueue
         }
         GRAPHQL;
 
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
+            return false;
+        }
+
         $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
 
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'X-Shopify-Access-Token' => $accessToken,
                     'Content-Type' => 'application/json',
                 ])
                 ->post($endpoint, [

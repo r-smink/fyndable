@@ -481,7 +481,8 @@ class ShopifyContentFetcher
      */
     private function graphql(Shop $shop, string $query, array $variables = []): array
     {
-        if (! $shop->hasAccessToken()) {
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
             return ['error' => 'no_access_token'];
         }
 
@@ -490,7 +491,7 @@ class ShopifyContentFetcher
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'X-Shopify-Access-Token' => $accessToken,
                     'Content-Type' => 'application/json',
                 ])
                 ->post($endpoint, [
@@ -498,7 +499,7 @@ class ShopifyContentFetcher
                     // Shopify expects variables as a JSON object ({}, not []).
                     // Empty PHP array [] encodes to [] in JSON, which Shopify
                     // rejects with "Invalid variables parameter."
-                    'variables' => empty($variables) ? new \stdClass() : $variables,
+                    'variables' => empty($variables) ? new \stdClass : $variables,
                 ]);
         } catch (ConnectionException $e) {
             Log::error('ShopifyContentFetcher: HTTP error', ['error' => $e->getMessage()]);

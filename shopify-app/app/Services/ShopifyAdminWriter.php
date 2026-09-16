@@ -235,7 +235,8 @@ class ShopifyAdminWriter
      */
     private function graphql(Shop $shop, string $query, array $variables = []): array
     {
-        if (! $shop->hasAccessToken()) {
+        $accessToken = app(ShopifyTokenService::class)->tokenFor($shop);
+        if ($accessToken === null) {
             return ['error' => 'no_access_token'];
         }
 
@@ -244,7 +245,7 @@ class ShopifyAdminWriter
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'X-Shopify-Access-Token' => $accessToken,
                     'Content-Type' => 'application/json',
                 ])
                 ->post($endpoint, [
