@@ -87,6 +87,15 @@ class Shop extends Model
         $required = array_filter(array_map('trim', explode(',', (string) config('shopify.scopes'))));
         $granted = array_filter(array_map('trim', explode(',', (string) $this->scope)));
 
-        return array_values(array_diff($required, $granted));
+        // Shopify treats write_X as implying read_X: accessScopes reports only
+        // write_products even though the token can also read products. Count
+        // the implied read scopes as granted.
+        $impliedReads = array_map(
+            fn (string $scope) => 'read_'.substr($scope, 6),
+            array_filter($granted, fn (string $scope) => str_starts_with($scope, 'write_'))
+        );
+        $effective = array_merge($granted, $impliedReads);
+
+        return array_values(array_diff($required, $effective));
     }
 }
