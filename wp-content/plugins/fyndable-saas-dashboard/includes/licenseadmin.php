@@ -176,6 +176,17 @@ class LicenseAdmin
     /**
      * Render license dashboard
      */
+    private function licenseStatusLabel(string $status): string
+    {
+        $labels = [
+            'active'  => __('Active', 'sseo-ai-saas'),
+            'used'    => __('Connected', 'sseo-ai-saas'),
+            'revoked' => __('Revoked', 'sseo-ai-saas'),
+            'expired' => __('Expired', 'sseo-ai-saas'),
+        ];
+        return $labels[$status] ?? ucfirst($status);
+    }
+
     public function renderLicenseDashboard(): void
     {
         $stats = $this->licenseGenerator->getLicenseStats();
@@ -235,7 +246,7 @@ class LicenseAdmin
                         <tbody>
                             <?php foreach ($stats['by_status'] as $row): ?>
                             <tr>
-                                <td><?php echo esc_html(ucfirst($row['status'])); ?></td>
+                                <td><?php echo esc_html($this->licenseStatusLabel($row['status'])); ?></td>
                                 <td><?php echo number_format($row['count']); ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -304,7 +315,7 @@ class LicenseAdmin
                             <td><code><?php echo esc_html(substr($license['license_key'], 0, 20) . '...'); ?></code></td>
                             <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
                             <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                            <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
+                            <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
                             <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                             <td><?php echo esc_html(human_time_diff(strtotime($license['created_at']), current_time('timestamp')) . ' ago'); ?></td>
                         </tr>
@@ -586,7 +597,7 @@ class LicenseAdmin
                     <select name="status">
                         <option value=""><?php esc_html_e('All Statuses', 'sseo-ai-saas'); ?></option>
                         <option value="active" <?php selected($filters['status'], 'active'); ?>><?php esc_html_e('Active', 'sseo-ai-saas'); ?></option>
-                        <option value="used" <?php selected($filters['status'], 'used'); ?>><?php esc_html_e('Used', 'sseo-ai-saas'); ?></option>
+                        <option value="used" <?php selected($filters['status'], 'used'); ?>><?php esc_html_e('Connected', 'sseo-ai-saas'); ?></option>
                         <option value="revoked" <?php selected($filters['status'], 'revoked'); ?>><?php esc_html_e('Revoked', 'sseo-ai-saas'); ?></option>
                         <option value="expired" <?php selected($filters['status'], 'expired'); ?>><?php esc_html_e('Expired', 'sseo-ai-saas'); ?></option>
                     </select>
@@ -653,7 +664,7 @@ class LicenseAdmin
                         <td><code class="license-key"><?php echo esc_html($license['license_key']); ?></code></td>
                         <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
                         <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                        <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
+                        <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
                         <td><span class="badge badge-platform-<?php echo esc_attr($license['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($license['platform'] ?? 'Unknown')); ?></span></td>
                         <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>

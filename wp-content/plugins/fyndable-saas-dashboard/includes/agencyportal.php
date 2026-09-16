@@ -37,6 +37,17 @@ class AgencyPortal
         $this->paymentProcessor = $paymentProcessor;
     }
 
+    private function licenseStatusLabel(string $status): string
+    {
+        $labels = [
+            'active'  => __('Active', 'sseo-ai-saas'),
+            'used'    => __('Connected', 'sseo-ai-saas'),
+            'revoked' => __('Revoked', 'sseo-ai-saas'),
+            'expired' => __('Expired', 'sseo-ai-saas'),
+        ];
+        return $labels[$status] ?? ucfirst($status);
+    }
+
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenu']);
@@ -676,7 +687,7 @@ class AgencyPortal
                                 <tr>
                                     <td><code><?php echo esc_html($license['license_key']); ?></code></td>
                                     <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                                    <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
+                                    <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
                                     <td><?php echo esc_html($license['max_sites']); ?></td>
                                     <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                                     <td><?php echo esc_html($license['key_prefix'] ?: '-'); ?></td>

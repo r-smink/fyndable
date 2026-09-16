@@ -608,7 +608,7 @@ class LicenseKeyGenerator
                 $license['license_key'],
                 $license['license_type'],
                 $license['tier'],
-                $license['status'],
+                $license['status'] === 'used' ? 'connected' : $license['status'],
                 $license['platform'] ?? 'unknown',
                 $license['max_sites'],
                 $license['rate_limit'],
