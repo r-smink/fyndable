@@ -54,11 +54,13 @@ class CheckRankingsJob implements ShouldQueue
 
         foreach ($keywords as $tracked) {
             try {
+                $targetUrl = $tracked->url ?: "https://{$shop->shop_domain}";
+
                 $result = $saas->serpRankCheck(
                     $shop->license_key,
                     $shop->tenant_key,
                     $tracked->keyword,
-                    $tracked->url ?? '',
+                    $targetUrl,
                     $tracked->country,
                     $tracked->language
                 );
@@ -66,7 +68,10 @@ class CheckRankingsJob implements ShouldQueue
                 if (isset($result['error'])) {
                     Log::warning('CheckRankingsJob: rank check failed', [
                         'keyword' => $tracked->keyword,
+                        'target_url' => $targetUrl,
                         'error' => $result['error'],
+                        'status' => $result['status'] ?? null,
+                        'message' => $result['message'] ?? null,
                     ]);
 
                     continue;

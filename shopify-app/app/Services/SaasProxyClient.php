@@ -210,7 +210,17 @@ class SaasProxyClient
         }
 
         if ($response->failed()) {
-            return ['error' => 'serp_failed', 'status' => $response->status()];
+            $body = $response->json() ?? [];
+            Log::error('SaasProxyClient: SERP rank-check failed', [
+                'status' => $response->status(),
+                'body' => mb_substr($response->body(), 0, 500),
+            ]);
+
+            return [
+                'error' => 'serp_failed',
+                'status' => $response->status(),
+                'message' => $body['message'] ?? $body['error'] ?? null,
+            ];
         }
 
         return $response->json();
