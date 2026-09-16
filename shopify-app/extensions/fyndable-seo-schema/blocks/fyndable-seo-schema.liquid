@@ -1,6 +1,17 @@
-{% if product.metafields.fyndable.product_schema.value %}
+{% assign fyndable_schema = nil %}
+{% if product and product.metafields.fyndable.product_schema.value %}
+  {% assign fyndable_schema = product.metafields.fyndable.product_schema.value %}
+{% elsif collection and collection.metafields.fyndable.collection_schema.value %}
+  {% assign fyndable_schema = collection.metafields.fyndable.collection_schema.value %}
+{% elsif page and page.metafields.fyndable.page_schema.value %}
+  {% assign fyndable_schema = page.metafields.fyndable.page_schema.value %}
+{% elsif article and article.metafields.fyndable.article_schema.value %}
+  {% assign fyndable_schema = article.metafields.fyndable.article_schema.value %}
+{% endif %}
+
+{% if fyndable_schema %}
 <script type="application/ld+json">
-  {{ product.metafields.fyndable.product_schema.value | json }}
+  {{ fyndable_schema | json }}
 </script>
 {% endif %}
 

@@ -87,6 +87,8 @@ class DashboardController extends Controller
                 'top_10_keywords' => $top10,
                 'llms_txt_enabled' => $llmsSettings->enabled,
                 'llms_txt_full_enabled' => $llmsSettings->full_enabled,
+                'missing_scopes' => $shop->missingScopes(),
+                'reauth_url' => '/install?shop='.urlencode($shop->shop_domain),
             ];
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('DashboardController::overview failed', [

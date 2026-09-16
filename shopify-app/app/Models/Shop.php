@@ -72,4 +72,21 @@ class Shop extends Model
     {
         return ! empty($this->license_key) && ! empty($this->tenant_key);
     }
+
+    /**
+     * Access scopes required by the app but missing from the stored token.
+     *
+     * With the legacy install flow a token keeps the scopes it was granted at
+     * install time. When the app adds scopes later, existing installs must
+     * re-authorize — until then the affected Admin API calls fail.
+     *
+     * @return array<int, string>
+     */
+    public function missingScopes(): array
+    {
+        $required = array_filter(array_map('trim', explode(',', (string) config('shopify.scopes'))));
+        $granted = array_filter(array_map('trim', explode(',', (string) $this->scope)));
+
+        return array_values(array_diff($required, $granted));
+    }
 }

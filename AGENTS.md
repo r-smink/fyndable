@@ -168,12 +168,24 @@ A separate Laravel 11 application lives in `shopify-app/` and provides the Fynda
 - `POST /webhooks` — Shopify webhooks (HMAC verified)
 - `GET /dashboard` — embedded app UI
 - `GET /api/llms.txt` / `/api/llms-full.txt` — public llms serving (shop via query param)
-- `GET /api/dashboard/overview` — dashboard stats
+- `GET /api/dashboard/overview` — dashboard stats (incl. `missing_scopes` + `reauth_url`)
 - `GET|POST /api/license/*` — license status/activate/deactivate
 - `GET|POST /api/llmstxt/*` — llms.txt settings/status/regenerate/preview
-- `POST /api/products/{id}/*` — AI description/meta/alt-text/schema generation
+- `GET /api/content/{type}` — list/search products|collections|pages|articles (search, limit)
+- `GET /api/content/{type}/{id}` — item detail for the editor (meta, body, schema, images)
+- `POST /api/content/{type}/{id}/generate-*` — AI meta/description + deterministic schema preview
+- `POST /api/content/{type}/{id}/save-*` — save meta/description/schema (per-type write-scope check)
+- `POST /api/products/{id}/*` — product-only extras: alt-text, push-all (write_products scope middleware)
 - `POST /api/bulk/*` — bulk optimizer (start/progress/cancel)
 - `GET|POST|DELETE /api/rank-tracker/*` — keyword CRUD + rank check
+
+### Content SEO editor (2026-09-16)
+- `ContentController` — generic `/api/content/{type}/{id}/*` for collection/page/article; delegates product calls to `ProductController`.
+- `ShopifyAdminWriter` — all Admin GraphQL mutations; returns `?string` error so real `userErrors` reach the UI. Alt text via `fileUpdate` (not productUpdate — that mutation can't edit existing media).
+- `ShopifyContentFetcher::search()` / `getNode()` — per-type search (`query:` arg) + `node(id:)` detail fetch.
+- `Shop::missingScopes()` + `shopify.scope` middleware + `missing_scopes` in overview — detects stale tokens (legacy install flow keeps install-time scopes) and points to `/install?shop=...` for re-auth.
+- Schemas: `generate-schema` = preview only; `save-schema` writes the (user-editable) JSON to `fyndable.{type}_schema` metafield (json type). Non-product meta saved via `global.title_tag`/`global.description_tag` metafields.
+- Theme extension block renders schema metafields for product/collection/page/article.
 
 ### Shopify App Proxy for llms.txt
 Shopify App Proxy serves llms.txt at `/apps/fyndable/llms.txt` (not root `/llms.txt`). The Laravel app exposes `/api/llms.txt?shop=...` which the App Proxy forwards to. A theme app extension or redirect snippet is needed for root-level serving — documented for merchants in the dashboard.

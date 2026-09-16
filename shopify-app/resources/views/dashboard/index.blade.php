@@ -62,7 +62,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('overview')">Overview</button>
             <button class="tab" onclick="showTab('llmstxt')">llms.txt</button>
-            <button class="tab" onclick="showTab('products')">Products</button>
+            <button class="tab" onclick="showTab('content')">Content</button>
             <button class="tab" onclick="showTab('bulk')">Bulk Optimize</button>
             <button class="tab" onclick="showTab('ranktracker')">Rank Tracker</button>
             <button class="tab" onclick="showTab('license')">License</button>
@@ -132,38 +132,91 @@
             </div>
         </div>
 
-        <!-- Products Tab -->
-        <div id="products" class="tab-content">
+        <!-- Content Tab -->
+        <div id="content" class="tab-content">
             <div class="card">
-                <h2>Product SEO</h2>
+                <h2>Content SEO</h2>
                 <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Generate AI-powered product descriptions, meta tags, image alt text, and JSON-LD schema. Review and push to Shopify.
+                    Generate AI-powered descriptions, meta tags, image alt text, and JSON-LD schema
+                    for products, collections, pages and blog articles. Review, edit and save to Shopify.
                 </p>
-                <div class="form-group">
-                    <label for="product-id">Product ID (Shopify GID or numeric ID)</label>
-                    <input type="text" id="product-id" placeholder="e.g. 123456789">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="content-type">Content type</label>
+                        <select id="content-type" onchange="onContentTypeChange()" style="min-width: 160px;">
+                            <option value="product">Products</option>
+                            <option value="collection">Collections</option>
+                            <option value="page">Pages</option>
+                            <option value="article">Blog articles</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 220px;">
+                        <label for="content-search">Search</label>
+                        <input type="text" id="content-search" placeholder="Search by title..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchContent();}">
+                    </div>
+                    <button class="btn secondary" onclick="searchContent()">Search</button>
                 </div>
-                <div class="form-group">
-                    <label for="product-context">Additional context (optional — keywords, target audience, tone, brand guidelines)</label>
-                    <textarea id="product-context" rows="3" placeholder="e.g. Target audience: outdoor enthusiasts. Tone: adventurous and eco-friendly. Focus on sustainability and durability."></textarea>
+                <div class="form-group" style="margin-top: 12px;">
+                    <select id="content-list" size="6" onchange="onContentSelect()" style="width: 100%;"></select>
                 </div>
-                <button class="btn" onclick="generateDescription('long')">Generate Description</button>
-                <button class="btn secondary" onclick="generateDescription('short')">Short Description</button>
-                <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
-                <button class="btn secondary" onclick="generateSchema()">Generate Schema</button>
-                <div id="product-schema" class="preview" style="margin-top: 10px; display: none;"></div>
-                <button class="btn secondary" onclick="pushSchema()" style="margin-top: 10px;">Save Schema to Shopify</button>
+                <div id="content-empty" style="color: #637381; font-size: 13px;">Select an item to load the editor.</div>
 
-                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                    <button class="btn" onclick="pushAll()">Push All to Shopify</button>
-                    <label style="margin-left: 10px; font-size: 13px;"><input type="checkbox" id="product-overwrite"> Overwrite existing product content</label>
-                </div>
+                <div id="content-editor" style="display: none;">
+                    <div id="content-selected" style="margin: 15px 0; font-weight: 600;"></div>
+                    <div class="form-group">
+                        <label for="product-context">Additional context for AI (optional — keywords, target audience, tone)</label>
+                        <textarea id="product-context" rows="2" placeholder="e.g. Target audience: outdoor enthusiasts. Tone: adventurous and eco-friendly."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <button class="btn secondary" onclick="generateDescription('long')">Generate Description</button>
+                        <button class="btn secondary" onclick="generateDescription('short')">Short Description</button>
+                        <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
+                        <button class="btn secondary" onclick="generateSchema()">Generate Schema</button>
+                    </div>
 
-                <p style="margin-top: 15px; color: #637381; font-size: 13px;">
-                    Note: to output the generated JSON-LD on your storefront, enable the
-                    <strong>Fyndable SEO Schema</strong> app embed in the Shopify theme editor
-                    (Online Store → Themes → Customize → App embeds).
-                </p>
+                    <div class="form-group">
+                        <label for="edit-meta-title">Meta title</label>
+                        <input type="text" id="edit-meta-title">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-meta-desc">Meta description</label>
+                        <textarea id="edit-meta-desc" rows="2"></textarea>
+                    </div>
+                    <button class="btn" onclick="saveMeta()">Save Meta</button>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="edit-description">Description / body</label>
+                        <textarea id="edit-description" rows="8"></textarea>
+                    </div>
+                    <button class="btn" onclick="saveDescription()">Save Description</button>
+
+                    <div class="form-group" id="alt-text-section" style="margin-top: 20px;">
+                        <label for="edit-image">Image alt text</label>
+                        <select id="edit-image" style="margin-bottom: 8px;"></select>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="edit-alt-text" placeholder="Alt text...">
+                            <button class="btn secondary" onclick="generateAltText()">Generate</button>
+                            <button class="btn" onclick="saveAltText()">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="edit-schema">JSON-LD schema (editable)</label>
+                        <textarea id="edit-schema" rows="10" style="font-family: monospace; font-size: 12px;"></textarea>
+                    </div>
+                    <button class="btn" onclick="saveSchema()">Save Schema</button>
+
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;" id="push-all-section">
+                        <button class="btn" onclick="pushAll()">Push All to Shopify</button>
+                        <label style="margin-left: 10px; font-size: 13px;"><input type="checkbox" id="product-overwrite"> Overwrite existing product content</label>
+                    </div>
+
+                    <p style="margin-top: 15px; color: #637381; font-size: 13px;">
+                        Note: to output the generated JSON-LD on your storefront, enable the
+                        <strong>Fyndable SEO Schema</strong> app embed in the Shopify theme editor
+                        (Online Store → Themes → Customize → App embeds).
+                    </p>
+                </div>
                 <div id="product-result" style="margin-top: 20px;"></div>
             </div>
         </div>
@@ -260,6 +313,7 @@
 
             // Load tab data
             if (tabId === 'overview') loadOverview();
+            if (tabId === 'content' && !contentListLoaded) { contentListLoaded = true; searchContent(); }
             if (tabId === 'llmstxt') loadLlmsTxtStatus();
             if (tabId === 'ranktracker') { loadRankStats(); loadKeywords(); }
             if (tabId === 'license') loadLicenseStatus();
@@ -300,6 +354,15 @@
                 <div class="stat"><div class="label">Top 10 Rankings</div><div class="value green">${data.top_10_keywords ?? 0}</div></div>
                 <div class="stat"><div class="label">llms.txt</div><div class="value ${data.llms_txt_enabled ? 'green' : 'red'}">${data.llms_txt_enabled ? 'Enabled' : 'Disabled'}</div></div>
             `;
+            if (data.missing_scopes && data.missing_scopes.length) {
+                document.getElementById('overview-stats').insertAdjacentHTML('beforeend', `
+                    <div class="alert error" style="grid-column: 1 / -1;">
+                        The app is missing permissions: <strong>${data.missing_scopes.join(', ')}</strong>.
+                        Saving to Shopify will fail until you
+                        <a href="${data.reauth_url}" target="_top" style="font-weight:600;">re-authorize the app</a>.
+                    </div>
+                `);
+            }
         }
 
         // llms.txt
@@ -383,137 +446,258 @@
             el.textContent = 'Redirects:\n' + lines;
         }
 
-        // Products
-        let lastProductId = null;
-        let lastGeneratedDescription = null;
-        let lastGeneratedMeta = null;
+        // Content SEO editor
+        let currentType = 'product';
+        let currentId = null;
+        let contentListLoaded = false;
+
+        function contentResult(html) {
+            document.getElementById('product-result').innerHTML = html;
+        }
+
+        function showApiError(data) {
+            if (data.error === 'missing_scopes' && data.reauth_url) {
+                contentResult(`<div class="alert error">${data.message || 'Missing permissions.'}
+                    <br><a href="${data.reauth_url}" target="_top" style="font-weight:600;">Re-authorize the app</a></div>`);
+                return;
+            }
+            contentResult(`<div class="alert error">Error: ${data.error || 'Unknown'}${data.message ? ' — ' + data.message : ''}</div>`);
+        }
+
+        function numericId() {
+            return currentId ? currentId.split('/').pop() : null;
+        }
+
+        async function searchContent() {
+            const search = document.getElementById('content-search').value;
+            const list = document.getElementById('content-list');
+            list.innerHTML = '<option>Loading...</option>';
+            const data = await api(`/content/${currentType}?search=${encodeURIComponent(search)}&limit=50`);
+            if (data.error) {
+                list.innerHTML = '';
+                showApiError(data);
+                return;
+            }
+            if (!data.items.length) {
+                list.innerHTML = '';
+                contentResult('<div class="alert info">No items found.</div>');
+                return;
+            }
+            list.innerHTML = data.items
+                .map(i => `<option value="${i.id}">${i.title}${i.subtitle ? ' — ' + i.subtitle : ''}</option>`)
+                .join('');
+        }
+
+        function onContentTypeChange() {
+            currentType = document.getElementById('content-type').value;
+            currentId = null;
+            document.getElementById('content-editor').style.display = 'none';
+            document.getElementById('content-empty').style.display = 'block';
+            searchContent();
+        }
+
+        async function onContentSelect() {
+            currentId = document.getElementById('content-list').value;
+            await loadContentDetail();
+        }
+
+        async function loadContentDetail() {
+            contentResult('<div class="loading">Loading item...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}`);
+            if (data.error) {
+                showApiError(data);
+                return;
+            }
+            const item = data.item;
+            document.getElementById('content-selected').textContent =
+                item.title + (item.url ? ' — ' + item.url : '');
+            document.getElementById('edit-meta-title').value = item.seo_title || '';
+            document.getElementById('edit-meta-desc').value = item.seo_description || '';
+            const descEl = document.getElementById('edit-description');
+            descEl.value = item.body || '';
+            descEl.dataset.format = 'html';
+            document.getElementById('edit-schema').value =
+                item.schema ? JSON.stringify(item.schema, null, 2) : '';
+            const imgSel = document.getElementById('edit-image');
+            imgSel.innerHTML = (item.images || [])
+                .map(i => `<option value="${i.id}" data-url="${i.url}">${i.alt || i.url.split('/').pop()}</option>`)
+                .join('');
+            document.getElementById('alt-text-section').style.display = currentType === 'product' ? 'block' : 'none';
+            document.getElementById('push-all-section').style.display = currentType === 'product' ? 'block' : 'none';
+            document.getElementById('content-editor').style.display = 'block';
+            document.getElementById('content-empty').style.display = 'none';
+            contentResult('');
+        }
 
         async function generateDescription(type) {
-            const productId = document.getElementById('product-id').value;
-            if (!productId) { alert('Enter a product ID'); return; }
-            lastProductId = productId;
-            document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
-            const data = await api(`/products/${productId}/generate-description`, {
+            if (!currentId) { alert('Select an item first'); return; }
+            contentResult('<div class="loading">Generating...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/generate-description`, {
                 method: 'POST',
                 body: JSON.stringify({ type, context: document.getElementById('product-context').value }),
             });
             if (data.success) {
-                lastGeneratedDescription = data.description;
-                document.getElementById('product-result').innerHTML = `
-                    <div class="alert success">Generated ${type} description:</div>
-                    <div class="preview">${data.description}</div>
-                    <button class="btn" style="margin-top: 10px;" onclick="saveDescription()">Save to Shopify</button>
-                `;
+                const el = document.getElementById('edit-description');
+                el.value = data.description;
+                el.dataset.format = 'text';
+                contentResult('<div class="alert success">Description generated — review it in the field and click "Save Description".</div>');
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || data.message || 'Unknown'}</div>`;
+                showApiError(data);
             }
         }
 
         async function saveDescription() {
-            if (!lastProductId || !lastGeneratedDescription) { alert('Nothing to save'); return; }
-            document.getElementById('product-result').innerHTML += '<div class="loading">Saving...</div>';
-            const data = await api(`/products/${lastProductId}/save-description`, {
+            if (!currentId) { alert('Select an item first'); return; }
+            const el = document.getElementById('edit-description');
+            if (!el.value.trim()) { alert('Nothing to save'); return; }
+            contentResult('<div class="loading">Saving...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/save-description`, {
                 method: 'POST',
-                body: JSON.stringify({ description: lastGeneratedDescription }),
+                body: JSON.stringify({ description: el.value, format: el.dataset.format || 'text' }),
             });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Description saved to Shopify!</div>`;
+                contentResult('<div class="alert success">Description saved to Shopify!</div>');
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Save failed: ${data.error || data.message || 'Unknown'}</div>`;
+                showApiError(data);
             }
         }
 
         async function generateMeta() {
-            const productId = document.getElementById('product-id').value;
-            if (!productId) { alert('Enter a product ID'); return; }
-            lastProductId = productId;
-            document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
-            const data = await api(`/products/${productId}/generate-meta`, {
+            if (!currentId) { alert('Select an item first'); return; }
+            contentResult('<div class="loading">Generating...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/generate-meta`, {
                 method: 'POST',
                 body: JSON.stringify({ context: document.getElementById('product-context').value }),
             });
             if (data.success) {
-                lastGeneratedMeta = data;
-                document.getElementById('product-result').innerHTML = `
-                    <div class="alert success">Meta tags generated:</div>
-                    <div class="preview">Title: ${data.title}\n\nDescription: ${data.description}</div>
-                    <button class="btn" style="margin-top: 10px;" onclick="saveMeta()">Save to Shopify</button>
-                `;
+                document.getElementById('edit-meta-title').value = data.title || '';
+                document.getElementById('edit-meta-desc').value = data.description || '';
+                contentResult('<div class="alert success">Meta tags generated — review and click "Save Meta".</div>');
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || data.message || 'Unknown'}</div>`;
+                showApiError(data);
             }
         }
 
         async function saveMeta() {
-            if (!lastProductId || !lastGeneratedMeta) { alert('Nothing to save'); return; }
-            document.getElementById('product-result').innerHTML += '<div class="loading">Saving...</div>';
-            const data = await api(`/products/${lastProductId}/save-meta`, {
+            if (!currentId) { alert('Select an item first'); return; }
+            contentResult('<div class="loading">Saving...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/save-meta`, {
                 method: 'POST',
-                body: JSON.stringify({ title: lastGeneratedMeta.title, description: lastGeneratedMeta.description }),
+                body: JSON.stringify({
+                    title: document.getElementById('edit-meta-title').value,
+                    description: document.getElementById('edit-meta-desc').value,
+                }),
             });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Meta tags saved to Shopify!</div>`;
+                contentResult('<div class="alert success">Meta tags saved to Shopify!</div>');
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Save failed: ${data.error || data.message || 'Unknown'}</div>`;
+                showApiError(data);
+            }
+        }
+
+        async function generateAltText() {
+            if (!currentId) { alert('Select an item first'); return; }
+            const sel = document.getElementById('edit-image');
+            const imageUrl = sel.selectedOptions[0]?.dataset.url;
+            if (!imageUrl) { alert('No image selected'); return; }
+            contentResult('<div class="loading">Generating alt text...</div>');
+            const data = await api(`/products/${numericId()}/generate-alt-text`, {
+                method: 'POST',
+                body: JSON.stringify({ image_url: imageUrl }),
+            });
+            if (data.success) {
+                document.getElementById('edit-alt-text').value = data.alt_text;
+                contentResult('<div class="alert success">Alt text generated — review and click "Save".</div>');
+            } else {
+                showApiError(data);
+            }
+        }
+
+        async function saveAltText() {
+            if (!currentId) { alert('Select an item first'); return; }
+            const imageId = document.getElementById('edit-image').value;
+            const altText = document.getElementById('edit-alt-text').value;
+            if (!imageId || !altText) { alert('Select an image and generate alt text first'); return; }
+            const data = await api(`/products/${numericId()}/push-alt-text`, {
+                method: 'POST',
+                body: JSON.stringify({ image_id: imageId, alt_text: altText }),
+            });
+            if (data.success) {
+                contentResult('<div class="alert success">Alt text saved to Shopify!</div>');
+            } else {
+                showApiError(data);
             }
         }
 
         async function generateSchema() {
-            const productId = document.getElementById('product-id').value;
-            if (!productId) { alert('Enter a product ID'); return; }
-            document.getElementById('product-result').innerHTML = '<div class="loading">Generating schema...</div>';
-            const data = await api(`/products/${productId}/generate-schema`, { method: 'POST' });
+            if (!currentId) { alert('Select an item first'); return; }
+            contentResult('<div class="loading">Generating schema...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/generate-schema`, { method: 'POST' });
             if (data.success) {
-                window.currentProductSchema = data.schema;
-                document.getElementById('product-schema').textContent = JSON.stringify(data.schema, null, 2);
-                document.getElementById('product-schema').style.display = 'block';
-                document.getElementById('product-result').innerHTML = '<div class="alert success">Schema generated. Click "Save Schema to Shopify".</div>';
+                document.getElementById('edit-schema').value = JSON.stringify(data.schema, null, 2);
+                contentResult('<div class="alert success">Schema generated — review/edit it and click "Save Schema".</div>');
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+                showApiError(data);
             }
         }
 
-        async function pushSchema() {
-            const productId = document.getElementById('product-id').value;
-            if (!productId || !window.currentProductSchema) { alert('Generate a schema first'); return; }
-            const data = await api(`/products/${productId}/generate-schema`, { method: 'POST' });
+        async function saveSchema() {
+            if (!currentId) { alert('Select an item first'); return; }
+            const raw = document.getElementById('edit-schema').value.trim();
+            if (!raw) { alert('Generate or paste a schema first'); return; }
+            let schema;
+            try {
+                schema = JSON.parse(raw);
+            } catch (e) {
+                contentResult(`<div class="alert error">Invalid JSON: ${e.message}</div>`);
+                return;
+            }
+            contentResult('<div class="loading">Saving schema...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/save-schema`, {
+                method: 'POST',
+                body: JSON.stringify({ schema }),
+            });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = '<div class="alert success">Schema saved to Shopify product metafield.</div>';
+                contentResult('<div class="alert success">Schema saved to Shopify metafield.</div>');
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+                showApiError(data);
             }
         }
 
         async function pushAll() {
-            const productId = document.getElementById('product-id').value;
-            const title = document.getElementById('product-meta-title').value;
-            const description = document.getElementById('product-description').value;
-            const metaTitle = document.getElementById('product-meta-title').value;
-            const metaDescription = document.getElementById('product-meta-desc').value;
-            const imageId = document.getElementById('product-image-id').value;
-            const altText = document.getElementById('product-alt-text').value;
-            const overwrite = document.getElementById('product-overwrite').checked;
-
-            if (!productId) { alert('Enter a product ID'); return; }
-            if (!overwrite) { alert('Please check "Overwrite existing product content" to confirm.'); return; }
-
-            const data = await api(`/products/${productId}/push-all`, {
+            if (!currentId || currentType !== 'product') { alert('Select a product first'); return; }
+            if (!document.getElementById('product-overwrite').checked) {
+                alert('Please check "Overwrite existing product content" to confirm.');
+                return;
+            }
+            const descEl = document.getElementById('edit-description');
+            let schema = null;
+            const rawSchema = document.getElementById('edit-schema').value.trim();
+            if (rawSchema) {
+                try {
+                    schema = JSON.parse(rawSchema);
+                } catch (e) {
+                    contentResult(`<div class="alert error">Invalid schema JSON: ${e.message}</div>`);
+                    return;
+                }
+            }
+            const data = await api(`/products/${numericId()}/push-all`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    title,
-                    description,
-                    meta_title: metaTitle,
-                    meta_description: metaDescription,
-                    image_id: imageId,
-                    alt_text: altText,
-                    schema: window.currentProductSchema,
+                    description: descEl.value,
+                    description_format: descEl.dataset.format || 'text',
+                    meta_title: document.getElementById('edit-meta-title').value,
+                    meta_description: document.getElementById('edit-meta-desc').value,
+                    image_id: document.getElementById('edit-image').value,
+                    alt_text: document.getElementById('edit-alt-text').value,
+                    schema,
                     overwrite: true,
                 }),
             });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Pushed to Shopify: ${JSON.stringify(data.saved)}</div>`;
+                contentResult(`<div class="alert success">Pushed to Shopify: ${JSON.stringify(data.saved)}</div>`);
             } else {
-                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}<br>${JSON.stringify(data.saved || {})}</div>`;
+                showApiError(data);
             }
         }
 

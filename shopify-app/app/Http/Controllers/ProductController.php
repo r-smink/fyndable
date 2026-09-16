@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
+use App\Services\ShopifyAdminWriter;
 use App\Services\ShopifyContentFetcher;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Log;
  *  - Generate product descriptions (short/long)
  *  - Generate SEO meta title + description
  *  - Generate image alt text (vision model)
- *  - Inject Product JSON-LD schema via Shopify metafields
+ *  - Preview and save Product JSON-LD schema via Shopify metafields
  */
 class ProductController extends Controller
 {
@@ -29,7 +30,8 @@ class ProductController extends Controller
     public function __construct(
         private ShopifyContentFetcher $fetcher,
         private SaasProxyClient $saas,
-        private LicenseService $license
+        private LicenseService $license,
+        private ShopifyAdminWriter $writer
     ) {}
 
     /**
@@ -82,7 +84,7 @@ class ProductController extends Controller
                 'type' => $type,
             ];
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('generateDescription failed', [
+            Log::error('generateDescription failed', [
                 'product_id' => $productId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -136,8 +138,8 @@ class ProductController extends Controller
 
             // Parse JSON response
             $text = $result['text'] ?? '';
-            $parsed = json_decode($text, true);
-            if (! is_array($parsed)) {
+            $parsed = $this->parseJsonResponse($text);
+            if (empty($parsed)) {
                 return ['error' => 'ai_parse_failed', 'raw' => $text];
             }
 
@@ -147,7 +149,7 @@ class ProductController extends Controller
                 'description' => $parsed['description'] ?? '',
             ];
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('generateMeta failed', [
+            Log::error('generateMeta failed', [
                 'product_id' => $productId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -248,18 +250,18 @@ class ProductController extends Controller
             $seo['description'] = $description;
         }
 
-        $result = $this->updateProduct($shop, $productId, ['seo' => $seo]);
+        $error = $this->writer->updateProduct($shop, $productId, ['seo' => $seo]);
 
-        return $result
-            ? ['success' => true]
-            : ['error' => 'save_failed'];
+        return $error
+            ? ['error' => 'save_failed', 'message' => $error]
+            : ['success' => true];
     }
 
     /**
      * Save a product description to Shopify.
      *
      * POST /api/products/{productId}/save-description
-     * Body: { description: "...", html: true|false }
+     * Body: { description: "...", format: "text"|"html" }
      */
     public function saveDescription(Request $request, string $productId): array
     {
@@ -277,18 +279,19 @@ class ProductController extends Controller
             return ['error' => 'nothing_to_save'];
         }
 
-        // Convert plain text to HTML (line breaks to <br>)
-        $descriptionHtml = nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+        $descriptionHtml = $request->input('format') === 'html'
+            ? $description
+            : nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
-        $result = $this->updateProduct($shop, $productId, ['descriptionHtml' => $descriptionHtml]);
+        $error = $this->writer->updateProduct($shop, $productId, ['descriptionHtml' => $descriptionHtml]);
 
-        return $result
-            ? ['success' => true]
-            : ['error' => 'save_failed'];
+        return $error
+            ? ['error' => 'save_failed', 'message' => $error]
+            : ['success' => true];
     }
 
     /**
-     * Generate and save Product JSON-LD schema to metafields.
+     * Generate a Product JSON-LD schema preview (does not save).
      *
      * POST /api/products/{productId}/generate-schema
      */
@@ -308,20 +311,50 @@ class ProductController extends Controller
             return $product;
         }
 
-        $schema = $this->buildProductSchema($product, $shop);
+        return [
+            'success' => true,
+            'schema' => $this->buildProductSchema($product, $shop),
+        ];
+    }
 
-        $metafield = $this->metafieldInput(
+    /**
+     * Save a (possibly user-edited) Product JSON-LD schema to metafields.
+     *
+     * POST /api/products/{productId}/save-schema
+     * Body: { schema: { ... } }
+     */
+    public function saveSchema(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $schema = $request->input('schema');
+        if (! is_array($schema) || empty($schema)) {
+            return ['error' => 'schema_required', 'message' => 'Provide a schema JSON object.'];
+        }
+
+        if (empty($schema['@context']) || empty($schema['@type'])) {
+            return ['error' => 'invalid_schema', 'message' => 'Schema must include @context and @type.'];
+        }
+
+        $metafield = $this->writer->metafieldInput(
             self::METAFIELD_NAMESPACE,
             'product_schema',
             json_encode($schema, JSON_UNESCAPED_SLASHES),
             'json'
         );
 
-        $result = $this->createMetafields($shop, 'product', $productId, [$metafield]);
+        $error = $this->writer->setMetafields($shop, 'product', $productId, [$metafield]);
 
-        return $result
-            ? ['success' => true, 'schema' => $schema]
-            : ['error' => 'schema_save_failed'];
+        return $error
+            ? ['error' => 'schema_save_failed', 'message' => $error]
+            : ['success' => true];
     }
 
     /**
@@ -351,13 +384,13 @@ class ProductController extends Controller
             return ['error' => 'overwrite_required', 'message' => 'Set overwrite: true to confirm overwriting the product description.'];
         }
 
-        $success = $this->updateProduct($shop, $productId, [
+        $error = $this->writer->updateProduct($shop, $productId, [
             'descriptionHtml' => $description,
         ]);
 
-        return $success
-            ? ['success' => true, 'saved' => true]
-            : ['error' => 'save_failed'];
+        return $error
+            ? ['error' => 'save_failed', 'message' => $error]
+            : ['success' => true, 'saved' => true];
     }
 
     /**
@@ -387,13 +420,13 @@ class ProductController extends Controller
             return ['error' => 'overwrite_required', 'message' => 'Set overwrite: true to confirm overwriting the product title.'];
         }
 
-        $success = $this->updateProduct($shop, $productId, [
+        $error = $this->writer->updateProduct($shop, $productId, [
             'title' => $title,
         ]);
 
-        return $success
-            ? ['success' => true, 'saved' => true]
-            : ['error' => 'save_failed'];
+        return $error
+            ? ['error' => 'save_failed', 'message' => $error]
+            : ['success' => true, 'saved' => true];
     }
 
     /**
@@ -420,18 +453,18 @@ class ProductController extends Controller
             return ['error' => 'image_id_and_alt_text_required'];
         }
 
-        $success = $this->updateMediaAlt($shop, $productId, $imageId, $altText);
+        $error = $this->writer->updateMediaAlt($shop, $imageId, $altText);
 
-        return $success
-            ? ['success' => true, 'saved' => true]
-            : ['error' => 'save_failed'];
+        return $error
+            ? ['error' => 'save_failed', 'message' => $error]
+            : ['success' => true, 'saved' => true];
     }
 
     /**
      * Push all generated SEO content to Shopify at once.
      *
      * POST /api/products/{productId}/push-all
-     * Body: { title, description, meta_title, meta_description, alt_text, image_id, overwrite }
+     * Body: { title, description, description_format, meta_title, meta_description, alt_text, image_id, schema, overwrite }
      */
     public function pushAll(Request $request, string $productId): array
     {
@@ -451,136 +484,59 @@ class ProductController extends Controller
 
         $results = [];
 
-        $updateFields = [];
         $title = trim($request->input('title', ''));
-        $description = trim($request->input('description', ''));
-
         if (! empty($title)) {
-            $updateFields['title'] = $title;
-            $results['title'] = false;
-        }
-        if (! empty($description)) {
-            $updateFields['descriptionHtml'] = $description;
-            $results['description'] = false;
+            $error = $this->writer->updateProduct($shop, $productId, ['title' => $title]);
+            $results['title'] = $error ?: true;
         }
 
-        if (! empty($updateFields)) {
-            $results = [];
-            if (! empty($title)) {
-                $results['title'] = $this->updateProduct($shop, $productId, ['title' => $title]);
-            }
-            if (! empty($description)) {
-                $results['description'] = $this->updateProduct($shop, $productId, ['descriptionHtml' => $description]);
-            }
+        $description = trim($request->input('description', ''));
+        if (! empty($description)) {
+            $descriptionHtml = $request->input('description_format') === 'html'
+                ? $description
+                : nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+            $error = $this->writer->updateProduct($shop, $productId, ['descriptionHtml' => $descriptionHtml]);
+            $results['description'] = $error ?: true;
         }
 
         $metaTitle = trim($request->input('meta_title', ''));
         $metaDescription = trim($request->input('meta_description', ''));
         if (! empty($metaTitle) || ! empty($metaDescription)) {
-            $metafields = [];
+            $seo = [];
             if (! empty($metaTitle)) {
-                $metafields[] = $this->metafieldInput(self::METAFIELD_NAMESPACE_SEO, 'title', $metaTitle, 'single_line_text_field');
-                $results['meta_title'] = false;
+                $seo['title'] = $metaTitle;
             }
             if (! empty($metaDescription)) {
-                $metafields[] = $this->metafieldInput(self::METAFIELD_NAMESPACE_SEO, 'description', $metaDescription, 'multi_line_text_field');
-                $results['meta_description'] = false;
+                $seo['description'] = $metaDescription;
             }
-            $results['meta'] = $this->createMetafields($shop, 'product', $productId, $metafields);
+            $error = $this->writer->updateProduct($shop, $productId, ['seo' => $seo]);
+            $results['meta'] = $error ?: true;
         }
 
         $imageId = trim($request->input('image_id', ''));
         $altText = trim($request->input('alt_text', ''));
         if (! empty($imageId) && ! empty($altText)) {
-            $results['alt_text'] = $this->updateMediaAlt($shop, $productId, $imageId, $altText);
+            $error = $this->writer->updateMediaAlt($shop, $imageId, $altText);
+            $results['alt_text'] = $error ?: true;
         }
 
         $schema = $request->input('schema', null);
-        if (is_array($schema)) {
-            $metafield = $this->metafieldInput(
+        if (is_array($schema) && ! empty($schema)) {
+            $metafield = $this->writer->metafieldInput(
                 self::METAFIELD_NAMESPACE,
                 'product_schema',
                 json_encode($schema, JSON_UNESCAPED_SLASHES),
                 'json'
             );
-            $results['schema'] = $this->createMetafields($shop, 'product', $productId, [$metafield]);
+            $error = $this->writer->setMetafields($shop, 'product', $productId, [$metafield]);
+            $results['schema'] = $error ?: true;
         }
 
-        $allOk = ! in_array(false, $results, true);
+        $failed = array_filter($results, fn ($result) => $result !== true);
 
-        return $allOk
+        return empty($failed)
             ? ['success' => true, 'saved' => $results]
             : ['error' => 'partial_save', 'saved' => $results];
-    }
-
-    /**
-     * Update the alt text of a product image (MediaImage).
-     */
-    private function updateMediaAlt(Shop $shop, string $productId, string $imageId, string $altText): bool
-    {
-        $mutation = <<<'GRAPHQL'
-        mutation productUpdateMedia($product: ProductUpdateInput!) {
-          productUpdate(product: $product) {
-            product { id }
-            userErrors { field message }
-          }
-        }
-        GRAPHQL;
-
-        $productGid = str_starts_with($productId, 'gid://')
-            ? $productId
-            : "gid://shopify/Product/{$productId}";
-
-        $imageGid = str_starts_with($imageId, 'gid://')
-            ? $imageId
-            : "gid://shopify/MediaImage/{$imageId}";
-
-        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
-
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($endpoint, [
-                    'query' => $mutation,
-                    'variables' => [
-                        'product' => [
-                            'id' => $productGid,
-                            'media' => [
-                                ['id' => $imageGid, 'alt' => $altText],
-                            ],
-                        ],
-                    ],
-                ]);
-        } catch (ConnectionException $e) {
-            Log::error('Media alt update failed', ['error' => $e->getMessage()]);
-
-            return false;
-        }
-
-        if ($response->failed()) {
-            Log::error('Media alt update HTTP error', ['status' => $response->status()]);
-
-            return false;
-        }
-
-        $body = $response->json();
-        if (! empty($body['errors'])) {
-            Log::error('Media alt update GraphQL errors', ['errors' => $body['errors']]);
-
-            return false;
-        }
-
-        $errors = $body['data']['productUpdate']['userErrors'] ?? [];
-        if (! empty($errors)) {
-            Log::error('Media alt update user errors', ['errors' => $errors]);
-
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -589,13 +545,13 @@ class ProductController extends Controller
     private function buildProductSchema(array $product, Shop $shop): array
     {
         $siteDomain = rtrim("https://{$shop->shop_domain}", '/');
-        $url = $product['onlineStoreUrl'] ?: "{$siteDomain}/products/{$product['handle']}";
+        $url = ($product['onlineStoreUrl'] ?? null) ?: "{$siteDomain}/products/".($product['handle'] ?? '');
         $description = strip_tags($product['description'] ?? '');
 
         $schema = [
             '@context' => 'https://schema.org/',
             '@type' => 'Product',
-            'name' => $product['title'],
+            'name' => $product['title'] ?? '',
             'description' => $description,
             'url' => $url,
         ];
@@ -626,7 +582,7 @@ class ProductController extends Controller
                 if (isset($v['price'])) {
                     $prices[] = (float) $v['price'];
                 }
-                if (! $v['availableForSale']) {
+                if (! ($v['availableForSale'] ?? false)) {
                     $available = false;
                 }
             }
@@ -732,7 +688,7 @@ class ProductController extends Controller
             tags
             onlineStoreUrl
             featuredImage { url altText }
-            images(first: 10) { edges { node { url altText } } }
+            images(first: 10) { edges { node { id url altText } } }
             variants(first: 20) {
               edges {
                 node {
@@ -757,7 +713,7 @@ class ProductController extends Controller
                 ])
                 ->post($endpoint, [
                     'query' => $query,
-                    'variables' => ['id' => "gid://shopify/Product/{$productId}"],
+                    'variables' => ['id' => str_starts_with($productId, 'gid://') ? $productId : "gid://shopify/Product/{$productId}"],
                 ]);
         } catch (ConnectionException $e) {
             return ['error' => 'connection_failed'];
@@ -774,145 +730,6 @@ class ProductController extends Controller
         }
 
         return $product;
-    }
-
-    /**
-     * Update a product via the Admin API productUpdate mutation.
-     *
-     * @param  string  $productId  Numeric ID or full GID.
-     * @param  array  $fields  ProductUpdateInput fields (merged with `id`).
-     */
-    private function updateProduct(Shop $shop, string $productId, array $fields): bool
-    {
-        $mutation = <<<'GRAPHQL'
-        mutation updateProduct($product: ProductUpdateInput!) {
-          productUpdate(product: $product) {
-            product { id }
-            userErrors { field message }
-          }
-        }
-        GRAPHQL;
-
-        $gid = str_starts_with($productId, 'gid://')
-            ? $productId
-            : "gid://shopify/Product/{$productId}";
-
-        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
-
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($endpoint, [
-                    'query' => $mutation,
-                    'variables' => ['product' => ['id' => $gid] + $fields],
-                ]);
-        } catch (ConnectionException $e) {
-            Log::error('Product update failed', ['error' => $e->getMessage()]);
-
-            return false;
-        }
-
-        if ($response->failed()) {
-            Log::error('Product update HTTP error', ['status' => $response->status()]);
-
-            return false;
-        }
-
-        $body = $response->json();
-        if (! empty($body['errors'])) {
-            Log::error('Product update GraphQL errors', ['errors' => $body['errors']]);
-
-            return false;
-        }
-
-        $errors = $body['data']['productUpdate']['userErrors'] ?? [];
-        if (! empty($errors)) {
-            Log::error('Product update user errors', ['errors' => $errors]);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Create metafields on a Shopify resource via the Admin API.
-     */
-    private function createMetafields(Shop $shop, string $ownerType, string $ownerId, array $metafields): bool
-    {
-        $mutation = <<<'GRAPHQL'
-        mutation createMetafields($metafields: [MetafieldsSetInput!]!) {
-          metafieldsSet(metafields: $metafields) {
-            metafields { id namespace key value }
-            userErrors { field message }
-          }
-        }
-        GRAPHQL;
-
-        // Shopify GIDs use the case-sensitive resource type (e.g. "Product")
-        $resourceType = ucfirst($ownerType);
-        $gid = str_starts_with($ownerId, 'gid://') ? $ownerId : "gid://shopify/{$resourceType}/{$ownerId}";
-
-        $metafields = array_map(
-            fn (array $metafield) => ['ownerId' => $gid] + $metafield,
-            $metafields
-        );
-
-        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
-
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'X-Shopify-Access-Token' => $shop->access_token,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($endpoint, [
-                    'query' => $mutation,
-                    'variables' => ['metafields' => $metafields],
-                ]);
-        } catch (ConnectionException $e) {
-            Log::error('Metafield creation failed', ['error' => $e->getMessage()]);
-
-            return false;
-        }
-
-        if ($response->failed()) {
-            Log::error('Metafield HTTP error', ['status' => $response->status()]);
-
-            return false;
-        }
-
-        $body = $response->json();
-        if (! empty($body['errors'])) {
-            Log::error('Metafield GraphQL errors', ['errors' => $body['errors']]);
-
-            return false;
-        }
-
-        $errors = $body['data']['metafieldsSet']['userErrors'] ?? [];
-        if (! empty($errors)) {
-            Log::error('Metafield user errors', ['errors' => $errors]);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Build a metafield input array for the GraphQL mutation.
-     */
-    private function metafieldInput(string $namespace, string $key, string $value, string $type): array
-    {
-        return [
-            'namespace' => $namespace,
-            'key' => $key,
-            'value' => $value,
-            'type' => $type,
-        ];
     }
 
     /**

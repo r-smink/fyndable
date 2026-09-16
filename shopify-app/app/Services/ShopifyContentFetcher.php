@@ -202,6 +202,134 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Search a single content type by title.
+     *
+     * Uses Shopify's search `query` argument; an empty search returns the first
+     * items. Supported types: product, collection, page, article.
+     *
+     * @return array<int, array>
+     */
+    public function search(Shop $shop, string $type, string $search = '', int $limit = 50): array
+    {
+        $limit = max(1, min($limit, 250));
+
+        $fields = match ($type) {
+            'product' => 'id title handle status productType onlineStoreUrl featuredImage { url altText }',
+            'collection' => 'id title handle onlineStoreUrl image { url altText }',
+            'page' => 'id title handle',
+            'article' => 'id title handle publishedAt image { url altText } blog { handle title }',
+            default => null,
+        };
+
+        if ($fields === null) {
+            return [];
+        }
+
+        $connection = $type === 'article' ? 'articles' : "{$type}s";
+
+        $query = <<<GRAPHQL
+        query searchContent(\$first: Int!, \$query: String) {
+          {$connection}(first: \$first, query: \$query) {
+            edges { node { {$fields} } }
+          }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query, [
+            'first' => $limit,
+            'query' => $search !== '' ? $search : null,
+        ]);
+
+        if (isset($response['error'])) {
+            Log::error('ShopifyContentFetcher: search failed', [
+                'type' => $type,
+                'error' => $response['error'],
+            ]);
+
+            return [];
+        }
+
+        $items = [];
+        foreach ($response['data'][$connection]['edges'] ?? [] as $edge) {
+            $items[] = $edge['node'] ?? [];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Fetch a single resource by GID via the generic node() query.
+     *
+     * Returns the raw node array plus a `__typename` discriminator, or
+     * ['error' => ...] on failure.
+     */
+    public function getNode(Shop $shop, string $gid): array
+    {
+        $query = <<<'GRAPHQL'
+        query getNode($id: ID!) {
+          node(id: $id) {
+            __typename
+            id
+            ... on Product {
+              title
+              handle
+              description
+              descriptionHtml
+              vendor
+              productType
+              tags
+              status
+              onlineStoreUrl
+              seo { title description }
+              featuredImage { url altText }
+              images(first: 10) { edges { node { id url altText } } }
+              variants(first: 20) { edges { node { sku price compareAtPrice availableForSale } } }
+              metafields(first: 25) { edges { node { namespace key value } } }
+            }
+            ... on Collection {
+              title
+              handle
+              description
+              descriptionHtml
+              onlineStoreUrl
+              seo { title description }
+              image { url altText }
+              metafields(first: 25) { edges { node { namespace key value } } }
+            }
+            ... on Page {
+              title
+              handle
+              body
+              bodySummary
+              metafields(first: 25) { edges { node { namespace key value } } }
+            }
+            ... on Article {
+              title
+              handle
+              content
+              contentHtml
+              excerpt
+              publishedAt
+              tags
+              image { url altText }
+              blog { handle title }
+              metafields(first: 25) { edges { node { namespace key value } } }
+            }
+          }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query, ['id' => $gid]);
+        if (isset($response['error'])) {
+            return $response;
+        }
+
+        $node = $response['data']['node'] ?? null;
+
+        return is_array($node) ? $node : ['error' => 'not_found'];
+    }
+
+    /**
      * Get the shop's total product count.
      *
      * @param  Shop  $shop
