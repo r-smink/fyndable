@@ -131,6 +131,11 @@ class LicenseAdmin
             true
         );
 
+        // The license features page calls the REST API via wp.apiFetch().
+        if (strpos($hook, 'sseo-ai-license-features') !== false) {
+            wp_enqueue_script('wp-api-fetch');
+        }
+
         // Apply global white-label colors to the SaaS admin pages. Agency pages
         // are skipped because AgencyPortal::enqueueAssets() injects an
         // agency-specific override there.
@@ -1004,7 +1009,7 @@ class LicenseAdmin
                 
                 // Load feature data
                 wp.apiFetch({
-                    path: 'ai-seo-saas/v1/license/features?license_key=' + encodeURIComponent(licenseKey),
+                    path: '/ai-seo-saas/v1/license/features?license_key=' + encodeURIComponent(licenseKey),
                     method: 'GET'
                 }).then(function(response) {
                     if (response.success && response.data) {
@@ -1077,7 +1082,7 @@ class LicenseAdmin
                         $('#save-features').prop('disabled', true).text('<?php esc_html_e('Saving...', 'sseo-ai-saas'); ?>');
                         
                         wp.apiFetch({
-                            path: 'ai-seo-saas/v1/license/features',
+                            path: '/ai-seo-saas/v1/license/features',
                             method: 'POST',
                             data: {
                                 license_key: licenseKey,
