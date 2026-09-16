@@ -79,21 +79,27 @@ class AuthController extends Controller
         $this->verifyHmac($request);
 
         // Exchange code for access token
-        $accessToken = $this->exchangeCodeForToken($shopDomain, $code);
+        $tokenData = $this->exchangeCodeForToken($shopDomain, $code);
+        $accessToken = $tokenData['access_token'] ?? null;
         if ($accessToken === null) {
             abort(400, 'Failed to obtain access token.');
         }
 
-        // Save shop
+        // Save shop — scope comes from the token-exchange response (the
+        // callback query string does not include it), then is corrected to the
+        // actually granted scopes via updateAccessScopes() below.
         $shop = Shop::firstOrCreate(['shop_domain' => $shopDomain]);
         $shop->access_token = $accessToken;
-        $shop->scope = $request->query('scope', '');
+        $shop->scope = $tokenData['scope'] ?? '';
         $shop->is_installed = true;
         $shop->is_uninstalled = false;
         $shop->save();
 
         // Fetch shop details (name, currency, country)
         $this->updateShopDetails($shop);
+
+        // Store the granted scopes (authoritative, covers granted != requested)
+        $this->updateAccessScopes($shop);
 
         // Register webhooks
         $this->registerWebhooks($shop);
@@ -109,8 +115,10 @@ class AuthController extends Controller
 
     /**
      * Exchange the OAuth code for a permanent access token.
+     *
+     * @return array{access_token: ?string, scope: string}|null
      */
-    private function exchangeCodeForToken(string $shopDomain, string $code): ?string
+    private function exchangeCodeForToken(string $shopDomain, string $code): ?array
     {
         $endpoint = "https://{$shopDomain}/admin/oauth/access_token";
         $apiKey = config('shopify.api_key');
@@ -135,7 +143,36 @@ class AuthController extends Controller
             return null;
         }
 
-        return $response->json('access_token');
+        return [
+            'access_token' => $response->json('access_token'),
+            'scope' => (string) $response->json('scope', ''),
+        ];
+    }
+
+    /**
+     * Fetch the actually granted access scopes via GraphQL and store them.
+     */
+    private function updateAccessScopes(Shop $shop): void
+    {
+        try {
+            $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
+            $response = Http::timeout(15)
+                ->withHeaders(['X-Shopify-Access-Token' => $shop->access_token])
+                ->post($endpoint, [
+                    'query' => '{ currentAppInstallation { accessScopes { handle } } }',
+                ]);
+
+            $handles = collect($response->json('data.currentAppInstallation.accessScopes') ?? [])
+                ->pluck('handle')
+                ->filter();
+
+            if ($handles->isNotEmpty()) {
+                $shop->scope = $handles->implode(',');
+                $shop->save();
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to fetch access scopes', ['error' => $e->getMessage()]);
+        }
     }
 
     /**
