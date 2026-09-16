@@ -125,8 +125,6 @@ class ShopifyContentFetcher
                 title
                 body
                 bodySummary
-                url
-                status
               }
             }
           }
@@ -181,7 +179,6 @@ class ShopifyContentFetcher
                       content
                       contentHtml
                       excerpt
-                      url
                       publishedAt
                       tags
                       image { url altText }
