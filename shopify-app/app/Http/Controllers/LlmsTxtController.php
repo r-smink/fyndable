@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\LlmsTxtSettings;
 use App\Models\Shop;
 use App\Services\LlmsTxtGenerator;
+use App\Services\ShopifyUrlRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 /**
  * LlmsTxtController
@@ -15,15 +17,35 @@ use Illuminate\Http\Response;
  *
  * Shopify App Proxy routes these requests from the shop's domain:
  *   https://store.myshopify.com/apps/fyndable/llms.txt
- *   https://store.myshopify.com/apps/fyndable/llms-full.txt
+ *   https://store.myshopify.com/apps/fyndable/llms.txt?full=1
  *
  * The shop is identified by the `shop` query parameter (added by Shopify App Proxy).
+ * Use `?full=1` to get the full content.
  */
 class LlmsTxtController extends Controller
 {
     public function __construct(
         private LlmsTxtGenerator $generator
     ) {}
+
+    /**
+     * App Proxy catch-all: serves /llms.txt or /llms-full.txt content
+     * based on the `full` query parameter.
+     *
+     * This method is mapped to the root of the API routes (e.g. GET /api)
+     * so Shopify App Proxy requests to `https://shopify.fyndable.ai/api`
+     * can be handled. Use `?full=1` to get the full version.
+     */
+    public function proxy(Request $request): Response
+    {
+        $request->query->set('shop', $request->query('shop', ''));
+
+        if ($request->boolean('full')) {
+            return $this->full($request);
+        }
+
+        return $this->summary($request);
+    }
 
     /**
      * Serve /llms.txt (markdown summary).
@@ -183,11 +205,41 @@ class LlmsTxtController extends Controller
     }
 
     /**
+     * Create or update Shopify URL redirects so /llms.txt and /llms-full.txt
+     * on the root domain redirect to the App Proxy paths.
+     */
+    public function setupRedirects(Request $request, ShopifyUrlRedirect $redirects): array
+    {
+        $shop = $this->resolveShop($request);
+        if (! $shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $shop->hasAccessToken()) {
+            return ['error' => 'no_access_token'];
+        }
+
+        $results = $redirects->setup($shop);
+
+        return ['success' => true, 'redirects' => $results];
+    }
+
+    /**
      * Resolve the shop from the request (via `shop` query param or session).
+     * If a Shopify App Proxy `signature` is provided, it is verified first.
      */
     private function resolveShop(Request $request): ?Shop
     {
         $shopDomain = $request->query('shop', '');
+
+        // Verify App Proxy signature if present
+        if ($request->has('signature')) {
+            if (! $this->verifyAppProxySignature($request)) {
+                Log::warning('llms.txt App Proxy signature invalid', ['shop' => $shopDomain]);
+                return null;
+            }
+        }
+
         if (! empty($shopDomain)) {
             $shopDomain = strtolower(trim($shopDomain));
 
@@ -201,6 +253,44 @@ class LlmsTxtController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Verify a Shopify App Proxy signature.
+     *
+     * Shopify sorts all query params (except `signature`) alphabetically, builds
+     * `key=value` pairs joined with `&` (without URL decoding the raw values),
+     * and compares the HMAC-SHA256 (hex) with the app secret.
+     */
+    private function verifyAppProxySignature(Request $request): bool
+    {
+        $queryString = $request->server->get('QUERY_STRING', '');
+        if ($queryString === '') {
+            return false;
+        }
+
+        $signature = '';
+        $pairs = [];
+
+        foreach (explode('&', $queryString) as $part) {
+            $pos = strpos($part, '=');
+            $key = $pos === false ? $part : substr($part, 0, $pos);
+            $value = $pos === false ? '' : substr($part, $pos + 1);
+
+            if ($key === 'signature') {
+                $signature = $value;
+                continue;
+            }
+
+            $pairs[$key] = $key . '=' . $value;
+        }
+
+        ksort($pairs);
+        $message = implode('&', $pairs);
+
+        $calculated = hash_hmac('sha256', $message, config('shopify.api_secret'));
+
+        return $signature !== '' && hash_equals($signature, $calculated);
     }
 
     /**

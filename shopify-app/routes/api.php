@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// App Proxy root: Shopify proxies all /apps/fyndable/* requests here.
+// Use ?full=1 to get /llms-full.txt, otherwise /llms.txt is served.
+Route::get('/', [LlmsTxtController::class, 'proxy']);
+
 Route::middleware(['shopify.session'])->group(function () {
 
     // Dashboard
@@ -32,6 +36,7 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::get('/llmstxt/status', [LlmsTxtController::class, 'status']);
     Route::post('/llmstxt/settings', [LlmsTxtController::class, 'updateSettings']);
     Route::post('/llmstxt/regenerate', [LlmsTxtController::class, 'regenerate']);
+    Route::post('/llmstxt/setup-redirects', [LlmsTxtController::class, 'setupRedirects']);
     Route::get('/llmstxt/preview', [LlmsTxtController::class, 'preview']);
 
     // Products
@@ -40,6 +45,10 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/products/{productId}/generate-alt-text', [ProductController::class, 'generateAltText']);
     Route::post('/products/{productId}/save-meta', [ProductController::class, 'saveMeta']);
     Route::post('/products/{productId}/generate-schema', [ProductController::class, 'generateSchema']);
+    Route::post('/products/{productId}/push-description', [ProductController::class, 'pushDescription']);
+    Route::post('/products/{productId}/push-title', [ProductController::class, 'pushTitle']);
+    Route::post('/products/{productId}/push-alt-text', [ProductController::class, 'pushAltText']);
+    Route::post('/products/{productId}/push-all', [ProductController::class, 'pushAll']);
 
     // Bulk optimizer
     Route::post('/bulk/optimize', [BulkOptimizerController::class, 'optimize']);
@@ -55,6 +64,3 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::get('/rank-tracker/stats', [RankTrackerController::class, 'stats']);
 });
 
-// llms.txt serving (public, no session required — shop resolved via query param)
-Route::get('/llms.txt', [LlmsTxtController::class, 'summary']);
-Route::get('/llms-full.txt', [LlmsTxtController::class, 'full']);

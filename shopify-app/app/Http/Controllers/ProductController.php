@@ -271,6 +271,265 @@ class ProductController extends Controller
     }
 
     /**
+     * Push a generated product description to Shopify.
+     *
+     * POST /api/products/{productId}/push-description
+     * Body: { description: "...", overwrite: true }
+     */
+    public function pushDescription(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $description = trim($request->input('description', ''));
+        if (empty($description)) {
+            return ['error' => 'description_required'];
+        }
+
+        $overwrite = (bool) $request->input('overwrite', false);
+        if (! $overwrite) {
+            return ['error' => 'overwrite_required', 'message' => 'Set overwrite: true to confirm overwriting the product description.'];
+        }
+
+        $success = $this->updateProduct($shop, $productId, [
+            'descriptionHtml' => $description,
+        ]);
+
+        return $success
+            ? ['success' => true, 'saved' => true]
+            : ['error' => 'save_failed'];
+    }
+
+    /**
+     * Push a generated product title to Shopify.
+     *
+     * POST /api/products/{productId}/push-title
+     * Body: { title: "...", overwrite: true }
+     */
+    public function pushTitle(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $title = trim($request->input('title', ''));
+        if (empty($title)) {
+            return ['error' => 'title_required'];
+        }
+
+        $overwrite = (bool) $request->input('overwrite', false);
+        if (! $overwrite) {
+            return ['error' => 'overwrite_required', 'message' => 'Set overwrite: true to confirm overwriting the product title.'];
+        }
+
+        $success = $this->updateProduct($shop, $productId, [
+            'title' => $title,
+        ]);
+
+        return $success
+            ? ['success' => true, 'saved' => true]
+            : ['error' => 'save_failed'];
+    }
+
+    /**
+     * Push generated image alt text to Shopify.
+     *
+     * POST /api/products/{productId}/push-alt-text
+     * Body: { image_id: "gid://shopify/MediaImage/123", alt_text: "..." }
+     */
+    public function pushAltText(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $imageId = trim($request->input('image_id', ''));
+        $altText = trim($request->input('alt_text', ''));
+
+        if (empty($imageId) || empty($altText)) {
+            return ['error' => 'image_id_and_alt_text_required'];
+        }
+
+        $success = $this->updateMediaAlt($shop, $productId, $imageId, $altText);
+
+        return $success
+            ? ['success' => true, 'saved' => true]
+            : ['error' => 'save_failed'];
+    }
+
+    /**
+     * Push all generated SEO content to Shopify at once.
+     *
+     * POST /api/products/{productId}/push-all
+     * Body: { title, description, meta_title, meta_description, alt_text, image_id, overwrite }
+     */
+    public function pushAll(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $overwrite = (bool) $request->input('overwrite', false);
+        if (! $overwrite) {
+            return ['error' => 'overwrite_required', 'message' => 'Set overwrite: true to confirm overwriting product content.'];
+        }
+
+        $results = [];
+
+        $updateFields = [];
+        $title = trim($request->input('title', ''));
+        $description = trim($request->input('description', ''));
+
+        if (! empty($title)) {
+            $updateFields['title'] = $title;
+            $results['title'] = false;
+        }
+        if (! empty($description)) {
+            $updateFields['descriptionHtml'] = $description;
+            $results['description'] = false;
+        }
+
+        if (! empty($updateFields)) {
+            $results = [];
+            if (! empty($title)) {
+                $results['title'] = $this->updateProduct($shop, $productId, ['title' => $title]);
+            }
+            if (! empty($description)) {
+                $results['description'] = $this->updateProduct($shop, $productId, ['descriptionHtml' => $description]);
+            }
+        }
+
+        $metaTitle = trim($request->input('meta_title', ''));
+        $metaDescription = trim($request->input('meta_description', ''));
+        if (! empty($metaTitle) || ! empty($metaDescription)) {
+            $metafields = [];
+            if (! empty($metaTitle)) {
+                $metafields[] = $this->metafieldInput(self::METAFIELD_NAMESPACE_SEO, 'title', $metaTitle, 'single_line_text_field');
+                $results['meta_title'] = false;
+            }
+            if (! empty($metaDescription)) {
+                $metafields[] = $this->metafieldInput(self::METAFIELD_NAMESPACE_SEO, 'description', $metaDescription, 'multi_line_text_field');
+                $results['meta_description'] = false;
+            }
+            $results['meta'] = $this->createMetafields($shop, 'product', $productId, $metafields);
+        }
+
+        $imageId = trim($request->input('image_id', ''));
+        $altText = trim($request->input('alt_text', ''));
+        if (! empty($imageId) && ! empty($altText)) {
+            $results['alt_text'] = $this->updateMediaAlt($shop, $productId, $imageId, $altText);
+        }
+
+        $schema = $request->input('schema', null);
+        if (is_array($schema)) {
+            $metafield = $this->metafieldInput(
+                self::METAFIELD_NAMESPACE,
+                'product_schema',
+                json_encode($schema, JSON_UNESCAPED_SLASHES),
+                'json'
+            );
+            $results['schema'] = $this->createMetafields($shop, 'product', $productId, [$metafield]);
+        }
+
+        $allOk = ! in_array(false, $results, true);
+
+        return $allOk
+            ? ['success' => true, 'saved' => $results]
+            : ['error' => 'partial_save', 'saved' => $results];
+    }
+
+    /**
+     * Update the alt text of a product image (MediaImage).
+     */
+    private function updateMediaAlt(Shop $shop, string $productId, string $imageId, string $altText): bool
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation productUpdateMedia($product: ProductUpdateInput!) {
+          productUpdate(product: $product) {
+            product { id }
+            userErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        $productGid = str_starts_with($productId, 'gid://')
+            ? $productId
+            : "gid://shopify/Product/{$productId}";
+
+        $imageGid = str_starts_with($imageId, 'gid://')
+            ? $imageId
+            : "gid://shopify/MediaImage/{$imageId}";
+
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-Shopify-Access-Token' => $shop->access_token,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($endpoint, [
+                    'query' => $mutation,
+                    'variables' => [
+                        'product' => [
+                            'id' => $productGid,
+                            'media' => [
+                                ['id' => $imageGid, 'alt' => $altText],
+                            ],
+                        ],
+                    ],
+                ]);
+        } catch (ConnectionException $e) {
+            Log::error('Media alt update failed', ['error' => $e->getMessage()]);
+
+            return false;
+        }
+
+        if ($response->failed()) {
+            Log::error('Media alt update HTTP error', ['status' => $response->status()]);
+
+            return false;
+        }
+
+        $body = $response->json();
+        if (! empty($body['errors'])) {
+            Log::error('Media alt update GraphQL errors', ['errors' => $body['errors']]);
+
+            return false;
+        }
+
+        $errors = $body['data']['productUpdate']['userErrors'] ?? [];
+        if (! empty($errors)) {
+            Log::error('Media alt update user errors', ['errors' => $errors]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Build a Product JSON-LD schema from Shopify product data.
      */
     private function buildProductSchema(array $product, Shop $shop): array

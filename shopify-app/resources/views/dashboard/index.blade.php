@@ -122,6 +122,8 @@
                     <button class="btn" onclick="saveLlmsTxtSettings()">Save Settings</button>
                     <button class="btn secondary" onclick="regenerateLlmsTxt()">Regenerate</button>
                     <button class="btn secondary" onclick="previewLlmsTxt()">Preview</button>
+                    <button class="btn secondary" onclick="setupLlmsTxtRedirects()">Create root /llms.txt redirects</button>
+                    <div id="llmstxt-redirect-status" style="margin-top: 10px; font-size: 13px; color: #637381;"></div>
                 </div>
             </div>
             <div class="card" id="llmstxt-preview-card" style="display:none;">
@@ -135,17 +137,65 @@
             <div class="card">
                 <h2>Product SEO</h2>
                 <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Generate AI-powered product descriptions, meta tags, image alt text, and JSON-LD schema.
+                    Generate AI-powered product descriptions, meta tags, image alt text, and JSON-LD schema. Review and push to Shopify.
                 </p>
                 <div class="form-group">
                     <label for="product-id">Product ID (Shopify GID or numeric ID)</label>
                     <input type="text" id="product-id" placeholder="e.g. 123456789">
                 </div>
-                <button class="btn" onclick="generateDescription('long')">Generate Description</button>
-                <button class="btn secondary" onclick="generateDescription('short')">Short Description</button>
-                <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
+
+                <h3 style="font-size: 16px; margin: 25px 0 10px;">Description</h3>
+                <div class="form-group">
+                    <button class="btn" onclick="generateDescription('long')">Generate Long</button>
+                    <button class="btn secondary" onclick="generateDescription('short')">Generate Short</button>
+                </div>
+                <textarea id="product-description" rows="6" class="preview" style="font-family: sans-serif; width: 100%; box-sizing: border-box;" placeholder="Generated description will appear here..."></textarea>
+                <div class="form-group" style="margin-top: 10px;">
+                    <button class="btn secondary" onclick="pushDescription()">Save Description to Shopify</button>
+                </div>
+
+                <h3 style="font-size: 16px; margin: 25px 0 10px;">Meta Tags</h3>
+                <div class="form-group">
+                    <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
+                </div>
+                <div class="form-group">
+                    <label for="product-meta-title">Meta Title</label>
+                    <input type="text" id="product-meta-title" placeholder="Generated meta title...">
+                </div>
+                <div class="form-group">
+                    <label for="product-meta-desc">Meta Description</label>
+                    <textarea id="product-meta-desc" rows="3" style="width: 100%; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-group">
+                    <button class="btn secondary" onclick="pushMeta()">Save Meta Tags to Shopify</button>
+                </div>
+
+                <h3 style="font-size: 16px; margin: 25px 0 10px;">Image Alt Text</h3>
+                <div class="form-group">
+                    <label for="product-image-url">Image URL (for AI vision)</label>
+                    <input type="text" id="product-image-url" placeholder="https://cdn.shopify.com/...">
+                </div>
+                <div class="form-group">
+                    <label for="product-image-id">Image ID (MediaImage GID or numeric)</label>
+                    <input type="text" id="product-image-id" placeholder="e.g. 987654321">
+                </div>
+                <button class="btn secondary" onclick="generateAltText()">Generate Alt Text</button>
+                <div class="form-group" style="margin-top: 10px;">
+                    <input type="text" id="product-alt-text" placeholder="Generated alt text..." style="width: 100%;">
+                </div>
+                <button class="btn secondary" onclick="pushAltText()">Save Alt Text to Shopify</button>
+
+                <h3 style="font-size: 16px; margin: 25px 0 10px;">JSON-LD Schema</h3>
                 <button class="btn secondary" onclick="generateSchema()">Generate Schema</button>
-                <p style="margin-top: 10px; color: #637381; font-size: 13px;">
+                <div id="product-schema" class="preview" style="margin-top: 10px; display: none;"></div>
+                <button class="btn secondary" onclick="pushSchema()" style="margin-top: 10px;">Save Schema to Shopify</button>
+
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <button class="btn" onclick="pushAll()">Push All to Shopify</button>
+                    <label style="margin-left: 10px; font-size: 13px;"><input type="checkbox" id="product-overwrite"> Overwrite existing product content</label>
+                </div>
+
+                <p style="margin-top: 15px; color: #637381; font-size: 13px;">
                     Note: to output the generated JSON-LD on your storefront, enable the
                     <strong>Fyndable SEO Schema</strong> app embed in the Shopify theme editor
                     (Online Store → Themes → Customize → App embeds).
@@ -329,6 +379,18 @@
             }
         }
 
+        async function setupLlmsTxtRedirects() {
+            const el = document.getElementById('llmstxt-redirect-status');
+            el.textContent = 'Creating redirects...';
+            const data = await api('/llmstxt/setup-redirects', { method: 'POST' });
+            if (data.error) {
+                el.textContent = 'Error: ' + data.error;
+                return;
+            }
+            const lines = data.redirects.map(r => `${r.path}: ${r.status}`).join('\n');
+            el.textContent = 'Redirects:\n' + lines;
+        }
+
         // Products
         async function generateDescription(type) {
             const productId = document.getElementById('product-id').value;
@@ -339,7 +401,24 @@
                 body: JSON.stringify({ type }),
             });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Generated ${type} description:</div><div class="preview">${data.description}</div>`;
+                document.getElementById('product-description').value = data.description;
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Description generated. Review and click "Save Description to Shopify".</div>';
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || data.message || 'Unknown'}</div>`;
+            }
+        }
+
+        async function pushDescription() {
+            const productId = document.getElementById('product-id').value;
+            const description = document.getElementById('product-description').value;
+            if (!productId || !description) { alert('Enter a product ID and generate or type a description first'); return; }
+            if (!confirm('This will overwrite the product description in Shopify. Continue?')) return;
+            const data = await api(`/products/${productId}/push-description`, {
+                method: 'POST',
+                body: JSON.stringify({ description, overwrite: true }),
+            });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Description saved to Shopify.</div>';
             } else {
                 document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || data.message || 'Unknown'}</div>`;
             }
@@ -351,7 +430,58 @@
             document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
             const data = await api(`/products/${productId}/generate-meta`, { method: 'POST' });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Meta tags generated:</div><div class="preview">Title: ${data.title}\n\nDescription: ${data.description}</div>`;
+                document.getElementById('product-meta-title').value = data.title;
+                document.getElementById('product-meta-desc').value = data.description;
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Meta tags generated. Review and click "Save Meta Tags to Shopify".</div>';
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+            }
+        }
+
+        async function pushMeta() {
+            const productId = document.getElementById('product-id').value;
+            const title = document.getElementById('product-meta-title').value;
+            const description = document.getElementById('product-meta-desc').value;
+            if (!productId) { alert('Enter a product ID'); return; }
+            const data = await api(`/products/${productId}/save-meta`, {
+                method: 'POST',
+                body: JSON.stringify({ title, description }),
+            });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Meta tags saved to Shopify product metafields.</div>';
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+            }
+        }
+
+        async function generateAltText() {
+            const productId = document.getElementById('product-id').value;
+            const imageUrl = document.getElementById('product-image-url').value;
+            if (!productId || !imageUrl) { alert('Enter a product ID and image URL'); return; }
+            document.getElementById('product-result').innerHTML = '<div class="loading">Generating...</div>';
+            const data = await api(`/products/${productId}/generate-alt-text`, {
+                method: 'POST',
+                body: JSON.stringify({ image_url: imageUrl }),
+            });
+            if (data.success) {
+                document.getElementById('product-alt-text').value = data.alt_text;
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Alt text generated. Enter the Image ID and click "Save Alt Text to Shopify".</div>';
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+            }
+        }
+
+        async function pushAltText() {
+            const productId = document.getElementById('product-id').value;
+            const imageId = document.getElementById('product-image-id').value;
+            const altText = document.getElementById('product-alt-text').value;
+            if (!productId || !imageId || !altText) { alert('Enter product ID, image ID and alt text'); return; }
+            const data = await api(`/products/${productId}/push-alt-text`, {
+                method: 'POST',
+                body: JSON.stringify({ image_id: imageId, alt_text: altText }),
+            });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Alt text saved to Shopify image.</div>';
             } else {
                 document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
             }
@@ -363,9 +493,56 @@
             document.getElementById('product-result').innerHTML = '<div class="loading">Generating schema...</div>';
             const data = await api(`/products/${productId}/generate-schema`, { method: 'POST' });
             if (data.success) {
-                document.getElementById('product-result').innerHTML = `<div class="alert success">Schema saved to metafields:</div><div class="preview">${JSON.stringify(data.schema, null, 2)}</div>`;
+                window.currentProductSchema = data.schema;
+                document.getElementById('product-schema').textContent = JSON.stringify(data.schema, null, 2);
+                document.getElementById('product-schema').style.display = 'block';
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Schema generated. Click "Save Schema to Shopify".</div>';
             } else {
                 document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+            }
+        }
+
+        async function pushSchema() {
+            const productId = document.getElementById('product-id').value;
+            if (!productId || !window.currentProductSchema) { alert('Generate a schema first'); return; }
+            const data = await api(`/products/${productId}/generate-schema`, { method: 'POST' });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = '<div class="alert success">Schema saved to Shopify product metafield.</div>';
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}</div>`;
+            }
+        }
+
+        async function pushAll() {
+            const productId = document.getElementById('product-id').value;
+            const title = document.getElementById('product-meta-title').value;
+            const description = document.getElementById('product-description').value;
+            const metaTitle = document.getElementById('product-meta-title').value;
+            const metaDescription = document.getElementById('product-meta-desc').value;
+            const imageId = document.getElementById('product-image-id').value;
+            const altText = document.getElementById('product-alt-text').value;
+            const overwrite = document.getElementById('product-overwrite').checked;
+
+            if (!productId) { alert('Enter a product ID'); return; }
+            if (!overwrite) { alert('Please check "Overwrite existing product content" to confirm.'); return; }
+
+            const data = await api(`/products/${productId}/push-all`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    title,
+                    description,
+                    meta_title: metaTitle,
+                    meta_description: metaDescription,
+                    image_id: imageId,
+                    alt_text: altText,
+                    schema: window.currentProductSchema,
+                    overwrite: true,
+                }),
+            });
+            if (data.success) {
+                document.getElementById('product-result').innerHTML = `<div class="alert success">Pushed to Shopify: ${JSON.stringify(data.saved)}</div>`;
+            } else {
+                document.getElementById('product-result').innerHTML = `<div class="alert error">Error: ${data.error || 'Unknown'}<br>${JSON.stringify(data.saved || {})}</div>`;
             }
         }
 

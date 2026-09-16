@@ -189,7 +189,7 @@ class LlmsTxtGenerator
 
         // Link to full version
         if ($settings->full_enabled) {
-            $fullUrl = "{$siteDomain}/apps/fyndable/llms-full.txt";
+            $fullUrl = "{$siteDomain}/apps/fyndable/llms.txt?full=1";
             $lines[] = '## Full content';
             $lines[] = '';
             $lines[] = "- [Full site content]({$fullUrl}): Complete text of all products, collections, pages, and blog articles";
