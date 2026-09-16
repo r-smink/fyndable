@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\BlogWriterController;
 use App\Http\Controllers\BulkOptimizerController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IndexNowController;
+use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\ProductController;
@@ -22,6 +25,9 @@ use Illuminate\Support\Facades\Route;
 // App Proxy root: Shopify proxies all /apps/fyndable/* requests here.
 // Use ?full=1 to get /llms-full.txt, otherwise /llms.txt is served.
 Route::get('/', [LlmsTxtController::class, 'proxy']);
+
+// IndexNow key file via app proxy (shop resolved from the ?shop= proxy param).
+Route::get('/indexnow-key.txt', [IndexNowController::class, 'keyFile']);
 
 Route::middleware(['shopify.session'])->group(function () {
 
@@ -62,6 +68,32 @@ Route::middleware(['shopify.session'])->group(function () {
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
     Route::post('/content/{type}/{id}/save-schema', [ContentController::class, 'saveSchema'])
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
+    Route::post('/content/{type}/{id}/generate-faq', [ContentController::class, 'generateFaq'])
+        ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
+    Route::post('/content/{type}/{id}/save-faq', [ContentController::class, 'saveFaq'])
+        ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
+    Route::post('/content/{type}/{id}/link-suggestions', [ContentController::class, 'linkSuggestions'])
+        ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
+    Route::post('/content/{type}/{id}/apply-link', [ContentController::class, 'applyLink'])
+        ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
+    Route::post('/content/{type}/{id}/generate-image', [ContentController::class, 'generateImage'])
+        ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
+
+    // Blog writer
+    Route::get('/blogs', [BlogWriterController::class, 'blogs']);
+    Route::post('/articles/generate', [BlogWriterController::class, 'generate']);
+    Route::post('/blogs/{blogId}/articles', [BlogWriterController::class, 'create'])->where('blogId', '.+');
+
+    // Insights: backlinks, LLM visibility, keyword data
+    Route::get('/insights/backlinks', [InsightsController::class, 'backlinks']);
+    Route::post('/insights/llm-mentions', [InsightsController::class, 'llmMentions']);
+    Route::post('/insights/llm-check', [InsightsController::class, 'llmCheck']);
+    Route::post('/insights/keyword-data', [InsightsController::class, 'keywordData']);
+
+    // IndexNow
+    Route::get('/indexnow/status', [IndexNowController::class, 'status']);
+    Route::post('/indexnow/setup', [IndexNowController::class, 'setup'])->middleware('shopify.scope:write_content');
+    Route::post('/indexnow/submit', [IndexNowController::class, 'submit']);
 
     // Products
     Route::post('/products/{productId}/generate-description', [ProductController::class, 'generateDescription']);

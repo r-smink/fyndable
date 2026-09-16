@@ -385,6 +385,299 @@ class ContentController extends Controller
     }
 
     /**
+     * Generate an FAQ (Q&A pairs) for a resource via AI — returns both the
+     * editable pairs and a ready-made FAQPage JSON-LD schema.
+     *
+     * POST /api/content/{type}/{id}/generate-faq
+     * Body: { count?: int, context?: string }
+     */
+    public function generateFaq(Request $request, string $type, string $id): array
+    {
+        $error = $this->validateType($type) ?? $this->guardLicensed($request);
+        if ($error) {
+            return $error;
+        }
+
+        try {
+            $shop = $request->attributes->get('shop');
+            $node = $this->fetcher->getNode($shop, $this->writer->gid(ucfirst($type), $id));
+            if (isset($node['error'])) {
+                return $node;
+            }
+
+            $label = self::TYPE_LABELS[$type] ?? 'product';
+            $count = max(2, min((int) $request->input('count', 5), 10));
+            $body = mb_substr(strip_tags($this->extractBody($node)), 0, 2000);
+            $context = trim((string) $request->input('context', ''));
+
+            $prompt = "Generate {$count} frequently asked questions with short, factual answers for this {$label}.\n\n"
+                ."Title: {$node['title']}\n"
+                ."Content: {$body}\n";
+
+            if ($context !== '') {
+                $prompt .= "Additional context: {$context}\n";
+            }
+
+            $prompt .= "\nRespond as JSON array only: [{\"question\": \"...\", \"answer\": \"...\"}]";
+
+            $result = $this->saas->aiGenerate(
+                $shop->license_key,
+                $shop->tenant_key,
+                [
+                    ['role' => 'system', 'content' => 'You are an SEO expert. Respond only in JSON: [{"question": "...", "answer": "..."}]'],
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'openai/gpt-4o-mini',
+                800,
+                0.6,
+                'faq_generation'
+            );
+
+            if (isset($result['error'])) {
+                return $result;
+            }
+
+            $pairs = $this->parseJsonResponse($result['text'] ?? '');
+            $pairs = array_values(array_filter(array_map(
+                fn ($p) => [
+                    'question' => trim((string) ($p['question'] ?? '')),
+                    'answer' => trim((string) ($p['answer'] ?? '')),
+                ],
+                is_array($pairs) ? $pairs : []
+            ), fn ($p) => $p['question'] !== '' && $p['answer'] !== ''));
+
+            if (empty($pairs)) {
+                return ['error' => 'ai_parse_failed', 'raw' => $result['text'] ?? ''];
+            }
+
+            return [
+                'success' => true,
+                'faq' => $pairs,
+                'schema' => $this->buildFaqSchema($pairs),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ContentController::generateFaq failed', [
+                'type' => $type, 'id' => $id, 'error' => $e->getMessage(),
+            ]);
+
+            return ['error' => 'generate_failed', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Save FAQPage JSON-LD to the fyndable.faq_schema metafield.
+     *
+     * POST /api/content/{type}/{id}/save-faq
+     * Body: { schema: {...} } — the FAQPage schema (possibly user-edited).
+     */
+    public function saveFaq(Request $request, string $type, string $id): array
+    {
+        $error = $this->validateType($type) ?? $this->guardWrite($request, $type);
+        if ($error) {
+            return $error;
+        }
+
+        $schema = $request->input('schema');
+        if (! is_array($schema) || ($schema['@type'] ?? '') !== 'FAQPage') {
+            return ['error' => 'invalid_schema', 'message' => 'Provide a FAQPage schema object.'];
+        }
+
+        $shop = $request->attributes->get('shop');
+        $metafield = $this->writer->metafieldInput(
+            'fyndable',
+            'faq_schema',
+            json_encode($schema, JSON_UNESCAPED_SLASHES),
+            'json'
+        );
+
+        $error = $this->writer->setMetafields($shop, $type, $id, [$metafield]);
+
+        return $error
+            ? ['error' => 'faq_save_failed', 'message' => $error]
+            : ['success' => true];
+    }
+
+    /**
+     * Suggest internal links: find other site resources whose title appears in
+     * this item's body text but is not yet linked.
+     *
+     * POST /api/content/{type}/{id}/link-suggestions
+     */
+    public function linkSuggestions(Request $request, string $type, string $id): array
+    {
+        $error = $this->validateType($type) ?? $this->guardShop($request);
+        if ($error) {
+            return $error;
+        }
+
+        $shop = $request->attributes->get('shop');
+        $gid = $this->writer->gid(ucfirst($type), $id);
+        $node = $this->fetcher->getNode($shop, $gid);
+        if (isset($node['error'])) {
+            return $node;
+        }
+
+        $bodyHtml = $this->extractBody($node);
+        $bodyText = mb_strtolower(strip_tags($bodyHtml));
+        $alreadyLinked = [];
+        if (preg_match_all('/href="([^"]+)"/i', $bodyHtml, $m)) {
+            $alreadyLinked = array_map('mb_strtolower', $m[1]);
+        }
+
+        $domain = rtrim("https://{$shop->shop_domain}", '/');
+        $suggestions = [];
+
+        foreach (['product', 'collection', 'page', 'article'] as $candidateType) {
+            foreach ($this->fetcher->search($shop, $candidateType, '', 50) as $item) {
+                $itemGid = $item['id'] ?? '';
+                $title = trim((string) ($item['title'] ?? ''));
+                // Skip self, too-short titles, and already-linked targets.
+                if ($itemGid === $gid || mb_strlen($title) < 4) {
+                    continue;
+                }
+
+                $url = $this->resourceUrl($candidateType, $item, $domain);
+                if (in_array(mb_strtolower($url), $alreadyLinked, true)) {
+                    continue;
+                }
+
+                // Anchor = full title when it literally occurs in the text.
+                if (str_contains($bodyText, mb_strtolower($title))) {
+                    $suggestions[] = [
+                        'anchor' => $title,
+                        'url' => $url,
+                        'title' => $title,
+                        'target_type' => $candidateType,
+                    ];
+                }
+            }
+        }
+
+        return ['success' => true, 'suggestions' => $suggestions];
+    }
+
+    /**
+     * Insert an internal link into the item's body HTML — wraps the first
+     * plain-text occurrence of the anchor in an <a> tag — and saves it.
+     *
+     * POST /api/content/{type}/{id}/apply-link
+     * Body: { anchor, url }
+     */
+    public function applyLink(Request $request, string $type, string $id): array
+    {
+        $error = $this->validateType($type) ?? $this->guardWrite($request, $type);
+        if ($error) {
+            return $error;
+        }
+
+        $anchor = trim((string) $request->input('anchor', ''));
+        $url = trim((string) $request->input('url', ''));
+        if ($anchor === '' || $url === '') {
+            return ['error' => 'anchor_and_url_required'];
+        }
+
+        $shop = $request->attributes->get('shop');
+        $node = $this->fetcher->getNode($shop, $this->writer->gid(ucfirst($type), $id));
+        if (isset($node['error'])) {
+            return $node;
+        }
+
+        $bodyHtml = $this->extractBody($node);
+        $quoted = preg_quote($anchor, '/');
+
+        // Only link text nodes — skip anchors inside existing tags/attributes.
+        $newHtml = preg_replace(
+            '/(?<![">])('.str_replace(' ', '\s+', $quoted).')(?![^<]*>)/i',
+            '<a href="'.htmlspecialchars($url, ENT_QUOTES).'">$1</a>',
+            $bodyHtml,
+            1,
+            $replaced
+        );
+
+        if (! $replaced || $newHtml === $bodyHtml) {
+            return ['error' => 'anchor_not_found', 'message' => 'Anchor text not found in the body content.'];
+        }
+
+        $saveError = match ($type) {
+            'product' => $this->writer->updateProduct($shop, $id, ['descriptionHtml' => $newHtml]),
+            'collection' => $this->writer->updateCollection($shop, $id, ['descriptionHtml' => $newHtml]),
+            'page' => $this->writer->updatePage($shop, $id, ['body' => $newHtml]),
+            'article' => $this->writer->updateArticle($shop, $id, ['body' => $newHtml]),
+            default => 'unsupported_type',
+        };
+
+        return $saveError
+            ? ['error' => 'save_failed', 'message' => $saveError]
+            : ['success' => true];
+    }
+
+    /**
+     * Generate a product image via AI and attach it as product media.
+     *
+     * POST /api/content/product/{id}/generate-image
+     * Body: { prompt?: string, alt?: string }
+     */
+    public function generateImage(Request $request, string $type, string $id): array
+    {
+        if ($type !== 'product') {
+            return ['error' => 'unsupported_type', 'message' => 'AI images are only supported for products.'];
+        }
+
+        $error = $this->guardWrite($request, 'product');
+        if ($error) {
+            return $error;
+        }
+
+        $shop = $request->attributes->get('shop');
+        $node = $this->fetcher->getNode($shop, $this->writer->gid('Product', $id));
+        if (isset($node['error'])) {
+            return $node;
+        }
+
+        $prompt = trim((string) $request->input('prompt', ''));
+        if ($prompt === '') {
+            $prompt = "Professional product photo of {$node['title']}, clean studio background, high quality";
+        }
+
+        $result = $this->saas->aiImage($shop->license_key, $shop->tenant_key, $prompt);
+        if (isset($result['error'])) {
+            return ['error' => 'image_failed', 'message' => $result['message'] ?? $result['error']];
+        }
+
+        $imageUrl = $result['url'] ?? null;
+        if (! $imageUrl) {
+            return ['error' => 'image_failed', 'message' => 'No image URL returned.'];
+        }
+
+        $alt = trim((string) $request->input('alt', '')) ?: ($node['title'] ?? '');
+
+        $error = $this->writer->addProductMedia($shop, $id, $imageUrl, $alt);
+
+        return $error
+            ? ['error' => 'media_failed', 'message' => $error]
+            : ['success' => true, 'image_url' => $imageUrl, 'revised_prompt' => $result['revised_prompt'] ?? null];
+    }
+
+    /**
+     * Build a FAQPage JSON-LD schema from Q&A pairs.
+     */
+    private function buildFaqSchema(array $pairs): array
+    {
+        return [
+            '@context' => 'https://schema.org/',
+            '@type' => 'FAQPage',
+            'mainEntity' => array_map(fn ($p) => [
+                '@type' => 'Question',
+                'name' => $p['question'],
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => $p['answer'],
+                ],
+            ], $pairs),
+        ];
+    }
+
+    /**
      * Build a JSON-LD schema for a collection, page or article.
      */
     private function buildSchema(string $type, array $node, Shop $shop): array

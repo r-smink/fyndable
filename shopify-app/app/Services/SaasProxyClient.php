@@ -304,4 +304,121 @@ class SaasProxyClient
 
         return $response->json();
     }
+
+    /**
+     * Backlinks summary for a domain/URL (DataForSEO via SaaS).
+     *
+     * @param  string  $target  Domain or URL (e.g. "example.com").
+     */
+    public function backlinksSummary(string $licenseKey, string $tenantKey, string $target): array
+    {
+        return $this->post('backlinks/summary', $licenseKey, $tenantKey, ['target' => $target]);
+    }
+
+    /**
+     * Live backlink list for a domain/URL.
+     */
+    public function backlinksLive(string $licenseKey, string $tenantKey, string $target, int $limit = 50): array
+    {
+        return $this->post('backlinks/live', $licenseKey, $tenantKey, [
+            'target' => $target,
+            'limit' => $limit,
+        ]);
+    }
+
+    /**
+     * AI Mentions (LLM visibility) — DataForSEO AI Optimization API.
+     *
+     * @param  string  $action  e.g. search_mentions, target_metrics, top_domains, top_pages
+     * @param  array  $params  Action-specific params (target, domain, etc.)
+     */
+    public function llmMentions(string $licenseKey, string $tenantKey, string $action, array $params = []): array
+    {
+        return $this->post('ai/llm-mentions', $licenseKey, $tenantKey, [
+            'action' => $action,
+            'params' => $params,
+        ]);
+    }
+
+    /**
+     * Live LLM response (ChatGPT/Claude/Gemini/Perplexity) — DataForSEO.
+     *
+     * @param  string  $provider  chatgpt|claude|gemini|perplexity
+     */
+    public function llmResponse(string $licenseKey, string $tenantKey, string $provider, string $prompt, array $extra = []): array
+    {
+        return $this->post('ai/llm-response', $licenseKey, $tenantKey, [
+            'provider' => $provider,
+            'prompt' => $prompt,
+        ] + $extra);
+    }
+
+    /**
+     * AI Keyword Data (search volume etc.) — DataForSEO.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    public function keywordData(string $licenseKey, string $tenantKey, array $keywords, ?int $locationCode = null, ?string $languageCode = null): array
+    {
+        $body = ['keywords' => array_values($keywords)];
+        if ($locationCode !== null) {
+            $body['location_code'] = $locationCode;
+        }
+        if ($languageCode !== null) {
+            $body['language_code'] = $languageCode;
+        }
+
+        return $this->post('ai/keyword-data', $licenseKey, $tenantKey, $body);
+    }
+
+    /**
+     * Generate an image via the SaaS /ai/image endpoint (OpenAI images API).
+     *
+     * @return array{success?: bool, url?: string, ...}|array{error: string}
+     */
+    public function aiImage(string $licenseKey, string $tenantKey, string $prompt, string $size = '1024x1024'): array
+    {
+        return $this->post('ai/image', $licenseKey, $tenantKey, [
+            'prompt' => $prompt,
+            'size' => $size,
+        ], 180);
+    }
+
+    /**
+     * Shared POST helper for SaaS endpoints.
+     */
+    private function post(string $route, string $licenseKey, string $tenantKey, array $body, int $timeout = 60): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/{$route}";
+
+        try {
+            $response = Http::timeout($timeout)
+                ->withHeaders([
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($endpoint, $body);
+        } catch (ConnectionException $e) {
+            Log::error("SaasProxyClient: {$route} failed", ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        if ($response->failed()) {
+            $json = $response->json() ?? [];
+            Log::error("SaasProxyClient: {$route} failed", [
+                'status' => $response->status(),
+                'body' => mb_substr($response->body(), 0, 500),
+            ]);
+
+            return [
+                'error' => 'saas_request_failed',
+                'status' => $response->status(),
+                'message' => $json['message'] ?? $json['error'] ?? null,
+            ];
+        }
+
+        return $response->json() ?? [];
+    }
 }

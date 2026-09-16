@@ -15,6 +15,24 @@
 </script>
 {% endif %}
 
+{% comment %} FAQ schema — separate metafield, can coexist with the main schema. {% endcomment %}
+{% assign fyndable_faq = nil %}
+{% if product and product.metafields.fyndable.faq_schema.value %}
+  {% assign fyndable_faq = product.metafields.fyndable.faq_schema.value %}
+{% elsif collection and collection.metafields.fyndable.faq_schema.value %}
+  {% assign fyndable_faq = collection.metafields.fyndable.faq_schema.value %}
+{% elsif page and page.metafields.fyndable.faq_schema.value %}
+  {% assign fyndable_faq = page.metafields.fyndable.faq_schema.value %}
+{% elsif article and article.metafields.fyndable.faq_schema.value %}
+  {% assign fyndable_faq = article.metafields.fyndable.faq_schema.value %}
+{% endif %}
+
+{% if fyndable_faq %}
+<script type="application/ld+json">
+  {{ fyndable_faq | json }}
+</script>
+{% endif %}
+
 {% schema %}
 {
   "name": "Fyndable SEO schema",

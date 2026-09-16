@@ -93,7 +93,6 @@ class ShopifyContentFetcher
                 title
                 description
                 descriptionHtml
-                onlineStoreUrl
                 productsCount { count precision }
                 image { url altText }
               }
@@ -141,9 +140,11 @@ class ShopifyContentFetcher
      * @param  int  $limit  Max total articles across all blogs.
      * @return array<int, array>
      */
-    public function getArticles(Shop $shop, int $limit = 250): array
+    /**
+     * List the shop's blogs (for the article writer).
+     */
+    public function getBlogs(Shop $shop): array
     {
-        // First get all blogs
         $blogsQuery = <<<'GRAPHQL'
         query getBlogs($first: Int!) {
           blogs(first: $first) {
@@ -159,7 +160,19 @@ class ShopifyContentFetcher
             return [];
         }
 
-        $blogs = $blogsResponse['data']['blogs']['edges'] ?? [];
+        return array_map(
+            fn (array $edge) => $edge['node'],
+            $blogsResponse['data']['blogs']['edges'] ?? []
+        );
+    }
+
+    public function getArticles(Shop $shop, int $limit = 250): array
+    {
+        // First get all blogs
+        $blogs = array_map(
+            fn (array $blog) => ['node' => $blog],
+            $this->getBlogs($shop)
+        );
         $allArticles = [];
 
         foreach ($blogs as $blogEdge) {
@@ -176,9 +189,8 @@ class ShopifyContentFetcher
                       id
                       handle
                       title
-                      content
-                      contentHtml
-                      excerpt
+                      body
+                      summary
                       publishedAt
                       tags
                       image { url altText }
@@ -215,7 +227,7 @@ class ShopifyContentFetcher
 
         $fields = match ($type) {
             'product' => 'id title handle status productType onlineStoreUrl featuredImage { url altText }',
-            'collection' => 'id title handle onlineStoreUrl image { url altText }',
+            'collection' => 'id title handle image { url altText }',
             'page' => 'id title handle',
             'article' => 'id title handle publishedAt image { url altText } blog { handle title }',
             default => null,
@@ -291,7 +303,6 @@ class ShopifyContentFetcher
               handle
               description
               descriptionHtml
-              onlineStoreUrl
               seo { title description }
               image { url altText }
               metafields(first: 25) { edges { node { namespace key value } } }
@@ -306,9 +317,8 @@ class ShopifyContentFetcher
             ... on Article {
               title
               handle
-              content
-              contentHtml
-              excerpt
+              body
+              summary
               publishedAt
               tags
               image { url altText }
@@ -515,7 +525,11 @@ class ShopifyContentFetcher
         if (isset($body['errors'])) {
             Log::error('ShopifyContentFetcher: GraphQL errors', ['errors' => $body['errors']]);
 
-            return ['error' => 'graphql_errors', 'details' => $body['errors']];
+            return [
+                'error' => 'graphql_errors',
+                'message' => $body['errors'][0]['message'] ?? 'Shopify GraphQL query failed',
+                'details' => $body['errors'],
+            ];
         }
 
         return $body;

@@ -16,6 +16,7 @@ class OpenAIAdapter
 {
     private SaaSSettings $settings;
     private string $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    private string $imagesUrl = 'https://api.openai.com/v1/images/generations';
 
     public function __construct(SaaSSettings $settings)
     {
@@ -123,6 +124,78 @@ class OpenAIAdapter
                 'total_tokens'      => $usage['total_tokens'] ?? 0,
                 'cost'              => 0,
             ],
+        ];
+    }
+
+    /**
+     * Generate an image via OpenAI's images API.
+     *
+     * Defaults to dall-e-3 because it returns a hosted URL — Shopify can fetch
+     * it directly via productCreateMedia/fileCreate. gpt-image-1 only returns
+     * b64_json, which needs staged uploads instead.
+     *
+     * @param string $prompt Image prompt
+     * @param string $size   e.g. "1024x1024", "1024x1792", "1792x1024"
+     * @param string $model  dall-e-3 | gpt-image-1
+     * @return array|\WP_Error ['url'|'b64_json', 'model', 'revised_prompt']
+     */
+    public function image(string $prompt, string $size = '1024x1024', string $model = 'dall-e-3'): array|\WP_Error
+    {
+        $apiKey = $this->getApiKey();
+
+        if (empty($apiKey)) {
+            return new \WP_Error(
+                'openai_not_configured',
+                __('OpenAI API key is not configured. Add it in SaaS Settings.', 'sseo-ai-saas')
+            );
+        }
+
+        $allowedSizes = ['1024x1024', '1024x1792', '1792x1024'];
+        if (!in_array($size, $allowedSizes, true)) {
+            $size = '1024x1024';
+        }
+
+        $response = wp_remote_post($this->imagesUrl, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => json_encode([
+                'model'           => $model,
+                'prompt'          => $prompt,
+                'n'               => 1,
+                'size'            => $size,
+                'response_format' => 'url',
+            ]),
+            'timeout' => 180,
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_Error('openai_request_failed', sprintf(__('OpenAI image request failed: %s', 'sseo-ai-saas'), $response->get_error_message()));
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200) {
+            $errorMsg = $body['error']['message'] ?? __('Unknown OpenAI error', 'sseo-ai-saas');
+            $errorCode = $body['error']['code'] ?? 'openai_image_error';
+            if ($statusCode === 401) {
+                $errorCode = 'invalid_api_key';
+            } elseif ($statusCode === 429) {
+                $errorCode = 'rate_limited';
+            }
+
+            return new \WP_Error($errorCode, $errorMsg);
+        }
+
+        $item = $body['data'][0] ?? [];
+
+        return [
+            'url'            => $item['url'] ?? null,
+            'b64_json'       => $item['b64_json'] ?? null,
+            'revised_prompt' => $item['revised_prompt'] ?? null,
+            'model'          => $model,
         ];
     }
 }

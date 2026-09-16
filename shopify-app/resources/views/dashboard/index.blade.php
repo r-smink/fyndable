@@ -65,6 +65,10 @@
             <button class="tab" onclick="showTab('content')">Content</button>
             <button class="tab" onclick="showTab('bulk')">Bulk Optimize</button>
             <button class="tab" onclick="showTab('ranktracker')">Rank Tracker</button>
+            <button class="tab" onclick="showTab('backlinks')">Backlinks</button>
+            <button class="tab" onclick="showTab('aivisibility')">AI Visibility</button>
+            <button class="tab" onclick="showTab('blogwriter')">Blog Writer</button>
+            <button class="tab" onclick="showTab('tools')">Tools</button>
             <button class="tab" onclick="showTab('license')">License</button>
         </div>
 
@@ -206,6 +210,34 @@
                     </div>
                     <button class="btn" onclick="saveSchema()">Save Schema</button>
 
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">FAQ schema</h3>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+                            <input type="number" id="faq-count" value="5" min="2" max="10" style="width: 70px;">
+                            <button class="btn secondary" onclick="generateFaq()">Generate FAQ</button>
+                            <button class="btn" onclick="saveFaq()">Save FAQ Schema</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-faq">FAQ items (JSON, editable — question/answer pairs)</label>
+                            <textarea id="edit-faq" rows="6" style="font-family: monospace; font-size: 12px;" placeholder='[{"question": "...", "answer": "..."}]'></textarea>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">Internal links</h3>
+                        <button class="btn secondary" onclick="findLinkSuggestions()">Find link suggestions</button>
+                        <div id="link-suggestions" style="margin-top: 10px;"></div>
+                    </div>
+
+                    <div id="ai-image-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: none;">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">AI product image</h3>
+                        <div class="form-group">
+                            <label for="ai-image-prompt">Image prompt (optional — defaults to product title)</label>
+                            <input type="text" id="ai-image-prompt" placeholder="e.g. product on a wooden table, warm light">
+                        </div>
+                        <button class="btn secondary" onclick="generateAiImage()">Generate &amp; attach image</button>
+                    </div>
+
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;" id="push-all-section">
                         <button class="btn" onclick="pushAll()">Push All to Shopify</button>
                         <label style="margin-left: 10px; font-size: 13px;"><input type="checkbox" id="product-overwrite"> Overwrite existing product content</label>
@@ -275,6 +307,134 @@
             </div>
         </div>
 
+        <!-- Backlinks Tab -->
+        <div id="backlinks" class="tab-content">
+            <div class="card">
+                <h2>Backlinks</h2>
+                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
+                    Analyze the backlink profile of your store (or any domain) via DataForSEO.
+                </p>
+                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
+                        <label for="bl-target">Domain or URL</label>
+                        <input type="text" id="bl-target" placeholder="your-store.com">
+                    </div>
+                    <button class="btn" onclick="loadBacklinks(false)">Summary</button>
+                    <button class="btn secondary" onclick="loadBacklinks(true)">Live backlinks</button>
+                </div>
+                <div id="backlinks-result" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- AI Visibility Tab -->
+        <div id="aivisibility" class="tab-content">
+            <div class="card">
+                <h2>AI / LLM Visibility</h2>
+                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
+                    Check whether AI assistants mention your brand, and inspect live LLM answers.
+                </p>
+                <h3 style="font-size: 15px; margin-bottom: 10px;">Live LLM answer</h3>
+                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
+                        <label for="llm-prompt">Question to ask</label>
+                        <input type="text" id="llm-prompt" placeholder="e.g. What are the best shops for outdoor gear?">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="llm-provider">Provider</label>
+                        <select id="llm-provider">
+                            <option value="chatgpt">ChatGPT</option>
+                            <option value="claude">Claude</option>
+                            <option value="gemini">Gemini</option>
+                            <option value="perplexity">Perplexity</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="runLlmCheck()">Ask</button>
+                </div>
+                <div id="llm-result" style="margin-top: 15px;"></div>
+                <h3 style="font-size: 15px; margin: 25px 0 10px;">AI mentions</h3>
+                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
+                        <label for="llm-mentions-target">Brand or domain</label>
+                        <input type="text" id="llm-mentions-target" placeholder="your-store.com">
+                    </div>
+                    <button class="btn secondary" onclick="loadLlmMentions()">Search mentions</button>
+                </div>
+                <div id="llm-mentions-result" style="margin-top: 15px;"></div>
+                <h3 style="font-size: 15px; margin: 25px 0 10px;">Keyword data</h3>
+                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
+                        <label for="kw-data-input">Keywords (comma separated)</label>
+                        <input type="text" id="kw-data-input" placeholder="e.g. snowboard, splitboard, snow gear">
+                    </div>
+                    <button class="btn secondary" onclick="loadKeywordData()">Get volumes</button>
+                </div>
+                <div id="kw-data-result" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- Blog Writer Tab -->
+        <div id="blogwriter" class="tab-content">
+            <div class="card">
+                <h2>Blog Writer</h2>
+                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
+                    Generate an SEO-optimized article with AI, review it, and publish it to a blog.
+                </p>
+                <div class="form-group">
+                    <label for="bw-blog">Blog</label>
+                    <select id="bw-blog" style="min-width: 220px;"></select>
+                </div>
+                <div class="form-group">
+                    <label for="bw-topic">Topic</label>
+                    <input type="text" id="bw-topic" placeholder="e.g. How to choose the right snowboard size">
+                </div>
+                <div class="form-group">
+                    <label for="bw-keywords">Keywords (optional, comma separated)</label>
+                    <input type="text" id="bw-keywords" placeholder="e.g. snowboard size chart, beginner snowboard">
+                </div>
+                <div class="form-group">
+                    <label for="bw-words">Word count</label>
+                    <input type="number" id="bw-words" value="800" min="200" max="2500" style="width: 110px;">
+                </div>
+                <button class="btn" onclick="generateArticle()">Generate draft</button>
+                <div id="bw-draft" style="display: none; margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="bw-title">Title</label>
+                        <input type="text" id="bw-title">
+                    </div>
+                    <div class="form-group">
+                        <label for="bw-body">Body (HTML)</label>
+                        <textarea id="bw-body" rows="14" style="font-family: monospace; font-size: 12px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="bw-tags">Tags (optional, comma separated)</label>
+                        <input type="text" id="bw-tags">
+                    </div>
+                    <button class="btn" onclick="createArticle(true)">Publish article</button>
+                    <button class="btn secondary" onclick="createArticle(false)">Save as draft</button>
+                </div>
+                <div id="bw-result" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Tools Tab -->
+        <div id="tools" class="tab-content">
+            <div class="card">
+                <h2>IndexNow</h2>
+                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
+                    Instantly notify Bing and other IndexNow search engines when URLs change.
+                    One-time setup creates a key file on your domain via a redirect to the app proxy.
+                </p>
+                <div id="indexnow-status" style="margin-bottom: 15px;"></div>
+                <button class="btn secondary" onclick="setupIndexNow()">Setup key redirect</button>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="indexnow-urls">URLs to submit (one per line)</label>
+                    <textarea id="indexnow-urls" rows="5" placeholder="https://your-store.com/products/example"></textarea>
+                </div>
+                <button class="btn" onclick="submitIndexNow()">Submit URLs</button>
+                <div id="indexnow-result" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
         <!-- License Tab -->
         <div id="license" class="tab-content">
             <div class="card">
@@ -316,6 +476,8 @@
             if (tabId === 'content' && !contentListLoaded) { contentListLoaded = true; searchContent(); }
             if (tabId === 'llmstxt') loadLlmsTxtStatus();
             if (tabId === 'ranktracker') { loadRankStats(); loadKeywords(); }
+            if (tabId === 'blogwriter') loadBlogs();
+            if (tabId === 'tools') loadIndexNowStatus();
             if (tabId === 'license') loadLicenseStatus();
         }
 
@@ -524,6 +686,8 @@
                 .join('');
             document.getElementById('alt-text-section').style.display = currentType === 'product' ? 'block' : 'none';
             document.getElementById('push-all-section').style.display = currentType === 'product' ? 'block' : 'none';
+            document.getElementById('ai-image-section').style.display = currentType === 'product' ? 'block' : 'none';
+            document.getElementById('link-suggestions').innerHTML = '';
             document.getElementById('content-editor').style.display = 'block';
             document.getElementById('content-empty').style.display = 'none';
             contentResult('');
@@ -834,6 +998,279 @@
             if (!confirm('Deactivate license?')) return;
             const data = await api('/license/deactivate', { method: 'POST' });
             if (data.success) loadLicenseStatus();
+        }
+
+        // FAQ schema
+        async function generateFaq() {
+            if (!currentId) { alert('Select an item first'); return; }
+            contentResult('<div class="loading">Generating FAQ...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/generate-faq`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    count: parseInt(document.getElementById('faq-count').value) || 5,
+                    context: document.getElementById('product-context').value,
+                }),
+            });
+            if (data.success) {
+                document.getElementById('edit-faq').value = JSON.stringify(data.faq, null, 2);
+                document.getElementById('edit-faq').dataset.schema = JSON.stringify(data.schema);
+                contentResult('<div class="alert success">FAQ generated — review and click "Save FAQ Schema".</div>');
+            } else {
+                showApiError(data);
+            }
+        }
+
+        async function saveFaq() {
+            if (!currentId) { alert('Select an item first'); return; }
+            let pairs;
+            try {
+                pairs = JSON.parse(document.getElementById('edit-faq').value);
+            } catch (e) {
+                alert('FAQ JSON is invalid');
+                return;
+            }
+            const schema = {
+                '@@context': 'https://schema.org/',
+                '@@type': 'FAQPage',
+                'mainEntity': (Array.isArray(pairs) ? pairs : []).map(p => ({
+                    '@@type': 'Question',
+                    'name': p.question,
+                    'acceptedAnswer': { '@@type': 'Answer', 'text': p.answer },
+                })),
+            };
+            contentResult('<div class="loading">Saving...</div>');
+            const data = await api(`/content/${currentType}/${numericId()}/save-faq`, {
+                method: 'POST',
+                body: JSON.stringify({ schema }),
+            });
+            if (data.success) {
+                contentResult('<div class="alert success">FAQ schema saved to Shopify!</div>');
+            } else {
+                showApiError(data);
+            }
+        }
+
+        // Internal links
+        async function findLinkSuggestions() {
+            if (!currentId) { alert('Select an item first'); return; }
+            const box = document.getElementById('link-suggestions');
+            box.innerHTML = '<div class="loading">Scanning content...</div>';
+            const data = await api(`/content/${currentType}/${numericId()}/link-suggestions`, { method: 'POST' });
+            if (data.error) {
+                showApiError(data);
+                box.innerHTML = '';
+                return;
+            }
+            if (!data.suggestions.length) {
+                box.innerHTML = '<p style="color:#637381;font-size:13px;">No linkable titles found in the body text.</p>';
+                return;
+            }
+            box.innerHTML = data.suggestions.map((s, i) => `
+                <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+                    <span style="flex:1;"><strong>${escHtml(s.anchor)}</strong> → ${escHtml(s.url)} <em>(${s.target_type})</em></span>
+                    <button class="btn secondary" style="padding:4px 10px;font-size:12px;" onclick="applyLink(${i})">Apply</button>
+                </div>`).join('');
+            window._linkSuggestions = data.suggestions;
+        }
+
+        async function applyLink(index) {
+            const s = window._linkSuggestions[index];
+            if (!s) return;
+            const data = await api(`/content/${currentType}/${numericId()}/apply-link`, {
+                method: 'POST',
+                body: JSON.stringify({ anchor: s.anchor, url: s.url }),
+            });
+            if (data.success) {
+                contentResult('<div class="alert success">Link inserted into the body content!</div>');
+                window._linkSuggestions.splice(index, 1);
+                document.getElementById('link-suggestions').querySelectorAll('div').forEach(el => el.remove());
+                findLinkSuggestions();
+            } else {
+                showApiError(data);
+            }
+        }
+
+        // AI product image
+        async function generateAiImage() {
+            if (!currentId || currentType !== 'product') { alert('Select a product first'); return; }
+            contentResult('<div class="loading">Generating image (can take ~30s)...</div>');
+            const data = await api(`/content/product/${numericId()}/generate-image`, {
+                method: 'POST',
+                body: JSON.stringify({ prompt: document.getElementById('ai-image-prompt').value }),
+            });
+            if (data.success) {
+                contentResult(`<div class="alert success">Image generated and attached to the product!
+                    <br><img src="${data.image_url}" style="max-width:200px;margin-top:8px;border-radius:6px;"></div>`);
+            } else {
+                showApiError(data);
+            }
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        // Backlinks
+        async function loadBacklinks(live) {
+            const target = document.getElementById('bl-target').value.trim();
+            const box = document.getElementById('backlinks-result');
+            box.innerHTML = '<div class="loading">Loading backlink data...</div>';
+            const data = await api(`/insights/backlinks?target=${encodeURIComponent(target)}&live=${live ? 1 : 0}&limit=50`);
+            if (data.error || data.success === false) {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+                return;
+            }
+            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+        }
+
+        // AI visibility
+        async function runLlmCheck() {
+            const prompt = document.getElementById('llm-prompt').value.trim();
+            if (!prompt) { alert('Enter a question'); return; }
+            const provider = document.getElementById('llm-provider').value;
+            const box = document.getElementById('llm-result');
+            box.innerHTML = '<div class="loading">Asking ' + provider + '...</div>';
+            const data = await api('/insights/llm-check', {
+                method: 'POST',
+                body: JSON.stringify({ prompt, provider }),
+            });
+            if (data.error || data.success === false) {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+                return;
+            }
+            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+        }
+
+        async function loadLlmMentions() {
+            const target = document.getElementById('llm-mentions-target').value.trim();
+            const box = document.getElementById('llm-mentions-result');
+            box.innerHTML = '<div class="loading">Searching AI mentions...</div>';
+            const data = await api('/insights/llm-mentions', {
+                method: 'POST',
+                body: JSON.stringify({ action: 'search_mentions', params: { target } }),
+            });
+            if (data.error || data.success === false) {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+                return;
+            }
+            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+        }
+
+        async function loadKeywordData() {
+            const raw = document.getElementById('kw-data-input').value;
+            const keywords = raw.split(',').map(k => k.trim()).filter(Boolean);
+            if (!keywords.length) { alert('Enter at least one keyword'); return; }
+            const box = document.getElementById('kw-data-result');
+            box.innerHTML = '<div class="loading">Loading keyword data...</div>';
+            const data = await api('/insights/keyword-data', {
+                method: 'POST',
+                body: JSON.stringify({ keywords }),
+            });
+            if (data.error || data.success === false) {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+                return;
+            }
+            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+        }
+
+        // Blog writer
+        async function loadBlogs() {
+            const sel = document.getElementById('bw-blog');
+            const data = await api('/blogs');
+            if (data.error) {
+                sel.innerHTML = '<option>Error loading blogs</option>';
+                return;
+            }
+            sel.innerHTML = (data.blogs || [])
+                .map(b => `<option value="${b.id.split('/').pop()}">${escHtml(b.title)}</option>`)
+                .join('') || '<option>No blogs found</option>';
+        }
+
+        async function generateArticle() {
+            const topic = document.getElementById('bw-topic').value.trim();
+            if (!topic) { alert('Enter a topic'); return; }
+            const box = document.getElementById('bw-result');
+            box.innerHTML = '<div class="loading">Writing article (can take ~30s)...</div>';
+            const data = await api('/articles/generate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    topic,
+                    keywords: document.getElementById('bw-keywords').value,
+                    word_count: parseInt(document.getElementById('bw-words').value) || 800,
+                }),
+            });
+            if (data.success) {
+                document.getElementById('bw-title').value = data.title;
+                document.getElementById('bw-body').value = data.body_html;
+                document.getElementById('bw-draft').style.display = 'block';
+                box.innerHTML = '<div class="alert success">Draft generated — review below, then publish or save as draft.</div>';
+            } else {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+            }
+        }
+
+        async function createArticle(publish) {
+            const blogId = document.getElementById('bw-blog').value;
+            const title = document.getElementById('bw-title').value.trim();
+            const body = document.getElementById('bw-body').value;
+            if (!title || !body) { alert('Title and body required'); return; }
+            const box = document.getElementById('bw-result');
+            box.innerHTML = '<div class="loading">Creating article...</div>';
+            const data = await api(`/blogs/${blogId}/articles`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    title,
+                    body_html: body,
+                    publish,
+                    tags: document.getElementById('bw-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+                }),
+            });
+            if (data.success) {
+                box.innerHTML = `<div class="alert success">Article ${publish ? 'published' : 'saved as draft'}!</div>`;
+            } else {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+            }
+        }
+
+        // IndexNow
+        async function loadIndexNowStatus() {
+            const data = await api('/indexnow/status');
+            const box = document.getElementById('indexnow-status');
+            if (data.error) {
+                box.innerHTML = `<div class="alert error">Error: ${data.error}</div>`;
+                return;
+            }
+            box.innerHTML = `<div style="font-size:13px;color:#45545f;">
+                Key: <code>${data.key}</code><br>
+                Key file: <code>${data.key_location}</code><br>
+                → redirects to <code>${data.proxy_path}</code></div>`;
+        }
+
+        async function setupIndexNow() {
+            const box = document.getElementById('indexnow-result');
+            box.innerHTML = '<div class="loading">Creating redirect...</div>';
+            const data = await api('/indexnow/setup', { method: 'POST' });
+            if (data.success) {
+                box.innerHTML = `<div class="alert success">Key redirect ${escHtml(data.redirect.status)}: ${escHtml(data.redirect.path)} → ${escHtml(data.redirect.target)}</div>`;
+            } else {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+            }
+        }
+
+        async function submitIndexNow() {
+            const urls = document.getElementById('indexnow-urls').value.split('\n').map(u => u.trim()).filter(Boolean);
+            if (!urls.length) { alert('Enter at least one URL'); return; }
+            const box = document.getElementById('indexnow-result');
+            box.innerHTML = '<div class="loading">Submitting to IndexNow...</div>';
+            const data = await api('/indexnow/submit', {
+                method: 'POST',
+                body: JSON.stringify({ urls }),
+            });
+            if (data.success) {
+                box.innerHTML = `<div class="alert success">Submitted ${data.submitted} URL(s) to IndexNow.</div>`;
+            } else {
+                box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
+            }
         }
 
         // Load overview on page load

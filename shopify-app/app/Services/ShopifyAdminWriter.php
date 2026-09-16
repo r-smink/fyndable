@@ -141,6 +141,54 @@ class ShopifyAdminWriter
     }
 
     /**
+     * Create a new blog article via articleCreate.
+     *
+     * @param  array  $fields  ArticleCreateInput fields (title, body, tags, isPublished, ...)
+     * @return string|null Error message or null on success.
+     */
+    public function createArticle(Shop $shop, string $blogId, array $fields): ?string
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation createArticle($article: ArticleCreateInput!) {
+          articleCreate(article: $article) {
+            article { id title }
+            userErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        return $this->runMutation($shop, $mutation, [
+            'article' => ['blogId' => $this->gid('Blog', $blogId)] + $fields,
+        ], 'articleCreate');
+    }
+
+    /**
+     * Attach external media (image URL) to a product via productCreateMedia.
+     *
+     * @return string|null Error message or null on success.
+     */
+    public function addProductMedia(Shop $shop, string $productId, string $imageUrl, string $alt = ''): ?string
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation addProductMedia($productId: ID!, $media: [CreateMediaInput!]!) {
+          productCreateMedia(productId: $productId, media: $media) {
+            media { id }
+            mediaUserErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        return $this->runMutation($shop, $mutation, [
+            'productId' => $this->gid('Product', $productId),
+            'media' => [[
+                'originalSource' => $imageUrl,
+                'mediaContentType' => 'IMAGE',
+                'alt' => $alt,
+            ]],
+        ], 'productCreateMedia');
+    }
+
+    /**
      * Create or update metafields on a resource via metafieldsSet.
      *
      * @param  string  $ownerType  Lowercase resource type: product|collection|page|article

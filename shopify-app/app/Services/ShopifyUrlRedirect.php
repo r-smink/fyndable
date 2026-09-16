@@ -37,6 +37,16 @@ class ShopifyUrlRedirect
         return $results;
     }
 
+    /**
+     * Ensure a single redirect exists (create or update).
+     */
+    public function ensure(Shop $shop, string $path, string $target): array
+    {
+        $base = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version');
+
+        return $this->ensureRedirect($shop, $base, $path, $target);
+    }
+
     private function ensureRedirect(Shop $shop, string $base, string $path, string $target): array
     {
         $existing = $this->findRedirect($shop, $base, $path);

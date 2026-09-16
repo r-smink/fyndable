@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RankHistory;
 use App\Models\Shop;
 use App\Services\LlmsTxtGenerator;
 use App\Services\ShopifySignature;
@@ -45,6 +46,21 @@ class WebhookController extends Controller
         switch ($topic) {
             case 'app/uninstalled':
                 $this->handleUninstall($shop);
+                break;
+
+                // GDPR mandatory webhooks — required for App Store listing.
+            case 'customers/data_request':
+                // The app stores no customer PII — acknowledge only.
+                Log::info('GDPR customers/data_request acknowledged', ['shop' => $shopDomain]);
+                break;
+
+            case 'customers/redact':
+                // The app stores no customer PII — acknowledge only.
+                Log::info('GDPR customers/redact acknowledged', ['shop' => $shopDomain]);
+                break;
+
+            case 'shop/redact':
+                $this->handleShopRedact($shop);
                 break;
 
             case 'products/create':
@@ -97,6 +113,31 @@ class WebhookController extends Controller
         $shop->save();
 
         Log::info('Shop uninstalled', ['shop' => $shop->shop_domain]);
+    }
+
+    /**
+     * shop/redact — erase shop data after uninstall grace period.
+     *
+     * Removes tracked keywords, rank history and llms.txt settings. The shop
+     * row itself is kept (license audit trail) but its credentials are
+     * cleared — uninstall already nulls the access token.
+     */
+    private function handleShopRedact(Shop $shop): void
+    {
+        RankHistory::whereIn(
+            'tracked_keyword_id',
+            $shop->trackedKeywords()->pluck('id')
+        )->delete();
+        $shop->trackedKeywords()->delete();
+        $shop->llmsTxtSettings()->delete();
+
+        $shop->access_token = null;
+        $shop->refresh_token = null;
+        $shop->token_expires_at = null;
+        $shop->shop_email = null;
+        $shop->save();
+
+        Log::info('GDPR shop/redact processed', ['shop' => $shop->shop_domain]);
     }
 
     /**

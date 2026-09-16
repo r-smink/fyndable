@@ -169,7 +169,7 @@ class LlmsTxtGenerator
                     $title = trim($article['title'] ?? '');
                     $entry = "- [{$title}]({$url})";
                     if ($settings->include_excerpt) {
-                        $excerpt = $this->makeExcerpt($article['excerpt'] ?? $article['content'] ?? '');
+                        $excerpt = $this->makeExcerpt($article['summary'] ?? $article['body'] ?? '');
                         if ($excerpt) {
                             $entry .= ": {$excerpt}";
                         }
@@ -381,7 +381,7 @@ class LlmsTxtGenerator
         $blogHandle = $article['_blog_handle'] ?? 'news';
         $url = ($article['url'] ?? '') ?: "{$siteDomain}/blogs/{$blogHandle}/".($article['handle'] ?? '');
         $title = trim($article['title'] ?? '');
-        $body = $this->stripHtml($article['content'] ?? '');
+        $body = $this->stripHtml($article['body'] ?? '');
 
         $body = trim(preg_replace('/\s+/', ' ', $body));
         if (mb_strlen($body) > $maxChars) {

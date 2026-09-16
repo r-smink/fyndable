@@ -53,6 +53,13 @@ class ApiGateway
             'callback' => [$this, 'handleAiRequest'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
+
+        // OpenAI image generation endpoint (product images etc.)
+        register_rest_route('ai-seo-saas/v1', '/ai/image', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleAiImageRequest'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
         
         // SERP proxy endpoint
         register_rest_route('ai-seo-saas/v1', '/serp/query', [
@@ -318,6 +325,53 @@ class ApiGateway
             'timeout' => $isTimeout,
             'details' => $lastError ? ($lastError->get_error_data() ?? null) : null,
         ], $statusCode);
+    }
+
+    /**
+     * Handle AI image generation request.
+     *
+     * Body: { prompt, size?, model? }
+     */
+    public function handleAiImageRequest(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $prompt = sanitize_textarea_field($body['prompt'] ?? '');
+        $size = sanitize_text_field($body['size'] ?? '1024x1024');
+        $model = sanitize_text_field($body['model'] ?? 'dall-e-3');
+
+        if (empty($prompt)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'missing_params',
+                'message' => __('prompt is required', 'sseo-ai-saas')
+            ], 400);
+        }
+
+        $adapter = new OpenAIAdapter($this->settings);
+        $result = $adapter->image($prompt, $size, $model);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        // dall-e-3 standard 1024x1024 ≈ $0.04/image; bill a flat estimate.
+        $cost = 0.04;
+        $this->trackUsage($tenant, 'ai_image', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'url' => $result['url'],
+            'revised_prompt' => $result['revised_prompt'],
+            'model' => $result['model'],
+            'usage' => ['cost' => $cost],
+        ], 200);
     }
 
     /**
