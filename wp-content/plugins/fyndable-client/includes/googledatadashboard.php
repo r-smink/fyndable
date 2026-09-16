@@ -141,7 +141,6 @@ class GoogleDataDashboard
         $overview = [
             'gsc' => null,
             'ga4' => null,
-            'ads' => null,
             'errors' => [],
         ];
 
@@ -191,22 +190,22 @@ class GoogleDataDashboard
             }
         }
 
-        // Google Ads overview
-        if ($this->adsClient->isConnected()) {
-            $adsResult = $this->adsClient->getCampaignOverview($days);
-            if (is_wp_error($adsResult)) {
-                $overview['errors'][] = 'Ads: ' . $adsResult->get_error_message();
-            } else {
-                $overview['ads'] = [
-                    'total_clicks' => $adsResult['total_clicks'] ?? 0,
-                    'total_impressions' => $adsResult['total_impressions'] ?? 0,
-                    'total_cost' => $adsResult['total_cost'] ?? 0,
-                    'total_conversions' => $adsResult['total_conversions'] ?? 0,
-                    'avg_ctr' => $adsResult['avg_ctr'] ?? 0,
-                    'cost_per_conversion' => $adsResult['cost_per_conversion'] ?? 0,
-                ];
-            }
-        }
+        // Google Ads overview — temporarily disabled for later stage.
+        // if ($this->adsClient->isConnected()) {
+        //     $adsResult = $this->adsClient->getCampaignOverview($days);
+        //     if (is_wp_error($adsResult)) {
+        //         $overview['errors'][] = 'Ads: ' . $adsResult->get_error_message();
+        //     } else {
+        //         $overview['ads'] = [
+        //             'total_clicks' => $adsResult['total_clicks'] ?? 0,
+        //             'total_impressions' => $adsResult['total_impressions'] ?? 0,
+        //             'total_cost' => $adsResult['total_cost'] ?? 0,
+        //             'total_conversions' => $adsResult['total_conversions'] ?? 0,
+        //             'avg_ctr' => $adsResult['avg_ctr'] ?? 0,
+        //             'cost_per_conversion' => $adsResult['cost_per_conversion'] ?? 0,
+        //         ];
+        //     }
+        // }
 
         // Cache successful results only; don't cache auth errors so reconnections are reflected immediately.
         if (empty($overview['errors'])) {
