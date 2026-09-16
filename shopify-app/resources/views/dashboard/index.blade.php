@@ -371,6 +371,18 @@
             }
         }
 
+        async function setupLlmsTxtRedirects() {
+            const el = document.getElementById('llmstxt-redirect-status');
+            el.textContent = 'Creating redirects...';
+            const data = await api('/llmstxt/setup-redirects', { method: 'POST' });
+            if (data.error) {
+                el.textContent = 'Error: ' + data.error;
+                return;
+            }
+            const lines = data.redirects.map(r => `${r.path}: ${r.status}`).join('\n');
+            el.textContent = 'Redirects:\n' + lines;
+        }
+
         // Products
         let lastProductId = null;
         let lastGeneratedDescription = null;
