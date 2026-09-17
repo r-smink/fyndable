@@ -46,7 +46,7 @@ class Client
     private ?ContentOptimizer $contentOptimizer = null;
     private ?SerpCompetitor $serpCompetitor = null;
     private ?TopicCluster $topicCluster = null;
-    private ?AutomationOrchestrator $automationOrchestrator = null;
+    private ?ApexFlow $apexFlow = null;
     private ?KeywordDifficulty $keywordDifficulty = null;
     private ?LSIKeywords $lsiKeywords = null;
     private ?AIRepurposer $aiRepurposer = null;
@@ -594,13 +594,20 @@ class Client
                 return $schedules;
             });
 
-            $this->automationOrchestrator = new AutomationOrchestrator(
-                $this->settings,
-                $this->licenseValidator,
-                $this->topicCluster,
-                $this->llmClient
-            );
-            $this->automationOrchestrator->register();
+            // ApexFlow — fully automatic content autopilot. Paid tiers only
+            // (no trial): autopilot consumes real SERP/AI budget.
+            if (in_array($tier, ['professional', 'business', 'agency', 'dev'], true)) {
+                $this->apexFlow = new ApexFlow(
+                    $this->settings,
+                    $this->licenseValidator,
+                    $this->dashboardAPI,
+                    $this->llmClient,
+                    $this->topicCluster,
+                    $this->keywordExplorer,
+                    $this->localSerp
+                );
+                $this->apexFlow->register();
+            }
         }
         
         // Agency-only features (DEV includes these)
@@ -1038,15 +1045,17 @@ class Client
                     [$this, 'renderTopicClusterPage']
                 );
 
-                // 10b. Automation
-                add_submenu_page(
-                    'fyndable-dashboard',
-                    __('Automation', 'ai-seo-client'),
-                    __('Automation', 'ai-seo-client'),
-                    'manage_options',
-                    'ai-seo-automation',
-                    [$this, 'renderAutomationPage']
-                );
+                // 10b. ApexFlow — content autopilot (paid Pro+ only, no trial)
+                if ($this->apexFlow) {
+                    add_submenu_page(
+                        'fyndable-dashboard',
+                        __('ApexFlow', 'ai-seo-client'),
+                        __('⚡ ApexFlow', 'ai-seo-client'),
+                        'manage_options',
+                        'ai-seo-automation',
+                        [$this, 'renderAutomationPage']
+                    );
+                }
 
                 // 11. Site Audit
                 add_submenu_page(
@@ -1560,7 +1569,7 @@ class Client
     }
 
     /**
-     * Render Automation page - delegates to AutomationOrchestrator class
+     * Render ApexFlow page - delegates to ApexFlow class
      */
     public function renderAutomationPage(): void
     {
@@ -1568,8 +1577,8 @@ class Client
             $this->renderLicenseRequiredNotice();
             return;
         }
-        if ($this->automationOrchestrator) {
-            $this->automationOrchestrator->renderPage();
+        if ($this->apexFlow) {
+            $this->apexFlow->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }

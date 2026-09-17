@@ -41,10 +41,28 @@ class BlogWriterController extends Controller
     }
 
     /**
+     * Supported output languages for generated content.
+     */
+    private const LANGUAGES = [
+        'en' => 'English',
+        'nl' => 'Dutch',
+        'de' => 'German',
+        'fr' => 'French',
+        'es' => 'Spanish',
+        'it' => 'Italian',
+        'pt' => 'Portuguese',
+        'da' => 'Danish',
+        'sv' => 'Swedish',
+        'no' => 'Norwegian',
+        'fi' => 'Finnish',
+        'pl' => 'Polish',
+    ];
+
+    /**
      * Generate an article draft.
      *
      * POST /api/articles/generate
-     * Body: { topic, keywords?, tone?, word_count? }
+     * Body: { topic, keywords?, tone?, word_count?, language? }
      */
     public function generate(Request $request): array
     {
@@ -62,12 +80,14 @@ class BlogWriterController extends Controller
         $keywords = trim((string) $request->input('keywords', ''));
         $tone = trim((string) $request->input('tone', 'informative'));
         $wordCount = max(200, min((int) $request->input('word_count', 800), 2500));
+        $language = self::LANGUAGES[strtolower((string) $request->input('language', 'en'))] ?? 'English';
 
         $details = $this->fetcher->getShopDetails($shop);
         $shopName = $details['name'] ?? $shop->shop_domain;
 
         $prompt = "Write an SEO-optimized blog article for the Shopify store \"{$shopName}\".\n\n"
             ."Topic: {$topic}\n"
+            ."Language: {$language} (write the entire article, including the title, in {$language})\n"
             ."Tone: {$tone}\n"
             ."Length: about {$wordCount} words.\n";
 
@@ -117,7 +137,7 @@ class BlogWriterController extends Controller
      * Create an article on a blog (draft by default).
      *
      * POST /api/blogs/{blogId}/articles
-     * Body: { title, body_html, tags?, publish?: bool }
+     * Body: { title, body_html, tags?, publish?: bool, author? }
      */
     public function create(Request $request, string $blogId): array
     {
@@ -134,10 +154,19 @@ class BlogWriterController extends Controller
             return ['error' => 'title_and_body_required'];
         }
 
+        // author is a required AuthorInput in recent API versions — fall back
+        // to the shop name when the merchant leaves the field empty.
+        $authorName = trim((string) $request->input('author', ''));
+        if ($authorName === '') {
+            $details = $this->fetcher->getShopDetails($shop);
+            $authorName = trim((string) ($details['name'] ?? '')) ?: $shop->shop_domain;
+        }
+
         $fields = [
             'title' => $title,
             'body' => $bodyHtml,
             'isPublished' => $request->boolean('publish'),
+            'author' => ['name' => $authorName],
         ];
 
         $tags = array_values(array_filter(array_map(

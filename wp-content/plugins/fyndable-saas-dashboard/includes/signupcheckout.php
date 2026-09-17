@@ -218,11 +218,16 @@ class SignupCheckout
                 $savingsLabel = __('2 maanden gratis', 'sseo-ai-saas');
             }
 
+            $selfServe = $tier['self_serve'] ?? true;
             $plans[$key] = [
                 'name' => $tier['name'],
                 'popular' => $tier['popular'],
                 'cta' => $tier['cta'],
                 'features' => $tier['features'],
+                'self_serve' => $selfServe,
+                'contact_url' => $selfServe
+                    ? ''
+                    : 'mailto:' . get_option('ai_seo_saas_support_email', get_option('admin_email')),
                 'intervals' => [
                     'month' => [
                         'price' => $monthlyAmount,

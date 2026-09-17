@@ -395,6 +395,23 @@
                     <label for="bw-words">Word count</label>
                     <input type="number" id="bw-words" value="800" min="200" max="2500" style="width: 110px;">
                 </div>
+                <div class="form-group">
+                    <label for="bw-lang">Language</label>
+                    <select id="bw-lang" style="min-width: 160px;">
+                        <option value="en">English</option>
+                        <option value="nl">Nederlands</option>
+                        <option value="de">Deutsch</option>
+                        <option value="fr">Français</option>
+                        <option value="es">Español</option>
+                        <option value="it">Italiano</option>
+                        <option value="pt">Português</option>
+                        <option value="da">Dansk</option>
+                        <option value="sv">Svenska</option>
+                        <option value="no">Norsk</option>
+                        <option value="fi">Suomi</option>
+                        <option value="pl">Polski</option>
+                    </select>
+                </div>
                 <button class="btn" onclick="generateArticle()">Generate draft</button>
                 <div id="bw-draft" style="display: none; margin-top: 20px;">
                     <div class="form-group">
@@ -404,6 +421,10 @@
                     <div class="form-group">
                         <label for="bw-body">Body (HTML)</label>
                         <textarea id="bw-body" rows="14" style="font-family: monospace; font-size: 12px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="bw-author">Author (optional — defaults to shop name)</label>
+                        <input type="text" id="bw-author" placeholder="e.g. Jane Doe">
                     </div>
                     <div class="form-group">
                         <label for="bw-tags">Tags (optional, comma separated)</label>
@@ -1197,6 +1218,7 @@
                     topic,
                     keywords: document.getElementById('bw-keywords').value,
                     word_count: parseInt(document.getElementById('bw-words').value) || 800,
+                    language: document.getElementById('bw-lang').value,
                 }),
             });
             if (data.success) {
@@ -1222,6 +1244,7 @@
                     title,
                     body_html: body,
                     publish,
+                    author: document.getElementById('bw-author').value.trim(),
                     tags: document.getElementById('bw-tags').value.split(',').map(t => t.trim()).filter(Boolean),
                 }),
             });

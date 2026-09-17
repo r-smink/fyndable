@@ -20,6 +20,7 @@ window.FyndableI18n = (function () {
             // Checkout / signup
             choose_your_plan: 'Choose Your Plan',
             trial_subtitle: 'Start free, upgrade anytime. No credit card required.',
+            start_trial: 'Start 14-day trial',
             monthly: 'Monthly',
             yearly: 'Yearly',
             months_free: '2 months free',
@@ -184,6 +185,7 @@ window.FyndableI18n = (function () {
             // Checkout / signup
             choose_your_plan: 'Kies je abonnement',
             trial_subtitle: 'Start gratis, upgrade wanneer je wilt. Geen creditcard nodig.',
+            start_trial: 'Start 14-dagen trial',
             monthly: 'Maandelijks',
             yearly: 'Jaarlijks',
             months_free: '2 maanden gratis',

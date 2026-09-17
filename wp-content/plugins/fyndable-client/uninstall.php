@@ -25,6 +25,8 @@ if (!defined('SSEO_AI_CLIENT_TENANT_OPTION')) {
 
 $optionPatterns = [
     'sseo_ai_client_%',
+    'sseo_ai_apexflow_%',
+    'sseo_ai_automation_%',
     'sseo_ai_white_label',
     'sseo_ai_wl_%',
     'ai_seo_%',
@@ -56,6 +58,10 @@ $specificOptions = [
     'sseo_ai_client_ssl_verify',
     'sseo_ai_white_label',
     'sseo_ai_saas_wl_enabled',
+    'sseo_ai_brand_voice',
+    'sseo_ai_industry',
+    'sseo_ai_cluster_queues',
+    'aiseo_keyword_clusters',
 ];
 
 foreach ($specificOptions as $option) {
@@ -107,6 +113,10 @@ $cronHooks = [
     'sseo_ai_check_performance',
     'aiseoclient_decay_check',
     'aiseoclient_generate_sitemap',
+    'sseo_ai_apexflow_weekly',
+    'sseo_ai_automation_cron',
+    'sseo_ai_process_cluster_queue',
+    'sseo_ai_process_cluster_map_queue',
 ];
 
 foreach ($cronHooks as $hook) {
@@ -138,6 +148,11 @@ $metaKeys = [
     '_sseo_ai_topic_model',
     '_sseo_ai_content_brief',
     '_sseo_ai_cluster_id',
+    '_sseo_ai_cluster_role',
+    '_sseo_ai_generated',
+    '_sseo_ai_generated_date',
+    '_sseo_ai_planned_date',
+    '_sseo_ai_source',
     '_sseo_ai_eeat_score',
     '_sseo_ai_readability_score',
     '_sseo_ai_lsi_keywords',

@@ -396,10 +396,15 @@ class ApiGateway
         
         $body = $request->get_json_params();
         $keyword = sanitize_text_field($body['keyword'] ?? '');
-        $location = sanitize_text_field($body['location'] ?? 'United States');
-        
+        $country = sanitize_text_field($body['country'] ?? '');
+        $language = sanitize_text_field($body['language'] ?? '');
+        $location = sanitize_text_field($body['location'] ?? '');
+        if ($location === '') {
+            $location = $country !== '' ? $this->countryToLocation($country) : 'United States';
+        }
+
         // Route to appropriate provider with fallback, retry and circuit breaker
-        $result = $this->fetchSerpData($provider, $apiKey, $keyword, $location, true);
+        $result = $this->fetchSerpData($provider, $apiKey, $keyword, $location, true, $country, $language);
 
         if (is_wp_error($result)) {
             return new \WP_REST_Response([
@@ -1492,7 +1497,7 @@ class ApiGateway
     /**
      * Fetch SERP data from provider with optional fallback, retry and circuit breaker.
      */
-    private function fetchSerpData(string $provider, string $apiKey, string $keyword, string $location, bool $withFallback = false, string $countryCode = ''): array|\WP_Error
+    private function fetchSerpData(string $provider, string $apiKey, string $keyword, string $location, bool $withFallback = false, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
         $providers = [$provider];
         if ($withFallback) {
@@ -1511,7 +1516,7 @@ class ApiGateway
             }
 
             for ($attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++) {
-                $result = $this->fetchSerpFromProvider($p, $apiKey, $keyword, $location, $countryCode);
+                $result = $this->fetchSerpFromProvider($p, $apiKey, $keyword, $location, $countryCode, $languageCode);
                 if (!is_wp_error($result)) {
                     $this->recordProviderSuccess($p);
                     $result['_provider'] = $p;
@@ -1531,14 +1536,14 @@ class ApiGateway
     /**
      * Dispatch a single SERP provider request.
      */
-    private function fetchSerpFromProvider(string $provider, string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
+    private function fetchSerpFromProvider(string $provider, string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
         $providerKey = $this->getProviderApiKey($provider, $apiKey);
         switch ($provider) {
             case 'dataforseo':
-                return $this->fetchDataForSeo($providerKey, $keyword, $location, $countryCode);
+                return $this->fetchDataForSeo($providerKey, $keyword, $location, $countryCode, $languageCode);
             case 'serpapi':
-                return $this->fetchSerpApi($providerKey, $keyword, $location, $countryCode);
+                return $this->fetchSerpApi($providerKey, $keyword, $location, $countryCode, $languageCode);
             case 'seranking':
                 return $this->fetchSerankingSerp($providerKey, $keyword, $location, $countryCode);
             default:
@@ -1553,14 +1558,16 @@ class ApiGateway
      * back to the inline implementation for backward compatibility when the
      * client was not injected.
      */
-    private function fetchDataForSeo(string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
+    private function fetchDataForSeo(string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
+        $languageCode = $languageCode !== '' ? $languageCode : 'en';
+
         // Prefer the central DataForSeoClient when injected and configured
         if ($this->dataForSeoClient && $this->dataForSeoClient->isConfigured()) {
             return $this->dataForSeoClient->serpOrganicLiveAdvanced(
                 $keyword,
                 $this->getLocationCode($location),
-                'en',
+                $languageCode,
                 $countryCode
             );
         }
@@ -1575,7 +1582,7 @@ class ApiGateway
                 [
                     'keyword' => $keyword,
                     'location_code' => $this->getLocationCode($location),
-                    'language_code' => 'en',
+                    'language_code' => $languageCode,
                 ]
             ]),
             'timeout' => 60,
@@ -1592,7 +1599,7 @@ class ApiGateway
     /**
      * Fetch from SerpApi
      */
-    private function fetchSerpApi(string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
+    private function fetchSerpApi(string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
         $locale = $this->getSerpApiLocale($location);
 
@@ -1601,7 +1608,7 @@ class ApiGateway
             'location' => $location,
             'google_domain' => $locale['domain'],
             'gl' => $locale['gl'],
-            'hl' => $locale['hl'],
+            'hl' => $languageCode !== '' ? $languageCode : $locale['hl'],
             'api_key' => $apiKey,
             'output' => 'json',
         ], 'https://serpapi.com/search');

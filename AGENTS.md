@@ -130,6 +130,30 @@ REST: `GET /sseo-ai/v1/llmstxt/status` and `POST /sseo-ai/v1/llmstxt/regenerate`
 
 Note: the settings UI is rendered via `do_action('sseo_ai_render_llmstxt_settings')` in `renderSettingsPage()` (placed between "Social & Sharing" and "Advanced Settings").
 
+## ApexFlow — content autopilot (2026-09-17)
+
+`fyndable-client/includes/apexflow.php` — class `ApexFlow`, replaces `AutomationOrchestrator` (file deleted). Menu slug stays `ai-seo-automation`, label is now "⚡ ApexFlow". **Paid Professional+ only**: `ALLOWED_TIERS = [professional, business, agency, dev]` — deliberately excludes `trial`, unlike the other Pro+ gates.
+
+Pipeline (weekly cron `sseo_ai_apexflow_weekly` + "Run ApexFlow Now"):
+1. `scanSiteProfile()` — homepage text + recent posts + `sseo_ai_industry` + Local Business + WooCommerce cats → LLM → `sseo_ai_apexflow_profile` (refreshed when >30d old).
+2. `refreshKeywordPool()` — seeds (manual > profile > tracked keywords > GSC top queries > site title) → `KeywordExplorer::expand()` SERP n-grams + `ai/keyword-data` volume/difficulty + `serp/local-pack` local-intent detection (when coords configured). Stored in `sseo_ai_apexflow_keyword_pool` (max 50, refreshed when >7d). Caps per run: 5 seed expansions, 3 local-pack scans, 25 keyword-data items.
+3. `buildPlan()` — open slots in lookahead window (publish_days/time, skips dates with existing `future` posts) → batched LLM titles → `sseo_ai_apexflow_plan` (statuses: planned|queued). Preview = `buildPlan(0, false)` — dry-run, not persisted.
+4. `enqueuePlan()` — appends items to the shared `sseo_ai_cluster_queues` (source=`apexflow`), generated in background by `TopicCluster::processQueueItems()`.
+
+New queue-item fields honored by `processQueueItems()`: `post_type`, `publish_mode` (`schedule`→future post, `draft`→draft + `_sseo_ai_planned_date` meta), `category_id`, `author_id`, `featured_image` (opt-out), `source` (→ `_sseo_ai_source` meta).
+
+Settings option `sseo_ai_apexflow_settings`: enabled, language, country, posts_per_week (1-7, capped by `getMonthlyAutoPostLimit()`), publish_mode, publish_days[], publish_time, seed_keywords[], excluded_topics[], post_type, category_id, author_id, word_count, featured_image, notify_email, lookahead_weeks (1-8). Legacy `sseo_ai_automation_settings` migrated on first load; `sseo_ai_automation_cron` cleared.
+
+REST (`manage_options`): `GET /sseo-ai/v1/apexflow/status`, `POST /apexflow/run`, `POST /apexflow/preview`, `POST /apexflow/rescan-profile`, `POST /apexflow/reject-keyword`.
+
+Other touched code:
+- `keywordexplorer.php` — `expand($seed, $opts)` accepts `country`/`language`, forwarded to `serp/search` (cache key includes them).
+- `apigateway.php` (SaaS) — `handleSerpRequest` now accepts `country` (mapped via `countryToLocation`) and `language` (→ DataForSEO `language_code`, SerpApi `hl`). Previously clients sent `country` and it was silently ignored — fixes latent bug for SerpCompetitor/KeywordExplorer too.
+- `ai-seo-client.php` — deactivation clears `sseo_ai_apexflow_weekly` + legacy `sseo_ai_automation_cron`.
+- Brand Voice quick fields on the ApexFlow page write to shared `sseo_ai_brand_voice` (tone, audience, voice_description, enabled).
+
+Note: WP-Cron only runs on site traffic — production sites should point a real cron at `wp-cron.php` for reliable weekly runs and queue processing.
+
 ## Shopify App (Laravel 11)
 
 A separate Laravel 11 application lives in `shopify-app/` and provides the Fyndable SEO app for the Shopify platform. It reuses the SaaS dashboard (portal.fyndable.ai) for licensing, AI, and SERP — it does NOT have its own provider keys.
@@ -254,3 +278,8 @@ Add to crontab:
 - `ShopifySignature` verifies webhook HMAC over raw request body
 - `VerifyShopifySession` verifies App Bridge session tokens via JWKS from `https://{shop}/.well-known/jwks.json` using `firebase/php-jwt` v7
 
+
+### Bug fixes / changes (2026-09-17)
+- **articleCreate author required** — API version 2026-07 makes `ArticleCreateInput.author` (AuthorInput: `name` or `userId`) required; `BlogWriterController::create()` now always sends `author.name`, using an optional `author` request field with the shop name as fallback. The Blog Writer UI has an optional "Author" field.
+- **Blog Writer language selector** — `POST /api/articles/generate` accepts `language` (whitelist in `BlogWriterController::LANGUAGES`, default `en`); the prompt instructs the model to write title + body in that language. UI dropdown in the Blog Writer tab. Other generators (product/collection meta/descriptions) have no selector — they inherit language from existing content/context.
+- **Agency tier checkout** — `SignupCheckout::getPlans()` now includes `self_serve` + `contact_url` (mailto to `ai_seo_saas_support_email`) per plan. `signup.js` renders `plan.cta` ("Contact Us") for non-self-serve plans and redirects to `contact_url` instead of opening the trial signup form (previously all plans showed "Start 14-dagen trial" and then hit the backend 403). New i18n key `start_trial` in `assets/i18n.js`.

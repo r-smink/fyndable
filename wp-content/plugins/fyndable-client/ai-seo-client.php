@@ -109,11 +109,15 @@ register_deactivation_hook(__FILE__, function () {
             switch_to_blog((int) $site->blog_id);
             wp_clear_scheduled_hook('sseo_ai_client_license_check');
             wp_clear_scheduled_hook('sseo_ai_rank_check_cron');
+            wp_clear_scheduled_hook('sseo_ai_apexflow_weekly');
+            wp_clear_scheduled_hook('sseo_ai_automation_cron');
             restore_current_blog();
         }
     } else {
         wp_clear_scheduled_hook('sseo_ai_client_license_check');
         wp_clear_scheduled_hook('sseo_ai_rank_check_cron');
+        wp_clear_scheduled_hook('sseo_ai_apexflow_weekly');
+        wp_clear_scheduled_hook('sseo_ai_automation_cron');
     }
 });
 

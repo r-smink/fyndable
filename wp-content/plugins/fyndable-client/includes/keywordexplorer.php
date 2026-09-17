@@ -51,17 +51,18 @@ class KeywordExplorer
     /**
      * Expand a seed keyword by fetching SERP titles and extracting n-grams.
      *
+     * @param array{country?: string, language?: string} $opts Optional SERP region/language.
      * @return array{related: array<string,int>, serp: array}
      */
-    public function expand(string $seed): array
+    public function expand(string $seed, array $opts = []): array
     {
-        $cacheKey = 'aiseo_kwexp_' . md5($seed);
+        $cacheKey = 'aiseo_kwexp_' . md5($seed . '|' . ($opts['country'] ?? '') . '|' . ($opts['language'] ?? ''));
         $cached = get_transient($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
 
-        $serpResults = $this->fetchSerpResults($seed);
+        $serpResults = $this->fetchSerpResults($seed, $opts);
         if (is_wp_error($serpResults) || empty($serpResults)) {
             return ['error' => 'Could not fetch SERP data', 'related' => [], 'serp' => []];
         }
@@ -136,12 +137,20 @@ class KeywordExplorer
     /**
      * Fetch SERP results via DashboardAPI with AI fallback.
      */
-    private function fetchSerpResults(string $keyword): array|\WP_Error
+    private function fetchSerpResults(string $keyword, array $opts = []): array|\WP_Error
     {
-        $response = $this->dashboardAPI->request('serp/search', [
+        $params = [
             'keyword' => $keyword,
             'num' => 20,
-        ]);
+        ];
+        if (!empty($opts['country'])) {
+            $params['country'] = sanitize_text_field($opts['country']);
+        }
+        if (!empty($opts['language'])) {
+            $params['language'] = sanitize_text_field($opts['language']);
+        }
+
+        $response = $this->dashboardAPI->request('serp/search', $params);
 
         if (!is_wp_error($response) && !empty($response['results'])) {
             return array_slice($response['results'], 0, 20);

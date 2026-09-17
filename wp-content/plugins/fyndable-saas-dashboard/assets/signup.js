@@ -137,8 +137,11 @@
                 html += '<li>' + escapeHtml(f) + '</li>';
             });
             html += '</ul>';
-            var btnLabel = trialEnabled ? 'Start 14-dagen trial' : plan.cta;
-            html += '<button data-tier="' + key + '">' + escapeHtml(btnLabel) + '</button>';
+            var isSelfServe = plan.self_serve !== false;
+            var btnLabel = isSelfServe
+                ? (trialEnabled ? FyndableI18n.t('start_trial') : plan.cta)
+                : plan.cta;
+            html += '<button data-tier="' + key + '"' + (isSelfServe ? '' : ' data-contact="' + escapeHtml(plan.contact_url || '') + '"') + '>' + escapeHtml(btnLabel) + '</button>';
             html += '</div>';
         });
 
@@ -195,6 +198,14 @@
         // Bind plan selection
         container.querySelectorAll('.fyndable-signup-plan button').forEach(function (btn) {
             btn.addEventListener('click', function () {
+                var plan = plans[btn.dataset.tier];
+                if (!plan || plan.self_serve === false) {
+                    var contactUrl = btn.dataset.contact || (plan && plan.contact_url);
+                    if (contactUrl) {
+                        window.location.href = contactUrl;
+                    }
+                    return;
+                }
                 selectedTier = btn.dataset.tier;
                 document.getElementById('fyndable-selected-plan').textContent = plans[selectedTier].name + ' — ' + plans[selectedTier].intervals[selectedInterval].price_display + plans[selectedTier].intervals[selectedInterval].period;
                 showStep('form');

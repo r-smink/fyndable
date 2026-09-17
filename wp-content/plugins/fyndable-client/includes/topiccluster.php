@@ -864,11 +864,12 @@ PROMPT;
                     }
 
                     // Determine post status
+                    $itemPostType = !empty($item['post_type']) && post_type_exists($item['post_type']) ? $item['post_type'] : 'post';
                     $postData = [
                         'post_title' => $item['title'],
                         'post_content' => $content['content'],
-                        'post_type' => 'post',
-                        'post_author' => get_current_user_id() ?: 1,
+                        'post_type' => $itemPostType,
+                        'post_author' => (int) ($item['author_id'] ?? 0) ?: (get_current_user_id() ?: 1),
                         'meta_input' => [
                             '_sseo_ai_title' => $item['title'],
                             '_sseo_ai_description' => $content['meta_description'] ?? '',
@@ -880,8 +881,22 @@ PROMPT;
                         ],
                     ];
 
+                    if (!empty($item['category_id']) && $itemPostType === 'post') {
+                        $postData['post_category'] = [(int) $item['category_id']];
+                    }
+                    if (!empty($item['source'])) {
+                        $postData['meta_input']['_sseo_ai_source'] = $item['source'];
+                    }
+
                     $scheduleDate = $item['schedule_date'] ?? '';
-                    if (!empty($scheduleDate) && strtotime(get_gmt_from_date($scheduleDate)) > time()) {
+                    $isFuture = !empty($scheduleDate) && strtotime(get_gmt_from_date($scheduleDate)) > time();
+                    if (($item['publish_mode'] ?? 'schedule') === 'draft') {
+                        // Draft-review mode (ApexFlow): keep as draft, remember the planned date.
+                        $postData['post_status'] = 'draft';
+                        if (!empty($scheduleDate)) {
+                            $postData['meta_input']['_sseo_ai_planned_date'] = $scheduleDate;
+                        }
+                    } elseif ($isFuture) {
                         $postData['post_status'] = 'future';
                         $postData['post_date'] = $scheduleDate;
                     } else {
@@ -908,8 +923,10 @@ PROMPT;
                     // Quality pipeline
                     $this->runPostGenerationPipeline($postId, $item['keyword'], $content['content']);
 
-                    // Featured image — always try to generate when any image API key is configured
-                    if ($this->hasImageApiKey()) {
+                    // Featured image — generate when an image API key is configured and the
+                    // queue item does not opt out (ApexFlow setting).
+                    $wantsImage = !array_key_exists('featured_image', $item) || !empty($item['featured_image']);
+                    if ($wantsImage && $this->hasImageApiKey()) {
                         $generator = new AIImageGenerator($this->settings, $this->llm);
                         $generator->generateFeaturedImage($postId, 'photorealistic', $item['title'], 100);
                     }
