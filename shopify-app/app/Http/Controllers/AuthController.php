@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Shop;
 use App\Services\ShopifyContentFetcher;
 use App\Services\ShopifySignature;
+use App\Services\ShopifyWebhookRegistrar;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,11 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     /**
-     * Step 1: Redirect the merchant to Shopify's OAuth authorize page.
+     * Step 1: Redirect the merchant to Shopify's install/grant page.
+     *
+     * The app uses the managed install flow (token exchange) — there is no
+     * OAuth authorize step. This URL presents the grant screen and is also
+     * where merchants re-approve when the app adds access scopes.
      */
     public function install(Request $request): RedirectResponse
     {
@@ -32,27 +37,11 @@ class AuthController extends Controller
             abort(400, 'Invalid or missing shop parameter.');
         }
 
-        $apiKey = config('shopify.api_key');
-        $scopes = config('shopify.scopes');
-        $redirectUri = url(config('shopify.redirect_uri'));
-
-        // Create or update shop record
-        $shop = Shop::firstOrCreate(
-            ['shop_domain' => $shopDomain],
-            ['is_installed' => false]
-        );
-
-        $state = bin2hex(random_bytes(32));
-        $request->session()->put('shopify_oauth_state', $state);
-
-        $authorizeUrl = "https://{$shopDomain}/admin/oauth/authorize?".http_build_query([
-            'client_id' => $apiKey,
-            'scope' => $scopes,
-            'redirect_uri' => $redirectUri,
-            'state' => $state,
+        $grantUrl = "https://{$shopDomain}/admin/oauth/install?".http_build_query([
+            'client_id' => config('shopify.api_key'),
         ]);
 
-        return redirect($authorizeUrl);
+        return redirect($grantUrl);
     }
 
     /**
@@ -110,7 +99,7 @@ class AuthController extends Controller
         $this->updateAccessScopes($shop);
 
         // Register webhooks
-        $this->registerWebhooks($shop);
+        app(ShopifyWebhookRegistrar::class)->register($shop);
 
         Log::info('Shopify app installed', ['shop' => $shopDomain]);
 
@@ -215,53 +204,6 @@ class AuthController extends Controller
             }
         } catch (\Exception $e) {
             Log::warning('Failed to fetch shop details', ['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Register Shopify webhooks for content changes.
-     */
-    private function registerWebhooks(Shop $shop): void
-    {
-        $webhookUrl = url(config('shopify.webhook_uri'));
-        $topics = [
-            'products/create',
-            'products/update',
-            'products/delete',
-            'collections/create',
-            'collections/update',
-            'collections/delete',
-            'pages/create',
-            'pages/update',
-            'pages/delete',
-            'articles/create',
-            'articles/update',
-            'articles/delete',
-            'blogs/create',
-            'blogs/update',
-            'blogs/delete',
-            'app/uninstalled',
-        ];
-
-        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/webhooks.json';
-
-        foreach ($topics as $topic) {
-            try {
-                Http::timeout(15)
-                    ->withHeaders([
-                        'X-Shopify-Access-Token' => $shop->access_token,
-                        'Content-Type' => 'application/json',
-                    ])
-                    ->post($endpoint, [
-                        'webhook' => [
-                            'topic' => $topic,
-                            'address' => $webhookUrl,
-                            'format' => 'json',
-                        ],
-                    ]);
-            } catch (\Exception $e) {
-                Log::warning('Webhook registration failed', ['topic' => $topic, 'error' => $e->getMessage()]);
-            }
         }
     }
 }

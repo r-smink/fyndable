@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Shop;
 use App\Services\ShopifySignature;
 use App\Services\ShopifyTokenService;
+use App\Services\ShopifyWebhookRegistrar;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,19 +52,38 @@ class VerifyShopifySession
         }
 
         $shop = Shop::findByDomain($shopDomain);
-        if (! $shop) {
-            return response()->json(['error' => 'shop_not_found'], 404);
+
+        // Managed install flow: there is no OAuth callback. The first
+        // verified session after the merchant installs (or reinstalls)
+        // provisions the shop record via token exchange.
+        $isNewInstall = $shop === null;
+        if ($isNewInstall) {
+            $shop = new Shop([
+                'shop_domain' => $shopDomain,
+                'is_installed' => true,
+                'is_uninstalled' => false,
+            ]);
         }
 
-        if (! $shop->is_installed || $shop->is_uninstalled) {
+        if (! $shop->is_installed && ! $isNewInstall) {
             return response()->json(['error' => 'shop_not_installed'], 403);
         }
 
-        // Shopify rejects non-expiring offline tokens. While a merchant
-        // session is active, swap the verified ID token for a fresh expiring
-        // access token whenever the stored one is missing or expired.
-        if (! $shop->hasUsableToken()) {
-            app(ShopifyTokenService::class)->exchange($shop, $token);
+        // A valid session token on an uninstalled shop means the merchant
+        // reinstalled — clear the flag once the exchange succeeds.
+        $needsToken = ! $shop->hasUsableToken() || $shop->is_uninstalled;
+        if ($needsToken) {
+            if (! app(ShopifyTokenService::class)->exchange($shop, $token)) {
+                return response()->json(['error' => 'token_exchange_failed'], 403);
+            }
+            if ($shop->is_uninstalled) {
+                $shop->is_uninstalled = false;
+                $shop->save();
+            }
+        }
+
+        if ($isNewInstall && $shop->exists) {
+            app(ShopifyWebhookRegistrar::class)->register($shop);
         }
 
         $request->attributes->set('shop', $shop);

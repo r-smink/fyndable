@@ -8,7 +8,6 @@ automatically_update_urls_on_dev = false
 
 [access_scopes]
 scopes = "read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy"
-use_legacy_install_flow = true
 
 [auth]
 redirect_urls = [
