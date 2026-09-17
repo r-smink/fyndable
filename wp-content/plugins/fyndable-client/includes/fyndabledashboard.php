@@ -71,6 +71,14 @@ class DashboardShell
                 ];
             }
 
+            if (in_array($tier, ['professional', 'business', 'agency', 'dev'], true)) {
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-automation',
+                    'label' => __('ApexFlow', 'ai-seo-client'),
+                    'icon' => '&#9889;',
+                ];
+            }
+
             $this->menuItems[] = [
                 'slug' => 'ai-seo-content-calendar',
                 'label' => __('Content Calendar', 'ai-seo-client'),

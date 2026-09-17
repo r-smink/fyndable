@@ -1406,7 +1406,83 @@ Keywords:
         }
         unset($entry);
         ?>
-        <div class="wrap sseo-ai-modern">
+        <style>
+            .sseo-apexflow-page .sseo-ai-dashboard-card { border: 1px solid #e1e6ee; border-radius: 10px; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
+            .sseo-apexflow-page .form-table { border-collapse: separate; border-spacing: 0 12px; }
+            .sseo-apexflow-page .form-table th { padding: 10px 20px 10px 0; color: #344054; font-size: 14px; font-weight: 600; vertical-align: top; }
+            .sseo-apexflow-page .form-table td { padding: 4px 0; }
+            .sseo-apexflow-page input[type="text"],
+            .sseo-apexflow-page input[type="number"],
+            .sseo-apexflow-page input[type="time"],
+            .sseo-apexflow-page select,
+            .sseo-apexflow-page textarea {
+                min-height: 42px;
+                padding: 9px 13px;
+                border: 1px solid #d7dde7;
+                border-radius: 6px;
+                background: #fff;
+                color: #344054;
+                box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+                transition: border-color .15s, box-shadow .15s;
+            }
+            .sseo-apexflow-page textarea { min-height: 86px; }
+            .sseo-apexflow-page input:focus,
+            .sseo-apexflow-page select:focus,
+            .sseo-apexflow-page textarea:focus {
+                border-color: #379fd3;
+                box-shadow: 0 0 0 3px rgba(55, 159, 211, .14);
+                outline: 0;
+            }
+            .sseo-apexflow-page .button {
+                min-height: 38px;
+                padding: 4px 16px;
+                border-color: #d7dde7;
+                border-radius: 6px;
+                color: #344054;
+                font-weight: 600;
+                box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+            }
+            .sseo-apexflow-page .button-primary {
+                border-color: #379fd3;
+                background: #379fd3;
+                color: #fff;
+            }
+            .sseo-apexflow-page .button-primary:hover,
+            .sseo-apexflow-page .button-primary:focus { border-color: #278dc0; background: #278dc0; color: #fff; }
+            .sseo-apexflow-toggle { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; }
+            .sseo-apexflow-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+            .sseo-apexflow-toggle-track {
+                position: relative;
+                width: 46px;
+                height: 24px;
+                flex: 0 0 46px;
+                border-radius: 999px;
+                background: #cbd5e1;
+                transition: background .2s, box-shadow .2s;
+            }
+            .sseo-apexflow-toggle-track::after {
+                content: "";
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #fff;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, .3);
+                transition: transform .2s;
+            }
+            .sseo-apexflow-toggle input:checked + .sseo-apexflow-toggle-track { background: #379fd3; }
+            .sseo-apexflow-toggle input:checked + .sseo-apexflow-toggle-track::after { transform: translateX(22px); }
+            .sseo-apexflow-toggle input:focus-visible + .sseo-apexflow-toggle-track { box-shadow: 0 0 0 3px rgba(55, 159, 211, .25); }
+            .sseo-apexflow-toggle-text { color: #475467; font-weight: 500; }
+            @media (max-width: 782px) {
+                .sseo-apexflow-page .form-table th { padding-bottom: 2px; }
+                .sseo-apexflow-page .regular-text,
+                .sseo-apexflow-page .large-text { width: 100%; }
+            }
+        </style>
+        <div class="wrap sseo-ai-modern sseo-apexflow-page">
             <div class="sseo-ai-header">
                 <h1>&#9889; <?php esc_html_e('ApexFlow — Content Autopilot', 'ai-seo-client'); ?></h1>
                 <p><?php esc_html_e('Scans your site, researches keywords in your region and automatically plans and writes posts — every week, hands-free.', 'ai-seo-client'); ?></p>
@@ -1454,8 +1530,11 @@ Keywords:
                             <tr>
                                 <th scope="row"><label for="enabled"><?php esc_html_e('Enable ApexFlow', 'ai-seo-client'); ?></label></th>
                                 <td>
-                                    <label><input type="checkbox" name="enabled" id="enabled" value="1" <?php checked($settings['enabled']); ?>>
-                                    <?php esc_html_e('Automatically research, plan and write content every week', 'ai-seo-client'); ?></label>
+                                    <label class="sseo-apexflow-toggle" for="enabled">
+                                        <input type="checkbox" name="enabled" id="enabled" value="1" <?php checked($settings['enabled']); ?>>
+                                        <span class="sseo-apexflow-toggle-track" aria-hidden="true"></span>
+                                        <span class="sseo-apexflow-toggle-text"><?php esc_html_e('Automatically research, plan and write content every week', 'ai-seo-client'); ?></span>
+                                    </label>
                                 </td>
                             </tr>
                             <tr>
