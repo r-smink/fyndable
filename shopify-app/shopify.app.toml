@@ -18,17 +18,10 @@ redirect_urls = [
 api_version = "2026-07"
 
   # Mandatory GDPR compliance webhooks (required for App Store review)
-  [[webhooks.subscriptions]]
-  topics = ["customers/data_request"]
-  uri = "https://shopify.fyndable.ai/webhooks"
-
-  [[webhooks.subscriptions]]
-  topics = ["customers/redact"]
-  uri = "https://shopify.fyndable.ai/webhooks"
-
-  [[webhooks.subscriptions]]
-  topics = ["shop/redact"]
-  uri = "https://shopify.fyndable.ai/webhooks"
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "https://shopify.fyndable.ai/webhooks"
+  customer_deletion_url = "https://shopify.fyndable.ai/webhooks"
+  shop_deletion_url = "https://shopify.fyndable.ai/webhooks"
 
 [app_proxy]
 url = "https://shopify.fyndable.ai/api"
