@@ -61,9 +61,12 @@ Local business settings (name, address, coordinates, radius, grid) are now saved
 ### Tenants / usage reports
 - `GET  /admin/tenants` — list (filters: status, tier, search, limit, offset).
 - `GET  /admin/tenants/{tenant_key}` — tenant detail + usage + limits + onboarding.
+- `DELETE /admin/tenants/{tenant_key}` — permanently delete a tenant (body: license_action = keep|free|revoke|delete). Cleans up settings/usage/tickets/feedback; keeps invoices. Blocked when sub-tenants or generated sub-licenses exist. Same logic as the Delete form on the WP-admin Tenants page (`TenantRepository::deleteTenant()`).
 - `GET  /admin/tenants/{tenant_key}/usage/history` — monthly usage history (months).
 - `GET  /admin/usage` — per-active-tenant usage overview (the "Usage Reports" page data).
 - `GET  /admin/revenue/stats` — MRR/ARR/tier breakdown (RevenueDashboard::getStats).
+
+Note: tenant_key URL params must allow underscores (`tn_<hex>`) — the route regex is `[A-Za-z0-9_]+`.
 
 ### Support tickets (admin side)
 - `GET  /admin/support/tickets` — list all (filters: status, priority, search).

@@ -655,6 +655,7 @@ class LicenseAdmin
                         <th><?php esc_html_e('Assigned To', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Expires', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Renews', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                     </tr>
                 </thead>
@@ -669,6 +670,7 @@ class LicenseAdmin
                         <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
+                        <td><?php echo !empty($license['tenant_expires_at']) ? esc_html(date_i18n(get_option('date_format'), strtotime($license['tenant_expires_at']))) : '<em>&mdash;</em>'; ?></td>
                         <td>
                             <?php if (in_array($license['status'], ['active', 'used'], true)): ?>
                                 <a href="<?php echo admin_url('admin.php?page=sseo-ai-license-features&license=' . urlencode($license['license_key'])); ?>" 
@@ -719,6 +721,30 @@ class LicenseAdmin
      */
     public function renderTenantsPage(): void
     {
+        // Handle tenant deletion
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['tenant_action'] ?? '') === 'delete') {
+            $deleteKey = sanitize_text_field($_POST['tenant_key'] ?? '');
+
+            if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'delete_tenant_' . $deleteKey)) {
+                echo '<div class="notice notice-error"><p>' . esc_html__('Security check failed.', 'sseo-ai-saas') . '</p></div>';
+            } else {
+                $licenseAction = sanitize_text_field($_POST['license_action'] ?? 'keep');
+                if (!in_array($licenseAction, ['keep', 'free', 'revoke', 'delete'], true)) {
+                    $licenseAction = 'keep';
+                }
+
+                $result = $this->tenants->deleteTenant($deleteKey, $licenseAction);
+
+                if (is_wp_error($result)) {
+                    echo '<div class="notice notice-error"><p>' . esc_html($result->get_error_message()) . '</p></div>';
+                } elseif ($result) {
+                    echo '<div class="notice notice-success"><p>' . esc_html__('Tenant deleted successfully.', 'sseo-ai-saas') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . esc_html__('Failed to delete tenant.', 'sseo-ai-saas') . '</p></div>';
+                }
+            }
+        }
+
         $filters = array_filter([
             'status' => sanitize_text_field($_GET['status'] ?? ''),
             'tier' => sanitize_text_field($_GET['tier'] ?? ''),
@@ -786,6 +812,7 @@ class LicenseAdmin
                             <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -799,6 +826,25 @@ class LicenseAdmin
                             <td><span class="badge badge-<?php echo esc_attr($tenant['status']); ?>"><?php echo esc_html(ucfirst($tenant['status'])); ?></span></td>
                             <td><?php echo esc_html(human_time_diff(strtotime($tenant['created_at']), current_time('timestamp')) . ' ago'); ?></td>
                             <td><?php echo $tenant['last_active'] ? esc_html(human_time_diff(strtotime($tenant['last_active']), current_time('timestamp')) . ' ago') : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
+                            <td>
+                                <form method="post" style="display:flex;gap:4px;align-items:center;"
+                                      onsubmit="return confirm('<?php esc_attr_e('Are you sure you want to delete this tenant? This permanently removes its settings, usage data and support tickets. Invoices are kept.', 'sseo-ai-saas'); ?>')">
+                                    <?php wp_nonce_field('delete_tenant_' . $tenant['tenant_key']); ?>
+                                    <input type="hidden" name="tenant_action" value="delete">
+                                    <input type="hidden" name="tenant_key" value="<?php echo esc_attr($tenant['tenant_key']); ?>">
+                                    <?php if (!empty($tenant['license_key'])): ?>
+                                    <select name="license_action" style="max-width:150px;">
+                                        <option value="keep"><?php esc_html_e('Keep license', 'sseo-ai-saas'); ?></option>
+                                        <option value="free"><?php esc_html_e('Free license (reusable)', 'sseo-ai-saas'); ?></option>
+                                        <option value="revoke"><?php esc_html_e('Revoke license', 'sseo-ai-saas'); ?></option>
+                                        <option value="delete"><?php esc_html_e('Delete license', 'sseo-ai-saas'); ?></option>
+                                    </select>
+                                    <?php endif; ?>
+                                    <button type="submit" class="button button-small" style="color:#b32d2e;border-color:#b32d2e;">
+                                        <?php esc_html_e('Delete', 'sseo-ai-saas'); ?>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

@@ -439,7 +439,8 @@ class LicenseKeyGenerator
 
         $whereClause = implode(' AND ', $where);
 
-        $sql = "SELECT lk.*, IFNULL(t.platform, 'unknown') AS platform
+        $sql = "SELECT lk.*, IFNULL(t.platform, 'unknown') AS platform,
+                       t.tenant_key AS tenant_key, t.expires_at AS tenant_expires_at
                 FROM $table AS lk
                 LEFT JOIN $tenantsTable AS t ON t.license_key = lk.license_key
                 WHERE $whereClause

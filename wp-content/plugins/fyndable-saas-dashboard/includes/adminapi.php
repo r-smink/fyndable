@@ -122,13 +122,19 @@ class AdminApi
             ],
         ]);
 
-        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9]+)', [
+        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9_]+)', [
             'methods' => 'GET',
             'callback' => [$this, 'getTenant'],
             'permission_callback' => $perm,
         ]);
 
-        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9]+)/usage/history', [
+        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9_]+)', [
+            'methods' => 'DELETE',
+            'callback' => [$this, 'deleteTenant'],
+            'permission_callback' => $perm,
+        ]);
+
+        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9_]+)/usage/history', [
             'methods' => 'GET',
             'callback' => [$this, 'getTenantUsageHistory'],
             'permission_callback' => $perm,
@@ -486,6 +492,36 @@ class AdminApi
         return new \WP_REST_Response([
             'success' => true,
             'history' => $history,
+        ], 200);
+    }
+
+    public function deleteTenant(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $body = $request->get_json_params();
+
+        $licenseAction = sanitize_text_field($body['license_action'] ?? 'keep');
+        if (!in_array($licenseAction, ['keep', 'free', 'revoke', 'delete'], true)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_license_action',
+                'message' => __('license_action must be one of: keep, free, revoke, delete', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $result = $this->tenants->deleteTenant($tenantKey, $licenseAction);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], $result->get_error_code() === 'not_found' ? 404 : 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => (bool) $result,
+            'tenant_key' => $tenantKey,
         ], 200);
     }
 
