@@ -170,7 +170,8 @@ class PageBuilderHelper
      */
     public static function getRenderedPageHtml(\WP_Post $post): string
     {
-        if (!is_admin() && !wp_doing_ajax() && !wp_doing_rest()) {
+        $isRestRequest = defined('REST_REQUEST') && REST_REQUEST;
+        if (!is_admin() && !wp_doing_ajax() && !$isRestRequest) {
             return '';
         }
 
