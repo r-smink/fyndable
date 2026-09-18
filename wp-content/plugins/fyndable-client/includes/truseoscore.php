@@ -326,8 +326,10 @@ class TruSEOSCORE
             $score += 5;
         }
 
-        // H1 usage (max 5 points)
-        $h1Count = preg_match_all('/<h1[^>]*>/i', $content);
+        // H1 usage (max 5 points). Use the fully rendered page so H1s from
+        // Elementor Theme Builder templates and other template parts are counted.
+        $pageHtml = PageBuilderHelper::getRenderedPageHtml($post);
+        $h1Count = preg_match_all('/<h1[^>]*>/i', $pageHtml ?: $content);
         if ($h1Count === 1) $score += 5;
 
         return min($maxScore, max(0, $score));
@@ -395,8 +397,10 @@ class TruSEOSCORE
             'message' => sprintf(__('%d of %d images have alt text.', 'ai-seo-client'), $images['with_alt'], $images['total']),
         ];
 
-        // H1 usage
-        $h1Count = preg_match_all('/<h1[^>]*>/i', $htmlContent);
+        // H1 usage. Count H1s from the fully rendered page so templates
+        // (Elementor Theme Builder, etc.) are taken into account.
+        $pageHtml = PageBuilderHelper::getRenderedPageHtml($post);
+        $h1Count = preg_match_all('/<h1[^>]*>/i', $pageHtml ?: $htmlContent);
         $analysis[] = [
             'label' => __('H1 Heading', 'ai-seo-client'),
             'status' => $h1Count === 1 ? 'good' : 'error',

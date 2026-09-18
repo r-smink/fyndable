@@ -154,4 +154,65 @@ class PageBuilderHelper
 
         return do_shortcode($post->post_content);
     }
+
+    /**
+     * Fetch the public, fully rendered HTML for a post.
+     *
+     * This includes theme and page-builder templates (e.g. Elementor Theme
+     * Builder single-post templates) that are not part of the post's own
+     * builder content. Useful for detecting headings that live in templates.
+     *
+     * The result is cached for a few minutes because this method performs an
+     * HTTP request.
+     *
+     * @param \WP_Post $post
+     * @return string Rendered page HTML, or empty string on failure.
+     */
+    public static function getRenderedPageHtml(\WP_Post $post): string
+    {
+        if (!is_admin() && !wp_doing_ajax() && !wp_doing_rest()) {
+            return '';
+        }
+
+        if (defined('SSEO_AI_DISABLE_FRONTEND_RENDER') && SSEO_AI_DISABLE_FRONTEND_RENDER) {
+            return '';
+        }
+
+        if (!is_post_type_viewable($post->post_type) || post_password_required($post)) {
+            return '';
+        }
+
+        $url = get_permalink($post->ID);
+        if (!$url) {
+            return '';
+        }
+
+        $cacheKey = 'sseo_ai_rendered_html_' . $post->ID . '_' . md5($post->post_modified . $url);
+        $cached = get_transient($cacheKey);
+        if (is_string($cached)) {
+            return $cached;
+        }
+
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'sslverify' => false,
+            'headers' => [
+                'Accept' => 'text/html',
+                'User-Agent' => 'Fyndable SEO Analyzer/' . SSEO_AI_CLIENT_VERSION,
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return '';
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code < 200 || $code >= 400 || empty($body)) {
+            return '';
+        }
+
+        set_transient($cacheKey, $body, 5 * MINUTE_IN_SECONDS);
+        return $body;
+    }
 }
