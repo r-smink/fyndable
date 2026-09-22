@@ -123,6 +123,16 @@ class GscOAuth
             return new \WP_REST_Response(['error' => 'Invalid token data'], 400);
         }
 
+        // Google only returns a refresh_token on first consent — keep the
+        // existing one if this token set doesn't include it.
+        if (empty($tokens['refresh_token'])) {
+            $existing = get_option('aiseoclient_gsc_tokens', []);
+            if (!empty($existing['refresh_token'])) {
+                $tokens['refresh_token'] = $existing['refresh_token'];
+            }
+        }
+        $tokens['created'] = $tokens['created'] ?? time();
+
         update_option('aiseoclient_gsc_tokens', $tokens, false);
 
         return ['success' => true, 'message' => 'Google account connected successfully.'];
@@ -322,6 +332,14 @@ class GscOAuth
             return new \WP_Error('gsc_token', __('Invalid token response', 'ai-seo-client'));
         }
 
+        // Keep existing refresh_token when Google doesn't send a new one.
+        if (empty($tokens['refresh_token'])) {
+            $existing = get_option('aiseoclient_gsc_tokens', []);
+            if (!empty($existing['refresh_token'])) {
+                $tokens['refresh_token'] = $existing['refresh_token'];
+            }
+        }
+
         $tokens['created'] = time();
         update_option('aiseoclient_gsc_tokens', $tokens, false);
         return $tokens;
@@ -335,33 +353,51 @@ class GscOAuth
         return $this->exchangeCode($code);
     }
 
+    /**
+     * Refresh the access token via the SaaS dashboard proxy.
+     * The refresh grant requires the OAuth client_secret, which by design only
+     * exists on the dashboard — calling Google directly from the client always
+     * fails with invalid_client.
+     */
     public function refresh(): array|\WP_Error
     {
         $tokens = get_option('aiseoclient_gsc_tokens', []);
         $refresh = $tokens['refresh_token'] ?? '';
         if (!$refresh) return new \WP_Error('gsc_refresh', __('Missing refresh token', 'ai-seo-client'));
-        $clientId = $this->getClientId();
-        if (!$clientId) return new \WP_Error('gsc_refresh', __('Cannot get Google client ID from SaaS dashboard', 'ai-seo-client'));
-        $resp = wp_remote_post('https://oauth2.googleapis.com/token', [
-            'timeout' => 15,
-            'body' => [
-                'refresh_token' => $refresh,
-                'client_id' => $clientId,
-                'grant_type' => 'refresh_token',
-            ],
-        ]);
+
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('gsc_refresh', __('SaaS dashboard not configured.', 'ai-seo-client'));
+        }
+
+        $resp = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/google/refresh',
+            [
+                'timeout' => 15,
+                'sslverify' => $this->settings->sslVerify(),
+                'body' => [
+                    'license_key' => $licenseKey,
+                    'tenant_key' => $tenantKey,
+                    'refresh_token' => $refresh,
+                ],
+            ]
+        );
         if (is_wp_error($resp)) return $resp;
         if (wp_remote_retrieve_response_code($resp) !== 200) return new \WP_Error('gsc_refresh', __('Refresh failed', 'ai-seo-client'), $resp);
         $body = json_decode(wp_remote_retrieve_body($resp), true);
-        if (!is_array($body)) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
-        $body['refresh_token'] = $refresh;
-        $body['created'] = time();
-        if (empty($body['scope'])) {
+        $tokens = $body['tokens'] ?? null;
+        if (!is_array($tokens) || empty($tokens['access_token'])) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
+        $tokens['refresh_token'] = $refresh;
+        $tokens['created'] = time();
+        if (empty($tokens['scope'])) {
             $existing = get_option('aiseoclient_gsc_tokens', []);
-            $body['scope'] = $existing['scope'] ?? '';
+            $tokens['scope'] = $existing['scope'] ?? '';
         }
-        update_option('aiseoclient_gsc_tokens', $body, false);
-        return $body;
+        update_option('aiseoclient_gsc_tokens', $tokens, false);
+        return $tokens;
     }
 
     public function getAccessToken(): string

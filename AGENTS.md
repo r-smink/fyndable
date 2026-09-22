@@ -15,6 +15,20 @@ This file captures project-specific information discovered during implementation
 
 Primary provider is DataForSEO (`/serp/google/maps/live/advanced` and `/serp/google/local_finder/live/advanced`); SerpAPI (`engine=google_maps`) is used as fallback.
 
+## Google OAuth proxy (GSC / GA4 / Ads)
+
+The client plugin never sees the OAuth `client_secret` — it lives on the SaaS dashboard. All Google token operations are proxied via `licenseapi.php`:
+
+- `POST /ai-seo-saas/v1/google/oauth-config` — returns `client_id` + scopes for the GIS popup.
+- `POST /ai-seo-saas/v1/google/exchange` — exchanges auth code for tokens (`redirect_uri: postmessage`, GIS code-client flow).
+- `POST /ai-seo-saas/v1/google/refresh` — **NEW**: refreshes the access token. Client-side `GscOAuth::refresh()` calls this; a direct call to `oauth2.googleapis.com/token` fails with `invalid_client` because Google requires `client_secret` on refresh for Web-app clients.
+- `POST /ai-seo-saas/v1/google/ads-dev-token` — Google Ads developer token.
+- `GET  /ai-seo-saas/v1/google/oauth-start` — HTML page that runs the GIS popup and postMessages tokens back to the client.
+
+Client side: `gscoauth.php` stores tokens in `aiseoclient_gsc_tokens`; `getAccessToken()` auto-refreshes when expired. `restStoreTokens()`/`exchangeCode()` preserve an existing `refresh_token` when Google doesn't return a new one.
+
+Note: if the Google OAuth app is in "Testing" publishing status, refresh tokens expire after **7 days** — publish/verify the app for persistent connections.
+
 ## New client endpoints
 
 `fyndable-client/includes/localserp.php`

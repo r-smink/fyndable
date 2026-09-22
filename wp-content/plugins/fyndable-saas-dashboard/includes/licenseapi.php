@@ -277,6 +277,18 @@ class LicenseAPI
             ],
         ]);
 
+        // Google OAuth proxy: refresh access token (secret stays server-side)
+        register_rest_route($this->namespace, '/google/refresh', [
+            'methods' => 'POST',
+            'callback' => [$this, 'refreshGoogleToken'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'refresh_token' => ['required' => true, 'type' => 'string'],
+            ],
+        ]);
+
         // Google Ads: get developer token (for authenticated tenants)
         register_rest_route($this->namespace, '/google/ads-dev-token', [
             'methods' => 'POST',
@@ -1132,6 +1144,61 @@ class LicenseAPI
 
         if ($statusCode !== 200 || !is_array($body)) {
             return new \WP_REST_Response(['success' => false, 'error' => 'exchange_failed', 'message' => 'Token exchange failed', 'details' => $body], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'tokens' => $body,
+        ], 200);
+    }
+
+    /**
+     * REST: Refresh Google access token (server-side, secret never exposed)
+     * Client sites cannot refresh directly — Google requires the client_secret
+     * for Web-application OAuth clients, which only lives on this dashboard.
+     */
+    public function refreshGoogleToken(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+
+        // Track OAuth refresh call
+        $this->tenants->trackGoogleApiUsage($request->get_param('tenant_key'), 'oauth');
+
+        $refreshToken = $request->get_param('refresh_token');
+        if (empty($refreshToken)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'missing_refresh_token', 'message' => 'Refresh token is required'], 400);
+        }
+
+        $settings = new SaaSSettings();
+        $clientId = $settings->getGoogleClientId();
+        $clientSecret = $settings->getGoogleClientSecret();
+
+        if (empty($clientId) || empty($clientSecret)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google OAuth is not configured on the SaaS dashboard'], 400);
+        }
+
+        $response = wp_remote_post('https://oauth2.googleapis.com/token', [
+            'timeout' => 15,
+            'body' => [
+                'refresh_token' => $refreshToken,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'grant_type' => 'refresh_token',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'refresh_failed', 'message' => $response->get_error_message()], 500);
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 || !is_array($body)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'refresh_failed', 'message' => 'Token refresh failed', 'details' => $body], 400);
         }
 
         return new \WP_REST_Response([

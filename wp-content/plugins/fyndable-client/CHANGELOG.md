@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.3.2 (2026-09-22)
+
+### Fixed / Improved
+- **Google OAuth token refresh** — Access tokens for Google Search Console / GA4 / Ads now refresh via the SaaS dashboard (`/google/refresh` endpoint) instead of calling Google directly. The direct call always failed because the OAuth `client_secret` only exists server-side, forcing a daily re-connect. Requires SaaS Dashboard v1.6.2+.
+- **Token storage** — `restStoreTokens()` and `exchangeCode()` now set a `created` timestamp and preserve an existing `refresh_token` when Google doesn't return a new one.
+
 ## v2.0.0 (2026-09-01)
 
 ### Major Release
