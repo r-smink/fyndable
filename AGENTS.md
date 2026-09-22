@@ -39,7 +39,7 @@ Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQue
 
 `publicapi.php` — class `PublicApi`, key managed via GEO Scan admin page (integratiekaart, `SaaSSettings::getWebsiteScanKey()` / `regenerateWebsiteScanKey()`, option `sseo_ai_saas_website_scan_key`):
 
-- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; dedupe per email (active scans only), IP rate limit 10/h → `201 {scan_id}`
+- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; idempotent per email: an existing non-expired non-failed website scan returns `200 {scan_id, duplicate:true}` instead of a new scan; IP rate limit 10/h → `201 {scan_id}` for new scans
 - `GET /ai-seo-saas/v1/public/geo-scan/{id}/status` — `{status, progress, progress_label}` + `teaser` (score, top-3 strengths/weaknesses/findings, keyword flags) when completed — full report stays internal
 - `POST /admin/geo-scan` (AdminApi) is now async too: returns `202 {scan_id, status:'queued'}` — poll `GET /admin/geo-scan/{id}`
 

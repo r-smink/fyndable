@@ -288,9 +288,11 @@ class GeoScanRepository
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
+        // created_at is stored in WP local time (current_time('mysql')) — the
+        // comparison must use the same clock or the sweep fires hours late.
         return $wpdb->get_col($wpdb->prepare(
             "SELECT id FROM {$table} WHERE status = 'queued' AND created_at < %s",
-            gmdate('Y-m-d H:i:s', time() - $seconds)
+            wp_date('Y-m-d H:i:s', time() - $seconds)
         )) ?: [];
     }
 
@@ -304,7 +306,7 @@ class GeoScanRepository
 
         return $wpdb->get_col($wpdb->prepare(
             "SELECT id FROM {$table} WHERE status = 'running' AND created_at < %s",
-            gmdate('Y-m-d H:i:s', time() - $seconds)
+            wp_date('Y-m-d H:i:s', time() - $seconds)
         )) ?: [];
     }
 
@@ -313,16 +315,29 @@ class GeoScanRepository
      */
     public function emailHasActiveScan(string $email): bool
     {
+        return $this->findActiveWebsiteScanId($email) !== null;
+    }
+
+    /**
+     * Id of the non-expired website scan for this email address, if any.
+     */
+    public function findActiveWebsiteScanId(string $email): ?int
+    {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
-        return (bool) $wpdb->get_var($wpdb->prepare(
+        // Failed scans never block a resubmit — the visitor can just try again.
+        $id = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$table}
              WHERE source = 'website' AND email = %s AND expires_at > %s
+             AND status != 'failed'
+             ORDER BY id DESC
              LIMIT 1",
             $email,
-            current_time('mysql')
+            gmdate('Y-m-d H:i:s')
         ));
+
+        return $id ? (int)$id : null;
     }
 
     /**
@@ -382,7 +397,7 @@ class GeoScanRepository
         $table = $wpdb->prefix . self::TABLE;
 
         $wpdb->query(
-            $wpdb->prepare("DELETE FROM {$table} WHERE expires_at < %s", current_time('mysql'))
+            $wpdb->prepare("DELETE FROM {$table} WHERE expires_at < %s", gmdate('Y-m-d H:i:s'))
         );
     }
 }

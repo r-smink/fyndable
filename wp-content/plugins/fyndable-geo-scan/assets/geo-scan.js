@@ -25,6 +25,33 @@
     var MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes — slow LLM responses take a while
     var CREEP_AHEAD = 12;             // how far beyond the server value the bar may drift
     var CREEP_CAP = 96;               // never show 100 until the scan reports completed
+    var STORAGE_KEY = 'fgs_pending_scan';
+
+    // The scan row lives on the portal for 90 days — remember the scan id so a
+    // result can still be shown after a timeout or a page refresh.
+    function savePending(scanId, scanUrl) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ id: scanId, url: scanUrl, t: Date.now() }));
+        } catch (e) { /* private mode etc. — resume just won't work */ }
+    }
+
+    function loadPending() {
+        try {
+            var p = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            if (!p || !p.id || (Date.now() - p.t) > 24 * 60 * 60 * 1000) {
+                return null;
+            }
+            return p;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function clearPending() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+    }
 
     function esc(s) {
         var div = document.createElement('div');
@@ -280,11 +307,13 @@
                 shown = 100;
                 render();
                 stopTicker();
+                clearPending();
                 renderResult(data.teaser, scanUrl);
                 return;
             }
 
             if (data.status === 'failed') {
+                clearPending();
                 fail(data.error || strings.error);
                 return;
             }
@@ -361,6 +390,7 @@
         .then(function (res) {
             var data = res.data || {};
             if (res.status === 200 && data.success && data.scan_id) {
+                savePending(data.scan_id, url);
                 pollStarted = Date.now();
                 pollStatus(data.scan_id, url);
                 return;
@@ -376,4 +406,18 @@
             fail(strings.error);
         });
     });
+
+    // Resume a scan that was still running when the visitor left or refreshed
+    // the page — the teaser is shown as soon as the portal has finished it.
+    var pending = loadPending();
+    if (pending) {
+        submitBtn.disabled = true;
+        progress.hidden = false;
+        shown = 0;
+        reported = 0;
+        setProgress(0, strings.queued);
+        startTicker();
+        pollStarted = Date.now();
+        pollStatus(pending.id, pending.url || '');
+    }
 })();

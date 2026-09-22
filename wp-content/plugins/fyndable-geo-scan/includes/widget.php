@@ -40,7 +40,7 @@ class Widget
             'strings' => [
                 'error'           => __('Er ging iets mis. Probeer het later opnieuw.', 'fyndable-geo-scan'),
                 'queued'          => __('Scan wordt voorbereid…', 'fyndable-geo-scan'),
-                'timeout'         => __('De scan duurt langer dan verwacht. Probeer het later opnieuw.', 'fyndable-geo-scan'),
+                'timeout'         => __('De scan duurt langer dan verwacht, maar loopt op de achtergrond door. Vernieuw deze pagina over een paar minuten — je resultaat verschijnt dan automatisch.', 'fyndable-geo-scan'),
                 'ctaTitle'        => __('Wil je het volledige rapport?', 'fyndable-geo-scan'),
                 'ctaText'         => __('Wij nemen contact met je op om de volledige analyse en verbeterpunten door te nemen.', 'fyndable-geo-scan'),
                 'resultBadge'     => __('Jouw resultaat', 'fyndable-geo-scan'),
@@ -263,7 +263,8 @@ class Widget
             return $this->error('already_scanned', __('Voor dit e-mailadres is al een scan aangevraagd.', 'fyndable-geo-scan'), 409);
         }
 
-        if ($code !== 201 || empty($data['scan_id'])) {
+        // 201 = new scan queued, 200 = existing scan resumed (idempotent submit).
+        if (($code !== 201 && $code !== 200) || empty($data['scan_id'])) {
             $msg = $data['message'] ?? __('De scan kon niet worden gestart.', 'fyndable-geo-scan');
             return $this->error('scan_failed', $msg, 502);
         }

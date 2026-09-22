@@ -90,8 +90,16 @@ class PublicApi
             return $err;
         }
 
-        if ($this->geoScanRepository->emailHasActiveScan($email)) {
-            return $this->error('already_scanned', __('A scan has already been requested for this email address', 'sseo-ai-saas'), 409);
+        // Idempotent submit: an earlier scan for this email may still be
+        // running or already completed — hand its id back so the visitor can
+        // pick up progress/result instead of paying for a duplicate scan.
+        $existingId = $this->geoScanRepository->findActiveWebsiteScanId($email);
+        if ($existingId !== null) {
+            return new \WP_REST_Response([
+                'success'   => true,
+                'scan_id'   => $existingId,
+                'duplicate' => true,
+            ], 200);
         }
 
         $scanId = $this->geoScanRepository->insertQueued($url, $keywords, 'auto', [
