@@ -36,6 +36,7 @@ class GeoScanAdmin
         add_action('wp_ajax_sseo_geo_scan_run', [$this, 'ajaxRun']);
         add_action('wp_ajax_sseo_geo_scan_status', [$this, 'ajaxStatus']);
         add_action('admin_post_sseo_geo_scan_regen_key', [$this, 'handleRegenKey']);
+        add_action('admin_post_sseo_geo_scan_save_website', [$this, 'handleSaveWebsiteSettings']);
     }
 
     /**
@@ -114,6 +115,10 @@ class GeoScanAdmin
 
             <?php if (!empty($_GET['key_regenerated'])) : ?>
                 <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Nieuwe website-scan key gegenereerd. Vergeet niet de key op fyndable.ai bij te werken.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+
+            <?php if (!empty($_GET['website_settings_saved'])) : ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Website-scan instellingen opgeslagen.', 'sseo-ai-saas'); ?></p></div>
             <?php endif; ?>
 
             <form id="sseo-geo-scan-form" class="sseo-geo-form sseo-geo-form-card">
@@ -290,6 +295,34 @@ class GeoScanAdmin
                     </tr>
                 </table>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('sseo_geo_scan_website_settings', 'sseo_geo_website_nonce'); ?>
+                    <input type="hidden" name="action" value="sseo_geo_scan_save_website">
+                    <input type="hidden" name="saas_shell" value="<?php echo isset($_GET['saas_shell']) ? '1' : ''; ?>">
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="sseo_geo_website_model"><?php esc_html_e('Model (website-scan)', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <?php $websiteModelOverride = $this->settings->getWebsiteGeoModelOverride(); ?>
+                                <select name="website_model" id="sseo_geo_website_model">
+                                    <option value="" <?php selected($websiteModelOverride, ''); ?>><?php esc_html_e('— Zelfde als GEO Scan Model —', 'sseo-ai-saas'); ?></option>
+                                    <?php
+                                    $websiteRouter = new \SSEOAISaaS\ProviderRouter($this->settings);
+                                    foreach ($websiteRouter->getMergedAvailableModels() as $modelKey => $modelLabel):
+                                    ?>
+                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php selected($websiteModelOverride, $modelKey); ?>><?php echo esc_html($modelLabel); ?></option>
+                                    <?php endforeach; ?>
+                                    <?php if (!empty($websiteModelOverride) && !isset(\SSEOAISaaS\ProviderRouter::getAvailableModels()[$websiteModelOverride])): ?>
+                                        <?php // Keep a saved model selectable when the live model list is unavailable. ?>
+                                        <option value="<?php echo esc_attr($websiteModelOverride); ?>" selected><?php echo esc_html($websiteModelOverride); ?> (<?php esc_html_e('saved', 'sseo-ai-saas'); ?>)</option>
+                                    <?php endif; ?>
+                                </select>
+                                <p class="description"><?php esc_html_e('Model voor scans die via de fyndable-geo-scan plugin op fyndable.ai worden gestart. Laat leeg om het standaard GEO Scan Model te gebruiken.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <button type="submit" class="button button-secondary"><?php esc_html_e('Model opslaan', 'sseo-ai-saas'); ?></button>
+                </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <?php wp_nonce_field('sseo_geo_scan_regen_key', 'sseo_geo_regen_nonce'); ?>
                     <input type="hidden" name="action" value="sseo_geo_scan_regen_key">
                     <input type="hidden" name="saas_shell" value="<?php echo isset($_GET['saas_shell']) ? '1' : ''; ?>">
@@ -389,6 +422,27 @@ class GeoScanAdmin
         }
 
         wp_send_json_success($response);
+    }
+
+    /**
+     * admin-post: save the dedicated website-scan model override.
+     */
+    public function handleSaveWebsiteSettings(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('No permission.', 'sseo-ai-saas'), 403);
+        }
+        check_admin_referer('sseo_geo_scan_website_settings', 'sseo_geo_website_nonce');
+
+        $model = sanitize_text_field(wp_unslash($_POST['website_model'] ?? ''));
+        update_option('sseo_ai_saas_geo_website_model', $model);
+
+        $redirect = admin_url('admin.php?page=sseo-ai-geo-scan&website_settings_saved=1');
+        if (!empty($_POST['saas_shell'])) {
+            $redirect .= '&saas_shell=1';
+        }
+        wp_safe_redirect($redirect);
+        exit;
     }
 
     /**

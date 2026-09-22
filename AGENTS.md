@@ -33,7 +33,7 @@ Note: if the Google OAuth app is in "Testing" publishing status, refresh tokens 
 
 Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQueued()` → `GeoScanQueue::enqueue()` → WP-Cron `sseo_geo_scan_run_job` → `GeoScanner::scan(..., onProgress, scanId)` writes progress to the row → frontends poll status. `spawn_cron()` kicks processing immediately; a 5-min sweep (`sseo_geo_scan_sweep`) requeues stale jobs and fails stuck 'running' scans. Table `sseo_ai_geo_scans` gained: `progress`, `progress_label`, `error`, `source` ('admin'|'website'), `email`, `consent`, `consent_at`, `meta` (incl. original keywords array — commas safe). Retention: admin 7d, website 90d.
 
-`GeoScanner::scan(url, keywords, language='auto')` — 'auto' triggers `detectLanguageFromKeywords()` (NL/EN stopword heuristic); LLM prompt is language-aware (NL/EN variants).
+`GeoScanner::scan(url, keywords, language='auto', onProgress, scanId, source)` — 'auto' triggers `detectLanguageFromKeywords()` (NL/EN stopword heuristic); LLM prompt is language-aware (NL/EN variants). `source` ('admin'|'website') selects the model: admin scans use `sseo_ai_saas_geo_model` (Settings → "GEO Scan Model"), website scans use `sseo_ai_saas_geo_website_model` (GEO Scan admin → integratiekaart → "Model (website-scan)"; empty = fall back to the admin model). Saved via `admin_post_sseo_geo_scan_save_website`.
 
 ### Public endpoints (shared-key auth, `X-Fyndable-Scan-Key` header)
 
@@ -45,7 +45,7 @@ Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQue
 
 ### Website plugin `fyndable-geo-scan/` (for fyndable.ai)
 
-Standalone plugin: Settings → GEO Scan (portal URL + API key), shortcode `[fyndable_geo_scan]` (URL + max 2 keywords + email + consent + honeypot), REST proxy `fyndable/v1/geo-scan` + `…/status`, JS progress bar → teaser result card. wp_mail notification to support email on completed website scans (follow-up).
+Standalone plugin: Settings → GEO Scan (portal URL + API key), shortcode `[fyndable_geo_scan]` (URL + max 2 keywords + email + consent + honeypot), REST proxy `fyndable/v1/geo-scan` + `…/status`, JS progress bar → teaser result card. wp_mail notification to support email on completed website scans (follow-up). Progress bar is smoothed client-side (creeps ≤12% ahead of server value, cap 96% until completed); poll timeout is 10 min (`MAX_POLL_MS` in geo-scan.js).
 
 Note: WP-Cron needs traffic or a real system cron hitting `wp-cron.php` on the portal for reliable processing.
 

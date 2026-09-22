@@ -410,6 +410,25 @@ class SaaSSettings
     }
 
     /**
+     * GEO Scan model for public website scans (fyndable-geo-scan plugin).
+     * Falls back to the regular GEO Scan model when no override is set.
+     */
+    public function getWebsiteGeoModel(): string
+    {
+        $override = $this->getWebsiteGeoModelOverride();
+        return $override !== '' ? $override : $this->getGeoModel();
+    }
+
+    /**
+     * Raw website GEO model override ('' = use the regular GEO Scan model).
+     */
+    public function getWebsiteGeoModelOverride(): string
+    {
+        $model = get_option('sseo_ai_saas_geo_website_model', '');
+        return is_string($model) ? $model : '';
+    }
+
+    /**
      * Get the shared key for the public website GEO scan (fyndable.ai).
      */
     public function getWebsiteScanKey(): string

@@ -18,8 +18,13 @@
     var resultBox = document.getElementById('fgs-result');
 
     var pollTimer = null;
+    var tickTimer = null;
     var pollStarted = 0;
-    var MAX_POLL_MS = 4 * 60 * 1000; // 4 minutes
+    var shown = 0;    // smoothed percentage currently rendered
+    var reported = 0; // last percentage reported by the server
+    var MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes — slow LLM responses take a while
+    var CREEP_AHEAD = 12;             // how far beyond the server value the bar may drift
+    var CREEP_CAP = 96;               // never show 100 until the scan reports completed
 
     function esc(s) {
         var div = document.createElement('div');
@@ -27,14 +32,46 @@
         return div.innerHTML;
     }
 
+    function render() {
+        var p = Math.max(0, Math.min(100, Math.round(shown)));
+        fill.style.width = p + '%';
+        pct.textContent = p + '%';
+    }
+
     function setProgress(p, l) {
         if (p >= 0) {
-            p = Math.max(0, Math.min(100, p));
-            fill.style.width = p + '%';
-            pct.textContent = p + '%';
+            reported = Math.max(reported, Math.min(100, p));
+            if (p > shown) {
+                shown = p;
+            }
+            render();
         }
         if (l) {
             label.textContent = l;
+        }
+    }
+
+    // Ease the bar forward between server updates so it never appears frozen:
+    // it drifts at most CREEP_AHEAD points past the last reported value and
+    // stays below CREEP_CAP until the scan actually completes.
+    function tick() {
+        var target = Math.min(reported + CREEP_AHEAD, CREEP_CAP);
+        if (shown < target) {
+            shown += Math.max(0.1, (target - shown) * 0.04);
+            render();
+        }
+    }
+
+    function startTicker() {
+        if (!tickTimer) {
+            tickTimer = setInterval(tick, 400);
+        }
+    }
+
+    function stopTicker() {
+        if (tickTimer) {
+            clearInterval(tickTimer);
+            tickTimer = null;
         }
     }
 
@@ -48,6 +85,7 @@
             clearTimeout(pollTimer);
             pollTimer = null;
         }
+        stopTicker();
         submitBtn.disabled = false;
         progress.hidden = true;
     }
@@ -238,7 +276,10 @@
             }
 
             if (data.status === 'completed') {
-                setProgress(100, '');
+                reported = 100;
+                shown = 100;
+                render();
+                stopTicker();
                 renderResult(data.teaser, scanUrl);
                 return;
             }
@@ -298,7 +339,10 @@
 
         submitBtn.disabled = true;
         progress.hidden = false;
+        shown = 0;
+        reported = 0;
         setProgress(0, strings.queued);
+        startTicker();
 
         fetch(restUrl + '/geo-scan', {
             method: 'POST',

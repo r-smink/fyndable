@@ -98,7 +98,8 @@ class GeoScanQueue
             $keywords,
             (string)($scan['language'] ?? 'auto'),
             null,
-            $scanId
+            $scanId,
+            (string)($scan['source'] ?? 'admin')
         );
 
         delete_transient($lockKey);

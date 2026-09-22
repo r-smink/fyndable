@@ -42,9 +42,11 @@ class GeoScanner
      * @param callable|null $onProgress fn(int $percent, string $label) — for async progress tracking.
      * @param int|null  $scanId     When set, the report is written to this existing
      *                              (queued) row instead of inserting a new one.
+     * @param string    $source     'admin' or 'website' — website scans can use a
+     *                              dedicated model (sseo_ai_saas_geo_website_model).
      * @return array|\WP_Error ['scan_id' => int, 'report' => array]
      */
-    public function scan(string $url, array $keywords, string $language = 'nl', ?callable $onProgress = null, ?int $scanId = null): array|\WP_Error
+    public function scan(string $url, array $keywords, string $language = 'nl', ?callable $onProgress = null, ?int $scanId = null, string $source = 'admin'): array|\WP_Error
     {
         if (function_exists('set_time_limit')) {
             @set_time_limit(600);
@@ -83,13 +85,15 @@ class GeoScanner
 
         $pageText = $htmlResult['text'] ?? '';
 
+        $progress(10, __('Pagina-inhoud verwerkt', 'sseo-ai-saas'));
+
         $keywordResults = [];
         $failedKeywords = [];
         $keywordCount = count($keywords);
         foreach ($keywords as $index => $keyword) {
             $progress(
                 10 + (int) round(($index / $keywordCount) * 60),
-                sprintf(__('AI Overview controleren: %s', 'sseo-ai-saas'), $keyword)
+                sprintf(__('AI Overview controleren: %s (%d/%d)', 'sseo-ai-saas'), $keyword, $index + 1, $keywordCount)
             );
 
             $res = $this->aiExtractor->getForKeyword($keyword, $language);
@@ -98,9 +102,14 @@ class GeoScanner
                     'keyword' => $keyword,
                     'error'   => $res->get_error_message(),
                 ];
-                continue;
+            } else {
+                $keywordResults[] = $res;
             }
-            $keywordResults[] = $res;
+
+            $progress(
+                10 + (int) round((($index + 1) / $keywordCount) * 60),
+                sprintf(__('Keyword %d van %d gecontroleerd', 'sseo-ai-saas'), $index + 1, $keywordCount)
+            );
 
             // Small delay to reduce the chance of SerpApi rate limits when
             // multiple keywords are scanned in quick succession.
@@ -114,7 +123,7 @@ class GeoScanner
         }
 
         $progress(75, __('AI-analyse genereren…', 'sseo-ai-saas'));
-        $llmResult = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language);
+        $llmResult = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language, $source);
         if (is_wp_error($llmResult)) {
             return $llmResult;
         }
@@ -183,7 +192,7 @@ class GeoScanner
         return $enScore > $nlScore ? 'en' : 'nl';
     }
 
-    private function analyzeWithLlm(string $pageText, array $keywords, array $keywordResults, string $language = 'nl'): array|\WP_Error
+    private function analyzeWithLlm(string $pageText, array $keywords, array $keywordResults, string $language = 'nl', string $source = 'admin'): array|\WP_Error
     {
         $truncated = mb_substr($pageText, 0, 12000);
 
@@ -291,7 +300,9 @@ AI Overview context:
             ['role' => 'user', 'content' => $prompt],
         ];
 
-        $model = $this->settings->getGeoModel();
+        $model = $source === 'website'
+            ? $this->settings->getWebsiteGeoModel()
+            : $this->settings->getGeoModel();
         $maxTokens = 6000; // the required JSON output is large; thinking tokens also count
 
         $result = $this->providerRouter->routeRequest($messages, $model ?: null, 'geo_readiness', $maxTokens, 0.2);
