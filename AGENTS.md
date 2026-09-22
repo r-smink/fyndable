@@ -29,6 +29,26 @@ Client side: `gscoauth.php` stores tokens in `aiseoclient_gsc_tokens`; `getAcces
 
 Note: if the Google OAuth app is in "Testing" publishing status, refresh tokens expire after **7 days** — publish/verify the app for persistent connections.
 
+## GEO Readiness scan — async + public website scan (2026-09-22)
+
+Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQueued()` → `GeoScanQueue::enqueue()` → WP-Cron `sseo_geo_scan_run_job` → `GeoScanner::scan(..., onProgress, scanId)` writes progress to the row → frontends poll status. `spawn_cron()` kicks processing immediately; a 5-min sweep (`sseo_geo_scan_sweep`) requeues stale jobs and fails stuck 'running' scans. Table `sseo_ai_geo_scans` gained: `progress`, `progress_label`, `error`, `source` ('admin'|'website'), `email`, `consent`, `consent_at`, `meta` (incl. original keywords array — commas safe). Retention: admin 7d, website 90d.
+
+`GeoScanner::scan(url, keywords, language='auto')` — 'auto' triggers `detectLanguageFromKeywords()` (NL/EN stopword heuristic); LLM prompt is language-aware (NL/EN variants).
+
+### Public endpoints (shared-key auth, `X-Fyndable-Scan-Key` header)
+
+`publicapi.php` — class `PublicApi`, key managed via GEO Scan admin page (integratiekaart, `SaaSSettings::getWebsiteScanKey()` / `regenerateWebsiteScanKey()`, option `sseo_ai_saas_website_scan_key`):
+
+- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; dedupe per email (active scans only), IP rate limit 10/h → `201 {scan_id}`
+- `GET /ai-seo-saas/v1/public/geo-scan/{id}/status` — `{status, progress, progress_label}` + `teaser` (score, top-3 strengths/weaknesses/findings, keyword flags) when completed — full report stays internal
+- `POST /admin/geo-scan` (AdminApi) is now async too: returns `202 {scan_id, status:'queued'}` — poll `GET /admin/geo-scan/{id}`
+
+### Website plugin `fyndable-geo-scan/` (for fyndable.ai)
+
+Standalone plugin: Settings → GEO Scan (portal URL + API key), shortcode `[fyndable_geo_scan]` (URL + 3 keywords + email + consent + honeypot), REST proxy `fyndable/v1/geo-scan` + `…/status`, JS progress bar → teaser result card. wp_mail notification to support email on completed website scans (follow-up).
+
+Note: WP-Cron needs traffic or a real system cron hitting `wp-cron.php` on the portal for reliable processing.
+
 ## New client endpoints
 
 `fyndable-client/includes/localserp.php`

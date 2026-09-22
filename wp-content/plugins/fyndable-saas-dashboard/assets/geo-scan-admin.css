@@ -26,6 +26,64 @@
     width: 220px;
 }
 
+/* ===== Progress bar ===== */
+.sseo-geo-admin .sseo-geo-progress {
+    margin: 18px 0 4px;
+    max-width: 640px;
+}
+
+.sseo-geo-progress-track {
+    height: 14px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sseo-geo-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+    background-repeat: no-repeat;
+    transition: width .6s ease;
+}
+
+.sseo-geo-progress-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.sseo-geo-progress-pct {
+    font-weight: 700;
+    color: #379fd3;
+    min-width: 40px;
+}
+
+.sseo-geo-progress-label {
+    color: #6b7280;
+}
+
+/* ===== Queue/status badges ===== */
+.sseo-geo-status.queued {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.sseo-geo-status.running {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* ===== Integration card ===== */
+.sseo-geo-integration-card input.code {
+    font-family: Consolas, Monaco, monospace;
+    background: #f9fafb;
+}
+
 /* ===== Report layout ===== */
 .sseo-geo-report {
     font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

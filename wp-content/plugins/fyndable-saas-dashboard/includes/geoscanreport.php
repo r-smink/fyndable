@@ -65,6 +65,16 @@ class GeoScanReport
                     <strong><?php esc_html_e('Webadres:', 'sseo-ai-saas'); ?></strong> <?php echo esc_url($data['url'] ?? ''); ?><br>
                     <strong><?php esc_html_e('Datum:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($data['scanned_at'] ?? ''); ?><br>
                     <strong><?php esc_html_e('Taal:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html(strtoupper($data['language'] ?? 'nl')); ?>
+                    <?php if (($scan['source'] ?? 'admin') === 'website') : ?>
+                    <?php if (!empty($scan['meta']['name'])) : ?>
+                    <br><strong><?php esc_html_e('Naam:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($scan['meta']['name']); ?>
+                    <?php endif; ?>
+                    <?php if (!empty($scan['meta']['company'])) : ?>
+                    <br><strong><?php esc_html_e('Bedrijf:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($scan['meta']['company']); ?>
+                    <?php endif; ?>
+                    <br><strong><?php esc_html_e('E-mail:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($scan['email'] ?? '-'); ?>
+                    <br><strong><?php esc_html_e('Consent:', 'sseo-ai-saas'); ?></strong> <?php echo !empty($scan['consent']) ? esc_html__('Ja', 'sseo-ai-saas') . ' (' . esc_html($scan['consent_at'] ?? '') . ')' : esc_html__('Nee', 'sseo-ai-saas'); ?>
+                    <?php endif; ?>
                 </p>
             </div>
 

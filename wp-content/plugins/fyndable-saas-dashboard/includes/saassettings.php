@@ -410,6 +410,24 @@ class SaaSSettings
     }
 
     /**
+     * Get the shared key for the public website GEO scan (fyndable.ai).
+     */
+    public function getWebsiteScanKey(): string
+    {
+        return get_option('sseo_ai_saas_website_scan_key', '');
+    }
+
+    /**
+     * Generate and store a new website scan key. Returns the new key.
+     */
+    public function regenerateWebsiteScanKey(): string
+    {
+        $key = wp_generate_password(32, false);
+        update_option('sseo_ai_saas_website_scan_key', $key, false);
+        return $key;
+    }
+
+    /**
      * Get Google Ads Developer Token
      */
     public function getGoogleAdsDevToken(): string

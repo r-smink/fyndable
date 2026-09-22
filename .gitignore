@@ -20,6 +20,8 @@ Thumbs.db
 
 # zip
 /wp-content/plugins/fyndable-client.zip
+/wp-content/plugins/fyndable-client-stable.zip
+/wp-content/plugins/fyndable-geo-scan.zip
 /wp-content/plugins/fyndable-saas-dashboard.zip
 nul
 

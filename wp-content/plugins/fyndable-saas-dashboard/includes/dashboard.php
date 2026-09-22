@@ -43,8 +43,10 @@ class Dashboard
     private HtmlFetcher $htmlFetcher;
     private AiOverviewExtractor $aiOverviewExtractor;
     private GeoScanner $geoScanner;
+    private GeoScanQueue $geoScanQueue;
     private GeoScanReport $geoScanReport;
     private GeoScanAdmin $geoScanAdmin;
+    private PublicApi $publicApi;
     private Feedback $feedback;
     private FeedbackAdmin $feedbackAdmin;
     private AdminApi $adminApi;
@@ -140,13 +142,19 @@ class Dashboard
             $this->saasSettings,
             $this->geoScanRepository
         );
+        $this->geoScanQueue = new GeoScanQueue($this->geoScanner, $this->geoScanRepository, $this->saasSettings);
         $this->geoScanReport = new GeoScanReport($this->geoScanRepository);
         $this->geoScanAdmin = new GeoScanAdmin(
             $this->pluginFile,
             $this->geoScanner,
             $this->geoScanRepository,
-            $this->geoScanReport
+            $this->geoScanReport,
+            $this->geoScanQueue,
+            $this->saasSettings
         );
+
+        // Public API for the free GEO scan on fyndable.ai (shared-key auth).
+        $this->publicApi = new PublicApi($this->geoScanRepository, $this->geoScanQueue, $this->saasSettings);
 
         // Admin REST API (consumed by the internal Android management app).
         $this->adminApi = new AdminApi(
@@ -157,7 +165,8 @@ class Dashboard
             $this->geoScanRepository,
             $this->providerRouter,
             $this->saasSettings,
-            $this->revenueDashboard
+            $this->revenueDashboard,
+            $this->geoScanQueue
         );
 
         // Register dashboard shell (top-level menu)
@@ -193,6 +202,10 @@ class Dashboard
         add_action('rest_api_init', [$this->feedback, 'registerRoutes']);
         add_action('rest_api_init', [$this->updateServer, 'register']);
         add_action('rest_api_init', [$this->adminApi, 'register']);
+        add_action('rest_api_init', [$this->publicApi, 'register']);
+
+        // Async GEO scan queue (WP-Cron worker + sweep).
+        $this->geoScanQueue->register();
 
         // Register self-serve signup (REST + shortcode)
         $this->signupCheckout->register();

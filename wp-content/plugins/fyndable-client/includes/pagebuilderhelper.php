@@ -70,6 +70,12 @@ class PageBuilderHelper
     }
 
     /**
+     * Content below this word count triggers a rendered-page fallback.
+     * Matches the "thin content" threshold used by the SEO analysis.
+     */
+    private const THIN_CONTENT_WORDS = 300;
+
+    /**
      * Get fully rendered content for a post, including page builder output.
      *
      * @param \WP_Post $post
@@ -77,29 +83,39 @@ class PageBuilderHelper
      */
     public static function getContent(\WP_Post $post): string
     {
+        $content = '';
+
         // Elementor: render from builder data when the post is built with Elementor.
         if (self::isElementor($post)) {
             $content = self::renderElementor($post);
-            if (!empty($content)) {
-                return $content;
-            }
         }
 
         // WPBakery / generic shortcode-based builders.
-        if (self::isWPBakery($post)) {
+        if (empty($content) && self::isWPBakery($post)) {
             $content = self::renderShortcodes($post);
-            if (!empty($content)) {
-                return $content;
-            }
         }
 
         // Fallback to the_content filters (Beaver Builder, Divi, standard Gutenberg, etc.).
-        $content = apply_filters('the_content', $post->post_content);
-        if (!empty($content)) {
-            return $content;
+        if (empty($content)) {
+            $content = apply_filters('the_content', $post->post_content);
         }
 
-        return $post->post_content;
+        if (empty($content)) {
+            $content = $post->post_content;
+        }
+
+        // Plugins that only inject content on the front end (legal pages such as
+        // terms/privacy generators, template content, conditional the_content
+        // filters) leave thin post_content behind. Fall back to the rendered
+        // page's main content region when it yields more text.
+        if (self::wordCount($content) < self::THIN_CONTENT_WORDS) {
+            $rendered = self::getRenderedPageContent($post);
+            if (self::wordCount($rendered) > self::wordCount($content)) {
+                $content = $rendered;
+            }
+        }
+
+        return $content;
     }
 
     /**
@@ -215,5 +231,108 @@ class PageBuilderHelper
 
         set_transient($cacheKey, $body, 5 * MINUTE_IN_SECONDS);
         return $body;
+    }
+
+    /**
+     * Extract the main content region from the fully rendered page HTML.
+     *
+     * Legal-document plugins, template builders and conditional the_content
+     * filters often render text only on the front end. This parses the rendered
+     * page and returns the most precise content container, excluding nav,
+     * header, footer and other boilerplate.
+     *
+     * @param \WP_Post $post
+     * @return string Content HTML, or empty string on failure.
+     */
+    private static function getRenderedPageContent(\WP_Post $post): string
+    {
+        $html = self::getRenderedPageHtml($post);
+        if (empty($html) || !class_exists('DOMDocument')) {
+            return '';
+        }
+
+        $prev = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($prev);
+
+        $xpath = new \DOMXPath($dom);
+        $classContains = static function (string $class): string {
+            return '//*[contains(concat(" ", normalize-space(@class), " "), " ' . $class . ' ")]';
+        };
+
+        // Precise content containers first, broad layout regions later.
+        $selectors = [
+            $classContains('entry-content'),
+            $classContains('post-content'),
+            $classContains('page-content'),
+            '//article',
+            '//*[@role="main"]',
+            '//main',
+            '//*[@id="main"]',
+            '//*[@id="content"]',
+            '//*[@id="primary"]',
+            $classContains('site-main'),
+        ];
+
+        foreach ($selectors as $query) {
+            $nodes = $xpath->query($query);
+            if (!$nodes) {
+                continue;
+            }
+            $best = '';
+            $bestWords = 0;
+            foreach ($nodes as $node) {
+                $inner = self::domInnerHtml($dom, $node);
+                $words = self::wordCount($inner);
+                if ($words > $bestWords) {
+                    $best = $inner;
+                    $bestWords = $words;
+                }
+            }
+            if ($bestWords > 0) {
+                return $best;
+            }
+        }
+
+        // Fallback: body minus boilerplate regions.
+        $bodies = $dom->getElementsByTagName('body');
+        if ($bodies->length === 0) {
+            return '';
+        }
+        $body = $bodies->item(0);
+        foreach (['script', 'style', 'nav', 'header', 'footer', 'form', 'aside', 'noscript'] as $tag) {
+            $tagNodes = [];
+            foreach ($body->getElementsByTagName($tag) as $node) {
+                $tagNodes[] = $node;
+            }
+            foreach ($tagNodes as $node) {
+                if ($node->parentNode instanceof \DOMElement) {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+        }
+        return self::domInnerHtml($dom, $body);
+    }
+
+    /**
+     * Serialize a node's children back to an HTML string.
+     */
+    private static function domInnerHtml(\DOMDocument $dom, \DOMNode $node): string
+    {
+        $html = '';
+        foreach ($node->childNodes as $child) {
+            $html .= (string) $dom->saveHTML($child);
+        }
+        return $html;
+    }
+
+    /**
+     * Word count of an HTML fragment.
+     */
+    private static function wordCount(string $html): int
+    {
+        return str_word_count(wp_strip_all_tags($html));
     }
 }

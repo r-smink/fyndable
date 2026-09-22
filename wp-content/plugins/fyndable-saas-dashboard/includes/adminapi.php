@@ -22,6 +22,7 @@ class AdminApi
     private SupportTickets $supportTickets;
     private GeoScanner $geoScanner;
     private GeoScanRepository $geoScanRepository;
+    private GeoScanQueue $geoScanQueue;
     private ProviderRouter $providerRouter;
     private SaaSSettings $settings;
     private RevenueDashboard $revenueDashboard;
@@ -36,7 +37,8 @@ class AdminApi
         GeoScanRepository $geoScanRepository,
         ProviderRouter $providerRouter,
         SaaSSettings $settings,
-        RevenueDashboard $revenueDashboard
+        RevenueDashboard $revenueDashboard,
+        ?GeoScanQueue $geoScanQueue = null
     ) {
         $this->licenseGenerator = $licenseGenerator;
         $this->tenants = $tenants;
@@ -46,6 +48,7 @@ class AdminApi
         $this->providerRouter = $providerRouter;
         $this->settings = $settings;
         $this->revenueDashboard = $revenueDashboard;
+        $this->geoScanQueue = $geoScanQueue ?? new GeoScanQueue($geoScanner, $geoScanRepository, $settings);
     }
 
     /**
@@ -712,26 +715,16 @@ class AdminApi
             ], 400);
         }
 
-        // GEO scans can take 30-90s; give PHP enough runway.
-        if (function_exists('set_time_limit')) {
-            @set_time_limit(300);
-        }
-
-        $result = $this->geoScanner->scan($url, $keywords, $language);
-
-        if (is_wp_error($result)) {
-            return new \WP_REST_Response([
-                'success' => false,
-                'error' => $result->get_error_code(),
-                'message' => $result->get_error_message(),
-            ], 502);
-        }
+        // Scans run asynchronously — this endpoint returns instantly with a
+        // scan_id; poll GET /admin/geo-scan/{id} for status and the report.
+        $scanId = $this->geoScanRepository->insertQueued($url, $keywords, $language, ['source' => 'admin']);
+        $this->geoScanQueue->enqueue($scanId);
 
         return new \WP_REST_Response([
             'success' => true,
-            'scan_id' => $result['scan_id'],
-            'report' => $result['report'],
-        ], 201);
+            'scan_id' => $scanId,
+            'status' => 'queued',
+        ], 202);
     }
 
     public function recentGeoScans(\WP_REST_Request $request): \WP_REST_Response
