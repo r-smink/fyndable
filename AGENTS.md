@@ -45,7 +45,7 @@ Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQue
 
 ### Website plugin `fyndable-geo-scan/` (for fyndable.ai)
 
-Standalone plugin: Settings → GEO Scan (portal URL + API key), shortcode `[fyndable_geo_scan]` (URL + 3 keywords + email + consent + honeypot), REST proxy `fyndable/v1/geo-scan` + `…/status`, JS progress bar → teaser result card. wp_mail notification to support email on completed website scans (follow-up).
+Standalone plugin: Settings → GEO Scan (portal URL + API key), shortcode `[fyndable_geo_scan]` (URL + max 2 keywords + email + consent + honeypot), REST proxy `fyndable/v1/geo-scan` + `…/status`, JS progress bar → teaser result card. wp_mail notification to support email on completed website scans (follow-up).
 
 Note: WP-Cron needs traffic or a real system cron hitting `wp-cron.php` on the portal for reliable processing.
 

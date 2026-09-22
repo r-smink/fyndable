@@ -136,8 +136,8 @@ class Widget
 
                 <div class="fgs-section-label"><?php esc_html_e('Zoektermen', 'fyndable-geo-scan'); ?></div>
                 <div class="fgs-field">
-                    <label><?php esc_html_e('Keywords of zoekzinnen (max. 3)', 'fyndable-geo-scan'); ?></label>
-                    <div class="fgs-grid-3">
+                    <label><?php esc_html_e('Keywords of zoekzinnen (max. 2)', 'fyndable-geo-scan'); ?></label>
+                    <div class="fgs-grid-2">
                         <div class="fgs-kw-wrap">
                             <input type="text" class="fgs-keyword" name="keyword1" placeholder="<?php esc_attr_e('seo specialist', 'fyndable-geo-scan'); ?>" required>
                             <span class="fgs-kw-num" aria-hidden="true">1</span>
@@ -145,10 +145,6 @@ class Widget
                         <div class="fgs-kw-wrap">
                             <input type="text" class="fgs-keyword" name="keyword2" placeholder="<?php esc_attr_e('wordpress seo plugin', 'fyndable-geo-scan'); ?>">
                             <span class="fgs-kw-num" aria-hidden="true">2</span>
-                        </div>
-                        <div class="fgs-kw-wrap">
-                            <input type="text" class="fgs-keyword" name="keyword3" placeholder="<?php esc_attr_e('content optimalisatie', 'fyndable-geo-scan'); ?>">
-                            <span class="fgs-kw-num" aria-hidden="true">3</span>
                         </div>
                     </div>
                 </div>
@@ -219,8 +215,8 @@ class Widget
         if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
             return $this->error('invalid_url', __('Vul een geldige URL in.', 'fyndable-geo-scan'), 400);
         }
-        if (empty($keywords) || count($keywords) > 3) {
-            return $this->error('invalid_keywords', __('Vul 1 tot 3 keywords in.', 'fyndable-geo-scan'), 400);
+        if (empty($keywords) || count($keywords) > 2) {
+            return $this->error('invalid_keywords', __('Vul 1 tot 2 keywords in.', 'fyndable-geo-scan'), 400);
         }
         if (empty($email) || !is_email($email)) {
             return $this->error('invalid_email', __('Vul een geldig e-mailadres in.', 'fyndable-geo-scan'), 400);

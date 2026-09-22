@@ -292,7 +292,9 @@ AI Overview context:
         ];
 
         $model = $this->settings->getGeoModel();
-        $result = $this->providerRouter->routeRequest($messages, $model ?: null, 'geo_readiness', 2500, 0.2);
+        $maxTokens = 6000; // the required JSON output is large; thinking tokens also count
+
+        $result = $this->providerRouter->routeRequest($messages, $model ?: null, 'geo_readiness', $maxTokens, 0.2);
 
         if (is_wp_error($result)) {
             return $result;
@@ -302,7 +304,27 @@ AI Overview context:
         $parsed = $this->extractJson($content);
 
         if (empty($parsed)) {
-            return new \WP_Error('llm_json_invalid', __('The AI model did not return a valid JSON response', 'sseo-ai-saas'));
+            // One retry with a sharpened instruction — models occasionally wrap
+            // or truncate the JSON on the first attempt.
+            $messages[] = ['role' => 'assistant', 'content' => $content];
+            $messages[] = ['role' => 'user', 'content' => $language === 'en'
+                ? 'Your previous response was not valid JSON. Return ONLY the raw JSON object — no markdown, no commentary.'
+                : 'Je vorige antwoord was geen geldige JSON. Geef ALLEEN het kale JSON-object terug — geen markdown, geen toelichting.'];
+
+            $result = $this->providerRouter->routeRequest($messages, $model ?: null, 'geo_readiness', $maxTokens, 0.2);
+            if (is_wp_error($result)) {
+                return $result;
+            }
+            $content = $result['content'] ?? '';
+            $parsed = $this->extractJson($content);
+        }
+
+        if (empty($parsed)) {
+            return new \WP_Error(
+                'llm_json_invalid',
+                __('The AI model did not return a valid JSON response', 'sseo-ai-saas'),
+                ['model' => $model, 'response_preview' => mb_substr($content, 0, 300)]
+            );
         }
 
         $parsed['usage'] = $result['usage'] ?? [];
@@ -312,19 +334,125 @@ AI Overview context:
 
     private function extractJson(string $content): ?array
     {
-        if (preg_match('/\{.*\}/s', $content, $matches)) {
+        // Strip markdown code fences (```json ... ```) and stray whitespace.
+        $clean = trim($content);
+        if (preg_match('/```(?:json)?\s*(.*?)\s*```/s', $clean, $fence)) {
+            $clean = trim($fence[1]);
+        }
+
+        $decoded = json_decode($clean, true);
+        if (is_array($decoded) && isset($decoded['score'])) {
+            return $decoded;
+        }
+
+        if (preg_match('/\{.*\}/s', $clean, $matches)) {
             $decoded = json_decode($matches[0], true);
             if (is_array($decoded) && isset($decoded['score'])) {
                 return $decoded;
             }
         }
 
-        $decoded = json_decode($content, true);
-        if (is_array($decoded) && isset($decoded['score'])) {
-            return $decoded;
+        // Truncated output (hit max_tokens): try to repair by closing open
+        // strings/brackets and slicing back to the last complete element.
+        $repaired = $this->repairTruncatedJson($clean);
+        if ($repaired !== null) {
+            $decoded = json_decode($repaired, true);
+            if (is_array($decoded) && isset($decoded['score'])) {
+                return $decoded;
+            }
         }
 
         return null;
+    }
+
+    /**
+     * Attempt to repair a JSON document truncated mid-stream: cut back to the
+     * last "safe" boundary — a comma or closed bracket outside strings, which
+     * guarantees everything before it was complete — then close the open
+     * structures.
+     */
+    private function repairTruncatedJson(string $content): ?string
+    {
+        $start = strpos($content, '{');
+        if ($start === false) {
+            return null;
+        }
+
+        $json = substr($content, $start);
+        $len = strlen($json);
+        $inString = false;
+        $escaped = false;
+        $cutPoint = -1; // byte offset just after the last safe boundary
+
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $json[$i];
+
+            if ($inString) {
+                if ($escaped) {
+                    $escaped = false;
+                } elseif ($ch === '\\') {
+                    $escaped = true;
+                } elseif ($ch === '"') {
+                    $inString = false;
+                }
+                continue;
+            }
+
+            if ($ch === '"') {
+                $inString = true;
+            } elseif ($ch === ',') {
+                $cutPoint = $i + 1;
+            } elseif ($ch === '}' || $ch === ']') {
+                $cutPoint = $i + 1;
+            }
+        }
+
+        if ($cutPoint <= 0) {
+            return null;
+        }
+
+        $cut = substr($json, 0, $cutPoint);
+        $cut = rtrim($cut);
+        $cut = rtrim($cut, ',');
+
+        // Rebuild the open bracket/string stack for the trimmed fragment.
+        $stack = [];
+        $inString = false;
+        $escaped = false;
+        $len = strlen($cut);
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $cut[$i];
+            if ($inString) {
+                if ($escaped) {
+                    $escaped = false;
+                } elseif ($ch === '\\') {
+                    $escaped = true;
+                } elseif ($ch === '"') {
+                    $inString = false;
+                }
+                continue;
+            }
+            if ($ch === '"') {
+                $inString = true;
+            } elseif ($ch === '{' || $ch === '[') {
+                $stack[] = $ch;
+            } elseif ($ch === '}' || $ch === ']') {
+                array_pop($stack);
+            }
+        }
+
+        if (empty($stack)) {
+            return null; // nothing was actually truncated
+        }
+
+        if ($inString) {
+            $cut .= '"';
+        }
+        foreach (array_reverse($stack) as $open) {
+            $cut .= ($open === '{') ? '}' : ']';
+        }
+
+        return $cut;
     }
 
     private function buildReport(

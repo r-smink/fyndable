@@ -75,8 +75,8 @@ class PublicApi
         if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
             return $this->error('invalid_url', __('Invalid URL provided', 'sseo-ai-saas'), 400);
         }
-        if (count($keywords) < 1 || count($keywords) > 3) {
-            return $this->error('invalid_keywords', __('Provide between 1 and 3 keywords', 'sseo-ai-saas'), 400);
+        if (count($keywords) < 1 || count($keywords) > 2) {
+            return $this->error('invalid_keywords', __('Provide between 1 and 2 keywords', 'sseo-ai-saas'), 400);
         }
         if (empty($email) || !is_email($email)) {
             return $this->error('invalid_email', __('A valid email address is required', 'sseo-ai-saas'), 400);
