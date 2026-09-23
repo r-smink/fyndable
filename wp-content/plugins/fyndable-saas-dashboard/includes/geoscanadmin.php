@@ -315,16 +315,24 @@ class GeoScanAdmin
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><label for="sseo_geo_multi_models"><?php esc_html_e('Modellen', 'sseo-ai-saas'); ?></label></th>
+                            <th scope="row"><label for="sseo_geo_multi_add"><?php esc_html_e('Modellen', 'sseo-ai-saas'); ?></label></th>
                             <td>
-                                <select name="multi_models[]" id="sseo_geo_multi_models" multiple="multiple" size="8" style="min-width:400px; height:auto;">
-                                    <?php foreach ($allModels as $modelKey => $modelLabel) : ?>
-                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php echo in_array($modelKey, $multiModels, true) ? 'selected' : ''; ?>><?php echo esc_html($modelLabel); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <p class="description">
-                                    <?php esc_html_e('Houd Ctrl (of Cmd) ingedrukt om meerdere modellen te selecteren. Selecteer minimaal 2 modellen.', 'sseo-ai-saas'); ?>
-                                    <br>
+                                <div class="sseo-geo-pill-select" id="sseo_geo_pill_select">
+                                    <div class="sseo-geo-pill-container" id="sseo_geo_pill_container"></div>
+                                    <select id="sseo_geo_multi_add" class="sseo-geo-pill-dropdown">
+                                        <option value=""><?php esc_html_e('+ Model toevoegen…', 'sseo-ai-saas'); ?></option>
+                                        <?php foreach ($allModels as $modelKey => $modelLabel) : ?>
+                                            <option value="<?php echo esc_attr($modelKey); ?>"><?php echo esc_html($modelLabel); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php // Hidden inputs for form submission are managed by JS ?>
+                                    <div id="sseo_geo_multi_hidden_inputs">
+                                        <?php foreach ($multiModels as $modelId) : ?>
+                                            <input type="hidden" name="multi_models[]" value="<?php echo esc_attr($modelId); ?>">
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                                <p class="description sseo-geo-pill-count">
                                     <?php
                                     $selectedCount = count($multiModels);
                                     printf(

@@ -121,4 +121,83 @@
             });
         });
     });
+
+    /* ===== Multi-model pill select ===== */
+    $(function () {
+        var $dropdown = $('#sseo_geo_multi_add');
+        var $container = $('#sseo_geo_pill_container');
+        var $hiddenWrap = $('#sseo_geo_multi_hidden_inputs');
+        var $countText = $('.sseo-geo-pill-count');
+
+        if (!$dropdown.length) {
+            return;
+        }
+
+        // Build initial pills from the hidden inputs already in the form.
+        $hiddenWrap.find('input[name="multi_models[]"]').each(function () {
+            var value = $(this).val();
+            var label = '';
+            $dropdown.find('option').each(function () {
+                if ($(this).val() === value) { label = $(this).text(); return false; }
+            });
+            if (label) {
+                addPill(value, label, true);
+            }
+        });
+        hideSelectedOptions();
+
+        $dropdown.on('change', function () {
+            var value = $(this).val();
+            if (!value) return;
+            var label = $(this).find('option:selected').text();
+            addPill(value, label, false);
+            $(this).val('');
+            hideSelectedOptions();
+            updateCount();
+        });
+
+        function addPill(value, label, skipHidden) {
+            // Avoid duplicates.
+            var exists = false;
+            $container.find('.sseo-geo-pill').each(function () {
+                if ($(this).attr('data-model') === value) exists = true;
+            });
+            if (exists) return;
+
+            var $pill = $('<span class="sseo-geo-pill"></span>').attr('data-model', value).text(label);
+            var $btn = $('<button type="button" class="sseo-geo-pill-remove" title="Verwijderen">&times;</button>');
+            $btn.on('click', function () {
+                $pill.remove();
+                $hiddenWrap.find('input').filter(function () { return $(this).val() === value; }).remove();
+                hideSelectedOptions();
+                updateCount();
+            });
+            $pill.append($btn);
+            $container.append($pill);
+
+            if (!skipHidden) {
+                $hiddenWrap.append($('<input type="hidden" name="multi_models[]">').val(value));
+            }
+        }
+
+        function hideSelectedOptions() {
+            var selected = [];
+            $hiddenWrap.find('input[name="multi_models[]"]').each(function () {
+                selected.push($(this).val());
+            });
+            $dropdown.find('option').each(function () {
+                var val = $(this).val();
+                if (!val) return; // keep the placeholder
+                $(this).prop('disabled', selected.indexOf(val) !== -1);
+            });
+        }
+
+        function updateCount() {
+            var count = $hiddenWrap.find('input[name="multi_models[]"]').length;
+            var multiplier = Math.max(1, count);
+            $countText.html(
+                'Momenteel ' + count + ' model(len) geselecteerd. Kosten per scan: ~' + multiplier + 'x de normale prijs.'
+            );
+        }
+    });
 })(jQuery);

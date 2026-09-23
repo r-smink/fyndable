@@ -552,3 +552,57 @@
         text-align: left;
     }
 }
+
+/* ===== Multi-model pill select ===== */
+.sseo-geo-pill-select {
+    max-width: 500px;
+}
+
+.sseo-geo-pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    min-height: 8px;
+}
+
+.sseo-geo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, rgba(55, 159, 211, .1) 0%, rgba(143, 57, 172, .1) 100%);
+    border: 1px solid rgba(55, 159, 211, .3);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.sseo-geo-pill-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: rgba(0, 0, 0, .1);
+    border-radius: 50%;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: background .15s ease, color .15s ease;
+}
+
+.sseo-geo-pill-remove:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.sseo-geo-pill-dropdown {
+    min-width: 300px;
+}
