@@ -315,18 +315,16 @@ class GeoScanAdmin
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php esc_html_e('Modellen', 'sseo-ai-saas'); ?></th>
+                            <th scope="row"><label for="sseo_geo_multi_models"><?php esc_html_e('Modellen', 'sseo-ai-saas'); ?></label></th>
                             <td>
-                                <fieldset>
-                                    <legend class="screen-reader-text"><?php esc_html_e('Selecteer modellen voor multi-model analyse', 'sseo-ai-saas'); ?></legend>
+                                <select name="multi_models[]" id="sseo_geo_multi_models" multiple="multiple" size="8" style="min-width:400px; height:auto;">
                                     <?php foreach ($allModels as $modelKey => $modelLabel) : ?>
-                                        <label style="display:block; margin-bottom:4px;">
-                                            <input type="checkbox" name="multi_models[]" value="<?php echo esc_attr($modelKey); ?>" <?php checked(in_array($modelKey, $multiModels, true)); ?>>
-                                            <?php echo esc_html($modelLabel); ?>
-                                        </label>
+                                        <option value="<?php echo esc_attr($modelKey); ?>" <?php echo in_array($modelKey, $multiModels, true) ? 'selected' : ''; ?>><?php echo esc_html($modelLabel); ?></option>
                                     <?php endforeach; ?>
-                                </fieldset>
-                                <p class="description" style="margin-top:8px;">
+                                </select>
+                                <p class="description">
+                                    <?php esc_html_e('Houd Ctrl (of Cmd) ingedrukt om meerdere modellen te selecteren. Selecteer minimaal 2 modellen.', 'sseo-ai-saas'); ?>
+                                    <br>
                                     <?php
                                     $selectedCount = count($multiModels);
                                     printf(
