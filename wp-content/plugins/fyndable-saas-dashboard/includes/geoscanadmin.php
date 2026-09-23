@@ -37,6 +37,7 @@ class GeoScanAdmin
         add_action('wp_ajax_sseo_geo_scan_status', [$this, 'ajaxStatus']);
         add_action('admin_post_sseo_geo_scan_regen_key', [$this, 'handleRegenKey']);
         add_action('admin_post_sseo_geo_scan_save_website', [$this, 'handleSaveWebsiteSettings']);
+        add_action('admin_post_sseo_geo_scan_save_multi_model', [$this, 'handleSaveMultiModel']);
     }
 
     /**
@@ -272,6 +273,76 @@ class GeoScanAdmin
                 <?php endif; ?>
             </div>
 
+            <?php
+            // Multi-model settings
+            $multiEnabled = $this->settings->isGeoMultiModelEnabled();
+            $multiModels = $this->settings->getGeoMultiModels();
+            $websiteMultiEnabled = $this->settings->isGeoWebsiteMultiModelEnabled();
+            $multiRouter = new \SSEOAISaaS\ProviderRouter($this->settings);
+            $allModels = $multiRouter->getMergedAvailableModels();
+            ?>
+            <div class="sseo-ai-card sseo-geo-integration-card">
+                <h2><?php esc_html_e('Multi-model GEO Scan', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Laat meerdere AI-modellen dezelfde pagina beoordelen voor een breder perspectief. De scores worden gemiddeld en bevindingen samengevoegd. Elk model evalueert vanuit zijn eigen sterke punten (bijv. ChatGPT → Bing/conversationeel, Gemini → Knowledge Graph, Claude → entity clarity).', 'sseo-ai-saas'); ?></p>
+
+                <?php if (!empty($_GET['multi_model_saved'])) : ?>
+                    <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Multi-model instellingen opgeslagen.', 'sseo-ai-saas'); ?></p></div>
+                <?php endif; ?>
+
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('sseo_geo_scan_multi_model', 'sseo_geo_multi_nonce'); ?>
+                    <input type="hidden" name="action" value="sseo_geo_scan_save_multi_model">
+                    <input type="hidden" name="saas_shell" value="<?php echo isset($_GET['saas_shell']) ? '1' : ''; ?>">
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Multi-model (admin-scans)', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="multi_enabled" value="1" <?php checked($multiEnabled); ?>>
+                                    <?php esc_html_e('Schakel multi-model analyse in voor admin-scans', 'sseo-ai-saas'); ?>
+                                </label>
+                                <p class="description"><?php esc_html_e('Wanneer ingeschakeld worden scans die vanuit deze pagina worden gestart door alle geselecteerde modellen geanalyseerd.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Multi-model (website-scans)', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="website_multi_enabled" value="1" <?php checked($websiteMultiEnabled); ?>>
+                                    <?php esc_html_e('Ook voor website-scans (fyndable.ai)', 'sseo-ai-saas'); ?>
+                                </label>
+                                <p class="description"><?php esc_html_e('Pas op: dit verhoogt de kosten per website-scan met het aantal geselecteerde modellen.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Modellen', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <fieldset>
+                                    <legend class="screen-reader-text"><?php esc_html_e('Selecteer modellen voor multi-model analyse', 'sseo-ai-saas'); ?></legend>
+                                    <?php foreach ($allModels as $modelKey => $modelLabel) : ?>
+                                        <label style="display:block; margin-bottom:4px;">
+                                            <input type="checkbox" name="multi_models[]" value="<?php echo esc_attr($modelKey); ?>" <?php checked(in_array($modelKey, $multiModels, true)); ?>>
+                                            <?php echo esc_html($modelLabel); ?>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </fieldset>
+                                <p class="description" style="margin-top:8px;">
+                                    <?php
+                                    $selectedCount = count($multiModels);
+                                    printf(
+                                        esc_html__('Momenteel %d model(len) geselecteerd. Kosten per scan: ~%dx de normale prijs.', 'sseo-ai-saas'),
+                                        $selectedCount,
+                                        max(1, $selectedCount)
+                                    );
+                                    ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <button type="submit" class="button button-primary"><?php esc_html_e('Multi-model instellingen opslaan', 'sseo-ai-saas'); ?></button>
+                </form>
+            </div>
+
             <div class="sseo-ai-card sseo-geo-integration-card">
                 <h2><?php esc_html_e('Website Scan integratie (fyndable.ai)', 'sseo-ai-saas'); ?></h2>
                 <p class="description"><?php esc_html_e('Deze key gebruikt de fyndable-geo-scan plugin op de website om scans aan te vragen. De key wordt als X-Fyndable-Scan-Key header verstuurd.', 'sseo-ai-saas'); ?></p>
@@ -458,6 +529,34 @@ class GeoScanAdmin
         $this->settings->regenerateWebsiteScanKey();
 
         $redirect = admin_url('admin.php?page=sseo-ai-geo-scan&key_regenerated=1');
+        if (!empty($_POST['saas_shell'])) {
+            $redirect .= '&saas_shell=1';
+        }
+        wp_safe_redirect($redirect);
+        exit;
+    }
+
+    /**
+     * admin-post: save multi-model GEO scan settings.
+     */
+    public function handleSaveMultiModel(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('No permission.', 'sseo-ai-saas'), 403);
+        }
+        check_admin_referer('sseo_geo_scan_multi_model', 'sseo_geo_multi_nonce');
+
+        $multiEnabled = !empty($_POST['multi_enabled']);
+        $websiteMultiEnabled = !empty($_POST['website_multi_enabled']);
+        $models = isset($_POST['multi_models']) && is_array($_POST['multi_models'])
+            ? array_map('sanitize_text_field', $_POST['multi_models'])
+            : [];
+
+        update_option('sseo_ai_saas_geo_multi_enabled', $multiEnabled);
+        update_option('sseo_ai_saas_geo_website_multi_enabled', $websiteMultiEnabled);
+        update_option('sseo_ai_saas_geo_multi_models', $models);
+
+        $redirect = admin_url('admin.php?page=sseo-ai-geo-scan&multi_model_saved=1');
         if (!empty($_POST['saas_shell'])) {
             $redirect .= '&saas_shell=1';
         }

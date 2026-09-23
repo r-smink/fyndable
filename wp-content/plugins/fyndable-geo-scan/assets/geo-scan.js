@@ -248,6 +248,9 @@
         var recs = (s.recommendations || []).map(recItem).join('');
 
         var html = '' +
+            '<div class="fgs-result-actions">' +
+                '<button type="button" class="fgs-print-btn">' + esc(strings.printResult || 'Printen / opslaan als PDF') + '</button>' +
+            '</div>' +
             '<div class="fgs-result-head">' +
                 '<span class="fgs-badge-pill">' + esc(strings.resultBadge || 'Jouw resultaat') + '</span>' +
                 '<h2 class="fgs-result-title">' + esc(strings.resultTitle || 'Jouw GEO Scan resultaat') + '</h2>' +
@@ -277,6 +280,9 @@
             '</div>';
 
         resultBox.innerHTML = html;
+        resultBox.querySelector('.fgs-print-btn').addEventListener('click', function () {
+            window.print();
+        });
         resultBox.hidden = false;
         form.hidden = true;
         resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });

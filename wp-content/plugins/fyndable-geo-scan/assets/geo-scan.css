@@ -289,6 +289,36 @@
     padding: 48px;
 }
 
+.fgs-result-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
+}
+
+.fgs-print-btn {
+    appearance: none;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #8F39AC, #379FD3);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(143, 57, 172, .2);
+}
+
+.fgs-print-btn:hover,
+.fgs-print-btn:focus-visible {
+    filter: brightness(1.08);
+}
+
+.fgs-print-btn:focus-visible {
+    outline: 3px solid rgba(55, 159, 211, .3);
+    outline-offset: 3px;
+}
+
 .fgs-result-head {
     text-align: center;
     margin-bottom: 40px;
@@ -667,7 +697,57 @@
         gap: 12px;
     }
 
+    .fgs-result-actions {
+        justify-content: stretch;
+    }
+
+    .fgs-print-btn {
+        width: 100%;
+    }
+
     .fgs-result-title {
         font-size: 24px;
+    }
+}
+
+@media print {
+    @page {
+        margin: 12mm;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    .fgs-result,
+    .fgs-result * {
+        visibility: visible;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .fgs-result {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .fgs-result-actions {
+        display: none;
+    }
+
+    .fgs-hero,
+    .fgs-kw,
+    .fgs-recs,
+    .fgs-rec,
+    .fgs-cta {
+        break-inside: avoid;
+        page-break-inside: avoid;
     }
 }

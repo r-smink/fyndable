@@ -45,6 +45,7 @@ class Widget
                 'ctaText'         => __('Wij nemen contact met je op om de volledige analyse en verbeterpunten door te nemen.', 'fyndable-geo-scan'),
                 'resultBadge'     => __('Jouw resultaat', 'fyndable-geo-scan'),
                 'resultTitle'     => __('Jouw GEO Scan resultaat', 'fyndable-geo-scan'),
+                'printResult'     => __('Printen / opslaan als PDF', 'fyndable-geo-scan'),
                 'totalScore'      => __('Totale GEO Score', 'fyndable-geo-scan'),
                 'keywordsWord'    => __('keywords', 'fyndable-geo-scan'),
                 'tileGoogle'      => __('Google', 'fyndable-geo-scan'),

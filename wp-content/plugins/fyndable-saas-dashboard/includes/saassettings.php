@@ -202,6 +202,17 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_model', ['default' => 'google/gemini-flash-1.5']);
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_language', ['default' => 'nl']);
 
+        // GEO Scan multi-model settings
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_multi_enabled', [
+            'default' => false,
+            'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1),
+        ]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_multi_models', ['default' => []]);
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_website_multi_enabled', [
+            'default' => false,
+            'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1),
+        ]);
+
         // Google Places (shared proxy for client autocomplete)
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_google_places_api_key', ['sanitize_callback' => 'sanitize_text_field']);
 
@@ -426,6 +437,35 @@ class SaaSSettings
     {
         $model = get_option('sseo_ai_saas_geo_website_model', '');
         return is_string($model) ? $model : '';
+    }
+
+    /**
+     * Whether multi-model GEO scanning is enabled (admin scans).
+     */
+    public function isGeoMultiModelEnabled(): bool
+    {
+        return (bool) get_option('sseo_ai_saas_geo_multi_enabled', false);
+    }
+
+    /**
+     * Get the list of models selected for multi-model GEO scans.
+     * Returns an array of model IDs (e.g. ['openai/gpt-5-mini', 'google/gemini-3.7-flash', 'anthropic/claude-sonnet-4']).
+     */
+    public function getGeoMultiModels(): array
+    {
+        $models = get_option('sseo_ai_saas_geo_multi_models', []);
+        if (!is_array($models)) {
+            return [];
+        }
+        return array_values(array_filter($models));
+    }
+
+    /**
+     * Whether multi-model GEO scanning is enabled for website (lead) scans.
+     */
+    public function isGeoWebsiteMultiModelEnabled(): bool
+    {
+        return (bool) get_option('sseo_ai_saas_geo_website_multi_enabled', false);
     }
 
     /**

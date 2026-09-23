@@ -35,6 +35,27 @@ Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQue
 
 `GeoScanner::scan(url, keywords, language='auto', onProgress, scanId, source)` — 'auto' triggers `detectLanguageFromKeywords()` (NL/EN stopword heuristic); LLM prompt is language-aware (NL/EN variants). `source` ('admin'|'website') selects the model: admin scans use `sseo_ai_saas_geo_model` (Settings → "GEO Scan Model"), website scans use `sseo_ai_saas_geo_website_model` (GEO Scan admin → integratiekaart → "Model (website-scan)"; empty = fall back to the admin model). Saved via `admin_post_sseo_geo_scan_save_website`.
 
+### Multi-model GEO scan (2026-09-23)
+
+When enabled, the GEO scan runs the same page through multiple AI models sequentially, each with a model-specific prompt addition. Results are merged into a single report.
+
+**Settings** (managed via GEO Scan admin → "Multi-model GEO Scan" card, saved via `admin_post_sseo_geo_scan_save_multi_model`):
+- `sseo_ai_saas_geo_multi_enabled` (bool) — multi-model for admin scans
+- `sseo_ai_saas_geo_multi_models` (array of model IDs) — which models to use
+- `sseo_ai_saas_geo_website_multi_enabled` (bool) — also for website scans (requires admin multi-model to be on)
+
+**Architecture:**
+- `GeoScanner::analyzeWithMultipleModels()` — loops sequentially over selected models, calls `analyzeWithLlm()` per model with a `$modelOverride`
+- `GeoScanner::getModelSpecificPromptAddition(model, language)` — per model-family (openai/google/anthropic) appends a focused evaluation section: ChatGPT → Bing/conversational, Gemini → Knowledge Graph/organic top-10, Claude → entity clarity/conservative name-dropping
+- `GeoScanner::mergeMultiModelResults()` — averages scores/breakdown, merges+deduplicates findings/recommendations/strengths/weaknesses (60% word-overlap threshold), sums usage/cost
+- `GeoScanner::detectModelFamily(model)` — maps model ID to family (openai/google/anthropic/other)
+- Report JSON gains `multi_model` (bool) and `models_used` (array of `{model, score}`)
+- `GeoScanReport` renders a "Geanalyseerd door X modellen" badge with per-model score chips when `multi_model` is true
+
+**Graceful degradation:** if a model fails, it's skipped and logged (`error_log`). If all models fail → `WP_Error('all_models_failed')`. If only 1 succeeds → returned as single-model result.
+
+**Backward compatible:** toggle off = exact same behavior as before. No database schema changes (report JSON is `longtext`).
+
 ### Public endpoints (shared-key auth, `X-Fyndable-Scan-Key` header)
 
 `publicapi.php` — class `PublicApi`, key managed via GEO Scan admin page (integratiekaart, `SaaSSettings::getWebsiteScanKey()` / `regenerateWebsiteScanKey()`, option `sseo_ai_saas_website_scan_key`):

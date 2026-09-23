@@ -86,6 +86,27 @@ class GeoScanReport
                         <span class="score-label">/100</span>
                     </div>
                     <p class="sseo-geo-score-caption"><?php esc_html_e('Hoe geschikt is deze pagina om als bron te worden geciteerd door AI-zoekmachines?', 'sseo-ai-saas'); ?></p>
+                    <?php
+                    $modelsUsed = $data['models_used'] ?? [];
+                    if (!empty($data['multi_model']) && count($modelsUsed) >= 2) :
+                    ?>
+                    <div class="sseo-geo-multi-model-badge" style="margin-top:12px; padding:8px 12px; background:#f0f7ff; border:1px solid #cce0f5; border-radius:6px; font-size:13px;">
+                        <strong><?php printf(esc_html__('Geanalyseerd door %d modellen', 'sseo-ai-saas'), count($modelsUsed)); ?></strong>
+                        <span style="color:#6b7280;"> — <?php esc_html_e('gemiddelde score', 'sseo-ai-saas'); ?></span>
+                        <div style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;">
+                            <?php foreach ($modelsUsed as $mu) :
+                                $modelName = str_contains($mu['model'], '/') ? substr($mu['model'], strpos($mu['model'], '/') + 1) : $mu['model'];
+                                $modelScore = (int)($mu['score'] ?? 0);
+                                $scoreColor = $modelScore >= 70 ? '#16a34a' : ($modelScore >= 40 ? '#d97706' : '#dc2626');
+                            ?>
+                            <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:#fff; border:1px solid #e5e7eb; border-radius:4px; font-size:12px;">
+                                <?php echo esc_html($modelName); ?>
+                                <span style="color:<?php echo esc_attr($scoreColor); ?>; font-weight:600;"><?php echo esc_html($modelScore); ?></span>
+                            </span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="sseo-geo-report-card sseo-geo-summary-card">
