@@ -126,14 +126,14 @@ class PublicApi
     public function getGeoScanStatus(\WP_REST_Request $request): \WP_REST_Response
     {
         if (($err = $this->checkKey($request)) !== null) {
-            return $err;
+            return $this->noCache($err);
         }
 
         $scanId = (int)$request->get_param('id');
         $scan = $this->geoScanRepository->getStatus($scanId);
 
         if (!$scan || ($scan['source'] ?? 'admin') !== 'website') {
-            return $this->error('not_found', __('Scan not found', 'sseo-ai-saas'), 404);
+            return $this->noCache($this->error('not_found', __('Scan not found', 'sseo-ai-saas'), 404));
         }
 
         $response = [
@@ -151,7 +151,16 @@ class PublicApi
             $response['teaser'] = $this->buildTeaser($scanId);
         }
 
-        return new \WP_REST_Response($response, 200);
+        return $this->noCache(new \WP_REST_Response($response, 200));
+    }
+
+    private function noCache(\WP_REST_Response $response): \WP_REST_Response
+    {
+        $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->header('Pragma', 'no-cache');
+        $response->header('Expires', 'Wed, 11 Jan 1984 05:00:00 GMT');
+        $response->header('X-LiteSpeed-Cache-Control', 'no-cache');
+        return $response;
     }
 
     /**

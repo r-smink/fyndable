@@ -283,28 +283,46 @@ class Widget
         $scanId = (int)$request->get_param('id');
 
         if ($scanId <= 0) {
-            return $this->error('invalid_scan', __('Ongeldige scan.', 'fyndable-geo-scan'), 400);
+            return $this->noCache($this->error('invalid_scan', __('Ongeldige scan.', 'fyndable-geo-scan'), 400));
         }
 
+        $statusUrl = add_query_arg(
+            '_',
+            sprintf('%.6F', microtime(true)),
+            Settings::portalUrl() . '/wp-json/ai-seo-saas/v1/public/geo-scan/' . $scanId . '/status'
+        );
         $response = wp_remote_get(
-            Settings::portalUrl() . '/wp-json/ai-seo-saas/v1/public/geo-scan/' . $scanId . '/status',
+            $statusUrl,
             [
                 'timeout' => 15,
-                'headers' => ['X-Fyndable-Scan-Key' => Settings::apiKey()],
+                'headers' => [
+                    'X-Fyndable-Scan-Key' => Settings::apiKey(),
+                    'Cache-Control' => 'no-cache, no-store, max-age=0',
+                    'Pragma' => 'no-cache',
+                ],
             ]
         );
 
         if (is_wp_error($response)) {
             // Transient portal hiccup — report as still running so the frontend keeps polling.
-            return new \WP_REST_Response(['success' => true, 'status' => 'running', 'progress' => -1], 200);
+            return $this->noCache(new \WP_REST_Response(['success' => true, 'status' => 'running', 'progress' => -1], 200));
         }
 
         $data = json_decode(wp_remote_retrieve_body($response), true);
         if (!is_array($data) || empty($data['success'])) {
-            return $this->error('status_failed', __('Status kon niet worden opgehaald.', 'fyndable-geo-scan'), 502);
+            return $this->noCache($this->error('status_failed', __('Status kon niet worden opgehaald.', 'fyndable-geo-scan'), 502));
         }
 
-        return new \WP_REST_Response($data, 200);
+        return $this->noCache(new \WP_REST_Response($data, 200));
+    }
+
+    private function noCache(\WP_REST_Response $response): \WP_REST_Response
+    {
+        $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->header('Pragma', 'no-cache');
+        $response->header('Expires', 'Wed, 11 Jan 1984 05:00:00 GMT');
+        $response->header('X-LiteSpeed-Cache-Control', 'no-cache');
+        return $response;
     }
 
     private function checkRateLimit(): ?\WP_REST_Response

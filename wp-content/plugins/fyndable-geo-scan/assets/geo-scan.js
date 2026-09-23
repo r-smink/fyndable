@@ -283,8 +283,9 @@
     }
 
     function pollStatus(scanId, scanUrl) {
-        fetch(restUrl + '/geo-scan/' + encodeURIComponent(scanId) + '/status', {
-            headers: { 'Accept': 'application/json' }
+        fetch(restUrl + '/geo-scan/' + encodeURIComponent(scanId) + '/status?_=' + Date.now(), {
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store'
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
