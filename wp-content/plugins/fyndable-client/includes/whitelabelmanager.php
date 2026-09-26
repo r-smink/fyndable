@@ -37,7 +37,7 @@ class WhiteLabelManager
     /**
      * Apply custom admin footer
      */
-    public function customAdminFooter(string $text): string
+    public function customAdminFooter(?string $text): string
     {
         $footerText = get_option('sseo_ai_wl_footer_text', '');
         
@@ -45,7 +45,7 @@ class WhiteLabelManager
             return $footerText;
         }
         
-        return $text;
+        return $text ?? '';
     }
     
     /**
