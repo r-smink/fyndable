@@ -17,6 +17,26 @@
     var errorBox = document.getElementById('fgs-error');
     var resultBox = document.getElementById('fgs-result');
 
+    var urlInput = document.getElementById('fgs-url');
+
+    // The field shows a fixed https:// prefix — strip a scheme the visitor
+    // types or pastes anyway so it never appears twice.
+    function stripScheme(v) {
+        return v.replace(/^\s*https?:\/\//i, '').replace(/^\/\//, '');
+    }
+
+    function normalizeUrl(v) {
+        var domain = stripScheme(v).trim();
+        return domain ? 'https://' + domain : '';
+    }
+
+    urlInput.addEventListener('input', function () {
+        var stripped = stripScheme(urlInput.value);
+        if (stripped !== urlInput.value) {
+            urlInput.value = stripped;
+        }
+    });
+
     var pollTimer = null;
     var tickTimer = null;
     var pollStarted = 0;
@@ -346,7 +366,7 @@
         errorBox.hidden = true;
         resultBox.hidden = true;
 
-        var url = form.querySelector('#fgs-url').value.trim();
+        var url = normalizeUrl(urlInput.value);
         var email = form.querySelector('#fgs-email').value.trim();
         var name = form.querySelector('#fgs-name').value.trim();
         var company = form.querySelector('#fgs-company').value.trim();
@@ -356,8 +376,8 @@
             .map(function (i) { return i.value.trim(); })
             .filter(function (k) { return k.length > 0; });
 
-        if (!url || !/^https?:\/\/.+\..+/.test(url)) {
-            showError('Vul een geldige URL in (incl. https://).');
+        if (!url || !/^https?:\/\/[^\s]+\.[^\s]+/.test(url)) {
+            showError('Vul een geldige URL in.');
             return;
         }
         if (keywords.length === 0) {

@@ -132,7 +132,10 @@ class Widget
                 <div class="fgs-section-label"><?php esc_html_e('Website', 'fyndable-geo-scan'); ?></div>
                 <div class="fgs-field">
                     <label for="fgs-url"><?php esc_html_e('Website URL', 'fyndable-geo-scan'); ?></label>
-                    <input type="url" id="fgs-url" name="url" placeholder="https://jouwwebsite.nl" required>
+                    <div class="fgs-url-group">
+                        <span class="fgs-url-prefix" aria-hidden="true">https://</span>
+                        <input type="text" id="fgs-url" name="url" inputmode="url" placeholder="jouwwebsite.nl" required>
+                    </div>
                 </div>
 
                 <div class="fgs-section-label"><?php esc_html_e('Zoektermen', 'fyndable-geo-scan'); ?></div>
@@ -199,7 +202,13 @@ class Widget
             return new \WP_REST_Response(['success' => true, 'scan_id' => 0], 200);
         }
 
-        $url = esc_url_raw($body['url'] ?? '');
+        $url = sanitize_text_field((string)($body['url'] ?? ''));
+        // The form shows a fixed https:// prefix and submits the domain only —
+        // prepend the scheme here too so direct API callers get the same result.
+        if ($url !== '' && !preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . ltrim($url, '/');
+        }
+        $url = esc_url_raw($url);
         $email = sanitize_email($body['email'] ?? '');
         $name = sanitize_text_field($body['name'] ?? '');
         $company = sanitize_text_field($body['company'] ?? '');
