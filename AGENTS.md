@@ -147,7 +147,7 @@ Note: tenant_key URL params must allow underscores (`tn_<hex>`) — the route re
 
 ## Verification notes
 
-- PHP CLI **is** available in this environment (`php -l` works).
+- PHP CLI is **not** on PATH in this workspace (`php` not found); `perl` is available. `tools/po2mo.pl` regenerates `.mo` files — equivalent to `languages/generate-mo.php`.
 - Key changed files:
   - `wp-content/plugins/fyndable-saas-dashboard/includes/dataforseoclient.php`
   - `wp-content/plugins/fyndable-saas-dashboard/includes/apigateway.php`
@@ -208,6 +208,17 @@ Other touched code:
 - Brand Voice quick fields on the ApexFlow page write to shared `sseo_ai_brand_voice` (tone, audience, voice_description, enabled).
 
 Note: WP-Cron only runs on site traffic — production sites should point a real cron at `wp-cron.php` for reliable weekly runs and queue processing.
+
+## Global AI loader — animated Fyndable logo (2026-09-28)
+
+`fyndable-client/assets/fyndable-loader.js` — self-contained vanilla-JS loader ported from `preloader.html` (bundled React artifact; source of truth for the animation). The Fyndable logo ring is "drawn" via an SVG `<mask>` wedge whose `d` is updated per frame by a shared `requestAnimationFrame` loop: 1.2s eased draw → 450ms hold → 0.5s erase → 250ms gap → loop. Dots under the label cycle `.`/`..`/`...` every 450ms.
+
+- **Overlay**: `#sseo-ai-loader-overlay` (dark `rgba(0,0,0,.6)` + blur backdrop) created lazily; label from `fyndableLoaderConfig.text` (`'AI is generating'` + animated dots). Public API unchanged: `window.sseoShowLoader()` / `sseoHideLoader()` — now backed by a pending counter + 300ms show delay (no flash on fast calls). Each show-source increments; matching completions decrement.
+- **Triggers**: jQuery `ajaxSend` (data contains `sseo_ai_`/`action=ai_seo`, matched again on `ajaxComplete`/`ajaxError` via `xhr.__fynLoader`), `wp.apiFetch` wrapper (`sseo-ai/v1` paths), `window.fetch` wrapper (`/sseo-ai/v1/` URLs). `support-assistant` paths are excluded — the chat widget has its own typing UI.
+- **Spinner upgrade**: a `MutationObserver` replaces every `.spinner`/`.fyndable-spinner` inside `fyndableLoaderConfig.scopeSelector` with an inline logo SVG (unique gradient/mask ids per instance, whitelabel `colors` when configured). Elements keep their own size; `.fyn-upgraded` CSS reset kills the WP border/background spinner. Animation runs only while an instance is visible (computed style + `.hidden` ancestor check).
+- **Enqueue points**: `client.php::enqueueAssets()` (all `ai-seo`/`fyndable` pages, scope = whole document) and `postmetabox.php` (post.php/post-new.php/attachment.php + `enqueue_block_editor_assets` for iframed editors, scope = `#fyndable_seo_meta, #fyndable_seo_meta_attachment` so WP core spinners stay untouched).
+- `mobile-app-template.html` embeds a compact copy of the same engine (`.spinner` → logo) for the Android app.
+- `.mo` regenerated via `tools/po2mo.pl` (new msgid "AI is generating" → "AI is aan het genereren").
 
 ## Shopify App (Laravel 11)
 

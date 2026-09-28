@@ -520,6 +520,9 @@ msgstr "Geen SEO-opties beschikbaar."
 msgid "AI is generating... Please wait."
 msgstr "AI is aan het genereren... Even geduld."
 
+msgid "AI is generating"
+msgstr "AI is aan het genereren"
+
 # License / activation
 msgid "License activated successfully!"
 msgstr "Licentie succesvol geactiveerd!"

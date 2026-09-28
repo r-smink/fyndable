@@ -1220,73 +1220,29 @@ class Client
             #wpcontent { padding-left: 0 !important; }
         ');
 
-        // Global AI generation loader overlay
-        wp_add_inline_style('ai-seo-client-admin', '
-            #sseo-ai-loader-overlay {
-                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.6); z-index: 100001; justify-content: center; align-items: center;
-                flex-direction: column; backdrop-filter: blur(4px);
-            }
-            #sseo-ai-loader-overlay.active { display: flex !important; }
-            #sseo-ai-loader-overlay .sseo-loader-spinner {
-                width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
-                border-top-color: #fff; border-radius: 50%; animation: sseo-spin 1s linear infinite;
-            }
-            #sseo-ai-loader-overlay .sseo-loader-text {
-                color: #fff; margin-top: 20px; font-size: 16px; font-weight: 500;
-                text-align: center; max-width: 300px; line-height: 1.5;
-            }
-            @keyframes sseo-spin { to { transform: rotate(360deg); } }
-        ');
+        // Global AI generation loader (animated Fyndable logo overlay + spinner upgrades)
+        wp_enqueue_script(
+            'fyndable-loader',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/fyndable-loader.js',
+            ['jquery'],
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/fyndable-loader.js'),
+            true
+        );
 
-        wp_add_inline_script('ai-seo-client-admin', '
-            (function($) {
-                if (document.getElementById("sseo-ai-loader-overlay")) return;
-                var overlay = document.createElement("div");
-                overlay.id = "sseo-ai-loader-overlay";
-                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + \'' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . '\' + "</div>";
-                document.body.appendChild(overlay);
+        // Whitelabel: recolor the loader gradient when a custom brand is configured
+        $loaderColors = null;
+        if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
+            $loaderColors = [
+                sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3',
+                sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac',
+            ];
+        }
 
-                var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
-                var sseoHideLoader = function() { $("#sseo-ai-loader-overlay").removeClass("active"); };
-                window.sseoShowLoader = sseoShowLoader;
-                window.sseoHideLoader = sseoHideLoader;
-
-                $(document).ajaxSend(function(e, xhr, settings) {
-                    if (settings.data && (settings.data.indexOf("sseo_ai_") !== -1 || settings.data.indexOf("action=ai_seo") !== -1)) {
-                        sseoShowLoader();
-                    }
-                });
-                $(document).ajaxComplete(function() {
-                    sseoHideLoader();
-                });
-
-                // Intercept wp.apiFetch for all AI calls
-                if (typeof wp !== "undefined" && wp.apiFetch) {
-                    var originalFetch = wp.apiFetch;
-                    var sseoWrappedFetch = function(options) {
-                        if (options && options.path && (options.path.indexOf("sseo-ai/v1") !== -1 || options.path.indexOf("/sseo-ai/v1") !== -1)) {
-                            sseoShowLoader();
-                            var result = originalFetch(options);
-                            if (result && typeof result.then === "function") {
-                                result.then(function() { sseoHideLoader(); }, function() { sseoHideLoader(); });
-                            } else {
-                                sseoHideLoader();
-                            }
-                            return result;
-                        }
-                        return originalFetch(options);
-                    };
-                    // Preserve all original properties (middleware, nonce, etc.)
-                    for (var key in originalFetch) {
-                        if (originalFetch.hasOwnProperty(key)) {
-                            sseoWrappedFetch[key] = originalFetch[key];
-                        }
-                    }
-                    wp.apiFetch = sseoWrappedFetch;
-                }
-            })(jQuery);
-        ', 'after');
+        wp_localize_script('fyndable-loader', 'fyndableLoaderConfig', [
+            'text' => __('AI is generating', 'ai-seo-client'),
+            'scopeSelector' => '',
+            'colors' => $loaderColors,
+        ]);
 
         // Apply white-label CSS variables only when a custom brand is configured
         if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
