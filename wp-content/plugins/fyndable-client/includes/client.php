@@ -2890,6 +2890,8 @@ class Client
             }
         }
         update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
+        // Invalidate cached brand reference descriptions so changed images are re-analyzed
+        delete_transient('sseo_ai_brand_ref_desc');
 
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         $allowedLanguages = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt', 'pl'];

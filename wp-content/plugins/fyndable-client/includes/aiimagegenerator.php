@@ -493,12 +493,18 @@ class AIImageGenerator
         // Build brand reference description from photo portfolio
         $brandReferenceDesc = $this->getBrandReferenceDescription();
 
+        // Custom prompt instructions configured on the settings page apply to all AI prompts
+        $customInstructions = trim((string) get_option('sseo_ai_prompt_settings', ''));
+        $customSection = $customInstructions !== ''
+            ? "\nAdditional instructions (always apply): {$customInstructions}\n"
+            : '';
+
         if (!empty($context)) {
             $aiPrompt = "Generate a detailed image prompt for creating a {$style} image.
 
 User context: {$context}
 Target prompt length: approximately {$wordCount} words.
-{$brandReferenceDesc}
+{$brandReferenceDesc}{$customSection}
 
 Create a concise, descriptive prompt that captures the essence. Focus on visual elements, mood, and composition.";
         } else {
@@ -509,7 +515,7 @@ Create a concise, descriptive prompt that captures the essence. Focus on visual 
 
 Title: {$post->post_title}
 Content: {$excerpt}
-{$brandReferenceDesc}
+{$brandReferenceDesc}{$customSection}
 
 Create a concise, descriptive prompt (max {$wordCount} words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
         }
@@ -551,8 +557,9 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
             return '';
         }
 
-        // Check cache (1 week)
-        $cacheKey = 'sseo_ai_brand_ref_desc';
+        // Check cache (1 week). The key is tied to the portfolio contents so
+        // adding/removing/changing reference images invalidates it automatically.
+        $cacheKey = 'sseo_ai_brand_ref_desc_' . md5(wp_json_encode($portfolio));
         $cached = get_transient($cacheKey);
         if ($cached !== false && is_string($cached)) {
             return $cached;
@@ -582,9 +589,13 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
 
             $result = $this->llm->callWithImage($visionPrompt, $url, null, 100, 'image_alt_text');
 
-            if (!is_wp_error($result) && !empty($result['text'])) {
-                $desc = trim($result['text']);
-                $descriptions[] = "{$label}: {$desc}";
+            if (is_wp_error($result)) {
+                error_log('Fyndable Image: Vision call failed for portfolio reference ' . $url . ' - ' . $result->get_error_message());
+                continue;
+            }
+
+            if (!empty($result['text'])) {
+                $descriptions[] = "{$label}: " . trim($result['text']);
             }
         }
 
@@ -1212,7 +1223,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         
         $postId = (int)($_POST['post_id'] ?? 0);
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
-        $context = sanitize_text_field($_POST['context'] ?? '');
+        $context = sanitize_textarea_field($_POST['context'] ?? '');
         $wordCount = (int)($_POST['word_count'] ?? 100);
         $useStoredPrompt = isset($_POST['use_stored_prompt']) && $_POST['use_stored_prompt'] === 'true';
 
@@ -1241,7 +1252,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         
         $postId = (int)($_POST['post_id'] ?? 0);
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
-        $context = sanitize_text_field($_POST['context'] ?? '');
+        $context = sanitize_textarea_field($_POST['context'] ?? '');
         $wordCount = (int)($_POST['word_count'] ?? 100);
         
         if (!$postId) {
@@ -1274,9 +1285,13 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
     public function restGenerateImage(\WP_REST_Request $request): array
     {
         $postId = (int)$request->get_param('id');
-        $style = $request->get_param('style') ?? 'photorealistic';
-        
-        $attachmentId = $this->generateFeaturedImage($postId, $style);
+        $style = sanitize_text_field($request->get_param('style') ?? 'photorealistic');
+        $context = sanitize_textarea_field((string) ($request->get_param('context') ?? ''));
+        $wordCount = (int)($request->get_param('word_count') ?? 100);
+        $useStoredPrompt = $request->get_param('use_stored_prompt') === true
+            || $request->get_param('use_stored_prompt') === 'true';
+
+        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount, $useStoredPrompt);
         
         if (!$attachmentId) {
             return ['error' => 'Failed to generate image'];
