@@ -1,0 +1,308 @@
+{
+ "version": "0.4",
+ "title": "Fyndable – FAQ (accordion) (licht)",
+ "type": "section",
+ "content": [
+  {
+   "id": "1894025",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 48,
+     "column": "48",
+     "row": "48"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "classic",
+    "background_color": "#f9fafb"
+   },
+   "elements": [
+    {
+     "id": "181f458",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      }
+     },
+     "elements": [
+      {
+       "id": "1806515",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "FAQ",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#8F39AC",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "#f3e8f7",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp"
+       },
+       "elements": []
+      },
+      {
+       "id": "1819269",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Veelgestelde <span style=\"color:#8F39AC\">vragen</span>",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.12
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.1,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 30,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:760px}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "186fd89",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "width": {
+       "unit": "px",
+       "size": 820
+      },
+      "width_mobile": {
+       "unit": "%",
+       "size": 100
+      },
+      "flex_direction": "column",
+      "animation": "fadeInUp",
+      "custom_css": "selector{margin:0 auto;max-width:100%}"
+     },
+     "elements": [
+      {
+       "id": "1866181",
+       "elType": "widget",
+       "widgetType": "accordion",
+       "isInner": false,
+       "settings": {
+        "tabs": [
+         {
+          "_id": "1825fa0",
+          "tab_title": "Wat is GEO?",
+          "tab_content": "<p>GEO staat voor Generative Engine Optimization: het optimaliseren van je website zodat AI-modellen je content kunnen vinden, begrijpen en citeren.</p>"
+         },
+         {
+          "_id": "1833def",
+          "tab_title": "Wat is het verschil tussen SEO en GEO?",
+          "tab_content": "<p>SEO draait om posities in Google. GEO draait om zichtbaarheid in de antwoorden die AI-tools als ChatGPT, Perplexity, Gemini en Google AI Overviews geven.</p>"
+         },
+         {
+          "_id": "184a34d",
+          "tab_title": "Wat controleert de GEO Scan?",
+          "tab_content": "<p>De structuur van je content, je schema markup, je technische toegankelijkheid voor AI-crawlers en de citability van je informatie.</p>"
+         },
+         {
+          "_id": "1853848",
+          "tab_title": "Wat krijg ik als resultaat?",
+          "tab_content": "<p>Een gericht overzicht met scores per categorie en concrete actiepunten die je direct kunt oppakken.</p>"
+         },
+         {
+          "_id": "18602ac",
+          "tab_title": "Op welke platformen werkt Fyndable?",
+          "tab_content": "<p>WordPress is beschikbaar en Shopify is in beta. Magento en een mobiele app staan op de roadmap.</p>"
+         }
+        ],
+        "selected_icon": {
+         "value": "fas fa-plus",
+         "library": "fa-solid"
+        },
+        "selected_active_icon": {
+         "value": "fas fa-minus",
+         "library": "fa-solid"
+        },
+        "title_html_tag": "h3",
+        "icon_align": "right",
+        "border_width": {
+         "unit": "px",
+         "size": 0,
+         "sizes": []
+        },
+        "title_background": "#ffffff",
+        "title_color": "#333333",
+        "tab_active_color": "#8F39AC",
+        "icon_color": "#8F39AC",
+        "icon_active_color": "#8F39AC",
+        "content_background_color": "#ffffff",
+        "content_color": "#4b5563",
+        "title_typography_typography": "custom",
+        "title_typography_font_family": "Outfit",
+        "title_typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "title_typography_font_weight": "600",
+        "title_typography_line_height": {
+         "unit": "em",
+         "size": 1.35
+        },
+        "content_typography_typography": "custom",
+        "content_typography_font_family": "Outfit",
+        "content_typography_font_size": {
+         "unit": "px",
+         "size": 15,
+         "sizes": []
+        },
+        "content_typography_font_weight": "400",
+        "content_typography_line_height": {
+         "unit": "em",
+         "size": 1.65
+        },
+        "title_padding": {
+         "unit": "px",
+         "top": "22",
+         "right": "24",
+         "bottom": "22",
+         "left": "24",
+         "isLinked": false
+        },
+        "content_padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "24",
+         "bottom": "22",
+         "left": "24",
+         "isLinked": false
+        },
+        "custom_css": "selector .elementor-accordion-item{border-radius:12px;overflow:hidden;margin-bottom:12px;border:0!important;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);transition:all .2s ease}selector .elementor-accordion-item:hover{border-color:#8F39AC!important}selector .elementor-tab-content{border:0!important}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "18855ae",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>body{margin:0;background:#f8f9fb;font-family:Outfit,sans-serif;color:#333}a{color:#8F39AC}a:hover{color:#379FD3}@keyframes geoSpin{to{rotate:360deg}}</style>
+</helmet>
+<div ref="{{ rootRef }}" style="min-height:100vh;display:flex;flex-direction:column">
+<div style="height:120vh;display:flex;align-items:center;justify-content:center;font:500 14px/1.4 Outfit,sans-serif;color:#9ca3af">Scroll omlaag ↓</div>
+<div style="background:#fff;border-top:1px solid #f0f1f3;border-bottom:1px solid #f0f1f3">
+<div style="max-width:1200px;margin:0 auto;padding:28px 40px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:24px;box-sizing:border-box">
+<span data-anim="left" style="font:600 12px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#9ca3af">Ondersteunde platformen</span>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+<div data-anim="up" data-delay="0" style="display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #e9d5f0;border-radius:20px;padding:8px 10px 8px 14px;position:relative;overflow:hidden;isolation:isolate" data-pill=""><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none"></span><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none"></span>
+<i class="fab fa-wordpress" style="font-size:18px;color:#8F39AC"></i>
+<span style="font:600 14px/1.2 Outfit,sans-serif;color:#333">WordPress</span>
+<span style="font:600 11px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#047857;background:#d1fae5;padding:5px 9px;border-radius:20px">Beschikbaar</span>
+</div>
+<div data-anim="up" data-delay="150" style="display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #e9d5f0;border-radius:20px;padding:8px 10px 8px 14px;position:relative;overflow:hidden;isolation:isolate" data-pill=""><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none"></span><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none"></span>
+<i class="fab fa-shopify" style="font-size:18px;color:#8F39AC"></i>
+<span style="font:600 14px/1.2 Outfit,sans-serif;color:#333">Shopify</span>
+<span style="font:600 11px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#1d6fa0;background:#e0f0fa;padding:5px 9px;border-radius:20px">Beta</span>
+</div>
+<div data-anim="up" data-delay="300" style="display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #e5e7eb;border-radius:20px;padding:8px 10px 8px 14px;position:relative;overflow:hidden;isolation:isolate" data-pill=""><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none"></span><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none"></span>
+<i class="fas fa-mobile-alt" style="font-size:18px;color:#9ca3af"></i>
+<span style="font:600 14px/1.2 Outfit,sans-serif;color:#6b7280">Mobile app</span>
+<span style="font:600 11px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;background:#f3f4f6;padding:5px 9px;border-radius:20px">Roadmap</span>
+</div>
+<div data-anim="up" data-delay="450" style="display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #e5e7eb;border-radius:20px;padding:8px 10px 8px 14px;position:relative;overflow:hidden;isolation:isolate" data-pill=""><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none"></span><span data-fill="" style="position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none"></span>
+<i class="fab fa-magento" style="font-size:18px;color:#9ca3af"></i>
+<span style="font:600 14px/1.2 Outfit,sans-serif;color:#6b7280">Magento</span>
+<span style="font:600 11px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;background:#f3f4f6;padding:5px 9px;border-radius:20px">Roadmap</span>
+</div>
+</div>
+</div>
+</div>
+<div style="height:60vh"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  componentDidMount() {
+    const root = this.rootRef.current; if (!root) return;
+    const els = root.querySelectorAll('[data-anim]');
+    els.forEach(el => { el.style.opacity = 0; el.style.transform = el.dataset.anim === 'left' ? 'translateX(-30px)' : 'translateY(24px)'; });
+    this.io = new IntersectionObserver(es => es.forEach(en => {
+      const el = en.target, d = +(el.dataset.delay || 0);
+      if (en.isIntersecting) setTimeout(() => { el.style.transition = 'opacity .6s ease, transform .6s ease, border-color .2s ease, box-shadow .2s ease'; el.style.opacity = 1; el.style.transform = ''; setTimeout(() => { el.style.transition = 'transform .2s ease, border-color .2s ease, box-shadow .2s ease'; }, 650); }, d);
+    }), { threshold: 0.3 });
+    els.forEach(el => this.io.observe(el));
+    root.querySelectorAll('[data-pill]').forEach(p => {
+      const fills = [...p.querySelectorAll('[data-fill]')], kids = [...p.querySelectorAll('i,span:not([data-fill])')];
+      kids.forEach(k => { k.dataset.c = k.style.color; k.dataset.b = k.style.background; k.style.transition = 'color .3s ease .2s, background .3s ease .2s'; });
+      const bc = p.style.borderColor;
+      p.addEventListener('mouseenter', () => { fills.forEach((fl, i) => fl.style.translate = i ? '0 calc(-100% + 62px)' : '0 calc(-100% + 70px)'); p.style.transform = 'translateY(-2px)'; p.style.borderColor = '#8F39AC'; p.style.boxShadow = '0 8px 20px rgba(143,57,172,.3)';
+        kids.forEach(k => { k.style.color = '#fff'; if (k.dataset.b) k.style.background = 'rgba(255,255,255,.22)'; }); });
+      p.addEventListener('mouseleave', () => { fills.forEach(fl => fl.style.translate = '0 calc(-100% - 60px)'); p.style.transform = ''; p.style.borderColor = bc; p.style.boxShadow = '';
+        kids.forEach(k => { k.style.color = k.dataset.c; if (k.dataset.b) k.style.background = k.dataset.b; }); });
+    });
+  }
+  componentWillUnmount() { this.io && this.io.disconnect(); }
+  renderVals() { return { rootRef: this.rootRef }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+/* Fyndable — color tokens.
+   Brand values are verbatim from Fyndable_CVI.pdf.
+   Neutral + semantic values are verbatim from the product CSS
+   (wp-content/plugins/fyndable-client/assets/client-admin.css). */
+:root{
+  /* Brand — CVI */
+  --fyn-purple:#8F39AC;
+  --fyn-blue:#379FD3;
+  --fyn-ink:#333333;
+  --fyn-mist:#E6E7E8;
+  --fyn-purple-dark:#7A2F92;
+  --fyn-purple-tint:#F4E9F8;
+  --fyn-blue-dark:#2B84B3;
+  --fyn-blue-tint:#E6F3FB;
+  /* The signature: CVI gradient, 135°, purple → blue */
+  --fyn-gradient:linear-gradient(135deg,#8F39AC 0%,#379FD3 100%); /* @kind color */
+  --fyn-gradient-flat:linear-gradient(90deg,#8F39AC,#379FD3); /* @kind color */
+  --fyn-gradient-reverse:linear-gradient(135deg,#379FD3 0%,#8F39AC 100%); /* @kind color */
+  /* Neutrals */
+  --fyn-white:#ffffff;
+  --fyn-gray-50:#f9fafb;
+  --fyn-gray-100:#f3f4f6;
+  --fyn-gray-200:#e5e7eb;
+  --fyn-gray-300:#d1d5db;
+  --fyn-gray-400:#9ca3af;
+  --fyn-gray-500:#6b7280;
+  --fyn-gray-600:#4b5563;
+  --fyn-gray-700:#374151;
+  --fyn-gray-900:#111827;
+  /* Semantic states */
+  --fyn-success:#10b981;
+  --fyn-success-light:#d1fae5;
+  --fyn-warning:#f59e0b;
+  --fyn-warning-light:#fef3c7;
+  --fyn-danger:#ef4444;
+  --fyn-danger-light:#fee2e2;
+  --fyn-info:#3b82f6;
+  --fyn-info-light:#dbeafe;
+  --fyn-accent:#a855f7;
+  --fyn-accent-light:#f3e8ff;
+  /* SERP preview (Google's own colors, used in the SERP snippet component) */
+  --fyn-serp-title:#1a0dab;
+  --fyn-serp-url:#006621;
+  --fyn-serp-desc:#4d5156;
+
+  /* ---- Semantic aliases: use these in components ---- */
+  --color-primary:var(--fyn-purple);
+  --color-primary-hover:var(--fyn-purple-dark);
+  --color-primary-tint:var(--fyn-purple-tint);
+  --color-secondary:var(--fyn-blue);
+  --color-secondary-tint:var(--fyn-blue-tint);
+  --text-heading:var(--fyn-gray-900);
+  --text-body:var(--fyn-ink);
+  --text-muted:var(--fyn-gray-500);
+  --text-subtle:var(--fyn-gray-400);
+  --text-inverse:var(--fyn-white);
+  --text-link:var(--fyn-purple);
+  --text-link-hover:var(--fyn-blue);
+  --surface-page:var(--fyn-gray-50);
+  --surface-card:var(--fyn-white);
+  --surface-card-glass:rgba(255,255,255,.95);
+  --surface-sunken:var(--fyn-gray-100);
+  --surface-brand:var(--fyn-gradient);
+  --surface-header:linear-gradient(135deg,#2A1533 0%,#132A38 100%);
+  --border-subtle:var(--fyn-gray-100);
+  --border-default:var(--fyn-gray-200);
+  --border-strong:var(--fyn-gray-300);
+  --border-focus:var(--fyn-purple);
+  --focus-ring:0 0 0 3px rgba(143,57,172,.15);
+}

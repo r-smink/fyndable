@@ -1,0 +1,29 @@
+/* Fyndable — spacing. The product is not on a strict 4px grid; these are its real steps. */
+:root{
+  --space-1:4px;
+  --space-2:6px;
+  --space-3:8px;
+  --space-4:10px;
+  --space-5:12px;
+  --space-6:15px;
+  --space-7:20px;
+  --space-8:24px;
+  --space-9:25px;
+  --space-10:30px;
+  --space-11:40px;
+  --space-12:60px;
+
+  --gap-tight:10px;
+  --gap-default:15px;
+  --gap-grid:20px;
+  --gap-section:25px;
+
+  --pad-card:25px;
+  --pad-card-lg:40px;
+  --pad-page:40px;
+  --pad-header:30px 40px;
+
+  --width-content:1400px;
+  --width-form:900px;
+  --width-narrow:600px;
+}

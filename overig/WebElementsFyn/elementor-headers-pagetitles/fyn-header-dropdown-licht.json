@@ -1,0 +1,294 @@
+{
+ "version": "0.4",
+ "title": "Fyndable – Header dropdown (licht)",
+ "type": "section",
+ "content": [
+  {
+   "id": "2677d52",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "16",
+     "right": "40",
+     "bottom": "16",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1400,
+     "sizes": []
+    },
+    "flex_direction": "row",
+    "flex_justify_content": "space-between",
+    "flex_align_items": "center",
+    "flex_gap": {
+     "unit": "px",
+     "size": 32,
+     "column": "32",
+     "row": "32"
+    },
+    "flex_wrap": "nowrap",
+    "padding_mobile": {
+     "unit": "px",
+     "top": "14",
+     "right": "16",
+     "bottom": "14",
+     "left": "16",
+     "isLinked": false
+    },
+    "z_index": 99,
+    "sticky": "top",
+    "sticky_on": [
+     "desktop",
+     "tablet",
+     "mobile"
+    ],
+    "background_background": "classic",
+    "background_color": "#ffffff",
+    "border_border": "solid",
+    "border_width": {
+     "unit": "px",
+     "top": "0",
+     "right": "0",
+     "bottom": "1",
+     "left": "0",
+     "isLinked": false
+    },
+    "border_color": "#e5e7eb"
+   },
+   "elements": [
+    {
+     "id": "263ef3d",
+     "elType": "widget",
+     "widgetType": "theme-site-logo",
+     "isInner": false,
+     "settings": {
+      "image_size": "full",
+      "width": {
+       "unit": "px",
+       "size": 150,
+       "sizes": []
+      },
+      "_element_width": "auto",
+      "custom_css": "selector img{max-height:36px;width:auto}"
+     },
+     "elements": []
+    },
+    {
+     "id": "2620b9c",
+     "elType": "widget",
+     "widgetType": "nav-menu",
+     "isInner": false,
+     "settings": {
+      "menu": "",
+      "layout": "horizontal",
+      "align_items": "center",
+      "pointer": "background",
+      "animation_background": "fade",
+      "submenu_icon": {
+       "value": "fas fa-chevron-down",
+       "library": "fa-solid"
+      },
+      "menu_typography_typography": "custom",
+      "menu_typography_font_family": "Outfit",
+      "menu_typography_font_size": {
+       "unit": "px",
+       "size": 15,
+       "sizes": []
+      },
+      "menu_typography_font_weight": "500",
+      "menu_typography_line_height": {
+       "unit": "em",
+       "size": 1
+      },
+      "color_menu_item": "#333333",
+      "color_menu_item_hover": "#8F39AC",
+      "pointer_color_menu_item_hover": "#f3e8f7",
+      "color_menu_item_active": "#8F39AC",
+      "pointer_color_menu_item_active": "#f3e8f7",
+      "padding_horizontal_menu_item": {
+       "unit": "px",
+       "size": 14,
+       "sizes": []
+      },
+      "padding_vertical_menu_item": {
+       "unit": "px",
+       "size": 10,
+       "sizes": []
+      },
+      "menu_space_between": {
+       "unit": "px",
+       "size": 4,
+       "sizes": []
+      },
+      "color_dropdown_item": "#4b5563",
+      "background_color_dropdown_item": "#ffffff",
+      "color_dropdown_item_hover": "#8F39AC",
+      "background_color_dropdown_item_hover": "#f3e8f7",
+      "dropdown_typography_typography": "custom",
+      "dropdown_typography_font_family": "Outfit",
+      "dropdown_typography_font_size": {
+       "unit": "px",
+       "size": 14,
+       "sizes": []
+      },
+      "dropdown_typography_font_weight": "500",
+      "dropdown_typography_line_height": {
+       "unit": "em",
+       "size": 1.3
+      },
+      "dropdown_border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "padding_horizontal_dropdown_item": {
+       "unit": "px",
+       "size": 14,
+       "sizes": []
+      },
+      "padding_vertical_dropdown_item": {
+       "unit": "px",
+       "size": 11,
+       "sizes": []
+      },
+      "dropdown_top_distance": {
+       "unit": "px",
+       "size": 12,
+       "sizes": []
+      },
+      "dropdown": "tablet",
+      "full_width": "stretch",
+      "toggle_color": "#333333",
+      "toggle_background_color": "rgba(0,0,0,0)",
+      "toggle_size": {
+       "unit": "px",
+       "size": 24,
+       "sizes": []
+      },
+      "custom_css": "selector .elementor-nav-menu--main .elementor-item{border-radius:8px}selector .elementor-nav-menu--main .elementor-item:before{border-radius:8px}selector .elementor-nav-menu--dropdown{border-radius:12px;padding:8px;box-shadow:0 10px 24px -6px rgba(0,0,0,.25);}selector .elementor-nav-menu--dropdown a{border-radius:6px;transition:all .2s ease}selector .elementor-nav-menu--main .sub-menu{min-width:220px!important;animation:fynDrop .2s ease}@keyframes fynDrop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}"
+     },
+     "elements": []
+    },
+    {
+     "id": "2670d9e",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "width": {
+       "unit": "px",
+       "size": 0
+      },
+      "flex_direction": "row",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 18,
+       "column": "18",
+       "row": "18"
+      },
+      "custom_css": "selector{width:auto!important}",
+      "hide_mobile": "hidden-mobile"
+     },
+     "elements": [
+      {
+       "id": "26435a8",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Inloggen",
+        "header_size": "span",
+        "link": {
+         "url": "/login/"
+        },
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 14,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "custom_css": "selector a:hover{color:#8F39AC!important}"
+       },
+       "elements": []
+      },
+      {
+       "id": "26549a6",
+       "elType": "widget",
+       "widgetType": "button",
+       "isInner": false,
+       "settings": {
+        "text": "Start gratis GEO Scan",
+        "link": {
+         "url": "/geo-scan/"
+        },
+        "background_background": "gradient",
+        "background_color": "#8F39AC",
+        "background_color_b": "#379FD3",
+        "background_gradient_angle": {
+         "unit": "deg",
+         "size": 135
+        },
+        "button_text_color": "#ffffff",
+        "border_radius": {
+         "unit": "px",
+         "top": "8",
+         "right": "8",
+         "bottom": "8",
+         "left": "8",
+         "isLinked": true
+        },
+        "text_padding": {
+         "unit": "px",
+         "top": "12",
+         "right": "20",
+         "bottom": "12",
+         "left": "20",
+         "isLinked": false
+        },
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 14,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "custom_css": "selector .elementor-button{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;box-shadow:0 4px 12px rgba(143,57,172,.3);transition:all .2s ease}selector .elementor-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(143,57,172,.45)}"
+       },
+       "elements": []
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

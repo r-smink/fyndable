@@ -1,0 +1,266 @@
+{
+ "version": "0.4",
+ "title": "Fyndable – CTA-bar (donker)",
+ "type": "section",
+ "content": [
+  {
+   "id": "405aeca",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "48",
+     "right": "40",
+     "bottom": "48",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "padding_mobile": {
+     "unit": "px",
+     "top": "32",
+     "right": "16",
+     "bottom": "32",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "classic",
+    "background_color": "#1a1020"
+   },
+   "elements": [
+    {
+     "id": "4035e39",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "56",
+       "right": "56",
+       "bottom": "56",
+       "left": "56",
+       "isLinked": false
+      },
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_justify_content": "space-between",
+      "flex_align_items": "center",
+      "flex_align_items_mobile": "flex-start",
+      "flex_gap": {
+       "unit": "px",
+       "size": 32,
+       "column": "32",
+       "row": "32"
+      },
+      "flex_wrap": "wrap",
+      "padding_mobile": {
+       "unit": "px",
+       "top": "36",
+       "right": "24",
+       "bottom": "36",
+       "left": "24",
+       "isLinked": false
+      },
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "background_background": "gradient",
+      "background_color": "#2A1533",
+      "background_color_b": "#132A38",
+      "background_gradient_angle": {
+       "unit": "deg",
+       "size": 135
+      },
+      "custom_css": "selector{position:relative;overflow:hidden}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#8F39AC,#379FD3);z-index:2}selector::after{content:\"\";position:absolute;top:0;left:0;width:25%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:fynSweep 4s ease-in-out infinite;z-index:3}selector{box-shadow:0 20px 40px -12px rgba(143,57,172,.45)}",
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "4025932",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 62
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        }
+       },
+       "elements": [
+        {
+         "id": "4001cc3",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Zet je SEO deze week <span style=\"color:#d8b4e8\">op de automaat</span>",
+          "header_size": "h2",
+          "title_color": "#ffffff",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 34,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.8,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 26,
+           "sizes": []
+          },
+          "_animation": "fadeInLeft",
+          "_animation_delay": 150
+         },
+         "elements": []
+        },
+        {
+         "id": "401431a",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Installeer de plugin, plak je licentiesleutel en draai je eerste analyse.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 17,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.55
+          },
+          "_animation": "fadeInLeft",
+          "_animation_delay": 250
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "402c6d4",
+       "elType": "widget",
+       "widgetType": "button",
+       "isInner": false,
+       "settings": {
+        "text": "Word early adopter",
+        "link": {
+         "url": "/early-adopter/"
+        },
+        "selected_icon": {
+         "value": "fas fa-arrow-right",
+         "library": "fa-solid"
+        },
+        "icon_align": "row-reverse",
+        "icon_indent": {
+         "unit": "px",
+         "size": 10,
+         "sizes": []
+        },
+        "background_background": "gradient",
+        "background_color": "#8F39AC",
+        "background_color_b": "#379FD3",
+        "button_text_color": "#ffffff",
+        "border_radius": {
+         "unit": "px",
+         "top": "8",
+         "right": "8",
+         "bottom": "8",
+         "left": "8",
+         "isLinked": true
+        },
+        "text_padding": {
+         "unit": "px",
+         "top": "16",
+         "right": "28",
+         "bottom": "16",
+         "left": "28",
+         "isLinked": false
+        },
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 15,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "_animation": "fadeInRight",
+        "_animation_delay": 350,
+        "custom_css": "selector .elementor-button{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;box-shadow:0 4px 12px rgba(143,57,172,.35);transition:all .2s ease}selector .elementor-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(143,57,172,.55)}selector .elementor-button-icon{transition:transform .2s ease}selector .elementor-button:hover .elementor-button-icon{transform:translateX(4px)}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "404a13c",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

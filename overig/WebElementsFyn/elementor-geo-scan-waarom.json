@@ -1,0 +1,3278 @@
+{
+ "version": "0.4",
+ "title": "GEO Scan – Waarom heb je een GEO Scan nodig",
+ "type": "section",
+ "content": [
+  {
+   "id": "191a67d",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 32,
+     "column": "32",
+     "row": "32"
+    },
+    "background_background": "classic",
+    "background_color": "#f4f2f6",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "56",
+     "right": "16",
+     "bottom": "56",
+     "left": "16",
+     "isLinked": false
+    },
+    "_css_classes": "geo-section",
+    "css_classes": "geo-section"
+   },
+   "elements": [
+    {
+     "id": "da7b898",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      },
+      "margin": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "24",
+       "left": "0",
+       "isLinked": false
+      }
+     },
+     "elements": [
+      {
+       "id": "da48666",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Generative Engine Optimization",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#8F39AC",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "#f3e8f7",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "da61f7f",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Wat is een <span class=\"geo-grad\">GEO Scan</span>?",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 52,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.3,
+         "sizes": []
+        },
+        "typography_font_size_tablet": {
+         "unit": "px",
+         "size": 40,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 32,
+         "sizes": []
+        },
+        "custom_css": "selector .geo-grad{background:linear-gradient(135deg,#8F39AC,#379FD3);-webkit-background-clip:text;background-clip:text;color:transparent;}",
+        "_animation": "fadeInUp",
+        "_animation_delay": 150
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "dc7ae8d",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 40,
+       "column": "40",
+       "row": "40"
+      },
+      "flex_wrap": "wrap",
+      "content_width": "full",
+      "background_background": "classic",
+      "background_color": "#ffffff",
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "box_shadow_box_shadow_type": "yes",
+      "box_shadow_box_shadow": {
+       "horizontal": 0,
+       "vertical": 10,
+       "blur": 15,
+       "spread": -3,
+       "color": "rgba(0,0,0,0.1)"
+      },
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "48",
+       "bottom": "48",
+       "left": "48",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "28",
+       "right": "28",
+       "bottom": "28",
+       "left": "28",
+       "isLinked": false
+      },
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "dae1cfc",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "da951b1",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Definitie",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "daaeaca",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Gevonden, begrepen en geciteerd door AI",
+          "header_size": "h3",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 30,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.6,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 24,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "dac83e3",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>GEO staat voor <strong>Generative Engine Optimization</strong>: het optimaliseren van je website zodat AI-modellen je content kunnen vinden, begrijpen en citeren. Waar traditionele SEO draait om posities in Google, draait GEO om zichtbaarheid in de antwoorden die AI-tools als ChatGPT, Perplexity, Gemini en Google AI Overviews aan gebruikers geven.</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.65
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "dc61574",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 16,
+         "column": "16",
+         "row": "16"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "dbc7ede",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "flex_direction": "row",
+          "flex_direction_mobile": "column",
+          "flex_gap": {
+           "unit": "px",
+           "size": 16,
+           "column": "16",
+           "row": "16"
+          },
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          }
+         },
+         "elements": [
+          {
+           "id": "db48161",
+           "elType": "container",
+           "isInner": true,
+           "settings": {
+            "content_width": "full",
+            "width": {
+             "unit": "%",
+             "size": 48
+            },
+            "flex_grow": 1,
+            "flex_direction": "column",
+            "flex_gap": {
+             "unit": "px",
+             "size": 10,
+             "column": "10",
+             "row": "10"
+            },
+            "background_background": "classic",
+            "background_color": "#f9fafb",
+            "border_radius": {
+             "unit": "px",
+             "top": "12",
+             "right": "12",
+             "bottom": "12",
+             "left": "12",
+             "isLinked": true
+            },
+            "padding": {
+             "unit": "px",
+             "top": "24",
+             "right": "24",
+             "bottom": "24",
+             "left": "24",
+             "isLinked": false
+            },
+            "animation": "fadeInUp",
+            "animation_delay": 0
+           },
+           "elements": [
+            {
+             "id": "dafb616",
+             "elType": "widget",
+             "widgetType": "heading",
+             "isInner": false,
+             "settings": {
+              "title": "SEO",
+              "header_size": "span",
+              "title_color": "#6b7280",
+              "typography_typography": "custom",
+              "typography_font_family": "Outfit",
+              "typography_font_size": {
+               "unit": "px",
+               "size": 12,
+               "sizes": []
+              },
+              "typography_font_weight": "600",
+              "typography_line_height": {
+               "unit": "em",
+               "size": 1
+              },
+              "typography_letter_spacing": {
+               "unit": "px",
+               "size": 0.6,
+               "sizes": []
+              },
+              "typography_text_transform": "uppercase"
+             },
+             "elements": []
+            },
+            {
+             "id": "db14f2f",
+             "elType": "widget",
+             "widgetType": "icon",
+             "isInner": false,
+             "settings": {
+              "selected_icon": {
+               "value": "dashicons dashicons-list-view",
+               "library": ""
+              },
+              "primary_color": "#6b7280",
+              "size": {
+               "unit": "px",
+               "size": 28,
+               "sizes": []
+              },
+              "align": "left"
+             },
+             "elements": []
+            },
+            {
+             "id": "db2e848",
+             "elType": "widget",
+             "widgetType": "heading",
+             "isInner": false,
+             "settings": {
+              "title": "Posities in Google",
+              "header_size": "span",
+              "title_color": "#333333",
+              "typography_typography": "custom",
+              "typography_font_family": "Outfit",
+              "typography_font_size": {
+               "unit": "px",
+               "size": 17,
+               "sizes": []
+              },
+              "typography_font_weight": "600",
+              "typography_line_height": {
+               "unit": "em",
+               "size": 1.35
+              }
+             },
+             "elements": []
+            }
+           ]
+          },
+          {
+           "id": "dbae5c5",
+           "elType": "container",
+           "isInner": true,
+           "settings": {
+            "content_width": "full",
+            "width": {
+             "unit": "%",
+             "size": 48
+            },
+            "flex_grow": 1,
+            "flex_direction": "column",
+            "flex_gap": {
+             "unit": "px",
+             "size": 10,
+             "column": "10",
+             "row": "10"
+            },
+            "background_background": "classic",
+            "background_color": "#f3e8f7",
+            "border_radius": {
+             "unit": "px",
+             "top": "12",
+             "right": "12",
+             "bottom": "12",
+             "left": "12",
+             "isLinked": true
+            },
+            "padding": {
+             "unit": "px",
+             "top": "24",
+             "right": "24",
+             "bottom": "24",
+             "left": "24",
+             "isLinked": false
+            },
+            "border_border": "solid",
+            "border_width": {
+             "unit": "px",
+             "top": "4",
+             "right": "0",
+             "bottom": "0",
+             "left": "0",
+             "isLinked": false
+            },
+            "border_color": "#8F39AC",
+            "animation": "fadeInUp",
+            "animation_delay": 200
+           },
+           "elements": [
+            {
+             "id": "db61a7a",
+             "elType": "widget",
+             "widgetType": "heading",
+             "isInner": false,
+             "settings": {
+              "title": "GEO",
+              "header_size": "span",
+              "title_color": "#8F39AC",
+              "typography_typography": "custom",
+              "typography_font_family": "Outfit",
+              "typography_font_size": {
+               "unit": "px",
+               "size": 12,
+               "sizes": []
+              },
+              "typography_font_weight": "600",
+              "typography_line_height": {
+               "unit": "em",
+               "size": 1
+              },
+              "typography_letter_spacing": {
+               "unit": "px",
+               "size": 0.6,
+               "sizes": []
+              },
+              "typography_text_transform": "uppercase"
+             },
+             "elements": []
+            },
+            {
+             "id": "db7b393",
+             "elType": "widget",
+             "widgetType": "icon",
+             "isInner": false,
+             "settings": {
+              "selected_icon": {
+               "value": "dashicons dashicons-format-chat",
+               "library": ""
+              },
+              "primary_color": "#8F39AC",
+              "size": {
+               "unit": "px",
+               "size": 28,
+               "sizes": []
+              },
+              "align": "left"
+             },
+             "elements": []
+            },
+            {
+             "id": "db94cac",
+             "elType": "widget",
+             "widgetType": "heading",
+             "isInner": false,
+             "settings": {
+              "title": "Zichtbaarheid in AI-antwoorden",
+              "header_size": "span",
+              "title_color": "#333333",
+              "typography_typography": "custom",
+              "typography_font_family": "Outfit",
+              "typography_font_size": {
+               "unit": "px",
+               "size": 17,
+               "sizes": []
+              },
+              "typography_font_weight": "600",
+              "typography_line_height": {
+               "unit": "em",
+               "size": 1.35
+              }
+             },
+             "elements": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "id": "dc47c5b",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "view": "inline",
+          "icon_list": [
+           {
+            "_id": "dbe17f7",
+            "text": "ChatGPT",
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           },
+           {
+            "_id": "dbfb110",
+            "text": "Perplexity",
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           },
+           {
+            "_id": "dc14a29",
+            "text": "Gemini",
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           },
+           {
+            "_id": "dc2e342",
+            "text": "Google AI Overviews",
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "text_color": "#8F39AC",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "_animation": "fadeInUp",
+          "_animation_delay": 400,
+          "custom_css": "selector .elementor-icon-list-item{border:2px solid #e9d5f0;border-radius:20px;padding:8px 14px!important;transition:all .2s ease;}selector .elementor-icon-list-item:hover{background:#8F39AC;border-color:#8F39AC;}selector .elementor-icon-list-item:hover .elementor-icon-list-text{color:#fff!important;}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dd7a987",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "flex_direction": "column",
+      "flex_direction_mobile": "column",
+      "flex_align_items": "stretch",
+      "flex_gap": {
+       "unit": "px",
+       "size": 40,
+       "column": "40",
+       "row": "40"
+      },
+      "flex_wrap": "wrap",
+      "content_width": "full",
+      "background_background": "classic",
+      "background_color": "#ffffff",
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "box_shadow_box_shadow_type": "yes",
+      "box_shadow_box_shadow": {
+       "horizontal": 0,
+       "vertical": 10,
+       "blur": 15,
+       "spread": -3,
+       "color": "rgba(0,0,0,0.1)"
+      },
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "48",
+       "bottom": "48",
+       "left": "48",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "28",
+       "right": "28",
+       "bottom": "28",
+       "left": "28",
+       "isLinked": false
+      },
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "dce12f1",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 70
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "dc947a6",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Wat de scan controleert",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "dcae0bf",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "De signalen die bepalen of AI jou als bron gebruikt",
+          "header_size": "h3",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 30,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.6,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 24,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "dcc79d8",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>De Fyndable GEO Scan controleert je website op de signalen die bepalen of AI-modellen je als bron gebruiken. Denk aan de structuur van je content, je schema markup, je technische toegankelijkheid voor AI-crawlers en de citability van je informatie.</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.65
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "dd6106e",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "flex_direction": "row",
+        "flex_wrap": "wrap",
+        "flex_gap": {
+         "unit": "px",
+         "size": 20,
+         "column": "20",
+         "row": "20"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "dcfac0a",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-file-alt",
+           "library": "fa-solid"
+          },
+          "title_text": "Contentstructuur",
+          "description_text": "",
+          "position": "top",
+          "title_size": "span",
+          "view": "stacked",
+          "shape": "rounded",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 22,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "text_align": "left",
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 17,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "_border_border": "solid",
+          "_border_width": {
+           "unit": "px",
+           "top": "2",
+           "right": "2",
+           "bottom": "2",
+           "left": "2",
+           "isLinked": true
+          },
+          "_border_color": "#e5e7eb",
+          "_border_hover_border": "solid",
+          "_border_hover_color": "#8F39AC",
+          "_border_radius": {
+           "unit": "px",
+           "top": "6",
+           "right": "6",
+           "bottom": "6",
+           "left": "6",
+           "isLinked": true
+          },
+          "_padding": {
+           "unit": "px",
+           "top": "24",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "_element_width": "initial",
+          "_element_custom_width": {
+           "unit": "%",
+           "size": 23
+          },
+          "_element_custom_width_tablet": {
+           "unit": "%",
+           "size": 47
+          },
+          "_element_custom_width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "_flex_grow": 1,
+          "_animation": "fadeInUp",
+          "_animation_delay": 0,
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}selector:hover{transform:translateY(-4px);box-shadow:0 10px 15px -3px rgba(143,57,172,.2);}selector{transition:all .2s ease;}"
+         },
+         "elements": []
+        },
+        {
+         "id": "dd14523",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-code",
+           "library": "fa-solid"
+          },
+          "title_text": "Schema markup",
+          "description_text": "",
+          "position": "top",
+          "title_size": "span",
+          "view": "stacked",
+          "shape": "rounded",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 22,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "text_align": "left",
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 17,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "_border_border": "solid",
+          "_border_width": {
+           "unit": "px",
+           "top": "2",
+           "right": "2",
+           "bottom": "2",
+           "left": "2",
+           "isLinked": true
+          },
+          "_border_color": "#e5e7eb",
+          "_border_hover_border": "solid",
+          "_border_hover_color": "#8F39AC",
+          "_border_radius": {
+           "unit": "px",
+           "top": "6",
+           "right": "6",
+           "bottom": "6",
+           "left": "6",
+           "isLinked": true
+          },
+          "_padding": {
+           "unit": "px",
+           "top": "24",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "_element_width": "initial",
+          "_element_custom_width": {
+           "unit": "%",
+           "size": 23
+          },
+          "_element_custom_width_tablet": {
+           "unit": "%",
+           "size": 47
+          },
+          "_element_custom_width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "_flex_grow": 1,
+          "_animation": "fadeInUp",
+          "_animation_delay": 150,
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}selector:hover{transform:translateY(-4px);box-shadow:0 10px 15px -3px rgba(143,57,172,.2);}selector{transition:all .2s ease;}"
+         },
+         "elements": []
+        },
+        {
+         "id": "dd2de3c",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-robot",
+           "library": "fa-solid"
+          },
+          "title_text": "Toegankelijkheid voor AI-crawlers",
+          "description_text": "",
+          "position": "top",
+          "title_size": "span",
+          "view": "stacked",
+          "shape": "rounded",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 22,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "text_align": "left",
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 17,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "_border_border": "solid",
+          "_border_width": {
+           "unit": "px",
+           "top": "2",
+           "right": "2",
+           "bottom": "2",
+           "left": "2",
+           "isLinked": true
+          },
+          "_border_color": "#e5e7eb",
+          "_border_hover_border": "solid",
+          "_border_hover_color": "#8F39AC",
+          "_border_radius": {
+           "unit": "px",
+           "top": "6",
+           "right": "6",
+           "bottom": "6",
+           "left": "6",
+           "isLinked": true
+          },
+          "_padding": {
+           "unit": "px",
+           "top": "24",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "_element_width": "initial",
+          "_element_custom_width": {
+           "unit": "%",
+           "size": 23
+          },
+          "_element_custom_width_tablet": {
+           "unit": "%",
+           "size": 47
+          },
+          "_element_custom_width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "_flex_grow": 1,
+          "_animation": "fadeInUp",
+          "_animation_delay": 300,
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}selector:hover{transform:translateY(-4px);box-shadow:0 10px 15px -3px rgba(143,57,172,.2);}selector{transition:all .2s ease;}"
+         },
+         "elements": []
+        },
+        {
+         "id": "dd47755",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-quote-right",
+           "library": "fa-solid"
+          },
+          "title_text": "Citability van je informatie",
+          "description_text": "",
+          "position": "top",
+          "title_size": "span",
+          "view": "stacked",
+          "shape": "rounded",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 22,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "text_align": "left",
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 17,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "_border_border": "solid",
+          "_border_width": {
+           "unit": "px",
+           "top": "2",
+           "right": "2",
+           "bottom": "2",
+           "left": "2",
+           "isLinked": true
+          },
+          "_border_color": "#e5e7eb",
+          "_border_hover_border": "solid",
+          "_border_hover_color": "#8F39AC",
+          "_border_radius": {
+           "unit": "px",
+           "top": "6",
+           "right": "6",
+           "bottom": "6",
+           "left": "6",
+           "isLinked": true
+          },
+          "_padding": {
+           "unit": "px",
+           "top": "24",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "_element_width": "initial",
+          "_element_custom_width": {
+           "unit": "%",
+           "size": 23
+          },
+          "_element_custom_width_tablet": {
+           "unit": "%",
+           "size": 47
+          },
+          "_element_custom_width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "_flex_grow": 1,
+          "_animation": "fadeInUp",
+          "_animation_delay": 450,
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}selector:hover{transform:translateY(-4px);box-shadow:0 10px 15px -3px rgba(143,57,172,.2);}selector{transition:all .2s ease;}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "de93d9a",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 40,
+       "column": "40",
+       "row": "40"
+      },
+      "flex_wrap": "wrap",
+      "content_width": "full",
+      "background_background": "classic",
+      "background_color": "#ffffff",
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "box_shadow_box_shadow_type": "yes",
+      "box_shadow_box_shadow": {
+       "horizontal": 0,
+       "vertical": 10,
+       "blur": 15,
+       "spread": -3,
+       "color": "rgba(0,0,0,0.1)"
+      },
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "48",
+       "bottom": "48",
+       "left": "48",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "28",
+       "right": "28",
+       "bottom": "28",
+       "left": "28",
+       "isLinked": false
+      },
+      "animation": "fadeInUp",
+      "margin": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "64",
+       "left": "0",
+       "isLinked": false
+      }
+     },
+     "elements": [
+      {
+       "id": "dde0deb",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "dd942a0",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Het resultaat",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "ddadbb9",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Geen vaag advies, maar actiepunten",
+          "header_size": "h3",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 30,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.6,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 24,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "ddc74d2",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>Het resultaat is geen vaag advies, maar een gericht overzicht met scores per categorie en concrete actiepunten die je direct kunt oppakken.</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.65
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "de7a481",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 18,
+         "column": "18",
+         "row": "18"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "28",
+         "bottom": "28",
+         "left": "28",
+         "isLinked": false
+        },
+        "background_background": "classic",
+        "background_color": "#f9fafb",
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        }
+       },
+       "elements": [
+        {
+         "id": "ddfa704",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Voorbeeldrapport",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "de1401d",
+         "elType": "widget",
+         "widgetType": "progress",
+         "isInner": false,
+         "settings": {
+          "title": "Contentstructuur",
+          "progress_type": "",
+          "percent": {
+           "unit": "px",
+           "size": 82,
+           "sizes": []
+          },
+          "display_percentage": "show",
+          "inner_text": "",
+          "bar_color": "#8F39AC",
+          "bar_bg_color": "#e5e7eb",
+          "bar_height": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "bar_border_radius": {
+           "unit": "px",
+           "top": "20",
+           "right": "20",
+           "bottom": "20",
+           "left": "20",
+           "isLinked": true
+          },
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          },
+          "bar_inline_color": "#333333",
+          "_animation": "fadeInUp",
+          "_animation_delay": 0,
+          "custom_css": "selector .elementor-progress-bar{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}",
+          "_css_classes": "geo-scroll-bar geo-max-82"
+         },
+         "elements": []
+        },
+        {
+         "id": "de2d936",
+         "elType": "widget",
+         "widgetType": "progress",
+         "isInner": false,
+         "settings": {
+          "title": "Schema markup",
+          "progress_type": "",
+          "percent": {
+           "unit": "px",
+           "size": 45,
+           "sizes": []
+          },
+          "display_percentage": "show",
+          "inner_text": "",
+          "bar_color": "#8F39AC",
+          "bar_bg_color": "#e5e7eb",
+          "bar_height": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "bar_border_radius": {
+           "unit": "px",
+           "top": "20",
+           "right": "20",
+           "bottom": "20",
+           "left": "20",
+           "isLinked": true
+          },
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          },
+          "bar_inline_color": "#333333",
+          "_animation": "fadeInUp",
+          "_animation_delay": 150,
+          "custom_css": "selector .elementor-progress-bar{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}",
+          "_css_classes": "geo-scroll-bar geo-max-45"
+         },
+         "elements": []
+        },
+        {
+         "id": "de4724f",
+         "elType": "widget",
+         "widgetType": "progress",
+         "isInner": false,
+         "settings": {
+          "title": "AI-crawlers",
+          "progress_type": "",
+          "percent": {
+           "unit": "px",
+           "size": 68,
+           "sizes": []
+          },
+          "display_percentage": "show",
+          "inner_text": "",
+          "bar_color": "#8F39AC",
+          "bar_bg_color": "#e5e7eb",
+          "bar_height": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "bar_border_radius": {
+           "unit": "px",
+           "top": "20",
+           "right": "20",
+           "bottom": "20",
+           "left": "20",
+           "isLinked": true
+          },
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          },
+          "bar_inline_color": "#333333",
+          "_animation": "fadeInUp",
+          "_animation_delay": 300,
+          "custom_css": "selector .elementor-progress-bar{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}",
+          "_css_classes": "geo-scroll-bar geo-max-68"
+         },
+         "elements": []
+        },
+        {
+         "id": "de60b68",
+         "elType": "widget",
+         "widgetType": "progress",
+         "isInner": false,
+         "settings": {
+          "title": "Citability",
+          "progress_type": "",
+          "percent": {
+           "unit": "px",
+           "size": 31,
+           "sizes": []
+          },
+          "display_percentage": "show",
+          "inner_text": "",
+          "bar_color": "#8F39AC",
+          "bar_bg_color": "#e5e7eb",
+          "bar_height": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "bar_border_radius": {
+           "unit": "px",
+           "top": "20",
+           "right": "20",
+           "bottom": "20",
+           "left": "20",
+           "isLinked": true
+          },
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          },
+          "bar_inline_color": "#333333",
+          "_animation": "fadeInUp",
+          "_animation_delay": 450,
+          "custom_css": "selector .elementor-progress-bar{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;}",
+          "_css_classes": "geo-scroll-bar geo-max-31"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "110d663",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      },
+      "margin": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "24",
+       "left": "0",
+       "isLinked": false
+      }
+     },
+     "elements": [
+      {
+       "id": "1099cae",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "GEO Scan",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#8F39AC",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "#f3e8f7",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0,
+        "animation_duration": "normal"
+       },
+       "elements": []
+      },
+      {
+       "id": "1047cd6",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Waarom heb je een <span class=\"geo-grad\">GEO Scan</span> nodig?",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 52,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.3,
+         "sizes": []
+        },
+        "typography_font_size_tablet": {
+         "unit": "px",
+         "size": 40,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 32,
+         "sizes": []
+        },
+        "custom_css": "selector .geo-grad{background:linear-gradient(135deg,#8F39AC,#379FD3);-webkit-background-clip:text;background-clip:text;color:transparent!important;}",
+        "_animation": "fadeInUp",
+        "_animation_delay": 150,
+        "animation_duration": "normal"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "1353f4f",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 40,
+       "column": "40",
+       "row": "40"
+      },
+      "flex_wrap": "wrap",
+      "content_width": "full",
+      "background_background": "classic",
+      "background_color": "#ffffff",
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "box_shadow_box_shadow_type": "yes",
+      "box_shadow_box_shadow": {
+       "horizontal": 0,
+       "vertical": 10,
+       "blur": 15,
+       "spread": -3,
+       "color": "rgba(0,0,0,0.1)"
+      },
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "48",
+       "bottom": "48",
+       "left": "48",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "28",
+       "right": "28",
+       "bottom": "28",
+       "left": "28",
+       "isLinked": false
+      },
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "11fa608",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "115fa9a",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "01 — Trend",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "1151280",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "AI-zoekmachines groeien explosief",
+          "header_size": "h3",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 30,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.6,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 24,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "1189b69",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>Onderzoek uit 2026 laat zien dat AI-tools inmiddels goed zijn voor circa 5,6% van alle zoekopdrachten wereldwijd. 37% van de consumenten start een zoekopdracht inmiddels in een AI-tool in plaats van in Google. Dat aandeel groeit elke maand.</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.65
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "12feb40",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "row",
+        "flex_gap": {
+         "unit": "px",
+         "size": 20,
+         "column": "20",
+         "row": "20"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "flex_direction_mobile": "column"
+       },
+       "elements": [
+        {
+         "id": "12c5412",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "width": {
+           "unit": "%",
+           "size": 48
+          },
+          "width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "flex_grow": 1,
+          "flex_direction": "column",
+          "background_background": "classic",
+          "background_color": "#f9fafb",
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "border_border": "solid",
+          "border_width": {
+           "unit": "px",
+           "top": "4",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "border_color": "#8F39AC",
+          "padding": {
+           "unit": "px",
+           "top": "28",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "animation_duration": "normal",
+          "animation": "fadeInUp",
+          "animation_delay": 0
+         },
+         "elements": [
+          {
+           "id": "1237d6f",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "<span class=\"geo-live\">5,6</span>%",
+            "header_size": "div",
+            "_css_classes": "geo-stat-number",
+            "title_color": "#8F39AC",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 68,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -2,
+             "sizes": []
+            },
+            "typography_font_size_mobile": {
+             "unit": "px",
+             "size": 52,
+             "sizes": []
+            }
+           }
+          },
+          {
+           "id": "1237d6t",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "van alle zoekopdrachten wereldwijd loopt via AI-tools",
+            "header_size": "div",
+            "title_color": "#4b5563",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 14,
+             "sizes": []
+            },
+            "typography_font_weight": "500",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.45
+            },
+            "_margin": {
+             "unit": "px",
+             "top": "8",
+             "right": "0",
+             "bottom": "0",
+             "left": "0",
+             "isLinked": false
+            }
+           }
+          }
+         ]
+        },
+        {
+         "id": "1313762",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "width": {
+           "unit": "%",
+           "size": 48
+          },
+          "width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "flex_grow": 1,
+          "flex_direction": "column",
+          "background_background": "classic",
+          "background_color": "#f9fafb",
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "border_border": "solid",
+          "border_width": {
+           "unit": "px",
+           "top": "4",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "border_color": "#8F39AC",
+          "padding": {
+           "unit": "px",
+           "top": "28",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "animation_duration": "normal",
+          "animation": "fadeInUp",
+          "animation_delay": 200
+         },
+         "elements": [
+          {
+           "id": "12abcb2",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "<span class=\"geo-live\">37</span>%",
+            "header_size": "div",
+            "_css_classes": "geo-stat-number",
+            "title_color": "#8F39AC",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 68,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -2,
+             "sizes": []
+            },
+            "typography_font_size_mobile": {
+             "unit": "px",
+             "size": 52,
+             "sizes": []
+            }
+           }
+          },
+          {
+           "id": "12abcbt",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "van de consumenten start een zoekopdracht in een AI-tool",
+            "header_size": "div",
+            "title_color": "#4b5563",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 14,
+             "sizes": []
+            },
+            "typography_font_weight": "500",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.45
+            },
+            "_margin": {
+             "unit": "px",
+             "top": "8",
+             "right": "0",
+             "bottom": "0",
+             "left": "0",
+             "isLinked": false
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "15bd68f",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "flex_direction": "row",
+      "flex_direction_mobile": "column-reverse",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 40,
+       "column": "40",
+       "row": "40"
+      },
+      "flex_wrap": "wrap",
+      "content_width": "full",
+      "background_background": "classic",
+      "background_color": "#ffffff",
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "box_shadow_box_shadow_type": "yes",
+      "box_shadow_box_shadow": {
+       "horizontal": 0,
+       "vertical": 10,
+       "blur": 15,
+       "spread": -3,
+       "color": "rgba(0,0,0,0.1)"
+      },
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "48",
+       "bottom": "48",
+       "left": "48",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "28",
+       "right": "28",
+       "bottom": "28",
+       "left": "28",
+       "isLinked": false
+      },
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "14147e5",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "row",
+        "flex_gap": {
+         "unit": "px",
+         "size": 20,
+         "column": "20",
+         "row": "20"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "flex_direction_mobile": "column"
+       },
+       "elements": [
+        {
+         "id": "1425e58",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "width": {
+           "unit": "%",
+           "size": 48
+          },
+          "width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "flex_grow": 1,
+          "flex_direction": "column",
+          "background_background": "classic",
+          "background_color": "#f9fafb",
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "border_border": "solid",
+          "border_width": {
+           "unit": "px",
+           "top": "4",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "border_color": "#8F39AC",
+          "padding": {
+           "unit": "px",
+           "top": "28",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "animation_duration": "normal",
+          "animation": "fadeInUp",
+          "animation_delay": 0
+         },
+         "elements": [
+          {
+           "id": "13e8966",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "<span class=\"geo-live\">48</span>%",
+            "header_size": "div",
+            "_css_classes": "geo-stat-number",
+            "title_color": "#8F39AC",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 68,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -2,
+             "sizes": []
+            },
+            "typography_font_size_mobile": {
+             "unit": "px",
+             "size": 52,
+             "sizes": []
+            }
+           }
+          },
+          {
+           "id": "13e896t",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "van alle bijgehouden zoekopdrachten toont een AI Overview",
+            "header_size": "div",
+            "title_color": "#4b5563",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 14,
+             "sizes": []
+            },
+            "typography_font_weight": "500",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.45
+            },
+            "_margin": {
+             "unit": "px",
+             "top": "8",
+             "right": "0",
+             "bottom": "0",
+             "left": "0",
+             "isLinked": false
+            }
+           }
+          }
+         ]
+        },
+        {
+         "id": "146a60f",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "width": {
+           "unit": "%",
+           "size": 48
+          },
+          "width_mobile": {
+           "unit": "%",
+           "size": 100
+          },
+          "flex_grow": 1,
+          "flex_direction": "column",
+          "background_background": "classic",
+          "background_color": "#fee2e2",
+          "border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "12",
+           "left": "12",
+           "isLinked": true
+          },
+          "border_border": "solid",
+          "border_width": {
+           "unit": "px",
+           "top": "4",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "border_color": "#ef4444",
+          "padding": {
+           "unit": "px",
+           "top": "28",
+           "right": "24",
+           "bottom": "24",
+           "left": "24",
+           "isLinked": false
+          },
+          "animation_duration": "normal",
+          "animation": "fadeInUp",
+          "animation_delay": 200
+         },
+         "elements": [
+          {
+           "id": "13ed65f",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "−<span class=\"geo-live\">54</span>%",
+            "header_size": "div",
+            "_css_classes": "geo-stat-number geo-neg-num",
+            "title_color": "#b91c1c",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 68,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -2,
+             "sizes": []
+            },
+            "typography_font_size_mobile": {
+             "unit": "px",
+             "size": 52,
+             "sizes": []
+            }
+           }
+          },
+          {
+           "id": "13ed65t",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "elements": [],
+           "settings": {
+            "title": "click-through rate op positie 1 bij een AI-samenvatting",
+            "header_size": "div",
+            "title_color": "#7f1d1d",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 14,
+             "sizes": []
+            },
+            "typography_font_weight": "500",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.45
+            },
+            "_margin": {
+             "unit": "px",
+             "top": "8",
+             "right": "0",
+             "bottom": "0",
+             "left": "0",
+             "isLinked": false
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "15b8af6",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "14acb5b",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "02 — Google",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "15063b0",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Google zelf wordt een AI-zoekmachine",
+          "header_size": "h3",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 30,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.6,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 24,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "1505834",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>Google AI Overviews verschijnen inmiddels bij ongeveer 48% van alle bijgehouden zoekopdrachten. Wanneer zo'n AI-samenvatting verschijnt, daalt de click-through rate voor de nummer-1-positie met gemiddeld 54%. Zelfs als je op positie 1 staat, krijg je minder verkeer als Google het antwoord al bovenaan toont.</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.65
+          }
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "189e2f0",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 40,
+       "column": "40",
+       "row": "40"
+      },
+      "flex_wrap": "wrap",
+      "content_width": "full",
+      "background_background": "classic",
+      "background_color": "#f3e8f7",
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "box_shadow_box_shadow_type": "yes",
+      "box_shadow_box_shadow": {
+       "horizontal": 0,
+       "vertical": 10,
+       "blur": 15,
+       "spread": -3,
+       "color": "rgba(0,0,0,0.1)"
+      },
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "48",
+       "bottom": "48",
+       "left": "48",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "28",
+       "right": "28",
+       "bottom": "28",
+       "left": "28",
+       "isLinked": false
+      },
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "16548bc",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        }
+       },
+       "elements": [
+        {
+         "id": "15afb10",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "03 — Risico",
+          "header_size": "span",
+          "title_color": "#8F39AC",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.6,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase"
+         },
+         "elements": []
+        },
+        {
+         "id": "15bede9",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Onzichtbaar in AI betekent verloren klanten",
+          "header_size": "h3",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 30,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.6,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 24,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "169ef9f",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>Als een potentiële klant aan ChatGPT vraagt \"beste [jouw dienst] in [jouw regio]\" en jij wordt niet genoemd, verlies je die lead zonder dat je het ooit weet. Je ziet geen daling in Google, geen lagere rankings. Je ziet alleen dat een concurrent groeit en kunt niet verklaren waarom.</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.65
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "18ae1b1",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 12,
+         "column": "12",
+         "row": "12"
+        },
+        "padding": {
+         "unit": "px",
+         "top": "24",
+         "right": "24",
+         "bottom": "24",
+         "left": "24",
+         "isLinked": false
+        },
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation_duration": "normal",
+        "animation": "fadeInUp",
+        "animation_delay": 200
+       },
+       "elements": [
+        {
+         "id": "16c07ed",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>Wat is de beste [jouw dienst] in [jouw regio]?</p>",
+          "text_color": "#ffffff",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "_background_background": "gradient",
+          "_background_color": "#8F39AC",
+          "_padding": {
+           "unit": "px",
+           "top": "12",
+           "right": "16",
+           "bottom": "12",
+           "left": "16",
+           "isLinked": false
+          },
+          "_border_radius": {
+           "unit": "px",
+           "top": "12",
+           "right": "12",
+           "bottom": "4",
+           "left": "12",
+           "isLinked": false
+          },
+          "_element_width": "auto",
+          "_flex_align_self": "flex-end",
+          "_background_color_b": "#379FD3",
+          "_background_gradient_angle": {
+           "unit": "deg",
+           "size": 135
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "16c6176",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p>Hier zijn drie aanraders in jouw regio:</p>",
+          "text_color": "#4b5563",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.5
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "17cf514",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "16fb0e1",
+            "text": "Concurrent A",
+            "selected_icon": {
+             "value": "fas fa-circle",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "1741320",
+            "text": "Concurrent B",
+            "selected_icon": {
+             "value": "fas fa-circle",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "17559af",
+            "text": "Concurrent C",
+            "selected_icon": {
+             "value": "fas fa-circle",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "icon_color": "#8F39AC",
+          "icon_size": {
+           "unit": "px",
+           "size": 8,
+           "sizes": []
+          },
+          "text_color": "#333333",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "divider": "yes",
+          "divider_color": "#e5e7eb",
+          "_animation": "fadeInUp",
+          "_animation_delay": 400,
+          "animation_duration": "normal"
+         },
+         "elements": []
+        },
+        {
+         "id": "18a4813",
+         "elType": "widget",
+         "widgetType": "alert",
+         "isInner": false,
+         "settings": {
+          "alert_type": "danger",
+          "alert_title": "✕ Jouw bedrijf wordt niet genoemd",
+          "alert_description": "",
+          "show_dismiss": "hide",
+          "background": "#fee2e2",
+          "border_color": "#ef4444",
+          "title_color": "#b91c1c",
+          "alert_title_typography": "custom",
+          "alert_title_font_family": "Outfit",
+          "alert_title_font_size": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "alert_title_font_weight": "600",
+          "alert_title_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "_animation": "fadeInUp",
+          "_animation_delay": 700,
+          "animation_duration": "normal"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "1915f84",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "padding": {
+       "unit": "px",
+       "top": "48",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      }
+     },
+     "elements": [
+      {
+       "id": "1919c21",
+       "elType": "widget",
+       "widgetType": "animated-headline",
+       "isInner": false,
+       "settings": {
+        "headline_style": "highlight",
+        "marker": "underline_zigzag",
+        "before_text": "De GEO Scan maakt die",
+        "highlighted_text": "blinde vlek",
+        "after_text": "zichtbaar.",
+        "loop": "",
+        "highlight_animation_duration": 1400,
+        "alignment": "center",
+        "tag": "h2",
+        "title_color": "#333333",
+        "title_typography_typography": "custom",
+        "title_typography_font_family": "Outfit",
+        "title_typography_font_size": {
+         "unit": "px",
+         "size": 42,
+         "sizes": []
+        },
+        "title_typography_font_weight": "700",
+        "title_typography_line_height": {
+         "unit": "em",
+         "size": 1.2
+        },
+        "title_typography_letter_spacing": {
+         "unit": "px",
+         "size": -1,
+         "sizes": []
+        },
+        "title_typography_font_size_mobile": {
+         "unit": "px",
+         "size": 28,
+         "sizes": []
+        },
+        "words_color": "#8F39AC",
+        "words_typography_typography": "custom",
+        "words_typography_font_family": "Outfit",
+        "words_typography_font_size": {
+         "unit": "px",
+         "size": 42,
+         "sizes": []
+        },
+        "words_typography_font_weight": "700",
+        "words_typography_line_height": {
+         "unit": "em",
+         "size": 1.2
+        },
+        "words_typography_letter_spacing": {
+         "unit": "px",
+         "size": -1,
+         "sizes": []
+        },
+        "words_typography_font_size_mobile": {
+         "unit": "px",
+         "size": 28,
+         "sizes": []
+        },
+        "marker_color": "#379FD3",
+        "stroke_width": {
+         "unit": "px",
+         "size": 8,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 0,
+        "animation_duration": "normal"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "9e0c5a1",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>\nbody .geo-stat-number,body .geo-stat-number *{visibility:visible!important;opacity:1!important}\nbody .geo-stat-number .elementor-heading-title{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important}\nbody .geo-stat-number:not(.geo-neg-num) .elementor-heading-title,body .geo-stat-number:not(.geo-neg-num) .elementor-heading-title *{color:#8F39AC!important;-webkit-text-fill-color:#8F39AC!important}\nbody .geo-stat-number.geo-neg-num .elementor-heading-title,body .geo-stat-number.geo-neg-num .elementor-heading-title *{color:#b91c1c!important;-webkit-text-fill-color:#b91c1c!important}\n</style>\n<script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){\nif(window.__geoScroll8)return;window.__geoScroll8=1;var END=0.45;\nfunction prog(el){var vh=window.innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){\n[].forEach.call(document.querySelectorAll('.geo-live'),function(el){try{\nif(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}\nel.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');}catch(e){}});\n[].forEach.call(document.querySelectorAll('.geo-scroll-bar'),function(w){try{if(w.parentElement&&w.parentElement.closest('.geo-scroll-bar'))return;\nvar b=w.querySelector('.elementor-progress-bar');if(!b)return;var m=(' '+w.className+' ').match(/ geo-max-([0-9]+) /);var max=parseFloat(m?m[1]:b.getAttribute('data-max'))||0;\nvar p=prog(b);b.style.transition='none';b.style.width=(max*p)+'%';var pc=w.querySelector('.elementor-progress-percentage');if(pc)pc.textContent=Math.round(max*p)+'%';}catch(e){}});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\n['scroll','resize','load'].forEach(function(e){window.addEventListener(e,on,{passive:true});});\ndocument.addEventListener('scroll',on,{passive:true,capture:true});\nif(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);\nsetInterval(run,300);setInterval(function(){var vh=window.innerHeight;[].forEach.call(document.querySelectorAll('.elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*0.9&&r.bottom>0){if(!e.__geoSeen){e.__geoSeen=Date.now();return;}if(Date.now()-e.__geoSeen>1200){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);\n})();</script>",
+      "_css_classes": "geo-scroll-counter-script",
+      "_element_width": "",
+      "_margin": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": true
+      }
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}
