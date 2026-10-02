@@ -46,7 +46,7 @@ class ApexFlow
     private const MAX_SEED_EXPANSIONS = 5;
     private const MAX_LOCAL_PACK_SCANS = 3;
     private const MAX_KEYWORD_DATA_BATCH = 25;
-    private const POOL_SIZE = 50;
+    private const POOL_SIZE = 20;
 
     public function __construct(
         Settings $settings,
@@ -146,6 +146,7 @@ class ApexFlow
             'publish_time' => '09:00',
             'seed_keywords' => [],
             'excluded_topics' => [],
+            'business_context' => '',
             'post_type' => 'post',
             'category_id' => 0,
             'author_id' => 0,
@@ -194,6 +195,7 @@ class ApexFlow
             ? $_POST['publish_time'] : '09:00';
         $settings['seed_keywords'] = $this->parseLines(sanitize_textarea_field($_POST['seed_keywords'] ?? ''));
         $settings['excluded_topics'] = $this->parseLines(sanitize_textarea_field($_POST['excluded_topics'] ?? ''));
+        $settings['business_context'] = sanitize_textarea_field($_POST['business_context'] ?? '');
         $settings['post_type'] = post_type_exists((string) ($_POST['post_type'] ?? 'post'))
             ? sanitize_text_field($_POST['post_type']) : 'post';
         $settings['category_id'] = max(0, (int) ($_POST['category_id'] ?? 0));
@@ -594,6 +596,10 @@ Return ONLY the JSON.";
         }
 
         $options = $this->settings->all();
+        $apexSettings = $this->getSettings();
+        if (!empty($apexSettings['business_context'])) {
+            $parts[] = 'Business context (provided by user): ' . $apexSettings['business_context'];
+        }
         $industry = get_option('sseo_ai_industry', '');
         if ($industry) {
             $parts[] = 'Industry (user setting): ' . $industry;
@@ -643,7 +649,7 @@ Return ONLY the JSON.";
     {
         $pool = $this->getPool();
         $age = time() - strtotime($pool['generated_at'] ?? '1970-01-01');
-        if ($force || empty($pool['keywords']) || $age > self::POOL_MAX_AGE) {
+        if ($force || empty($pool['keywords']) || count((array) $pool['keywords']) > self::POOL_SIZE || $age > self::POOL_MAX_AGE) {
             $pool = $this->refreshKeywordPool();
         }
         return $pool['keywords'] ?? [];
@@ -687,7 +693,11 @@ Return ONLY the JSON.";
             }
         }
 
-        $candidates = array_values(array_unique(array_filter(array_map('trim', $candidates))));
+        $candidates = array_values(array_unique(array_filter(
+            array_map('trim', $candidates),
+            fn($keyword) => $this->isUsableKeyword($keyword, $settings['language'])
+        )));
+        $candidates = $this->selectRelevantCandidates($candidates, $seeds, $settings);
 
         // Batch search volume / difficulty via DataForSEO (one call).
         $keywordData = $this->fetchKeywordData(array_slice($candidates, 0, self::MAX_KEYWORD_DATA_BATCH));
@@ -827,6 +837,72 @@ Return ONLY the JSON.";
 
         $seeds = array_values(array_unique(array_filter(array_map('trim', $seeds))));
         return array_slice($seeds, 0, 15);
+    }
+
+    private function isUsableKeyword(string $keyword, string $language): bool
+    {
+        $keyword = trim(mb_strtolower(wp_strip_all_tags($keyword)));
+        if ($keyword === '' || mb_strlen($keyword) < 4 || mb_strlen($keyword) > 100 || preg_match('/[<>\[\]{}|]/', $keyword)) {
+            return false;
+        }
+
+        $words = preg_split('/[^\p{L}\p{N}]+/u', $keyword, -1, PREG_SPLIT_NO_EMPTY);
+        if (!$words || count($words) > 10) {
+            return false;
+        }
+
+        $stopwords = [
+            'nl' => ['de', 'het', 'een', 'en', 'of', 'maar', 'niet', 'geen', 'wel', 'alleen', 'ook', 'nog', 'al', 'dan', 'dat', 'dit', 'die', 'wat', 'wie', 'waar', 'wanneer', 'hoe', 'te', 'van', 'voor', 'met', 'zonder', 'in', 'op', 'aan', 'om', 'bij', 'er', 'is', 'zijn', 'wordt', 'worden', 'genoeg'],
+            'en' => ['the', 'a', 'an', 'and', 'or', 'but', 'not', 'no', 'only', 'also', 'just', 'enough', 'that', 'this', 'what', 'who', 'where', 'when', 'how', 'to', 'of', 'for', 'with', 'without', 'in', 'on', 'at', 'is', 'are'],
+            'de' => ['der', 'die', 'das', 'ein', 'eine', 'und', 'oder', 'aber', 'nicht', 'kein', 'nur', 'auch', 'genug', 'was', 'wer', 'wo', 'wann', 'wie', 'zu', 'von', 'für', 'mit', 'ohne', 'in', 'auf', 'ist', 'sind'],
+            'fr' => ['le', 'la', 'les', 'un', 'une', 'et', 'ou', 'mais', 'pas', 'non', 'seulement', 'aussi', 'assez', 'que', 'qui', 'où', 'quand', 'comment', 'de', 'pour', 'avec', 'sans', 'dans', 'sur', 'est', 'sont'],
+        ];
+        $languageStopwords = $stopwords[$language] ?? array_merge(...array_values($stopwords));
+        $meaningful = array_values(array_filter($words, fn($word) => !in_array($word, $languageStopwords, true) && mb_strlen($word) > 2));
+
+        return !empty($meaningful);
+    }
+
+    private function selectRelevantCandidates(array $candidates, array $seeds, array $settings): array
+    {
+        if (empty($candidates)) {
+            return [];
+        }
+
+        $profile = $this->getProfile();
+        $context = $this->buildContentContext($settings, $profile);
+        $candidateList = implode("\n", array_map(fn($keyword) => '- ' . $keyword, array_slice($candidates, 0, 80)));
+        $prompt = "Select at most 25 complete, commercially or informationally useful SEO keywords that are directly relevant to this business. Reject sentence fragments, stopword combinations, vague phrases and unrelated topics. Never rewrite or invent a keyword. Return only a JSON array containing exact strings from the candidate list.\n\nBusiness context:\n{$context}\n\nCandidates:\n{$candidateList}";
+        $response = $this->llm->generateText($prompt, ['use_case' => 'keyword_research', 'max_tokens' => 1000]);
+        if (is_wp_error($response)) {
+            return array_slice($candidates, 0, self::MAX_KEYWORD_DATA_BATCH);
+        }
+
+        $raw = trim($response);
+        if (preg_match('/```(?:json)?\s*(.+?)\s*```/s', $raw, $match)) {
+            $raw = trim($match[1]);
+        }
+        $selected = json_decode($raw, true);
+        if (!is_array($selected)) {
+            return array_slice($candidates, 0, self::MAX_KEYWORD_DATA_BATCH);
+        }
+
+        $candidateMap = [];
+        foreach ($candidates as $candidate) {
+            $candidateMap[mb_strtolower($candidate)] = $candidate;
+        }
+        $result = [];
+        foreach (array_merge($seeds, $selected) as $keyword) {
+            $key = mb_strtolower(trim((string) $keyword));
+            if (isset($candidateMap[$key])) {
+                $result[$key] = $candidateMap[$key];
+            }
+            if (count($result) >= self::MAX_KEYWORD_DATA_BATCH) {
+                break;
+            }
+        }
+
+        return !empty($result) ? array_values($result) : array_slice($candidates, 0, self::MAX_KEYWORD_DATA_BATCH);
     }
 
     /**
@@ -1174,10 +1250,11 @@ Return ONLY the JSON.";
         }
 
         $kwList = implode("\n", array_map(fn($k, $i) => ($i + 1) . ". {$k}", $keywords, array_keys($keywords)));
-        $context = trim(($profile['niche_description'] ?? '') . ' ' . ($profile['industry'] ?? ''));
+        $context = $this->buildContentContext($settings, $profile);
 
         $prompt = "Generate one compelling, SEO-optimized blog post title in {$langName} for each keyword below.
-Website niche: {$context}
+Website and business context:
+{$context}
 Return a JSON array of strings in the same order as the keywords (no markdown, only JSON).
 
 Keywords:
@@ -1199,6 +1276,18 @@ Keywords:
         return $titles;
     }
 
+    private function buildContentContext(array $settings, array $profile): string
+    {
+        $parts = array_filter([
+            !empty($profile['industry']) ? 'Industry: ' . $profile['industry'] : '',
+            !empty($profile['niche_description']) ? 'Business: ' . $profile['niche_description'] : '',
+            !empty($profile['audience']) ? 'Target audience: ' . $profile['audience'] : '',
+            !empty($profile['topics']) ? 'Core topics: ' . implode(', ', (array) $profile['topics']) : '',
+            !empty($settings['business_context']) ? 'Additional context and boundaries: ' . $settings['business_context'] : '',
+        ]);
+        return implode("\n", $parts);
+    }
+
     /**
      * Push planned entries into the shared cluster queue for background
      * generation by TopicCluster::processQueueItems().
@@ -1212,6 +1301,7 @@ Keywords:
         }
 
         $settings = $this->getSettings();
+        $contentContext = $this->buildContentContext($settings, $this->getProfile());
         $queues = get_option('sseo_ai_cluster_queues', []);
         if (!is_array($queues)) {
             $queues = [];
@@ -1225,6 +1315,7 @@ Keywords:
                 'keyword' => $entry['keyword'],
                 'word_count' => (int) $settings['word_count'],
                 'content_type' => 'article',
+                'cluster_context' => $contentContext,
                 'cluster_role' => 'apexflow',
                 'schedule_date' => $entry['date'],
                 'status' => 'pending',
@@ -1548,6 +1639,13 @@ Keywords:
                             <tr>
                                 <th scope="row"><label for="profile_topics"><?php esc_html_e('Core topics (comma-separated)', 'ai-seo-client'); ?></label></th>
                                 <td><input type="text" name="profile_topics" id="profile_topics" class="large-text" value="<?php echo esc_attr(implode(', ', (array) ($profile['topics'] ?? []))); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="business_context"><?php esc_html_e('Business context', 'ai-seo-client'); ?></label></th>
+                                <td>
+                                    <textarea name="business_context" id="business_context" rows="4" class="large-text" placeholder="<?php esc_attr_e('Describe your services, products, expertise, target market, differentiators and topics ApexFlow should avoid.', 'ai-seo-client'); ?>"><?php echo esc_textarea($settings['business_context']); ?></textarea>
+                                    <p class="description"><?php esc_html_e('Used to validate keywords and to guide titles, full article content and featured images.', 'ai-seo-client'); ?></p>
+                                </td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="seed_keywords"><?php esc_html_e('Own keywords (optional)', 'ai-seo-client'); ?></label></th>

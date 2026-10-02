@@ -415,6 +415,9 @@ class AIImageGenerator
     public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100, bool $useStoredPrompt = false): ?int
     {
         $post = get_post($postId);
+        if (!$post) {
+            return null;
+        }
 
         // On regenerate, reuse the stored prompt from the original generation when no new context is provided
         if ($useStoredPrompt && empty($context)) {
@@ -499,26 +502,20 @@ class AIImageGenerator
             ? "\nAdditional instructions (always apply): {$customInstructions}\n"
             : '';
 
-        if (!empty($context)) {
-            $aiPrompt = "Generate a detailed image prompt for creating a {$style} image.
+        $content = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags($post->post_content)));
+        $excerpt = mb_substr($content, 0, 1500);
+        $keyword = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
+        $contextSection = !empty($context) ? "Additional user context: {$context}\n" : '';
 
-User context: {$context}
-Target prompt length: approximately {$wordCount} words.
+        $aiPrompt = "Create one detailed prompt for a {$style} featured image that is specifically and unmistakably relevant to this article.
+
+Article title: {$post->post_title}
+Focus keyword: {$keyword}
+Article summary: {$excerpt}
+{$contextSection}Target prompt length: approximately {$wordCount} words.
 {$brandReferenceDesc}{$customSection}
 
-Create a concise, descriptive prompt that captures the essence. Focus on visual elements, mood, and composition.";
-        } else {
-            $content = wp_strip_all_tags($post->post_content);
-            $excerpt = substr($content, 0, 500);
-
-            $aiPrompt = "Generate a detailed image prompt for creating a {$style} image about:
-
-Title: {$post->post_title}
-Content: {$excerpt}
-{$brandReferenceDesc}{$customSection}
-
-Create a concise, descriptive prompt (max {$wordCount} words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
-        }
+Describe a concrete scene, objects, environment and composition tied directly to the article subject. Prefer subject matter, tools, interfaces, locations or visual metaphors over generic stock photography. Do not depict a woman, man, portrait, model, team or other person unless people are essential to the article subject. Do not introduce cats, pets or unrelated decorative characters. Do not request readable text, captions, logos or watermarks in the image. If a person reference exists in the brand portfolio, use it only when a person is genuinely required by the article. Return only the final image prompt.";
 
         $imagePrompt = $this->llm->generateText($aiPrompt, [
             'max_tokens' => max(150, (int)($wordCount * 2)),
@@ -531,7 +528,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
 
         if (is_wp_error($imagePrompt)) {
             // Fallback to simple prompt
-            $fallback = (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
+            $fallback = (!empty($context) ? $context : $post->post_title) . ", directly relevant subject matter, no generic portraits or unrelated animals, no text or watermark, {$style} style, {$size}, high quality";
             if (!empty($brandReferenceDesc)) {
                 $fallback .= ". Match the brand's visual identity.";
             }

@@ -247,10 +247,14 @@ class TopicCluster
             $postData['post_status'] = 'draft';
         }
 
-        $postId = wp_insert_post($postData);
+        $postId = wp_insert_post($postData, true);
 
         if (is_wp_error($postId)) {
             return $postId;
+        }
+        $storedPost = get_post($postId);
+        if (!$storedPost || trim(wp_strip_all_tags($storedPost->post_content)) === '') {
+            return new \WP_Error('content_not_stored', __('Generated content could not be stored in the post', 'ai-seo-client'));
         }
 
         // 1.1 — Track cluster relationships in post meta
@@ -276,7 +280,7 @@ class TopicCluster
         $imageAttachmentId = null;
         if ($this->hasImageApiKey()) {
             $generator = new AIImageGenerator($this->settings, $this->llm);
-            $imageAttachmentId = $generator->generateFeaturedImage($postId, 'photorealistic', $title, 100);
+            $imageAttachmentId = $generator->generateFeaturedImage($postId, 'photorealistic', '', 120);
         }
 
         // 1.5 — Post-generation quality pipeline
@@ -372,6 +376,7 @@ You are an expert SEO content writer. Create a comprehensive, SEO-optimized {$co
 Target Keyword: {$keyword}
 Target Word Count: {$wordCount} words
 
+Business and editorial context:
 {$clusterContext}{$briefSection}
 
 Requirements:
@@ -412,8 +417,9 @@ PROMPT;
 
         if ($data && isset($data['content'])) {
             // Valid JSON received — verify content is not empty
-            if (trim(strip_tags($data['content'])) === '') {
-                return new \WP_Error('empty_content', __('AI returned empty content for this post', 'ai-seo-client'));
+            $plainContent = trim(wp_strip_all_tags((string) $data['content']));
+            if ($plainContent === '' || str_word_count($plainContent) < 100) {
+                return new \WP_Error('empty_content', __('AI returned empty or incomplete content for this post', 'ai-seo-client'));
             }
             return $data;
         }
@@ -426,11 +432,16 @@ PROMPT;
         }
 
         // Response is not JSON — treat it as HTML content directly
+        $plainContent = trim(wp_strip_all_tags($rawResponse));
+        $actualWordCount = str_word_count($plainContent);
+        if ($plainContent === '' || $actualWordCount < 100) {
+            return new \WP_Error('empty_content', __('AI returned empty or incomplete content for this post', 'ai-seo-client'));
+        }
         return [
             'content' => $rawResponse,
-            'meta_description' => substr(strip_tags($rawResponse), 0, 160),
+            'meta_description' => substr($plainContent, 0, 160),
             'tags' => [$keyword],
-            'word_count' => str_word_count(strip_tags($rawResponse)),
+            'word_count' => $actualWordCount,
         ];
     }
 
@@ -856,7 +867,7 @@ PROMPT;
                         $item['keyword'],
                         $item['word_count'],
                         $item['content_type'],
-                        ''
+                        (string) ($item['cluster_context'] ?? '')
                     );
 
                     if (is_wp_error($content)) {
@@ -903,10 +914,14 @@ PROMPT;
                         $postData['post_status'] = 'draft';
                     }
 
-                    $postId = wp_insert_post($postData);
+                    $postId = wp_insert_post($postData, true);
 
                     if (is_wp_error($postId)) {
                         throw new \Exception($postId->get_error_message());
+                    }
+                    $storedPost = get_post($postId);
+                    if (!$storedPost || trim(wp_strip_all_tags($storedPost->post_content)) === '') {
+                        throw new \Exception(__('Generated content could not be stored in the post', 'ai-seo-client'));
                     }
 
                     // Add tags
@@ -928,7 +943,7 @@ PROMPT;
                     $wantsImage = !array_key_exists('featured_image', $item) || !empty($item['featured_image']);
                     if ($wantsImage && $this->hasImageApiKey()) {
                         $generator = new AIImageGenerator($this->settings, $this->llm);
-                        $generator->generateFeaturedImage($postId, 'photorealistic', $item['title'], 100);
+                        $generator->generateFeaturedImage($postId, 'photorealistic', '', 120);
                     }
 
                     $item['status'] = 'completed';
