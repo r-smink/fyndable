@@ -76,6 +76,9 @@ class ApexFlow
         add_action('admin_post_sseo_ai_apexflow_rescan', [$this, 'handleRescan']);
         add_action('admin_post_sseo_ai_apexflow_preview', [$this, 'handlePreview']);
         add_action('admin_post_sseo_ai_apexflow_reject', [$this, 'handleRejectKeyword']);
+        add_action('admin_post_sseo_ai_apexflow_clear_plan', [$this, 'handleClearPlan']);
+        add_action('admin_post_sseo_ai_apexflow_clear_pool', [$this, 'handleClearPool']);
+        add_action('admin_post_sseo_ai_apexflow_refresh_pool', [$this, 'handleRefreshPool']);
         add_action(self::CRON_HOOK, [$this, 'runAutomation']);
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
 
@@ -283,6 +286,93 @@ class ApexFlow
         exit;
     }
 
+    public function handleClearPlan(): void
+    {
+        check_admin_referer('sseo_ai_apexflow_clear_plan');
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+        $cancelled = $this->clearPlanAndQueue();
+        $this->log("Plan cleared ({$cancelled} queued item(s) cancelled).");
+        wp_redirect(admin_url('admin.php?page=ai-seo-automation&cleared=1'));
+        exit;
+    }
+
+    public function handleClearPool(): void
+    {
+        check_admin_referer('sseo_ai_apexflow_clear_pool');
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+        delete_option(self::POOL_KEY);
+        $this->log('Keyword pool cleared (rebuilds on next run).');
+        wp_redirect(admin_url('admin.php?page=ai-seo-automation&pool_cleared=1'));
+        exit;
+    }
+
+    public function handleRefreshPool(): void
+    {
+        check_admin_referer('sseo_ai_apexflow_refresh_pool');
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'ai-seo-client'));
+        }
+        $this->refreshKeywordPool();
+        wp_redirect(admin_url('admin.php?page=ai-seo-automation&pool_refreshed=1'));
+        exit;
+    }
+
+    /**
+     * Remove the plan and cancel pending ApexFlow items in the shared cluster
+     * queue. Pool keywords marked 'planned' are freed again ('new'). Items
+     * already 'processing' are left to finish; already generated posts are
+     * untouched.
+     *
+     * @return int Number of queue items cancelled.
+     */
+    private function clearPlanAndQueue(): int
+    {
+        delete_option(self::PLAN_KEY);
+
+        $cancelled = 0;
+        $queues = get_option('sseo_ai_cluster_queues', []);
+        if (is_array($queues)) {
+            foreach ($queues as &$queue) {
+                if (!isset($queue['items']) || !is_array($queue['items'])) {
+                    continue;
+                }
+                foreach ($queue['items'] as &$item) {
+                    if (($item['source'] ?? '') === 'apexflow' && ($item['status'] ?? '') === 'pending') {
+                        $item['status'] = 'cancelled';
+                        $cancelled++;
+                    }
+                }
+                unset($item);
+                $remaining = array_filter(
+                    (array) ($queue['items'] ?? []),
+                    fn($i) => in_array($i['status'] ?? '', ['pending', 'processing'], true)
+                );
+                if (empty($remaining) && in_array($queue['status'] ?? '', ['pending', 'processing'], true)) {
+                    $queue['status'] = 'cancelled';
+                }
+            }
+            unset($queue);
+            update_option('sseo_ai_cluster_queues', $queues);
+        }
+
+        $pool = get_option(self::POOL_KEY, []);
+        if (is_array($pool) && !empty($pool['keywords']) && is_array($pool['keywords'])) {
+            foreach ($pool['keywords'] as &$item) {
+                if (($item['status'] ?? '') === 'planned') {
+                    $item['status'] = 'new';
+                }
+            }
+            unset($item);
+            update_option(self::POOL_KEY, $pool);
+        }
+
+        return $cancelled;
+    }
+
     private function parseLines(string $input, string $separator = "\n"): array
     {
         if (empty($input)) {
@@ -334,6 +424,21 @@ class ApexFlow
             'callback' => [$this, 'restReject'],
             'permission_callback' => fn() => current_user_can('manage_options'),
             'args' => ['keyword' => ['type' => 'string', 'required' => true]],
+        ]);
+        register_rest_route('sseo-ai/v1', '/apexflow/clear-plan', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restClearPlan'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
+        ]);
+        register_rest_route('sseo-ai/v1', '/apexflow/clear-pool', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restClearPool'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
+        ]);
+        register_rest_route('sseo-ai/v1', '/apexflow/refresh-pool', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restRefreshPool'],
+            'permission_callback' => fn() => current_user_can('manage_options'),
         ]);
     }
 
@@ -390,6 +495,35 @@ class ApexFlow
         }
         $this->rejectKeyword(sanitize_text_field($request->get_param('keyword')));
         return ['success' => true];
+    }
+
+    public function restClearPlan(): array|\WP_Error
+    {
+        if (!$this->isAllowed()) {
+            return new \WP_Error('tier_not_allowed', __('ApexFlow requires a Professional or higher license.', 'ai-seo-client'));
+        }
+        $cancelled = $this->clearPlanAndQueue();
+        $this->log("Plan cleared via REST ({$cancelled} queued item(s) cancelled).");
+        return ['success' => true, 'cancelled' => $cancelled];
+    }
+
+    public function restClearPool(): array|\WP_Error
+    {
+        if (!$this->isAllowed()) {
+            return new \WP_Error('tier_not_allowed', __('ApexFlow requires a Professional or higher license.', 'ai-seo-client'));
+        }
+        delete_option(self::POOL_KEY);
+        $this->log('Keyword pool cleared via REST (rebuilds on next run).');
+        return ['success' => true];
+    }
+
+    public function restRefreshPool(): array|\WP_Error
+    {
+        if (!$this->isAllowed()) {
+            return new \WP_Error('tier_not_allowed', __('ApexFlow requires a Professional or higher license.', 'ai-seo-client'));
+        }
+        $pool = $this->refreshKeywordPool();
+        return ['success' => true, 'pool_size' => count($pool['keywords'] ?? [])];
     }
 
     // ------------------------------------------------------------------
@@ -1567,6 +1701,8 @@ Keywords:
             .sseo-apexflow-toggle input:checked + .sseo-apexflow-toggle-track::after { transform: translateX(22px); }
             .sseo-apexflow-toggle input:focus-visible + .sseo-apexflow-toggle-track { box-shadow: 0 0 0 3px rgba(55, 159, 211, .25); }
             .sseo-apexflow-toggle-text { color: #475467; font-weight: 500; }
+            .sseo-apexflow-log { max-height: 240px; overflow-y: auto; border: 1px solid #e1e6ee; border-radius: 8px; padding: 10px 14px; background: #fafbfc; }
+            .sseo-apexflow-log ul { margin: 0; }
             @media (max-width: 782px) {
                 .sseo-apexflow-page .form-table th { padding-bottom: 2px; }
                 .sseo-apexflow-page .regular-text,
@@ -1591,6 +1727,15 @@ Keywords:
                     <?php endif; ?>
                     <?php if (isset($_GET['rejected'])): ?>
                         <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword rejected and added to excluded topics.', 'ai-seo-client'); ?></p></div>
+                    <?php endif; ?>
+                    <?php if (isset($_GET['cleared'])): ?>
+                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Planned posts cleared and pending generation cancelled.', 'ai-seo-client'); ?></p></div>
+                    <?php endif; ?>
+                    <?php if (isset($_GET['pool_cleared'])): ?>
+                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword pool cleared. It rebuilds automatically on the next run or preview.', 'ai-seo-client'); ?></p></div>
+                    <?php endif; ?>
+                    <?php if (isset($_GET['pool_refreshed'])): ?>
+                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword pool refreshed.', 'ai-seo-client'); ?></p></div>
                     <?php endif; ?>
 
                     <h2><?php esc_html_e('Status', 'ai-seo-client'); ?></h2>
@@ -1786,7 +1931,23 @@ Keywords:
                             <input type="hidden" name="action" value="sseo_ai_apexflow_run_now">
                             <?php submit_button(__('Run ApexFlow Now', 'ai-seo-client'), 'secondary', 'submit', false); ?>
                         </form>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('This removes all planned posts and cancels pending generation. Already generated posts are kept. Continue?', 'ai-seo-client')); ?>');">
+                            <?php wp_nonce_field('sseo_ai_apexflow_clear_plan'); ?>
+                            <input type="hidden" name="action" value="sseo_ai_apexflow_clear_plan">
+                            <?php submit_button(__('Clear Planned Posts', 'ai-seo-client'), 'secondary', 'submit', false); ?>
+                        </form>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                            <?php wp_nonce_field('sseo_ai_apexflow_clear_pool'); ?>
+                            <input type="hidden" name="action" value="sseo_ai_apexflow_clear_pool">
+                            <?php submit_button(__('Clear Keyword Pool', 'ai-seo-client'), 'secondary', 'submit', false); ?>
+                        </form>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                            <?php wp_nonce_field('sseo_ai_apexflow_refresh_pool'); ?>
+                            <input type="hidden" name="action" value="sseo_ai_apexflow_refresh_pool">
+                            <?php submit_button(__('Refresh Pool Now', 'ai-seo-client'), 'secondary', 'submit', false); ?>
+                        </form>
                     </div>
+                    <p class="description"><?php esc_html_e('Refresh Pool Now rebuilds the keyword pool immediately (uses SERP/AI credits); Clear Keyword Pool rebuilds lazily on the next run.', 'ai-seo-client'); ?></p>
 
                     <?php if (is_array($preview) && !empty($preview)): ?>
                         <hr style="margin: 30px 0;">
@@ -1880,12 +2041,14 @@ Keywords:
                     <?php endif; ?>
 
                     <hr style="margin: 30px 0;">
-                    <h2><?php esc_html_e('Activity log', 'ai-seo-client'); ?></h2>
-                    <ul style="font-size: 12px; color: #555;">
-                        <?php foreach (array_reverse($logs) as $log): ?>
-                            <li><?php echo esc_html($log['time'] ?? ''); ?> — <?php echo esc_html($log['message'] ?? ''); ?></li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <h2><?php esc_html_e('Activity log', 'ai-seo-client'); ?> <span class="description" style="font-weight:400;">(<?php esc_html_e('last 50 entries', 'ai-seo-client'); ?>)</span></h2>
+                    <div class="sseo-apexflow-log">
+                        <ul style="font-size: 12px; color: #555;">
+                            <?php foreach (array_reverse($logs) as $log): ?>
+                                <li><?php echo esc_html($log['time'] ?? ''); ?> — <?php echo esc_html($log['message'] ?? ''); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

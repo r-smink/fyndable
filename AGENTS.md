@@ -191,7 +191,7 @@ Note: the settings UI is rendered via `do_action('sseo_ai_render_llmstxt_setting
 
 Pipeline (weekly cron `sseo_ai_apexflow_weekly` + "Run ApexFlow Now"):
 1. `scanSiteProfile()` — homepage text + recent posts + `sseo_ai_industry` + Local Business + WooCommerce cats → LLM → `sseo_ai_apexflow_profile` (refreshed when >30d old).
-2. `refreshKeywordPool()` — seeds (manual > profile > tracked keywords > GSC top queries > site title) → `KeywordExplorer::expand()` SERP n-grams + `ai/keyword-data` volume/difficulty + `serp/local-pack` local-intent detection (when coords configured). Stored in `sseo_ai_apexflow_keyword_pool` (max 50, refreshed when >7d). Caps per run: 5 seed expansions, 3 local-pack scans, 25 keyword-data items.
+2. `refreshKeywordPool()` — seeds (manual > profile > tracked keywords > GSC top queries > site title) → `KeywordExplorer::expand()` SERP n-grams + `ai/keyword-data` volume/difficulty + `serp/local-pack` local-intent detection (when coords configured). Stored in `sseo_ai_apexflow_keyword_pool` (max 20, refreshed when >7d or when a stored pool exceeds POOL_SIZE). Caps per run: 5 seed expansions, 3 local-pack scans, 25 keyword-data items.
 3. `buildPlan()` — open slots in lookahead window (publish_days/time, skips dates with existing `future` posts) → batched LLM titles → `sseo_ai_apexflow_plan` (statuses: planned|queued). Preview = `buildPlan(0, false)` — dry-run, not persisted.
 4. `enqueuePlan()` — appends items to the shared `sseo_ai_cluster_queues` (source=`apexflow`), generated in background by `TopicCluster::processQueueItems()`.
 
@@ -199,7 +199,9 @@ New queue-item fields honored by `processQueueItems()`: `post_type`, `publish_mo
 
 Settings option `sseo_ai_apexflow_settings`: enabled, language, country, posts_per_week (1-7, capped by `getMonthlyAutoPostLimit()`), publish_mode, publish_days[], publish_time, seed_keywords[], excluded_topics[], post_type, category_id, author_id, word_count, featured_image, notify_email, lookahead_weeks (1-8). Legacy `sseo_ai_automation_settings` migrated on first load; `sseo_ai_automation_cron` cleared.
 
-REST (`manage_options`): `GET /sseo-ai/v1/apexflow/status`, `POST /apexflow/run`, `POST /apexflow/preview`, `POST /apexflow/rescan-profile`, `POST /apexflow/reject-keyword`.
+REST (`manage_options`): `GET /sseo-ai/v1/apexflow/status`, `POST /apexflow/run`, `POST /apexflow/preview`, `POST /apexflow/rescan-profile`, `POST /apexflow/reject-keyword`, `POST /apexflow/clear-plan`, `POST /apexflow/clear-pool`, `POST /apexflow/refresh-pool`.
+
+Admin reset buttons (admin-post handlers + REST parity): "Clear Planned Posts" → `clearPlanAndQueue()` deletes `sseo_ai_apexflow_plan`, sets pending `source=apexflow` items in `sseo_ai_cluster_queues` to `cancelled` (items already `processing` finish; generated posts untouched), and frees pool keywords `planned`→`new`. "Clear Keyword Pool" deletes `sseo_ai_apexflow_keyword_pool` (lazy rebuild on next run/preview); "Refresh Pool Now" calls `refreshKeywordPool()` synchronously (costs SERP/AI credits). Activity log keeps the last 50 entries (`LOG_KEY`) and renders in a `.sseo-apexflow-log` scroll container.
 
 Other touched code:
 - `keywordexplorer.php` — `expand($seed, $opts)` accepts `country`/`language`, forwarded to `serp/search` (cache key includes them).

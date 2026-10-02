@@ -982,3 +982,31 @@ msgstr "Naar dashboard"
 
 msgid "XXXX-XXXX-XXXX-XXXX-XXXX"
 msgstr "XXXX-XXXX-XXXX-XXXX-XXXX"
+
+# ApexFlow reset / pool actions
+msgid "Planned posts cleared and pending generation cancelled."
+msgstr "Geplande posts gewist en openstaande generatie geannuleerd."
+
+msgid "Keyword pool cleared. It rebuilds automatically on the next run or preview."
+msgstr "Keyword-pool geleegd. Deze wordt automatisch opnieuw opgebouwd bij de volgende run of preview."
+
+msgid "Keyword pool refreshed."
+msgstr "Keyword-pool ververst."
+
+msgid "This removes all planned posts and cancels pending generation. Already generated posts are kept. Continue?"
+msgstr "Dit verwijdert alle geplande posts en annuleert openstaande generatie. Al gegenereerde posts blijven behouden. Doorgaan?"
+
+msgid "Clear Planned Posts"
+msgstr "Geplande posts wissen"
+
+msgid "Clear Keyword Pool"
+msgstr "Keyword-pool legen"
+
+msgid "Refresh Pool Now"
+msgstr "Pool nu verversen"
+
+msgid "Refresh Pool Now rebuilds the keyword pool immediately (uses SERP/AI credits); Clear Keyword Pool rebuilds lazily on the next run."
+msgstr "'Pool nu verversen' bouwt de keyword-pool direct opnieuw op (verbruikt SERP/AI-credits); 'Keyword-pool legen' bouwt pas opnieuw op bij de volgende run."
+
+msgid "last 50 entries"
+msgstr "laatste 50 regels"
