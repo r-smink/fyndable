@@ -70,16 +70,21 @@ class KeywordExplorer
         $ngrams = [];
         $related = [];
         foreach ($serpResults as $item) {
-            $title = strtolower($item['title'] ?? '');
-            $tokens = preg_split('/[^a-z0-9]+/i', $title, -1, PREG_SPLIT_NO_EMPTY);
-            $tokens = array_values(array_filter($tokens, fn($t) => strlen($t) > 2));
-            for ($i = 0; $i < count($tokens) - 1; $i++) {
-                $ng = $tokens[$i] . ' ' . $tokens[$i + 1];
-                $ngrams[$ng] = ($ngrams[$ng] ?? 0) + 1;
-            }
-            foreach ($tokens as $t) {
-                if (strlen($t) >= 4) {
-                    $related[$t] = ($related[$t] ?? 0) + 1;
+            $title = mb_strtolower((string) ($item['title'] ?? ''));
+            // Split titles on punctuation/symbols first so bigrams never
+            // straddle clause boundaries, then tokenize each segment
+            // Unicode-aware so accented words (artificiële) stay intact.
+            foreach (preg_split('/[\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}]+/u', $title) as $segment) {
+                $tokens = preg_split('/[^\p{L}\p{N}]+/u', $segment, -1, PREG_SPLIT_NO_EMPTY);
+                $tokens = array_values(array_filter($tokens, fn($t) => mb_strlen($t) > 2));
+                for ($i = 0; $i < count($tokens) - 1; $i++) {
+                    $ng = $tokens[$i] . ' ' . $tokens[$i + 1];
+                    $ngrams[$ng] = ($ngrams[$ng] ?? 0) + 1;
+                }
+                foreach ($tokens as $t) {
+                    if (mb_strlen($t) >= 4) {
+                        $related[$t] = ($related[$t] ?? 0) + 1;
+                    }
                 }
             }
         }
@@ -230,7 +235,7 @@ class KeywordExplorer
 
     private function tokenize(string $s): array
     {
-        $parts = preg_split('/[^a-z0-9]+/i', strtolower($s), -1, PREG_SPLIT_NO_EMPTY);
+        $parts = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($s), -1, PREG_SPLIT_NO_EMPTY);
         return array_values(array_unique($parts));
     }
 

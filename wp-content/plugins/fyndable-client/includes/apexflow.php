@@ -827,9 +827,18 @@ Return ONLY the JSON.";
             }
         }
 
+        $seedSet = array_map('mb_strtolower', $seeds);
+        $manualSeeds = array_map('mb_strtolower', (array) $settings['seed_keywords']);
         $candidates = array_values(array_unique(array_filter(
             array_map('trim', $candidates),
-            fn($keyword) => $this->isUsableKeyword($keyword, $settings['language'])
+            function ($keyword) use ($seedSet, $manualSeeds, $settings) {
+                $lower = mb_strtolower($keyword);
+                if (in_array($lower, $manualSeeds, true)) {
+                    return true; // user-entered seeds always pass
+                }
+                $min = in_array($lower, $seedSet, true) ? 1 : 2;
+                return $this->isUsableKeyword($keyword, $settings['language'], $min);
+            }
         )));
         $candidates = $this->selectRelevantCandidates($candidates, $seeds, $settings);
 
@@ -851,6 +860,14 @@ Return ONLY the JSON.";
                 }
             }
             if ($isExcluded || $this->isCovered($kw, $covered)) {
+                continue;
+            }
+
+            // Only keep candidates DataForSEO recognizes as real queries —
+            // drops SERP n-gram fragments and non-queries. Seed keywords are
+            // exempt (trusted sources); when the API is unreachable
+            // ($keywordData === null) the gate is skipped.
+            if ($keywordData !== null && !isset($keywordData[$lower]) && !in_array($lower, $seedSet, true)) {
                 continue;
             }
 
@@ -973,7 +990,7 @@ Return ONLY the JSON.";
         return array_slice($seeds, 0, 15);
     }
 
-    private function isUsableKeyword(string $keyword, string $language): bool
+    private function isUsableKeyword(string $keyword, string $language, int $minMeaningful = 2): bool
     {
         $keyword = trim(mb_strtolower(wp_strip_all_tags($keyword)));
         if ($keyword === '' || mb_strlen($keyword) < 4 || mb_strlen($keyword) > 100 || preg_match('/[<>\[\]{}|]/', $keyword)) {
@@ -992,9 +1009,22 @@ Return ONLY the JSON.";
             'fr' => ['le', 'la', 'les', 'un', 'une', 'et', 'ou', 'mais', 'pas', 'non', 'seulement', 'aussi', 'assez', 'que', 'qui', 'où', 'quand', 'comment', 'de', 'pour', 'avec', 'sans', 'dans', 'sur', 'est', 'sont'],
         ];
         $languageStopwords = $stopwords[$language] ?? array_merge(...array_values($stopwords));
+
+        // Reject candidates with a strong foreign-language marker: a word that
+        // is a stopword in another language but not in the target language
+        // (e.g. "for"/"the" fragments leaking into a Dutch pool).
+        if (isset($stopwords[$language])) {
+            $allStopwords = array_merge(...array_values($stopwords));
+            foreach ($words as $word) {
+                if (in_array($word, $allStopwords, true) && !in_array($word, $languageStopwords, true)) {
+                    return false;
+                }
+            }
+        }
+
         $meaningful = array_values(array_filter($words, fn($word) => !in_array($word, $languageStopwords, true) && mb_strlen($word) > 2));
 
-        return !empty($meaningful);
+        return count($meaningful) >= $minMeaningful;
     }
 
     private function selectRelevantCandidates(array $candidates, array $seeds, array $settings): array
@@ -1005,8 +1035,11 @@ Return ONLY the JSON.";
 
         $profile = $this->getProfile();
         $context = $this->buildContentContext($settings, $profile);
+        $langNames = ['nl' => 'Dutch', 'en' => 'English', 'de' => 'German', 'fr' => 'French',
+            'es' => 'Spanish', 'it' => 'Italian', 'pt' => 'Portuguese', 'pl' => 'Polish'];
+        $langName = $langNames[$settings['language'] ?? ''] ?? 'the site language';
         $candidateList = implode("\n", array_map(fn($keyword) => '- ' . $keyword, array_slice($candidates, 0, 80)));
-        $prompt = "Select at most 25 complete, commercially or informationally useful SEO keywords that are directly relevant to this business. Reject sentence fragments, stopword combinations, vague phrases and unrelated topics. Never rewrite or invent a keyword. Return only a JSON array containing exact strings from the candidate list.\n\nBusiness context:\n{$context}\n\nCandidates:\n{$candidateList}";
+        $prompt = "Select at most 25 complete, commercially or informationally useful SEO keywords in {$langName} that are directly relevant to this business. Reject keywords written in other languages, clipped or truncated words, sentence fragments, stopword combinations, single generic terms, vague phrases and unrelated topics. Never rewrite or invent a keyword. Return only a JSON array containing exact strings from the candidate list.\n\nBusiness context:\n{$context}\n\nCandidates:\n{$candidateList}";
         $response = $this->llm->generateText($prompt, ['use_case' => 'keyword_research', 'max_tokens' => 1000]);
         if (is_wp_error($response)) {
             return array_slice($candidates, 0, self::MAX_KEYWORD_DATA_BATCH);
@@ -1041,9 +1074,10 @@ Return ONLY the JSON.";
 
     /**
      * Fetch search volume/difficulty for a batch of keywords via the SaaS
-     * DataForSEO proxy. Returns a map keyed by lowercase keyword.
+     * DataForSEO proxy. Returns a map keyed by lowercase keyword, or null
+     * when the API call fails (callers should not treat null as "no data").
      */
-    private function fetchKeywordData(array $keywords): array
+    private function fetchKeywordData(array $keywords): ?array
     {
         if (empty($keywords)) {
             return [];
@@ -1066,8 +1100,11 @@ Return ONLY the JSON.";
         }
 
         $response = $this->dashboardAPI->request('ai/keyword-data', $params);
+        if (is_wp_error($response) || !isset($response['data'])) {
+            return null;
+        }
         $map = [];
-        if (!is_wp_error($response) && !empty($response['data'])) {
+        if (!empty($response['data'])) {
             $items = $response['data']['tasks'][0]['result'][0]['items'] ?? [];
             foreach ((array) $items as $item) {
                 $kw = mb_strtolower((string) ($item['keyword'] ?? ''));
