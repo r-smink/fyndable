@@ -161,6 +161,9 @@ class Client
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
+        // Add a body class to Fyndable client admin pages (used by the dark theme and shell CSS)
+        add_filter('admin_body_class', [$this, 'addAdminBodyClass']);
+
         // Custom menu icon styling
         $printIconStyles = function (): void {
             echo '<style>
@@ -270,6 +273,26 @@ class Client
         }
 
         return 'Fyndable';
+    }
+
+    /**
+     * Add a custom body class to Fyndable client admin pages.
+     *
+     * This makes it possible to scope shell/dark styling to the plugin only.
+     */
+    public function addAdminBodyClass(string $classes): string
+    {
+        $screen = get_current_screen();
+        if (!$screen) {
+            return $classes;
+        }
+
+        $screenId = $screen->id;
+        if (strpos($screenId, 'ai-seo') !== false || strpos($screenId, 'fyndable') !== false) {
+            $classes .= ' fyndable-ui';
+        }
+
+        return $classes;
     }
 
     /**
@@ -1264,13 +1287,12 @@ class Client
                     --sseo-sa-primary: {$primaryColor};
                     --sseo-sa-secondary: {$secondaryColor};
                 }
-                /* Override all hardcoded Fyndable gradients on admin pages */
-                .sseo-ai-header {
-                    background: {$bgGradient} !important;
-                    border-color: {$primaryColor} !important;
+                /* Move the brand gradient to the page wrapper; header/content stay transparent */
+                .wrap.sseo-ai-modern {
+                    background: {$bgGradient};
                 }
-                .sseo-ai-content {
-                    background: {$bgGradient} !important;
+                .sseo-ai-header {
+                    border-color: {$primaryColor} !important;
                 }
                 .sseo-ai-header h1::before {
                     color: {$primaryColor};
@@ -1342,6 +1364,16 @@ class Client
                     border-color: {$primaryColor} !important;
                 }
             ");
+        }
+
+        // Load the optional dark theme stylesheet
+        if (get_option('sseo_ai_client_dark_theme', '0') === '1') {
+            wp_enqueue_style(
+                'ai-seo-client-admin-dark',
+                SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin-dark.css',
+                ['ai-seo-client-admin'],
+                SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/client-admin-dark.css')
+            );
         }
     }
 
@@ -2176,6 +2208,7 @@ class Client
         $contentLanguage = $this->settings->contentLanguage();
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
         $showShareButtons = get_option('sseo_ai_client_show_share_buttons', '1') === '1';
+        $darkTheme = get_option('sseo_ai_client_dark_theme', '0') === '1';
 
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -2570,6 +2603,19 @@ class Client
                         </div>
 
                         <div class="settings-section">
+                            <h2><?php esc_html_e('Appearance', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Customize the look of the Fyndable backend.', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="dark_theme">
+                                    <input type="checkbox" name="dark_theme" id="dark_theme" value="1" <?php checked($darkTheme, true); ?>>
+                                    <?php esc_html_e('Enable dark theme', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('Applies a dark Fyndable theme to the plugin admin pages.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
 
@@ -2901,6 +2947,7 @@ class Client
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
         update_option('sseo_ai_client_show_share_buttons', isset($_POST['show_share_buttons']) && $_POST['show_share_buttons'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_dark_theme', isset($_POST['dark_theme']) && $_POST['dark_theme'] === '1' ? '1' : '0');
         update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
 
         // Local business settings (used by Local SEO schema and Local SERP radius scans)

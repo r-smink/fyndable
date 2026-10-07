@@ -1,0 +1,202 @@
+/* Fyndable client admin — dark theme */
+
+.wrap.sseo-ai-modern {
+    background: linear-gradient(135deg, #371447 0%, #132A38 100%) !important;
+}
+
+.sseo-ai-dashboard-card {
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 2px solid transparent;
+}
+
+.sseo-ai-settings-card,
+.sseo-ai-connection-card {
+    background: rgba(55, 20, 71, 0.9) !important;
+    color: #fff;
+}
+
+input[type=color],
+input[type=date],
+input[type=datetime-local],
+input[type=datetime],
+input[type=email],
+input[type=month],
+input[type=number],
+input[type=password],
+input[type=search],
+input[type=tel],
+input[type=text],
+input[type=time],
+input[type=url],
+input[type=week],
+select,
+textarea {
+    box-shadow: 0 0 0 transparent;
+    border-radius: 2px;
+    border: 1px solid #ffffff80;
+    background-color: #ffffff2e;
+    color: #ffffff;
+    border-radius: 10px;
+}
+
+input[type=checkbox],
+input[type=radio] {
+    border: 1px solid #ffffff80;
+    border-radius: 2px;
+    background: #ffffff2e;
+    color: #ffffff;
+}
+
+.form-table th,
+.form-wrap label,
+.sseo-ai-dashboard-card h2,
+.sseo-ai-dashboard-card h3,
+.sseo-ai-settings-card h2,
+.settings-section h2,
+.form-table td fieldset label,
+.wp-die-message,
+p,
+.form-table td {
+    color: #fff;
+}
+
+.wp-core-ui .button:where(:not(.button-link)) {
+    background: 0 0 !important;
+    border: 1px solid #fff !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+
+.wp-core-ui .button:where(:not(.button-link)):hover {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%) !important;
+    border: 1px solid #fff !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+
+/* Tables */
+.alternate,
+.striped > tbody > :nth-child(odd),
+ul.striped > :nth-child(odd) {
+    background-color: #371447;
+}
+
+.widefat td,
+.widefat th {
+    color: #fff;
+}
+
+.comment-ays,
+.feature-filter,
+.popular-tags,
+.stuffbox,
+.widgets-holder-wrap,
+.wp-editor-container,
+p.popular-tags,
+table.widefat {
+    background: transparent;
+}
+
+.widefat tfoot tr td,
+.widefat tfoot tr th,
+.widefat thead tr td,
+.widefat thead tr th {
+    color: white;
+}
+
+.form-wrap p,
+p.description {
+    margin: 2px 0 5px;
+    color: #aeaeae;
+}
+
+/* Sidebar */
+.fyndable-sidebar {
+    width: 240px;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-shrink: 0;
+    background-image: linear-gradient(135deg, #371447 0%, #132A38 100%) !important;
+}
+
+.fyndable-sidebar-nav a {
+    color: #fff !important;
+}
+
+.fyndable-sidebar-nav a:hover {
+    background: #f3f4f6 !important;
+    color: #379fd3 !important;
+}
+
+/* Scrollbars — modern browsers */
+.fyndable-sidebar,
+.fyndable-ui {
+    scrollbar-width: 8px;
+    scrollbar-color: #8f39ac #371447;
+}
+
+/* Scrollbars — legacy WebKit */
+.fyndable-sidebar::-webkit-scrollbar,
+.fyndable-ui::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.fyndable-sidebar::-webkit-scrollbar-track,
+.fyndable-ui::-webkit-scrollbar-track {
+    background-color: #371447;
+    border-radius: 4px;
+    padding: 1px;
+}
+
+.fyndable-sidebar::-webkit-scrollbar-track:hover,
+.fyndable-ui::-webkit-scrollbar-track:hover {
+    background-color: #312e81;
+}
+
+.fyndable-sidebar::-webkit-scrollbar-track:active,
+.fyndable-ui::-webkit-scrollbar-track:active {
+    background-color: #3730a3;
+}
+
+.fyndable-sidebar::-webkit-scrollbar-thumb,
+.fyndable-ui::-webkit-scrollbar-thumb {
+    background-color: #8f39ac;
+    border-radius: 4px;
+    min-height: 30px;
+    box-shadow: 0 0 6px rgba(143, 57, 172, 0.50);
+}
+
+.fyndable-sidebar::-webkit-scrollbar-thumb:hover,
+.fyndable-ui::-webkit-scrollbar-thumb:hover {
+    background-color: #379fd3;
+}
+
+.fyndable-sidebar::-webkit-scrollbar-thumb:active,
+.fyndable-ui::-webkit-scrollbar-thumb:active {
+    background-color: #379fd3;
+}
+
+.fyndable-sidebar::-webkit-scrollbar-button,
+.fyndable-ui::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Shell wrapper consistency (override inline shell styles) */
+.fyndable-shell-wrap {
+    background: #132A38 !important;
+}
+
+/* Override hardcoded light section backgrounds in settings */
+.settings-section[style*="#f0f6ff"],
+.settings-section[style*="#fffbeb"] {
+    background: rgba(55, 20, 71, 0.9) !important;
+}

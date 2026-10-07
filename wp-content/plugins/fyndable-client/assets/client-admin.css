@@ -83,7 +83,7 @@ body[class*="aiseo"] #wpfooter {
 }
 
 .sseo-ai-header {
-    background: transparent;
+    background: transparent !important;
     color: #fff;
     padding: 30px 40px;
     margin: 0;
@@ -100,7 +100,7 @@ body[class*="aiseo"] #wpfooter {
 
 .sseo-ai-content {
     padding: 40px;
-    background: transparent;
+    background: transparent !important;
 }
 
 /* ================================================
