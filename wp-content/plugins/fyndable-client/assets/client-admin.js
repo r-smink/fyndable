@@ -57,5 +57,53 @@
             $(this).removeClass('error');
             $(this).next('.error-message').remove();
         });
+
+        // Enhance plain checkboxes to checkout-style toggles
+        enhanceCheckboxes();
     });
+
+    /**
+     * Turn checkboxes inside .form-field and cards into toggle switches.
+     */
+    function enhanceCheckboxes() {
+        if (!document.querySelector) {
+            return;
+        }
+
+        var selectors = [
+            '.fyndable-ui .form-field input[type="checkbox"]',
+            '.fyndable-ui .sseo-ai-settings-card input[type="checkbox"]',
+            '.fyndable-ui .sseo-ai-dashboard-card input[type="checkbox"]'
+        ].join(', ');
+
+        document.querySelectorAll(selectors).forEach(function(input) {
+            if (input.closest('.sseo-ai-toggle') || input.closest('table')) {
+                return;
+            }
+
+            var label = input.closest('label');
+            if (!label) {
+                return;
+            }
+
+            label.classList.add('sseo-ai-toggle');
+
+            var track = document.createElement('span');
+            track.className = 'sseo-ai-toggle-track';
+            track.setAttribute('aria-hidden', 'true');
+            input.after(track);
+
+            var textSpan = document.createElement('span');
+            textSpan.className = 'sseo-ai-toggle-text';
+            var labelChildren = Array.from(label.childNodes).filter(function(node) {
+                return node !== input && node !== track;
+            });
+            labelChildren.forEach(function(node) {
+                textSpan.appendChild(node);
+            });
+            if (textSpan.childNodes.length) {
+                label.appendChild(textSpan);
+            }
+        });
+    }
 })(jQuery);

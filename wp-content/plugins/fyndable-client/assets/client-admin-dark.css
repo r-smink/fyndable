@@ -195,6 +195,19 @@ p.description {
     background: #132A38 !important;
 }
 
+/* Toggle switch dark variant */
+.fyndable-ui .sseo-ai-toggle-track {
+    background-color: #4a3b5c;
+}
+
+.fyndable-ui .sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+}
+
+.fyndable-ui .sseo-ai-toggle input[type=checkbox]:focus-visible + .sseo-ai-toggle-track {
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, .25);
+}
+
 /* Override hardcoded light section backgrounds in settings */
 .settings-section[style*="#f0f6ff"],
 .settings-section[style*="#fffbeb"] {

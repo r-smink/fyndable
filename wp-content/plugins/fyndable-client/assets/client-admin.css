@@ -1661,3 +1661,64 @@ a.ai-tool-card p {
         padding: 12px;
     }
 }
+
+/* ================================================
+   TOGGLE SWITCH (checkout-style checkboxes)
+   ================================================ */
+.sseo-ai-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.sseo-ai-toggle input[type=checkbox] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sseo-ai-toggle-track {
+    position: relative;
+    flex: 0 0 56px;
+    width: 56px;
+    height: 30px;
+    border-radius: 30px;
+    background-color: #e5e7eb;
+    transition: 0.3s;
+}
+
+.sseo-ai-toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .15);
+    transition: 0.3s;
+}
+
+.sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+}
+
+.sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track::after {
+    transform: translateX(26px);
+}
+
+.sseo-ai-toggle input[type=checkbox]:focus-visible + .sseo-ai-toggle-track {
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, .25);
+}
+
+.sseo-ai-toggle-text {
+    color: inherit;
+    font-weight: 500;
+}
