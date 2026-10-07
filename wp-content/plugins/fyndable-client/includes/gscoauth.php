@@ -8,7 +8,6 @@ namespace SSEOAIClient;
  * Manages OAuth2 authentication flow for multiple Google services:
  * - Google Search Console (webmasters.readonly)
  * - Google Analytics 4 (analytics.readonly)
- * - Google Ads (adwords)
  * 
  * OAuth credentials (client ID, secret, dev token) are stored on the
  * SaaS dashboard and never exposed to client sites.
@@ -204,7 +203,7 @@ class GscOAuth
             'services' => [
                 'gsc' => strpos($scopes, 'webmasters') !== false || !empty($tokens['access_token']),
                 'ga4' => strpos($scopes, 'analytics') !== false || !empty($tokens['access_token']),
-                'ads' => strpos($scopes, 'adwords') !== false || !empty($tokens['access_token']),
+                'ads' => false,
             ],
             'ga4_property_id' => $ga4PropertyId,
             'google_ads_customer_id' => $googleAdsCustomerId,
