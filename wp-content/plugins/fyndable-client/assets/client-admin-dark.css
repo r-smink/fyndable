@@ -1,10 +1,10 @@
-/* Fyndable client admin — dark theme */
+/* Fyndable client admin — dark theme (scoped to body.fyndable-dark) */
 
-.wrap.sseo-ai-modern {
+body.fyndable-dark .wrap.sseo-ai-modern {
     background: linear-gradient(135deg, #371447 0%, #132A38 100%) !important;
 }
 
-.sseo-ai-dashboard-card {
+body.fyndable-dark .sseo-ai-dashboard-card {
     border-radius: 12px;
     padding: 30px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
@@ -13,28 +13,28 @@
     border: 2px solid transparent;
 }
 
-.sseo-ai-settings-card,
-.sseo-ai-connection-card {
+body.fyndable-dark .sseo-ai-settings-card,
+body.fyndable-dark .sseo-ai-connection-card {
     background: rgba(55, 20, 71, 0.9) !important;
-    color: #fff;
+    color: #fff !important;
 }
 
-input[type=color],
-input[type=date],
-input[type=datetime-local],
-input[type=datetime],
-input[type=email],
-input[type=month],
-input[type=number],
-input[type=password],
-input[type=search],
-input[type=tel],
-input[type=text],
-input[type=time],
-input[type=url],
-input[type=week],
-select,
-textarea {
+body.fyndable-dark input[type=color],
+body.fyndable-dark input[type=date],
+body.fyndable-dark input[type=datetime-local],
+body.fyndable-dark input[type=datetime],
+body.fyndable-dark input[type=email],
+body.fyndable-dark input[type=month],
+body.fyndable-dark input[type=number],
+body.fyndable-dark input[type=password],
+body.fyndable-dark input[type=search],
+body.fyndable-dark input[type=tel],
+body.fyndable-dark input[type=text],
+body.fyndable-dark input[type=time],
+body.fyndable-dark input[type=url],
+body.fyndable-dark input[type=week],
+body.fyndable-dark select,
+body.fyndable-dark textarea {
     box-shadow: 0 0 0 transparent;
     border-radius: 2px;
     border: 1px solid #ffffff80;
@@ -43,35 +43,35 @@ textarea {
     border-radius: 10px;
 }
 
-input[type=checkbox],
-input[type=radio] {
+body.fyndable-dark input[type=checkbox],
+body.fyndable-dark input[type=radio] {
     border: 1px solid #ffffff80;
     border-radius: 2px;
     background: #ffffff2e;
     color: #ffffff;
 }
 
-.form-table th,
-.form-wrap label,
-.sseo-ai-dashboard-card h2,
-.sseo-ai-dashboard-card h3,
-.sseo-ai-settings-card h2,
-.settings-section h2,
-.form-table td fieldset label,
-.wp-die-message,
-p,
-.form-table td {
-    color: #fff;
+body.fyndable-dark .form-table th,
+body.fyndable-dark .form-wrap label,
+body.fyndable-dark .sseo-ai-dashboard-card h2,
+body.fyndable-dark .sseo-ai-dashboard-card h3,
+body.fyndable-dark .sseo-ai-settings-card h2,
+body.fyndable-dark .settings-section h2,
+body.fyndable-dark .form-table td fieldset label,
+body.fyndable-dark .wp-die-message,
+body.fyndable-dark p,
+body.fyndable-dark .form-table td {
+    color: #fff !important;
 }
 
-.wp-core-ui .button:where(:not(.button-link)) {
+body.fyndable-dark .wp-core-ui .button:where(:not(.button-link)) {
     background: 0 0 !important;
     border: 1px solid #fff !important;
     border-radius: 10px !important;
     color: #ffffff !important;
 }
 
-.wp-core-ui .button:where(:not(.button-link)):hover {
+body.fyndable-dark .wp-core-ui .button:where(:not(.button-link)):hover {
     background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%) !important;
     border: 1px solid #fff !important;
     border-radius: 10px !important;
@@ -79,137 +79,137 @@ p,
 }
 
 /* Tables */
-.alternate,
-.striped > tbody > :nth-child(odd),
-ul.striped > :nth-child(odd) {
+body.fyndable-dark .alternate,
+body.fyndable-dark .striped > tbody > :nth-child(odd),
+body.fyndable-dark ul.striped > :nth-child(odd) {
     background-color: #371447;
 }
 
-.widefat td,
-.widefat th {
-    color: #fff;
+body.fyndable-dark .widefat td,
+body.fyndable-dark .widefat th {
+    color: #fff !important;
 }
 
-.comment-ays,
-.feature-filter,
-.popular-tags,
-.stuffbox,
-.widgets-holder-wrap,
-.wp-editor-container,
-p.popular-tags,
-table.widefat {
+body.fyndable-dark .comment-ays,
+body.fyndable-dark .feature-filter,
+body.fyndable-dark .popular-tags,
+body.fyndable-dark .stuffbox,
+body.fyndable-dark .widgets-holder-wrap,
+body.fyndable-dark .wp-editor-container,
+body.fyndable-dark p.popular-tags,
+body.fyndable-dark table.widefat {
     background: transparent;
 }
 
-.widefat tfoot tr td,
-.widefat tfoot tr th,
-.widefat thead tr td,
-.widefat thead tr th {
+body.fyndable-dark .widefat tfoot tr td,
+body.fyndable-dark .widefat tfoot tr th,
+body.fyndable-dark .widefat thead tr td,
+body.fyndable-dark .widefat thead tr th {
     color: white;
 }
 
-.form-wrap p,
-p.description {
+body.fyndable-dark .form-wrap p,
+body.fyndable-dark p.description {
     margin: 2px 0 5px;
     color: #aeaeae;
 }
 
 /* Sidebar */
-.fyndable-sidebar {
+body.fyndable-dark .fyndable-sidebar {
     width: 240px;
     border-right: 1px solid #e5e7eb;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     flex-shrink: 0;
-    background-image: linear-gradient(135deg, #371447 0%, #132A38 100%) !important;
+    background: linear-gradient(135deg, #371447 0%, #132A38 100%) !important;
 }
 
-.fyndable-sidebar-nav a {
+body.fyndable-dark .fyndable-sidebar-nav a {
     color: #fff !important;
 }
 
-.fyndable-sidebar-nav a:hover {
+body.fyndable-dark .fyndable-sidebar-nav a:hover {
     background: #f3f4f6 !important;
     color: #379fd3 !important;
 }
 
 /* Scrollbars — modern browsers */
-.fyndable-sidebar,
-.fyndable-ui {
+body.fyndable-dark.fyndable-ui,
+body.fyndable-dark .fyndable-sidebar {
     scrollbar-width: 8px;
     scrollbar-color: #8f39ac #371447;
 }
 
 /* Scrollbars — legacy WebKit */
-.fyndable-sidebar::-webkit-scrollbar,
-.fyndable-ui::-webkit-scrollbar {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
-.fyndable-sidebar::-webkit-scrollbar-track,
-.fyndable-ui::-webkit-scrollbar-track {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-track,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-track {
     background-color: #371447;
     border-radius: 4px;
     padding: 1px;
 }
 
-.fyndable-sidebar::-webkit-scrollbar-track:hover,
-.fyndable-ui::-webkit-scrollbar-track:hover {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-track:hover,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-track:hover {
     background-color: #312e81;
 }
 
-.fyndable-sidebar::-webkit-scrollbar-track:active,
-.fyndable-ui::-webkit-scrollbar-track:active {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-track:active,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-track:active {
     background-color: #3730a3;
 }
 
-.fyndable-sidebar::-webkit-scrollbar-thumb,
-.fyndable-ui::-webkit-scrollbar-thumb {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-thumb,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-thumb {
     background-color: #8f39ac;
     border-radius: 4px;
     min-height: 30px;
     box-shadow: 0 0 6px rgba(143, 57, 172, 0.50);
 }
 
-.fyndable-sidebar::-webkit-scrollbar-thumb:hover,
-.fyndable-ui::-webkit-scrollbar-thumb:hover {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-thumb:hover,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-thumb:hover {
     background-color: #379fd3;
 }
 
-.fyndable-sidebar::-webkit-scrollbar-thumb:active,
-.fyndable-ui::-webkit-scrollbar-thumb:active {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-thumb:active,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-thumb:active {
     background-color: #379fd3;
 }
 
-.fyndable-sidebar::-webkit-scrollbar-button,
-.fyndable-ui::-webkit-scrollbar-button {
+body.fyndable-dark.fyndable-ui::-webkit-scrollbar-button,
+body.fyndable-dark .fyndable-sidebar::-webkit-scrollbar-button {
     display: none;
     width: 0;
     height: 0;
 }
 
 /* Shell wrapper consistency (override inline shell styles) */
-.fyndable-shell-wrap {
+body.fyndable-dark .fyndable-shell-wrap {
     background: #132A38 !important;
 }
 
 /* Toggle switch dark variant */
-.fyndable-ui .sseo-ai-toggle-track {
+body.fyndable-dark .sseo-ai-toggle-track {
     background-color: #4a3b5c;
 }
 
-.fyndable-ui .sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track {
+body.fyndable-dark .sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track {
     background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
 }
 
-.fyndable-ui .sseo-ai-toggle input[type=checkbox]:focus-visible + .sseo-ai-toggle-track {
+body.fyndable-dark .sseo-ai-toggle input[type=checkbox]:focus-visible + .sseo-ai-toggle-track {
     box-shadow: 0 0 0 3px rgba(55, 159, 211, .25);
 }
 
 /* Override hardcoded light section backgrounds in settings */
-.settings-section[style*="#f0f6ff"],
-.settings-section[style*="#fffbeb"] {
+body.fyndable-dark .settings-section[style*="#f0f6ff"],
+body.fyndable-dark .settings-section[style*="#fffbeb"] {
     background: rgba(55, 20, 71, 0.9) !important;
 }

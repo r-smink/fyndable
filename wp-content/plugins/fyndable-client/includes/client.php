@@ -290,6 +290,9 @@ class Client
         $screenId = $screen->id;
         if (strpos($screenId, 'ai-seo') !== false || strpos($screenId, 'fyndable') !== false) {
             $classes .= ' fyndable-ui';
+            if (get_option('sseo_ai_client_dark_theme', '0') === '1') {
+                $classes .= ' fyndable-dark';
+            }
         }
 
         return $classes;
