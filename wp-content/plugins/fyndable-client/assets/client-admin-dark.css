@@ -213,3 +213,102 @@ body.fyndable-dark .settings-section[style*="#f0f6ff"],
 body.fyndable-dark .settings-section[style*="#fffbeb"] {
     background: rgba(55, 20, 71, 0.9) !important;
 }
+
+body.fyndable-dark .sseo-ai-content .postbox {
+    overflow: hidden;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 2px solid transparent;
+}
+
+body.fyndable-dark .fyndable-ui,
+body.fyndable-dark .sseo-ai-content,
+body.fyndable-dark .sseo-ai-content h1,
+body.fyndable-dark .sseo-ai-content h2,
+body.fyndable-dark .sseo-ai-content h3,
+body.fyndable-dark .sseo-ai-content h4,
+body.fyndable-dark .sseo-ai-content h5,
+body.fyndable-dark .sseo-ai-content h6,
+body.fyndable-dark .sseo-ai-content label,
+body.fyndable-dark .sseo-ai-content legend,
+body.fyndable-dark .sseo-ai-content li,
+body.fyndable-dark .sseo-ai-content td,
+body.fyndable-dark .sseo-ai-content th,
+body.fyndable-dark .sseo-ai-content span:not(.score-value):not(.sseo-stat-value),
+body.fyndable-dark .sseo-ai-content div:not(.score-value):not(.sseo-stat-value),
+body.fyndable-dark .filter-group,
+body.fyndable-dark .filter-group label,
+body.fyndable-dark ul li {
+    color: #FFFFFF !important;
+}
+
+body.fyndable-dark .widefat a,
+body.fyndable-dark .widefat button.button-link {
+    text-decoration: none;
+    color: #fff !important;
+}
+
+body.fyndable-dark .widefat a:active,
+body.fyndable-dark .widefat a:focus,
+body.fyndable-dark .widefat a:hover {
+    color: #379fd3 !important;
+}
+
+body.fyndable-dark .sseo-stat-card,
+body.fyndable-dark .score-card,
+body.fyndable-dark .sseo-ai-content [style*="background: #f9f9f9"],
+body.fyndable-dark .sseo-ai-content [style*="background:#f9f9f9"],
+body.fyndable-dark .sseo-ai-content [style*="background: #f8d7da"],
+body.fyndable-dark .sseo-ai-content [style*="background:#f8d7da"],
+body.fyndable-dark .sseo-ai-content [style*="background: #d1e7dd"],
+body.fyndable-dark .sseo-ai-content [style*="background:#d1e7dd"],
+body.fyndable-dark .sseo-ai-content [style*="background: #fff3cd"],
+body.fyndable-dark .sseo-ai-content [style*="background:#fff3cd"] {
+    background: transparent !important;
+    border-style: solid !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+}
+
+body.fyndable-dark .sseo-stat-card--neutral,
+body.fyndable-dark .sseo-ai-content [style*="background: #f9f9f9"],
+body.fyndable-dark .sseo-ai-content [style*="background:#f9f9f9"] { border-color: #f9f9f9 !important; }
+body.fyndable-dark .sseo-stat-card--success,
+body.fyndable-dark .sseo-ai-content [style*="background: #d1e7dd"],
+body.fyndable-dark .sseo-ai-content [style*="background:#d1e7dd"] { border-color: #d1e7dd !important; }
+body.fyndable-dark .sseo-stat-card--warning,
+body.fyndable-dark .sseo-ai-content [style*="background: #fff3cd"],
+body.fyndable-dark .sseo-ai-content [style*="background:#fff3cd"] { border-color: #fff3cd !important; }
+body.fyndable-dark .sseo-stat-card--danger,
+body.fyndable-dark .sseo-ai-content [style*="background: #f8d7da"],
+body.fyndable-dark .sseo-ai-content [style*="background:#f8d7da"] { border-color: #f8d7da !important; }
+
+body.fyndable-dark .score-card {
+    border-color: #cbd5e1 !important;
+}
+
+body.fyndable-dark .score-label,
+body.fyndable-dark .sseo-stat-description,
+body.fyndable-dark .description,
+body.fyndable-dark p.description,
+body.fyndable-dark .sseo-ai-content a:not(.button),
+body.fyndable-dark .sseo-ai-content small,
+body.fyndable-dark .sseo-ai-content strong,
+body.fyndable-dark .sseo-ai-content em {
+    color: #FFFFFF !important;
+}
+
+body.fyndable-dark .fyndable-loading {
+    background: #132A38 !important;
+}
+
+body.fyndable-dark .fyndable-sidebar-footer,
+body.fyndable-dark .fyndable-sidebar-footer a,
+body.fyndable-dark .fyndable-footer-brand,
+body.fyndable-dark .fyndable-footer-brand strong {
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, .3);
+}

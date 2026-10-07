@@ -1370,14 +1370,12 @@ class Client
         }
 
         // Load the optional dark theme stylesheet
-        if (get_option('sseo_ai_client_dark_theme', '0') === '1') {
-            wp_enqueue_style(
-                'ai-seo-client-admin-dark',
-                SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin-dark.css',
-                ['ai-seo-client-admin'],
-                SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/client-admin-dark.css')
-            );
-        }
+        wp_enqueue_style(
+            'ai-seo-client-admin-dark',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin-dark.css',
+            ['ai-seo-client-admin'],
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/client-admin-dark.css')
+        );
     }
 
     /**

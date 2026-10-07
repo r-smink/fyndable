@@ -22,6 +22,19 @@ class DashboardShell
     public function register(): void
     {
         add_action('admin_head', [$this, 'hideWpChrome']);
+        add_action('wp_ajax_sseo_ai_toggle_theme', [$this, 'toggleTheme']);
+    }
+
+    public function toggleTheme(): void
+    {
+        check_ajax_referer('sseo_ai_toggle_theme', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'ai-seo-client')], 403);
+        }
+
+        $dark = isset($_POST['dark']) && $_POST['dark'] === '1';
+        update_option('sseo_ai_client_dark_theme', $dark ? '1' : '0');
+        wp_send_json_success(['dark' => $dark]);
     }
 
     /**
@@ -403,6 +416,7 @@ class DashboardShell
         $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
         $supportEmail = !empty($whiteLabel['support_email']) ? $whiteLabel['support_email'] : '';
         $supportUrl = !empty($whiteLabel['support_url']) ? $whiteLabel['support_url'] : '';
+        $darkTheme = get_option('sseo_ai_client_dark_theme', '0') === '1';
 
         if ($usePrimaryOnly) {
             $topBarGradient = $primaryColor;
@@ -485,6 +499,39 @@ class DashboardShell
                 background: rgba(255,255,255,0.25);
                 color: #fff;
             }
+            .fyndable-theme-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                min-height: 32px;
+                padding: 5px 10px;
+                border: 1px solid rgba(255,255,255,.3);
+                border-radius: 8px;
+                background: rgba(255,255,255,.15);
+                color: #fff;
+                cursor: pointer;
+            }
+            .fyndable-theme-toggle:hover { background: rgba(255,255,255,.25); }
+            .fyndable-theme-toggle-icon { font-size: 17px; line-height: 1; }
+            .fyndable-theme-toggle-track {
+                position: relative;
+                width: 30px;
+                height: 16px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.35);
+            }
+            .fyndable-theme-toggle-track::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #fff;
+                transition: transform .2s ease;
+            }
+            .fyndable-theme-toggle[aria-pressed="true"] .fyndable-theme-toggle-track::after { transform: translateX(14px); }
             .fyndable-exit-x {
                 font-size: 18px;
                 line-height: 1;
@@ -640,6 +687,11 @@ class DashboardShell
                     <div class="fyndable-topbar-badge"><?php esc_html_e('Dashboard', 'ai-seo-client'); ?></div>
                 </div>
                 <div class="fyndable-topbar-actions">
+                    <button type="button" id="fyndable-theme-toggle" class="fyndable-theme-toggle" aria-pressed="<?php echo $darkTheme ? 'true' : 'false'; ?>" title="<?php esc_attr_e('Switch light/dark theme', 'ai-seo-client'); ?>">
+                        <span class="fyndable-theme-toggle-icon" aria-hidden="true">☀</span>
+                        <span class="fyndable-theme-toggle-track" aria-hidden="true"></span>
+                        <span class="fyndable-theme-toggle-icon" aria-hidden="true">☾</span>
+                    </button>
                     <a href="<?php echo esc_url($exitUrl); ?>" class="fyndable-exit-btn" title="<?php esc_attr_e('Exit to WordPress', 'ai-seo-client'); ?>">
                         <span class="fyndable-exit-x">&times;</span>
                         <span><?php esc_html_e('Exit', 'ai-seo-client'); ?></span>
@@ -693,10 +745,30 @@ class DashboardShell
             var iframe = document.getElementById('fyndable-frame');
             var loading = document.getElementById('fyndable-loading');
             var navLinks = document.querySelectorAll('.fyndable-sidebar-nav a');
+            var themeToggle = document.getElementById('fyndable-theme-toggle');
 
             // Hide loading when iframe loads
             iframe.addEventListener('load', function() {
                 loading.classList.add('hidden');
+            });
+
+            themeToggle.addEventListener('click', function() {
+                var dark = themeToggle.getAttribute('aria-pressed') !== 'true';
+                themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+                document.body.classList.toggle('fyndable-dark', dark);
+                try {
+                    iframe.contentDocument.body.classList.toggle('fyndable-dark', dark);
+                } catch (e) {}
+
+                var data = new FormData();
+                data.append('action', 'sseo_ai_toggle_theme');
+                data.append('nonce', '<?php echo esc_js(wp_create_nonce('sseo_ai_toggle_theme')); ?>');
+                data.append('dark', dark ? '1' : '0');
+                fetch('<?php echo esc_js(admin_url('admin-ajax.php')); ?>', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: data
+                });
             });
 
             // Navigation switching

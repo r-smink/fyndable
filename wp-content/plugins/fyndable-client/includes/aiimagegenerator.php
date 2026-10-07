@@ -61,30 +61,30 @@ class AIImageGenerator
                 <div class="sseo-ai-dashboard-card">
                     <h2><?php esc_html_e('AI Image Overview', 'ai-seo-client'); ?></h2>
                 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #2271b1;">
+                <div class="sseo-stat-grid">
+                    <div class="sseo-stat-card sseo-stat-card--neutral">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #2271b1;">
                             <?php echo esc_html($stats['total_generated']); ?>
                         </div>
-                        <div><?php esc_html_e('Images Generated', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Images Generated', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #00a32a;">
+                    <div class="sseo-stat-card sseo-stat-card--success">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #00a32a;">
                             <?php echo esc_html($stats['featured_images']); ?>
                         </div>
-                        <div><?php esc_html_e('Featured Images', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Featured Images', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #856404;">
+                    <div class="sseo-stat-card sseo-stat-card--warning">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #856404;">
                             <?php echo esc_html($stats['social_images']); ?>
                         </div>
-                        <div><?php esc_html_e('Social Images', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Social Images', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #d63638;">
+                    <div class="sseo-stat-card sseo-stat-card--danger">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #d63638;">
                             <?php echo esc_html($stats['missing_featured']); ?>
                         </div>
-                        <div><?php esc_html_e('Posts Without Featured', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Posts Without Featured', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
             </div>
