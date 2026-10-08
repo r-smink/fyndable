@@ -36,11 +36,11 @@ body.fyndable-dark input[type=week],
 body.fyndable-dark select,
 body.fyndable-dark textarea {
     box-shadow: 0 0 0 transparent;
-    border-radius: 2px;
     border: 1px solid #ffffff80;
     background-color: #ffffff2e;
     color: #ffffff;
     border-radius: 10px;
+    margin-top: 5px;
 }
 
 body.fyndable-dark input[type=checkbox],
@@ -64,19 +64,6 @@ body.fyndable-dark .form-table td {
     color: #fff !important;
 }
 
-body.fyndable-dark .wp-core-ui .button:where(:not(.button-link)) {
-    background: 0 0 !important;
-    border: 1px solid #fff !important;
-    border-radius: 10px !important;
-    color: #ffffff !important;
-}
-
-body.fyndable-dark .wp-core-ui .button:where(:not(.button-link)):hover {
-    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%) !important;
-    border: 1px solid #fff !important;
-    border-radius: 10px !important;
-    color: #ffffff !important;
-}
 
 /* Tables */
 body.fyndable-dark .alternate,
@@ -212,6 +199,134 @@ body.fyndable-dark .sseo-ai-toggle input[type=checkbox]:focus-visible + .sseo-ai
 body.fyndable-dark .settings-section[style*="#f0f6ff"],
 body.fyndable-dark .settings-section[style*="#fffbeb"] {
     background: rgba(55, 20, 71, 0.9) !important;
+}
+
+/* ================================================================
+   FILTERS, TABS, TABLES & CARDS (applied across all dark pages)
+   ================================================================ */
+body.fyndable-dark .filter-group,
+body.fyndable-dark #sseo-ideas-page .filter-group {
+    box-sizing: border-box;
+    position: relative;
+    float: left;
+    margin: 0 1% 0 0;
+    padding: 20px 10px 10px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    width: fit-content;
+}
+
+body.fyndable-dark button.filter-btn,
+body.fyndable-dark .ideas-table-header,
+body.fyndable-dark #sseo-ideas-page .ideas-table-header,
+body.fyndable-dark button#btn-clear-filters,
+body.fyndable-dark .tab-btn,
+body.fyndable-dark #sseo-ideas-page .tab-btn {
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 1px solid transparent;
+    border-radius: 10px;
+}
+
+body.fyndable-dark button#btn-clear-filters {
+    padding: 5px 15px;
+    color: #FFF;
+    font-size: 26px;
+}
+
+body.fyndable-dark .tab-btn,
+body.fyndable-dark #sseo-ideas-page .tab-btn,
+body.fyndable-dark #sseo-ideas-page .tab-btn[data-tab="scheduled"] {
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #fff !important;
+}
+
+/* Created posts page */
+body.fyndable-dark #sseo-created-posts-page .status-pills {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+body.fyndable-dark #sseo-created-posts-page .status-pill,
+body.fyndable-dark .status-pill {
+    padding: 6px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 1px solid transparent;
+    color: #fff;
+}
+
+body.fyndable-dark #sseo-created-posts-page .posts-summary,
+body.fyndable-dark .posts-summary {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: var(--sseo-radius);
+    margin-bottom: 15px;
+    margin-top: 30px;
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 1px solid transparent;
+}
+
+/* Rank tracker */
+body.fyndable-dark div#rank-tracker-panel {
+    margin-top: -20px;
+}
+
+body.fyndable-dark .rank-panel .sseo-ai-dashboard-card {
+    border-top-left-radius: 0 !important;
+}
+
+body.fyndable-dark .rank-panel .sseo-ai-dashboard-card:nth-of-type(2) {
+    border-top-left-radius: 12px !important;
+}
+
+body.fyndable-dark button.button.rank-tab {
+    border: 2px solid transparent;
+    background: #ffffff36 !important;
+    color: #fff !important;
+}
+
+body.fyndable-dark button.button.rank-tab.active {
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 2px solid transparent;
+    color: #fff !important;
+}
+
+/* Buttons */
+body.fyndable-dark .wp-core-ui .button-primary,
+body.fyndable-dark .wp-core-ui .button:where(:not(.button-link)) {
+    color: #fff;
+    background: linear-gradient(135deg, #371447, #132A38) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+    border: 1px solid transparent !important;
+    border-radius: 20px !important;
+}
+
+body.fyndable-dark .wp-core-ui .button-primary:hover,
+body.fyndable-dark .wp-core-ui .button:where(:not(.button-link)):hover {
+    background: linear-gradient(135deg, #379fd3, #8f39ac) padding-box, linear-gradient(135deg, #8F39AC, #379FD3) border-box !important;
+}
+
+/* Calendar today & workflow status blocks */
+body.fyndable-dark .sseo-calendar .today {
+    background: #f0f6fc4d !important;
+}
+
+body.fyndable-dark .sseo-ai-dashboard-card div[style*="grid-template-columns: repeat(4, 1fr)"] > div > div:first-child {
+    margin-bottom: 8px;
+}
+
+body.fyndable-dark .sseo-ai-dashboard-card div[style*="background: #cfe2ff"],
+body.fyndable-dark .sseo-ai-dashboard-card div[style*="background:#cfe2ff"] {
+    background: #cfe2ff70 !important;
 }
 
 body.fyndable-dark .sseo-ai-content .postbox {
