@@ -307,7 +307,7 @@ class DashboardShell
                             sep = "&";
                         }
                         if (url.indexOf("fyndable_dark") === -1) {
-                            var darkParam = document.body.classList.contains('fyndable-dark') ? '1' : '0';
+                            var darkParam = document.body.classList.contains("fyndable-dark") ? "1" : "0";
                             url += sep + "fyndable_dark=" + darkParam;
                         }
                         window.location.href = url;
@@ -324,7 +324,7 @@ class DashboardShell
                                 var referrer = form.querySelector("input[name=_wp_http_referer]");
                                 if (referrer && referrer.value.indexOf("fyndable_shell") === -1) {
                                     var sep = referrer.value.indexOf("?") !== -1 ? "&" : "?";
-                                    var darkParam = document.body.classList.contains('fyndable-dark') ? '1' : '0';
+                                    var darkParam = document.body.classList.contains("fyndable-dark") ? "1" : "0";
                                     referrer.value = referrer.value + sep + "fyndable_shell=1&fyndable_dark=" + darkParam;
                                 }
                             }
