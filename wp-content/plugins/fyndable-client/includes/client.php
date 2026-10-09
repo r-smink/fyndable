@@ -25,7 +25,6 @@ class Client
     private ?SitemapGenerator $sitemapGenerator = null;
     private ?SmartTags $smartTags = null;
     private ?ContentDecay $contentDecay = null;
-    private ?AuditService $auditService = null;
     private ?LocalSEO $localSEO = null;
     private ?RedirectionManager $redirectManager = null;
     private ?NotFoundMonitor $notFoundMonitor = null;
@@ -567,8 +566,6 @@ class Client
             $gscClientBiz = new GscClient($this->settings);
             $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings, $this->llmClient);
             $this->contentDecay->register();
-            
-            $this->auditService = new AuditService();
         }
 
         // AI SEO Agent — conversational interface (after all features are loaded)

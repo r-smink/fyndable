@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.4.0 (2026-10-09)
+
+### Added
+- **Cannibalization Dashboard** — new tab on the Rank Tracker page. Detects posts/pages competing for the same focus keyphrase (`same_focus_keyphrase`), tracked keywords matching multiple posts (`tracked_keyword_multi_match`, marks the intended target post), and tracked keywords with no targeting post. REST: `GET /sseo-ai/v1/cannibalization/report` (6h cache) + `POST /sseo-ai/v1/cannibalization/scan`.
+
+### Security
+- Google `refresh_token` now stored encrypted at rest (`enc1:` AES-256-GCM, key derived from WP salts); legacy plaintext values decrypt transparently and are re-encrypted on next store.
+
+### Removed
+- Dead `AuditService` module (`auditservice.php`) — instantiated but never called; cannibalization and technical audit coverage now lives in RankTracker and the Technical SEO Auditor.
+
 ## v2.3.2 (2026-09-22)
 
 ### Fixed / Improved

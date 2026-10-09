@@ -81,7 +81,6 @@
 | **Content Decay Monitor** | `contentdecay.php` | Detects declining content via Google Search Console data. Tracks impression/click trends. Alerts when pages lose rankings. Suggests refresh strategies. |
 | **Advanced Backlinks** | `advancedbacklinks.php` | Deep backlink monitoring: new/lost links, anchor text changes, domain authority trends. Automated outreach email templates. Competitor backlink gap analysis. |
 | **Content Performance Monitor** | `contentperformancemonitor.php` | Long-term content metrics tracking. Benchmark against historical performance. Automated underperformance alerts. |
-| **Audit Service** | `auditservice.php` | Comprehensive content audit with quality scoring, thin content detection, duplicate content finder, and optimization recommendations. |
 
 ### Agency Features
 

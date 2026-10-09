@@ -397,4 +397,6 @@ New third tab **"Cannibalization"** on the Rank Tracker page (`ai-seo-ranks`), i
 - Report shape: `{success, scanned_at, summary{high,medium,info}, groups[]}`; each group has `keyword, severity, reason, posts[] {id,title,status,type,edit_link,permalink,is_target,match_type}, tracked`
 - UI: lazy-loads on first tab open, severity chips + per-group post tables with Edit/View links and advice per reason. JS lives in the existing renderPage() script block (jQuery + wp.apiFetch).
 
+Removed dead code: `auditservice.php` (AuditService) was instantiated in client.php but never called — deleted file + references (also from README feature table). Cannibalization now lives in RankTracker.
+
 Note: `php` CLI **is** available in this workspace (`php -l` works) — earlier note about PHP missing was wrong.
