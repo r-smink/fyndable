@@ -74,6 +74,8 @@ class Widget
                 'prioHigh'        => __('Hoog', 'fyndable-geo-scan'),
                 'prioMedium'      => __('Medium', 'fyndable-geo-scan'),
                 'prioLow'         => __('Laag', 'fyndable-geo-scan'),
+                'printBrand'      => __('GEO Readiness Report', 'fyndable-geo-scan'),
+                'printFooter'     => __('Gegenereerd door Fyndable GEO Scan', 'fyndable-geo-scan'),
             ],
         ]);
     }
@@ -280,8 +282,9 @@ class Widget
         }
 
         return new \WP_REST_Response([
-            'success' => true,
-            'scan_id' => (int)$data['scan_id'],
+            'success'    => true,
+            'scan_id'    => (int)$data['scan_id'],
+            'scan_token' => sanitize_text_field((string)($data['scan_token'] ?? '')),
         ], 200);
     }
 
@@ -291,14 +294,14 @@ class Widget
     public function restScanStatus(\WP_REST_Request $request): \WP_REST_Response
     {
         $scanId = (int)$request->get_param('id');
+        $token = sanitize_text_field((string)$request->get_param('token'));
 
         if ($scanId <= 0) {
             return $this->noCache($this->error('invalid_scan', __('Ongeldige scan.', 'fyndable-geo-scan'), 400));
         }
 
         $statusUrl = add_query_arg(
-            '_',
-            sprintf('%.6F', microtime(true)),
+            ['_' => sprintf('%.6F', microtime(true)), 'token' => $token],
             Settings::portalUrl() . '/wp-json/ai-seo-saas/v1/public/geo-scan/' . $scanId . '/status'
         );
         $response = wp_remote_get(

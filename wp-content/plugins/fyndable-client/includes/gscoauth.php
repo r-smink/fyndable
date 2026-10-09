@@ -127,12 +127,12 @@ class GscOAuth
         if (empty($tokens['refresh_token'])) {
             $existing = get_option('aiseoclient_gsc_tokens', []);
             if (!empty($existing['refresh_token'])) {
-                $tokens['refresh_token'] = $existing['refresh_token'];
+                $tokens['refresh_token'] = self::decryptToken($existing['refresh_token']);
             }
         }
         $tokens['created'] = $tokens['created'] ?? time();
 
-        update_option('aiseoclient_gsc_tokens', $tokens, false);
+        $this->storeTokens($tokens);
 
         return ['success' => true, 'message' => 'Google account connected successfully.'];
     }
@@ -335,12 +335,12 @@ class GscOAuth
         if (empty($tokens['refresh_token'])) {
             $existing = get_option('aiseoclient_gsc_tokens', []);
             if (!empty($existing['refresh_token'])) {
-                $tokens['refresh_token'] = $existing['refresh_token'];
+                $tokens['refresh_token'] = self::decryptToken($existing['refresh_token']);
             }
         }
 
         $tokens['created'] = time();
-        update_option('aiseoclient_gsc_tokens', $tokens, false);
+        $this->storeTokens($tokens);
         return $tokens;
     }
 
@@ -361,7 +361,7 @@ class GscOAuth
     public function refresh(): array|\WP_Error
     {
         $tokens = get_option('aiseoclient_gsc_tokens', []);
-        $refresh = $tokens['refresh_token'] ?? '';
+        $refresh = self::decryptToken($tokens['refresh_token'] ?? '');
         if (!$refresh) return new \WP_Error('gsc_refresh', __('Missing refresh token', 'ai-seo-client'));
 
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
@@ -395,8 +395,63 @@ class GscOAuth
             $existing = get_option('aiseoclient_gsc_tokens', []);
             $tokens['scope'] = $existing['scope'] ?? '';
         }
-        update_option('aiseoclient_gsc_tokens', $tokens, false);
+        $this->storeTokens($tokens);
         return $tokens;
+    }
+
+    /**
+     * Persist Google tokens. The refresh_token is encrypted at rest because it
+     * is long-lived; the short-lived access_token is stored as-is. A site key
+     * derived from the WP salts is used so a DB dump alone doesn't leak the
+     * Google connection.
+     */
+    private function storeTokens(array $tokens): void
+    {
+        if (!empty($tokens['refresh_token'])) {
+            $tokens['refresh_token'] = self::encryptToken($tokens['refresh_token']);
+        }
+        update_option('aiseoclient_gsc_tokens', $tokens, false);
+    }
+
+    private static function tokenKey(): string
+    {
+        return hash('sha256', wp_salt('auth') . wp_salt('secure_auth'), true);
+    }
+
+    /**
+     * Encrypt a token value; returns 'enc1:' . base64(ciphertext).
+     */
+    private static function encryptToken(string $value): string
+    {
+        if ($value === '' || strpos($value, 'enc1:') === 0) {
+            return $value;
+        }
+        $iv = random_bytes(12);
+        $cipher = openssl_encrypt($value, 'aes-256-gcm', self::tokenKey(), OPENSSL_RAW_DATA, $iv, $tag);
+        if ($cipher === false) {
+            return $value; // OpenSSL unavailable — store plaintext rather than break the connection.
+        }
+        return 'enc1:' . base64_encode($iv . $tag . $cipher);
+    }
+
+    /**
+     * Decrypt a token value; plaintext values pass through unchanged so
+     * existing connections keep working and get encrypted on the next store.
+     */
+    private static function decryptToken(string $value): string
+    {
+        if (strpos($value, 'enc1:') !== 0) {
+            return $value;
+        }
+        $raw = base64_decode(substr($value, 5), true);
+        if ($raw === false || strlen($raw) < 29) {
+            return '';
+        }
+        $iv = substr($raw, 0, 12);
+        $tag = substr($raw, 12, 16);
+        $cipher = substr($raw, 28);
+        $plain = openssl_decrypt($cipher, 'aes-256-gcm', self::tokenKey(), OPENSSL_RAW_DATA, $iv, $tag);
+        return $plain === false ? '' : $plain;
     }
 
     public function getAccessToken(): string

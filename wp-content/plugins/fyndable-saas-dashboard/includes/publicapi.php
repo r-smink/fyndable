@@ -96,27 +96,31 @@ class PublicApi
         $existingId = $this->geoScanRepository->findActiveWebsiteScanId($email);
         if ($existingId !== null) {
             return new \WP_REST_Response([
-                'success'   => true,
-                'scan_id'   => $existingId,
-                'duplicate' => true,
+                'success'    => true,
+                'scan_id'    => $existingId,
+                'scan_token' => $this->geoScanRepository->getPublicToken($existingId),
+                'duplicate'  => true,
             ], 200);
         }
 
+        $publicToken = wp_generate_password(32, false, false);
         $scanId = $this->geoScanRepository->insertQueued($url, $keywords, 'auto', [
-            'source'     => 'website',
-            'email'      => $email,
-            'consent'    => true,
-            'ip'         => $ip,
-            'user_agent' => substr((string)($request->get_header('user_agent') ?? ''), 0, 255),
-            'name'       => $name,
-            'company'    => $company,
+            'source'       => 'website',
+            'email'        => $email,
+            'consent'      => true,
+            'ip'           => $ip,
+            'user_agent'   => substr((string)($request->get_header('user_agent') ?? ''), 0, 255),
+            'name'         => $name,
+            'company'      => $company,
+            'public_token' => $publicToken,
         ]);
 
         $this->geoScanQueue->enqueue($scanId);
 
         return new \WP_REST_Response([
-            'success' => true,
-            'scan_id' => $scanId,
+            'success'    => true,
+            'scan_id'    => $scanId,
+            'scan_token' => $publicToken,
         ], 201);
     }
 
@@ -134,6 +138,16 @@ class PublicApi
 
         if (!$scan || ($scan['source'] ?? 'admin') !== 'website') {
             return $this->noCache($this->error('not_found', __('Scan not found', 'sseo-ai-saas'), 404));
+        }
+
+        // Scans created with a public token require it for polling — the
+        // numeric scan id alone is enumerable within the shared-key scope.
+        $storedToken = $this->geoScanRepository->getPublicToken($scanId);
+        if ($storedToken !== null) {
+            $provided = (string)$request->get_param('token');
+            if ($provided === '' || !hash_equals($storedToken, $provided)) {
+                return $this->noCache($this->error('not_found', __('Scan not found', 'sseo-ai-saas'), 404));
+            }
         }
 
         $response = [

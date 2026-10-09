@@ -139,11 +139,16 @@ class GeoScanRepository
                 'consent'        => $consent ? 1 : 0,
                 'consent_at'     => $consent ? current_time('mysql') : null,
                 'meta'           => wp_json_encode([
-                    'ip'         => $meta['ip'] ?? '',
-                    'user_agent' => $meta['user_agent'] ?? '',
-                    'name'       => sanitize_text_field($meta['name'] ?? ''),
-                    'company'    => sanitize_text_field($meta['company'] ?? ''),
-                    'keywords'   => $keywords,
+                    'ip'           => $meta['ip'] ?? '',
+                    'user_agent'   => $meta['user_agent'] ?? '',
+                    'name'         => sanitize_text_field($meta['name'] ?? ''),
+                    'company'      => sanitize_text_field($meta['company'] ?? ''),
+                    'keywords'     => $keywords,
+                    // Unguessable token used to authorize polling the public
+                    // status endpoint — the numeric scan id alone is enumerable.
+                    'public_token' => !empty($meta['public_token'])
+                        ? sanitize_text_field($meta['public_token'])
+                        : wp_generate_password(32, false, false),
                 ]),
                 'created_at'     => current_time('mysql'),
                 'expires_at'     => gmdate('Y-m-d H:i:s', strtotime('+' . $retentionDays . ' days')),
@@ -262,6 +267,26 @@ class GeoScanRepository
         );
 
         return $row ?: null;
+    }
+
+    /**
+     * The unguessable public token stored in meta for a website scan,
+     * or null when the scan predates the token mechanism.
+     */
+    public function getPublicToken(int $id): ?string
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE;
+
+        $meta = $wpdb->get_var(
+            $wpdb->prepare("SELECT meta FROM {$table} WHERE id = %d", $id)
+        );
+        if (empty($meta)) {
+            return null;
+        }
+        $decoded = json_decode($meta, true);
+        $token = $decoded['public_token'] ?? '';
+        return $token !== '' ? $token : null;
     }
 
     /**

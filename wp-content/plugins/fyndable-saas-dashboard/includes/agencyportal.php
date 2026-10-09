@@ -1437,8 +1437,15 @@ class AgencyPortal
                 'gif' => 'image/gif',
                 'webp' => 'image/webp',
             ];
-            $fileInfo = wp_check_filetype($_FILES['company_logo']['name'], $allowedMimes);
-            if (empty($fileInfo['ext']) || empty($fileInfo['type'])) {
+            // wp_check_filetype_and_ext verifies the real file content (magic bytes),
+            // not just the extension — blocks e.g. a PHP file renamed to .png.
+            $fileInfo = wp_check_filetype_and_ext(
+                $_FILES['company_logo']['tmp_name'],
+                $_FILES['company_logo']['name'],
+                $allowedMimes
+            );
+            if (empty($fileInfo['ext']) || empty($fileInfo['type'])
+                || !in_array($fileInfo['type'], $allowedMimes, true)) {
                 wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&error=invalid_type'));
                 exit;
             }

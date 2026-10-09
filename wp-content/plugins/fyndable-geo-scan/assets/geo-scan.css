@@ -754,9 +754,15 @@
     }
 }
 
+/* Print-only report chrome — hidden on screen, shown when printing. */
+.fgs-print-head,
+.fgs-print-foot {
+    display: none;
+}
+
 @media print {
     @page {
-        margin: 12mm;
+        margin: 14mm 12mm;
     }
 
     body * {
@@ -770,9 +776,10 @@
         -webkit-print-color-adjust: exact;
     }
 
+    /* position:static (not absolute) keeps multi-page reports flowing —
+       absolute positioning can clip content to the first page. */
     .fgs-result {
-        position: absolute;
-        inset: 0;
+        position: static;
         width: 100%;
         max-width: none;
         margin: 0;
@@ -780,10 +787,86 @@
         border: 0;
         border-radius: 0;
         box-shadow: none;
+        background: #fff;
+        color: #1a1a2e;
     }
 
     .fgs-result-actions {
         display: none;
+    }
+
+    /* Report header — only visible in print */
+    .fgs-print-head {
+        display: block;
+        border-bottom: 2px solid #8F39AC;
+        padding-bottom: 12px;
+        margin-bottom: 28px;
+    }
+
+    .fgs-print-brand {
+        font-size: 20px;
+        font-weight: 700;
+        color: #8F39AC;
+        letter-spacing: -.01em;
+    }
+
+    .fgs-print-meta {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .fgs-print-foot {
+        display: block;
+        margin-top: 32px;
+        padding-top: 10px;
+        border-top: 1px solid #e5e7eb;
+        font-size: 10px;
+        color: #9ca3af;
+        text-align: center;
+    }
+
+    /* Light theme — the dark hero gradient prints poorly and wastes toner */
+    .fgs-hero {
+        background: #f8f4fb !important;
+        border: 1px solid #e5e7eb;
+        color: #1a1a2e !important;
+    }
+
+    .fgs-hero * {
+        color: #1a1a2e !important;
+    }
+
+    .fgs-hero-label {
+        color: #374151 !important;
+    }
+
+    .fgs-ring text {
+        fill: #1a1a2e !important;
+    }
+
+    .fgs-ring circle:first-of-type {
+        stroke: #e5e7eb !important;
+    }
+
+    .fgs-tile {
+        background: #fff !important;
+        border: 1px solid #e5e7eb;
+    }
+
+    .fgs-kw,
+    .fgs-rec {
+        border: 1px solid #e5e7eb;
+    }
+
+    .fgs-cta {
+        background: #f8f4fb !important;
+        border: 1px dashed #8F39AC;
+        color: #374151 !important;
+    }
+
+    .fgs-cta h4 {
+        color: #1a1a2e !important;
     }
 
     .fgs-hero,

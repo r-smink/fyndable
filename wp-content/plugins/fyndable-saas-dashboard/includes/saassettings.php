@@ -2106,7 +2106,8 @@ class SaaSSettings
         if (empty($version)) {
             $version = 'latest';
         }
-        $filename = 'fyndable-client_v' . $version . '.zip';
+        // Random suffix so the package URL isn't trivially guessable.
+        $filename = 'fyndable-client_v' . $version . '_' . wp_generate_password(10, false, false) . '.zip';
         $destination = $uploadDir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destination)) {

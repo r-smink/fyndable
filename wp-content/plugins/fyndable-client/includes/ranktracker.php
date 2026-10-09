@@ -177,6 +177,193 @@ class RankTracker
             'callback' => [$this, 'restCheckNow'],
             'permission_callback' => function () { return current_user_can('manage_options'); },
         ]);
+
+        register_rest_route('sseo-ai/v1', '/cannibalization/report', [
+            'methods' => 'GET',
+            'callback' => [$this, 'restGetCannibalizationReport'],
+            'permission_callback' => function () { return current_user_can('manage_options'); },
+        ]);
+
+        register_rest_route('sseo-ai/v1', '/cannibalization/scan', [
+            'methods' => 'POST',
+            'callback' => [$this, 'restRunCannibalizationScan'],
+            'permission_callback' => function () { return current_user_can('manage_options'); },
+        ]);
+    }
+
+    /**
+     * GET: cached cannibalization report (runs a scan when none exists).
+     */
+    public function restGetCannibalizationReport(\WP_REST_Request $request): array
+    {
+        $report = get_transient('sseo_ai_cannibal_report');
+        if (!is_array($report)) {
+            $report = $this->buildCannibalizationReport();
+            set_transient('sseo_ai_cannibal_report', $report, 6 * HOUR_IN_SECONDS);
+        }
+        return $report;
+    }
+
+    /**
+     * POST: force a fresh cannibalization scan.
+     */
+    public function restRunCannibalizationScan(\WP_REST_Request $request): array
+    {
+        $report = $this->buildCannibalizationReport();
+        set_transient('sseo_ai_cannibal_report', $report, 6 * HOUR_IN_SECONDS);
+        return $report;
+    }
+
+    /**
+     * Build the site-wide cannibalization report.
+     *
+     * Two signals:
+     *  1. Focus-keyphrase collisions — multiple posts/pages carrying the same
+     *     _sseo_ai_focus_keyphrase, independent of tracked keywords.
+     *  2. Tracked-keyword conflicts — an active tracked keyword matching more
+     *     than one post (focus meta or title), or matching posts other than
+     *     its intended target.
+     */
+    private function buildCannibalizationReport(): array
+    {
+        global $wpdb;
+
+        // Fixed whitelist — safe to inline after escaping.
+        $statusList = "'" . implode("','", array_map('esc_sql', ['publish', 'draft', 'future', 'pending'])) . "'";
+
+        // 1. All posts with a focus keyphrase, grouped by normalized phrase.
+        $focusRows = $wpdb->get_results(
+            "SELECT pm.post_id, pm.meta_value AS phrase, p.post_title, p.post_status, p.post_type
+             FROM {$wpdb->postmeta} pm
+             JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_sseo_ai_focus_keyphrase'
+               AND pm.meta_value != ''
+               AND p.post_status IN ({$statusList})
+               AND p.post_type IN ('post','page')",
+            ARRAY_A
+        ) ?: [];
+
+        $focusGroups = [];
+        foreach ($focusRows as $row) {
+            $key = mb_strtolower(trim((string)$row['phrase']));
+            if ($key === '') {
+                continue;
+            }
+            $focusGroups[$key][] = $row;
+        }
+
+        $groups = [];
+
+        foreach ($focusGroups as $phrase => $rows) {
+            if (count($rows) < 2) {
+                continue;
+            }
+            $groups[] = [
+                'keyword'    => $rows[0]['phrase'],
+                'severity'   => 'high',
+                'reason'     => 'same_focus_keyphrase',
+                'posts'      => array_map([$this, 'formatCannibalPost'], $rows),
+                'tracked'    => false,
+            ];
+        }
+
+        // 2. Tracked keywords: match posts via focus meta + title search.
+        $tracked = $wpdb->get_results(
+            "SELECT id, keyword, url, post_id FROM {$this->keywordsTable} WHERE active = 1",
+            ARRAY_A
+        ) ?: [];
+
+        if ($tracked) {
+            $titles = $wpdb->get_results(
+                "SELECT ID, post_title, post_status, post_type FROM {$wpdb->posts}
+                 WHERE post_status IN ({$statusList}) AND post_type IN ('post','page')
+                 ORDER BY post_date DESC LIMIT 2000",
+                ARRAY_A
+            ) ?: [];
+
+            // focus phrase → post rows lookup built above
+            foreach ($tracked as $kw) {
+                $norm = mb_strtolower(trim($kw['keyword']));
+                $matches = [];
+
+                foreach ($focusGroups[$norm] ?? [] as $row) {
+                    $row['match_type'] = 'focus';
+                    $matches[(int)$row['post_id']] = $row;
+                }
+                foreach ($titles as $post) {
+                    if ($norm !== '' && mb_stripos($post['post_title'], $kw['keyword']) !== false) {
+                        $post['post_id'] = $post['ID'];
+                        $post['match_type'] = 'title';
+                        $matches[(int)$post['ID']] = $post + ['phrase' => null];
+                    }
+                }
+
+                $targetPostId = (int)($kw['post_id'] ?? 0);
+                $posts = [];
+                foreach ($matches as $postId => $row) {
+                    $formatted = $this->formatCannibalPost($row);
+                    $formatted['match_type'] = $row['match_type'] ?? 'focus';
+                    $formatted['is_target'] = $targetPostId > 0 && $postId === $targetPostId;
+                    $posts[] = $formatted;
+                }
+
+                if (count($posts) > 1) {
+                    // High when the target collides or 2+ posts claim the phrase.
+                    $focusCount = count($focusGroups[$norm] ?? []);
+                    $severity = ($targetPostId === 0 || $focusCount > 1) ? 'high' : 'medium';
+                    $groups[] = [
+                        'keyword'  => $kw['keyword'],
+                        'severity' => $severity,
+                        'reason'   => 'tracked_keyword_multi_match',
+                        'posts'    => array_values($posts),
+                        'tracked'  => true,
+                    ];
+                } elseif (count($posts) === 0) {
+                    $groups[] = [
+                        'keyword'  => $kw['keyword'],
+                        'severity' => 'info',
+                        'reason'   => 'tracked_keyword_no_match',
+                        'posts'    => [],
+                        'tracked'  => true,
+                    ];
+                }
+            }
+        }
+
+        // Sort: high → medium → info, then by post count desc.
+        $order = ['high' => 0, 'medium' => 1, 'info' => 2];
+        usort($groups, function ($a, $b) use ($order) {
+            $sa = $order[$a['severity']] ?? 3;
+            $sb = $order[$b['severity']] ?? 3;
+            return $sa <=> $sb ?: count($b['posts']) <=> count($a['posts']);
+        });
+
+        $summary = ['high' => 0, 'medium' => 0, 'info' => 0];
+        foreach ($groups as $g) {
+            $summary[$g['severity']] = ($summary[$g['severity']] ?? 0) + 1;
+        }
+
+        return [
+            'success'     => true,
+            'scanned_at'  => current_time('mysql'),
+            'summary'     => $summary,
+            'groups'      => $groups,
+        ];
+    }
+
+    private function formatCannibalPost(array $row): array
+    {
+        $id = (int)($row['post_id'] ?? $row['ID'] ?? 0);
+        return [
+            'id'         => $id,
+            'title'      => $row['post_title'] ?? '',
+            'status'     => $row['post_status'] ?? '',
+            'type'       => $row['post_type'] ?? 'post',
+            'edit_link'  => $id ? (string)get_edit_post_link($id, '') : '',
+            'permalink'  => $id ? (string)get_permalink($id) : '',
+            'is_target'  => false,
+            'match_type' => $row['match_type'] ?? 'focus',
+        ];
     }
 
     /**
@@ -439,6 +626,7 @@ class RankTracker
                     <?php if ($this->localSerp): ?>
                         <button type="button" class="button rank-tab" data-tab="rank-local-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
                     <?php endif; ?>
+                    <button type="button" class="button rank-tab" data-tab="rank-cannibal-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Cannibalization', 'ai-seo-client'); ?></button>
                 </div>
 
                 <div id="rank-tracker-panel" class="rank-panel" style="display:block;">
@@ -506,6 +694,24 @@ class RankTracker
                         <?php $this->localSerp->renderPanel(); ?>
                     </div>
                 <?php endif; ?>
+
+                <div id="rank-cannibal-panel" class="rank-panel" style="display:none;">
+                    <div class="sseo-ai-dashboard-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                            <h2 style="margin:0;"><?php esc_html_e('Cannibalization Dashboard', 'ai-seo-client'); ?></h2>
+                            <div>
+                                <span class="spinner" id="cannibal-spinner" style="float:none;"></span>
+                                <button type="button" class="button button-primary" id="cannibal-rescan"><?php esc_html_e('Rescan', 'ai-seo-client'); ?></button>
+                            </div>
+                        </div>
+                        <p style="color:#6b7280;">
+                            <?php esc_html_e('Detects posts and pages competing for the same keyword — a shared focus keyphrase, or multiple titles matching a tracked keyword. Merge, differentiate or redirect to fix.', 'ai-seo-client'); ?>
+                        </p>
+                        <div id="cannibal-summary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+                        <div id="cannibal-scanned-at" style="font-size:12px;color:#9ca3af;margin-bottom:16px;"></div>
+                        <div id="cannibal-groups"></div>
+                    </div>
+                </div>
 
             </div>
             </div>
@@ -785,6 +991,123 @@ class RankTracker
                 var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
                 return R * c;
             }
+
+            // ===== Cannibalization tab =====
+            var cannibalLoaded = false;
+
+            function escHtml(s) {
+                return $('<span>').text(s == null ? '' : String(s)).html();
+            }
+
+            var severityMeta = {
+                high:   { label: '<?php echo esc_js(__('High', 'ai-seo-client')); ?>',   color: '#b91c1c', bg: '#fee2e2' },
+                medium: { label: '<?php echo esc_js(__('Medium', 'ai-seo-client')); ?>', color: '#92400e', bg: '#fef3c7' },
+                info:   { label: '<?php echo esc_js(__('Info', 'ai-seo-client')); ?>',   color: '#1e40af', bg: '#dbeafe' }
+            };
+
+            var reasonLabels = {
+                same_focus_keyphrase:        '<?php echo esc_js(__('Same focus keyphrase on multiple posts', 'ai-seo-client')); ?>',
+                tracked_keyword_multi_match: '<?php echo esc_js(__('Multiple posts match this tracked keyword', 'ai-seo-client')); ?>',
+                tracked_keyword_no_match:    '<?php echo esc_js(__('No post targets this tracked keyword', 'ai-seo-client')); ?>'
+            };
+
+            var adviceMap = {
+                same_focus_keyphrase:        '<?php echo esc_js(__('Keep one primary post for this phrase: merge content or 301-redirect the others, or give each post a unique focus keyphrase.', 'ai-seo-client')); ?>',
+                tracked_keyword_multi_match: '<?php echo esc_js(__('Decide which post should rank for this keyword. Strengthen internal links to it and differentiate the other posts\' titles and focus.', 'ai-seo-client')); ?>',
+                tracked_keyword_no_match:    '<?php echo esc_js(__('Create or assign a post targeting this keyword — currently nothing is optimized for it.', 'ai-seo-client')); ?>'
+            };
+
+            function renderCannibalReport(report) {
+                var summary = report.summary || {};
+                var chips = '';
+                ['high', 'medium', 'info'].forEach(function (sev) {
+                    var m = severityMeta[sev];
+                    chips += '<span style="background:' + m.bg + ';color:' + m.color + ';padding:4px 14px;border-radius:14px;font-weight:600;font-size:13px;">' +
+                        (summary[sev] || 0) + '× ' + m.label + '</span>';
+                });
+                $('#cannibal-summary').html(chips);
+                $('#cannibal-scanned-at').text('<?php echo esc_js(__('Last scan:', 'ai-seo-client')); ?> ' + (report.scanned_at || '—'));
+
+                var groups = report.groups || [];
+                var container = $('#cannibal-groups');
+                container.empty();
+
+                if (!groups.length) {
+                    container.html('<p style="color:#059669;font-weight:600;"><?php echo esc_js(__('No cannibalization found — every keyword has a single clear target.', 'ai-seo-client')); ?></p>');
+                    return;
+                }
+
+                groups.forEach(function (g) {
+                    var m = severityMeta[g.severity] || severityMeta.info;
+                    var html = '<div style="border:1px solid #e5e7eb;border-left:4px solid ' + m.color + ';border-radius:8px;padding:16px 20px;margin-bottom:14px;background:#fff;">' +
+                        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+                            '<span style="background:' + m.bg + ';color:' + m.color + ';padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700;">' + m.label + '</span>' +
+                            '<strong style="font-size:15px;">"' + escHtml(g.keyword) + '"</strong>' +
+                            '<span style="color:#6b7280;font-size:12px;">' + escHtml(reasonLabels[g.reason] || g.reason) + '</span>' +
+                        '</div>';
+
+                    if (g.posts && g.posts.length) {
+                        html += '<table class="widefat" style="margin-top:10px;border:none;box-shadow:none;">' +
+                            '<thead><tr>' +
+                                '<th style="padding:6px 8px;"><?php echo esc_js(__('Post', 'ai-seo-client')); ?></th>' +
+                                '<th style="width:70px;padding:6px 8px;"><?php echo esc_js(__('Status', 'ai-seo-client')); ?></th>' +
+                                '<th style="width:90px;padding:6px 8px;"><?php echo esc_js(__('Match', 'ai-seo-client')); ?></th>' +
+                                '<th style="width:110px;padding:6px 8px;"></th>' +
+                            '</tr></thead><tbody>';
+                        g.posts.forEach(function (p) {
+                            html += '<tr>' +
+                                '<td style="padding:6px 8px;">' +
+                                    escHtml(p.title || ('#' + p.id)) +
+                                    (p.is_target ? ' <span style="background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;"><?php echo esc_js(__('target', 'ai-seo-client')); ?></span>' : '') +
+                                '</td>' +
+                                '<td style="padding:6px 8px;color:#6b7280;font-size:12px;">' + escHtml(p.status) + '</td>' +
+                                '<td style="padding:6px 8px;color:#6b7280;font-size:12px;">' + escHtml(p.match_type || '—') + '</td>' +
+                                '<td style="padding:6px 8px;">' +
+                                    (p.edit_link ? '<a href="' + escHtml(p.edit_link) + '" class="button button-small"><?php echo esc_js(__('Edit', 'ai-seo-client')); ?></a> ' : '') +
+                                    (p.permalink ? '<a href="' + escHtml(p.permalink) + '" target="_blank" class="button button-small"><?php echo esc_js(__('View', 'ai-seo-client')); ?></a>' : '') +
+                                '</td>' +
+                            '</tr>';
+                        });
+                        html += '</tbody></table>';
+                    }
+
+                    if (adviceMap[g.reason]) {
+                        html += '<p style="margin:10px 0 0;color:#374151;font-size:13px;"><strong><?php echo esc_js(__('Advice:', 'ai-seo-client')); ?></strong> ' + escHtml(adviceMap[g.reason]) + '</p>';
+                    }
+
+                    html += '</div>';
+                    container.append(html);
+                });
+            }
+
+            function loadCannibalReport(force) {
+                $('#cannibal-spinner').addClass('is-active');
+                $('#cannibal-rescan').prop('disabled', true);
+                wp.apiFetch({
+                    path: force ? 'sseo-ai/v1/cannibalization/scan' : 'sseo-ai/v1/cannibalization/report',
+                    method: force ? 'POST' : 'GET'
+                }).then(function (res) {
+                    renderCannibalReport(res);
+                    $('#cannibal-spinner').removeClass('is-active');
+                    $('#cannibal-rescan').prop('disabled', false);
+                }).catch(function (err) {
+                    $('#cannibal-groups').html('<p style="color:#b91c1c;">' + escHtml(err.message || '<?php echo esc_js(__('Scan failed.', 'ai-seo-client')); ?>') + '</p>');
+                    $('#cannibal-spinner').removeClass('is-active');
+                    $('#cannibal-rescan').prop('disabled', false);
+                });
+            }
+
+            $('#cannibal-rescan').on('click', function () {
+                loadCannibalReport(true);
+            });
+
+            // Lazy-load the report the first time the tab is opened.
+            $('.rank-tab').on('click', function () {
+                if ($(this).data('tab') === 'rank-cannibal-panel' && !cannibalLoaded) {
+                    cannibalLoaded = true;
+                    loadCannibalReport(false);
+                }
+            });
         });
         </script>
         <?php

@@ -351,3 +351,50 @@ Add to crontab:
 - **articleCreate author required** — API version 2026-07 makes `ArticleCreateInput.author` (AuthorInput: `name` or `userId`) required; `BlogWriterController::create()` now always sends `author.name`, using an optional `author` request field with the shop name as fallback. The Blog Writer UI has an optional "Author" field.
 - **Blog Writer language selector** — `POST /api/articles/generate` accepts `language` (whitelist in `BlogWriterController::LANGUAGES`, default `en`); the prompt instructs the model to write title + body in that language. UI dropdown in the Blog Writer tab. Other generators (product/collection meta/descriptions) have no selector — they inherit language from existing content/context.
 - **Agency tier checkout** — `SignupCheckout::getPlans()` now includes `self_serve` + `contact_url` (mailto to `ai_seo_saas_support_email`) per plan. `signup.js` renders `plan.cta` ("Contact Us") for non-self-serve plans and redirects to `contact_url` instead of opening the trial signup form (previously all plans showed "Start 14-dagen trial" and then hit the backend 403). New i18n key `start_trial` in `assets/i18n.js`.
+
+## Feature inventory + security audit (2026-10-09)
+
+### fyndable-client (~115 modules, `includes/`)
+- **Core SEO**: TruSEO score, post metabox, readability, schema markup (FAQ etc.), breadcrumbs, canonicals, Open Graph, robots.txt, sitemaps (incl. extended/video), hreflang/international, redirection manager, 404 monitor, technical SEO auditor, robots/indexing (IndexNow, directindex), WooCommerce SEO, pagebuilder helper, smart tags, smart internal linking (linkassistant).
+- **Content**: content writer/rewriter/optimizer, editor assistant, content brief, content calendar, ideas, topic clusters, programmatic SEO, A/B testing, AI repurposer, simple content generator, bulk actions, content decay + performance monitor, fact checker, plagiarism checker, E-E-A-T validator, brand voice, GEO content score, LSI keywords, prompt template library, image alt + AI image generator, AiseoAgent.
+- **Keywords/rank**: keywords DB, rank tracker, keyword explorer + difficulty, competitor research, SERP competitor, SERP change monitor, SERP feature tracker, local SERP/geo-grid, local SEO.
+- **AI/GEO**: GEO readiness scans (via SaaS), llms.txt + llms-full.txt generator, LLM tracker, brand visibility tracker, AI optimization tracker.
+- **Data/integrations**: GSC/GA4/Google Ads dashboards (OAuth proxy via SaaS), PageSpeed, Ahrefs + SE Ranking + DataForSEO backlink clients, backlink analyzer, external integrations, multi-CMS publisher, mobile app template.
+- **Automation**: ApexFlow content autopilot, post auto-cleaner, alert notifier, health logger, review prompt, onboarding wizard, demo mode, trial cleanup, role permissions, white-label manager, privacy export (GDPR), support tickets + assistant, SEO importer, SEO revisions + snapshots, report data collector + SEO report export.
+- **Special**: auditservice incl. cannibalization check; topiccluster also blocks cannibal posts.
+
+### fyndable-saas-dashboard (~45 modules)
+- Licensing (generator, API, feature manager), tenants, subscriptions (Stripe + Mollie, signature-verified webhooks), invoicing, revenue dashboard, bookkeeping admin.
+- API gateway: LLM proxy (OpenRouter/OpenAI adapters), SERP (DataForSEO + SerpAPI), keyword data, image gen (OpenArt), GEO scanner (multi-model, async queue + sweeper).
+- Public surface: license API (rate-limited), public geo-scan (shared key + IP rate limit), signup/checkout (self-serve gated), webhooks, update server (license+tenant verified).
+- Admin REST API (manage_options, for Android app), agency portal (white-label zip builder, custom role/caps), customer portal, email automation (templates + block renderer), feedback, support tickets, GEO scan admin.
+
+### fyndable-geo-scan
+- Standalone website plugin: shortcode form → SaaS public API, teaser results, wp_mail follow-up.
+
+### Security audit findings (2026-10-09)
+Good: hash_equals on shared key, Stripe signature verify fail-closed, Mollie fetch-back verify, orderby whitelists, SSRF private-range blocking in HtmlFetcher, rate limits on license/public endpoints, no hardcoded secrets, capability checks on all admin REST routes.
+Watchlist — resolved 2026-10-09:
+- license_key comparisons → `hash_equals` (licenseapi, apigateway, updateserver, feedback, supporttickets)
+- Google refresh_token encrypted at rest in `aiseoclient_gsc_tokens` (`enc1:` = AES-256-GCM, key derived from wp_salt; legacy plaintext decrypts transparently)
+- agency logo upload → `wp_check_filetype_and_ext` (real mime check)
+- A/B conversion endpoint already had rate-limit (30/min/IP) + per-session dedup
+- website GEO scans get unguessable `public_token` in meta; `GET /public/geo-scan/{id}/status` requires `?token=` when a token is stored (scans predating this still work). geo-scan plugin passes `scan_token` through, localStorage resume carries it.
+- client zip uploads get random filename suffix (`fyndable-client_v{ver}_{rand10}.zip`)
+- HtmlFetcher `isUrlSafe` now blocks literal-IP hosts incl. bracketed IPv6 (note: no server-side fetch happens — Jina/Firecrawl fetch remotely)
+- geo-scan print/PDF: light print theme, report header (brand + URL + date), footer, `position:static` for multi-page flow, print-only chrome via `.fgs-print-head/.fgs-print-foot`
+
+## Cannibalization dashboard (2026-10-09)
+
+New third tab **"Cannibalization"** on the Rank Tracker page (`ai-seo-ranks`), implemented inside `ranktracker.php`:
+
+- `GET /sseo-ai/v1/cannibalization/report` — cached report (transient `sseo_ai_cannibal_report`, 6h, auto-scans when empty)
+- `POST /sseo-ai/v1/cannibalization/scan` — force rescan
+- `RankTracker::buildCannibalizationReport()` detects:
+  - `same_focus_keyphrase` (high) — ≥2 posts/pages sharing `_sseo_ai_focus_keyphrase`, site-wide
+  - `tracked_keyword_multi_match` (high/medium) — active tracked keyword matching >1 post via focus meta or title; marks `is_target` vs `sseo_ai_tracked_keywords.post_id`
+  - `tracked_keyword_no_match` (info) — tracked keyword with no targeting post
+- Report shape: `{success, scanned_at, summary{high,medium,info}, groups[]}`; each group has `keyword, severity, reason, posts[] {id,title,status,type,edit_link,permalink,is_target,match_type}, tracked`
+- UI: lazy-loads on first tab open, severity chips + per-group post tables with Edit/View links and advice per reason. JS lives in the existing renderPage() script block (jQuery + wp.apiFetch).
+
+Note: `php` CLI **is** available in this workspace (`php -l` works) — earlier note about PHP missing was wrong.

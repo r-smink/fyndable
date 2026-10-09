@@ -666,7 +666,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -712,7 +712,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -750,7 +750,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -777,7 +777,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -905,7 +905,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -1063,7 +1063,7 @@ class LicenseAPI
         }
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_Error('invalid_credentials', 'Invalid license or tenant credentials');
         }
 
@@ -1267,7 +1267,7 @@ class LicenseAPI
 
         // Validate tenant
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
         }
         if ($tenant['status'] !== 'active') {
@@ -1466,7 +1466,7 @@ class LicenseAPI
         }
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Invalid tenant or license mismatch.',
@@ -1520,7 +1520,7 @@ class LicenseAPI
         $tenantKey = $request->get_param('tenant_key');
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Invalid tenant or license mismatch.',

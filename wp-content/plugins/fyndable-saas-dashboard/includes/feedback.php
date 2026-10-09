@@ -87,7 +87,7 @@ class Feedback
         }
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return false;
         }
 
@@ -111,7 +111,7 @@ class Feedback
     {
         [$licenseKey, $tenantKey] = $this->getCredentialsFromRequest($request);
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return null;
         }
         return $tenant;

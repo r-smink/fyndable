@@ -180,7 +180,7 @@ class ApiGateway
         
         // Validate tenant exists and matches license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return false;
         }
         

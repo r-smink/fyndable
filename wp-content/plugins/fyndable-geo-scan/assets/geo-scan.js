@@ -49,9 +49,9 @@
 
     // The scan row lives on the portal for 90 days — remember the scan id so a
     // result can still be shown after a timeout or a page refresh.
-    function savePending(scanId, scanUrl) {
+    function savePending(scanId, scanUrl, scanToken) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ id: scanId, url: scanUrl, t: Date.now() }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ id: scanId, url: scanUrl, token: scanToken || '', t: Date.now() }));
         } catch (e) { /* private mode etc. — resume just won't work */ }
     }
 
@@ -271,6 +271,10 @@
             '<div class="fgs-result-actions">' +
                 '<button type="button" class="fgs-print-btn">' + esc(strings.printResult || 'Printen / opslaan als PDF') + '</button>' +
             '</div>' +
+            '<div class="fgs-print-head" aria-hidden="true">' +
+                '<div class="fgs-print-brand">' + esc(strings.printBrand || 'GEO Readiness Report') + '</div>' +
+                '<div class="fgs-print-meta">' + esc(scanUrl) + ' · ' + esc(new Date().toLocaleDateString()) + '</div>' +
+            '</div>' +
             '<div class="fgs-result-head">' +
                 '<span class="fgs-badge-pill">' + esc(strings.resultBadge || 'Jouw resultaat') + '</span>' +
                 '<h2 class="fgs-result-title">' + esc(strings.resultTitle || 'Jouw GEO Scan resultaat') + '</h2>' +
@@ -297,6 +301,9 @@
             '<div class="fgs-cta">' +
                 '<h4>' + esc(strings.ctaTitle || 'Wil je het volledige rapport?') + '</h4>' +
                 '<p>' + esc(strings.ctaText || 'Wij nemen contact met je op om de volledige analyse en verbeterpunten door te nemen.') + '</p>' +
+            '</div>' +
+            '<div class="fgs-print-foot" aria-hidden="true">' +
+                '<span>' + esc(strings.printFooter || 'Gegenereerd door Fyndable GEO Scan') + '</span>' +
             '</div>';
 
         resultBox.innerHTML = html;
@@ -308,8 +315,8 @@
         resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function pollStatus(scanId, scanUrl) {
-        fetch(restUrl + '/geo-scan/' + encodeURIComponent(scanId) + '/status?_=' + Date.now(), {
+    function pollStatus(scanId, scanUrl, scanToken) {
+        fetch(restUrl + '/geo-scan/' + encodeURIComponent(scanId) + '/status?_=' + Date.now() + '&token=' + encodeURIComponent(scanToken || ''), {
             headers: { 'Accept': 'application/json' },
             cache: 'no-store'
         })
@@ -321,7 +328,7 @@
                     fail(strings.timeout);
                     return;
                 }
-                pollTimer = setTimeout(function () { pollStatus(scanId, scanUrl); }, 4000);
+                pollTimer = setTimeout(function () { pollStatus(scanId, scanUrl, scanToken); }, 4000);
                 return;
             }
 
@@ -350,14 +357,14 @@
                 return;
             }
 
-            pollTimer = setTimeout(function () { pollStatus(scanId, scanUrl); }, 3000);
+            pollTimer = setTimeout(function () { pollStatus(scanId, scanUrl, scanToken); }, 3000);
         })
         .catch(function () {
             if (Date.now() - pollStarted > MAX_POLL_MS) {
                 fail(strings.timeout);
                 return;
             }
-            pollTimer = setTimeout(function () { pollStatus(scanId, scanUrl); }, 5000);
+            pollTimer = setTimeout(function () { pollStatus(scanId, scanUrl, scanToken); }, 5000);
         });
     }
 
@@ -417,9 +424,9 @@
         .then(function (res) {
             var data = res.data || {};
             if (res.status === 200 && data.success && data.scan_id) {
-                savePending(data.scan_id, url);
+                savePending(data.scan_id, url, data.scan_token);
                 pollStarted = Date.now();
-                pollStatus(data.scan_id, url);
+                pollStatus(data.scan_id, url, data.scan_token);
                 return;
             }
             // Honeypot success (scan_id 0) — silently do nothing.
@@ -445,6 +452,6 @@
         setProgress(0, strings.queued);
         startTicker();
         pollStarted = Date.now();
-        pollStatus(pending.id, pending.url || '');
+        pollStatus(pending.id, pending.url || '', pending.token || '');
     }
 })();
