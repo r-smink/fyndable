@@ -290,7 +290,15 @@ class Client
         $screenId = $screen->id;
         if (strpos($screenId, 'ai-seo') !== false || strpos($screenId, 'fyndable') !== false) {
             $classes .= ' fyndable-ui';
-            if (get_option('sseo_ai_client_dark_theme', '0') === '1') {
+            // The shell passes the active theme in the URL so newly loaded iframe
+            // pages render with the correct theme immediately, before the async DB
+            // update from the toggle has completed.
+            if (isset($_GET['fyndable_dark'])) {
+                $dark = $_GET['fyndable_dark'] === '1';
+            } else {
+                $dark = get_option('sseo_ai_client_dark_theme', '0') === '1';
+            }
+            if ($dark) {
                 $classes .= ' fyndable-dark';
             }
         }
