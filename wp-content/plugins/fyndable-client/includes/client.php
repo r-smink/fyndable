@@ -1148,6 +1148,30 @@ class Client
                     [$this, 'renderAiOptimizationPage']
                 );
 
+                // 16. Backlinks - Professional+
+                if ($this->backlinkAnalyzer) {
+                    add_submenu_page(
+                        'fyndable-dashboard',
+                        __('Backlinks', 'ai-seo-client'),
+                        __('🔗 Backlinks', 'ai-seo-client'),
+                        'manage_options',
+                        'ai-seo-backlinks',
+                        [$this->backlinkAnalyzer, 'renderDashboard']
+                    );
+
+                    // 16b. Advanced Backlinks
+                    if ($this->advancedBacklinks) {
+                        add_submenu_page(
+                            'ai-seo-backlinks',
+                            __('Advanced Backlinks', 'ai-seo-client'),
+                            __('Advanced Analysis', 'ai-seo-client'),
+                            'manage_options',
+                            'ai-seo-advanced-backlinks',
+                            [$this->advancedBacklinks, 'renderDashboard']
+                        );
+                    }
+                }
+
                 // 14b. Prompt Templates - Business+
                 if ($this->promptTemplateLibrary) {
                     add_submenu_page(
