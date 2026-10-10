@@ -1162,9 +1162,9 @@ class Client
                     // 16b. Advanced Backlinks
                     if ($this->advancedBacklinks) {
                         add_submenu_page(
-                            'ai-seo-backlinks',
+                            'fyndable-dashboard',
                             __('Advanced Backlinks', 'ai-seo-client'),
-                            __('Advanced Analysis', 'ai-seo-client'),
+                            __('Advanced Backlinks', 'ai-seo-client'),
                             'manage_options',
                             'ai-seo-advanced-backlinks',
                             [$this->advancedBacklinks, 'renderDashboard']
