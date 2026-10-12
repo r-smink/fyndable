@@ -70,12 +70,20 @@ class GeoScanPdf
         $benchmark = (array)($data['competitive_benchmark'] ?? []);
         $actions = $this->actions($data, $language);
         $logo = $this->logoDataUri($cover === 'dark');
+        $headerLogo = $this->logoDataUri(false);
+        $fontRegular = $this->fontDataUri(false);
+        $fontBold = $this->fontDataUri(true);
+        $scoreRing = $this->scoreRingDataUri($score, $cover === 'dark');
         $coverClass = $cover === 'dark' ? 'cover dark' : 'cover light';
         $scoreLabel = $score >= 70 ? $t['good'] : ($score >= 40 ? $t['needs_work'] : $t['weak']);
         $visiblePlatforms = count(array_filter($platforms, static fn(array $platform): bool => in_array($platform['status'] ?? '', ['visible', 'sometimes'], true)));
         $platformCount = count(array_filter($platforms, static fn(array $platform): bool => ($platform['status'] ?? '') !== 'unavailable'));
         $metricLabels = $this->metricLabels($language);
         $summaryMetrics = array_intersect_key($metricLabels, array_flip(['structure', 'schema_markup', 'direct_answer', 'citation_worthiness']));
+        $headerHtml = '<div class="report-header">'
+            . ($headerLogo !== '' ? '<img src="' . $headerLogo . '" alt="Fyndable Smart SEO">' : '')
+            . '<span>' . $this->e($t['report'] . ' · ' . $host) . '</span></div>';
+        $footerHtml = '<div class="report-footer">Fyndable GEO Scan · ' . $this->e($host) . '</div>';
 
         ob_start();
         ?>
@@ -84,77 +92,94 @@ class GeoScanPdf
 <head>
 <meta charset="utf-8">
 <style>
-@page { margin: 18mm 17mm 17mm; }
+@page { margin: 12mm 14mm 12mm; }
+@font-face { font-family: "Outfit"; src: url("<?php echo $fontRegular; ?>") format("truetype"); font-weight: normal; }
+@font-face { font-family: "Outfit"; src: url("<?php echo $fontBold; ?>") format("truetype"); font-weight: bold; }
 * { box-sizing: border-box; }
-body { margin: 0; color: #172033; font-family: "DejaVu Sans", sans-serif; font-size: 9.2pt; line-height: 1.45; }
+body { margin: 0; color: #343434; font-family: "Outfit", "DejaVu Sans", sans-serif; font-size: 10pt; line-height: 1.45; }
 a { color: inherit; text-decoration: none; }
-.cover { height: 250mm; padding: 12mm 10mm; page-break-after: always; position: relative; overflow: hidden; }
-.cover.light { background: #f7f8fc; color: #172033; }
-.cover.dark { background: #11142a; color: #fff; }
-.cover:after { content: ""; position: absolute; right: -38mm; bottom: -48mm; width: 130mm; height: 130mm; border-radius: 65mm; background: #743cbe; opacity: .16; }
-.cover .eyebrow, .section-kicker { color: #7542bf; font-size: 8pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; }
-.cover.dark .eyebrow { color: #b89be6; }
-.logo { width: 64mm; height: auto; margin-bottom: 23mm; }
-.cover h1 { font-size: 34pt; line-height: 1.05; margin: 5mm 0 6mm; letter-spacing: -1px; }
-.cover .subtitle { width: 125mm; font-size: 12pt; color: #667085; }
-.cover.dark .subtitle { color: #c8cbe0; }
-.cover-grid { width: 100%; margin-top: 29mm; border-collapse: collapse; }
-.cover-grid td { width: 50%; vertical-align: bottom; }
-.meta-label { color: #798197; font-size: 7pt; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+.cover { height: 250mm; padding: 0; position: relative; overflow: hidden; border-top: 1.4mm solid #8340b9; }
+.cover.light { background: #fff; color: #343434; }
+.cover.dark { background: #16172b; color: #fff; }
+.cover:after { content: ""; position: absolute; right: -38mm; bottom: -50mm; width: 115mm; height: 115mm; border-radius: 58mm; background: #efe4fa; }
+.cover.dark:after { background: #292446; }
+.cover .eyebrow, .section-kicker { color: #a23bbc; font-size: 8pt; font-weight: bold; letter-spacing: .5px; text-transform: uppercase; }
+.cover.dark .eyebrow { color: #c57ce1; }
+.logo { width: 60mm; height: auto; }
+.cover-logo { position: absolute; top: 14mm; left: 0; }
+.cover-copy { position: absolute; left: 0; top: 116mm; width: 145mm; }
+.cover h1 { font-size: 31pt; line-height: .98; margin: 6mm 0 5mm; font-weight: bold; letter-spacing: -.8px; }
+.cover h1 .gradient-word { display: block; color: #7546c9; font-size: 30pt; }
+.cover .subtitle { width: 145mm; font-size: 11pt; color: #4e596c; line-height: 1.6; }
+.cover.dark .subtitle { color: #d0d2de; }
+.cover-bottom-card { position: absolute; left: 0; right: 0; bottom: 7mm; height: 57mm; border-top: 1.2mm solid #8842bd; border-radius: 4mm; background: #f7f7f8; z-index: 1; }
+.cover.dark .cover-bottom-card { background: #22243a; }
+.cover-meta { position: absolute; left: 8mm; bottom: 15mm; width: 72mm; z-index: 2; }
+.meta-label { color: #748096; font-size: 6.8pt; font-weight: bold; letter-spacing: .65px; text-transform: uppercase; }
 .cover.dark .meta-label { color: #aeb3c9; }
-.meta-value { font-size: 14pt; font-weight: bold; margin: 2mm 0 7mm; }
-.cover-score { text-align: right; }
-.cover-score strong { font-size: 42pt; line-height: 1; }
-.cover-score span { font-size: 15pt; }
-.score-status { color: #7542bf; font-size: 9pt; font-weight: bold; letter-spacing: .6px; text-transform: uppercase; }
-.cover.dark .score-status { color: #b89be6; }
-.page { page-break-before: always; }
-.report-header { position: fixed; top: -13mm; left: 0; right: 0; color: #6d7485; font-size: 7.5pt; text-align: right; text-transform: uppercase; letter-spacing: .5px; }
-.report-footer { position: fixed; bottom: -11mm; left: 0; right: 0; border-top: .3mm solid #e5e7ef; color: #7b8292; font-size: 7.5pt; padding-top: 2mm; }
-.report-footer .right { float: right; }
-h2 { font-size: 23pt; line-height: 1.18; margin: 3mm 0 6mm; letter-spacing: -.5px; }
-h3 { font-size: 15pt; margin: 0 0 3mm; }
+.meta-value { font-size: 13pt; font-weight: bold; margin: 1mm 0 5mm; }
+.cover-score { position: absolute; right: 8mm; bottom: 11mm; width: 50mm; text-align: center; z-index: 2; }
+.cover-score-ring { width: 42mm; height: 42mm; margin: 0 auto 1mm; }
+.score-status { display: inline-block; padding: 1.5mm 3mm; border: .3mm solid #f0c76b; border-radius: 8mm; background: #fff5dc; color: #b56208; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
+.cover.dark .score-status { background: #322849; border-color: #8252b7; color: #ead7fa; }
+.report-page { height: 258mm; position: relative; page-break-before: always; overflow: hidden; }
+.appendix-page { page-break-before: always; }
+.report-header { height: 13mm; border-bottom: .55mm solid #8842bd; margin-bottom: 8mm; }
+.report-header img { width: 45mm; height: auto; }
+.report-header span { float: right; padding-top: 2mm; color: #8992a4; font-size: 7pt; font-weight: bold; letter-spacing: .5px; text-transform: uppercase; }
+.report-footer { position: absolute; bottom: 0; left: 0; right: 0; border-top: .3mm solid #dfe3ea; color: #8d95a5; font-size: 7pt; padding-top: 2.5mm; }
+h2 { font-size: 22pt; line-height: 1.12; margin: 3mm 0 4mm; font-weight: bold; letter-spacing: -.4px; }
+h3 { font-size: 14pt; margin: 0 0 3mm; font-weight: bold; }
 p { margin: 0 0 4mm; }
-.lead { font-size: 11pt; color: #515a6c; line-height: 1.65; }
-.stats { width: 100%; border-collapse: collapse; margin: 9mm 0; }
-.stats td { width: 33.33%; padding: 5mm; border-left: 1mm solid #7542bf; background: #f6f3fb; }
-.stats strong { display: block; font-size: 22pt; line-height: 1.1; }
-.stats span { color: #687083; font-size: 8pt; }
+.lead { font-size: 10.5pt; color: #515a6c; line-height: 1.55; }
+.stats { width: 100%; border-collapse: separate; border-spacing: 3mm; margin: 7mm -3mm 6mm; }
+.stats td { width: 33.33%; padding: 5mm; border-top: 1.2mm solid #8c42bd; background: #f7f7f8; }
+.stats strong { display: block; color: #9b39b5; font-size: 24pt; line-height: 1.1; }
+.stats span { color: #596274; font-size: 8pt; }
 .metric-table, .benchmark-table { width: 100%; border-collapse: collapse; }
-.metric-table td { padding: 2.6mm 0; border-bottom: .3mm solid #edf0f5; }
-.metric-name { width: 39%; font-weight: bold; }
-.bar { width: 45%; height: 3mm; background: #e8e9f0; }
-.bar-fill { height: 3mm; background: #7542bf; }
-.metric-score { width: 16%; text-align: right; font-weight: bold; }
-.platform-grid { width: 100%; border-collapse: separate; border-spacing: 4mm; margin: 3mm -4mm 8mm; }
-.platform-grid td { width: 50%; vertical-align: top; border: .3mm solid #e1e4ec; padding: 5mm; border-radius: 2mm; }
+.metric-table td { padding: 2.4mm 0; vertical-align: middle; }
+.metric-icon { width: 13mm; height: 10mm; color: #fff; background: #8547bf; text-align: center; border-radius: 3mm; }
+.metric-name { width: 35%; padding-left: 4mm !important; font-weight: bold; }
+.bar { width: 100%; height: 2.2mm; background: #e3e6eb; border-radius: 2mm; }
+.bar-fill { height: 2.2mm; background: #8742bd; border-radius: 2mm; }
+.metric-score { width: 24%; text-align: right; color: #9299a8; font-size: 8pt; }
+.metric-score strong { color: #343434; font-size: 11pt; }
+.platform-grid { width: 100%; border-collapse: separate; border-spacing: 4mm; margin: 3mm -4mm 6mm; table-layout: fixed; }
+.platform-grid td { width: 50%; vertical-align: top; border: .5mm solid #e0e3e8; padding: 5mm; border-radius: 3mm; }
 .platform-name { font-size: 12pt; font-weight: bold; }
-.badge { float: right; border-radius: 10mm; padding: 1mm 2.5mm; font-size: 6.5pt; font-weight: bold; text-transform: uppercase; }
-.badge.visible { background: #dff6e8; color: #167447; }
-.badge.sometimes { background: #fff0cf; color: #8b5a00; }
-.badge.not_mentioned { background: #fbe2e6; color: #a32c41; }
+.badge { float: right; border-radius: 10mm; padding: 1.2mm 3mm; font-size: 6.5pt; font-weight: bold; text-transform: uppercase; }
+.badge.visible { background: #ccf5e2; color: #087b55; }
+.badge.sometimes { background: #fff0bf; color: #aa6200; }
+.badge.not_mentioned { background: #ffdfe1; color: #bd202b; }
 .badge.unavailable { background: #eceef3; color: #687083; }
-.platform-copy { clear: both; padding-top: 3mm; color: #626a7b; font-size: 8.5pt; }
+.platform-copy { clear: both; padding-top: 4mm; color: #626a7b; font-size: 8.5pt; }
+.benchmark-table { padding: 4mm 6mm; background: #f8f8f9; }
 .benchmark-table td { padding: 2.5mm 0; }
-.benchmark-label { width: 32%; font-weight: bold; }
-.benchmark-bar { width: 58%; background: #eceef4; height: 4mm; }
-.benchmark-fill { height: 4mm; background: #7542bf; }
+.benchmark-label { width: 30%; font-weight: bold; }
+.benchmark-bar { width: 100%; background: #e2e5ea; height: 4mm; border-radius: 3mm; }
+.benchmark-fill { height: 4mm; background: #8742bd; border-radius: 3mm; }
 .benchmark-value { width: 10%; text-align: right; font-weight: bold; }
-.note { margin-top: 5mm; padding: 4mm; background: #f7f8fb; color: #687083; font-size: 8pt; }
+.note { padding: 3mm 6mm; background: #f8f8f9; color: #687083; font-size: 8pt; }
 .action { width: 100%; page-break-inside: avoid; border-top: .3mm solid #e1e4ec; border-collapse: collapse; }
-.action td { padding: 4mm 0 3mm; vertical-align: top; }
-.action-priority { width: 20mm; color: #7542bf; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
-.action-title { font-weight: bold; font-size: 10.5pt; line-height: 1.35; }
-.action-description { margin: 1.5mm 0; color: #5c6475; }
-.action-meta { font-size: 7.5pt; color: #7542bf; }
-.steps { width: 100%; border-collapse: collapse; margin-top: 6mm; }
-.steps td { vertical-align: top; padding: 5mm 0; border-top: .3mm solid #e1e4ec; }
-.step-number { width: 13mm; font-size: 20pt; font-weight: bold; color: #7542bf; }
-.cta { margin-top: 12mm; padding: 8mm; color: #fff; background: #171a32; }
+.action td { padding: 4mm 0; vertical-align: top; }
+.action-priority { width: 25mm; }
+.priority-chip { display: inline-block; min-width: 18mm; padding: 1.2mm 2.5mm; border-radius: 8mm; text-align: center; font-size: 7pt; font-style: normal; font-weight: bold; text-transform: uppercase; }
+.priority-chip.high { color: #b71925; background: #ffdfe1; }
+.priority-chip.medium { color: #a85d00; background: #fff0bf; }
+.priority-chip.low { color: #087b55; background: #ccf5e2; }
+.action-title { font-weight: bold; font-size: 10.5pt; line-height: 1.3; }
+.action-description { margin: 1mm 0 2mm; color: #657083; font-size: 8.5pt; }
+.action-meta span, .action-meta em { display: inline-block; margin-right: 2mm; padding: 1mm 2.5mm; border-radius: 7mm; background: #f3e8f8; color: #a13ab8; font-size: 7pt; font-style: normal; }
+.action-meta em { background: #f0f2f5; color: #657083; }
+.steps { width: 100%; border-collapse: separate; border-spacing: 0 4mm; margin-top: 4mm; }
+.steps td { vertical-align: middle; padding: 5mm; background: #f8f8f9; }
+.step-number { width: 15mm; color: #fff; background: #8644bd !important; text-align: center; font-size: 16pt; font-weight: bold; }
+.cta { margin-top: 7mm; padding: 8mm 9mm; color: #fff; background: #191b31; border-top: 1.2mm solid #8742bd; }
 .cta-table { width: 100%; }
-.cta-table td { width: 50%; vertical-align: middle; }
-.cta h3 { color: #fff; font-size: 19pt; }
-.cta-contact { text-align: right; font-weight: bold; }
+.cta-table td { width: 55%; vertical-align: middle; }
+.cta h3 { color: #fff; font-size: 18pt; line-height: 1.2; }
+.cta-contact { width: 45% !important; text-align: center; color: #d7dae4; font-size: 8pt; }
+.cta-contact strong { display: block; margin-bottom: 3mm; padding: 3mm; border-radius: 2mm; background: #8b43bd; color: #fff; font-size: 10pt; }
 .appendix-block { margin: 6mm 0; }
 .appendix-block h3 { padding-bottom: 2mm; border-bottom: .3mm solid #e1e4ec; }
 ul { margin: 0; padding-left: 5mm; }
@@ -167,18 +192,18 @@ li { margin-bottom: 2mm; }
 </head>
 <body>
 <section class="<?php echo $coverClass; ?>">
-    <?php if ($logo !== '') : ?><img class="logo" src="<?php echo $logo; ?>" alt="Fyndable Smart SEO"><?php endif; ?>
-    <div class="eyebrow">Generative Engine Optimization</div>
-    <h1><?php echo $this->e($t['title']); ?></h1>
-    <div class="subtitle"><?php echo $this->e($t['subtitle']); ?></div>
-    <table class="cover-grid"><tr>
-        <td><div class="meta-label"><?php echo $this->e($t['website']); ?></div><div class="meta-value"><?php echo $this->e($host); ?></div><div class="meta-label"><?php echo $this->e($t['scan_date']); ?></div><div class="meta-value"><?php echo $this->e($date); ?></div></td>
-        <td class="cover-score"><strong><?php echo $score; ?></strong><span> / 100</span><div class="score-status"><?php echo $this->e($t['geo_score'] . ' · ' . $scoreLabel); ?></div></td>
-    </tr></table>
+    <?php if ($logo !== '') : ?><img class="logo cover-logo" src="<?php echo $logo; ?>" alt="Fyndable Smart SEO"><?php endif; ?>
+    <div class="cover-copy">
+        <div class="eyebrow">Generative Engine Optimization</div>
+        <h1>GEO Scan <span class="gradient-word"><?php echo $language === 'en' ? 'Report' : 'Rapport'; ?></span></h1>
+        <div class="subtitle"><?php echo $this->e($t['subtitle']); ?></div>
+    </div>
+    <div class="cover-bottom-card"></div>
+    <div class="cover-meta"><div class="meta-label"><?php echo $this->e($t['website']); ?></div><div class="meta-value"><?php echo $this->e($host); ?></div><div class="meta-label"><?php echo $this->e($t['scan_date']); ?></div><div class="meta-value"><?php echo $this->e($date); ?></div></div>
+    <div class="cover-score"><img class="cover-score-ring" src="<?php echo $scoreRing; ?>" alt="<?php echo $score; ?>/100"><div class="score-status"><?php echo $this->e($t['geo_score'] . ' · ' . $scoreLabel); ?></div></div>
 </section>
-<div class="report-header"><?php echo $this->e($t['report'] . ' · ' . $host); ?></div>
-<div class="report-footer">Fyndable GEO Scan · <?php echo $this->e($host); ?></div>
-<section>
+<section class="report-page">
+    <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['management']); ?></div>
     <h2><?php echo $this->e($headline); ?></h2>
     <p class="lead"><?php echo $this->e($summary); ?></p>
@@ -188,9 +213,11 @@ li { margin-bottom: 2mm; }
         <td><strong><?php echo count($actions); ?></strong><span><?php echo $this->e($t['actions_found']); ?></span></td>
     </tr></table>
     <h3><?php echo $this->e($t['category_scores']); ?></h3>
-    <table class="metric-table"><?php foreach ($summaryMetrics as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $value; ?>/100</td></tr><?php endforeach; ?></table>
+    <table class="metric-table"><?php foreach ($summaryMetrics as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-icon">●</td><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $this->e($this->scoreStatus($value, $language)); ?> <strong><?php echo $value; ?></strong>/100</td></tr><?php endforeach; ?></table>
+    <?php echo $footerHtml; ?>
 </section>
-<section class="page">
+<section class="report-page">
+    <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['platform_visibility']); ?></div>
     <h2><?php echo $this->e($t['where_visible']); ?></h2>
     <p class="lead"><?php echo $this->e($t['platform_intro']); ?></p>
@@ -207,21 +234,27 @@ li { margin-bottom: 2mm; }
         <?php endforeach; ?>
     </table>
     <div class="note"><?php echo $this->e(sprintf($t['snapshot_note'], (int)($benchmark['tests'] ?? 0))); ?></div>
+    <?php echo $footerHtml; ?>
 </section>
-<section class="page">
+<section class="report-page">
+    <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['actions']); ?></div>
     <h2><?php echo $this->e(sprintf($t['actions_heading'], count($actions))); ?></h2>
     <p class="lead"><?php echo $this->e($t['actions_intro']); ?></p>
-    <?php foreach ($actions as $action) : ?><table class="action"><tr><td class="action-priority"><?php echo $this->e($t['priority_' . $action['priority']]); ?></td><td><div class="action-title"><?php echo $this->e($action['title']); ?></div><?php if ($action['description'] !== '') : ?><div class="action-description"><?php echo $this->e($action['description']); ?></div><?php endif; ?><div class="action-meta"><?php echo $this->e($action['category'] . ' · ' . $t['effort'] . ': ' . $t['effort_' . $action['effort']]); ?></div></td></tr></table><?php endforeach; ?>
+    <?php foreach ($actions as $action) : ?><table class="action"><tr><td class="action-priority"><span class="priority-chip <?php echo $this->e($action['priority']); ?>"><?php echo $this->e($t['priority_' . $action['priority']]); ?></span></td><td><div class="action-title"><?php echo $this->e($action['title']); ?></div><?php if ($action['description'] !== '') : ?><div class="action-description"><?php echo $this->e($action['description']); ?></div><?php endif; ?><div class="action-meta"><span><?php echo $this->e($action['category']); ?></span> <em><?php echo $this->e($t['effort'] . ': ' . $t['effort_' . $action['effort']]); ?></em></div></td></tr></table><?php endforeach; ?>
+    <?php echo $footerHtml; ?>
 </section>
-<section class="page">
+<section class="report-page">
+    <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['next_steps']); ?></div>
     <h2><?php echo $this->e($t['from_report']); ?></h2>
     <p class="lead"><?php echo $this->e($t['steps_intro']); ?></p>
     <table class="steps"><?php foreach ($t['steps'] as $index => $step) : ?><tr><td class="step-number"><?php echo $index + 1; ?></td><td><strong><?php echo $this->e($step[0]); ?></strong><br><?php echo $this->e($step[1]); ?></td></tr><?php endforeach; ?></table>
-    <div class="cta"><table class="cta-table"><tr><td><h3><?php echo $this->e($t['cta_title']); ?></h3><?php echo $this->e($t['cta_copy']); ?></td><td class="cta-contact"><?php echo $this->e($t['contact']); ?><br>fyndable.ai · hallo@fyndable.ai</td></tr></table></div>
+    <div class="cta"><table class="cta-table"><tr><td><h3><?php echo $this->e($t['cta_title']); ?></h3><?php echo $this->e($t['cta_copy']); ?></td><td class="cta-contact"><strong><?php echo $this->e($t['contact']); ?></strong><br>fyndable.ai · hallo@fyndable.ai</td></tr></table></div>
+    <?php echo $footerHtml; ?>
 </section>
-<section class="page">
+<section class="appendix-page">
+    <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['appendix']); ?></div>
     <h2><?php echo $this->e($t['findings_recommendations']); ?></h2>
     <?php if (!empty($data['multi_model']) && !empty($data['models_used'])) : ?><div class="model-chips"><?php foreach ((array)$data['models_used'] as $model) : ?><span><?php echo $this->e((string)($model['model'] ?? '')); ?> · <?php echo (int)($model['score'] ?? 0); ?>/100</span><?php endforeach; ?></div><?php endif; ?>
@@ -231,7 +264,8 @@ li { margin-bottom: 2mm; }
     <div class="appendix-block"><h3><?php echo $this->e($t['recommendations']); ?></h3><ul><?php foreach ((array)($data['recommendations'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></div>
     <div class="appendix-block"><h3><?php echo $this->e($t['all_category_scores']); ?></h3><table class="metric-table"><?php foreach ($metricLabels as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $value; ?>/100</td></tr><?php endforeach; ?></table></div>
 </section>
-<section class="page">
+<section class="appendix-page">
+    <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['keyword_analysis']); ?></div>
     <h2><?php echo $this->e($t['tested_keywords']); ?></h2>
     <table class="keyword-table"><thead><tr><th><?php echo $this->e($t['keyword']); ?></th><th><?php echo $this->e($t['ai_overview']); ?></th><th><?php echo $this->e($t['your_site_cited']); ?></th><th><?php echo $this->e($t['competitors']); ?></th></tr></thead><tbody><?php foreach ((array)($data['keywords_analysis'] ?? []) as $keyword) : ?><tr><td><?php echo $this->e((string)($keyword['keyword'] ?? '')); ?></td><td><?php echo !empty($keyword['has_ai_overview']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo !empty($keyword['target_cited']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo $this->e($this->competitorHosts((array)($keyword['competitor_citations'] ?? []))); ?></td></tr><?php endforeach; ?></tbody></table>
@@ -307,6 +341,14 @@ li { margin-bottom: 2mm; }
             : sprintf('Genoemd of geciteerd in %d van %d geteste prompts (%d%%).', $mentions, $tests, (int)($platform['visibility'] ?? 0));
     }
 
+    private function scoreStatus(int $score, string $language): string
+    {
+        if ($language === 'en') {
+            return $score >= 70 ? 'Good' : ($score >= 40 ? 'Needs work' : 'Weak');
+        }
+        return $score >= 70 ? 'Goed' : ($score >= 40 ? 'Kan beter' : 'Zwak');
+    }
+
     private function scoreHeadline(int $score, string $language): string
     {
         if ($language === 'en') {
@@ -329,6 +371,31 @@ li { margin-bottom: 2mm; }
             return '';
         }
         return 'data:image/png;base64,' . base64_encode((string)file_get_contents($file));
+    }
+
+    private function fontDataUri(bool $bold): string
+    {
+        $file = SSEO_AI_SAAS_PLUGIN_DIR . 'assets/fonts/outfit/' . ($bold ? 'Outfit-Bold.ttf' : 'Outfit-Regular.ttf');
+        if (!is_readable($file)) {
+            return '';
+        }
+        return 'data:font/truetype;base64,' . base64_encode((string)file_get_contents($file));
+    }
+
+    private function scoreRingDataUri(int $score, bool $dark): string
+    {
+        $score = max(0, min(100, $score));
+        $circumference = 263.89;
+        $dash = round($circumference * ($score / 100), 2);
+        $track = $dark ? '#34364d' : '#e5e8ee';
+        $text = $dark ? '#ffffff' : '#343434';
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">'
+            . '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a43bb8"/><stop offset="1" stop-color="#32a6db"/></linearGradient></defs>'
+            . '<circle cx="80" cy="80" r="42" fill="none" stroke="' . $track . '" stroke-width="10"/>'
+            . '<circle cx="80" cy="80" r="42" fill="none" stroke="#8742bd" stroke-width="10" stroke-linecap="round" stroke-dasharray="' . $dash . ' ' . ($circumference - $dash) . '" transform="rotate(-90 80 80)"/>'
+            . '<text x="80" y="79" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="32" fill="' . $text . '">' . $score . '</text>'
+            . '<text x="80" y="99" text-anchor="middle" font-family="DejaVu Sans" font-size="12" fill="#8992a4">/ 100</text></svg>';
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     private function host(string $url): string
