@@ -36,7 +36,7 @@ class GeoScanPdf
         $dompdf->loadHtml($this->buildHtml($scan, $cover), 'UTF-8');
         $dompdf->render();
         $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
-        $pageLabel = (($scan['result']['language'] ?? 'nl') === 'en') ? 'Page' : 'Pagina';
+        $pageLabel = (($scan['result']['language'] ?? $scan['language'] ?? 'nl') === 'en') ? 'Page' : 'Pagina';
         $dompdf->getCanvas()->page_script(static function ($pageNumber, $pageCount, $canvas) use ($font, $pageLabel): void {
             if ($pageNumber > 1) {
                 $text = $pageLabel . ' ' . ($pageNumber - 1) . ' / ' . ($pageCount - 1);
@@ -46,8 +46,9 @@ class GeoScanPdf
         });
 
         $data = $scan['result'];
-        $host = $this->host((string)($data['url'] ?? $scan['url'] ?? 'website'));
-        $date = !empty($data['scanned_at']) ? strtotime($data['scanned_at']) : time();
+        $host = $this->host((string)($scan['url'] ?? $data['url'] ?? 'website'));
+        $dateValue = (string)($data['scanned_at'] ?? $scan['created_at'] ?? '');
+        $date = strtotime($dateValue) ?: time();
         $filename = sanitize_file_name(sprintf('fyndable-geo-scan-%s-%s-%s.pdf', $host, wp_date('Y-m-d', $date), $cover));
 
         return ['bytes' => $dompdf->output(), 'filename' => $filename];
@@ -56,12 +57,15 @@ class GeoScanPdf
     private function buildHtml(array $scan, string $cover): string
     {
         $data = (array)$scan['result'];
-        $language = ($data['language'] ?? 'nl') === 'en' ? 'en' : 'nl';
+        $language = (($data['language'] ?? $scan['language'] ?? 'nl') === 'en') ? 'en' : 'nl';
         $t = $this->labels($language);
-        $score = max(0, min(100, (int)($data['score'] ?? 0)));
-        $url = (string)($data['url'] ?? $scan['url'] ?? '');
+        $score = max(0, min(100, (int)($data['score'] ?? $scan['score'] ?? 0)));
+        $url = (string)($scan['url'] ?? $data['url'] ?? '');
         $host = $this->host($url);
-        $scanDate = !empty($data['scanned_at']) ? strtotime($data['scanned_at']) : time();
+        $keywords = $this->scanKeywords($scan, $data);
+        $keywordAnalysis = $this->keywordAnalysis($data, $keywords);
+        $scanDateValue = (string)($data['scanned_at'] ?? $scan['created_at'] ?? '');
+        $scanDate = strtotime($scanDateValue) ?: time();
         $date = wp_date($language === 'en' ? 'F j, Y' : 'j F Y', $scanDate);
         $headline = trim((string)($data['management_headline'] ?? '')) ?: $this->scoreHeadline($score, $language);
         $summary = trim((string)($data['executive_summary'] ?? '')) ?: $this->fallbackSummary($score, $language);
@@ -79,7 +83,10 @@ class GeoScanPdf
         $visiblePlatforms = count(array_filter($platforms, static fn(array $platform): bool => in_array($platform['status'] ?? '', ['visible', 'sometimes'], true)));
         $platformCount = count(array_filter($platforms, static fn(array $platform): bool => ($platform['status'] ?? '') !== 'unavailable'));
         $metricLabels = $this->metricLabels($language);
-        $summaryMetrics = array_intersect_key($metricLabels, array_flip(['structure', 'schema_markup', 'direct_answer', 'citation_worthiness']));
+        $summaryMetrics = [];
+        foreach (['direct_answer', 'eeat', 'schema_markup', 'entities', 'citation_worthiness', 'content_freshness', 'structure', 'readability'] as $key) {
+            $summaryMetrics[$key] = $metricLabels[$key];
+        }
         $headerHtml = '<div class="report-header">'
             . ($headerLogo !== '' ? '<img src="' . $headerLogo . '" alt="Fyndable Smart SEO">' : '')
             . '<span>' . $this->e($t['report'] . ' · ' . $host) . '</span></div>';
@@ -122,12 +129,12 @@ a { color: inherit; text-decoration: none; }
 .cover-score-ring { width: 42mm; height: 42mm; margin: 0 auto 1mm; }
 .score-status { display: inline-block; padding: 1.5mm 3mm; border: .3mm solid #f0c76b; border-radius: 8mm; background: #fff5dc; color: #b56208; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
 .cover.dark .score-status { background: #322849; border-color: #8252b7; color: #ead7fa; }
-.report-page { height: 258mm; position: relative; page-break-before: always; overflow: hidden; }
+.report-page { position: relative; page-break-before: always; }
 .appendix-page { page-break-before: always; }
 .report-header { height: 13mm; border-bottom: .55mm solid #8842bd; margin-bottom: 8mm; }
 .report-header img { width: 45mm; height: auto; }
 .report-header span { float: right; padding-top: 2mm; color: #8992a4; font-size: 7pt; font-weight: bold; letter-spacing: .5px; text-transform: uppercase; }
-.report-footer { position: absolute; bottom: 0; left: 0; right: 0; border-top: .3mm solid #dfe3ea; color: #8d95a5; font-size: 7pt; padding-top: 2.5mm; }
+.report-footer { border-top: .3mm solid #dfe3ea; color: #8d95a5; font-size: 7pt; padding-top: 2.5mm; margin-top: 6mm; }
 h2 { font-size: 22pt; line-height: 1.12; margin: 3mm 0 4mm; font-weight: bold; letter-spacing: -.4px; }
 h3 { font-size: 14pt; margin: 0 0 3mm; font-weight: bold; }
 p { margin: 0 0 4mm; }
@@ -138,12 +145,13 @@ p { margin: 0 0 4mm; }
 .stats span { color: #596274; font-size: 8pt; }
 .metric-table, .benchmark-table { width: 100%; border-collapse: collapse; }
 .metric-table td { padding: 2.4mm 0; vertical-align: middle; }
-.metric-icon { width: 13mm; height: 10mm; color: #fff; background: #8547bf; text-align: center; border-radius: 3mm; }
-.metric-name { width: 35%; padding-left: 4mm !important; font-weight: bold; }
+.metric-icon { width: 11mm; text-align: center; }
+.metric-icon img { width: 9mm; height: 9mm; }
+.metric-name { width: 35%; padding-left: 3mm !important; font-weight: bold; font-size: 9pt; }
 .bar { width: 100%; height: 2.2mm; background: #e3e6eb; border-radius: 2mm; }
 .bar-fill { height: 2.2mm; background: #8742bd; border-radius: 2mm; }
-.metric-score { width: 24%; text-align: right; color: #9299a8; font-size: 8pt; }
-.metric-score strong { color: #343434; font-size: 11pt; }
+.metric-score { width: 22%; text-align: right; color: #9299a8; font-size: 8pt; }
+.metric-score strong { color: #343434; font-size: 10pt; }
 .platform-grid { width: 100%; border-collapse: separate; border-spacing: 4mm; margin: 3mm -4mm 6mm; table-layout: fixed; }
 .platform-grid td { width: 50%; vertical-align: top; border: .5mm solid #e0e3e8; padding: 5mm; border-radius: 3mm; }
 .platform-name { font-size: 12pt; font-weight: bold; }
@@ -213,7 +221,7 @@ li { margin-bottom: 2mm; }
         <td><strong><?php echo count($actions); ?></strong><span><?php echo $this->e($t['actions_found']); ?></span></td>
     </tr></table>
     <h3><?php echo $this->e($t['category_scores']); ?></h3>
-    <table class="metric-table"><?php foreach ($summaryMetrics as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-icon">●</td><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $this->e($this->scoreStatus($value, $language)); ?> <strong><?php echo $value; ?></strong>/100</td></tr><?php endforeach; ?></table>
+    <table class="metric-table"><?php foreach ($summaryMetrics as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-icon"><img src="<?php echo $this->metricIconDataUri($key); ?>" alt=""></td><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $this->e($this->scoreStatus($value, $language)); ?> <strong><?php echo $value; ?></strong>/100</td></tr><?php endforeach; ?></table>
     <?php echo $footerHtml; ?>
 </section>
 <section class="report-page">
@@ -268,7 +276,8 @@ li { margin-bottom: 2mm; }
     <?php echo $headerHtml; ?>
     <div class="section-kicker"><?php echo $this->e($t['keyword_analysis']); ?></div>
     <h2><?php echo $this->e($t['tested_keywords']); ?></h2>
-    <table class="keyword-table"><thead><tr><th><?php echo $this->e($t['keyword']); ?></th><th><?php echo $this->e($t['ai_overview']); ?></th><th><?php echo $this->e($t['your_site_cited']); ?></th><th><?php echo $this->e($t['competitors']); ?></th></tr></thead><tbody><?php foreach ((array)($data['keywords_analysis'] ?? []) as $keyword) : ?><tr><td><?php echo $this->e((string)($keyword['keyword'] ?? '')); ?></td><td><?php echo !empty($keyword['has_ai_overview']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo !empty($keyword['target_cited']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo $this->e($this->competitorHosts((array)($keyword['competitor_citations'] ?? []))); ?></td></tr><?php endforeach; ?></tbody></table>
+    <?php if ($keywords) : ?><p class="lead"><?php echo $language === 'en' ? 'Keywords used: ' : 'Gebruikte zoekwoorden: '; ?><strong><?php echo $this->e(implode(' · ', $keywords)); ?></strong></p><?php endif; ?>
+    <table class="keyword-table"><thead><tr><th><?php echo $this->e($t['keyword']); ?></th><th><?php echo $this->e($t['ai_overview']); ?></th><th><?php echo $this->e($t['your_site_cited']); ?></th><th><?php echo $this->e($t['competitors']); ?></th></tr></thead><tbody><?php foreach ($keywordAnalysis as $keyword) : $hasResult = ($keyword['has_result'] ?? true) === true; ?><tr><td><?php echo $this->e((string)($keyword['keyword'] ?? '')); ?></td><td><?php echo !$hasResult ? '—' : (!empty($keyword['has_ai_overview']) ? $this->e($t['yes']) : $this->e($t['no'])); ?></td><td><?php echo !$hasResult ? '—' : (!empty($keyword['target_cited']) ? $this->e($t['yes']) : $this->e($t['no'])); ?></td><td><?php echo !$hasResult ? '—' : $this->e($this->competitorHosts((array)($keyword['competitor_citations'] ?? []))); ?></td></tr><?php endforeach; ?></tbody></table>
 </section>
 </body>
 </html>
@@ -276,23 +285,85 @@ li { margin-bottom: 2mm; }
         return (string)ob_get_clean();
     }
 
+    private function scanKeywords(array $scan, array $data): array
+    {
+        $keywords = (array)($scan['meta']['keywords'] ?? []);
+        if (!$keywords && !empty($scan['keywords'])) {
+            $keywords = preg_split('/\s*,\s*/', (string)$scan['keywords'], -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        }
+        if (!$keywords) {
+            $keywords = $data['keywords'] ?? [];
+            if (!is_array($keywords)) {
+                $keywords = preg_split('/\s*,\s*/', (string)$keywords, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            }
+        }
+
+        $normalized = [];
+        foreach ($keywords as $keyword) {
+            $keyword = trim((string)$keyword);
+            if ($keyword !== '' && !in_array($keyword, $normalized, true)) {
+                $normalized[] = $keyword;
+            }
+        }
+        return $normalized;
+    }
+
+    private function keywordAnalysis(array $data, array $keywords): array
+    {
+        $analysis = array_values(array_filter(
+            (array)($data['keywords_analysis'] ?? []),
+            static fn($item): bool => is_array($item) && trim((string)($item['keyword'] ?? '')) !== ''
+        ));
+        $analyzed = array_map(
+            static fn(array $item): string => strtolower(trim((string)$item['keyword'])),
+            $analysis
+        );
+        foreach ($keywords as $keyword) {
+            if (!in_array(strtolower($keyword), $analyzed, true)) {
+                $analysis[] = [
+                    'keyword' => $keyword,
+                    'has_result' => false,
+                    'has_ai_overview' => false,
+                    'target_cited' => false,
+                    'competitor_citations' => [],
+                ];
+            }
+        }
+        return $analysis;
+    }
+
     private function actions(array $data, string $language): array
     {
         $actions = [];
-        foreach ((array)($data['structured_actions'] ?? []) as $item) {
-            if (!is_array($item) || trim((string)($item['title'] ?? '')) === '') {
+        $priorityRecommendations = (array)($data['priority_ranked_recommendations'] ?? []);
+        foreach ($priorityRecommendations as $index => $item) {
+            if (trim((string)$item) === '') {
                 continue;
             }
             $actions[] = [
-                'title' => (string)$item['title'],
-                'description' => (string)($item['description'] ?? ''),
-                'priority' => in_array($item['priority'] ?? '', ['high', 'medium', 'low'], true) ? $item['priority'] : 'medium',
-                'category' => (string)($item['category'] ?? ($language === 'en' ? 'GEO readiness' : 'GEO-readiness')),
-                'effort' => in_array($item['effort'] ?? '', ['low', 'medium', 'high'], true) ? $item['effort'] : 'medium',
+                'title' => (string)$item,
+                'description' => '',
+                'priority' => $index < 2 ? 'high' : ($index < 4 ? 'medium' : 'low'),
+                'category' => $language === 'en' ? 'GEO readiness' : 'GEO-readiness',
+                'effort' => 'medium',
             ];
         }
         if (!$actions) {
-            foreach ((array)($data['priority_ranked_recommendations'] ?? $data['recommendations'] ?? []) as $index => $item) {
+            foreach ((array)($data['structured_actions'] ?? []) as $item) {
+                if (!is_array($item) || trim((string)($item['title'] ?? '')) === '') {
+                    continue;
+                }
+                $actions[] = [
+                    'title' => (string)$item['title'],
+                    'description' => (string)($item['description'] ?? ''),
+                    'priority' => in_array($item['priority'] ?? '', ['high', 'medium', 'low'], true) ? $item['priority'] : 'medium',
+                    'category' => (string)($item['category'] ?? ($language === 'en' ? 'GEO readiness' : 'GEO-readiness')),
+                    'effort' => in_array($item['effort'] ?? '', ['low', 'medium', 'high'], true) ? $item['effort'] : 'medium',
+                ];
+            }
+        }
+        if (!$actions) {
+            foreach ((array)($data['recommendations'] ?? []) as $index => $item) {
                 $actions[] = [
                     'title' => (string)$item,
                     'description' => '',
@@ -339,6 +410,25 @@ li { margin-bottom: 2mm; }
         return $language === 'en'
             ? sprintf('Mentioned or cited in %d of %d tested prompts (%d%%).', $mentions, $tests, (int)($platform['visibility'] ?? 0))
             : sprintf('Genoemd of geciteerd in %d van %d geteste prompts (%d%%).', $mentions, $tests, (int)($platform['visibility'] ?? 0));
+    }
+
+    private function metricIconDataUri(string $key): string
+    {
+        $symbols = [
+            'direct_answer'       => 'M14 3l-3 3H8v4H4v10h16V3h-6zm2 16H6v-6h4V9h4V5h2v14z',
+            'eeat'                => 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4a3 3 0 110 6 3 3 0 010-6zm5 12H7v-1c0-2 4-3.1 5-3.1s5 1.1 5 3.1v1z',
+            'schema_markup'       => 'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z',
+            'entities'            => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z',
+            'citation_worthiness' => 'M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z',
+            'content_freshness'   => 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z',
+            'structure'           => 'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z',
+            'readability'         => 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+        ];
+        $path = $symbols[$key] ?? 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z';
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">'
+            . '<rect width="36" height="36" rx="8" fill="#8547bf"/>'
+            . '<g transform="translate(6,6)" fill="#fff"><path d="' . $path . '"/></g></svg>';
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     private function scoreStatus(int $score, string $language): string
