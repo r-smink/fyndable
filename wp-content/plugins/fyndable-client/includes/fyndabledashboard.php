@@ -110,6 +110,19 @@ class DashboardShell
 
             if ($isPro) {
                 $this->menuItems[] = [
+                    'slug' => 'ai-seo-backlinks',
+                    'label' => __('Backlinks', 'ai-seo-client'),
+                    'icon' => '&#128279;',
+                ];
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-advanced-backlinks',
+                    'label' => __('Adv. Backlinks', 'ai-seo-client'),
+                    'icon' => '&#129517;',
+                ];
+            }
+
+            if ($isPro) {
+                $this->menuItems[] = [
                     'slug' => 'ai-seo-rank-tracker',
                     'label' => __('Rank Tracker', 'ai-seo-client'),
                     'icon' => '&#128200;',

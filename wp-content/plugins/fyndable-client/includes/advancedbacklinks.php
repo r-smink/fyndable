@@ -50,163 +50,199 @@ class AdvancedBacklinks
         $brokenBacklinks = $this->findBrokenBacklinks();
         $competitorTargets = $this->getCompetitorBacklinkTargets();
         $anchorAnalysis = $this->getAnchorTextAnalysis();
-        
+        $prefilledCompetitor = isset($_GET['competitor']) ? sanitize_text_field($_GET['competitor']) : '';
+
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Advanced Backlink Analysis', 'ai-seo-client'); ?></h1>
+        <style>
+            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
+            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
+            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
+            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
+            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
+            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
+            .sseo-ai-dashboard-card h3 { color: #374151; font-size: 16px; font-weight: 600; margin: 0 0 10px; }
+            .sseo-ai-metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
+            .sseo-ai-metric { text-align: center; padding: 15px; border-radius: 8px; }
+            .sseo-ai-metric.branded { background: #e0f2fe; color: #0369a1; }
+            .sseo-ai-metric.exact { background: #fef3c7; color: #92400e; }
+            .sseo-ai-metric.partial { background: #e0f7fa; color: #0e7490; }
+            .sseo-ai-metric.generic { background: #fce7f3; color: #be185d; }
+            .sseo-ai-metric-value { font-size: 28px; font-weight: 700; margin: 0; }
+            .sseo-ai-metric-label { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
+            .sseo-ai-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+            .sseo-ai-recommendations { margin-top: 20px; padding: 16px; background: #f0f9ff; border-left: 4px solid #379fd3; border-radius: 8px; }
+            .sseo-ai-recommendations h4 { margin-top: 0; color: #111827; }
+            .sseo-ai-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+            .sseo-ai-modal-content { background: #fff; border-radius: 12px; padding: 30px; width: 90%; max-width: 600px; max-height: 90vh; overflow: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,.1); }
+            .sseo-ai-modal-content textarea { width: 100%; height: 300px; margin-bottom: 15px; }
+            @media (max-width: 768px) {
+                .sseo-ai-metric-grid { grid-template-columns: repeat(2, 1fr); }
+                .sseo-ai-content { padding: 20px; }
+            }
+            /* Dark theme overrides */
+            body.fyndable-dark .sseo-ai-metric-value { color: inherit; }
+            body.fyndable-dark .sseo-ai-metric.branded { background: #0c4a6e; color: #e0f2fe; }
+            body.fyndable-dark .sseo-ai-metric.exact { background: #78350f; color: #fef3c7; }
+            body.fyndable-dark .sseo-ai-metric.partial { background: #164e63; color: #cffafe; }
+            body.fyndable-dark .sseo-ai-metric.generic { background: #831843; color: #fce7f3; }
+            body.fyndable-dark .sseo-ai-recommendations { background: #371447; border-left-color: #8f39ac; }
+            body.fyndable-dark .sseo-ai-recommendations h4 { color: #fff; }
+            body.fyndable-dark .sseo-ai-modal-content { background: #1f2937; color: #fff; }
+            body.fyndable-dark .sseo-ai-modal-content textarea { background: #374151; color: #fff; border-color: #4b5563; }
+        </style>
+        <div class="wrap sseo-ai-modern">
+            <div class="sseo-ai-header">
+                <h1><?php esc_html_e('Advanced Backlink Analysis', 'ai-seo-client'); ?></h1>
+                <p><?php esc_html_e('Broken links, competitor targets & anchor risk analysis', 'ai-seo-client'); ?></p>
+            </div>
+            <div class="sseo-ai-content">
             
-            <!-- Broken Backlink Prospecting -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Broken Backlink Opportunities', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('Find broken backlinks pointing to your competitors that you can reclaim.', 'ai-seo-client'); ?></p>
-                
-                <div style="margin-bottom: 15px;">
-                    <label for="competitor-domain">
-                        <strong><?php esc_html_e('Competitor Domain:', 'ai-seo-client'); ?></strong>
-                    </label><br>
-                    <input type="text" id="competitor-domain" class="regular-text" 
-                           placeholder="competitor.com">
-                    <button type="button" class="button button-primary" onclick="sseoFindBrokenBacklinks()">
-                        <?php esc_html_e('Find Broken Links', 'ai-seo-client'); ?>
-                    </button>
+                <!-- Broken Backlink Prospecting -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Broken Backlink Opportunities', 'ai-seo-client'); ?></h2>
+                    <p><?php esc_html_e('Find broken backlinks pointing to your competitors that you can reclaim.', 'ai-seo-client'); ?></p>
+
+                    <div style="margin-bottom: 15px;">
+                        <label for="competitor-domain-broken">
+                            <strong><?php esc_html_e('Competitor Domain:', 'ai-seo-client'); ?></strong>
+                        </label><br>
+                        <input type="text" id="competitor-domain-broken" class="regular-text"
+                               placeholder="competitor.com"
+                               value="<?php echo esc_attr($prefilledCompetitor); ?>">
+                        <button type="button" class="button button-primary" onclick="sseoFindBrokenBacklinks()">
+                            <?php esc_html_e('Find Broken Links', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
+
+                    <?php if (!empty($brokenBacklinks)): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Source URL', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Broken Target', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('DR', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Opportunity Score', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($brokenBacklinks as $link): ?>
+                            <tr>
+                                <td>
+                                    <a href="<?php echo esc_url($link['source_url']); ?>" target="_blank">
+                                        <?php echo esc_html($this->truncateUrl($link['source_url'])); ?>
+                                    </a>
+                                </td>
+                                <td>
+                                    <code><?php echo esc_html($this->truncateUrl($link['target_url'])); ?></code>
+                                </td>
+                                <td>
+                                    <strong style="color: <?php echo esc_attr($this->getDRColor($link['domain_rating'])); ?>;">
+                                        <?php echo esc_html($link['domain_rating']); ?>
+                                    </strong>
+                                </td>
+                                <td><?php echo esc_html($link['anchor_text']); ?></td>
+                                <td>
+                                    <span style="color: <?php echo esc_attr($this->getScoreColor($link['opportunity_score'])); ?>;">
+                                        <?php echo esc_html($link['opportunity_score']); ?>/100
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="button button-small"
+                                            onclick="sseoCreateOutreachEmail('<?php echo esc_js($link['source_url']); ?>')">
+                                        <?php esc_html_e('Generate Outreach', 'ai-seo-client'); ?>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php else: ?>
+                    <p><?php esc_html_e('No broken backlink opportunities found yet. Enter a competitor domain above.', 'ai-seo-client'); ?></p>
+                    <?php endif; ?>
                 </div>
-                
-                <?php if (!empty($brokenBacklinks)): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Source URL', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Broken Target', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('DR', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Opportunity Score', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($brokenBacklinks as $link): ?>
-                        <tr>
-                            <td>
-                                <a href="<?php echo esc_url($link['source_url']); ?>" target="_blank">
-                                    <?php echo esc_html($this->truncateUrl($link['source_url'])); ?>
-                                </a>
-                            </td>
-                            <td>
-                                <code><?php echo esc_html($this->truncateUrl($link['target_url'])); ?></code>
-                            </td>
-                            <td>
-                                <strong style="color: <?php echo $this->getDRColor($link['domain_rating']); ?>;">
-                                    <?php echo esc_html($link['domain_rating']); ?>
-                                </strong>
-                            </td>
-                            <td><?php echo esc_html($link['anchor_text']); ?></td>
-                            <td>
-                                <span style="color: <?php echo $this->getScoreColor($link['opportunity_score']); ?>;">
-                                    <?php echo esc_html($link['opportunity_score']); ?>/100
-                                </span>
-                            </td>
-                            <td>
-                                <button type="button" class="button button-small" 
-                                        onclick="sseoCreateOutreachEmail('<?php echo esc_js($link['source_url']); ?>')">
-                                    <?php esc_html_e('Generate Outreach', 'ai-seo-client'); ?>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('No broken backlink opportunities found yet. Enter a competitor domain above.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
-            </div>
             
-            <!-- Competitor Backlink Targets -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Competitor Backlink Targets', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('High-value domains linking to your competitors but not to you.', 'ai-seo-client'); ?></p>
-                
-                <?php if (!empty($competitorTargets)): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Target Domain', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('DR', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Links to Competitors', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Link Type', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($competitorTargets as $target): ?>
-                        <tr>
-                            <td>
-                                <a href="<?php echo esc_url('https://' . $target['domain']); ?>" target="_blank">
-                                    <?php echo esc_html($target['domain']); ?>
-                                </a>
-                            </td>
-                            <td>
-                                <strong style="color: <?php echo $this->getDRColor($target['domain_rating']); ?>;">
-                                    <?php echo esc_html($target['domain_rating']); ?>
-                                </strong>
-                            </td>
-                            <td><?php echo esc_html($target['competitor_links']); ?></td>
-                            <td><?php echo esc_html($target['link_type']); ?></td>
-                            <td>
-                                <span style="color: <?php echo $this->getPriorityColor($target['priority']); ?>;">
-                                    <?php echo esc_html(ucfirst($target['priority'])); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <button type="button" class="button button-small button-primary" 
-                                        onclick="sseoStartOutreach('<?php echo esc_js($target['domain']); ?>')">
-                                    <?php esc_html_e('Start Outreach', 'ai-seo-client'); ?>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('Add competitor domains in the main Backlink Analysis page to see targets.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
-            </div>
+                <!-- Competitor Backlink Targets -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Competitor Backlink Targets', 'ai-seo-client'); ?></h2>
+                    <p><?php esc_html_e('High-value domains linking to your competitors but not to you.', 'ai-seo-client'); ?></p>
+
+                    <?php if (!empty($competitorTargets)): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Target Domain', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('DR', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Links to Competitors', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Link Type', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($competitorTargets as $target): ?>
+                            <tr>
+                                <td>
+                                    <a href="<?php echo esc_url('https://' . $target['domain']); ?>" target="_blank">
+                                        <?php echo esc_html($target['domain']); ?>
+                                    </a>
+                                </td>
+                                <td>
+                                    <strong style="color: <?php echo esc_attr($this->getDRColor($target['domain_rating'])); ?>;">
+                                        <?php echo esc_html($target['domain_rating']); ?>
+                                    </strong>
+                                </td>
+                                <td><?php echo esc_html($target['competitor_links']); ?></td>
+                                <td><?php echo esc_html($target['link_type']); ?></td>
+                                <td>
+                                    <span style="color: <?php echo esc_attr($this->getPriorityColor($target['priority'])); ?>;">
+                                        <?php echo esc_html(ucfirst($target['priority'])); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="button button-small button-primary"
+                                            onclick="sseoCreateOutreachEmail('<?php echo esc_js('https://' . $target['domain']); ?>')">
+                                        <?php esc_html_e('Start Outreach', 'ai-seo-client'); ?>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php else: ?>
+                    <p><?php esc_html_e('Add competitor domains in the main Backlink Analysis page to see targets.', 'ai-seo-client'); ?></p>
+                    <?php endif; ?>
+                </div>
             
-            <!-- Advanced Anchor Text Analysis -->
-            <div class="card">
-                <h2><?php esc_html_e('Anchor Text Analysis', 'ai-seo-client'); ?></h2>
+                <!-- Advanced Anchor Text Analysis -->
+                <div class="sseo-ai-dashboard-card">
+                    <h2><?php esc_html_e('Anchor Text Analysis', 'ai-seo-client'); ?></h2>
                 
                 <?php if (!empty($anchorAnalysis)): ?>
                 <div style="margin-bottom: 20px;">
-                    <h3><?php esc_html_e('Anchor Text Distribution', 'ai-seo-client'); ?></h3>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-                        <div style="padding: 15px; background: #e7f3ff; border-radius: 4px;">
-                            <div style="font-size: 24px; font-weight: bold; color: #2271b1;">
-                                <?php echo esc_html($anchorAnalysis['branded_percentage']); ?>%
-                            </div>
-                            <div><?php esc_html_e('Branded', 'ai-seo-client'); ?></div>
+                        <h3><?php esc_html_e('Anchor Text Distribution', 'ai-seo-client'); ?></h3>
+                    <div class="sseo-ai-metric-grid">
+                        <div class="sseo-ai-metric branded">
+                            <div class="sseo-ai-metric-value"><?php echo esc_html($anchorAnalysis['branded_percentage']); ?>%</div>
+                            <div class="sseo-ai-metric-label"><?php esc_html_e('Branded', 'ai-seo-client'); ?></div>
                         </div>
-                        <div style="padding: 15px; background: #fff3cd; border-radius: 4px;">
-                            <div style="font-size: 24px; font-weight: bold; color: #856404;">
-                                <?php echo esc_html($anchorAnalysis['exact_match_percentage']); ?>%
-                            </div>
-                            <div><?php esc_html_e('Exact Match', 'ai-seo-client'); ?></div>
+                        <div class="sseo-ai-metric exact">
+                            <div class="sseo-ai-metric-value"><?php echo esc_html($anchorAnalysis['exact_match_percentage']); ?>%</div>
+                            <div class="sseo-ai-metric-label"><?php esc_html_e('Exact Match', 'ai-seo-client'); ?></div>
                         </div>
-                        <div style="padding: 15px; background: #d1ecf1; border-radius: 4px;">
-                            <div style="font-size: 24px; font-weight: bold; color: #0c5460;">
-                                <?php echo esc_html($anchorAnalysis['partial_match_percentage']); ?>%
-                            </div>
-                            <div><?php esc_html_e('Partial Match', 'ai-seo-client'); ?></div>
+                        <div class="sseo-ai-metric partial">
+                            <div class="sseo-ai-metric-value"><?php echo esc_html($anchorAnalysis['partial_match_percentage']); ?>%</div>
+                            <div class="sseo-ai-metric-label"><?php esc_html_e('Partial Match', 'ai-seo-client'); ?></div>
                         </div>
-                        <div style="padding: 15px; background: #f8d7da; border-radius: 4px;">
-                            <div style="font-size: 24px; font-weight: bold; color: #721c24;">
-                                <?php echo esc_html($anchorAnalysis['generic_percentage']); ?>%
-                            </div>
-                            <div><?php esc_html_e('Generic', 'ai-seo-client'); ?></div>
+                        <div class="sseo-ai-metric generic">
+                            <div class="sseo-ai-metric-value"><?php echo esc_html($anchorAnalysis['generic_percentage']); ?>%</div>
+                            <div class="sseo-ai-metric-label"><?php esc_html_e('Generic', 'ai-seo-client'); ?></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <h3><?php esc_html_e('Top Anchor Texts', 'ai-seo-client'); ?></h3>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
@@ -226,7 +262,7 @@ class AdvancedBacklinks
                             <td><?php echo esc_html(number_format($anchor['count'])); ?></td>
                             <td><?php echo esc_html($anchor['percentage']); ?>%</td>
                             <td>
-                                <span style="color: <?php echo $this->getRiskColor($anchor['risk']); ?>;">
+                                <span style="color: <?php echo esc_attr($this->getRiskColor($anchor['risk'])); ?>;">
                                     <?php echo esc_html(ucfirst($anchor['risk'])); ?>
                                 </span>
                             </td>
@@ -234,9 +270,9 @@ class AdvancedBacklinks
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                
-                <div style="margin-top: 20px; padding: 15px; background: #f0f6fc; border-left: 4px solid #2271b1;">
-                    <h4 style="margin-top: 0;"><?php esc_html_e('AI Recommendations', 'ai-seo-client'); ?></h4>
+
+                <div class="sseo-ai-recommendations">
+                    <h4><?php esc_html_e('AI Recommendations', 'ai-seo-client'); ?></h4>
                     <div id="anchor-recommendations">
                         <?php echo wp_kses_post($this->getAnchorRecommendations($anchorAnalysis)); ?>
                     </div>
@@ -245,16 +281,17 @@ class AdvancedBacklinks
                 <p><?php esc_html_e('No anchor text data available yet.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
             </div>
+            </div>
         </div>
-        
+
         <script>
         function sseoFindBrokenBacklinks() {
-            const domain = jQuery('#competitor-domain').val().trim();
+            const domain = jQuery('#competitor-domain-broken').val().trim();
             if (!domain) {
                 alert('<?php esc_html_e('Please enter a competitor domain', 'ai-seo-client'); ?>');
                 return;
             }
-            
+
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_find_broken_backlinks',
                 domain: domain,
@@ -267,7 +304,7 @@ class AdvancedBacklinks
                 }
             });
         }
-        
+
         function sseoCreateOutreachEmail(sourceUrl) {
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_generate_outreach',
@@ -276,23 +313,23 @@ class AdvancedBacklinks
             }, function(response) {
                 if (response.success) {
                     const email = response.data.email;
-                    const modal = jQuery('<div class="sseo-modal">' +
-                        '<div class="sseo-modal-content">' +
+                    const modal = jQuery('<div class="sseo-ai-modal">' +
+                        '<div class="sseo-ai-modal-content">' +
                         '<h2><?php esc_html_e('Outreach Email Template', 'ai-seo-client'); ?></h2>' +
-                        '<textarea style="width: 100%; height: 300px;">' + email + '</textarea>' +
-                        '<button class="button button-primary" onclick="jQuery(this).closest(\'.sseo-modal\').remove()">Close</button>' +
+                        '<textarea readonly>' + email + '</textarea>' +
+                        '<button class="button button-primary" onclick="jQuery(this).closest(\'.sseo-ai-modal\').remove()"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>' +
                         '</div>' +
                         '</div>');
                     jQuery('body').append(modal);
                 }
             });
         }
-        
+
         function sseoStartOutreach(domain) {
-            window.location.href = '<?php echo admin_url('admin.php?page=ai-seo-outreach&domain='); ?>' + encodeURIComponent(domain);
+            sseoCreateOutreachEmail(domain);
         }
         </script>
-        
+
         <style>
         .sseo-modal {
             position: fixed;

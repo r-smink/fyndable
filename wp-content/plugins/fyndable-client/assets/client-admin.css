@@ -69,6 +69,31 @@ body[class*="aiseo"] #wpfooter {
     --sseo-shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.06);
     --sseo-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
     --sseo-transition: all .2s ease;
+    /* Compatibility aliases for legacy aiseo-* variable names */
+    --aiseo-primary: var(--sseo-primary);
+    --aiseo-primary-dark: var(--sseo-primary-dark);
+    --aiseo-primary-light: var(--sseo-primary-light);
+    --aiseo-success: var(--sseo-success);
+    --aiseo-success-light: var(--sseo-success-light);
+    --aiseo-warning: var(--sseo-warning);
+    --aiseo-warning-light: var(--sseo-warning-light);
+    --aiseo-danger: var(--sseo-danger);
+    --aiseo-danger-light: var(--sseo-danger-light);
+    --aiseo-purple: var(--sseo-purple);
+    --aiseo-purple-light: var(--sseo-purple-light);
+    --aiseo-gray-50: var(--sseo-gray-50);
+    --aiseo-gray-100: var(--sseo-gray-100);
+    --aiseo-gray-200: var(--sseo-gray-200);
+    --aiseo-gray-300: var(--sseo-gray-300);
+    --aiseo-gray-500: var(--sseo-gray-500);
+    --aiseo-gray-700: var(--sseo-gray-700);
+    --aiseo-gray-900: var(--sseo-gray-900);
+    --aiseo-radius: var(--sseo-radius);
+    --aiseo-radius-sm: var(--sseo-radius-sm);
+    --aiseo-shadow: var(--sseo-shadow);
+    --aiseo-shadow-md: var(--sseo-shadow-md);
+    --aiseo-shadow-lg: var(--sseo-shadow-lg);
+    --aiseo-transition: var(--sseo-transition);
 }
 
 /* ================================================
@@ -512,7 +537,9 @@ a.ai-tool-card p {
    4. BUTTONS
    ================================================ */
 .aiseo-modern .button,
-.ai-seo-client .button {
+.ai-seo-client .button,
+.sseo-ai-modern .button,
+.sseo-ai-dashboard-card .button {
     border-radius: 6px !important;
     font-weight: 500;
     transition: var(--aiseo-transition);
@@ -522,19 +549,25 @@ a.ai-tool-card p {
 }
 
 .aiseo-modern .button-primary,
-.ai-seo-client .button-primary {
+.ai-seo-client .button-primary,
+.sseo-ai-modern .button-primary,
+.sseo-ai-dashboard-card .button-primary {
     background: var(--aiseo-primary) !important;
     border-color: var(--aiseo-primary-dark) !important;
     color: #fff !important;
 }
 
 .aiseo-modern .button-primary:hover,
-.ai-seo-client .button-primary:hover {
+.ai-seo-client .button-primary:hover,
+.sseo-ai-modern .button-primary:hover,
+.sseo-ai-dashboard-card .button-primary:hover {
     background: var(--aiseo-primary-dark) !important;
     box-shadow: var(--aiseo-shadow-md);
 }
 
-.aiseo-modern .button:disabled {
+.aiseo-modern .button:disabled,
+.sseo-ai-modern .button:disabled,
+.sseo-ai-dashboard-card .button:disabled {
     opacity: .55;
     cursor: not-allowed;
 }
