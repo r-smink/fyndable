@@ -400,3 +400,11 @@ New third tab **"Cannibalization"** on the Rank Tracker page (`ai-seo-ranks`), i
 Removed dead code: `auditservice.php` (AuditService) was instantiated in client.php but never called — deleted file + references (also from README feature table). Cannibalization now lives in RankTracker.
 
 Note: `php` CLI **is** available in this workspace (`php -l` works) — earlier note about PHP missing was wrong.
+
+## GEO prospect PDF + AI-platform benchmark (2026-10-12)
+
+The SaaS GEO scan now tests up to the first 3 keywords via DataForSEO LLM Responses for ChatGPT, Gemini and Perplexity. Google AI Overview continues to use all successful keyword lookups. `GeoScanner` stores normalized `platform_visibility` and `competitive_benchmark` fields in the existing result JSON; failed platform calls degrade to `unavailable` rather than a false negative. The live benchmark compares own-domain and cited competitor visibility within the successful test set.
+
+`GeoScanPdf` (`includes/geoscanpdf.php`) renders the completed scan on demand with Dompdf 3.1.6, bundled under the plugin-local `vendor/` directory. The protected `admin-post.php?action=sseo_geo_scan_download_pdf` action requires `agency_geo_scan`/`manage_options` plus a scan-specific nonce. The report/download pages open a cover-selection dialog with `cover=light|dark`; both versions contain the same prospect-safe scan data and exclude lead details, consent, API errors, usage and cost.
+
+New scans may take longer because of up to 9 additional live platform requests. `GeoScanQueue` lock/stale-running limits are 20 minutes. Verification commands: `php -l` on changed PHP files, `node --check assets/geo-scan-admin.js`, and plugin-local Composer validation through the available Composer PHAR or a system Composer installation.

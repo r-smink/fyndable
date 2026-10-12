@@ -50,13 +50,13 @@ class GeoScanReport
 
         <div class="wrap sseo-geo-report">
             <div class="sseo-geo-report-print-header">
-                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/logo_long_black.png'); ?>" alt="Fyndable">
+                <img src="<?php echo esc_url(SSEO_AI_SAAS_PLUGIN_URL . 'assets/logo_long_black.png'); ?>" alt="Fyndable">
             </div>
 
             <div class="sseo-geo-actions">
                 <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-geo-scan' . (isset($_GET['saas_shell']) ? '&saas_shell=1' : ''))); ?>" class="button button-secondary"><?php esc_html_e('Terug naar scans', 'sseo-ai-saas'); ?></a>
-                <button type="button" class="button button-primary" onclick="window.print();"><?php esc_html_e('Printen / Opslaan als PDF', 'sseo-ai-saas'); ?></button>
-                <span class="sseo-geo-print-hint"><?php esc_html_e('Kies in het printvenster "Opslaan als PDF".', 'sseo-ai-saas'); ?></span>
+                <?php $pdfUrl = wp_nonce_url(admin_url('admin-post.php?action=sseo_geo_scan_download_pdf&scan_id=' . $scanId), 'sseo_geo_scan_pdf_' . $scanId); ?>
+                <button type="button" class="button button-primary sseo-geo-pdf-open" data-pdf-url="<?php echo esc_url($pdfUrl); ?>"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button>
             </div>
 
             <div class="sseo-geo-report-card sseo-geo-report-hero">
@@ -276,6 +276,19 @@ class GeoScanReport
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            <div class="sseo-geo-pdf-dialog" id="sseo-geo-pdf-dialog" role="dialog" aria-modal="true" aria-labelledby="sseo-geo-pdf-title" hidden>
+                <div class="sseo-geo-pdf-backdrop" data-pdf-close></div>
+                <div class="sseo-geo-pdf-panel">
+                    <button type="button" class="sseo-geo-pdf-close" data-pdf-close aria-label="<?php esc_attr_e('Sluiten', 'sseo-ai-saas'); ?>">&times;</button>
+                    <h2 id="sseo-geo-pdf-title"><?php esc_html_e('Kies een cover', 'sseo-ai-saas'); ?></h2>
+                    <p><?php esc_html_e('Selecteer de cover voor het prospectrapport.', 'sseo-ai-saas'); ?></p>
+                    <div class="sseo-geo-cover-options">
+                        <label class="sseo-geo-cover-option is-selected"><input type="radio" name="sseo_geo_cover" value="light" checked><span class="sseo-geo-cover-preview light"><strong>GEO</strong><small><?php esc_html_e('SCAN RAPPORT', 'sseo-ai-saas'); ?></small></span><span><?php esc_html_e('Lichte cover', 'sseo-ai-saas'); ?></span></label>
+                        <label class="sseo-geo-cover-option"><input type="radio" name="sseo_geo_cover" value="dark"><span class="sseo-geo-cover-preview dark"><strong>GEO</strong><small><?php esc_html_e('SCAN RAPPORT', 'sseo-ai-saas'); ?></small></span><span><?php esc_html_e('Donkere cover', 'sseo-ai-saas'); ?></span></label>
+                    </div>
+                    <div class="sseo-geo-pdf-dialog-actions"><button type="button" class="button" data-pdf-close><?php esc_html_e('Annuleren', 'sseo-ai-saas'); ?></button><button type="button" class="button button-primary" id="sseo-geo-pdf-download"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button></div>
                 </div>
             </div>
         </div>

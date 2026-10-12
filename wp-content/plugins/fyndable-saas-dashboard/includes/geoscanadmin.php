@@ -14,6 +14,7 @@ class GeoScanAdmin
     private GeoScanner $geoScanner;
     private GeoScanRepository $repository;
     private GeoScanReport $report;
+    private GeoScanPdf $pdf;
     private GeoScanQueue $queue;
     private SaaSSettings $settings;
     private string $pluginFile;
@@ -23,6 +24,7 @@ class GeoScanAdmin
         GeoScanner $geoScanner,
         GeoScanRepository $repository,
         GeoScanReport $report,
+        GeoScanPdf $pdf,
         GeoScanQueue $queue,
         SaaSSettings $settings
     ) {
@@ -30,6 +32,7 @@ class GeoScanAdmin
         $this->geoScanner = $geoScanner;
         $this->repository = $repository;
         $this->report = $report;
+        $this->pdf = $pdf;
         $this->queue = $queue;
         $this->settings = $settings;
 
@@ -38,6 +41,7 @@ class GeoScanAdmin
         add_action('admin_post_sseo_geo_scan_regen_key', [$this, 'handleRegenKey']);
         add_action('admin_post_sseo_geo_scan_save_website', [$this, 'handleSaveWebsiteSettings']);
         add_action('admin_post_sseo_geo_scan_save_multi_model', [$this, 'handleSaveMultiModel']);
+        add_action('admin_post_sseo_geo_scan_download_pdf', [$this, 'handleDownloadPdf']);
     }
 
     /**
@@ -200,6 +204,7 @@ class GeoScanAdmin
                                 <td>
                                     <?php if ($status === 'completed') : ?>
                                         <a href="<?php echo esc_url($viewUrl); ?>" class="button button-small"><?php esc_html_e('View Report', 'sseo-ai-saas'); ?></a>
+                                        <button type="button" class="button button-small sseo-geo-pdf-open" data-pdf-url="<?php echo esc_url($this->getPdfUrl((int)$scan['id'])); ?>"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button>
                                     <?php else : ?>
                                         —
                                     <?php endif; ?>
@@ -262,6 +267,7 @@ class GeoScanAdmin
                                 <td>
                                     <?php if ($status === 'completed') : ?>
                                         <a href="<?php echo esc_url($viewUrl); ?>" class="button button-small"><?php esc_html_e('View Report', 'sseo-ai-saas'); ?></a>
+                                        <button type="button" class="button button-small sseo-geo-pdf-open" data-pdf-url="<?php echo esc_url($this->getPdfUrl((int)$scan['id'])); ?>"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button>
                                     <?php else : ?>
                                         —
                                     <?php endif; ?>
@@ -408,6 +414,45 @@ class GeoScanAdmin
                     </button>
                 </form>
             </div>
+            <?php $this->renderPdfDialog(); ?>
+        </div>
+        <?php
+    }
+
+    private function getPdfUrl(int $scanId): string
+    {
+        return wp_nonce_url(
+            admin_url('admin-post.php?action=sseo_geo_scan_download_pdf&scan_id=' . $scanId),
+            'sseo_geo_scan_pdf_' . $scanId
+        );
+    }
+
+    private function renderPdfDialog(): void
+    {
+        ?>
+        <div class="sseo-geo-pdf-dialog" id="sseo-geo-pdf-dialog" role="dialog" aria-modal="true" aria-labelledby="sseo-geo-pdf-title" hidden>
+            <div class="sseo-geo-pdf-backdrop" data-pdf-close></div>
+            <div class="sseo-geo-pdf-panel">
+                <button type="button" class="sseo-geo-pdf-close" data-pdf-close aria-label="<?php esc_attr_e('Sluiten', 'sseo-ai-saas'); ?>">&times;</button>
+                <h2 id="sseo-geo-pdf-title"><?php esc_html_e('Kies een cover', 'sseo-ai-saas'); ?></h2>
+                <p><?php esc_html_e('Selecteer de cover voor het prospectrapport.', 'sseo-ai-saas'); ?></p>
+                <div class="sseo-geo-cover-options">
+                    <label class="sseo-geo-cover-option is-selected">
+                        <input type="radio" name="sseo_geo_cover" value="light" checked>
+                        <span class="sseo-geo-cover-preview light"><strong>GEO</strong><small><?php esc_html_e('SCAN RAPPORT', 'sseo-ai-saas'); ?></small></span>
+                        <span><?php esc_html_e('Lichte cover', 'sseo-ai-saas'); ?></span>
+                    </label>
+                    <label class="sseo-geo-cover-option">
+                        <input type="radio" name="sseo_geo_cover" value="dark">
+                        <span class="sseo-geo-cover-preview dark"><strong>GEO</strong><small><?php esc_html_e('SCAN RAPPORT', 'sseo-ai-saas'); ?></small></span>
+                        <span><?php esc_html_e('Donkere cover', 'sseo-ai-saas'); ?></span>
+                    </label>
+                </div>
+                <div class="sseo-geo-pdf-dialog-actions">
+                    <button type="button" class="button" data-pdf-close><?php esc_html_e('Annuleren', 'sseo-ai-saas'); ?></button>
+                    <button type="button" class="button button-primary" id="sseo-geo-pdf-download"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button>
+                </div>
+            </div>
         </div>
         <?php
     }
@@ -499,6 +544,28 @@ class GeoScanAdmin
         }
 
         wp_send_json_success($response);
+    }
+
+    public function handleDownloadPdf(): void
+    {
+        if (!current_user_can('agency_geo_scan') && !current_user_can('manage_options')) {
+            wp_die(__('Je hebt geen toestemming om dit rapport te downloaden.', 'sseo-ai-saas'), 403);
+        }
+
+        $scanId = (int)($_GET['scan_id'] ?? 0);
+        check_admin_referer('sseo_geo_scan_pdf_' . $scanId);
+        $cover = sanitize_key($_GET['cover'] ?? 'light');
+        $pdf = $this->pdf->render($scanId, $cover);
+        if (is_wp_error($pdf)) {
+            wp_die(esc_html($pdf->get_error_message()), esc_html__('PDF genereren mislukt', 'sseo-ai-saas'), ['response' => 404]);
+        }
+
+        nocache_headers();
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $pdf['filename'] . '"');
+        header('Content-Length: ' . strlen($pdf['bytes']));
+        echo $pdf['bytes'];
+        exit;
     }
 
     /**

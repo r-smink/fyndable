@@ -16,8 +16,8 @@ class GeoScanQueue
     public const RUN_HOOK = 'sseo_geo_scan_run_job';
     public const SWEEP_HOOK = 'sseo_geo_scan_sweep';
 
-    private const LOCK_TTL = 600;          // 10 min — prevents double processing
-    private const STALE_RUNNING = 900;     // running > 15 min = presumed dead
+    private const LOCK_TTL = 1200;         // 20 min — prevents double processing
+    private const STALE_RUNNING = 1200;    // running > 20 min = presumed dead
     private const STALE_QUEUED = 120;      // queued > 2 min = cron probably missed it
 
     private GeoScanner $geoScanner;

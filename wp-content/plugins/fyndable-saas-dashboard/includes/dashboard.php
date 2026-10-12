@@ -45,6 +45,7 @@ class Dashboard
     private GeoScanner $geoScanner;
     private GeoScanQueue $geoScanQueue;
     private GeoScanReport $geoScanReport;
+    private GeoScanPdf $geoScanPdf;
     private GeoScanAdmin $geoScanAdmin;
     private PublicApi $publicApi;
     private Feedback $feedback;
@@ -140,15 +141,18 @@ class Dashboard
             $this->aiOverviewExtractor,
             $this->providerRouter,
             $this->saasSettings,
-            $this->geoScanRepository
+            $this->geoScanRepository,
+            $this->dataForSeoClient
         );
         $this->geoScanQueue = new GeoScanQueue($this->geoScanner, $this->geoScanRepository, $this->saasSettings);
         $this->geoScanReport = new GeoScanReport($this->geoScanRepository);
+        $this->geoScanPdf = new GeoScanPdf($this->geoScanRepository);
         $this->geoScanAdmin = new GeoScanAdmin(
             $this->pluginFile,
             $this->geoScanner,
             $this->geoScanRepository,
             $this->geoScanReport,
+            $this->geoScanPdf,
             $this->geoScanQueue,
             $this->saasSettings
         );

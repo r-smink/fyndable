@@ -20,19 +20,22 @@ class GeoScanner
     private ProviderRouter $providerRouter;
     private SaaSSettings $settings;
     private GeoScanRepository $repository;
+    private DataForSeoClient $dataForSeoClient;
 
     public function __construct(
         HtmlFetcher $htmlFetcher,
         AiOverviewExtractor $aiExtractor,
         ProviderRouter $providerRouter,
         SaaSSettings $settings,
-        GeoScanRepository $repository
+        GeoScanRepository $repository,
+        DataForSeoClient $dataForSeoClient
     ) {
         $this->htmlFetcher = $htmlFetcher;
         $this->aiExtractor = $aiExtractor;
         $this->providerRouter = $providerRouter;
         $this->settings = $settings;
         $this->repository = $repository;
+        $this->dataForSeoClient = $dataForSeoClient;
     }
 
     /**
@@ -122,25 +125,40 @@ class GeoScanner
             return new \WP_Error('all_keywords_failed', __('All keyword lookups failed. Please check your SERP provider settings and try again.', 'sseo-ai-saas'));
         }
 
+        $targetHost = $this->normalizeHost((string)(parse_url($url, PHP_URL_HOST) ?: ''));
+        $progress(72, __('AI-platformzichtbaarheid controleren…', 'sseo-ai-saas'));
+        $platformVisibility = $this->scanPlatformVisibility($keywords, $keywordResults, $language, $targetHost, $progress);
+        $competitiveBenchmark = $this->buildCompetitiveBenchmark($platformVisibility, $targetHost);
+
         $multiModelEnabled = $source === 'website'
             ? ($this->settings->isGeoMultiModelEnabled() && $this->settings->isGeoWebsiteMultiModelEnabled())
             : $this->settings->isGeoMultiModelEnabled();
         $multiModels = $multiModelEnabled ? $this->settings->getGeoMultiModels() : [];
 
         if ($multiModelEnabled && count($multiModels) >= 2) {
-            $progress(75, __('AI-analyse genereren (multi-model)…', 'sseo-ai-saas'));
-            $llmResult = $this->analyzeWithMultipleModels($pageText, $keywords, $keywordResults, $language, $source, $multiModels, $progress);
+            $progress(86, __('AI-analyse genereren (multi-model)…', 'sseo-ai-saas'));
+            $llmResult = $this->analyzeWithMultipleModels($pageText, $keywords, $keywordResults, $language, $source, $multiModels, $progress, $platformVisibility, $competitiveBenchmark);
         } else {
-            $progress(75, __('AI-analyse genereren…', 'sseo-ai-saas'));
-            $llmResult = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language, $source);
+            $progress(86, __('AI-analyse genereren…', 'sseo-ai-saas'));
+            $llmResult = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language, $source, null, $platformVisibility, $competitiveBenchmark);
         }
         if (is_wp_error($llmResult)) {
             return $llmResult;
         }
 
-        $progress(90, __('Rapport samenstellen…', 'sseo-ai-saas'));
-        $targetHost = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
-        $report = $this->buildReport($url, $keywords, $language, $htmlResult, $keywordResults, $failedKeywords, $llmResult, $targetHost);
+        $progress(96, __('Rapport samenstellen…', 'sseo-ai-saas'));
+        $report = $this->buildReport(
+            $url,
+            $keywords,
+            $language,
+            $htmlResult,
+            $keywordResults,
+            $failedKeywords,
+            $llmResult,
+            $targetHost,
+            $platformVisibility,
+            $competitiveBenchmark
+        );
 
         if ($scanId) {
             $this->repository->markCompleted($scanId, $report);
@@ -207,8 +225,16 @@ class GeoScanner
      *
      * @param string|null $modelOverride Explicit model to use (bypasses source-based resolution).
      */
-    private function analyzeWithLlm(string $pageText, array $keywords, array $keywordResults, string $language = 'nl', string $source = 'admin', ?string $modelOverride = null): array|\WP_Error
-    {
+    private function analyzeWithLlm(
+        string $pageText,
+        array $keywords,
+        array $keywordResults,
+        string $language = 'nl',
+        string $source = 'admin',
+        ?string $modelOverride = null,
+        array $platformVisibility = [],
+        array $competitiveBenchmark = []
+    ): array|\WP_Error {
         $truncated = mb_substr($pageText, 0, 12000);
 
         $context = [];
@@ -218,6 +244,23 @@ class GeoScanner
             } else {
                 $context[] = '- ' . $kr['keyword'] . ': AI Overview ' . ($kr['has_ai_overview'] ? 'aanwezig' : 'afwezig');
             }
+        }
+        foreach ($platformVisibility as $platform => $visibility) {
+            $context[] = sprintf(
+                '- %s: %s (%d/%d)',
+                $platform,
+                (string)($visibility['status'] ?? 'unavailable'),
+                (int)($visibility['mentions'] ?? 0),
+                (int)($visibility['tests'] ?? 0)
+            );
+        }
+        if (($competitiveBenchmark['tests'] ?? 0) > 0) {
+            $context[] = sprintf(
+                '- benchmark: own %d/100, average competitor %d/100, best competitor %d/100',
+                (int)($competitiveBenchmark['own_visibility'] ?? 0),
+                (int)($competitiveBenchmark['average_competitor'] ?? 0),
+                (int)($competitiveBenchmark['best_competitor'] ?? 0)
+            );
         }
 
         $model = $modelOverride
@@ -249,11 +292,14 @@ Required JSON structure:
     \"entity_coverage\": 0-100,
     \"competitive_gap\": 0-100
   },
+  \"management_headline\": \"...\",
+  \"executive_summary\": \"...\",
   \"findings\": [\"...\", \"...\"],
   \"recommendations\": [\"...\", \"...\"],
   \"strengths\": [\"...\", \"...\"],
   \"weaknesses\": [\"...\", \"...\"],
-  \"priority_ranked_recommendations\": [\"...\", \"...\"]
+  \"priority_ranked_recommendations\": [\"...\", \"...\"],
+  \"structured_actions\": [{\"title\":\"...\",\"description\":\"...\",\"priority\":\"high|medium|low\",\"category\":\"...\",\"effort\":\"low|medium|high\"}]
 }
 
 Guidelines:
@@ -293,11 +339,14 @@ Vereiste JSON-structuur:
     \"entity_coverage\": 0-100,
     \"competitive_gap\": 0-100
   },
+  \"management_headline\": \"...\",
+  \"executive_summary\": \"...\",
   \"findings\": [\"...\", \"...\"],
   \"recommendations\": [\"...\", \"...\"],
   \"strengths\": [\"...\", \"...\"],
   \"weaknesses\": [\"...\", \"...\"],
-  \"priority_ranked_recommendations\": [\"...\", \"...\"]
+  \"priority_ranked_recommendations\": [\"...\", \"...\"],
+  \"structured_actions\": [{\"title\":\"...\",\"description\":\"...\",\"priority\":\"high|medium|low\",\"category\":\"...\",\"effort\":\"low|medium|high\"}]
 }
 
 Richtlijnen:
@@ -371,7 +420,9 @@ AI Overview context:
         string $language,
         string $source,
         array $models,
-        callable $progress
+        callable $progress,
+        array $platformVisibility = [],
+        array $competitiveBenchmark = []
     ): array|\WP_Error {
         $modelResults = [];
         $modelCount = count($models);
@@ -386,7 +437,7 @@ AI Overview context:
                 $modelCount
             ));
 
-            $result = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language, $source, $model);
+            $result = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language, $source, $model, $platformVisibility, $competitiveBenchmark);
 
             if (is_wp_error($result)) {
                 // Log failure but continue with remaining models (graceful degradation).
@@ -486,6 +537,9 @@ AI Overview context:
             'strengths'                      => $strengths,
             'weaknesses'                     => $weaknesses,
             'priority_ranked_recommendations'=> array_slice($priorityRecs, 0, 5),
+            'structured_actions'             => array_slice((array)($modelResults[0]['structured_actions'] ?? []), 0, 8),
+            'management_headline'            => (string)($modelResults[0]['management_headline'] ?? ''),
+            'executive_summary'              => (string)($modelResults[0]['executive_summary'] ?? ''),
             'usage'                          => $totalUsage,
             'models_used'                    => $modelsUsed,
             'multi_model'                    => true,
@@ -716,6 +770,198 @@ AI Overview context:
         return $cut;
     }
 
+    private function scanPlatformVisibility(array $keywords, array $keywordResults, string $language, string $targetHost, callable $progress): array
+    {
+        $platforms = [];
+        $googleTests = [];
+        foreach ($keywordResults as $result) {
+            $hosts = [];
+            foreach ((array)($result['ai_sources'] ?? []) as $source) {
+                $host = $this->normalizeHost((string)(parse_url((string)($source['url'] ?? ''), PHP_URL_HOST) ?: ''));
+                if ($host !== '') {
+                    $hosts[] = $host;
+                }
+            }
+            $googleTests[] = [
+                'keyword' => (string)($result['keyword'] ?? ''),
+                'mentioned' => in_array($targetHost, $hosts, true),
+                'source_hosts' => array_values(array_unique($hosts)),
+            ];
+        }
+        $platforms['google_ai_overviews'] = $this->summarizePlatformTests($googleTests);
+
+        if (!$this->dataForSeoClient->isConfigured()) {
+            foreach (['chatgpt', 'gemini', 'perplexity'] as $provider) {
+                $platforms[$provider] = $this->summarizePlatformTests([]);
+            }
+            return $platforms;
+        }
+
+        $models = [
+            'chatgpt' => 'gpt-4.1-mini',
+            'gemini' => 'gemini-2.0-flash',
+            'perplexity' => 'sonar',
+        ];
+        $testKeywords = array_slice($keywords, 0, 3);
+        $total = max(1, count($models) * count($testKeywords));
+        $completed = 0;
+
+        foreach ($models as $provider => $model) {
+            $tests = [];
+            foreach ($testKeywords as $keyword) {
+                $completed++;
+                $progress(
+                    72 + (int)round(($completed / $total) * 12),
+                    sprintf(__('AI-platformtest: %s (%d/%d)', 'sseo-ai-saas'), ucfirst($provider), $completed, $total)
+                );
+                $prompt = $language === 'en'
+                    ? sprintf('Give a concise, factual answer to this search query and cite the most useful online sources: %s', $keyword)
+                    : sprintf('Geef een beknopt, feitelijk antwoord op deze zoekopdracht en citeer de nuttigste online bronnen: %s', $keyword);
+                $response = $this->dataForSeoClient->llmResponseLive($provider, [
+                    'user_prompt' => mb_substr($prompt, 0, 500),
+                    'model_name' => $model,
+                    'max_output_tokens' => 700,
+                    'temperature' => 0.2,
+                    'web_search' => true,
+                    'web_search_country_iso_code' => $language === 'nl' ? 'NL' : 'US',
+                ]);
+                if (is_wp_error($response) || empty($response['tasks'][0]['result'])) {
+                    continue;
+                }
+                $text = $this->extractLlmResponseText($response);
+                $hosts = $this->extractHostsFromResponse($response);
+                $mentioned = in_array($targetHost, $hosts, true)
+                    || ($targetHost !== '' && stripos($text, $targetHost) !== false);
+                $tests[] = [
+                    'keyword' => $keyword,
+                    'mentioned' => $mentioned,
+                    'source_hosts' => $hosts,
+                ];
+            }
+            $platforms[$provider] = $this->summarizePlatformTests($tests);
+        }
+
+        return $platforms;
+    }
+
+    private function summarizePlatformTests(array $tests): array
+    {
+        $successful = count($tests);
+        $mentions = count(array_filter($tests, static fn(array $test): bool => !empty($test['mentioned'])));
+        $visibility = $successful > 0 ? (int)round(($mentions / $successful) * 100) : null;
+        $status = 'unavailable';
+        if ($visibility !== null) {
+            $status = $visibility === 0 ? 'not_mentioned' : ($visibility >= 67 ? 'visible' : 'sometimes');
+        }
+        return [
+            'status' => $status,
+            'visibility' => $visibility,
+            'mentions' => $mentions,
+            'tests' => $successful,
+            'results' => $tests,
+        ];
+    }
+
+    private function buildCompetitiveBenchmark(array $platforms, string $targetHost): array
+    {
+        $ownMentions = 0;
+        $testCount = 0;
+        $competitors = [];
+        foreach ($platforms as $platform) {
+            foreach ((array)($platform['results'] ?? []) as $test) {
+                $testCount++;
+                if (!empty($test['mentioned'])) {
+                    $ownMentions++;
+                }
+                foreach ((array)($test['source_hosts'] ?? []) as $host) {
+                    if ($host === $targetHost || $this->isGenericHost($host)) {
+                        continue;
+                    }
+                    $competitors[$host] = ($competitors[$host] ?? 0) + 1;
+                }
+            }
+        }
+        arsort($competitors);
+        $scores = [];
+        foreach ($competitors as $host => $mentions) {
+            $scores[$host] = $testCount > 0 ? (int)round(($mentions / $testCount) * 100) : 0;
+        }
+        $values = array_values($scores);
+        return [
+            'own_visibility' => $testCount > 0 ? (int)round(($ownMentions / $testCount) * 100) : null,
+            'average_competitor' => $values ? (int)round(array_sum($values) / count($values)) : null,
+            'best_competitor' => $values ? max($values) : null,
+            'best_competitor_host' => $scores ? (string)array_key_first($scores) : '',
+            'tests' => $testCount,
+            'competitors' => array_slice($scores, 0, 10, true),
+        ];
+    }
+
+    private function extractLlmResponseText(array $response): string
+    {
+        $parts = [];
+        $walk = function ($value, $key = '') use (&$walk, &$parts): void {
+            if (is_array($value)) {
+                foreach ($value as $childKey => $child) {
+                    $walk($child, (string)$childKey);
+                }
+                return;
+            }
+            if (is_string($value) && in_array($key, ['text', 'message', 'content', 'answer'], true)) {
+                $parts[] = $value;
+            }
+        };
+        $walk($response);
+        return implode("\n", array_unique($parts));
+    }
+
+    private function extractHostsFromResponse(array $response): array
+    {
+        $urls = [];
+        $walk = function ($value, $key = '') use (&$walk, &$urls): void {
+            if (is_array($value)) {
+                foreach ($value as $childKey => $child) {
+                    $walk($child, (string)$childKey);
+                }
+                return;
+            }
+            if (!is_string($value)) {
+                return;
+            }
+            if (in_array($key, ['url', 'link', 'source_url'], true) && filter_var($value, FILTER_VALIDATE_URL)) {
+                $urls[] = $value;
+            }
+            if (preg_match_all('#https?://[^\s<>"\]]+#i', $value, $matches)) {
+                $urls = array_merge($urls, $matches[0]);
+            }
+        };
+        $walk($response);
+        $hosts = [];
+        foreach ($urls as $url) {
+            $host = $this->normalizeHost((string)(parse_url(rtrim($url, '.,);'), PHP_URL_HOST) ?: ''));
+            if ($host !== '') {
+                $hosts[] = $host;
+            }
+        }
+        return array_values(array_unique($hosts));
+    }
+
+    private function normalizeHost(string $host): string
+    {
+        return preg_replace('/^www\./i', '', strtolower(rtrim(trim($host), '.'))) ?: '';
+    }
+
+    private function isGenericHost(string $host): bool
+    {
+        $generic = ['google.com', 'google.nl', 'bing.com', 'youtube.com', 'wikipedia.org', 'linkedin.com', 'facebook.com', 'instagram.com', 'x.com', 'reddit.com'];
+        foreach ($generic as $domain) {
+            if ($host === $domain || str_ends_with($host, '.' . $domain)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function buildReport(
         string $url,
         array $keywords,
@@ -724,7 +970,9 @@ AI Overview context:
         array $keywordResults,
         array $failedKeywords,
         array $llmResult,
-        string $targetHost
+        string $targetHost,
+        array $platformVisibility,
+        array $competitiveBenchmark
     ): array {
         $keywordsAnalysis = [];
 
@@ -732,7 +980,7 @@ AI Overview context:
             $cited = false;
             $sourceHosts = [];
             foreach ($kr['ai_sources'] as $source) {
-                $host = strtolower(parse_url($source['url'], PHP_URL_HOST) ?: '');
+                $host = $this->normalizeHost((string)(parse_url($source['url'], PHP_URL_HOST) ?: ''));
                 if ($host) {
                     $sourceHosts[] = $host;
                 }
@@ -744,7 +992,7 @@ AI Overview context:
             $competitors = [];
             $targetPosition = null;
             foreach ($kr['organic_top'] as $idx => $item) {
-                $host = strtolower(parse_url($item['url'], PHP_URL_HOST) ?: '');
+                $host = $this->normalizeHost((string)(parse_url($item['url'], PHP_URL_HOST) ?: ''));
                 if ($host && $host === $targetHost && $targetPosition === null) {
                     $targetPosition = $idx + 1;
                 }
@@ -778,6 +1026,11 @@ AI Overview context:
             'findings'                      => $llmResult['findings'] ?? [],
             'recommendations'               => $llmResult['recommendations'] ?? [],
             'priority_ranked_recommendations'=> $llmResult['priority_ranked_recommendations'] ?? [],
+            'structured_actions'             => $llmResult['structured_actions'] ?? [],
+            'management_headline'            => $llmResult['management_headline'] ?? '',
+            'executive_summary'              => $llmResult['executive_summary'] ?? '',
+            'platform_visibility'            => $platformVisibility,
+            'competitive_benchmark'          => $competitiveBenchmark,
             'strengths'                     => $llmResult['strengths'] ?? [],
             'weaknesses'                    => $llmResult['weaknesses'] ?? [],
             'readability'                   => (int)($llmResult['breakdown']['readability'] ?? 0),

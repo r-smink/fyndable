@@ -606,3 +606,141 @@
 .sseo-geo-pill-dropdown {
     min-width: 300px;
 }
+
+body.sseo-geo-modal-open {
+    overflow: hidden;
+}
+
+.sseo-geo-pdf-dialog[hidden] {
+    display: none;
+}
+
+.sseo-geo-pdf-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 100100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.sseo-geo-pdf-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 24, 39, .72);
+    backdrop-filter: blur(4px);
+}
+
+.sseo-geo-pdf-panel {
+    position: relative;
+    z-index: 1;
+    width: min(620px, 100%);
+    padding: 30px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+}
+
+.sseo-geo-pdf-panel h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+}
+
+.sseo-geo-pdf-panel > p {
+    margin: 0 0 22px;
+    color: #6b7280;
+}
+
+.sseo-geo-pdf-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sseo-geo-cover-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.sseo-geo-cover-option {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.sseo-geo-cover-option.is-selected {
+    border-color: #7542bf;
+    box-shadow: 0 0 0 3px rgba(117, 66, 191, .12);
+}
+
+.sseo-geo-cover-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sseo-geo-cover-preview {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 160px;
+    padding: 18px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sseo-geo-cover-preview.light {
+    color: #172033;
+    background: linear-gradient(145deg, #f8f9fc 70%, #e9def7);
+}
+
+.sseo-geo-cover-preview.dark {
+    color: #fff;
+    background: linear-gradient(145deg, #11142a 70%, #3b245e);
+}
+
+.sseo-geo-cover-preview strong {
+    font-size: 34px;
+    line-height: 1;
+}
+
+.sseo-geo-cover-preview small {
+    margin-top: 5px;
+    color: #7542bf;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.sseo-geo-cover-preview.dark small {
+    color: #b89be6;
+}
+
+.sseo-geo-pdf-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+@media screen and (max-width: 600px) {
+    .sseo-geo-cover-options {
+        grid-template-columns: 1fr;
+    }
+
+    .sseo-geo-cover-preview {
+        height: 110px;
+    }
+}

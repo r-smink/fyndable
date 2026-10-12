@@ -122,6 +122,53 @@
         });
     });
 
+    $(function () {
+        var $dialog = $('#sseo-geo-pdf-dialog');
+        var $download = $('#sseo-geo-pdf-download');
+        var pdfUrl = '';
+        var $lastTrigger = $();
+
+        if (!$dialog.length) {
+            return;
+        }
+
+        function closeDialog() {
+            $dialog.prop('hidden', true).removeClass('is-open');
+            $('body').removeClass('sseo-geo-modal-open');
+            if ($lastTrigger.length) {
+                $lastTrigger.trigger('focus');
+            }
+        }
+
+        $(document).on('click', '.sseo-geo-pdf-open', function () {
+            $lastTrigger = $(this);
+            pdfUrl = $lastTrigger.attr('data-pdf-url') || '';
+            $dialog.prop('hidden', false).addClass('is-open');
+            $('body').addClass('sseo-geo-modal-open');
+            $dialog.find('input[value="light"]').prop('checked', true).trigger('change');
+            $dialog.find('.sseo-geo-pdf-close').trigger('focus');
+        });
+
+        $dialog.on('click', '[data-pdf-close]', closeDialog);
+        $dialog.on('change', 'input[name="sseo_geo_cover"]', function () {
+            $dialog.find('.sseo-geo-cover-option').removeClass('is-selected');
+            $(this).closest('.sseo-geo-cover-option').addClass('is-selected');
+        });
+        $download.on('click', function () {
+            if (!pdfUrl) {
+                return;
+            }
+            var cover = $dialog.find('input[name="sseo_geo_cover"]:checked').val() || 'light';
+            window.location.href = pdfUrl + '&cover=' + encodeURIComponent(cover);
+            closeDialog();
+        });
+        $(document).on('keydown', function (event) {
+            if (event.key === 'Escape' && $dialog.hasClass('is-open')) {
+                closeDialog();
+            }
+        });
+    });
+
     /* ===== Multi-model pill select ===== */
     $(function () {
         var $dropdown = $('#sseo_geo_multi_add');
