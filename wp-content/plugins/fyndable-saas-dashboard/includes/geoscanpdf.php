@@ -39,7 +39,9 @@ class GeoScanPdf
         $pageLabel = (($scan['result']['language'] ?? 'nl') === 'en') ? 'Page' : 'Pagina';
         $dompdf->getCanvas()->page_script(static function ($pageNumber, $pageCount, $canvas) use ($font, $pageLabel): void {
             if ($pageNumber > 1) {
-                $canvas->text(500, 810, $pageLabel . ' ' . $pageNumber . ' / ' . $pageCount, $font, 7, [0.48, 0.51, 0.57]);
+                $text = $pageLabel . ' ' . ($pageNumber - 1) . ' / ' . ($pageCount - 1);
+                $width = $canvas->get_text_width($text, $font, 7);
+                $canvas->text(548 - $width, 810, $text, $font, 7, [0.48, 0.51, 0.57]);
             }
         });
 
@@ -72,6 +74,8 @@ class GeoScanPdf
         $scoreLabel = $score >= 70 ? $t['good'] : ($score >= 40 ? $t['needs_work'] : $t['weak']);
         $visiblePlatforms = count(array_filter($platforms, static fn(array $platform): bool => in_array($platform['status'] ?? '', ['visible', 'sometimes'], true)));
         $platformCount = count(array_filter($platforms, static fn(array $platform): bool => ($platform['status'] ?? '') !== 'unavailable'));
+        $metricLabels = $this->metricLabels($language);
+        $summaryMetrics = array_intersect_key($metricLabels, array_flip(['structure', 'schema_markup', 'direct_answer', 'citation_worthiness']));
 
         ob_start();
         ?>
@@ -80,22 +84,21 @@ class GeoScanPdf
 <head>
 <meta charset="utf-8">
 <style>
-@page { margin: 20mm 17mm 18mm; }
-@page:first { margin: 0; }
+@page { margin: 18mm 17mm 17mm; }
 * { box-sizing: border-box; }
-body { margin: 0; color: #172033; font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; line-height: 1.5; }
+body { margin: 0; color: #172033; font-family: "DejaVu Sans", sans-serif; font-size: 9.2pt; line-height: 1.45; }
 a { color: inherit; text-decoration: none; }
-.cover { height: 297mm; padding: 25mm 22mm 20mm; page-break-after: always; position: relative; overflow: hidden; }
+.cover { height: 250mm; padding: 12mm 10mm; page-break-after: always; position: relative; overflow: hidden; }
 .cover.light { background: #f7f8fc; color: #172033; }
 .cover.dark { background: #11142a; color: #fff; }
 .cover:after { content: ""; position: absolute; right: -38mm; bottom: -48mm; width: 130mm; height: 130mm; border-radius: 65mm; background: #743cbe; opacity: .16; }
 .cover .eyebrow, .section-kicker { color: #7542bf; font-size: 8pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; }
 .cover.dark .eyebrow { color: #b89be6; }
-.logo { width: 64mm; height: auto; margin-bottom: 30mm; }
+.logo { width: 64mm; height: auto; margin-bottom: 23mm; }
 .cover h1 { font-size: 34pt; line-height: 1.05; margin: 5mm 0 6mm; letter-spacing: -1px; }
 .cover .subtitle { width: 125mm; font-size: 12pt; color: #667085; }
 .cover.dark .subtitle { color: #c8cbe0; }
-.cover-grid { width: 100%; margin-top: 38mm; border-collapse: collapse; }
+.cover-grid { width: 100%; margin-top: 29mm; border-collapse: collapse; }
 .cover-grid td { width: 50%; vertical-align: bottom; }
 .meta-label { color: #798197; font-size: 7pt; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
 .cover.dark .meta-label { color: #aeb3c9; }
@@ -138,11 +141,12 @@ p { margin: 0 0 4mm; }
 .benchmark-fill { height: 4mm; background: #7542bf; }
 .benchmark-value { width: 10%; text-align: right; font-weight: bold; }
 .note { margin-top: 5mm; padding: 4mm; background: #f7f8fb; color: #687083; font-size: 8pt; }
-.action { page-break-inside: avoid; border-top: .3mm solid #e1e4ec; padding: 4mm 0; }
-.action-priority { display: inline-block; width: 19mm; color: #7542bf; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
-.action-title { font-weight: bold; font-size: 10.5pt; }
-.action-description { margin: 2mm 0 2mm 19mm; color: #5c6475; }
-.action-meta { margin-left: 19mm; font-size: 7.5pt; color: #7542bf; }
+.action { width: 100%; page-break-inside: avoid; border-top: .3mm solid #e1e4ec; border-collapse: collapse; }
+.action td { padding: 4mm 0 3mm; vertical-align: top; }
+.action-priority { width: 20mm; color: #7542bf; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
+.action-title { font-weight: bold; font-size: 10.5pt; line-height: 1.35; }
+.action-description { margin: 1.5mm 0; color: #5c6475; }
+.action-meta { font-size: 7.5pt; color: #7542bf; }
 .steps { width: 100%; border-collapse: collapse; margin-top: 6mm; }
 .steps td { vertical-align: top; padding: 5mm 0; border-top: .3mm solid #e1e4ec; }
 .step-number { width: 13mm; font-size: 20pt; font-weight: bold; color: #7542bf; }
@@ -151,8 +155,8 @@ p { margin: 0 0 4mm; }
 .cta-table td { width: 50%; vertical-align: middle; }
 .cta h3 { color: #fff; font-size: 19pt; }
 .cta-contact { text-align: right; font-weight: bold; }
-.two-col { width: 100%; border-collapse: separate; border-spacing: 5mm; margin-left: -5mm; }
-.two-col td { width: 50%; vertical-align: top; }
+.appendix-block { margin: 6mm 0; }
+.appendix-block h3 { padding-bottom: 2mm; border-bottom: .3mm solid #e1e4ec; }
 ul { margin: 0; padding-left: 5mm; }
 li { margin-bottom: 2mm; }
 .keyword-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
@@ -173,7 +177,7 @@ li { margin-bottom: 2mm; }
     </tr></table>
 </section>
 <div class="report-header"><?php echo $this->e($t['report'] . ' · ' . $host); ?></div>
-<div class="report-footer">Fyndable GEO Scan · <?php echo $this->e($host); ?><span class="right">fyndable.ai</span></div>
+<div class="report-footer">Fyndable GEO Scan · <?php echo $this->e($host); ?></div>
 <section>
     <div class="section-kicker"><?php echo $this->e($t['management']); ?></div>
     <h2><?php echo $this->e($headline); ?></h2>
@@ -184,7 +188,7 @@ li { margin-bottom: 2mm; }
         <td><strong><?php echo count($actions); ?></strong><span><?php echo $this->e($t['actions_found']); ?></span></td>
     </tr></table>
     <h3><?php echo $this->e($t['category_scores']); ?></h3>
-    <table class="metric-table"><?php foreach ($this->metricLabels($language) as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $value; ?>/100</td></tr><?php endforeach; ?></table>
+    <table class="metric-table"><?php foreach ($summaryMetrics as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $value; ?>/100</td></tr><?php endforeach; ?></table>
 </section>
 <section class="page">
     <div class="section-kicker"><?php echo $this->e($t['platform_visibility']); ?></div>
@@ -208,7 +212,7 @@ li { margin-bottom: 2mm; }
     <div class="section-kicker"><?php echo $this->e($t['actions']); ?></div>
     <h2><?php echo $this->e(sprintf($t['actions_heading'], count($actions))); ?></h2>
     <p class="lead"><?php echo $this->e($t['actions_intro']); ?></p>
-    <?php foreach ($actions as $action) : ?><div class="action"><span class="action-priority"><?php echo $this->e($t['priority_' . $action['priority']]); ?></span><span class="action-title"><?php echo $this->e($action['title']); ?></span><div class="action-description"><?php echo $this->e($action['description']); ?></div><div class="action-meta"><?php echo $this->e($action['category'] . ' · ' . $t['effort'] . ': ' . $t['effort_' . $action['effort']]); ?></div></div><?php endforeach; ?>
+    <?php foreach ($actions as $action) : ?><table class="action"><tr><td class="action-priority"><?php echo $this->e($t['priority_' . $action['priority']]); ?></td><td><div class="action-title"><?php echo $this->e($action['title']); ?></div><?php if ($action['description'] !== '') : ?><div class="action-description"><?php echo $this->e($action['description']); ?></div><?php endif; ?><div class="action-meta"><?php echo $this->e($action['category'] . ' · ' . $t['effort'] . ': ' . $t['effort_' . $action['effort']]); ?></div></td></tr></table><?php endforeach; ?>
 </section>
 <section class="page">
     <div class="section-kicker"><?php echo $this->e($t['next_steps']); ?></div>
@@ -221,13 +225,16 @@ li { margin-bottom: 2mm; }
     <div class="section-kicker"><?php echo $this->e($t['appendix']); ?></div>
     <h2><?php echo $this->e($t['findings_recommendations']); ?></h2>
     <?php if (!empty($data['multi_model']) && !empty($data['models_used'])) : ?><div class="model-chips"><?php foreach ((array)$data['models_used'] as $model) : ?><span><?php echo $this->e((string)($model['model'] ?? '')); ?> · <?php echo (int)($model['score'] ?? 0); ?>/100</span><?php endforeach; ?></div><?php endif; ?>
-    <table class="two-col"><tr><td><h3><?php echo $this->e($t['strengths']); ?></h3><ul><?php foreach ((array)($data['strengths'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></td><td><h3><?php echo $this->e($t['weaknesses']); ?></h3><ul><?php foreach ((array)($data['weaknesses'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></td></tr></table>
-    <table class="two-col"><tr><td><h3><?php echo $this->e($t['findings']); ?></h3><ul><?php foreach ((array)($data['findings'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></td><td><h3><?php echo $this->e($t['recommendations']); ?></h3><ul><?php foreach ((array)($data['recommendations'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></td></tr></table>
+    <div class="appendix-block"><h3><?php echo $this->e($t['strengths']); ?></h3><ul><?php foreach ((array)($data['strengths'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></div>
+    <div class="appendix-block"><h3><?php echo $this->e($t['weaknesses']); ?></h3><ul><?php foreach ((array)($data['weaknesses'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></div>
+    <div class="appendix-block"><h3><?php echo $this->e($t['findings']); ?></h3><ul><?php foreach ((array)($data['findings'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></div>
+    <div class="appendix-block"><h3><?php echo $this->e($t['recommendations']); ?></h3><ul><?php foreach ((array)($data['recommendations'] ?? []) as $item) : ?><li><?php echo $this->e((string)$item); ?></li><?php endforeach; ?></ul></div>
+    <div class="appendix-block"><h3><?php echo $this->e($t['all_category_scores']); ?></h3><table class="metric-table"><?php foreach ($metricLabels as $key => $label) : $value = max(0, min(100, (int)($breakdown[$key] ?? 0))); ?><tr><td class="metric-name"><?php echo $this->e($label); ?></td><td><div class="bar"><div class="bar-fill" style="width:<?php echo $value; ?>%"></div></div></td><td class="metric-score"><?php echo $value; ?>/100</td></tr><?php endforeach; ?></table></div>
 </section>
 <section class="page">
     <div class="section-kicker"><?php echo $this->e($t['keyword_analysis']); ?></div>
     <h2><?php echo $this->e($t['tested_keywords']); ?></h2>
-    <table class="keyword-table"><thead><tr><th><?php echo $this->e($t['keyword']); ?></th><th><?php echo $this->e($t['ai_overview']); ?></th><th><?php echo $this->e($t['your_site_cited']); ?></th><th><?php echo $this->e($t['competitors']); ?></th></tr></thead><tbody><?php foreach ((array)($data['keywords_analysis'] ?? []) as $keyword) : ?><tr><td><?php echo $this->e((string)($keyword['keyword'] ?? '')); ?></td><td><?php echo !empty($keyword['has_ai_overview']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo !empty($keyword['target_cited']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo $this->e(implode(', ', array_filter(array_column((array)($keyword['competitor_citations'] ?? []), 'host')))); ?></td></tr><?php endforeach; ?></tbody></table>
+    <table class="keyword-table"><thead><tr><th><?php echo $this->e($t['keyword']); ?></th><th><?php echo $this->e($t['ai_overview']); ?></th><th><?php echo $this->e($t['your_site_cited']); ?></th><th><?php echo $this->e($t['competitors']); ?></th></tr></thead><tbody><?php foreach ((array)($data['keywords_analysis'] ?? []) as $keyword) : ?><tr><td><?php echo $this->e((string)($keyword['keyword'] ?? '')); ?></td><td><?php echo !empty($keyword['has_ai_overview']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo !empty($keyword['target_cited']) ? $this->e($t['yes']) : $this->e($t['no']); ?></td><td><?php echo $this->e($this->competitorHosts((array)($keyword['competitor_citations'] ?? []))); ?></td></tr><?php endforeach; ?></tbody></table>
 </section>
 </body>
 </html>
@@ -268,11 +275,11 @@ li { margin-bottom: 2mm; }
     {
         if ($language === 'en') {
             return [
-                'title'=>'GEO Scan Report','subtitle'=>'How visible is your website in answers from ChatGPT, Gemini, Perplexity and Google AI Overviews.','website'=>'Scanned website','scan_date'=>'Scan date','geo_score'=>'GEO score','report'=>'GEO scan report','management'=>'Management overview','total_score'=>'Total GEO score out of 100','platforms_visible'=>'AI platforms with visibility','actions_found'=>'Concrete actions identified','category_scores'=>'Score by category','platform_visibility'=>'Visibility by AI platform','where_visible'=>'Where are you used as a source?','platform_intro'=>'A snapshot based on live prompts in the most important AI tools.','benchmark'=>'Benchmark against competitors','your_site'=>'Your site','average_competitor'=>'Average competitor','best_competitor'=>'Best competitor','snapshot_note'=>'This benchmark is a snapshot based on %d successful live tests.','actions'=>'Concrete actions','actions_heading'=>'%d improvements ranked by priority','actions_intro'=>'Start at the top: these actions have the greatest expected impact on your GEO visibility.','next_steps'=>'Next steps','from_report'=>'From report to AI visibility','steps_intro'=>'Three practical steps to improve your score over the coming weeks.','cta_title'=>'Ready to become visible in AI?','cta_copy'=>'Contact Fyndable and we will review the opportunities with you.','contact'=>'Contact us','appendix'=>'Appendix','findings_recommendations'=>'Complete scan details','strengths'=>'Strengths','weaknesses'=>'Areas for attention','findings'=>'Findings','recommendations'=>'Recommendations','keyword_analysis'=>'Keyword analysis','tested_keywords'=>'Results by tested keyword','keyword'=>'Keyword','ai_overview'=>'AI Overview','your_site_cited'=>'Your site cited','competitors'=>'Competitors cited','yes'=>'Yes','no'=>'No','good'=>'Good','needs_work'=>'Needs work','weak'=>'Weak','status_visible'=>'Visible','status_sometimes'=>'Sometimes mentioned','status_not_mentioned'=>'Not mentioned','status_unavailable'=>'Insufficient data','priority_high'=>'High','priority_medium'=>'Medium','priority_low'=>'Low','effort'=>'Effort','effort_low'=>'low','effort_medium'=>'medium','effort_high'=>'high','steps'=>[['Implement the two highest-priority actions','Start with the improvements expected to have the greatest impact.'],['Use Fyndable Smart SEO','Optimize content, schema and AI visibility from one workflow.'],['Repeat the scan in 30 days','Measure progress with the same prompts and platforms.']],
+                'title'=>'GEO Scan Report','subtitle'=>'How visible is your website in answers from ChatGPT, Gemini, Perplexity and Google AI Overviews.','website'=>'Scanned website','scan_date'=>'Scan date','geo_score'=>'GEO score','report'=>'GEO scan report','management'=>'Management overview','total_score'=>'Total GEO score out of 100','platforms_visible'=>'AI platforms with visibility','actions_found'=>'Concrete actions identified','category_scores'=>'Score by category','platform_visibility'=>'Visibility by AI platform','where_visible'=>'Where are you used as a source?','platform_intro'=>'A snapshot based on live prompts in the most important AI tools.','benchmark'=>'Benchmark against competitors','your_site'=>'Your site','average_competitor'=>'Average competitor','best_competitor'=>'Best competitor','snapshot_note'=>'This benchmark is a snapshot based on %d successful live tests.','actions'=>'Concrete actions','actions_heading'=>'%d improvements ranked by priority','actions_intro'=>'Start at the top: these actions have the greatest expected impact on your GEO visibility.','next_steps'=>'Next steps','from_report'=>'From report to AI visibility','steps_intro'=>'Three practical steps to improve your score over the coming weeks.','cta_title'=>'Ready to become visible in AI?','cta_copy'=>'Contact Fyndable and we will review the opportunities with you.','contact'=>'Contact us','appendix'=>'Appendix','findings_recommendations'=>'Complete scan details','all_category_scores'=>'All category scores','strengths'=>'Strengths','weaknesses'=>'Areas for attention','findings'=>'Findings','recommendations'=>'Recommendations','keyword_analysis'=>'Keyword analysis','tested_keywords'=>'Results by tested keyword','keyword'=>'Keyword','ai_overview'=>'AI Overview','your_site_cited'=>'Your site cited','competitors'=>'Competitors cited','yes'=>'Yes','no'=>'No','good'=>'Good','needs_work'=>'Needs work','weak'=>'Weak','status_visible'=>'Visible','status_sometimes'=>'Sometimes mentioned','status_not_mentioned'=>'Not mentioned','status_unavailable'=>'Insufficient data','priority_high'=>'High','priority_medium'=>'Medium','priority_low'=>'Low','effort'=>'Effort','effort_low'=>'low','effort_medium'=>'medium','effort_high'=>'high','steps'=>[['Implement the two highest-priority actions','Start with the improvements expected to have the greatest impact.'],['Use Fyndable Smart SEO','Optimize content, schema and AI visibility from one workflow.'],['Repeat the scan in 30 days','Measure progress with the same prompts and platforms.']],
             ];
         }
         return [
-            'title'=>'GEO Scan Rapport','subtitle'=>'Hoe zichtbaar is je website in de antwoorden van ChatGPT, Gemini, Perplexity en Google AI Overviews.','website'=>'Gescande website','scan_date'=>'Scandatum','geo_score'=>'GEO-score','report'=>'GEO scan rapport','management'=>'Managementoverzicht','total_score'=>'Totale GEO-score van 100','platforms_visible'=>'AI-platforms waarin je zichtbaar bent','actions_found'=>'Concrete actiepunten geïdentificeerd','category_scores'=>'Score per categorie','platform_visibility'=>'Zichtbaarheid per AI-platform','where_visible'=>'Waar word je wel en niet als bron gebruikt?','platform_intro'=>'Een momentopname op basis van live testprompts in de belangrijkste AI-tools.','benchmark'=>'Benchmark t.o.v. concurrentie','your_site'=>'Jouw site','average_competitor'=>'Gemiddelde concurrent','best_competitor'=>'Beste concurrent','snapshot_note'=>'Deze benchmark is een momentopname op basis van %d geslaagde live tests.','actions'=>'Concrete actiepunten','actions_heading'=>'%d ingrepen, op prioriteit gerangschikt','actions_intro'=>'Begin bovenaan: dit zijn de acties met de grootste verwachte impact op je GEO-zichtbaarheid.','next_steps'=>'Volgende stappen','from_report'=>'Van rapport naar zichtbaarheid in AI','steps_intro'=>'Drie praktische stappen om je score de komende weken omhoog te brengen.','cta_title'=>'Klaar om zichtbaar te worden in AI?','cta_copy'=>'Neem contact op met Fyndable en we lopen de kansen samen door.','contact'=>'Neem contact op','appendix'=>'Bijlage','findings_recommendations'=>'Volledige scandetails','strengths'=>'Sterke punten','weaknesses'=>'Aandachtspunten','findings'=>'Bevindingen','recommendations'=>'Aanbevelingen','keyword_analysis'=>'Zoekwoordanalyse','tested_keywords'=>'Resultaten per getest zoekwoord','keyword'=>'Zoekwoord','ai_overview'=>'AI-overzicht','your_site_cited'=>'Jouw site geciteerd','competitors'=>'Concurrenten geciteerd','yes'=>'Ja','no'=>'Nee','good'=>'Goed','needs_work'=>'Kan beter','weak'=>'Zwak','status_visible'=>'Zichtbaar','status_sometimes'=>'Soms genoemd','status_not_mentioned'=>'Niet genoemd','status_unavailable'=>'Onvoldoende data','priority_high'=>'Hoog','priority_medium'=>'Midden','priority_low'=>'Laag','effort'=>'Inspanning','effort_low'=>'laag','effort_medium'=>'midden','effort_high'=>'hoog','steps'=>[['Pak de twee hoge-prioriteitsacties op','Begin met de verbeteringen waarvan de grootste impact wordt verwacht.'],['Gebruik Fyndable Smart SEO','Optimaliseer content, schema en AI-zichtbaarheid vanuit één workflow.'],['Herhaal de scan over 30 dagen','Meet de vooruitgang met dezelfde prompts en platformen.']],
+            'title'=>'GEO Scan Rapport','subtitle'=>'Hoe zichtbaar is je website in de antwoorden van ChatGPT, Gemini, Perplexity en Google AI Overviews.','website'=>'Gescande website','scan_date'=>'Scandatum','geo_score'=>'GEO-score','report'=>'GEO scan rapport','management'=>'Managementoverzicht','total_score'=>'Totale GEO-score van 100','platforms_visible'=>'AI-platforms waarin je zichtbaar bent','actions_found'=>'Concrete actiepunten geïdentificeerd','category_scores'=>'Score per categorie','platform_visibility'=>'Zichtbaarheid per AI-platform','where_visible'=>'Waar word je wel en niet als bron gebruikt?','platform_intro'=>'Een momentopname op basis van live testprompts in de belangrijkste AI-tools.','benchmark'=>'Benchmark t.o.v. concurrentie','your_site'=>'Jouw site','average_competitor'=>'Gemiddelde concurrent','best_competitor'=>'Beste concurrent','snapshot_note'=>'Deze benchmark is een momentopname op basis van %d geslaagde live tests.','actions'=>'Concrete actiepunten','actions_heading'=>'%d ingrepen, op prioriteit gerangschikt','actions_intro'=>'Begin bovenaan: dit zijn de acties met de grootste verwachte impact op je GEO-zichtbaarheid.','next_steps'=>'Volgende stappen','from_report'=>'Van rapport naar zichtbaarheid in AI','steps_intro'=>'Drie praktische stappen om je score de komende weken omhoog te brengen.','cta_title'=>'Klaar om zichtbaar te worden in AI?','cta_copy'=>'Neem contact op met Fyndable en we lopen de kansen samen door.','contact'=>'Neem contact op','appendix'=>'Bijlage','findings_recommendations'=>'Volledige scandetails','all_category_scores'=>'Alle categoriescores','strengths'=>'Sterke punten','weaknesses'=>'Aandachtspunten','findings'=>'Bevindingen','recommendations'=>'Aanbevelingen','keyword_analysis'=>'Zoekwoordanalyse','tested_keywords'=>'Resultaten per getest zoekwoord','keyword'=>'Zoekwoord','ai_overview'=>'AI-overzicht','your_site_cited'=>'Jouw site geciteerd','competitors'=>'Concurrenten geciteerd','yes'=>'Ja','no'=>'Nee','good'=>'Goed','needs_work'=>'Kan beter','weak'=>'Zwak','status_visible'=>'Zichtbaar','status_sometimes'=>'Soms genoemd','status_not_mentioned'=>'Niet genoemd','status_unavailable'=>'Onvoldoende data','priority_high'=>'Hoog','priority_medium'=>'Midden','priority_low'=>'Laag','effort'=>'Inspanning','effort_low'=>'laag','effort_medium'=>'midden','effort_high'=>'hoog','steps'=>[['Pak de twee hoge-prioriteitsacties op','Begin met de verbeteringen waarvan de grootste impact wordt verwacht.'],['Gebruik Fyndable Smart SEO','Optimaliseer content, schema en AI-zichtbaarheid vanuit één workflow.'],['Herhaal de scan over 30 dagen','Meet de vooruitgang met dezelfde prompts en platformen.']],
         ];
     }
 
@@ -328,6 +335,18 @@ li { margin-bottom: 2mm; }
     {
         $host = (string)(parse_url($url, PHP_URL_HOST) ?: $url);
         return preg_replace('/^www\./i', '', strtolower($host)) ?: $host;
+    }
+
+    private function competitorHosts(array $competitors): string
+    {
+        $hosts = [];
+        foreach ($competitors as $competitor) {
+            $host = $this->host((string)($competitor['host'] ?? ''));
+            if ($host !== '') {
+                $hosts[] = $host;
+            }
+        }
+        return implode(', ', array_values(array_unique($hosts)));
     }
 
     private function e(string $value): string
