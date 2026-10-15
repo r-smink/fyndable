@@ -34,9 +34,8 @@ class DemoMode
         // Override license validation to always pass
         add_filter('sseo_ai_license_valid', '__return_true');
         add_filter('sseo_ai_license_tier', function () {
-            return 'dev';
+            return 'professional';
         });
-        add_filter('sseo_ai_skip_license_validation', '__return_true');
 
         // Show demo banner in admin
         add_action('admin_notices', [$this, 'showDemoBanner']);

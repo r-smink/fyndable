@@ -22,7 +22,7 @@ class LicenseValidator
     public function isLicenseValid(): bool
     {
         $status = get_option('sseo_ai_client_license_status', 'inactive');
-        return (bool) apply_filters('sseo_ai_license_valid', $status === 'active', $status);
+        return $status === 'active';
     }
 
     /**
@@ -31,8 +31,7 @@ class LicenseValidator
     public function getLicenseTier(): string
     {
         $tier = strtolower(get_option('sseo_ai_client_license_tier', 'free'));
-        $tier = $tier === 'development' ? 'dev' : $tier;
-        return (string) apply_filters('sseo_ai_license_tier', $tier);
+        return $tier === 'development' ? 'dev' : $tier;
     }
 
     /**
@@ -40,10 +39,6 @@ class LicenseValidator
      */
     public function validateStoredLicense(): void
     {
-        if (apply_filters('sseo_ai_skip_license_validation', false)) {
-            return;
-        }
-
         $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
         $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
         $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
