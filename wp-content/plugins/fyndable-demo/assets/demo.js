@@ -12,6 +12,14 @@
     var autoplay = false;
     var timer = null;
     var panel;
+    var badge;
+    var audio = null;
+    var muted = false;
+    var audioEnded = false;
+
+    function labels() {
+        return fyndableDemo.labels || {};
+    }
 
     function shellReady() {
         frame = document.getElementById('fyndable-frame');
@@ -22,10 +30,10 @@
         if (document.getElementById('fyndable-demo-controls')) return;
         var controls = document.createElement('div');
         controls.id = 'fyndable-demo-controls';
-        controls.innerHTML = '<span class="fyndable-demo-pill">' + escapeHtml(fyndableDemo.labels.demo) + '</span>' +
+        controls.innerHTML = '<span class="fyndable-demo-pill">' + escapeHtml(labels().demo) + '</span>' +
             '<button type="button" data-demo-action="start">Tour</button>' +
             '<button type="button" data-demo-action="autoplay">Autoplay</button>' +
-            '<button type="button" data-demo-action="reset">' + escapeHtml(fyndableDemo.labels.reset) + '</button>';
+            '<button type="button" data-demo-action="reset">' + escapeHtml(labels().reset) + '</button>';
         document.body.appendChild(controls);
         controls.addEventListener('click', function (event) {
             var action = event.target.getAttribute('data-demo-action');
@@ -58,6 +66,20 @@
                 renderPanel(steps[current]);
                 schedule();
             }
+            if (action === 'mute') {
+                muted = !muted;
+                if (audio) audio.muted = muted;
+                renderPanel(steps[current]);
+            }
+        });
+        panel.addEventListener('change', function (event) {
+            if (event.target.id === 'fyndable-demo-jump') {
+                var idx = parseInt(event.target.value, 10);
+                if (!isNaN(idx) && steps[idx]) {
+                    autoplay = false;
+                    show(idx);
+                }
+            }
         });
     }
 
@@ -76,19 +98,32 @@
         autoplay = false;
         clearTimeout(timer);
         clearHighlight();
-        if (panel) panel.classList.remove('is-visible');
+        stopAudio();
+        if (panel) {
+            panel.classList.remove('is-visible');
+            panel.classList.remove('fyndable-pos-top', 'fyndable-pos-bottom', 'fyndable-pos-left', 'fyndable-pos-right');
+        }
     }
 
     function show(index) {
         if (!running || !steps[index]) return;
         clearTimeout(timer);
         clearHighlight();
+        stopAudio();
         current = index;
         var step = steps[index];
         renderPanel(step);
         navigate(step.slug, function () {
             prepareStep(step, function () {
-                highlight(step.selector);
+                highlight(step);
+                positionPanel(step);
+                playAudio(step, function (played) {
+                    if (played && autoplay) {
+                        // Audio ended — replace the fallback timer with a short pause.
+                        clearTimeout(timer);
+                        timer = window.setTimeout(advanceOnce, 1200);
+                    }
+                });
                 schedule();
             });
         });
@@ -104,10 +139,17 @@
             attempts++;
             try {
                 var viewButton = frame.contentDocument.querySelector('.tc-view-saved');
+                var result = frame.contentDocument.getElementById('tc-result');
+                if (result && result.style.display !== 'none') {
+                    done();
+                    return;
+                }
                 if (viewButton) {
                     viewButton.click();
                     window.setTimeout(function () {
-                        step.selector = '#tc-result';
+                        if (step.selector === '#tc-saved-list') {
+                            step.selector = '#tc-pillar';
+                        }
                         done();
                     }, 600);
                     return;
@@ -147,17 +189,35 @@
         window.setTimeout(onLoad, 5000);
     }
 
-    function highlight(selector) {
-        if (!frame) return;
+    function findTarget(step) {
+        if (!frame || !frame.contentDocument) return null;
+        var doc = frame.contentDocument;
         try {
-            var doc = frame.contentDocument;
-            var target = doc.querySelector(selector) || doc.querySelector('.wrap') || doc.body;
+            return doc.querySelector(step.selector) || doc.querySelector('.wrap') || doc.body;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function highlight(step) {
+        var target = findTarget(step);
+        if (!target) return;
+        try {
             target.classList.add('fyndable-demo-highlight');
             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            badge = target.ownerDocument.createElement('div');
+            badge.className = 'fyndable-demo-badge';
+            badge.textContent = (current + 1);
+            badge.setAttribute('aria-hidden', 'true');
+            target.appendChild(badge);
         } catch (e) {}
     }
 
     function clearHighlight() {
+        if (badge && badge.parentNode) {
+            badge.parentNode.removeChild(badge);
+        }
+        badge = null;
         if (!frame) return;
         try {
             frame.contentDocument.querySelectorAll('.fyndable-demo-highlight').forEach(function (node) {
@@ -166,27 +226,209 @@
         } catch (e) {}
     }
 
-    function renderPanel(step) {
+    function positionPanel(step) {
         if (!panel) return;
+        var frameRect = frame ? frame.getBoundingClientRect() : null;
+        var target = findTarget(step);
+        var rect = null;
+        if (target) {
+            try { rect = target.getBoundingClientRect(); } catch (e) {}
+        }
+
+        var pw = 440;
+        var margin = 18;
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        var top, left;
+        var pos = 'right';
+
+        panel.classList.remove('fyndable-pos-top', 'fyndable-pos-bottom', 'fyndable-pos-left', 'fyndable-pos-right');
+
+        if (rect && frameRect) {
+            var elLeft = frameRect.left + rect.left;
+            var elTop = frameRect.top + rect.top;
+            var elRight = frameRect.left + rect.right;
+            var elBottom = frameRect.top + rect.bottom;
+            var elW = rect.width;
+            var elH = rect.height;
+
+            // Prefer right side if there is room next to the element
+            var spaceRight = vw - elRight;
+            var spaceLeft = elLeft;
+            var spaceBelow = vh - elBottom;
+            var spaceAbove = elTop;
+
+            if (spaceRight >= pw + margin * 2) {
+                pos = 'right';
+                left = elRight + margin;
+                top = elTop + elH / 2;
+            } else if (spaceLeft >= pw + margin * 2) {
+                pos = 'left';
+                left = elLeft - pw - margin;
+                top = elTop + elH / 2;
+            } else if (spaceBelow >= 320) {
+                pos = 'bottom';
+                left = elLeft + elW / 2 - pw / 2;
+                top = elBottom + margin;
+            } else if (spaceAbove >= 320) {
+                pos = 'top';
+                left = elLeft + elW / 2 - pw / 2;
+                top = elTop - margin;
+            } else {
+                pos = 'right';
+                left = Math.min(elRight + margin, vw - pw - margin);
+                top = elTop + elH / 2;
+            }
+        } else {
+            left = vw - pw - 80;
+            top = 120;
+        }
+
+        // Clamp within viewport (estimate height; re-clamp after layout)
+        left = Math.max(margin, Math.min(left, vw - pw - margin));
+        top = Math.max(70, top);
+
+        panel.style.left = left + 'px';
+        panel.style.top = top + 'px';
+        panel.style.bottom = 'auto';
+        panel.classList.add('fyndable-pos-' + pos);
+
+        // Re-clamp vertically once height is known
+        window.requestAnimationFrame(function () {
+            var ph = panel.offsetHeight;
+            var newTop = Math.max(70, Math.min(top, vh - ph - 20));
+            panel.style.top = newTop + 'px';
+            if (pos === 'top') {
+                // Arrow points down toward the element
+                panel.style.top = Math.max(70, (rect ? frameRect.top + rect.top : 200) - ph - margin) + 'px';
+            }
+        });
+    }
+
+    function stopAudio() {
+        if (audio) {
+            try { audio.pause(); } catch (e) {}
+            audio = null;
+        }
+        audioEnded = false;
+    }
+
+    function playAudio(step, done) {
+        stopAudio();
+        if (!step.audio || muted) {
+            done(false);
+            return;
+        }
+        var url = (fyndableDemo.audioBaseUrl || '') + step.audio;
+        try {
+            audio = new Audio(url);
+            audio.muted = muted;
+            audio.preload = 'auto';
+            audio.addEventListener('ended', function () {
+                audioEnded = true;
+                done(true);
+            });
+            audio.addEventListener('error', function () {
+                audio = null;
+                done(false);
+            });
+            audio.addEventListener('canplay', function () {
+                if (autoplay) {
+                    audio.play().catch(function () { done(false); });
+                }
+            });
+            // Try to play immediately if the file is ready fast enough
+            var p = audio.play();
+            if (p && p.catch) {
+                p.catch(function () {
+                    // Autoplay blocked: stay silent, done via timer
+                });
+            }
+        } catch (e) {
+            done(false);
+        }
+    }
+
+    function renderPanel(step) {
+        if (!panel || !step) return;
+        var L = labels();
         var last = current === steps.length - 1;
-        panel.innerHTML = '<button class="fyndable-demo-close" data-tour-action="close" aria-label="Sluiten">&times;</button>' +
-            '<div class="fyndable-demo-progress">Stap ' + (current + 1) + ' van ' + steps.length + '</div>' +
-            '<h2>' + escapeHtml(step.title) + '</h2>' +
-            '<p>' + escapeHtml(step.text) + '</p>' +
-            '<div class="fyndable-demo-actions">' +
-                '<button type="button" data-tour-action="previous"' + (current === 0 ? ' disabled' : '') + '>' + escapeHtml(fyndableDemo.labels.previous) + '</button>' +
-                '<button type="button" data-tour-action="toggle">' + escapeHtml(autoplay ? fyndableDemo.labels.pause : fyndableDemo.labels.play) + '</button>' +
-                '<button type="button" class="primary" data-tour-action="next">' + escapeHtml(last ? fyndableDemo.labels.finish : fyndableDemo.labels.next) + '</button>' +
+        var total = steps.length;
+        var pct = Math.round(((current + 1) / total) * 100);
+
+        var html = '';
+        html += '<button class="fyndable-demo-close" data-tour-action="close" aria-label="Sluiten">&times;</button>';
+        html += '<div class="fyndable-demo-meta">';
+        if (step.section) {
+            html += '<span class="fyndable-demo-section">' + escapeHtml(step.section) + '</span>';
+        }
+        if (step.substep) {
+            html += '<span class="fyndable-demo-substep">onderdeel ' + escapeHtml(step.substep) + '</span>';
+        }
+        html += '</div>';
+        html += '<div class="fyndable-demo-progressbar"><div class="fyndable-demo-progressbar-fill" style="width:' + pct + '%"></div></div>';
+        html += '<div class="fyndable-demo-progress">' + escapeHtml(L.stepOf ? L.stepOf : 'Stap') + ' ' + (current + 1) + ' ' + escapeHtml(L.of ? L.of : 'van') + ' ' + total + '</div>';
+        html += '<h2>' + escapeHtml(step.title) + '</h2>';
+
+        if (step.what) {
+            html += '<div class="fyndable-demo-block fyndable-demo-what">' +
+                '<h3>' + escapeHtml(L.whatTitle || 'Wat doet het?') + '</h3>' +
+                '<p>' + escapeHtml(step.what) + '</p></div>';
+        }
+        if (step.how && step.how.length) {
+            html += '<div class="fyndable-demo-block fyndable-demo-how">' +
+                '<h3>' + escapeHtml(L.howTitle || 'Hoe gebruik je het?') + '</h3><ol>';
+            step.how.forEach(function (item) {
+                html += '<li>' + escapeHtml(item) + '</li>';
+            });
+            html += '</ol></div>';
+        }
+        if (step.tip) {
+            html += '<div class="fyndable-demo-tip"><strong>' + escapeHtml(L.tipTitle || 'Tip') + ':</strong> ' + escapeHtml(step.tip) + '</div>';
+        }
+
+        html += '<div class="fyndable-demo-actions">' +
+            '<button type="button" data-tour-action="mute" class="fyndable-demo-audio" title="' + escapeHtml(muted ? (L.unmute || 'Geluid aan') : (L.mute || 'Geluid uit')) + '">' +
+                (muted ? '🔇' : '🔊') +
+            '</button>' +
+            '<button type="button" data-tour-action="previous"' + (current === 0 ? ' disabled' : '') + '>' + escapeHtml(L.previous) + '</button>' +
+            '<button type="button" data-tour-action="toggle">' + escapeHtml(autoplay ? L.pause : L.play) + '</button>' +
+            '<button type="button" class="primary" data-tour-action="next">' + escapeHtml(last ? L.finish : L.next) + '</button>' +
             '</div>';
+
+        // Chapter jump selector
+        var curSection = step.section || '';
+        var seen = {};
+        var options = '';
+        steps.forEach(function (s, i) {
+            if (s.section && !seen[s.section]) {
+                seen[s.section] = true;
+                options += '<option value="' + i + '"' + (s.section === curSection ? ' selected' : '') + '>' + escapeHtml(s.section) + '</option>';
+            }
+        });
+        if (options) {
+            html += '<div class="fyndable-demo-jump-wrap"><select id="fyndable-demo-jump" aria-label="' + escapeHtml(L.jumpTo || 'Ga naar onderdeel') + '">' + options + '</select></div>';
+        }
+
+        panel.innerHTML = html;
+    }
+
+    function advanceOnce() {
+        if (!running || !autoplay) return;
+        if (current >= steps.length - 1) stop();
+        else show(current + 1);
     }
 
     function schedule() {
         clearTimeout(timer);
         if (!running || !autoplay) return;
+
+        var wait = 9000;
+        // When audio is available it may override the reading timer via its
+        // 'ended' handler (playAudio callback). Keep a generous fallback.
         timer = window.setTimeout(function () {
-            if (current >= steps.length - 1) stop();
-            else show(current + 1);
-        }, 6500);
+            if (!audioEnded) advanceOnce();
+        }, wait);
     }
 
     function setupLiveMiddleware() {

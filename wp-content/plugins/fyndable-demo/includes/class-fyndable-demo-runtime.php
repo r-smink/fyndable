@@ -21,6 +21,12 @@ final class Fyndable_Demo_Runtime
         add_filter('sseo_ai_skip_license_validation', [$this, 'skipLicenseValidation'], 999);
         add_filter('rest_pre_dispatch', [$this, 'interceptRestRequest'], 10, 3);
         add_filter('pre_http_request', [$this, 'blockPortalRequests'], 10, 3);
+
+        // Option fixtures so server-rendered pages show demo data too.
+        add_filter('pre_option_sseo_ai_tracked_competitors', [$this, 'fixtureCompetitors']);
+        add_filter('pre_option_sseo_ai_apexflow_profile', [$this, 'fixtureApexflowProfile']);
+        add_filter('pre_option_sseo_ai_apexflow_keyword_pool', [$this, 'fixtureApexflowPool']);
+        add_filter('pre_option_sseo_ai_apexflow_plan', [$this, 'fixtureApexflowPlan']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets'], 100);
         add_action('admin_menu', [$this, 'registerSettingsPage'], 50);
         add_action('admin_bar_menu', [$this, 'addAdminBarMenu'], 999);
@@ -52,6 +58,43 @@ final class Fyndable_Demo_Runtime
     public function skipLicenseValidation(bool $skip): bool
     {
         return $this->canUseDemo() ? true : $skip;
+    }
+
+    /**
+     * Option fixtures: only return demo data when the real option is empty,
+     * so sites that already configured these features keep their own values.
+     * Returning an array short-circuits get_option(); returning false falls
+     * through to the stored option.
+     */
+    public function fixtureCompetitors()
+    {
+        return $this->canUseDemo() ? Fyndable_Demo_Fixtures::competitors() : false;
+    }
+
+    public function fixtureApexflowProfile()
+    {
+        if (!$this->canUseDemo()) {
+            return false;
+        }
+        $fixture = Fyndable_Demo_Fixtures::apexflow();
+        return [
+            'business' => $fixture['profile']['business'],
+            'industry' => $fixture['profile']['industry'],
+            'audience' => $fixture['profile']['audience'],
+            'proposition' => $fixture['profile']['proposition'],
+            'topics' => ['airco', 'warmtepomp', 'ventilatie', 'klimaatbeheersing'],
+            'scanned_at' => gmdate('Y-m-d H:i:s', strtotime('-5 days')),
+        ];
+    }
+
+    public function fixtureApexflowPool()
+    {
+        return $this->canUseDemo() ? Fyndable_Demo_Fixtures::apexflowPool() : false;
+    }
+
+    public function fixtureApexflowPlan()
+    {
+        return $this->canUseDemo() ? Fyndable_Demo_Fixtures::apexflowPlanOption() : false;
     }
 
     public function blockPortalRequests($preempt, array $args, string $url)
@@ -186,6 +229,7 @@ final class Fyndable_Demo_Runtime
             'steps' => Fyndable_Demo_Fixtures::tour(),
             'nonce' => wp_create_nonce('fyndable_demo'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
+            'audioBaseUrl' => FYNDABLE_DEMO_URL,
             'autoStart' => isset($_GET['fyndable_demo_tour']),
             'autoplay' => isset($_GET['fyndable_demo_autoplay']),
             'liveEnabled' => get_option('fyndable_demo_live_enabled', '0') === '1',
@@ -198,6 +242,14 @@ final class Fyndable_Demo_Runtime
                 'pause' => __('Pauzeren', 'fyndable-demo'),
                 'play' => __('Afspelen', 'fyndable-demo'),
                 'reset' => __('Demo resetten', 'fyndable-demo'),
+                'whatTitle' => __('Wat doet het?', 'fyndable-demo'),
+                'howTitle' => __('Hoe gebruik je het?', 'fyndable-demo'),
+                'tipTitle' => __('Tip', 'fyndable-demo'),
+                'mute' => __('Geluid uit', 'fyndable-demo'),
+                'unmute' => __('Geluid aan', 'fyndable-demo'),
+                'stepOf' => __('Stap', 'fyndable-demo'),
+                'of' => __('van', 'fyndable-demo'),
+                'jumpTo' => __('Ga naar onderdeel', 'fyndable-demo'),
             ],
         ]);
     }
@@ -299,6 +351,26 @@ final class Fyndable_Demo_Runtime
 
         if ($route === '/sseo-ai/v1/apexflow/preview' && $method === 'POST') {
             return $this->response(['success' => true, 'plan' => Fyndable_Demo_Fixtures::apexflowPlan(), 'is_demo' => true]);
+        }
+
+        if ($route === '/sseo-ai/v1/created-posts' && $method === 'GET') {
+            $posts = Fyndable_Demo_Fixtures::createdPosts();
+            return $this->response([
+                'posts' => $posts,
+                'total' => count($posts),
+                'total_pages' => 1,
+                'page' => 1,
+                'per_page' => 10,
+                'is_demo' => true,
+            ]);
+        }
+
+        if ($route === '/sseo-ai/v1/created-posts/stats' && $method === 'GET') {
+            return $this->response(Fyndable_Demo_Fixtures::createdPostStats());
+        }
+
+        if (str_starts_with($route, '/sseo-ai/v1/created-posts/') && in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+            return $this->response(['success' => true, 'simulated' => true, 'is_demo' => true]);
         }
 
         if (str_starts_with($route, '/sseo-ai/v1/apexflow/') && $method === 'POST') {
