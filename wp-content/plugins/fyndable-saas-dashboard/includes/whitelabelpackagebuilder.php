@@ -25,6 +25,14 @@ class WhiteLabelPackageBuilder
             return new \WP_Error('zip_missing', __('The ZipArchive PHP extension is required to build packages.', 'sseo-ai-saas'));
         }
 
+        // The company name is injected into PHP source files below. Restrict it
+        // to a safe character set so quotes, $, backslashes and other syntax
+        // characters can never break out of string literals.
+        $companyName = $this->sanitizeCompanyName($companyName);
+        if (empty($companyName)) {
+            return new \WP_Error('invalid_company', __('The company name contains no usable characters. Please use letters, digits and basic punctuation only.', 'sseo-ai-saas'));
+        }
+
         $companySlug = $this->sanitizeSlug($companyName);
         if (empty($companySlug)) {
             $companySlug = 'agency';
@@ -228,6 +236,20 @@ class WhiteLabelPackageBuilder
         if ($zip->open($zipPath) !== true) {
             return new \WP_Error('zip_open_failed', __('Could not open client source zip.', 'sseo-ai-saas'));
         }
+
+        // Guard against path traversal (zip-slip): reject archives containing
+        // absolute paths or ".." segments before extracting anything.
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entryName = str_replace('\\', '/', (string) $zip->getNameIndex($i));
+            if (strpos($entryName, '..') !== false
+                || strncmp($entryName, '/', 1) === 0
+                || preg_match('/^[a-zA-Z]:\//', $entryName) === 1
+            ) {
+                $zip->close();
+                return new \WP_Error('zip_unsafe', __('The client source zip contains unsafe paths.', 'sseo-ai-saas'));
+            }
+        }
+
         $zip->extractTo($tmpDir);
         $zip->close();
 
@@ -283,6 +305,22 @@ class WhiteLabelPackageBuilder
         $ext = strtolower(pathinfo($relativePath, PATHINFO_EXTENSION));
         $rebrandExtensions = ['php', 'md', 'txt', 'po', 'json', 'css', 'js', 'html'];
         return in_array($ext, $rebrandExtensions, true);
+    }
+
+    /**
+     * Restrict a company name to characters that are safe to inject into PHP
+     * source code, plugin headers, JSON and PO files. Strips quotes, dollar
+     * signs, backslashes, angle brackets and control characters so the name
+     * can never alter program syntax or produce markup injection.
+     */
+    private function sanitizeCompanyName(string $companyName): string
+    {
+        $companyName = wp_strip_all_tags($companyName, true);
+        // Allow letters (incl. accents), digits, spaces and a small set of
+        // punctuation common in business names. Everything else is removed.
+        $companyName = preg_replace('/[^\p{L}\p{N} &.,()\-]/u', '', $companyName) ?? '';
+        $companyName = preg_replace('/\s+/', ' ', $companyName) ?? '';
+        return trim(mb_substr($companyName, 0, 60));
     }
 
     /**

@@ -2,6 +2,18 @@
 
 This file captures project-specific information discovered during implementation.
 
+> **Documentation note (2026-10-16):** all user/architecture/setup docs were merged into `FYNDABLE.md` (repo root, Dutch). The old `ARCHITECTURE.md`, `SETUP.md`, `AUDIT-REPORT.md`, `GEBRUIKERSHANDLEIDING.md`, `analyse.md`, `report-claude.md`, `fyndable-faq-homepage-pricing.md` and `tools/UPDATES-SERVER.md` were removed; `README.md` is now just a pointer to `FYNDABLE.md`. This file remains the running technical log.
+
+## Security fixes (2026-10-16 audit round)
+
+- `whitelabelpackagebuilder.php` — `sanitizeCompanyName()` whitelist before injecting agency `company_name` into PHP source (was: raw `str_replace` of a `sanitize_text_field` value → PHP code injection into distributed zips). `extractClientZip()` now rejects `..`/absolute/drive-letter entry paths (zip-slip).
+- `licenseapi.php` — `startTrial()` no longer returns the existing `license_key` in its 409 `trial_exists` response (email-only credential leak). `getClientIp()` now uses `REMOTE_ADDR` only (XFF spoofing bypassed all license rate limits). Activation log uses an md5 fingerprint instead of the first 15 key chars.
+- `signupcheckout.php` — `restRegister` got an IP rate limit (10/h). `handlePaymentReturn` verifies the stored `mollie_payment_id` with Mollie before `cleanupPendingSignup` on cancel/failed/expired; `cleanupPendingSignup` re-reads the tenant row and refuses to delete tenants with `paid`/`trial`/`active` payment_status.
+- `bookkeepingadmin.php` — CSV export cells pass through `csvSafe()` (formula-injection guard for `=+-@` and tab/CR prefixes).
+- `licensevalidator.php` — cURL fallback no longer follows redirects (credentials could leak to a redirect target).
+- `seoreportexport.php` — fixed two fatals: `gatherReportData()` → `getReportData()`, `AISEO_CLIENT_VERSION` → `SSEO_AI_CLIENT_VERSION`.
+- `redirectionmanager.php` — registered the missing `admin_post_sseo_ai_redirect_export` handler (nonce + `manage_options`) for the previously dead Export CSV link.
+
 ## New SaaS endpoints
 
 `fyndable-saas-dashboard/includes/apigateway.php`

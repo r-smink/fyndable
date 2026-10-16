@@ -25,6 +25,7 @@ class RedirectionManager
         add_action('admin_post_sseo_ai_redirect_delete', [$this, 'handleDeleteRedirect']);
         add_action('admin_post_sseo_ai_redirect_toggle', [$this, 'handleToggleRedirect']);
         add_action('admin_post_sseo_ai_redirect_import', [$this, 'handleImportRedirects']);
+        add_action('admin_post_sseo_ai_redirect_export', [$this, 'handleExportRedirects']);
     }
 
     public function maybeCreateTable(): void
@@ -392,6 +393,19 @@ class RedirectionManager
         exit;
     }
 
+    public function handleExportRedirects(): void
+    {
+        check_admin_referer('sseo_ai_redirect_export');
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=redirects-' . gmdate('Y-m-d') . '.csv');
+        echo $this->export();
+        exit;
+    }
+
     public function renderAdminPage(): void
     {
         $stats = $this->getStats();
@@ -469,7 +483,7 @@ class RedirectionManager
                     <input type="file" name="csv_file" accept=".csv">
                     <?php submit_button(__('Import CSV', 'ai-seo-client'), 'secondary', 'submit', false); ?>
                 </form>
-                <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_redirect_export')); ?>" class="button button-secondary"><?php esc_html_e('Export CSV', 'ai-seo-client'); ?></a>
+                <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=sseo_ai_redirect_export'), 'sseo_ai_redirect_export')); ?>" class="button button-secondary"><?php esc_html_e('Export CSV', 'ai-seo-client'); ?></a>
             </div>
 
             <!-- Redirects list -->

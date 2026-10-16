@@ -252,6 +252,21 @@ class SignupCheckout
      */
     public function restRegister(\WP_REST_Request $request): \WP_REST_Response
     {
+        // IP rate limit: 10 registration attempts per hour. REMOTE_ADDR is
+        // used deliberately — forwarded headers are client-spoofable.
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
+        $rlKey = 'sseo_saas_rl_register_' . md5($ip);
+        $rlCount = (int) get_transient($rlKey);
+        if ($rlCount >= 10) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'rate_limited',
+                'message' => 'Too many registration attempts. Please try again later.',
+            ], 429);
+        }
+        set_transient($rlKey, $rlCount + 1, HOUR_IN_SECONDS);
+
         $name = $request->get_param('name');
         $email = $request->get_param('email');
         $street = $request->get_param('street');
@@ -672,6 +687,18 @@ class SignupCheckout
         $pricingUrl = home_url('/pricing/');
 
         if (in_array($state, ['cancel', 'failed', 'expired'], true)) {
+            // Verify with the provider before deleting: a webhook may already
+            // have marked the payment as paid while the customer clicked
+            // "cancel" in the return window. Never wipe a paid signup.
+            $storedPaymentId = (string) $this->tenants->getTenantSetting($tenantKey, 'mollie_payment_id', '');
+            if ($storedPaymentId !== '') {
+                $storedPayment = $this->paymentProcessor->fetchMolliePayment($storedPaymentId);
+                if (!is_wp_error($storedPayment) && is_array($storedPayment)
+                    && ($storedPayment['status'] ?? '') === 'paid') {
+                    wp_redirect(home_url('/dashboard/'));
+                    exit;
+                }
+            }
             $this->cleanupPendingSignup($tenant);
             wp_redirect(add_query_arg('fyndable_checkout', 'cancelled', $pricingUrl));
             exit;
@@ -796,8 +823,17 @@ class SignupCheckout
             return;
         }
 
-        // Never clean up an already active paid customer
-        if (($tenant['status'] ?? '') === 'active' && ($tenant['payment_status'] ?? '') === 'active') {
+        // Re-read the tenant row — the caller's copy may be stale (a webhook
+        // could have activated or paid the account in the meantime).
+        $fresh = $this->tenants->getTenant($tenantKey);
+        if (is_array($fresh)) {
+            $tenant = $fresh;
+        }
+
+        // Never clean up an already active or paid customer
+        if (($tenant['status'] ?? '') === 'active'
+            || in_array($tenant['payment_status'] ?? '', ['active', 'paid', 'trial'], true)
+        ) {
             return;
         }
 

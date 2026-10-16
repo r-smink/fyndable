@@ -412,8 +412,7 @@ class LicenseAPI
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
         $platform = $request->get_param('platform') ?: 'wordpress';
 
-        error_log('SSEO AI Dashboard: License activation request received');
-        error_log('SSEO AI Dashboard: License Key: ' . substr($licenseKey, 0, 15) . '...');
+        error_log('SSEO AI Dashboard: License activation request received (key fp: ' . substr(md5((string) $licenseKey), 0, 8) . ')');
         error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
         error_log('SSEO AI Dashboard: Platform: ' . $platform);
 
@@ -542,21 +541,16 @@ class LicenseAPI
     }
 
     /**
-     * Get the client IP address, preferring forwarded headers.
+     * Get the client IP address for rate limiting.
+     *
+     * SECURITY: only REMOTE_ADDR is trusted. X-Forwarded-For / X-Real-IP are
+     * client-spoofable and would let an attacker bypass every IP-based rate
+     * limit on the license endpoints. When the site runs behind a reverse
+     * proxy, configure the proxy to overwrite REMOTE_ADDR instead.
      */
     private function getClientIp(): string
     {
-        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-        if (!empty($ip)) {
-            $parts = explode(',', $ip);
-            $ip = trim($parts[0]);
-        }
-        if (empty($ip)) {
-            $ip = $_SERVER['HTTP_X_REAL_IP'] ?? '';
-        }
-        if (empty($ip)) {
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        }
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
     }
 
@@ -821,11 +815,13 @@ class LicenseAPI
             if (($existing['email'] ?? '') === $email) {
                 $tier = $existing['tier'] ?? '';
                 if ($tier === 'trial') {
+                    // Never return the existing license_key — knowing the email
+                    // address alone must not expose credentials. The key was
+                    // emailed at signup; the user can request a resend.
                     return new \WP_REST_Response([
                         'success' => false,
                         'error' => 'trial_exists',
-                        'message' => 'You already have a trial account. Use your existing license key or upgrade.',
-                        'license_key' => $existing['license_key'] ?? '',
+                        'message' => 'You already have a trial account. Your license key was sent by email — use it or upgrade.',
                     ], 409);
                 }
                 return new \WP_REST_Response([

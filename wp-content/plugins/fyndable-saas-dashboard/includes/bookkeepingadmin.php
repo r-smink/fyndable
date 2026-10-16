@@ -241,19 +241,19 @@ class BookkeepingAdmin
             $vatAmount = $amount * ($vatRate / (100 + $vatRate));
             $subtotal = $amount - $vatAmount;
             $rows[] = [
-                $inv['invoice_number'],
-                $inv['created_at'],
-                $inv['paid_at'] ?? '',
-                $inv['tenant_key'],
-                $inv['tenant_name'] ?? '',
-                $inv['tenant_email'] ?? '',
-                $inv['tier'] ?? '',
-                $inv['billing_interval'] ?? '',
-                $inv['description'] ?? '',
-                $inv['provider'] ?? '',
-                $inv['external_id'] ?? '',
-                $inv['status'] ?? '',
-                $inv['currency'] ?? 'EUR',
+                $this->csvSafe($inv['invoice_number']),
+                $this->csvSafe($inv['created_at']),
+                $this->csvSafe($inv['paid_at'] ?? ''),
+                $this->csvSafe($inv['tenant_key']),
+                $this->csvSafe($inv['tenant_name'] ?? ''),
+                $this->csvSafe($inv['tenant_email'] ?? ''),
+                $this->csvSafe($inv['tier'] ?? ''),
+                $this->csvSafe($inv['billing_interval'] ?? ''),
+                $this->csvSafe($inv['description'] ?? ''),
+                $this->csvSafe($inv['provider'] ?? ''),
+                $this->csvSafe($inv['external_id'] ?? ''),
+                $this->csvSafe($inv['status'] ?? ''),
+                $this->csvSafe($inv['currency'] ?? 'EUR'),
                 number_format($subtotal, 2, '.', ''),
                 $vatRate,
                 number_format($vatAmount, 2, '.', ''),
@@ -269,6 +269,22 @@ class BookkeepingAdmin
         }
         fclose($fh);
         exit;
+    }
+
+    /**
+     * Neutralize spreadsheet formula injection in CSV cells.
+     * Tenant-supplied values (name, description, external_id) may start with
+     * =, +, -, @ or a tab/CR — prefixing a single quote keeps them inert.
+     */
+    private function csvSafe($value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+        if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value) === 1) {
+            return "'" . $value;
+        }
+        return $value;
     }
 
     /**
