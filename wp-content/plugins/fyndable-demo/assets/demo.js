@@ -16,6 +16,7 @@
     var audio = null;
     var muted = false;
     var audioEnded = false;
+    var PAUSE_MS = 2500; // breathing room after each voiceover finishes
 
     function labels() {
         return fyndableDemo.labels || {};
@@ -119,9 +120,10 @@
                 positionPanel(step);
                 playAudio(step, function (played) {
                     if (played && autoplay) {
-                        // Audio ended — replace the fallback timer with a short pause.
+                        // Voiceover finished — give the viewer a moment, then advance.
                         clearTimeout(timer);
-                        timer = window.setTimeout(advanceOnce, 1200);
+                        audioEnded = true;
+                        timer = window.setTimeout(advanceOnce, PAUSE_MS);
                     }
                 });
                 schedule();
@@ -320,32 +322,47 @@
             return;
         }
         var url = (fyndableDemo.audioBaseUrl || '') + step.audio;
+        var called = false;
+        function finish(result) {
+            if (called) return;
+            called = true;
+            done(result);
+        }
         try {
             audio = new Audio(url);
             audio.muted = muted;
             audio.preload = 'auto';
             audio.addEventListener('ended', function () {
                 audioEnded = true;
-                done(true);
+                finish(true);
             });
             audio.addEventListener('error', function () {
                 audio = null;
-                done(false);
+                finish(false);
+            });
+            audio.addEventListener('playing', function () {
+                // Audio actually started: reset fallback to the real remaining length.
+                if (autoplay && audio && !isNaN(audio.duration) && audio.duration > 0) {
+                    clearTimeout(timer);
+                    timer = window.setTimeout(function () {
+                        if (!audioEnded) advanceOnce();
+                    }, Math.round(audio.duration * 1000) + PAUSE_MS);
+                }
             });
             audio.addEventListener('canplay', function () {
-                if (autoplay) {
-                    audio.play().catch(function () { done(false); });
+                if (autoplay && audio && audio.paused) {
+                    audio.play().catch(function () {});
                 }
             });
             // Try to play immediately if the file is ready fast enough
             var p = audio.play();
             if (p && p.catch) {
                 p.catch(function () {
-                    // Autoplay blocked: stay silent, done via timer
+                    // Autoplay blocked: canplay will retry; fallback timer covers us.
                 });
             }
         } catch (e) {
-            done(false);
+            finish(false);
         }
     }
 
@@ -423,12 +440,16 @@
         clearTimeout(timer);
         if (!running || !autoplay) return;
 
-        var wait = 9000;
-        // When audio is available it may override the reading timer via its
-        // 'ended' handler (playAudio callback). Keep a generous fallback.
+        var step = steps[current];
+        // Fallback wait matches the voiceover length plus breathing room.
+        // The audio 'ended' handler normally cancels this timer early.
+        var fallbackMs = step.duration || 9000;
+        if (audio && !isNaN(audio.duration) && audio.duration > 0) {
+            fallbackMs = Math.max(fallbackMs, Math.round(audio.duration * 1000) + PAUSE_MS);
+        }
         timer = window.setTimeout(function () {
             if (!audioEnded) advanceOnce();
-        }, wait);
+        }, fallbackMs);
     }
 
     function setupLiveMiddleware() {

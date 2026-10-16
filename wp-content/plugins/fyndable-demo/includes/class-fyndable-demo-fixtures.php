@@ -6,6 +6,38 @@ if (!defined('ABSPATH')) {
 
 final class Fyndable_Demo_Fixtures
 {
+    private const AUDIO_BITRATE = 128000; // 128 kbps CBR MP3
+    private const AUDIO_PAUSE_MS = 2500;  // breathing room after the voiceover ends
+
+    private static function audioDuration(string $relativePath): int
+    {
+        $path = FYNDABLE_DEMO_DIR . $relativePath;
+        if (!file_exists($path)) {
+            return 9000; // fallback reading time when no audio file is present
+        }
+
+        $offset = 0;
+        $handle = @fopen($path, 'rb');
+        if ($handle) {
+            $header = fread($handle, 10);
+            fclose($handle);
+            if (strlen($header) >= 10 && substr($header, 0, 3) === 'ID3') {
+                $bytes = array_values(unpack('C*', substr($header, 6, 4)));
+                $size = (($bytes[0] & 0x7F) << 21)
+                      | (($bytes[1] & 0x7F) << 14)
+                      | (($bytes[2] & 0x7F) << 7)
+                      | ($bytes[3] & 0x7F);
+                $flags = ord($header[5]);
+                $footer = ($flags & 0x10) ? 10 : 0;
+                $offset = 10 + $size + $footer;
+            }
+        }
+
+        $audioBytes = max(0, filesize($path) - $offset);
+        $ms = (int) round(($audioBytes * 8 / self::AUDIO_BITRATE) * 1000);
+        return $ms + self::AUDIO_PAUSE_MS;
+    }
+
     public static function dashboard(): array
     {
         return [
@@ -291,7 +323,7 @@ final class Fyndable_Demo_Fixtures
     public static function tour(): array
     {
         $a = static fn(string $id): string => 'assets/audio/' . $id . '.mp3';
-        return [
+        $steps = [
             // 1. Dashboard / SEO-nulmeting
             [
                 'id' => 'step-01-dashboard-score', 'slug' => 'ai-seo-dashboard',
@@ -591,5 +623,12 @@ final class Fyndable_Demo_Fixtures
                 'audio' => $a('step-22-posts-table'),
             ],
         ];
+
+        foreach ($steps as &$step) {
+            $step['duration'] = !empty($step['audio']) ? self::audioDuration($step['audio']) : 9000;
+        }
+        unset($step);
+
+        return $steps;
     }
 }
