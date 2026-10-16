@@ -337,6 +337,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Start elke klantpresentatie hier: de score van 74 is direct begrijpelijk en creëert urgentie zonder technisch jargon.',
                 'audio' => $a('step-01-dashboard-score'),
+                'voiceover' => 'Welkom in Fyndable. We beginnen bij de gezondheidscheck van de website. Met één klik op "Analyze Site" scant de plugin alle pagina's en posts en vertaalt dat naar een totale SEO-score. Groen betekent gezond, oranje vraagt aandacht, rood is kritiek. Deze demowebsite van Van Dijk Klimaattechniek scoort 74 — er is dus ruimte voor winst. Onder de score zie je hoeveel pagina's zijn meegenomen in de analyse.',
             ],
             [
                 'id' => 'step-02-dashboard-breakdown', 'slug' => 'ai-seo-dashboard',
@@ -349,6 +350,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Gebruik de breakdown om te laten zien dat SEO geen black box is maar een checklist die systematisch wordt afgerond.',
                 'audio' => $a('step-02-dashboard-breakdown'),
+                'voiceover' => 'Naast de score zie je de breakdown: per SEO-onderdeel hoeveel pagina's al op orde zijn. Denk aan titels, meta descriptions, focus keyphrases, Open Graph-tags, interne links en contentlengte. Elke balk is een voortgangsmeter. De oranje balken zijn je snelste verbeterpunten — daar ligt de grootste relatieve winst voor de klant.',
             ],
             [
                 'id' => 'step-03-dashboard-issues', 'slug' => 'ai-seo-dashboard',
@@ -361,6 +363,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Wijs hier op de 8 ontbrekende SEO-titels: dat is exact het soort werk dat Fyndable geautomatiseerd oplost.',
                 'audio' => $a('step-03-dashboard-issues'),
+                'voiceover' => 'Hieronder de concrete bevindingen. Links de issues: acht pagina's missen bijvoorbeeld een SEO-titel. Klik erop en je ziet precies welke pagina's. Rechts de quick wins — pagina's met goede content maar ontbrekende meta-data. Met de Bulk Optimizer los je die in minuten op. Perfecte openingscasus voor een demo: dit is precies het werk dat Fyndable geautomatiseerd oppakt.',
             ],
             // 2. Keywords
             [
@@ -375,6 +378,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Probeer in de demo "airco onderhoud" toe te voegen — het zoekwoord verschijnt direct in de tabel en blijft bewaard via "Demo resetten".',
                 'audio' => $a('step-04-keywords-toolbar'),
+                'voiceover' => 'Dit is het centrale zoekwoordbeheer. Typ een zoekwoord in en voeg het toe, of laat AI via "Generate keywords" en de "Keywords explorer" nieuwe varianten voorstellen — compleet met zoekvolume en moeilijkheidsgraad. Probeer het gerust: voeg bijvoorbeeld "airco onderhoud" toe. In de demo blijft je invoer bewaard tot je de demo reset.',
             ],
             [
                 'id' => 'step-05-keywords-filters', 'slug' => 'ai-seo-keywords',
@@ -388,6 +392,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'De tellers op de tabs geven in één blik de omvang van je zoekwoordportfolio.',
                 'audio' => $a('step-05-keywords-filters'),
+                'voiceover' => 'De tabs boven de tabel filteren je portfolio: alle zoekwoorden, alleen getrackte, gerangschikte, positieveranderingen en nieuwe rankings. De tellers geven in één blik de omvang. Sorteer op volume, difficulty of rank via de kolomkoppen, of filter op onderwerpgroep met de cluster-dropdown.',
             ],
             [
                 'id' => 'step-06-keywords-table', 'slug' => 'ai-seo-keywords',
@@ -401,6 +406,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Let op "subsidie warmtepomp 2026": hoog volume (1.300) — een perfecte case voor een informatief artikel.',
                 'audio' => $a('step-06-keywords-table'),
+                'voiceover' => 'Elke regel combineert alles wat je nodig hebt om te prioriteren: zoekvolume, difficulty, cost-per-click, actuele positie, zoekintentie en SERP-concurrenten. De truc: veel volume plus lage difficulty is een ideale kans. Let op "subsidie warmtepomp 2026" — dertienhonderd zoekopdrachten per maand. Een perfecte case voor een informatief artikel.',
             ],
             // 3. Competitor Research
             [
@@ -415,6 +421,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'De AI-content-detectie laat zien welke concurrenten massaal geautomatiseerd publiceren — een opening om met kwaliteit te winnen.',
                 'audio' => $a('step-07-competitors-add'),
+                'voiceover' => 'Bij Competitor Research vul je het domein van een concurrent in en bouwt Fyndable een compleet profiel: zoekwoordstrategie, publicatietempo, AI-content-percentage, win-loss-analyse, backlinks en advertenties. Optioneel geef je een sitemap mee en vink je "Full site" aan om alle sub-sitemaps te volgen. De eerste analyse duurt enkele minuten; daarna staat de concurrent in je dashboard.',
             ],
             [
                 'id' => 'step-08-competitors-overview', 'slug' => 'ai-seo-competitor-research',
@@ -428,6 +435,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Win/Loss is de sterkste sales-demo: "Ze scoren beter op X, maar jij wint op Y" is een concreet verhaal.',
                 'audio' => $a('step-08-competitors-overview'),
+                'voiceover' => 'Per concurrent vergelijk je vijf dimensies via de tabs: Keyword Strategy, Content Calendar, Win/Loss, Backlink Strategy en Ad Copy. De Win/Loss-tab is de sterkste in een salesgesprek: je ziet zwart op wit waar de concurrent wint en waar jij wint. En de AI-content-detectie laat zien welke concurrenten massaal geautomatiseerd publiceren — een opening om met kwaliteit te winnen.',
             ],
             // 4. Topic Clusters
             [
@@ -442,6 +450,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Voor Van Dijk Klimaattechniek is "klimaatbeheersing utrecht" het kernthema — hieronder staat de opgeslagen voorbeeldmap.',
                 'audio' => $a('step-09-clusters-generator'),
+                'voiceover' => 'Nu komt het strategische deel. De Topic Cluster Generator zet één kernthema om in een complete contentarchitectuur: een pillar page met hub- en ondersteunende pagina's. Voor Van Dijk is "klimaatbeheersing utrecht" het kernthema. Kies taal en diepte, audit eventueel je bestaande content, en klik "Generate Map". Hieronder staat al een opgeslagen voorbeeld.',
             ],
             [
                 'id' => 'step-10-clusters-pillar', 'slug' => 'ai-seo-topic-clusters',
@@ -455,6 +464,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => '13 geplande pagina’s in 3 clusters = drie maanden gestructureerde contentvoorraad.',
                 'audio' => $a('step-10-clusters-pillar'),
+                'voiceover' => 'Dit is een gegenereerde clustermap. Bovenaan een complete gids — de pillar page — waar alle clusters naartoe linken. Eronder drie clusters met elk een hubpagina en ondersteunende artikelen, compleet met doelzoekwoord, woordenaantal en prioriteit. Dertien geplande pagina's, gespreid over drie maanden: een hele kwartaalplanning in één scherm.',
             ],
             [
                 'id' => 'step-11-clusters-generate', 'slug' => 'ai-seo-topic-clusters',
@@ -468,6 +478,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'De geschatte API-kosten staan erbij — je weet vooraf wat een bulk-run kost.',
                 'audio' => $a('step-11-clusters-generate'),
+                'voiceover' => 'Van plan naar publicatie. Klik "Review All Pages", selecteer welke pagina's je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.',
             ],
             // 5. Content Calendar
             [
@@ -482,6 +493,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Laat de klant zelf een item verslepen — drag-and-drop maakt de planning meteen tastbaar.',
                 'audio' => $a('step-12-calendar-grid'),
+                'voiceover' => 'De contentkalender geeft een maandoverzicht van alles: gepubliceerd, gepland, concept en ter review. De kleurcode is intuïtief: groen is gepland of live, geel is concept, blauw wacht op review. Concepten en geplande posts sleep je eenvoudig naar een andere dag. Laat de klant gerust zelf even verslepen — dat maakt de planning meteen tastbaar.',
             ],
             [
                 'id' => 'step-13-calendar-workflow', 'slug' => 'ai-seo-content-calendar',
@@ -496,6 +508,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Combineer met ApexFlow: de autopilot vult gaten automatisch, deze kalender houdt je in controle.',
                 'audio' => $a('step-13-calendar-workflow'),
+                'voiceover' => 'Rechts zie je de operationele sturing. De Content Gap Calendar wijst dagen aan zonder content — één klik op "Fill Gap" vult ze. De vier statuskaarten tonen waar content in de pijplijn zit: drafts, pending review, gepland en gepubliceerd. En onder Pending Approvals keurt het team ingediende stukken goed of af. Volledig onderaan vind je de Keyword Opportunity Timeline met voorstellen op datum.',
             ],
             // 6. ApexFlow
             [
@@ -511,6 +524,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Hoe beter de business-context, hoe scherper de gegenereerde content. Denk aan USP’s, regio en no-go-onderwerpen.',
                 'audio' => $a('step-14-apexflow-profile'),
+                'voiceover' => 'ApexFlow is de content-autopilot. Hij scant de site en bepaalt zelf niche, doelgroep en kernthema's. Hier stuur je dat bij: industry, doelgroep, business-context en eigen zoekwoorden die voorrang krijgen. Onderwerpen die je uitsluit, blijven buiten de deur. Hoe beter de context, hoe scherper de output — denk aan USP's, regio en no-go-onderwerpen.',
             ],
             [
                 'id' => 'step-15-apexflow-schedule', 'slug' => 'ai-seo-automation',
@@ -525,6 +539,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Adviseer klanten eerst in draft-modus: één week reviewen bouwt vertrouwen voordat je volledig automatisch gaat.',
                 'audio' => $a('step-15-apexflow-schedule'),
+                'voiceover' => 'Hier bepaal je ritme en veiligheid: het aantal posts per week — begrensd door de licentie — de publicatiedagen, het tijdstip en de modus. Auto-publish publiceert direct; draft-modus legt alles eerst in concepten ter review. Onze tip: start een week in draft-modus. Dat bouwt vertrouwen, daarna kan de autopilot volledig.',
             ],
             [
                 'id' => 'step-16-apexflow-pool', 'slug' => 'ai-seo-automation',
@@ -539,6 +554,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Het pinnetjes-icoon bij een keyword betekent lokale intentie — relevant als Local Business-coördinaten zijn ingesteld.',
                 'audio' => $a('step-16-apexflow-pool'),
+                'voiceover' => 'ApexFlow bouwt een keyword pool van maximaal twintig kandidaten uit SERP-data, volumes en lokale intentie — het pinnetje betekent lokaal zoekgedrag. Met "Preview Calendar" doe je een droge run; met "Reject" schuif je een keyword naar de uitsluitingen. Onderaan staat het plan: welke post, welke dag, welk zoekwoord. "Run ApexFlow Now" forceert meteen een run.',
             ],
             // 7. Rank Tracker
             [
@@ -553,6 +569,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Laat op "airco installeren utrecht" zien hoe positie 7 naar 4 ging — meetbaar bewijs van het traject.',
                 'audio' => $a('step-17-rank-national'),
+                'voiceover' => 'De Rank Tracker controleert dagelijks je Google-posities per zoekwoord, land en doelpagina. Groen omhoog betekent gestegen, rood omlaag betekent gezakt. Klik op een zoekwoord voor de dertigdaagse positiereeks. "airco installeren utrecht" ging hier van positie zeven naar vier — meetbaar bewijs dat het traject werkt. "Check All Now" forceert een verse meting.',
             ],
             [
                 'id' => 'step-18-rank-local', 'slug' => 'ai-seo-rank-tracker',
@@ -566,6 +583,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Voor Van Dijk Klimaattechniek is de geo-grid dé eye-opener: zichtbaarheid verschilt echt per stadswijk.',
                 'audio' => $a('step-18-rank-local'),
+                'voiceover' => 'Twee extra tabbladen. Local SERP meet je positie in de Google Maps-pack via een geo-grid rond de vestiging — per meetpunt zie je of je bedrijf in de local pack staat. Voor een lokale dienstverlener als Van Dijk is dat dé eye-opener: zichtbaarheid verschilt echt per stadswijk. De Cannibalization-tab detecteert pagina's die onderling om hetzelfde zoekwoord strijden.',
             ],
             // 8. LLM Tracker
             [
@@ -581,6 +599,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Gebruik de concurrentenlijst bewust: zo vergelijk je jouw AI-share-of-voice met directe rivals.',
                 'audio' => $a('step-19-llm-config'),
+                'voiceover' => 'Tot slot: de nieuwe vorm van vindbaarheid. De LLM Tracker vraagt ChatGPT, Perplexity, Gemini en Claude om aanbevelingen en meet of jouw merk wordt genoemd. Vul merknaam, categorie, producten en concurrenten in, pas de zoekopdrachten aan met placeholders en vink de platforms aan. Met "Run Scan Now" start je direct een meetronde.',
             ],
             [
                 'id' => 'step-20-llm-results', 'slug' => 'ai-seo-llm-tracker',
@@ -594,6 +613,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Koppel dit aan GEO-scans en llms.txt: zo meet én verbeter je AI-vindbaarheid in dezelfde plugin.',
                 'audio' => $a('step-20-llm-results'),
+                'voiceover' => 'Na een scan zie je de Visibility Score: in hoeveel procent van de AI-antwoorden wordt je merk genoemd. Plus vermeldingen, gemiddelde positie en sentiment — positief of negatief. De platform-breakdown toont waar je zwak scoort, en per vermelding lees je het antwoordfragment. Koppel dit aan de GEO-scan en llms.txt, en je meet én verbetert AI-vindbaarheid in dezelfde plugin.',
             ],
             // 9. Created Posts
             [
@@ -608,6 +628,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'De pillen met telling geven direct een kwaliteitsindicatie van de geautomatiseerde output.',
                 'audio' => $a('step-21-posts-filters'),
+                'voiceover' => 'Alle door AI gemaakte content komt terecht in dit controlepaneel. Filter op zoekterm, cluster, woordenaantal, datumbereiken en status. De statuspills tonen met tellers hoeveel posts gereed zijn, aandacht vragen of in review zijn. Zo behoudt het team volledige grip op geautomatiseerde output.',
             ],
             [
                 'id' => 'step-22-posts-table', 'slug' => 'ai-seo-created-posts',
@@ -621,6 +642,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Dit scherm is het bewijs dat AI-content in Fyndable altijd onder menselijke controle blijft.',
                 'audio' => $a('step-22-posts-table'),
+                'voiceover' => 'En dit is het bewijs: elke post met afbeelding, status, edit- en reviewstatus. Selecteer posts voor bulk-acties — status wijzigen, reviewstatus aanpassen of verwijderen — of open een post om te bewerken of opnieuw te laten genereren. Fyndable schrijft, maar de mens blijft eindverantwoordelijk. Dat is de tour. Vragen? De demo blijft openstaan om zelf te verkennen.',
             ],
         ];
 

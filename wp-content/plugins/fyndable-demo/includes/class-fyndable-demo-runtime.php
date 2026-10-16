@@ -250,6 +250,15 @@ final class Fyndable_Demo_Runtime
                 'stepOf' => __('Stap', 'fyndable-demo'),
                 'of' => __('van', 'fyndable-demo'),
                 'jumpTo' => __('Ga naar onderdeel', 'fyndable-demo'),
+                'voiceoverTitle' => __('Toelichting', 'fyndable-demo'),
+                'switchToVoice' => __('Schakel naar voice-over', 'fyndable-demo'),
+                'switchToText' => __('Schakel naar tekst', 'fyndable-demo'),
+                'chooseModeTitle' => __('Hoe wil je de tour volgen?', 'fyndable-demo'),
+                'chooseModeDesc' => __('Kies of je de toelichting wilt horen (voice-over) of lezen (tekst in de popup).', 'fyndable-demo'),
+                'modeVoice' => __('Met voice-over', 'fyndable-demo'),
+                'modeVoiceHint' => __('Audio-toelichting bij elke stap', 'fyndable-demo'),
+                'modeText' => __('Met tekst', 'fyndable-demo'),
+                'modeTextHint' => __('Toelichting als tekst in de popup', 'fyndable-demo'),
             ],
         ]);
     }

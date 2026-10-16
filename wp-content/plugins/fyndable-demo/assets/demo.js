@@ -16,7 +16,9 @@
     var audio = null;
     var muted = false;
     var audioEnded = false;
+    var textMode = false; // true = show voiceover as text, false = play audio
     var PAUSE_MS = 2500; // breathing room after each voiceover finishes
+    var TEXT_READ_MS_PER_CHAR = 55; // autoplay reading time per character in text mode
 
     function labels() {
         return fyndableDemo.labels || {};
@@ -72,6 +74,28 @@
                 if (audio) audio.muted = muted;
                 renderPanel(steps[current]);
             }
+            if (action === 'switch-mode') {
+                textMode = !textMode;
+                if (textMode) {
+                    // Switching to text mode: stop any playing audio
+                    stopAudio();
+                    muted = true;
+                } else {
+                    // Switching to voice mode: unmute and play current step's audio
+                    muted = false;
+                }
+                renderPanel(steps[current]);
+                if (!textMode) {
+                    playAudio(steps[current], function (played) {
+                        if (played && autoplay) {
+                            clearTimeout(timer);
+                            audioEnded = true;
+                            timer = window.setTimeout(advanceOnce, PAUSE_MS);
+                        }
+                    });
+                }
+                schedule();
+            }
         });
         panel.addEventListener('change', function (event) {
             if (event.target.id === 'fyndable-demo-jump') {
@@ -86,12 +110,53 @@
 
     function start(auto) {
         if (!steps.length) return;
-        running = true;
-        autoplay = !!auto;
-        current = 0;
-        createPanel();
-        panel.classList.add('is-visible');
-        show(0);
+        showModeChooser(function (mode) {
+            textMode = mode === 'text';
+            muted = textMode; // mute audio when text mode is chosen
+            running = true;
+            autoplay = !!auto;
+            current = 0;
+            createPanel();
+            panel.classList.add('is-visible');
+            show(0);
+        });
+    }
+
+    function showModeChooser(callback) {
+        var overlay = document.createElement('div');
+        overlay.className = 'fyndable-mode-overlay';
+        var L = labels();
+        overlay.innerHTML =
+            '<div class="fyndable-mode-dialog">' +
+                '<h2>' + escapeHtml(L.chooseModeTitle || 'Hoe wil je de tour volgen?') + '</h2>' +
+                '<p>' + escapeHtml(L.chooseModeDesc || 'Kies of je de toelichting wilt horen (voice-over) of lezen (tekst in de popup).') + '</p>' +
+                '<div class="fyndable-mode-options">' +
+                    '<button type="button" class="fyndable-mode-btn" data-mode="voice">' +
+                        '<span class="fyndable-mode-icon">&#x1F50A;</span>' +
+                        '<span class="fyndable-mode-label">' + escapeHtml(L.modeVoice || 'Met voice-over') + '</span>' +
+                        '<span class="fyndable-mode-hint">' + escapeHtml(L.modeVoiceHint || 'Audio-toelichting bij elke stap') + '</span>' +
+                    '</button>' +
+                    '<button type="button" class="fyndable-mode-btn" data-mode="text">' +
+                        '<span class="fyndable-mode-icon">&#x1F4DD;</span>' +
+                        '<span class="fyndable-mode-label">' + escapeHtml(L.modeText || 'Met tekst') + '</span>' +
+                        '<span class="fyndable-mode-hint">' + escapeHtml(L.modeTextHint || 'Toelichting als tekst in de popup') + '</span>' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        // Force reflow then add visible class for transition
+        overlay.offsetHeight; // eslint-disable-line no-unused-expressions
+        overlay.classList.add('is-visible');
+        overlay.addEventListener('click', function (e) {
+            var btn = e.target.closest ? e.target.closest('[data-mode]') : null;
+            if (!btn) return;
+            var mode = btn.getAttribute('data-mode');
+            overlay.classList.remove('is-visible');
+            window.setTimeout(function () {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                callback(mode);
+            }, 250);
+        });
     }
 
     function stop() {
@@ -213,6 +278,9 @@
             badge.setAttribute('aria-hidden', 'true');
             target.appendChild(badge);
         } catch (e) {}
+        // Return focus to the parent window so arrow keys keep working
+        // after the iframe loads new content or the user clicks the highlight.
+        window.focus();
     }
 
     function clearHighlight() {
@@ -317,7 +385,7 @@
 
     function playAudio(step, done) {
         stopAudio();
-        if (!step.audio || muted) {
+        if (!step.audio || muted || textMode) {
             done(false);
             return;
         }
@@ -404,11 +472,24 @@
             html += '<div class="fyndable-demo-tip"><strong>' + escapeHtml(L.tipTitle || 'Tip') + ':</strong> ' + escapeHtml(step.tip) + '</div>';
         }
 
+        // Show voiceover text when in text mode
+        if (textMode && step.voiceover) {
+            html += '<div class="fyndable-demo-voiceover">' +
+                '<div class="fyndable-demo-voiceover-header">' + escapeHtml(L.voiceoverTitle || 'Toelichting') + '</div>' +
+                '<p>' + escapeHtml(step.voiceover) + '</p></div>';
+        }
+
         html += '<div class="fyndable-demo-actions">' +
-            '<button type="button" data-tour-action="mute" class="fyndable-demo-audio" title="' + escapeHtml(muted ? (L.unmute || 'Geluid aan') : (L.mute || 'Geluid uit')) + '">' +
-                (muted ? '🔇' : '🔊') +
-            '</button>' +
-            '<button type="button" data-tour-action="previous"' + (current === 0 ? ' disabled' : '') + '>' + escapeHtml(L.previous) + '</button>' +
+            '<button type="button" data-tour-action="switch-mode" class="fyndable-demo-mode-toggle" title="' +
+                escapeHtml(textMode ? (L.switchToVoice || 'Schakel naar voice-over') : (L.switchToText || 'Schakel naar tekst')) + '">' +
+                (textMode ? '&#x1F50A;' : '&#x1F4DD;') +
+            '</button>';
+        if (!textMode) {
+            html += '<button type="button" data-tour-action="mute" class="fyndable-demo-audio" title="' + escapeHtml(muted ? (L.unmute || 'Geluid aan') : (L.mute || 'Geluid uit')) + '">' +
+                (muted ? '&#x1F507;' : '&#x1F50A;') +
+            '</button>';
+        }
+        html += '<button type="button" data-tour-action="previous"' + (current === 0 ? ' disabled' : '') + '>' + escapeHtml(L.previous) + '</button>' +
             '<button type="button" data-tour-action="toggle">' + escapeHtml(autoplay ? L.pause : L.play) + '</button>' +
             '<button type="button" class="primary" data-tour-action="next">' + escapeHtml(last ? L.finish : L.next) + '</button>' +
             '</div>';
@@ -441,6 +522,15 @@
         if (!running || !autoplay) return;
 
         var step = steps[current];
+
+        if (textMode) {
+            // In text mode, estimate reading time from voiceover length
+            var charCount = (step.voiceover || '').length;
+            var readMs = Math.max(6000, charCount * TEXT_READ_MS_PER_CHAR) + PAUSE_MS;
+            timer = window.setTimeout(advanceOnce, readMs);
+            return;
+        }
+
         // Fallback wait matches the voiceover length plus breathing room.
         // The audio 'ended' handler normally cancels this timer early.
         var fallbackMs = step.duration || 9000;
@@ -515,15 +605,29 @@
         if (!shellReady()) return;
         createControls();
         createPanel();
+
+        // Recapture focus when the iframe steals it, so arrow keys keep working.
+        // We listen on the parent window: when focus leaves to the iframe the
+        // parent fires a 'blur'. After a short delay (to let iframe settle)
+        // we pull focus back — but only while the tour is actively running.
+        window.addEventListener('blur', function () {
+            if (!running) return;
+            window.setTimeout(function () {
+                if (running && document.activeElement === frame) {
+                    window.focus();
+                }
+            }, 80);
+        });
+
         document.addEventListener('keydown', function (event) {
             if (!running || ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(event.target.tagName) !== -1) return;
             if (event.key === 'ArrowLeft' && current > 0) {
                 autoplay = false;
                 show(current - 1);
             }
-            if (event.key === 'ArrowRight') {
+            if (event.key === 'ArrowRight' && current < steps.length - 1) {
                 autoplay = false;
-                current >= steps.length - 1 ? stop() : show(current + 1);
+                show(current + 1);
             }
             if (event.key === 'Escape') stop();
         });
