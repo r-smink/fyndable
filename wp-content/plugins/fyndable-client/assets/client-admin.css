@@ -69,6 +69,31 @@ body[class*="aiseo"] #wpfooter {
     --sseo-shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.06);
     --sseo-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
     --sseo-transition: all .2s ease;
+    /* Compatibility aliases for legacy aiseo-* variable names */
+    --aiseo-primary: var(--sseo-primary);
+    --aiseo-primary-dark: var(--sseo-primary-dark);
+    --aiseo-primary-light: var(--sseo-primary-light);
+    --aiseo-success: var(--sseo-success);
+    --aiseo-success-light: var(--sseo-success-light);
+    --aiseo-warning: var(--sseo-warning);
+    --aiseo-warning-light: var(--sseo-warning-light);
+    --aiseo-danger: var(--sseo-danger);
+    --aiseo-danger-light: var(--sseo-danger-light);
+    --aiseo-purple: var(--sseo-purple);
+    --aiseo-purple-light: var(--sseo-purple-light);
+    --aiseo-gray-50: var(--sseo-gray-50);
+    --aiseo-gray-100: var(--sseo-gray-100);
+    --aiseo-gray-200: var(--sseo-gray-200);
+    --aiseo-gray-300: var(--sseo-gray-300);
+    --aiseo-gray-500: var(--sseo-gray-500);
+    --aiseo-gray-700: var(--sseo-gray-700);
+    --aiseo-gray-900: var(--sseo-gray-900);
+    --aiseo-radius: var(--sseo-radius);
+    --aiseo-radius-sm: var(--sseo-radius-sm);
+    --aiseo-shadow: var(--sseo-shadow);
+    --aiseo-shadow-md: var(--sseo-shadow-md);
+    --aiseo-shadow-lg: var(--sseo-shadow-lg);
+    --aiseo-transition: var(--sseo-transition);
 }
 
 /* ================================================
@@ -83,7 +108,7 @@ body[class*="aiseo"] #wpfooter {
 }
 
 .sseo-ai-header {
-    background: transparent;
+    background: transparent !important;
     color: #fff;
     padding: 30px 40px;
     margin: 0;
@@ -100,7 +125,7 @@ body[class*="aiseo"] #wpfooter {
 
 .sseo-ai-content {
     padding: 40px;
-    background: transparent;
+    background: transparent !important;
 }
 
 /* ================================================
@@ -256,8 +281,40 @@ body[class*="aiseo"] #wpfooter {
 }
 
 .sseo-ai-content .postbox {
-    border-radius: var(--sseo-radius);
     overflow: hidden;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, .95);
+    border: 2px solid transparent;
+}
+
+.sseo-theme-card {
+    border-radius: 10px;
+}
+
+.sseo-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.sseo-stat-card {
+    text-align: center;
+    padding: 20px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+}
+
+.sseo-stat-card--neutral { background: #f9f9f9; }
+.sseo-stat-card--success { background: #d1e7dd; }
+.sseo-stat-card--warning { background: #fff3cd; }
+.sseo-stat-card--danger { background: #f8d7da; }
+
+@media (max-width: 782px) {
+    .sseo-stat-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 #sseo-sortable-cards {
@@ -480,7 +537,9 @@ a.ai-tool-card p {
    4. BUTTONS
    ================================================ */
 .aiseo-modern .button,
-.ai-seo-client .button {
+.ai-seo-client .button,
+.sseo-ai-modern .button,
+.sseo-ai-dashboard-card .button {
     border-radius: 6px !important;
     font-weight: 500;
     transition: var(--aiseo-transition);
@@ -490,19 +549,25 @@ a.ai-tool-card p {
 }
 
 .aiseo-modern .button-primary,
-.ai-seo-client .button-primary {
+.ai-seo-client .button-primary,
+.sseo-ai-modern .button-primary,
+.sseo-ai-dashboard-card .button-primary {
     background: var(--aiseo-primary) !important;
     border-color: var(--aiseo-primary-dark) !important;
     color: #fff !important;
 }
 
 .aiseo-modern .button-primary:hover,
-.ai-seo-client .button-primary:hover {
+.ai-seo-client .button-primary:hover,
+.sseo-ai-modern .button-primary:hover,
+.sseo-ai-dashboard-card .button-primary:hover {
     background: var(--aiseo-primary-dark) !important;
     box-shadow: var(--aiseo-shadow-md);
 }
 
-.aiseo-modern .button:disabled {
+.aiseo-modern .button:disabled,
+.sseo-ai-modern .button:disabled,
+.sseo-ai-dashboard-card .button:disabled {
     opacity: .55;
     cursor: not-allowed;
 }
@@ -1660,4 +1725,65 @@ a.ai-tool-card p {
     .sseo-ai-notice {
         padding: 12px;
     }
+}
+
+/* ================================================
+   TOGGLE SWITCH (checkout-style checkboxes)
+   ================================================ */
+.sseo-ai-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.sseo-ai-toggle input[type=checkbox] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sseo-ai-toggle-track {
+    position: relative;
+    flex: 0 0 56px;
+    width: 56px;
+    height: 30px;
+    border-radius: 30px;
+    background-color: #e5e7eb;
+    transition: 0.3s;
+}
+
+.sseo-ai-toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .15);
+    transition: 0.3s;
+}
+
+.sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track {
+    background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+}
+
+.sseo-ai-toggle input[type=checkbox]:checked + .sseo-ai-toggle-track::after {
+    transform: translateX(26px);
+}
+
+.sseo-ai-toggle input[type=checkbox]:focus-visible + .sseo-ai-toggle-track {
+    box-shadow: 0 0 0 3px rgba(55, 159, 211, .25);
+}
+
+.sseo-ai-toggle-text {
+    color: inherit;
+    font-weight: 500;
 }

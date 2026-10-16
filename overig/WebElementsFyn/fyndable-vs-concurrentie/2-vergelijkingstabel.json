@@ -1,0 +1,219 @@
+{
+ "version": "0.4",
+ "title": "Fyndable vs – 2-vergelijkingstabel",
+ "type": "section",
+ "content": [
+  {
+   "id": "51ab05e",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1400,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 32,
+     "column": "32",
+     "row": "32"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "classic",
+    "background_color": "#f9fafb",
+    "_element_id": "vergelijking"
+   },
+   "elements": [
+    {
+     "id": "517bf41",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      }
+     },
+     "elements": [
+      {
+       "id": "514fb77",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Functies",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#8F39AC",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "#f3e8f7",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "5160f2d",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Functies <span style=\"color:#8F39AC\">naast elkaar</span>",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.12
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.1,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 30,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:760px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "516962e",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0;text-align:center\">Alle zes tools vergeleken op de functies die ertoe doen voor WordPress-gebruikers.</p>",
+        "text_color": "#4b5563",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_font_weight": "400",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 200,
+        "custom_css": "selector{max-width:640px}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "518cef5",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>\n@keyframes fynRowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.fyn-cmp .fyn-anim{animation:fynRowIn .45s ease both}.fyn-cmp{font-family:Outfit,sans-serif}\n.fyn-cmp .fyn-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:32px}\n.fyn-cmp .fyn-pill{cursor:pointer;font:500 13px/1 Outfit,sans-serif;padding:10px 16px;border-radius:20px;border:2px solid #e5e7eb;background:#fff;color:#4b5563;transition:all .2s ease}\n.fyn-cmp .fyn-pill:hover{border-color:#8F39AC;color:#8F39AC}\n.fyn-cmp .fyn-pill.on{background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;border-color:transparent}\n.fyn-cmp .fyn-card{background:#fff;border-radius:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);overflow:hidden}\n.fyn-cmp .fyn-scroll{overflow-x:auto}.fyn-cmp .fyn-in{min-width:1000px}\n.fyn-cmp .fyn-r{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));border-top:1px solid #f0f1f3;transition:background .2s ease}\n.fyn-cmp .fyn-r:hover{background:#fcfcfd}\n.fyn-cmp .fyn-n{position:sticky;left:0;z-index:1;background:#fff;padding:14px 20px;display:flex;align-items:center;font:500 14px/1.35 Outfit,sans-serif;color:#333}\n.fyn-cmp .fyn-c{padding:14px 10px;display:flex;align-items:center;justify-content:center;text-align:center}\n.fyn-cmp .fyc{background:#faf5fc}\n.fyn-cmp .fyn-ck{width:26px;height:26px;border-radius:50%;background:#d1fae5;color:#047857;display:inline-flex;align-items:center;justify-content:center;font:700 13px/1 Outfit,sans-serif}\n.fyn-cmp .fyn-ck.fy{background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;box-shadow:0 4px 12px rgba(143,57,172,.25)}\n.fyn-cmp .fyn-x{font:600 14px/1 Outfit,sans-serif;color:#c4c8cf}\n.fyn-cmp .fyn-tx{font:500 13px/1.3 Outfit,sans-serif;color:#4b5563}.fyn-cmp .fyn-tx.fy{font-weight:700;color:#8F39AC}\n.fyn-cmp .fyn-g{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));background:#f9fafb;border-top:2px solid #e5e7eb}\n.fyn-cmp .fyn-g>div:first-child{position:sticky;left:0;z-index:1;background:#f9fafb;padding:12px 20px;font:600 12px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#6b7280}\n.fyn-cmp .fyn-g>div:nth-child(2){background:#f5eefa}\n.fyn-cmp .fyn-h{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));border-bottom:2px solid #e5e7eb}\n.fyn-cmp .fyn-h>div{padding:26px 10px 16px;display:flex;align-items:flex-end;justify-content:center;text-align:center;font:600 14px/1.25 Outfit,sans-serif;color:#333}\n.fyn-cmp .fyn-h>div:first-child{position:sticky;left:0;z-index:2;background:#fff;padding:20px;justify-content:flex-start;font:600 12px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#6b7280}\n.fyn-cmp .fyn-h .fyh{position:relative;background:#faf5fc;flex-direction:column;align-items:center;gap:8px}\n.fyn-cmp .fyn-h .fyh:before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}\n.fyn-cmp .fyn-best{font:600 10px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#8F39AC,#379FD3);padding:5px 8px;border-radius:20px}\n.fyn-cmp .fyn-h .fyh b{font:700 15px/1.2 Outfit,sans-serif;color:#8F39AC}\n.fyn-cmp .fyn-f{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));border-top:2px solid #e5e7eb}\n.fyn-cmp .fyn-f>div:first-child{position:sticky;left:0;z-index:1;background:#fff;padding:18px 20px;font:700 14px/1.3 Outfit,sans-serif;color:#333;display:flex;align-items:center}\n.fyn-cmp .fyn-t{padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}\n.fyn-cmp .fyn-t strong{font:700 16px/1 Outfit,sans-serif;color:#333;font-variant-numeric:tabular-nums}.fyn-cmp .fyn-t.fyc strong{font-size:20px;color:#8F39AC}\n.fyn-cmp .fyn-t small{font-weight:500;font-size:12px;color:#6b7280}\n.fyn-cmp .fyn-bar{width:64px;height:6px;border-radius:20px;background:#e5e7eb;overflow:hidden}.fyn-cmp .fyn-bar i{display:block;height:100%;width:0;background:#9ca3af;border-radius:20px;}.fyn-cmp .fyc .fyn-bar i{background:linear-gradient(135deg,#8F39AC,#379FD3)}\n.fyn-cmp .fyn-note{margin:16px 0 0;text-align:center;font:400 13px/1.5 Outfit,sans-serif;color:#6b7280}\n</style>\n<div class=\"fyn-cmp\"><div class=\"fyn-pills\"><button class=\"fyn-pill on\" data-pick=\"all\">Alles</button><button class=\"fyn-pill\" data-pick=\"0\">Prijs & model</button><button class=\"fyn-pill\" data-pick=\"1\">Content & AI</button><button class=\"fyn-pill\" data-pick=\"2\">Tracking & analyse</button><button class=\"fyn-pill\" data-pick=\"3\">Technische SEO</button><button class=\"fyn-pill\" data-pick=\"4\">WordPress-integratie</button><button class=\"fyn-pill\" data-pick=\"5\">Strategie & planning</button><button class=\"fyn-pill\" data-pick=\"6\">Extra's & agency</button></div>\n<div class=\"fyn-card\"><div class=\"fyn-scroll\"><div class=\"fyn-in\">\n<div class=\"fyn-h\"><div>Functie</div><div class=\"fyh\"><span class=\"fyn-best\">Beste keuze</span><b>Fyndable</b></div><div>WP SEO AI</div><div>Surfer SEO</div><div>Scalenut</div><div>Keytomic</div><div>RankReady</div></div>\n<div data-cat=\"0\"><div class=\"fyn-g\"><div>Prijs & model</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Startprijs</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">€60/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€420/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€45/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€55/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€92/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Gratis</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Pro-plan</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">€199/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Op aanvraag</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€99/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€119/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€185/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">—</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Contractverplichting</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">12 maanden</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Type</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">WP Plugin</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Managed</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">SaaS (cloud)</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">SaaS (cloud)</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">SaaS (cloud)</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">WP Plugin</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Gratis proefperiode</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">14 dagen</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">7 dagen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">7 dagen</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">N.v.t.</span></div></div></div>\n<div data-cat=\"1\"><div class=\"fyn-g\"><div>Content & AI</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Content Writer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Optimizer (NLP-score)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Brief Generator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Content Rewriter</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Content Repurposer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Image Generator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SERP-analyse & concurrentie</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Keuze AI-model (GPT/Claude/Mistral)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Decay Monitor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Bulk AI Optimizer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Readability Score (incl. NL)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">E-E-A-T Validator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Plagiarism Checker</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"2\"><div class=\"fyn-g\"><div>Tracking & analyse</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Rank Tracker (dagelijks)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Local SERP Tracker</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SERP Feature Tracker</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Search Console-integratie</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">GA4-integratie</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Performance Monitor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI-zichtbaarheid / GEO</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Add-on</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Backlink Analyzer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Competitor Research</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"3\"><div class=\"fyn-g\"><div>Technische SEO</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Schema/FAQ markup (JSON-LD)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Technical SEO Auditor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Auto-indexing (IndexNow + Direct)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">404 Monitor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">TruSEO Score (on-page)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">PageSpeed / Core Web Vitals</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Robots.txt Editor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Canonical URL Management</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"4\"><div class=\"fyn-g\"><div>WordPress-integratie</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Native WordPress-plugin</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Via API</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Publiceren vanuit WP-admin</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Interne links assistent</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Pro+</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Sitemaps (XML, Video, News)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Redirects (301/302/307)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Hreflang / meertalig</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Open Graph / Social Meta</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">WooCommerce SEO</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Gutenberg Sidebar</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Breadcrumbs (JSON-LD)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"5\"><div class=\"fyn-g\"><div>Strategie & planning</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Topic Cluster Map</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Kalender</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Keyword Explorer & Clustering</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Personalized Keyword Difficulty</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SEO Report Export (CSV/PDF)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"6\"><div class=\"fyn-g\"><div>Extra's & agency</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">A/B Testing</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">White-label voor bureaus</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Enterprise</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Custom</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Local SEO & Google Business</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Video SEO & Transcripties</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SEO Revisions (audit trail)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Image Alt Generator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Role-Based Permissions</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div class=\"fyn-f\"><div>Functies aanwezig</div><div class=\"fyn-t fyc\"><strong>52<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"100\"></i></span></div><div class=\"fyn-t\"><strong>9<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"17\"></i></span></div><div class=\"fyn-t\"><strong>9<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"17\"></i></span></div><div class=\"fyn-t\"><strong>13<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"25\"></i></span></div><div class=\"fyn-t\"><strong>10<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"19\"></i></span></div><div class=\"fyn-t\"><strong>3<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"6\"></i></span></div></div>\n</div></div></div><p class=\"fyn-note\">Scroll horizontaal op mobiel om alle tools te zien.</p></div>\n<script>(function(){[].forEach.call(document.querySelectorAll('.fyn-cmp'),function(r){if(r.__fyn)return;r.__fyn=1;var p=r.querySelectorAll('[data-pick]');\n[].forEach.call(p,function(b){b.addEventListener('click',function(){var c=b.getAttribute('data-pick');[].forEach.call(p,function(q){q.classList.toggle('on',q===b);});[].forEach.call(r.querySelectorAll('[data-cat]'),function(x){var on=(c==='all'||x.getAttribute('data-cat')===c);x.style.display=on?'':'none';if(on){var k=0;[].forEach.call(x.children,function(ch){ch.classList.remove('fyn-anim');void ch.offsetWidth;ch.style.animationDelay=Math.min(k++,14)*35+'ms';ch.classList.add('fyn-anim');});}});});});\nvar bars=r.querySelectorAll('.fyn-bar i');function fill(){var vh=innerHeight;[].forEach.call(bars,function(i){var p=Math.max(0,Math.min(1,(vh-i.getBoundingClientRect().top)/(vh-vh*.45)));i.style.width=(parseFloat(i.getAttribute('data-w'))*p)+'%';});}var q=0;addEventListener('scroll',function(){if(!q)q=requestAnimationFrame(function(){q=0;fill();});},{passive:true});addEventListener('resize',fill);fill();setInterval(fill,400);});})();</script>",
+      "_animation": "fadeInUp"
+     },
+     "elements": []
+    },
+    {
+     "id": "519a6d7",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

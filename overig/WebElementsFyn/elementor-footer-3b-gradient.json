@@ -1,0 +1,312 @@
+{
+ "version": "0.4",
+ "title": "Fyndable – Footer 3b",
+ "type": "section",
+ "content": [
+  {
+   "id": "2008e7b",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "flex_direction": "column",
+    "flex_align_items": "center",
+    "flex_gap": {
+     "unit": "px",
+     "size": 8,
+     "column": "8",
+     "row": "8"
+    },
+    "overflow": "hidden",
+    "background_background": "classic",
+    "background_color": "#f9fafb",
+    "padding": {
+     "unit": "px",
+     "top": "40",
+     "right": "40",
+     "bottom": "0",
+     "left": "40",
+     "isLinked": false
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "28",
+     "right": "16",
+     "bottom": "0",
+     "left": "16",
+     "isLinked": false
+    }
+   },
+   "elements": [
+    {
+     "id": "c24eb56",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "width": {
+       "unit": "px",
+       "size": 1100
+      },
+      "width_mobile": {
+       "unit": "%",
+       "size": 100
+      },
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_justify_content": "space-between",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 16,
+       "column": "16",
+       "row": "16"
+      },
+      "flex_wrap": "wrap",
+      "padding": {
+       "unit": "px",
+       "top": "10",
+       "right": "10",
+       "bottom": "10",
+       "left": "28",
+       "isLinked": false
+      },
+      "padding_mobile": {
+       "unit": "px",
+       "top": "20",
+       "right": "20",
+       "bottom": "20",
+       "left": "20",
+       "isLinked": false
+      },
+      "border_radius": {
+       "unit": "px",
+       "top": "40",
+       "right": "40",
+       "bottom": "40",
+       "left": "40",
+       "isLinked": true
+      },
+      "animation": "fadeInUp",
+      "custom_css": "selector{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45);max-width:100%}@media(max-width:767px){selector{border-radius:24px!important}}"
+     },
+     "elements": [
+      {
+       "id": "fb8f14b",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0\">© <span class=\"fyn-year\">2026</span> Fyndable Smart SEO</p>",
+        "text_color": "#ffffff",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 14,
+         "sizes": []
+        },
+        "typography_font_weight": "500",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.3
+        }
+       },
+       "elements": []
+      },
+      {
+       "id": "c46349a",
+       "elType": "widget",
+       "widgetType": "html",
+       "isInner": false,
+       "settings": {
+        "html": "<style>@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}</style>\n<span style=\"display:flex;align-items:center;gap:6px;font:500 14px/1.3 Outfit,sans-serif;color:#fff\">Vindbaar in <span style=\"display:inline-block;height:1.3em;overflow:hidden;border-bottom:2px solid rgba(255,255,255,.6)\"><span style=\"display:flex;flex-direction:column;line-height:1.3em;font-weight:700;color:#fff;animation:fynWords 10s cubic-bezier(.7,0,.3,1) infinite\"><span>ChatGPT</span><span>Gemini</span><span>Perplexity</span><span>Google</span><span>ChatGPT</span></span></span></span>"
+       },
+       "elements": []
+      },
+      {
+       "id": "d591ad6",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "px",
+         "size": 0
+        },
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "custom_css": "selector{width:auto!important}",
+        "flex_direction": "row",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 6,
+         "column": "6",
+         "row": "6"
+        },
+        "flex_wrap": "wrap"
+       },
+       "elements": [
+        {
+         "id": "8c56903",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "view": "inline",
+          "icon_list": [
+           {
+            "_id": "0c2d21c",
+            "text": "Privacybeleid",
+            "link": {
+             "url": "/privacybeleid/"
+            },
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           },
+           {
+            "_id": "097fe7b",
+            "text": "Voorwaarden",
+            "link": {
+             "url": "/algemene-voorwaarden/"
+            },
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           },
+           {
+            "_id": "860b2ba",
+            "text": "Cookies",
+            "link": {
+             "url": "/cookies/"
+            },
+            "selected_icon": {
+             "value": "",
+             "library": ""
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 6,
+           "sizes": []
+          },
+          "text_color": "#ffffff",
+          "text_color_hover": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 13,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "custom_css": "selector .elementor-icon-list-item{padding:10px 14px!important;border-radius:20px;transition:all .2s ease}selector .elementor-icon-list-item:hover{background:rgba(255,255,255,.18)}"
+         },
+         "elements": []
+        },
+        {
+         "id": "e17954d",
+         "elType": "widget",
+         "widgetType": "icon",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-arrow-up",
+           "library": "fa-solid"
+          },
+          "view": "stacked",
+          "shape": "circle",
+          "primary_color": "#ffffff",
+          "secondary_color": "#8F39AC",
+          "size": {
+           "unit": "px",
+           "size": 16,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "link": {
+           "url": "#"
+          },
+          "_css_classes": "fyn-top",
+          "custom_css": "selector .elementor-icon{background:#fff!important;color:#8F39AC!important;box-shadow:0 4px 12px rgba(0,0,0,.12);transition:all .2s ease}selector .elementor-icon i{color:#8F39AC!important}selector .elementor-icon svg{fill:#8F39AC!important}selector .elementor-icon:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "4c4b258",
+     "elType": "widget",
+     "widgetType": "heading",
+     "isInner": false,
+     "settings": {
+      "title": "fyndable",
+      "header_size": "div",
+      "align": "center",
+      "title_color": "#f3e8f7",
+      "typography_typography": "custom",
+      "typography_font_family": "Outfit",
+      "typography_font_size": {
+       "unit": "vw",
+       "size": 17
+      },
+      "typography_font_weight": "700",
+      "typography_line_height": {
+       "unit": "em",
+       "size": 0.8
+      },
+      "typography_letter_spacing": {
+       "unit": "em",
+       "size": -0.05
+      },
+      "_margin": {
+       "unit": "em",
+       "top": "0",
+       "right": "0",
+       "bottom": "-0.12",
+       "left": "0",
+       "isLinked": false
+      },
+      "custom_css": "selector .elementor-heading-title{white-space:nowrap;user-select:none;font-size:clamp(120px,17vw,240px)}selector .elementor-heading-title{color:transparent!important;-webkit-text-stroke:2px #e9d5f0}",
+      "_animation": "fadeInUp",
+      "_animation_delay": 200
+     },
+     "elements": []
+    },
+    {
+     "id": "797abdb",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.fyn-year').forEach(function(e){e.textContent=y;});document.querySelectorAll('.fyn-top a,a.fyn-top').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});});});})();</script>",
+      "_position": "absolute"
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

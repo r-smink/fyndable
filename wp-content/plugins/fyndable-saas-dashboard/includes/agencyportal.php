@@ -37,6 +37,17 @@ class AgencyPortal
         $this->paymentProcessor = $paymentProcessor;
     }
 
+    private function licenseStatusLabel(string $status): string
+    {
+        $labels = [
+            'active'  => __('Active', 'sseo-ai-saas'),
+            'used'    => __('Connected', 'sseo-ai-saas'),
+            'revoked' => __('Revoked', 'sseo-ai-saas'),
+            'expired' => __('Expired', 'sseo-ai-saas'),
+        ];
+        return $labels[$status] ?? ucfirst($status);
+    }
+
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenu']);
@@ -676,7 +687,7 @@ class AgencyPortal
                                 <tr>
                                     <td><code><?php echo esc_html($license['license_key']); ?></code></td>
                                     <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                                    <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
+                                    <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
                                     <td><?php echo esc_html($license['max_sites']); ?></td>
                                     <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                                     <td><?php echo esc_html($license['key_prefix'] ?: '-'); ?></td>
@@ -1426,8 +1437,15 @@ class AgencyPortal
                 'gif' => 'image/gif',
                 'webp' => 'image/webp',
             ];
-            $fileInfo = wp_check_filetype($_FILES['company_logo']['name'], $allowedMimes);
-            if (empty($fileInfo['ext']) || empty($fileInfo['type'])) {
+            // wp_check_filetype_and_ext verifies the real file content (magic bytes),
+            // not just the extension — blocks e.g. a PHP file renamed to .png.
+            $fileInfo = wp_check_filetype_and_ext(
+                $_FILES['company_logo']['tmp_name'],
+                $_FILES['company_logo']['name'],
+                $allowedMimes
+            );
+            if (empty($fileInfo['ext']) || empty($fileInfo['type'])
+                || !in_array($fileInfo['type'], $allowedMimes, true)) {
                 wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-wl&error=invalid_type'));
                 exit;
             }

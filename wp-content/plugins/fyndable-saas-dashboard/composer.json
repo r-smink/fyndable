@@ -1,0 +1,14 @@
+{
+    "name": "fyndable/smartseo-dashboard",
+    "description": "Fyndable SmartSEO SaaS Dashboard",
+    "type": "wordpress-plugin",
+    "license": "proprietary",
+    "require": {
+        "dompdf/dompdf": "3.1.6"
+    },
+    "config": {
+        "allow-plugins": false,
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

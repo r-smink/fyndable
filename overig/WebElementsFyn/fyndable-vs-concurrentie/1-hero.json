@@ -1,0 +1,856 @@
+{
+ "version": "0.4",
+ "title": "Fyndable vs – 1-hero",
+ "type": "section",
+ "content": [
+  {
+   "id": "513c810",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "104",
+     "right": "40",
+     "bottom": "88",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 48,
+     "column": "48",
+     "row": "48"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "gradient",
+    "background_color": "#2A1533",
+    "background_color_b": "#132A38",
+    "background_gradient_angle": {
+     "unit": "deg",
+     "size": 135
+    },
+    "custom_css": "selector{position:relative;overflow:hidden}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#8F39AC,#379FD3);z-index:2}selector::after{content:\"\";position:absolute;top:0;left:0;width:25%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:fynSweep 4s ease-in-out infinite;z-index:3}"
+   },
+   "elements": [
+    {
+     "id": "505a472",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 18,
+       "column": "18",
+       "row": "18"
+      }
+     },
+     "elements": [
+      {
+       "id": "5007bb1",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Vergelijking 2026",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#f3e8f7",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "rgba(143,57,172,0.45)",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "5011335",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Fyndable vs. <span style=\"color:#d8b4e8\">de concurrentie</span>",
+        "header_size": "h1",
+        "align": "center",
+        "title_color": "#ffffff",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 60,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.06
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.8,
+         "sizes": []
+        },
+        "typography_font_size_tablet": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 36,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:860px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "5020bf0",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0;text-align:center\">Hoe verhoudt Fyndable Smart SEO zich tot andere AI-SEO tools? Een eerlijke vergelijking op functies, prijs en WordPress-integratie.</p>",
+        "text_color": "#e6e7e8",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 18,
+         "sizes": []
+        },
+        "typography_font_weight": "400",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 200,
+        "custom_css": "selector{max-width:640px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "504dd47",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "flex_direction": "row",
+        "flex_direction_mobile": "column",
+        "flex_justify_content": "center",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 12,
+         "column": "12",
+         "row": "12"
+        },
+        "margin": {
+         "unit": "px",
+         "top": "8",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 300
+       },
+       "elements": [
+        {
+         "id": "50325b1",
+         "elType": "widget",
+         "widgetType": "button",
+         "isInner": false,
+         "settings": {
+          "text": "Bekijk de vergelijking",
+          "link": {
+           "url": "#vergelijking"
+          },
+          "background_background": "gradient",
+          "background_color": "#8F39AC",
+          "background_color_b": "#379FD3",
+          "button_text_color": "#ffffff",
+          "border_radius": {
+           "unit": "px",
+           "top": "8",
+           "right": "8",
+           "bottom": "8",
+           "left": "8",
+           "isLinked": true
+          },
+          "text_padding": {
+           "unit": "px",
+           "top": "16",
+           "right": "28",
+           "bottom": "16",
+           "left": "28",
+           "isLinked": false
+          },
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "custom_css": "selector .elementor-button{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;box-shadow:0 4px 12px rgba(143,57,172,.35);transition:all .2s ease}selector .elementor-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(143,57,172,.55)}"
+         },
+         "elements": []
+        },
+        {
+         "id": "5049bfe",
+         "elType": "widget",
+         "widgetType": "button",
+         "isInner": false,
+         "settings": {
+          "text": "Waar laat jij kansen liggen?",
+          "link": {
+           "url": "https://fyndable.ai/contact/"
+          },
+          "button_text_color": "#ffffff",
+          "background_color": "rgba(0,0,0,0)",
+          "border_radius": {
+           "unit": "px",
+           "top": "8",
+           "right": "8",
+           "bottom": "8",
+           "left": "8",
+           "isLinked": true
+          },
+          "text_padding": {
+           "unit": "px",
+           "top": "16",
+           "right": "26",
+           "bottom": "16",
+           "left": "26",
+           "isLinked": false
+          },
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "custom_css": "selector .elementor-button{border:2px solid rgba(255,255,255,.3)!important;background:transparent!important;color:#fff!important;transition:all .2s ease}selector .elementor-button:hover{border-color:#8F39AC!important;background:rgba(255,255,255,.08)!important;transform:translateY(-2px)}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "511ec79",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "row",
+      "flex_wrap": "wrap",
+      "flex_gap": {
+       "unit": "px",
+       "size": 20,
+       "column": "20",
+       "row": "20"
+      }
+     },
+     "elements": [
+      {
+       "id": "50972a1",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 0,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "506fa20",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span class=\"fyn-live-time\" data-to=\"50\">50</span>+",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "50813b5",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "SEO-functies",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "50c376a",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 120,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "50a6274",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span style=\"font-size:16px;font-weight:500;color:#c9c3d6;letter-spacing:0;margin-right:6px\">vanaf</span>€<span class=\"fyn-live-time\" data-to=\"60\">60</span>",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "50b171a",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "per maand",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "50e2d16",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 240,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "50c7ab2",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span class=\"fyn-live-time\" data-to=\"25\">25</span>+",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "50d83cd",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "AI-modellen naar keuze*",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "510f5d9",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 360,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "50f9b89",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span class=\"fyn-live-time\" data-to=\"100\">100</span>%",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "510a852",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Transparant",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "51362cc",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynTime)return;window.__fynTime=1;function go(){var els=document.querySelectorAll('.fyn-live-time');[].forEach.call(els,function(el){if(el.__d)return;el.__d=1;var to=parseFloat(el.getAttribute('data-to')||el.textContent)||0;el.textContent='0';var t0=null;function s(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/2000),e=1-Math.pow(1-p,3);el.textContent=Math.round(to*e);if(p<1)requestAnimationFrame(s);}setTimeout(function(){requestAnimationFrame(s);},300);});}\nif(document.readyState!=='loading')go();else document.addEventListener('DOMContentLoaded',go);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

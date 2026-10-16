@@ -53,6 +53,13 @@ class ApiGateway
             'callback' => [$this, 'handleAiRequest'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
+
+        // OpenAI image generation endpoint (product images etc.)
+        register_rest_route('ai-seo-saas/v1', '/ai/image', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleAiImageRequest'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
         
         // SERP proxy endpoint
         register_rest_route('ai-seo-saas/v1', '/serp/query', [
@@ -173,7 +180,7 @@ class ApiGateway
         
         // Validate tenant exists and matches license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return false;
         }
         
@@ -321,6 +328,53 @@ class ApiGateway
     }
 
     /**
+     * Handle AI image generation request.
+     *
+     * Body: { prompt, size?, model? }
+     */
+    public function handleAiImageRequest(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $prompt = sanitize_textarea_field($body['prompt'] ?? '');
+        $size = sanitize_text_field($body['size'] ?? '1024x1024');
+        $model = sanitize_text_field($body['model'] ?? 'dall-e-3');
+
+        if (empty($prompt)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'missing_params',
+                'message' => __('prompt is required', 'sseo-ai-saas')
+            ], 400);
+        }
+
+        $adapter = new OpenAIAdapter($this->settings);
+        $result = $adapter->image($prompt, $size, $model);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], 502);
+        }
+
+        // dall-e-3 standard 1024x1024 ≈ $0.04/image; bill a flat estimate.
+        $cost = 0.04;
+        $this->trackUsage($tenant, 'ai_image', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'url' => $result['url'],
+            'revised_prompt' => $result['revised_prompt'],
+            'model' => $result['model'],
+            'usage' => ['cost' => $cost],
+        ], 200);
+    }
+
+    /**
      * Handle SERP request
      */
     public function handleSerpRequest(\WP_REST_Request $request): \WP_REST_Response
@@ -342,10 +396,15 @@ class ApiGateway
         
         $body = $request->get_json_params();
         $keyword = sanitize_text_field($body['keyword'] ?? '');
-        $location = sanitize_text_field($body['location'] ?? 'United States');
-        
+        $country = sanitize_text_field($body['country'] ?? '');
+        $language = sanitize_text_field($body['language'] ?? '');
+        $location = sanitize_text_field($body['location'] ?? '');
+        if ($location === '') {
+            $location = $country !== '' ? $this->countryToLocation($country) : 'United States';
+        }
+
         // Route to appropriate provider with fallback, retry and circuit breaker
-        $result = $this->fetchSerpData($provider, $apiKey, $keyword, $location, true);
+        $result = $this->fetchSerpData($provider, $apiKey, $keyword, $location, true, $country, $language);
 
         if (is_wp_error($result)) {
             return new \WP_REST_Response([
@@ -1438,7 +1497,7 @@ class ApiGateway
     /**
      * Fetch SERP data from provider with optional fallback, retry and circuit breaker.
      */
-    private function fetchSerpData(string $provider, string $apiKey, string $keyword, string $location, bool $withFallback = false, string $countryCode = ''): array|\WP_Error
+    private function fetchSerpData(string $provider, string $apiKey, string $keyword, string $location, bool $withFallback = false, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
         $providers = [$provider];
         if ($withFallback) {
@@ -1457,7 +1516,7 @@ class ApiGateway
             }
 
             for ($attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++) {
-                $result = $this->fetchSerpFromProvider($p, $apiKey, $keyword, $location, $countryCode);
+                $result = $this->fetchSerpFromProvider($p, $apiKey, $keyword, $location, $countryCode, $languageCode);
                 if (!is_wp_error($result)) {
                     $this->recordProviderSuccess($p);
                     $result['_provider'] = $p;
@@ -1477,14 +1536,14 @@ class ApiGateway
     /**
      * Dispatch a single SERP provider request.
      */
-    private function fetchSerpFromProvider(string $provider, string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
+    private function fetchSerpFromProvider(string $provider, string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
         $providerKey = $this->getProviderApiKey($provider, $apiKey);
         switch ($provider) {
             case 'dataforseo':
-                return $this->fetchDataForSeo($providerKey, $keyword, $location, $countryCode);
+                return $this->fetchDataForSeo($providerKey, $keyword, $location, $countryCode, $languageCode);
             case 'serpapi':
-                return $this->fetchSerpApi($providerKey, $keyword, $location, $countryCode);
+                return $this->fetchSerpApi($providerKey, $keyword, $location, $countryCode, $languageCode);
             case 'seranking':
                 return $this->fetchSerankingSerp($providerKey, $keyword, $location, $countryCode);
             default:
@@ -1499,14 +1558,16 @@ class ApiGateway
      * back to the inline implementation for backward compatibility when the
      * client was not injected.
      */
-    private function fetchDataForSeo(string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
+    private function fetchDataForSeo(string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
+        $languageCode = $languageCode !== '' ? $languageCode : 'en';
+
         // Prefer the central DataForSeoClient when injected and configured
         if ($this->dataForSeoClient && $this->dataForSeoClient->isConfigured()) {
             return $this->dataForSeoClient->serpOrganicLiveAdvanced(
                 $keyword,
                 $this->getLocationCode($location),
-                'en',
+                $languageCode,
                 $countryCode
             );
         }
@@ -1521,7 +1582,7 @@ class ApiGateway
                 [
                     'keyword' => $keyword,
                     'location_code' => $this->getLocationCode($location),
-                    'language_code' => 'en',
+                    'language_code' => $languageCode,
                 ]
             ]),
             'timeout' => 60,
@@ -1538,7 +1599,7 @@ class ApiGateway
     /**
      * Fetch from SerpApi
      */
-    private function fetchSerpApi(string $apiKey, string $keyword, string $location, string $countryCode = ''): array|\WP_Error
+    private function fetchSerpApi(string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
         $locale = $this->getSerpApiLocale($location);
 
@@ -1547,7 +1608,7 @@ class ApiGateway
             'location' => $location,
             'google_domain' => $locale['domain'],
             'gl' => $locale['gl'],
-            'hl' => $locale['hl'],
+            'hl' => $languageCode !== '' ? $languageCode : $locale['hl'],
             'api_key' => $apiKey,
             'output' => 'json',
         ], 'https://serpapi.com/search');

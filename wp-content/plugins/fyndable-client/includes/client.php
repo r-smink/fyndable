@@ -25,7 +25,6 @@ class Client
     private ?SitemapGenerator $sitemapGenerator = null;
     private ?SmartTags $smartTags = null;
     private ?ContentDecay $contentDecay = null;
-    private ?AuditService $auditService = null;
     private ?LocalSEO $localSEO = null;
     private ?RedirectionManager $redirectManager = null;
     private ?NotFoundMonitor $notFoundMonitor = null;
@@ -46,7 +45,7 @@ class Client
     private ?ContentOptimizer $contentOptimizer = null;
     private ?SerpCompetitor $serpCompetitor = null;
     private ?TopicCluster $topicCluster = null;
-    private ?AutomationOrchestrator $automationOrchestrator = null;
+    private ?ApexFlow $apexFlow = null;
     private ?KeywordDifficulty $keywordDifficulty = null;
     private ?LSIKeywords $lsiKeywords = null;
     private ?AIRepurposer $aiRepurposer = null;
@@ -161,6 +160,9 @@ class Client
         add_action('admin_menu', [$this, 'registerAdminMenu'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 
+        // Add a body class to Fyndable client admin pages (used by the dark theme and shell CSS)
+        add_filter('admin_body_class', [$this, 'addAdminBodyClass']);
+
         // Custom menu icon styling
         $printIconStyles = function (): void {
             echo '<style>
@@ -270,6 +272,37 @@ class Client
         }
 
         return 'Fyndable';
+    }
+
+    /**
+     * Add a custom body class to Fyndable client admin pages.
+     *
+     * This makes it possible to scope shell/dark styling to the plugin only.
+     */
+    public function addAdminBodyClass(string $classes): string
+    {
+        $screen = get_current_screen();
+        if (!$screen) {
+            return $classes;
+        }
+
+        $screenId = $screen->id;
+        if (strpos($screenId, 'ai-seo') !== false || strpos($screenId, 'fyndable') !== false) {
+            $classes .= ' fyndable-ui';
+            // The shell passes the active theme in the URL so newly loaded iframe
+            // pages render with the correct theme immediately, before the async DB
+            // update from the toggle has completed.
+            if (isset($_GET['fyndable_dark'])) {
+                $dark = $_GET['fyndable_dark'] === '1';
+            } else {
+                $dark = get_option('sseo_ai_client_dark_theme', '0') === '1';
+            }
+            if ($dark) {
+                $classes .= ' fyndable-dark';
+            }
+        }
+
+        return $classes;
     }
 
     /**
@@ -478,7 +511,7 @@ class Client
             $this->gscDashboard = new GscDashboard($this->settings, $gscClient);
             $this->gscDashboard->register();
 
-            // Google Data Dashboard (GSC + GA4 + Google Ads unified)
+            // Google Data Dashboard (GSC + GA4 unified)
             $this->googleDataDashboard = new GoogleDataDashboard($this->settings);
             $this->googleDataDashboard->register();
             
@@ -533,8 +566,6 @@ class Client
             $gscClientBiz = new GscClient($this->settings);
             $this->contentDecay = new ContentDecay($snapshots, $gscClientBiz, $this->settings, $this->llmClient);
             $this->contentDecay->register();
-            
-            $this->auditService = new AuditService();
         }
 
         // AI SEO Agent — conversational interface (after all features are loaded)
@@ -594,13 +625,20 @@ class Client
                 return $schedules;
             });
 
-            $this->automationOrchestrator = new AutomationOrchestrator(
-                $this->settings,
-                $this->licenseValidator,
-                $this->topicCluster,
-                $this->llmClient
-            );
-            $this->automationOrchestrator->register();
+            // ApexFlow — fully automatic content autopilot. Paid tiers only
+            // (no trial): autopilot consumes real SERP/AI budget.
+            if (in_array($tier, ['professional', 'business', 'agency', 'dev'], true)) {
+                $this->apexFlow = new ApexFlow(
+                    $this->settings,
+                    $this->licenseValidator,
+                    $this->dashboardAPI,
+                    $this->llmClient,
+                    $this->topicCluster,
+                    $this->keywordExplorer,
+                    $this->localSerp
+                );
+                $this->apexFlow->register();
+            }
         }
         
         // Agency-only features (DEV includes these)
@@ -1038,15 +1076,17 @@ class Client
                     [$this, 'renderTopicClusterPage']
                 );
 
-                // 10b. Automation
-                add_submenu_page(
-                    'fyndable-dashboard',
-                    __('Automation', 'ai-seo-client'),
-                    __('Automation', 'ai-seo-client'),
-                    'manage_options',
-                    'ai-seo-automation',
-                    [$this, 'renderAutomationPage']
-                );
+                // 10b. ApexFlow — content autopilot (paid Pro+ only, no trial)
+                if ($this->apexFlow) {
+                    add_submenu_page(
+                        'fyndable-dashboard',
+                        __('ApexFlow', 'ai-seo-client'),
+                        __('⚡ ApexFlow', 'ai-seo-client'),
+                        'manage_options',
+                        'ai-seo-automation',
+                        [$this, 'renderAutomationPage']
+                    );
+                }
 
                 // 11. Site Audit
                 add_submenu_page(
@@ -1107,6 +1147,30 @@ class Client
                     'ai-seo-ai-optimization',
                     [$this, 'renderAiOptimizationPage']
                 );
+
+                // 16. Backlinks - Professional+
+                if ($this->backlinkAnalyzer) {
+                    add_submenu_page(
+                        'fyndable-dashboard',
+                        __('Backlinks', 'ai-seo-client'),
+                        __('🔗 Backlinks', 'ai-seo-client'),
+                        'manage_options',
+                        'ai-seo-backlinks',
+                        [$this->backlinkAnalyzer, 'renderDashboard']
+                    );
+
+                    // 16b. Advanced Backlinks
+                    if ($this->advancedBacklinks) {
+                        add_submenu_page(
+                            'fyndable-dashboard',
+                            __('Advanced Backlinks', 'ai-seo-client'),
+                            __('Advanced Backlinks', 'ai-seo-client'),
+                            'manage_options',
+                            'ai-seo-advanced-backlinks',
+                            [$this->advancedBacklinks, 'renderDashboard']
+                        );
+                    }
+                }
 
                 // 14b. Prompt Templates - Business+
                 if ($this->promptTemplateLibrary) {
@@ -1211,73 +1275,29 @@ class Client
             #wpcontent { padding-left: 0 !important; }
         ');
 
-        // Global AI generation loader overlay
-        wp_add_inline_style('ai-seo-client-admin', '
-            #sseo-ai-loader-overlay {
-                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.6); z-index: 100001; justify-content: center; align-items: center;
-                flex-direction: column; backdrop-filter: blur(4px);
-            }
-            #sseo-ai-loader-overlay.active { display: flex !important; }
-            #sseo-ai-loader-overlay .sseo-loader-spinner {
-                width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
-                border-top-color: #fff; border-radius: 50%; animation: sseo-spin 1s linear infinite;
-            }
-            #sseo-ai-loader-overlay .sseo-loader-text {
-                color: #fff; margin-top: 20px; font-size: 16px; font-weight: 500;
-                text-align: center; max-width: 300px; line-height: 1.5;
-            }
-            @keyframes sseo-spin { to { transform: rotate(360deg); } }
-        ');
+        // Global AI generation loader (animated Fyndable logo overlay + spinner upgrades)
+        wp_enqueue_script(
+            'fyndable-loader',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/fyndable-loader.js',
+            ['jquery'],
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/fyndable-loader.js'),
+            true
+        );
 
-        wp_add_inline_script('ai-seo-client-admin', '
-            (function($) {
-                if (document.getElementById("sseo-ai-loader-overlay")) return;
-                var overlay = document.createElement("div");
-                overlay.id = "sseo-ai-loader-overlay";
-                overlay.innerHTML = "<div class=\'sseo-loader-spinner\'></div><div class=\'sseo-loader-text\'>" + \'' . esc_js(__('AI is generating... Please wait.', 'ai-seo-client')) . '\' + "</div>";
-                document.body.appendChild(overlay);
+        // Whitelabel: recolor the loader gradient when a custom brand is configured
+        $loaderColors = null;
+        if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
+            $loaderColors = [
+                sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3',
+                sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac',
+            ];
+        }
 
-                var sseoShowLoader = function() { $("#sseo-ai-loader-overlay").addClass("active"); };
-                var sseoHideLoader = function() { $("#sseo-ai-loader-overlay").removeClass("active"); };
-                window.sseoShowLoader = sseoShowLoader;
-                window.sseoHideLoader = sseoHideLoader;
-
-                $(document).ajaxSend(function(e, xhr, settings) {
-                    if (settings.data && (settings.data.indexOf("sseo_ai_") !== -1 || settings.data.indexOf("action=ai_seo") !== -1)) {
-                        sseoShowLoader();
-                    }
-                });
-                $(document).ajaxComplete(function() {
-                    sseoHideLoader();
-                });
-
-                // Intercept wp.apiFetch for all AI calls
-                if (typeof wp !== "undefined" && wp.apiFetch) {
-                    var originalFetch = wp.apiFetch;
-                    var sseoWrappedFetch = function(options) {
-                        if (options && options.path && (options.path.indexOf("sseo-ai/v1") !== -1 || options.path.indexOf("/sseo-ai/v1") !== -1)) {
-                            sseoShowLoader();
-                            var result = originalFetch(options);
-                            if (result && typeof result.then === "function") {
-                                result.then(function() { sseoHideLoader(); }, function() { sseoHideLoader(); });
-                            } else {
-                                sseoHideLoader();
-                            }
-                            return result;
-                        }
-                        return originalFetch(options);
-                    };
-                    // Preserve all original properties (middleware, nonce, etc.)
-                    for (var key in originalFetch) {
-                        if (originalFetch.hasOwnProperty(key)) {
-                            sseoWrappedFetch[key] = originalFetch[key];
-                        }
-                    }
-                    wp.apiFetch = sseoWrappedFetch;
-                }
-            })(jQuery);
-        ', 'after');
+        wp_localize_script('fyndable-loader', 'fyndableLoaderConfig', [
+            'text' => __('AI is generating', 'ai-seo-client'),
+            'scopeSelector' => '',
+            'colors' => $loaderColors,
+        ]);
 
         // Apply white-label CSS variables only when a custom brand is configured
         if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
@@ -1299,13 +1319,12 @@ class Client
                     --sseo-sa-primary: {$primaryColor};
                     --sseo-sa-secondary: {$secondaryColor};
                 }
-                /* Override all hardcoded Fyndable gradients on admin pages */
-                .sseo-ai-header {
-                    background: {$bgGradient} !important;
-                    border-color: {$primaryColor} !important;
+                /* Move the brand gradient to the page wrapper; header/content stay transparent */
+                .wrap.sseo-ai-modern {
+                    background: {$bgGradient};
                 }
-                .sseo-ai-content {
-                    background: {$bgGradient} !important;
+                .sseo-ai-header {
+                    border-color: {$primaryColor} !important;
                 }
                 .sseo-ai-header h1::before {
                     color: {$primaryColor};
@@ -1378,6 +1397,14 @@ class Client
                 }
             ");
         }
+
+        // Load the optional dark theme stylesheet
+        wp_enqueue_style(
+            'ai-seo-client-admin-dark',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/client-admin-dark.css',
+            ['ai-seo-client-admin'],
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/client-admin-dark.css')
+        );
     }
 
     /**
@@ -1560,7 +1587,7 @@ class Client
     }
 
     /**
-     * Render Automation page - delegates to AutomationOrchestrator class
+     * Render ApexFlow page - delegates to ApexFlow class
      */
     public function renderAutomationPage(): void
     {
@@ -1568,8 +1595,8 @@ class Client
             $this->renderLicenseRequiredNotice();
             return;
         }
-        if ($this->automationOrchestrator) {
-            $this->automationOrchestrator->renderPage();
+        if ($this->apexFlow) {
+            $this->apexFlow->renderPage();
         } else {
             $this->renderFeatureNotAvailable();
         }
@@ -1767,7 +1794,7 @@ class Client
     }
 
     /**
-     * Render Google Data Dashboard page (GSC + GA4 + Google Ads)
+     * Render Google Data Dashboard page (GSC + GA4)
      */
     public function renderGoogleDataPage(): void
     {
@@ -2211,6 +2238,7 @@ class Client
         $contentLanguage = $this->settings->contentLanguage();
         $demoMode = $this->demoMode instanceof DemoMode ? $this->demoMode->isEnabled() : (get_option('sseo_ai_demo_mode', '0') === '1');
         $showShareButtons = get_option('sseo_ai_client_show_share_buttons', '1') === '1';
+        $darkTheme = get_option('sseo_ai_client_dark_theme', '0') === '1';
 
         // Get rate limit status
         $rateLimitStatus = $this->getRateLimitStatus();
@@ -2605,6 +2633,19 @@ class Client
                         </div>
 
                         <div class="settings-section">
+                            <h2><?php esc_html_e('Appearance', 'ai-seo-client'); ?></h2>
+                            <p class="description"><?php esc_html_e('Customize the look of the Fyndable backend.', 'ai-seo-client'); ?></p>
+
+                            <div class="form-field">
+                                <label for="dark_theme">
+                                    <input type="checkbox" name="dark_theme" id="dark_theme" value="1" <?php checked($darkTheme, true); ?>>
+                                    <?php esc_html_e('Enable dark theme', 'ai-seo-client'); ?>
+                                </label>
+                                <p class="field-description"><?php esc_html_e('Applies a dark Fyndable theme to the plugin admin pages.', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                             <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
                             <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
 
@@ -2925,6 +2966,8 @@ class Client
             }
         }
         update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
+        // Invalidate cached brand reference descriptions so changed images are re-analyzed
+        delete_transient('sseo_ai_brand_ref_desc');
 
         update_option('sseo_ai_client_default_word_count', max(100, min(5000, (int) ($_POST['default_word_count'] ?? 500))));
         $allowedLanguages = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt', 'pl'];
@@ -2934,6 +2977,7 @@ class Client
         $this->settings->set('default_include_faq', isset($_POST['default_include_faq']) && $_POST['default_include_faq'] === '1');
         update_option('sseo_ai_client_ssl_verify', isset($_POST['ssl_verify']) && $_POST['ssl_verify'] === '1' ? '1' : '0');
         update_option('sseo_ai_client_show_share_buttons', isset($_POST['show_share_buttons']) && $_POST['show_share_buttons'] === '1' ? '1' : '0');
+        update_option('sseo_ai_client_dark_theme', isset($_POST['dark_theme']) && $_POST['dark_theme'] === '1' ? '1' : '0');
         update_option('sseo_ai_demo_mode', isset($_POST['demo_mode']) && $_POST['demo_mode'] === '1' ? '1' : '0');
 
         // Local business settings (used by Local SEO schema and Local SERP radius scans)

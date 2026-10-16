@@ -1,0 +1,6 @@
+/* Fyndable — webfonts.
+   CVI specifies: "Outfit variable font" (weights ExtraLight 200 → SemiBold 600).
+   NOTE: no font binaries were supplied with the brand assets, so Outfit is loaded
+   from Google Fonts. Drop the real .woff2 files into assets/fonts/ and replace this
+   @import with local @font-face rules to self-host. */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap');

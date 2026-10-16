@@ -141,12 +141,18 @@ class HtmlFetcher
             return false;
         }
 
-        // Block common internal/loopback hostnames.
-        $blockedHosts = ['localhost', 'metadata.google.internal'];
+        // Block common internal/loopback hostnames (incl. IPv6 loopback spellings).
+        $blockedHosts = ['localhost', 'metadata.google.internal', '::1', '[::1]', 'ip6-localhost', 'ip6-loopback'];
         foreach ($blockedHosts as $blocked) {
             if (strcasecmp($host, $blocked) === 0) {
                 return false;
             }
+        }
+
+        // Literal IP host (incl. bracketed IPv6) — validate the IP directly.
+        $literalIp = trim($host, '[]');
+        if (filter_var($literalIp, FILTER_VALIDATE_IP)) {
+            return $this->isIpSafe($literalIp);
         }
 
         // Resolve host to IPs and check each against blocked ranges.

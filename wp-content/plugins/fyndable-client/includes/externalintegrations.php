@@ -491,11 +491,11 @@ class ExternalIntegrations
                     </div>
                         </div>
                         
-                        <!-- Google Services (Search Console + Analytics 4 + Google Ads) -->
+                        <!-- Google Services (Search Console + Analytics 4) -->
                         <div class="sseo-ai-dashboard-card">
-                            <h2><?php esc_html_e('Google Services (Search Console, Analytics 4 & Google Ads)', 'ai-seo-client'); ?></h2>
+                            <h2><?php esc_html_e('Google Services (Search Console & Analytics 4)', 'ai-seo-client'); ?></h2>
                             <p class="description">
-                                <?php esc_html_e('Connect your Google account once to access Search Console, Google Analytics 4, and Google Ads data. A single login grants access to all three services.', 'ai-seo-client'); ?>
+                                <?php esc_html_e('Connect your Google account once to access Search Console and Google Analytics 4 data. A single login grants access to all services.', 'ai-seo-client'); ?>
                             </p>
                     
                     <table class="form-table">
@@ -604,6 +604,7 @@ class ExternalIntegrations
                         </tr>
                     </table>
 
+                    <!-- Google Ads settings hidden — temporarily disabled for later stage.
                     <h3 style="margin-top: 20px;"><?php esc_html_e('Google Ads', 'ai-seo-client'); ?></h3>
                     <table class="form-table">
                         <tr>
@@ -623,6 +624,7 @@ class ExternalIntegrations
                             </td>
                         </tr>
                     </table>
+                    -->
                     <?php endif; ?>
 
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
@@ -1000,7 +1002,7 @@ class ExternalIntegrations
         });
         
         function sseoDisconnectGSC() {
-            if (!confirm('<?php esc_html_e('Are you sure you want to disconnect your Google account? This will remove access to Search Console, Analytics 4, and Google Ads.', 'ai-seo-client'); ?>')) {
+            if (!confirm('<?php esc_html_e('Are you sure you want to disconnect your Google account? This will remove access to Search Console and Analytics 4.', 'ai-seo-client'); ?>')) {
                 return;
             }
             

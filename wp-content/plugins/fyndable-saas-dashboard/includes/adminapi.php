@@ -22,6 +22,7 @@ class AdminApi
     private SupportTickets $supportTickets;
     private GeoScanner $geoScanner;
     private GeoScanRepository $geoScanRepository;
+    private GeoScanQueue $geoScanQueue;
     private ProviderRouter $providerRouter;
     private SaaSSettings $settings;
     private RevenueDashboard $revenueDashboard;
@@ -36,7 +37,8 @@ class AdminApi
         GeoScanRepository $geoScanRepository,
         ProviderRouter $providerRouter,
         SaaSSettings $settings,
-        RevenueDashboard $revenueDashboard
+        RevenueDashboard $revenueDashboard,
+        ?GeoScanQueue $geoScanQueue = null
     ) {
         $this->licenseGenerator = $licenseGenerator;
         $this->tenants = $tenants;
@@ -46,6 +48,7 @@ class AdminApi
         $this->providerRouter = $providerRouter;
         $this->settings = $settings;
         $this->revenueDashboard = $revenueDashboard;
+        $this->geoScanQueue = $geoScanQueue ?? new GeoScanQueue($geoScanner, $geoScanRepository, $settings);
     }
 
     /**
@@ -113,21 +116,28 @@ class AdminApi
             'callback' => [$this, 'listTenants'],
             'permission_callback' => $perm,
             'args' => [
-                'status' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
-                'tier'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
-                'search' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
-                'limit'  => ['type' => 'integer', 'default' => 100],
-                'offset' => ['type' => 'integer', 'default' => 0],
+                'status'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tier'     => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'platform' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'search'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'limit'    => ['type' => 'integer', 'default' => 100],
+                'offset'   => ['type' => 'integer', 'default' => 0],
             ],
         ]);
 
-        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9]+)', [
+        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9_]+)', [
             'methods' => 'GET',
             'callback' => [$this, 'getTenant'],
             'permission_callback' => $perm,
         ]);
 
-        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9]+)/usage/history', [
+        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9_]+)', [
+            'methods' => 'DELETE',
+            'callback' => [$this, 'deleteTenant'],
+            'permission_callback' => $perm,
+        ]);
+
+        register_rest_route($this->namespace, '/admin/tenants/(?P<tenant_key>[A-Za-z0-9_]+)/usage/history', [
             'methods' => 'GET',
             'callback' => [$this, 'getTenantUsageHistory'],
             'permission_callback' => $perm,
@@ -413,9 +423,10 @@ class AdminApi
     public function listTenants(\WP_REST_Request $request): \WP_REST_Response
     {
         $filters = array_filter([
-            'status' => $request->get_param('status'),
-            'tier'   => $request->get_param('tier'),
-            'search' => $request->get_param('search'),
+            'status'   => $request->get_param('status'),
+            'tier'     => $request->get_param('tier'),
+            'search'   => $request->get_param('search'),
+            'platform' => $request->get_param('platform'),
         ]);
 
         $limit = max(1, min(500, (int) $request->get_param('limit')));
@@ -484,6 +495,36 @@ class AdminApi
         return new \WP_REST_Response([
             'success' => true,
             'history' => $history,
+        ], 200);
+    }
+
+    public function deleteTenant(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_param('tenant_key');
+        $body = $request->get_json_params();
+
+        $licenseAction = sanitize_text_field($body['license_action'] ?? 'keep');
+        if (!in_array($licenseAction, ['keep', 'free', 'revoke', 'delete'], true)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_license_action',
+                'message' => __('license_action must be one of: keep, free, revoke, delete', 'sseo-ai-saas'),
+            ], 400);
+        }
+
+        $result = $this->tenants->deleteTenant($tenantKey, $licenseAction);
+
+        if (is_wp_error($result)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ], $result->get_error_code() === 'not_found' ? 404 : 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => (bool) $result,
+            'tenant_key' => $tenantKey,
         ], 200);
     }
 
@@ -674,26 +715,16 @@ class AdminApi
             ], 400);
         }
 
-        // GEO scans can take 30-90s; give PHP enough runway.
-        if (function_exists('set_time_limit')) {
-            @set_time_limit(300);
-        }
-
-        $result = $this->geoScanner->scan($url, $keywords, $language);
-
-        if (is_wp_error($result)) {
-            return new \WP_REST_Response([
-                'success' => false,
-                'error' => $result->get_error_code(),
-                'message' => $result->get_error_message(),
-            ], 502);
-        }
+        // Scans run asynchronously — this endpoint returns instantly with a
+        // scan_id; poll GET /admin/geo-scan/{id} for status and the report.
+        $scanId = $this->geoScanRepository->insertQueued($url, $keywords, $language, ['source' => 'admin']);
+        $this->geoScanQueue->enqueue($scanId);
 
         return new \WP_REST_Response([
             'success' => true,
-            'scan_id' => $result['scan_id'],
-            'report' => $result['report'],
-        ], 201);
+            'scan_id' => $scanId,
+            'status' => 'queued',
+        ], 202);
     }
 
     public function recentGeoScans(\WP_REST_Request $request): \WP_REST_Response

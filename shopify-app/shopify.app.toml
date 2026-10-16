@@ -1,0 +1,29 @@
+client_id = "a8c61aa96e7cfd0ac63fb005d272effb"
+name = "Fyndable Smart SEO"
+application_url = "https://shopify.fyndable.ai/dashboard"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = false
+
+[access_scopes]
+scopes = "read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy"
+
+[auth]
+redirect_urls = [
+    "https://shopify.fyndable.ai/auth/callback",
+]
+
+[webhooks]
+api_version = "2026-07"
+
+  # Mandatory GDPR compliance webhooks (required for App Store review)
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "https://shopify.fyndable.ai/webhooks"
+  customer_deletion_url = "https://shopify.fyndable.ai/webhooks"
+  shop_deletion_url = "https://shopify.fyndable.ai/webhooks"
+
+[app_proxy]
+url = "https://shopify.fyndable.ai/api"
+prefix = "apps"
+subpath = "fyndable"

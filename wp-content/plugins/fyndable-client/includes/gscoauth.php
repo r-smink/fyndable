@@ -8,7 +8,6 @@ namespace SSEOAIClient;
  * Manages OAuth2 authentication flow for multiple Google services:
  * - Google Search Console (webmasters.readonly)
  * - Google Analytics 4 (analytics.readonly)
- * - Google Ads (adwords)
  * 
  * OAuth credentials (client ID, secret, dev token) are stored on the
  * SaaS dashboard and never exposed to client sites.
@@ -123,7 +122,17 @@ class GscOAuth
             return new \WP_REST_Response(['error' => 'Invalid token data'], 400);
         }
 
-        update_option('aiseoclient_gsc_tokens', $tokens, false);
+        // Google only returns a refresh_token on first consent — keep the
+        // existing one if this token set doesn't include it.
+        if (empty($tokens['refresh_token'])) {
+            $existing = get_option('aiseoclient_gsc_tokens', []);
+            if (!empty($existing['refresh_token'])) {
+                $tokens['refresh_token'] = self::decryptToken($existing['refresh_token']);
+            }
+        }
+        $tokens['created'] = $tokens['created'] ?? time();
+
+        $this->storeTokens($tokens);
 
         return ['success' => true, 'message' => 'Google account connected successfully.'];
     }
@@ -194,7 +203,7 @@ class GscOAuth
             'services' => [
                 'gsc' => strpos($scopes, 'webmasters') !== false || !empty($tokens['access_token']),
                 'ga4' => strpos($scopes, 'analytics') !== false || !empty($tokens['access_token']),
-                'ads' => strpos($scopes, 'adwords') !== false || !empty($tokens['access_token']),
+                'ads' => false,
             ],
             'ga4_property_id' => $ga4PropertyId,
             'google_ads_customer_id' => $googleAdsCustomerId,
@@ -322,8 +331,16 @@ class GscOAuth
             return new \WP_Error('gsc_token', __('Invalid token response', 'ai-seo-client'));
         }
 
+        // Keep existing refresh_token when Google doesn't send a new one.
+        if (empty($tokens['refresh_token'])) {
+            $existing = get_option('aiseoclient_gsc_tokens', []);
+            if (!empty($existing['refresh_token'])) {
+                $tokens['refresh_token'] = self::decryptToken($existing['refresh_token']);
+            }
+        }
+
         $tokens['created'] = time();
-        update_option('aiseoclient_gsc_tokens', $tokens, false);
+        $this->storeTokens($tokens);
         return $tokens;
     }
 
@@ -335,33 +352,106 @@ class GscOAuth
         return $this->exchangeCode($code);
     }
 
+    /**
+     * Refresh the access token via the SaaS dashboard proxy.
+     * The refresh grant requires the OAuth client_secret, which by design only
+     * exists on the dashboard — calling Google directly from the client always
+     * fails with invalid_client.
+     */
     public function refresh(): array|\WP_Error
     {
         $tokens = get_option('aiseoclient_gsc_tokens', []);
-        $refresh = $tokens['refresh_token'] ?? '';
+        $refresh = self::decryptToken($tokens['refresh_token'] ?? '');
         if (!$refresh) return new \WP_Error('gsc_refresh', __('Missing refresh token', 'ai-seo-client'));
-        $clientId = $this->getClientId();
-        if (!$clientId) return new \WP_Error('gsc_refresh', __('Cannot get Google client ID from SaaS dashboard', 'ai-seo-client'));
-        $resp = wp_remote_post('https://oauth2.googleapis.com/token', [
-            'timeout' => 15,
-            'body' => [
-                'refresh_token' => $refresh,
-                'client_id' => $clientId,
-                'grant_type' => 'refresh_token',
-            ],
-        ]);
+
+        $licenseKey = get_option(SSEO_AI_CLIENT_LICENSE_OPTION, '');
+        $tenantKey = get_option(SSEO_AI_CLIENT_TENANT_OPTION, '');
+        $dashboardUrl = get_option('sseo_ai_client_dashboard_url', '');
+
+        if (empty($licenseKey) || empty($tenantKey) || empty($dashboardUrl)) {
+            return new \WP_Error('gsc_refresh', __('SaaS dashboard not configured.', 'ai-seo-client'));
+        }
+
+        $resp = wp_remote_post(
+            rtrim($dashboardUrl, '/') . '/wp-json/ai-seo-saas/v1/google/refresh',
+            [
+                'timeout' => 15,
+                'sslverify' => $this->settings->sslVerify(),
+                'body' => [
+                    'license_key' => $licenseKey,
+                    'tenant_key' => $tenantKey,
+                    'refresh_token' => $refresh,
+                ],
+            ]
+        );
         if (is_wp_error($resp)) return $resp;
         if (wp_remote_retrieve_response_code($resp) !== 200) return new \WP_Error('gsc_refresh', __('Refresh failed', 'ai-seo-client'), $resp);
         $body = json_decode(wp_remote_retrieve_body($resp), true);
-        if (!is_array($body)) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
-        $body['refresh_token'] = $refresh;
-        $body['created'] = time();
-        if (empty($body['scope'])) {
+        $tokens = $body['tokens'] ?? null;
+        if (!is_array($tokens) || empty($tokens['access_token'])) return new \WP_Error('gsc_refresh', __('Invalid refresh response', 'ai-seo-client'));
+        $tokens['refresh_token'] = $refresh;
+        $tokens['created'] = time();
+        if (empty($tokens['scope'])) {
             $existing = get_option('aiseoclient_gsc_tokens', []);
-            $body['scope'] = $existing['scope'] ?? '';
+            $tokens['scope'] = $existing['scope'] ?? '';
         }
-        update_option('aiseoclient_gsc_tokens', $body, false);
-        return $body;
+        $this->storeTokens($tokens);
+        return $tokens;
+    }
+
+    /**
+     * Persist Google tokens. The refresh_token is encrypted at rest because it
+     * is long-lived; the short-lived access_token is stored as-is. A site key
+     * derived from the WP salts is used so a DB dump alone doesn't leak the
+     * Google connection.
+     */
+    private function storeTokens(array $tokens): void
+    {
+        if (!empty($tokens['refresh_token'])) {
+            $tokens['refresh_token'] = self::encryptToken($tokens['refresh_token']);
+        }
+        update_option('aiseoclient_gsc_tokens', $tokens, false);
+    }
+
+    private static function tokenKey(): string
+    {
+        return hash('sha256', wp_salt('auth') . wp_salt('secure_auth'), true);
+    }
+
+    /**
+     * Encrypt a token value; returns 'enc1:' . base64(ciphertext).
+     */
+    private static function encryptToken(string $value): string
+    {
+        if ($value === '' || strpos($value, 'enc1:') === 0) {
+            return $value;
+        }
+        $iv = random_bytes(12);
+        $cipher = openssl_encrypt($value, 'aes-256-gcm', self::tokenKey(), OPENSSL_RAW_DATA, $iv, $tag);
+        if ($cipher === false) {
+            return $value; // OpenSSL unavailable — store plaintext rather than break the connection.
+        }
+        return 'enc1:' . base64_encode($iv . $tag . $cipher);
+    }
+
+    /**
+     * Decrypt a token value; plaintext values pass through unchanged so
+     * existing connections keep working and get encrypted on the next store.
+     */
+    private static function decryptToken(string $value): string
+    {
+        if (strpos($value, 'enc1:') !== 0) {
+            return $value;
+        }
+        $raw = base64_decode(substr($value, 5), true);
+        if ($raw === false || strlen($raw) < 29) {
+            return '';
+        }
+        $iv = substr($raw, 0, 12);
+        $tag = substr($raw, 12, 16);
+        $cipher = substr($raw, 28);
+        $plain = openssl_decrypt($cipher, 'aes-256-gcm', self::tokenKey(), OPENSSL_RAW_DATA, $iv, $tag);
+        return $plain === false ? '' : $plain;
     }
 
     public function getAccessToken(): string

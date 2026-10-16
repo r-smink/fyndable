@@ -131,6 +131,11 @@ class LicenseAdmin
             true
         );
 
+        // The license features page calls the REST API via wp.apiFetch().
+        if (strpos($hook, 'sseo-ai-license-features') !== false) {
+            wp_enqueue_script('wp-api-fetch');
+        }
+
         // Apply global white-label colors to the SaaS admin pages. Agency pages
         // are skipped because AgencyPortal::enqueueAssets() injects an
         // agency-specific override there.
@@ -171,6 +176,17 @@ class LicenseAdmin
     /**
      * Render license dashboard
      */
+    private function licenseStatusLabel(string $status): string
+    {
+        $labels = [
+            'active'  => __('Active', 'sseo-ai-saas'),
+            'used'    => __('Connected', 'sseo-ai-saas'),
+            'revoked' => __('Revoked', 'sseo-ai-saas'),
+            'expired' => __('Expired', 'sseo-ai-saas'),
+        ];
+        return $labels[$status] ?? ucfirst($status);
+    }
+
     public function renderLicenseDashboard(): void
     {
         $stats = $this->licenseGenerator->getLicenseStats();
@@ -216,7 +232,7 @@ class LicenseAdmin
                 </div>
             </div>
             
-            <!-- Stats by Type -->
+            <!-- Stats by Type / Platform -->
             <div class="sseo-ai-grid-2">
                 <div class="sseo-ai-card">
                     <h3><?php esc_html_e('Licenses by Status', 'sseo-ai-saas'); ?></h3>
@@ -230,7 +246,7 @@ class LicenseAdmin
                         <tbody>
                             <?php foreach ($stats['by_status'] as $row): ?>
                             <tr>
-                                <td><?php echo esc_html(ucfirst($row['status'])); ?></td>
+                                <td><?php echo esc_html($this->licenseStatusLabel($row['status'])); ?></td>
                                 <td><?php echo number_format($row['count']); ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -251,6 +267,26 @@ class LicenseAdmin
                             <?php foreach ($stats['by_type'] as $row): ?>
                             <tr>
                                 <td><?php echo esc_html(ucfirst($row['license_type'])); ?></td>
+                                <td><?php echo number_format($row['count']); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="sseo-ai-card">
+                    <h3><?php esc_html_e('Licenses by Platform', 'sseo-ai-saas'); ?></h3>
+                    <table class="wp-list-table widefat striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Platform', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Count', 'sseo-ai-saas'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($stats['by_platform'] as $row): ?>
+                            <tr>
+                                <td><?php echo esc_html(ucfirst($row['platform'])); ?></td>
                                 <td><?php echo number_format($row['count']); ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -279,7 +315,7 @@ class LicenseAdmin
                             <td><code><?php echo esc_html(substr($license['license_key'], 0, 20) . '...'); ?></code></td>
                             <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
                             <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                            <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
+                            <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
                             <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                             <td><?php echo esc_html(human_time_diff(strtotime($license['created_at']), current_time('timestamp')) . ' ago'); ?></td>
                         </tr>
@@ -538,6 +574,7 @@ class LicenseAdmin
             'status' => sanitize_text_field($_GET['status'] ?? ''),
             'type' => sanitize_text_field($_GET['type'] ?? ''),
             'tier' => sanitize_text_field($_GET['tier'] ?? ''),
+            'platform' => sanitize_text_field($_GET['platform'] ?? ''),
             'search' => sanitize_text_field($_GET['search'] ?? ''),
         ];
         
@@ -560,7 +597,7 @@ class LicenseAdmin
                     <select name="status">
                         <option value=""><?php esc_html_e('All Statuses', 'sseo-ai-saas'); ?></option>
                         <option value="active" <?php selected($filters['status'], 'active'); ?>><?php esc_html_e('Active', 'sseo-ai-saas'); ?></option>
-                        <option value="used" <?php selected($filters['status'], 'used'); ?>><?php esc_html_e('Used', 'sseo-ai-saas'); ?></option>
+                        <option value="used" <?php selected($filters['status'], 'used'); ?>><?php esc_html_e('Connected', 'sseo-ai-saas'); ?></option>
                         <option value="revoked" <?php selected($filters['status'], 'revoked'); ?>><?php esc_html_e('Revoked', 'sseo-ai-saas'); ?></option>
                         <option value="expired" <?php selected($filters['status'], 'expired'); ?>><?php esc_html_e('Expired', 'sseo-ai-saas'); ?></option>
                     </select>
@@ -586,6 +623,14 @@ class LicenseAdmin
                         <option value="agency" <?php selected($filters['tier'], 'agency'); ?>><?php echo esc_html(sprintf(__('Agency - €%s', 'sseo-ai-saas'), number_format(SaaSSettings::tierPrice('agency'), 0, ',', '.'))); ?></option>
                     </select>
                     
+                    <select name="platform">
+                        <option value=""><?php esc_html_e('All Platforms', 'sseo-ai-saas'); ?></option>
+                        <option value="wordpress" <?php selected($filters['platform'], 'wordpress'); ?>><?php esc_html_e('WordPress', 'sseo-ai-saas'); ?></option>
+                        <option value="shopify" <?php selected($filters['platform'], 'shopify'); ?>><?php esc_html_e('Shopify', 'sseo-ai-saas'); ?></option>
+                        <option value="webflow" <?php selected($filters['platform'], 'webflow'); ?>><?php esc_html_e('Webflow', 'sseo-ai-saas'); ?></option>
+                        <option value="unknown" <?php selected($filters['platform'], 'unknown'); ?>><?php esc_html_e('Unknown', 'sseo-ai-saas'); ?></option>
+                    </select>
+                    
                     <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="Search...">
                     
                     <?php submit_button(__('Filter', 'sseo-ai-saas'), '', '', false); ?>
@@ -606,9 +651,11 @@ class LicenseAdmin
                         <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Platform', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Assigned To', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Expires', 'sseo-ai-saas'); ?></th>
+                        <th><?php esc_html_e('Renews', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                     </tr>
                 </thead>
@@ -618,10 +665,12 @@ class LicenseAdmin
                         <td><code class="license-key"><?php echo esc_html($license['license_key']); ?></code></td>
                         <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
                         <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                        <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html(ucfirst($license['status'])); ?></span></td>
+                        <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
+                        <td><span class="badge badge-platform-<?php echo esc_attr($license['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($license['platform'] ?? 'Unknown')); ?></span></td>
                         <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
+                        <td><?php echo !empty($license['tenant_expires_at']) ? esc_html(date_i18n(get_option('date_format'), strtotime($license['tenant_expires_at']))) : '<em>&mdash;</em>'; ?></td>
                         <td>
                             <?php if (in_array($license['status'], ['active', 'used'], true)): ?>
                                 <a href="<?php echo admin_url('admin.php?page=sseo-ai-license-features&license=' . urlencode($license['license_key'])); ?>" 
@@ -672,11 +721,84 @@ class LicenseAdmin
      */
     public function renderTenantsPage(): void
     {
-        $tenants = $this->tenants->getTenants([], 50, 0);
+        // Handle tenant deletion
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['tenant_action'] ?? '') === 'delete') {
+            $deleteKey = sanitize_text_field($_POST['tenant_key'] ?? '');
+
+            if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'delete_tenant_' . $deleteKey)) {
+                echo '<div class="notice notice-error"><p>' . esc_html__('Security check failed.', 'sseo-ai-saas') . '</p></div>';
+            } else {
+                $licenseAction = sanitize_text_field($_POST['license_action'] ?? 'keep');
+                if (!in_array($licenseAction, ['keep', 'free', 'revoke', 'delete'], true)) {
+                    $licenseAction = 'keep';
+                }
+
+                $result = $this->tenants->deleteTenant($deleteKey, $licenseAction);
+
+                if (is_wp_error($result)) {
+                    echo '<div class="notice notice-error"><p>' . esc_html($result->get_error_message()) . '</p></div>';
+                } elseif ($result) {
+                    echo '<div class="notice notice-success"><p>' . esc_html__('Tenant deleted successfully.', 'sseo-ai-saas') . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . esc_html__('Failed to delete tenant.', 'sseo-ai-saas') . '</p></div>';
+                }
+            }
+        }
+
+        $filters = array_filter([
+            'status' => sanitize_text_field($_GET['status'] ?? ''),
+            'tier' => sanitize_text_field($_GET['tier'] ?? ''),
+            'platform' => sanitize_text_field($_GET['platform'] ?? ''),
+            'search' => sanitize_text_field($_GET['search'] ?? ''),
+        ]);
+
+        $page = (int)($_GET['paged'] ?? 1);
+        $perPage = 50;
+        $offset = ($page - 1) * $perPage;
+
+        $tenants = $this->tenants->getTenants($filters, $perPage, $offset);
+        $total = $this->tenants->countTenants($filters);
+        $totalPages = ceil($total / $perPage);
         ?>
         <div class="wrap sseo-ai-license-admin">
             <h1><?php esc_html_e('Tenant Management', 'sseo-ai-saas'); ?></h1>
             
+            <!-- Filters -->
+            <div class="tablenav top">
+                <form method="get" class="alignleft actions" style="margin-bottom:10px;">
+                    <input type="hidden" name="page" value="sseo-ai-tenants">
+                    
+                    <select name="status">
+                        <option value=""><?php esc_html_e('All Statuses', 'sseo-ai-saas'); ?></option>
+                        <option value="active" <?php selected($filters['status'] ?? '', 'active'); ?>><?php esc_html_e('Active', 'sseo-ai-saas'); ?></option>
+                        <option value="inactive" <?php selected($filters['status'] ?? '', 'inactive'); ?>><?php esc_html_e('Inactive', 'sseo-ai-saas'); ?></option>
+                        <option value="suspended" <?php selected($filters['status'] ?? '', 'suspended'); ?>><?php esc_html_e('Suspended', 'sseo-ai-saas'); ?></option>
+                        <option value="cancelled" <?php selected($filters['status'] ?? '', 'cancelled'); ?>><?php esc_html_e('Cancelled', 'sseo-ai-saas'); ?></option>
+                    </select>
+                    
+                    <select name="tier">
+                        <option value=""><?php esc_html_e('All Tiers', 'sseo-ai-saas'); ?></option>
+                        <option value="free" <?php selected($filters['tier'] ?? '', 'free'); ?>><?php esc_html_e('Free', 'sseo-ai-saas'); ?></option>
+                        <option value="trial" <?php selected($filters['tier'] ?? '', 'trial'); ?>><?php esc_html_e('Trial', 'sseo-ai-saas'); ?></option>
+                        <option value="starter" <?php selected($filters['tier'] ?? '', 'starter'); ?>><?php esc_html_e('Starter', 'sseo-ai-saas'); ?></option>
+                        <option value="professional" <?php selected($filters['tier'] ?? '', 'professional'); ?>><?php esc_html_e('Professional', 'sseo-ai-saas'); ?></option>
+                        <option value="business" <?php selected($filters['tier'] ?? '', 'business'); ?>><?php esc_html_e('Business', 'sseo-ai-saas'); ?></option>
+                        <option value="agency" <?php selected($filters['tier'] ?? '', 'agency'); ?>><?php esc_html_e('Agency', 'sseo-ai-saas'); ?></option>
+                    </select>
+                    
+                    <select name="platform">
+                        <option value=""><?php esc_html_e('All Platforms', 'sseo-ai-saas'); ?></option>
+                        <option value="wordpress" <?php selected($filters['platform'] ?? '', 'wordpress'); ?>><?php esc_html_e('WordPress', 'sseo-ai-saas'); ?></option>
+                        <option value="shopify" <?php selected($filters['platform'] ?? '', 'shopify'); ?>><?php esc_html_e('Shopify', 'sseo-ai-saas'); ?></option>
+                        <option value="webflow" <?php selected($filters['platform'] ?? '', 'webflow'); ?>><?php esc_html_e('Webflow', 'sseo-ai-saas'); ?></option>
+                    </select>
+                    
+                    <input type="text" name="search" value="<?php echo esc_attr($filters['search'] ?? ''); ?>" placeholder="Search...">
+                    
+                    <?php submit_button(__('Filter', 'sseo-ai-saas'), '', '', false); ?>
+                </form>
+            </div>
+
             <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></h2>
                 <table class="wp-list-table widefat striped">
@@ -685,10 +807,12 @@ class LicenseAdmin
                             <th><?php esc_html_e('Tenant Key', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Name', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Domain', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Platform', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -697,15 +821,64 @@ class LicenseAdmin
                             <td><code><?php echo esc_html(substr($tenant['tenant_key'], 0, 20) . '...'); ?></code></td>
                             <td><?php echo esc_html($tenant['name']); ?></td>
                             <td><?php echo esc_html($tenant['domain'] ?: '-'); ?></td>
+                            <td><?php echo esc_html(ucfirst($tenant['platform'] ?? 'Unknown')); ?></td>
                             <td><?php echo esc_html(ucfirst($tenant['tier'])); ?></td>
                             <td><span class="badge badge-<?php echo esc_attr($tenant['status']); ?>"><?php echo esc_html(ucfirst($tenant['status'])); ?></span></td>
                             <td><?php echo esc_html(human_time_diff(strtotime($tenant['created_at']), current_time('timestamp')) . ' ago'); ?></td>
                             <td><?php echo $tenant['last_active'] ? esc_html(human_time_diff(strtotime($tenant['last_active']), current_time('timestamp')) . ' ago') : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
+                            <td>
+                                <form method="post" style="display:flex;gap:4px;align-items:center;"
+                                      onsubmit="return confirm('<?php esc_attr_e('Are you sure you want to delete this tenant? This permanently removes its settings, usage data and support tickets. Invoices are kept.', 'sseo-ai-saas'); ?>')">
+                                    <?php wp_nonce_field('delete_tenant_' . $tenant['tenant_key']); ?>
+                                    <input type="hidden" name="tenant_action" value="delete">
+                                    <input type="hidden" name="tenant_key" value="<?php echo esc_attr($tenant['tenant_key']); ?>">
+                                    <?php if (!empty($tenant['license_key'])): ?>
+                                    <select name="license_action" style="max-width:150px;">
+                                        <option value="keep"><?php esc_html_e('Keep license', 'sseo-ai-saas'); ?></option>
+                                        <option value="free"><?php esc_html_e('Free license (reusable)', 'sseo-ai-saas'); ?></option>
+                                        <option value="revoke"><?php esc_html_e('Revoke license', 'sseo-ai-saas'); ?></option>
+                                        <option value="delete"><?php esc_html_e('Delete license', 'sseo-ai-saas'); ?></option>
+                                    </select>
+                                    <?php endif; ?>
+                                    <button type="submit" class="button button-small" style="color:#b32d2e;border-color:#b32d2e;">
+                                        <?php esc_html_e('Delete', 'sseo-ai-saas'); ?>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+            
+            <?php if ($totalPages > 1): ?>
+            <div class="tablenav bottom">
+                <div class="tablenav-pages">
+                    <span class="displaying-num">
+                        <?php printf(esc_html__('%s items', 'sseo-ai-saas'), number_format($total)); ?>
+                    </span>
+                    <span class="pagination-links">
+                        <?php
+                        $base = add_query_arg([
+                            'page' => 'sseo-ai-tenants',
+                            'status' => $filters['status'] ?? '',
+                            'tier' => $filters['tier'] ?? '',
+                            'platform' => $filters['platform'] ?? '',
+                            'search' => $filters['search'] ?? '',
+                        ], admin_url('admin.php'));
+                        echo paginate_links([
+                            'base' => $base . '&paged=%#%',
+                            'format' => '',
+                            'prev_text' => '&laquo;',
+                            'next_text' => '&raquo;',
+                            'total' => $totalPages,
+                            'current' => $page,
+                        ]);
+                        ?>
+                    </span>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -726,10 +899,13 @@ class LicenseAdmin
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
                     $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
                     $onboardingCompletedAt = $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed_at', '');
+                    $limitsChecks = $limits['checks'] ?? [];
+                    $apiCallsCheck = $limitsChecks['api_calls'] ?? ['exceeded' => false, 'limit' => (int) ($tenant['api_calls_limit'] ?? 0)];
                 ?>
                 <div class="sseo-ai-card tenant-usage-card">
                     <h3><?php echo esc_html($tenant['name']); ?></h3>
                     <p class="tenant-domain"><?php echo esc_html($tenant['domain'] ?: 'No domain'); ?></p>
+                    <p class="tenant-platform"><span class="badge badge-platform-<?php echo esc_attr($tenant['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($tenant['platform'] ?? 'Unknown')); ?></span></p>
                     <p class="tenant-onboarding" style="font-size:12px;color:#666;">
                         <?php if ($onboardingCompleted): ?>
                             <span style="color:#00a32a;">&#10003; <?php esc_html_e('Wizard completed', 'sseo-ai-saas'); ?></span>
@@ -744,8 +920,8 @@ class LicenseAdmin
                     <div class="usage-stats">
                         <div class="usage-stat">
                             <span class="usage-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></span>
-                            <span class="usage-value <?php echo $limits['checks']['api_calls']['exceeded'] ? 'exceeded' : ''; ?>">
-                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($limits['checks']['api_calls']['limit']); ?>
+                            <span class="usage-value <?php echo !empty($apiCallsCheck['exceeded']) ? 'exceeded' : ''; ?>">
+                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($apiCallsCheck['limit'] ?? 0); ?>
                             </span>
                         </div>
                         
@@ -890,7 +1066,7 @@ class LicenseAdmin
                 
                 // Load feature data
                 wp.apiFetch({
-                    path: 'ai-seo-saas/v1/license/features?license_key=' + encodeURIComponent(licenseKey),
+                    path: '/ai-seo-saas/v1/license/features?license_key=' + encodeURIComponent(licenseKey),
                     method: 'GET'
                 }).then(function(response) {
                     if (response.success && response.data) {
@@ -963,7 +1139,7 @@ class LicenseAdmin
                         $('#save-features').prop('disabled', true).text('<?php esc_html_e('Saving...', 'sseo-ai-saas'); ?>');
                         
                         wp.apiFetch({
-                            path: 'ai-seo-saas/v1/license/features',
+                            path: '/ai-seo-saas/v1/license/features',
                             method: 'POST',
                             data: {
                                 license_key: licenseKey,

@@ -15,6 +15,61 @@ This file captures project-specific information discovered during implementation
 
 Primary provider is DataForSEO (`/serp/google/maps/live/advanced` and `/serp/google/local_finder/live/advanced`); SerpAPI (`engine=google_maps`) is used as fallback.
 
+## Google OAuth proxy (GSC / GA4 / Ads)
+
+The client plugin never sees the OAuth `client_secret` — it lives on the SaaS dashboard. All Google token operations are proxied via `licenseapi.php`:
+
+- `POST /ai-seo-saas/v1/google/oauth-config` — returns `client_id` + scopes for the GIS popup.
+- `POST /ai-seo-saas/v1/google/exchange` — exchanges auth code for tokens (`redirect_uri: postmessage`, GIS code-client flow).
+- `POST /ai-seo-saas/v1/google/refresh` — **NEW**: refreshes the access token. Client-side `GscOAuth::refresh()` calls this; a direct call to `oauth2.googleapis.com/token` fails with `invalid_client` because Google requires `client_secret` on refresh for Web-app clients.
+- `POST /ai-seo-saas/v1/google/ads-dev-token` — Google Ads developer token.
+- `GET  /ai-seo-saas/v1/google/oauth-start` — HTML page that runs the GIS popup and postMessages tokens back to the client.
+
+Client side: `gscoauth.php` stores tokens in `aiseoclient_gsc_tokens`; `getAccessToken()` auto-refreshes when expired. `restStoreTokens()`/`exchangeCode()` preserve an existing `refresh_token` when Google doesn't return a new one.
+
+Note: if the Google OAuth app is in "Testing" publishing status, refresh tokens expire after **7 days** — publish/verify the app for persistent connections.
+
+## GEO Readiness scan — async + public website scan (2026-09-22)
+
+Scans run **asynchronously** (fixed gateway 504s): `GeoScanRepository::insertQueued()` → `GeoScanQueue::enqueue()` → WP-Cron `sseo_geo_scan_run_job` → `GeoScanner::scan(..., onProgress, scanId)` writes progress to the row → frontends poll status. `spawn_cron()` kicks processing immediately; a 5-min sweep (`sseo_geo_scan_sweep`) requeues stale jobs and fails stuck 'running' scans. Table `sseo_ai_geo_scans` gained: `progress`, `progress_label`, `error`, `source` ('admin'|'website'), `email`, `consent`, `consent_at`, `meta` (incl. original keywords array — commas safe). Retention: admin 7d, website 90d.
+
+`GeoScanner::scan(url, keywords, language='auto', onProgress, scanId, source)` — 'auto' triggers `detectLanguageFromKeywords()` (NL/EN stopword heuristic); LLM prompt is language-aware (NL/EN variants). `source` ('admin'|'website') selects the model: admin scans use `sseo_ai_saas_geo_model` (Settings → "GEO Scan Model"), website scans use `sseo_ai_saas_geo_website_model` (GEO Scan admin → integratiekaart → "Model (website-scan)"; empty = fall back to the admin model). Saved via `admin_post_sseo_geo_scan_save_website`.
+
+### Multi-model GEO scan (2026-09-23)
+
+When enabled, the GEO scan runs the same page through multiple AI models sequentially, each with a model-specific prompt addition. Results are merged into a single report.
+
+**Settings** (managed via GEO Scan admin → "Multi-model GEO Scan" card, saved via `admin_post_sseo_geo_scan_save_multi_model`):
+- `sseo_ai_saas_geo_multi_enabled` (bool) — multi-model for admin scans
+- `sseo_ai_saas_geo_multi_models` (array of model IDs) — which models to use
+- `sseo_ai_saas_geo_website_multi_enabled` (bool) — also for website scans (requires admin multi-model to be on)
+
+**Architecture:**
+- `GeoScanner::analyzeWithMultipleModels()` — loops sequentially over selected models, calls `analyzeWithLlm()` per model with a `$modelOverride`
+- `GeoScanner::getModelSpecificPromptAddition(model, language)` — per model-family (openai/google/anthropic) appends a focused evaluation section: ChatGPT → Bing/conversational, Gemini → Knowledge Graph/organic top-10, Claude → entity clarity/conservative name-dropping
+- `GeoScanner::mergeMultiModelResults()` — averages scores/breakdown, merges+deduplicates findings/recommendations/strengths/weaknesses (60% word-overlap threshold), sums usage/cost
+- `GeoScanner::detectModelFamily(model)` — maps model ID to family (openai/google/anthropic/other)
+- Report JSON gains `multi_model` (bool) and `models_used` (array of `{model, score}`)
+- `GeoScanReport` renders a "Geanalyseerd door X modellen" badge with per-model score chips when `multi_model` is true
+
+**Graceful degradation:** if a model fails, it's skipped and logged (`error_log`). If all models fail → `WP_Error('all_models_failed')`. If only 1 succeeds → returned as single-model result.
+
+**Backward compatible:** toggle off = exact same behavior as before. No database schema changes (report JSON is `longtext`).
+
+### Public endpoints (shared-key auth, `X-Fyndable-Scan-Key` header)
+
+`publicapi.php` — class `PublicApi`, key managed via GEO Scan admin page (integratiekaart, `SaaSSettings::getWebsiteScanKey()` / `regenerateWebsiteScanKey()`, option `sseo_ai_saas_website_scan_key`):
+
+- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; idempotent per email: an existing non-expired non-failed website scan returns `200 {scan_id, duplicate:true}` instead of a new scan; IP rate limit 10/h → `201 {scan_id}` for new scans
+- `GET /ai-seo-saas/v1/public/geo-scan/{id}/status` — `{status, progress, progress_label}` + `teaser` (score, top-3 strengths/weaknesses/findings, keyword flags) when completed — full report stays internal
+- `POST /admin/geo-scan` (AdminApi) is now async too: returns `202 {scan_id, status:'queued'}` — poll `GET /admin/geo-scan/{id}`
+
+### Website plugin `fyndable-geo-scan/` (for fyndable.ai)
+
+Standalone plugin: Settings → GEO Scan (portal URL + API key), shortcode `[fyndable_geo_scan]` (URL + max 2 keywords + email + consent + honeypot), REST proxy `fyndable/v1/geo-scan` + `…/status`, JS progress bar → teaser result card. wp_mail notification to support email on completed website scans (follow-up). Progress bar is smoothed client-side (creeps ≤12% ahead of server value, cap 96% until completed); poll timeout is 10 min (`MAX_POLL_MS` in geo-scan.js).
+
+Note: WP-Cron needs traffic or a real system cron hitting `wp-cron.php` on the portal for reliable processing.
+
 ## New client endpoints
 
 `fyndable-client/includes/localserp.php`
@@ -61,9 +116,12 @@ Local business settings (name, address, coordinates, radius, grid) are now saved
 ### Tenants / usage reports
 - `GET  /admin/tenants` — list (filters: status, tier, search, limit, offset).
 - `GET  /admin/tenants/{tenant_key}` — tenant detail + usage + limits + onboarding.
+- `DELETE /admin/tenants/{tenant_key}` — permanently delete a tenant (body: license_action = keep|free|revoke|delete). Cleans up settings/usage/tickets/feedback; keeps invoices. Blocked when sub-tenants or generated sub-licenses exist. Same logic as the Delete form on the WP-admin Tenants page (`TenantRepository::deleteTenant()`).
 - `GET  /admin/tenants/{tenant_key}/usage/history` — monthly usage history (months).
 - `GET  /admin/usage` — per-active-tenant usage overview (the "Usage Reports" page data).
 - `GET  /admin/revenue/stats` — MRR/ARR/tier breakdown (RevenueDashboard::getStats).
+
+Note: tenant_key URL params must allow underscores (`tn_<hex>`) — the route regex is `[A-Za-z0-9_]+`.
 
 ### Support tickets (admin side)
 - `GET  /admin/support/tickets` — list all (filters: status, priority, search).
@@ -89,7 +147,7 @@ Local business settings (name, address, coordinates, radius, grid) are now saved
 
 ## Verification notes
 
-- PHP CLI **is** available in this environment (`php -l` works).
+- PHP CLI is **not** on PATH in this workspace (`php` not found); `perl` is available. `tools/po2mo.pl` regenerates `.mo` files — equivalent to `languages/generate-mo.php`.
 - Key changed files:
   - `wp-content/plugins/fyndable-saas-dashboard/includes/dataforseoclient.php`
   - `wp-content/plugins/fyndable-saas-dashboard/includes/apigateway.php`
@@ -126,3 +184,227 @@ Caches: transient `sseo_ai_llmstxt_cache` (summary) and `sseo_ai_llmstxt_full_ca
 REST: `GET /sseo-ai/v1/llmstxt/status` and `POST /sseo-ai/v1/llmstxt/regenerate` now include `full_enabled`, `full_url`, `full_exists`, `full_size`, `selected_pages_count`.
 
 Note: the settings UI is rendered via `do_action('sseo_ai_render_llmstxt_settings')` in `renderSettingsPage()` (placed between "Social & Sharing" and "Advanced Settings").
+
+## ApexFlow — content autopilot (2026-09-17)
+
+`fyndable-client/includes/apexflow.php` — class `ApexFlow`, replaces `AutomationOrchestrator` (file deleted). Menu slug stays `ai-seo-automation`, label is now "⚡ ApexFlow". **Paid Professional+ only**: `ALLOWED_TIERS = [professional, business, agency, dev]` — deliberately excludes `trial`, unlike the other Pro+ gates.
+
+Pipeline (weekly cron `sseo_ai_apexflow_weekly` + "Run ApexFlow Now"):
+1. `scanSiteProfile()` — homepage text + recent posts + `sseo_ai_industry` + Local Business + WooCommerce cats → LLM → `sseo_ai_apexflow_profile` (refreshed when >30d old).
+2. `refreshKeywordPool()` — seeds (manual > profile > tracked keywords > GSC top queries > site title) → `KeywordExplorer::expand()` SERP n-grams (Unicode tokenization, segment-bounded bigrams) + LLM relevance filter (`selectRelevantCandidates`, language-aware) + `ai/keyword-data` volume/difficulty + `serp/local-pack` local-intent detection (when coords configured). Quality gates: `isUsableKeyword()` requires ≥2 meaningful words + rejects foreign-stopword markers (seeds exempt: manual seeds bypass entirely, other seeds min 1 word); candidates not recognized by `ai/keyword-data` are dropped (seeds exempt; gate skipped when the API call fails — `fetchKeywordData` returns `?array`, null on error). Stored in `sseo_ai_apexflow_keyword_pool` (max 20, refreshed when >7d or when a stored pool exceeds POOL_SIZE). Caps per run: 5 seed expansions, 3 local-pack scans, 25 keyword-data items.
+3. `buildPlan()` — open slots in lookahead window (publish_days/time, skips dates with existing `future` posts) → batched LLM titles → `sseo_ai_apexflow_plan` (statuses: planned|queued). Preview = `buildPlan(0, false)` — dry-run, not persisted.
+4. `enqueuePlan()` — appends items to the shared `sseo_ai_cluster_queues` (source=`apexflow`), generated in background by `TopicCluster::processQueueItems()`.
+
+New queue-item fields honored by `processQueueItems()`: `post_type`, `publish_mode` (`schedule`→future post, `draft`→draft + `_sseo_ai_planned_date` meta), `category_id`, `author_id`, `featured_image` (opt-out), `source` (→ `_sseo_ai_source` meta).
+
+Settings option `sseo_ai_apexflow_settings`: enabled, language, country, posts_per_week (1-7, capped by `getMonthlyAutoPostLimit()`), publish_mode, publish_days[], publish_time, seed_keywords[], excluded_topics[], post_type, category_id, author_id, word_count, featured_image, notify_email, lookahead_weeks (1-8). Legacy `sseo_ai_automation_settings` migrated on first load; `sseo_ai_automation_cron` cleared.
+
+REST (`manage_options`): `GET /sseo-ai/v1/apexflow/status`, `POST /apexflow/run`, `POST /apexflow/preview`, `POST /apexflow/rescan-profile`, `POST /apexflow/reject-keyword`, `POST /apexflow/clear-plan`, `POST /apexflow/clear-pool`, `POST /apexflow/refresh-pool`.
+
+Admin reset buttons (admin-post handlers + REST parity): "Clear Planned Posts" → `clearPlanAndQueue()` deletes `sseo_ai_apexflow_plan`, sets pending `source=apexflow` items in `sseo_ai_cluster_queues` to `cancelled` (items already `processing` finish; generated posts untouched), and frees pool keywords `planned`→`new`. "Clear Keyword Pool" deletes `sseo_ai_apexflow_keyword_pool` (lazy rebuild on next run/preview); "Refresh Pool Now" calls `refreshKeywordPool()` synchronously (costs SERP/AI credits). Activity log keeps the last 50 entries (`LOG_KEY`) and renders in a `.sseo-apexflow-log` scroll container.
+
+Other touched code:
+- `keywordexplorer.php` — `expand($seed, $opts)` accepts `country`/`language`, forwarded to `serp/search` (cache key includes them).
+- `apigateway.php` (SaaS) — `handleSerpRequest` now accepts `country` (mapped via `countryToLocation`) and `language` (→ DataForSEO `language_code`, SerpApi `hl`). Previously clients sent `country` and it was silently ignored — fixes latent bug for SerpCompetitor/KeywordExplorer too.
+- `ai-seo-client.php` — deactivation clears `sseo_ai_apexflow_weekly` + legacy `sseo_ai_automation_cron`.
+- Brand Voice quick fields on the ApexFlow page write to shared `sseo_ai_brand_voice` (tone, audience, voice_description, enabled).
+
+Note: WP-Cron only runs on site traffic — production sites should point a real cron at `wp-cron.php` for reliable weekly runs and queue processing.
+
+## Global AI loader — animated Fyndable logo (2026-09-28)
+
+`fyndable-client/assets/fyndable-loader.js` — self-contained vanilla-JS loader ported from `preloader.html` (bundled React artifact; source of truth for the animation). The Fyndable logo ring is "drawn" via an SVG `<mask>` wedge whose `d` is updated per frame by a shared `requestAnimationFrame` loop: 1.2s eased draw → 450ms hold → 0.5s erase → 250ms gap → loop. Dots under the label cycle `.`/`..`/`...` every 450ms.
+
+- **Overlay**: `#sseo-ai-loader-overlay` (dark `rgba(0,0,0,.6)` + blur backdrop) created lazily; label from `fyndableLoaderConfig.text` (`'AI is generating'` + animated dots). Public API unchanged: `window.sseoShowLoader()` / `sseoHideLoader()` — now backed by a pending counter + 300ms show delay (no flash on fast calls). Each show-source increments; matching completions decrement.
+- **Triggers**: jQuery `ajaxSend` (data contains `sseo_ai_`/`action=ai_seo`, matched again on `ajaxComplete`/`ajaxError` via `xhr.__fynLoader`), `wp.apiFetch` wrapper (`sseo-ai/v1` paths), `window.fetch` wrapper (`/sseo-ai/v1/` URLs). `support-assistant` paths are excluded — the chat widget has its own typing UI.
+- **Spinner upgrade**: a `MutationObserver` replaces every `.spinner`/`.fyndable-spinner` inside `fyndableLoaderConfig.scopeSelector` with an inline logo SVG (unique gradient/mask ids per instance, whitelabel `colors` when configured). Elements keep their own size; `.fyn-upgraded` CSS reset kills the WP border/background spinner. Animation runs only while an instance is visible (computed style + `.hidden` ancestor check).
+- **Enqueue points**: `client.php::enqueueAssets()` (all `ai-seo`/`fyndable` pages, scope = whole document) and `postmetabox.php` (post.php/post-new.php/attachment.php + `enqueue_block_editor_assets` for iframed editors, scope = `#fyndable_seo_meta, #fyndable_seo_meta_attachment` so WP core spinners stay untouched).
+- `mobile-app-template.html` embeds a compact copy of the same engine (`.spinner` → logo) for the Android app.
+- `.mo` regenerated via `tools/po2mo.pl` (new msgid "AI is generating" → "AI is aan het genereren").
+
+## Shopify App (Laravel 11)
+
+A separate Laravel 11 application lives in `shopify-app/` and provides the Fyndable SEO app for the Shopify platform. It reuses the SaaS dashboard (portal.fyndable.ai) for licensing, AI, and SERP — it does NOT have its own provider keys.
+
+### Stack
+- Laravel 11.56.1, PHP 8.2
+- `shopify/shopify-api` v6.1.1 (abandoned — revisit before production)
+- SQLite for local dev (switch to MySQL for production)
+- Queue jobs for bulk optimization and rank checks
+
+### Key files
+- `shopify-app/config/shopify.php` — Shopify + SaaS config
+- `shopify-app/app/Services/SaasProxyClient.php` — talks to portal.fyndable.ai (license, AI, SERP)
+- `shopify-app/app/Services/LicenseService.php` — license activation/validation (cached 1h)
+- `shopify-app/app/Services/ShopifyContentFetcher.php` — Shopify Admin GraphQL (products, collections, pages, blogs)
+- `shopify-app/app/Services/LlmsTxtGenerator.php` — generates /llms.txt and /llms-full.txt (cached 6h)
+- `shopify-app/app/Http/Controllers/AuthController.php` — Shopify OAuth install + callback
+- `shopify-app/app/Http/Controllers/WebhookController.php` — content change + app/uninstalled webhooks
+- `shopify-app/app/Http/Controllers/LlmsTxtController.php` — serves llms.txt files + settings API
+- `shopify-app/app/Http/Controllers/ProductController.php` — AI descriptions, meta, alt text, JSON-LD schema
+- `shopify-app/app/Http/Controllers/BulkOptimizerController.php` — bulk SEO optimization
+- `shopify-app/app/Http/Controllers/RankTrackerController.php` — keyword rank tracking
+- `shopify-app/app/Http/Controllers/DashboardController.php` — embedded app dashboard
+- `shopify-app/app/Http/Controllers/LicenseController.php` — license activation UI
+- `shopify-app/app/Http/Middleware/VerifyShopifySession.php` — resolves shop from query/JWT
+- `shopify-app/app/Jobs/BulkOptimizeJob.php` — background bulk optimization
+- `shopify-app/app/Jobs/CheckRankingsJob.php` — daily rank checks (scheduled 06:00 UTC)
+- `shopify-app/resources/views/dashboard/index.blade.php` — App Bridge + Polaris dashboard
+
+### Database tables (migrations in `database/migrations/`)
+- `shops` — shop_domain, access_token, scope, license_key, tenant_key, license_tier, is_installed, is_uninstalled
+- `tracked_keywords` — shop_id, keyword, url, country, language, last_position, best_position
+- `rank_history` — tracked_keyword_id, position, search_engine, result_url, serp_features, checked_at
+- `llmstxt_settings` — shop_id, enabled, full_enabled, include_products/collections/pages/blogs, max_*, description, custom_sections
+
+### Routes
+- `GET /install` — Shopify OAuth start
+- `GET /auth/callback` — OAuth callback (HMAC verified)
+- `POST /webhooks` — Shopify webhooks (HMAC verified)
+- `GET /dashboard` — embedded app UI
+- `GET /api/llms.txt` / `/api/llms-full.txt` — public llms serving (shop via query param)
+- `GET /api/dashboard/overview` — dashboard stats (incl. `missing_scopes` + `reauth_url`)
+- `GET|POST /api/license/*` — license status/activate/deactivate
+- `GET|POST /api/llmstxt/*` — llms.txt settings/status/regenerate/preview
+- `GET /api/content/{type}` — list/search products|collections|pages|articles (search, limit)
+- `GET /api/content/{type}/{id}` — item detail for the editor (meta, body, schema, images)
+- `POST /api/content/{type}/{id}/generate-*` — AI meta/description + deterministic schema preview
+- `POST /api/content/{type}/{id}/save-*` — save meta/description/schema (per-type write-scope check)
+- `POST /api/products/{id}/*` — product-only extras: alt-text, push-all (write_products scope middleware)
+- `POST /api/bulk/*` — bulk optimizer (start/progress/cancel)
+- `GET|POST|DELETE /api/rank-tracker/*` — keyword CRUD + rank check
+
+### Content SEO editor (2026-09-16)
+- `ContentController` — generic `/api/content/{type}/{id}/*` for collection/page/article; delegates product calls to `ProductController`.
+- `ShopifyAdminWriter` — all Admin GraphQL mutations; returns `?string` error so real `userErrors` reach the UI. Alt text via `fileUpdate` (not productUpdate — that mutation can't edit existing media).
+- `ShopifyContentFetcher::search()` / `getNode()` — per-type search (`query:` arg) + `node(id:)` detail fetch.
+- `Shop::missingScopes()` + `shopify.scope` middleware + `missing_scopes` in overview — detects stale tokens (legacy install flow keeps install-time scopes) and points to `/install?shop=...` for re-auth.
+- Schemas: `generate-schema` = preview only; `save-schema` writes the (user-editable) JSON to `fyndable.{type}_schema` metafield (json type). Non-product meta saved via `global.title_tag`/`global.description_tag` metafields.
+- Theme extension block renders schema metafields for product/collection/page/article.
+
+### Shopify App Proxy for llms.txt
+Shopify App Proxy serves llms.txt at `/apps/fyndable/llms.txt` (not root `/llms.txt`). The Laravel app exposes `/api/llms.txt?shop=...` which the App Proxy forwards to. A theme app extension or redirect snippet is needed for root-level serving — documented for merchants in the dashboard.
+
+### SaaS dashboard changes (Phase 7)
+- `tenantrepository.php` — added `platform` column (wordpress|shopify|webflow) to tenants table + migration in `migrateExistingTables()`
+- `licenseapi.php` — `/license/activate` now accepts `platform` parameter
+- `licensekeygenerator.php` — `activateLicense()` passes platform to createTenant/updateTenant; `getLicenses()`/`countLicenses()` join with tenants to expose `platform`; added `getLicensePlatformStats()`
+- `adminapi.php` — `/admin/tenants` now supports `platform` filter
+- `tenantrepository.php` — `getTenants()` supports platform filter; `countTenants()` supports platform + search filters; `updateTenant()` allows platform field
+- `licenseadmin.php` — Tenants and All Licenses admin pages show `Platform` column; both pages have a Platform filter; dashboard shows `Licenses by Platform` stats; licenses export includes `Platform`
+
+### Environment variables (shopify-app/.env)
+- `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` — from Shopify Partner Dashboard
+- `SHOPIFY_SCOPES` — read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects
+- `SHOPIFY_API_VERSION` — 2025-01
+- `SAAS_DASHBOARD_URL` — https://portal.fyndable.ai
+- `SAAS_API_NAMESPACE` — ai-seo-saas/v1
+
+### Known issues / TODO before production
+- `shopify/shopify-api` v6.1.1 is abandoned — consider `shopify/shopify-app-php`
+- Composer security advisories were disabled during install — run `composer audit` and fix advisories
+- No test suite yet — needs OAuth, webhook, GraphQL, llms, and SaaS proxy tests
+- Queue worker must be running for bulk optimization and rank checks (`php artisan queue:work`)
+- Scheduler must be running for daily rank checks (`php artisan schedule:run` via cron)
+- App Proxy path is `/apps/fyndable/llms.txt` — configure App Proxy + theme app extension in Shopify Partner Dashboard
+- SaaS platform filter shows `unknown` for licenses that have not been activated yet
+
+### Queue worker setup (production VPS)
+Bulk optimization (`BulkOptimizeJob`) and rank checks (`CheckRankingsJob`) run as queued jobs. Without a running queue worker, these jobs are enqueued but never execute — the API returns success but nothing happens.
+
+**Option A — Supervisor (recommended for production):**
+```ini
+[program:shopify-queue]
+command=php /path/to/shopify-app/artisan queue:work --tries=1 --timeout=1800
+directory=/path/to/shopify-app
+autostart=true
+autorestart=true
+user=www-data
+```
+Install Supervisor (`apt install supervisor`), save to `/etc/supervisor/conf.d/shopify-queue.conf`, then:
+```bash
+supervisorctl reread && supervisorctl update && supervisorctl start shopify-queue
+```
+
+**Option B — Quick fix (small catalogs only):**
+Set `QUEUE_CONNECTION=sync` in `.env` so jobs run synchronously within the HTTP request. This makes bulk optimize slow for large catalogs but works without a worker.
+
+**Scheduler (daily rank checks):**
+Add to crontab:
+```
+* * * * * cd /path/to/shopify-app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+### Bug fixes (2026-09-15)
+- **App Bridge v4 restored** — commit `d87c24a` replaced App Bridge v4 with v2 and removed `createApp()`, breaking all authenticated API calls. Restored v4 CDN with `authenticatedFetch` so the session ID token is sent as `Authorization: Bearer` header.
+- **LlmsTxtGenerator error handling** — `generateSummary()` and `generateFull()` accessed `$shopDetails['name']` and `$shopDetails['domain']` with `?:` (ternary) which throws `ErrorException` on missing keys. Fixed to use `??` (null coalescing). Also fixed all `$product['onlineStoreUrl']`, `$collection['title']`, etc. accesses.
+- **ShopifyContentFetcher error handling** — `getShopDetails()` returned `[]` on error, causing downstream 500s. Now returns sensible defaults. `getProductCount()` now checks for errors before accessing `$response['data']`.
+- **Deprecated GraphQL argument removed** — `metafields(first: 10, namespace: "seo")` in the products query had a deprecated `namespace` argument. Removed to avoid GraphQL errors on newer API versions.
+
+### Security hardening completed
+- `ShopifySignature` service verifies OAuth callback HMAC without URL-encoding values (per Shopify spec)
+- `ShopifySignature` verifies webhook HMAC over raw request body
+- `VerifyShopifySession` verifies App Bridge session tokens via JWKS from `https://{shop}/.well-known/jwks.json` using `firebase/php-jwt` v7
+
+
+### Bug fixes / changes (2026-09-17)
+- **articleCreate author required** — API version 2026-07 makes `ArticleCreateInput.author` (AuthorInput: `name` or `userId`) required; `BlogWriterController::create()` now always sends `author.name`, using an optional `author` request field with the shop name as fallback. The Blog Writer UI has an optional "Author" field.
+- **Blog Writer language selector** — `POST /api/articles/generate` accepts `language` (whitelist in `BlogWriterController::LANGUAGES`, default `en`); the prompt instructs the model to write title + body in that language. UI dropdown in the Blog Writer tab. Other generators (product/collection meta/descriptions) have no selector — they inherit language from existing content/context.
+- **Agency tier checkout** — `SignupCheckout::getPlans()` now includes `self_serve` + `contact_url` (mailto to `ai_seo_saas_support_email`) per plan. `signup.js` renders `plan.cta` ("Contact Us") for non-self-serve plans and redirects to `contact_url` instead of opening the trial signup form (previously all plans showed "Start 14-dagen trial" and then hit the backend 403). New i18n key `start_trial` in `assets/i18n.js`.
+
+## Feature inventory + security audit (2026-10-09)
+
+### fyndable-client (~115 modules, `includes/`)
+- **Core SEO**: TruSEO score, post metabox, readability, schema markup (FAQ etc.), breadcrumbs, canonicals, Open Graph, robots.txt, sitemaps (incl. extended/video), hreflang/international, redirection manager, 404 monitor, technical SEO auditor, robots/indexing (IndexNow, directindex), WooCommerce SEO, pagebuilder helper, smart tags, smart internal linking (linkassistant).
+- **Content**: content writer/rewriter/optimizer, editor assistant, content brief, content calendar, ideas, topic clusters, programmatic SEO, A/B testing, AI repurposer, simple content generator, bulk actions, content decay + performance monitor, fact checker, plagiarism checker, E-E-A-T validator, brand voice, GEO content score, LSI keywords, prompt template library, image alt + AI image generator, AiseoAgent.
+- **Keywords/rank**: keywords DB, rank tracker, keyword explorer + difficulty, competitor research, SERP competitor, SERP change monitor, SERP feature tracker, local SERP/geo-grid, local SEO.
+- **AI/GEO**: GEO readiness scans (via SaaS), llms.txt + llms-full.txt generator, LLM tracker, brand visibility tracker, AI optimization tracker.
+- **Data/integrations**: GSC/GA4/Google Ads dashboards (OAuth proxy via SaaS), PageSpeed, Ahrefs + SE Ranking + DataForSEO backlink clients, backlink analyzer, external integrations, multi-CMS publisher, mobile app template.
+- **Automation**: ApexFlow content autopilot, post auto-cleaner, alert notifier, health logger, review prompt, onboarding wizard, demo mode, trial cleanup, role permissions, white-label manager, privacy export (GDPR), support tickets + assistant, SEO importer, SEO revisions + snapshots, report data collector + SEO report export.
+- **Special**: auditservice incl. cannibalization check; topiccluster also blocks cannibal posts.
+
+### fyndable-saas-dashboard (~45 modules)
+- Licensing (generator, API, feature manager), tenants, subscriptions (Stripe + Mollie, signature-verified webhooks), invoicing, revenue dashboard, bookkeeping admin.
+- API gateway: LLM proxy (OpenRouter/OpenAI adapters), SERP (DataForSEO + SerpAPI), keyword data, image gen (OpenArt), GEO scanner (multi-model, async queue + sweeper).
+- Public surface: license API (rate-limited), public geo-scan (shared key + IP rate limit), signup/checkout (self-serve gated), webhooks, update server (license+tenant verified).
+- Admin REST API (manage_options, for Android app), agency portal (white-label zip builder, custom role/caps), customer portal, email automation (templates + block renderer), feedback, support tickets, GEO scan admin.
+
+### fyndable-geo-scan
+- Standalone website plugin: shortcode form → SaaS public API, teaser results, wp_mail follow-up.
+
+### Security audit findings (2026-10-09)
+Good: hash_equals on shared key, Stripe signature verify fail-closed, Mollie fetch-back verify, orderby whitelists, SSRF private-range blocking in HtmlFetcher, rate limits on license/public endpoints, no hardcoded secrets, capability checks on all admin REST routes.
+Watchlist — resolved 2026-10-09:
+- license_key comparisons → `hash_equals` (licenseapi, apigateway, updateserver, feedback, supporttickets)
+- Google refresh_token encrypted at rest in `aiseoclient_gsc_tokens` (`enc1:` = AES-256-GCM, key derived from wp_salt; legacy plaintext decrypts transparently)
+- agency logo upload → `wp_check_filetype_and_ext` (real mime check)
+- A/B conversion endpoint already had rate-limit (30/min/IP) + per-session dedup
+- website GEO scans get unguessable `public_token` in meta; `GET /public/geo-scan/{id}/status` requires `?token=` when a token is stored (scans predating this still work). geo-scan plugin passes `scan_token` through, localStorage resume carries it.
+- client zip uploads get random filename suffix (`fyndable-client_v{ver}_{rand10}.zip`)
+- HtmlFetcher `isUrlSafe` now blocks literal-IP hosts incl. bracketed IPv6 (note: no server-side fetch happens — Jina/Firecrawl fetch remotely)
+- geo-scan print/PDF: light print theme, report header (brand + URL + date), footer, `position:static` for multi-page flow, print-only chrome via `.fgs-print-head/.fgs-print-foot`
+
+## Cannibalization dashboard (2026-10-09)
+
+New third tab **"Cannibalization"** on the Rank Tracker page (`ai-seo-ranks`), implemented inside `ranktracker.php`:
+
+- `GET /sseo-ai/v1/cannibalization/report` — cached report (transient `sseo_ai_cannibal_report`, 6h, auto-scans when empty)
+- `POST /sseo-ai/v1/cannibalization/scan` — force rescan
+- `RankTracker::buildCannibalizationReport()` detects:
+  - `same_focus_keyphrase` (high) — ≥2 posts/pages sharing `_sseo_ai_focus_keyphrase`, site-wide
+  - `tracked_keyword_multi_match` (high/medium) — active tracked keyword matching >1 post via focus meta or title; marks `is_target` vs `sseo_ai_tracked_keywords.post_id`
+  - `tracked_keyword_no_match` (info) — tracked keyword with no targeting post
+- Report shape: `{success, scanned_at, summary{high,medium,info}, groups[]}`; each group has `keyword, severity, reason, posts[] {id,title,status,type,edit_link,permalink,is_target,match_type}, tracked`
+- UI: lazy-loads on first tab open, severity chips + per-group post tables with Edit/View links and advice per reason. JS lives in the existing renderPage() script block (jQuery + wp.apiFetch).
+
+Removed dead code: `auditservice.php` (AuditService) was instantiated in client.php but never called — deleted file + references (also from README feature table). Cannibalization now lives in RankTracker.
+
+Note: `php` CLI **is** available in this workspace (`php -l` works) — earlier note about PHP missing was wrong.
+
+## GEO prospect PDF + AI-platform benchmark (2026-10-12)
+
+The SaaS GEO scan now tests up to the first 3 keywords via DataForSEO LLM Responses for ChatGPT, Gemini and Perplexity. Google AI Overview continues to use all successful keyword lookups. `GeoScanner` stores normalized `platform_visibility` and `competitive_benchmark` fields in the existing result JSON; failed platform calls degrade to `unavailable` rather than a false negative. The live benchmark compares own-domain and cited competitor visibility within the successful test set.
+
+`GeoScanPdf` (`includes/geoscanpdf.php`) renders the completed scan on demand with Dompdf 3.1.6, bundled under the plugin-local `vendor/` directory. The protected `admin-post.php?action=sseo_geo_scan_download_pdf` action requires `agency_geo_scan`/`manage_options` plus a scan-specific nonce. The report/download pages open a cover-selection dialog with `cover=light|dark`; both versions contain the same prospect-safe scan data and exclude lead details, consent, API errors, usage and cost.
+
+New scans may take longer because of up to 9 additional live platform requests. `GeoScanQueue` lock/stale-running limits are 20 minutes. Verification commands: `php -l` on changed PHP files, `node --check assets/geo-scan-admin.js`, and plugin-local Composer validation through the available Composer PHAR or a system Composer installation.

@@ -1,0 +1,3598 @@
+{
+ "version": "0.4",
+ "title": "Fyndable vs. de concurrentie",
+ "type": "page",
+ "content": [
+  {
+   "id": "513c810",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "104",
+     "right": "40",
+     "bottom": "88",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 48,
+     "column": "48",
+     "row": "48"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "gradient",
+    "background_color": "#2A1533",
+    "background_color_b": "#132A38",
+    "background_gradient_angle": {
+     "unit": "deg",
+     "size": 135
+    },
+    "custom_css": "selector{position:relative;overflow:hidden}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#8F39AC,#379FD3);z-index:2}selector::after{content:\"\";position:absolute;top:0;left:0;width:25%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:fynSweep 4s ease-in-out infinite;z-index:3}"
+   },
+   "elements": [
+    {
+     "id": "505a472",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 18,
+       "column": "18",
+       "row": "18"
+      }
+     },
+     "elements": [
+      {
+       "id": "5007bb1",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Vergelijking 2026",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#f3e8f7",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "rgba(143,57,172,0.45)",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "5011335",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Fyndable vs. <span style=\"color:#d8b4e8\">de concurrentie</span>",
+        "header_size": "h1",
+        "align": "center",
+        "title_color": "#ffffff",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 60,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.06
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.8,
+         "sizes": []
+        },
+        "typography_font_size_tablet": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 36,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:860px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "5020bf0",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0;text-align:center\">Hoe verhoudt Fyndable Smart SEO zich tot andere AI-SEO tools? Een eerlijke vergelijking op functies, prijs en WordPress-integratie.</p>",
+        "text_color": "#e6e7e8",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 18,
+         "sizes": []
+        },
+        "typography_font_weight": "400",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 200,
+        "custom_css": "selector{max-width:640px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "504dd47",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "flex_direction": "row",
+        "flex_direction_mobile": "column",
+        "flex_justify_content": "center",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 12,
+         "column": "12",
+         "row": "12"
+        },
+        "margin": {
+         "unit": "px",
+         "top": "8",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 300
+       },
+       "elements": [
+        {
+         "id": "50325b1",
+         "elType": "widget",
+         "widgetType": "button",
+         "isInner": false,
+         "settings": {
+          "text": "Bekijk de vergelijking",
+          "link": {
+           "url": "#vergelijking"
+          },
+          "background_background": "gradient",
+          "background_color": "#8F39AC",
+          "background_color_b": "#379FD3",
+          "button_text_color": "#ffffff",
+          "border_radius": {
+           "unit": "px",
+           "top": "8",
+           "right": "8",
+           "bottom": "8",
+           "left": "8",
+           "isLinked": true
+          },
+          "text_padding": {
+           "unit": "px",
+           "top": "16",
+           "right": "28",
+           "bottom": "16",
+           "left": "28",
+           "isLinked": false
+          },
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "custom_css": "selector .elementor-button{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;box-shadow:0 4px 12px rgba(143,57,172,.35);transition:all .2s ease}selector .elementor-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(143,57,172,.55)}"
+         },
+         "elements": []
+        },
+        {
+         "id": "5049bfe",
+         "elType": "widget",
+         "widgetType": "button",
+         "isInner": false,
+         "settings": {
+          "text": "Waar laat jij kansen liggen?",
+          "link": {
+           "url": "https://fyndable.ai/contact/"
+          },
+          "button_text_color": "#ffffff",
+          "background_color": "rgba(0,0,0,0)",
+          "border_radius": {
+           "unit": "px",
+           "top": "8",
+           "right": "8",
+           "bottom": "8",
+           "left": "8",
+           "isLinked": true
+          },
+          "text_padding": {
+           "unit": "px",
+           "top": "16",
+           "right": "26",
+           "bottom": "16",
+           "left": "26",
+           "isLinked": false
+          },
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "custom_css": "selector .elementor-button{border:2px solid rgba(255,255,255,.3)!important;background:transparent!important;color:#fff!important;transition:all .2s ease}selector .elementor-button:hover{border-color:#8F39AC!important;background:rgba(255,255,255,.08)!important;transform:translateY(-2px)}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "511ec79",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "row",
+      "flex_wrap": "wrap",
+      "flex_gap": {
+       "unit": "px",
+       "size": 20,
+       "column": "20",
+       "row": "20"
+      }
+     },
+     "elements": [
+      {
+       "id": "50972a1",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 0,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "506fa20",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span class=\"fyn-live-time\" data-to=\"50\">50</span>+",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "50813b5",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "SEO-functies",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "50c376a",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 120,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "50a6274",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span style=\"font-size:16px;font-weight:500;color:#c9c3d6;letter-spacing:0;margin-right:6px\">vanaf</span>€<span class=\"fyn-live-time\" data-to=\"60\">60</span>",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "50b171a",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "per maand",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "50e2d16",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 240,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "50c7ab2",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span class=\"fyn-live-time\" data-to=\"25\">25</span>+",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "50d83cd",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "AI-modellen naar keuze*",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "510f5d9",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "28",
+         "right": "24",
+         "bottom": "28",
+         "left": "24",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 23
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_grow": 1,
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "animation": "fadeInUp",
+        "animation_delay": 360,
+        "custom_css": "selector{position:relative;overflow:hidden;transition:all .2s ease}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}selector:hover{transform:translateY(-4px);border-color:#8F39AC!important;box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}"
+       },
+       "elements": [
+        {
+         "id": "50f9b89",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "<span class=\"fyn-live-time\" data-to=\"100\">100</span>%",
+          "header_size": "div",
+          "_css_classes": "fyn-stat-num",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 52,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -1.5,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 44,
+           "sizes": []
+          },
+          "custom_css": "selector .elementor-heading-title{font-variant-numeric:tabular-nums}"
+         },
+         "elements": []
+        },
+        {
+         "id": "510a852",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Transparant",
+          "header_size": "div",
+          "title_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "500",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          }
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "51362cc",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynTime)return;window.__fynTime=1;function go(){var els=document.querySelectorAll('.fyn-live-time');[].forEach.call(els,function(el){if(el.__d)return;el.__d=1;var to=parseFloat(el.getAttribute('data-to')||el.textContent)||0;el.textContent='0';var t0=null;function s(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/2000),e=1-Math.pow(1-p,3);el.textContent=Math.round(to*e);if(p<1)requestAnimationFrame(s);}setTimeout(function(){requestAnimationFrame(s);},300);});}\nif(document.readyState!=='loading')go();else document.addEventListener('DOMContentLoaded',go);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  },
+  {
+   "id": "51ab05e",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1400,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 32,
+     "column": "32",
+     "row": "32"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "classic",
+    "background_color": "#f9fafb",
+    "_element_id": "vergelijking"
+   },
+   "elements": [
+    {
+     "id": "517bf41",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      }
+     },
+     "elements": [
+      {
+       "id": "514fb77",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Functies",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#8F39AC",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "#f3e8f7",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "5160f2d",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Functies <span style=\"color:#8F39AC\">naast elkaar</span>",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.12
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.1,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 30,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:760px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "516962e",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0;text-align:center\">Alle zes tools vergeleken op de functies die ertoe doen voor WordPress-gebruikers.</p>",
+        "text_color": "#4b5563",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_font_weight": "400",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 200,
+        "custom_css": "selector{max-width:640px}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "518cef5",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>\n@keyframes fynRowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.fyn-cmp .fyn-anim{animation:fynRowIn .45s ease both}.fyn-cmp{font-family:Outfit,sans-serif}\n.fyn-cmp .fyn-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:32px}\n.fyn-cmp .fyn-pill{cursor:pointer;font:500 13px/1 Outfit,sans-serif;padding:10px 16px;border-radius:20px;border:2px solid #e5e7eb;background:#fff;color:#4b5563;transition:all .2s ease}\n.fyn-cmp .fyn-pill:hover{border-color:#8F39AC;color:#8F39AC}\n.fyn-cmp .fyn-pill.on{background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;border-color:transparent}\n.fyn-cmp .fyn-card{background:#fff;border-radius:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);overflow:hidden}\n.fyn-cmp .fyn-scroll{overflow-x:auto}.fyn-cmp .fyn-in{min-width:1000px}\n.fyn-cmp .fyn-r{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));border-top:1px solid #f0f1f3;transition:background .2s ease}\n.fyn-cmp .fyn-r:hover{background:#fcfcfd}\n.fyn-cmp .fyn-n{position:sticky;left:0;z-index:1;background:#fff;padding:14px 20px;display:flex;align-items:center;font:500 14px/1.35 Outfit,sans-serif;color:#333}\n.fyn-cmp .fyn-c{padding:14px 10px;display:flex;align-items:center;justify-content:center;text-align:center}\n.fyn-cmp .fyc{background:#faf5fc}\n.fyn-cmp .fyn-ck{width:26px;height:26px;border-radius:50%;background:#d1fae5;color:#047857;display:inline-flex;align-items:center;justify-content:center;font:700 13px/1 Outfit,sans-serif}\n.fyn-cmp .fyn-ck.fy{background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;box-shadow:0 4px 12px rgba(143,57,172,.25)}\n.fyn-cmp .fyn-x{font:600 14px/1 Outfit,sans-serif;color:#c4c8cf}\n.fyn-cmp .fyn-tx{font:500 13px/1.3 Outfit,sans-serif;color:#4b5563}.fyn-cmp .fyn-tx.fy{font-weight:700;color:#8F39AC}\n.fyn-cmp .fyn-g{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));background:#f9fafb;border-top:2px solid #e5e7eb}\n.fyn-cmp .fyn-g>div:first-child{position:sticky;left:0;z-index:1;background:#f9fafb;padding:12px 20px;font:600 12px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#6b7280}\n.fyn-cmp .fyn-g>div:nth-child(2){background:#f5eefa}\n.fyn-cmp .fyn-h{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));border-bottom:2px solid #e5e7eb}\n.fyn-cmp .fyn-h>div{padding:26px 10px 16px;display:flex;align-items:flex-end;justify-content:center;text-align:center;font:600 14px/1.25 Outfit,sans-serif;color:#333}\n.fyn-cmp .fyn-h>div:first-child{position:sticky;left:0;z-index:2;background:#fff;padding:20px;justify-content:flex-start;font:600 12px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#6b7280}\n.fyn-cmp .fyn-h .fyh{position:relative;background:#faf5fc;flex-direction:column;align-items:center;gap:8px}\n.fyn-cmp .fyn-h .fyh:before{content:\"\";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(135deg,#8F39AC,#379FD3)}\n.fyn-cmp .fyn-best{font:600 10px/1 Outfit,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#8F39AC,#379FD3);padding:5px 8px;border-radius:20px}\n.fyn-cmp .fyn-h .fyh b{font:700 15px/1.2 Outfit,sans-serif;color:#8F39AC}\n.fyn-cmp .fyn-f{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(6,minmax(112px,1fr));border-top:2px solid #e5e7eb}\n.fyn-cmp .fyn-f>div:first-child{position:sticky;left:0;z-index:1;background:#fff;padding:18px 20px;font:700 14px/1.3 Outfit,sans-serif;color:#333;display:flex;align-items:center}\n.fyn-cmp .fyn-t{padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}\n.fyn-cmp .fyn-t strong{font:700 16px/1 Outfit,sans-serif;color:#333;font-variant-numeric:tabular-nums}.fyn-cmp .fyn-t.fyc strong{font-size:20px;color:#8F39AC}\n.fyn-cmp .fyn-t small{font-weight:500;font-size:12px;color:#6b7280}\n.fyn-cmp .fyn-bar{width:64px;height:6px;border-radius:20px;background:#e5e7eb;overflow:hidden}.fyn-cmp .fyn-bar i{display:block;height:100%;width:0;background:#9ca3af;border-radius:20px;}.fyn-cmp .fyc .fyn-bar i{background:linear-gradient(135deg,#8F39AC,#379FD3)}\n.fyn-cmp .fyn-note{margin:16px 0 0;text-align:center;font:400 13px/1.5 Outfit,sans-serif;color:#6b7280}\n</style>\n<div class=\"fyn-cmp\"><div class=\"fyn-pills\"><button class=\"fyn-pill on\" data-pick=\"all\">Alles</button><button class=\"fyn-pill\" data-pick=\"0\">Prijs & model</button><button class=\"fyn-pill\" data-pick=\"1\">Content & AI</button><button class=\"fyn-pill\" data-pick=\"2\">Tracking & analyse</button><button class=\"fyn-pill\" data-pick=\"3\">Technische SEO</button><button class=\"fyn-pill\" data-pick=\"4\">WordPress-integratie</button><button class=\"fyn-pill\" data-pick=\"5\">Strategie & planning</button><button class=\"fyn-pill\" data-pick=\"6\">Extra's & agency</button></div>\n<div class=\"fyn-card\"><div class=\"fyn-scroll\"><div class=\"fyn-in\">\n<div class=\"fyn-h\"><div>Functie</div><div class=\"fyh\"><span class=\"fyn-best\">Beste keuze</span><b>Fyndable</b></div><div>WP SEO AI</div><div>Surfer SEO</div><div>Scalenut</div><div>Keytomic</div><div>RankReady</div></div>\n<div data-cat=\"0\"><div class=\"fyn-g\"><div>Prijs & model</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Startprijs</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">€60/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€420/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€45/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€55/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€92/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Gratis</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Pro-plan</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">€199/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Op aanvraag</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€99/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€119/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">€185/mnd</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">—</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Contractverplichting</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">12 maanden</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Geen</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Type</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">WP Plugin</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Managed</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">SaaS (cloud)</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">SaaS (cloud)</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">SaaS (cloud)</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">WP Plugin</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Gratis proefperiode</div><div class=\"fyn-c fyc\"><span class=\"fyn-tx fy\">14 dagen</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">7 dagen</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">7 dagen</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">N.v.t.</span></div></div></div>\n<div data-cat=\"1\"><div class=\"fyn-g\"><div>Content & AI</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Content Writer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Optimizer (NLP-score)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Brief Generator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Content Rewriter</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Content Repurposer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Image Generator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SERP-analyse & concurrentie</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Keuze AI-model (GPT/Claude/Mistral)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Decay Monitor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Bulk AI Optimizer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Readability Score (incl. NL)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">E-E-A-T Validator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Plagiarism Checker</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"2\"><div class=\"fyn-g\"><div>Tracking & analyse</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Rank Tracker (dagelijks)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Local SERP Tracker</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SERP Feature Tracker</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Search Console-integratie</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">GA4-integratie</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Performance Monitor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI-zichtbaarheid / GEO</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Add-on</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Backlink Analyzer</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Competitor Research</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"3\"><div class=\"fyn-g\"><div>Technische SEO</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Schema/FAQ markup (JSON-LD)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Technical SEO Auditor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Auto-indexing (IndexNow + Direct)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">404 Monitor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">TruSEO Score (on-page)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">PageSpeed / Core Web Vitals</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Robots.txt Editor</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Canonical URL Management</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"4\"><div class=\"fyn-g\"><div>WordPress-integratie</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Native WordPress-plugin</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Via API</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Publiceren vanuit WP-admin</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Interne links assistent</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Pro+</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Sitemaps (XML, Video, News)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Redirects (301/302/307)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Hreflang / meertalig</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Open Graph / Social Meta</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">WooCommerce SEO</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Gutenberg Sidebar</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Breadcrumbs (JSON-LD)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"5\"><div class=\"fyn-g\"><div>Strategie & planning</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Topic Cluster Map</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Content Kalender</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Keyword Explorer & Clustering</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-ck\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Personalized Keyword Difficulty</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SEO Report Export (CSV/PDF)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div data-cat=\"6\"><div class=\"fyn-g\"><div>Extra's & agency</div><div></div><div></div><div></div><div></div><div></div><div></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">A/B Testing</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">White-label voor bureaus</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Enterprise</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-tx\">Custom</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Local SEO & Google Business</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Video SEO & Transcripties</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">SEO Revisions (audit trail)</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">AI Image Alt Generator</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div><div class=\"fyn-r\"><div class=\"fyn-n\">Role-Based Permissions</div><div class=\"fyn-c fyc\"><span class=\"fyn-ck fy\">✓</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div><div class=\"fyn-c\"><span class=\"fyn-x\">✕</span></div></div></div>\n<div class=\"fyn-f\"><div>Functies aanwezig</div><div class=\"fyn-t fyc\"><strong>52<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"100\"></i></span></div><div class=\"fyn-t\"><strong>9<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"17\"></i></span></div><div class=\"fyn-t\"><strong>9<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"17\"></i></span></div><div class=\"fyn-t\"><strong>13<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"25\"></i></span></div><div class=\"fyn-t\"><strong>10<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"19\"></i></span></div><div class=\"fyn-t\"><strong>3<small>/52</small></strong><span class=\"fyn-bar\"><i data-w=\"6\"></i></span></div></div>\n</div></div></div><p class=\"fyn-note\">Scroll horizontaal op mobiel om alle tools te zien.</p></div>\n<script>(function(){[].forEach.call(document.querySelectorAll('.fyn-cmp'),function(r){if(r.__fyn)return;r.__fyn=1;var p=r.querySelectorAll('[data-pick]');\n[].forEach.call(p,function(b){b.addEventListener('click',function(){var c=b.getAttribute('data-pick');[].forEach.call(p,function(q){q.classList.toggle('on',q===b);});[].forEach.call(r.querySelectorAll('[data-cat]'),function(x){var on=(c==='all'||x.getAttribute('data-cat')===c);x.style.display=on?'':'none';if(on){var k=0;[].forEach.call(x.children,function(ch){ch.classList.remove('fyn-anim');void ch.offsetWidth;ch.style.animationDelay=Math.min(k++,14)*35+'ms';ch.classList.add('fyn-anim');});}});});});\nvar bars=r.querySelectorAll('.fyn-bar i');function fill(){var vh=innerHeight;[].forEach.call(bars,function(i){var p=Math.max(0,Math.min(1,(vh-i.getBoundingClientRect().top)/(vh-vh*.45)));i.style.width=(parseFloat(i.getAttribute('data-w'))*p)+'%';});}var q=0;addEventListener('scroll',function(){if(!q)q=requestAnimationFrame(function(){q=0;fill();});},{passive:true});addEventListener('resize',fill);fill();setInterval(fill,400);});})();</script>",
+      "_animation": "fadeInUp"
+     },
+     "elements": []
+    },
+    {
+     "id": "519a6d7",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  },
+  {
+   "id": "55a3e6e",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 48,
+     "column": "48",
+     "row": "48"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "gradient",
+    "background_color": "#2A1533",
+    "background_color_b": "#132A38",
+    "background_gradient_angle": {
+     "unit": "deg",
+     "size": 135
+    },
+    "custom_css": "selector{position:relative;overflow:hidden}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#8F39AC,#379FD3);z-index:2}selector::after{content:\"\";position:absolute;top:0;left:0;width:25%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:fynSweep 4s ease-in-out infinite;z-index:3}"
+   },
+   "elements": [
+    {
+     "id": "51e6272",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      }
+     },
+     "elements": [
+      {
+       "id": "51c2419",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Per tool",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#f3e8f7",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "rgba(143,57,172,0.45)",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "51ce9eb",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Elke tool <span style=\"color:#d8b4e8\">in het kort</span>",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#ffffff",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.12
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.1,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 30,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:760px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "51dc539",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0;text-align:center\">Wat krijg je precies — en wat mis je?</p>",
+        "text_color": "#e6e7e8",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_font_weight": "400",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 200,
+        "custom_css": "selector{max-width:640px}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "5592fce",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "row",
+      "flex_wrap": "wrap",
+      "flex_gap": {
+       "unit": "px",
+       "size": 24,
+       "column": "24",
+       "row": "24"
+      }
+     },
+     "elements": [
+      {
+       "id": "528d76a",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 0,
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.45)}selector{border:2px solid transparent;background:linear-gradient(135deg,#34193f,#162f3e) padding-box,linear-gradient(135deg,#8F39AC,#379FD3) border-box!important;box-shadow:0 20px 40px -12px rgba(143,57,172,.5)}"
+       },
+       "elements": [
+        {
+         "id": "5218811",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "flex_direction": "row",
+          "flex_justify_content": "space-between",
+          "flex_align_items": "center",
+          "flex_gap": {
+           "unit": "px",
+           "size": 12,
+           "column": "12",
+           "row": "12"
+          }
+         },
+         "elements": [
+          {
+           "id": "51f71bc",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "Fyndable Smart SEO",
+            "header_size": "h3",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 21,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.25
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -0.2,
+             "sizes": []
+            }
+           },
+           "elements": []
+          },
+          {
+           "id": "520354d",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "Onze keuze",
+            "header_size": "span",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 11,
+             "sizes": []
+            },
+            "typography_font_weight": "600",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": 0.5,
+             "sizes": []
+            },
+            "typography_text_transform": "uppercase",
+            "_element_width": "auto",
+            "custom_css": "selector .elementor-heading-title{background:linear-gradient(135deg,#8F39AC,#379FD3);padding:6px 10px;border-radius:20px;display:inline-block}"
+           },
+           "elements": []
+          }
+         ]
+        },
+        {
+         "id": "522a76e",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Starter €60/mnd · Pro €199/mnd · WordPress-plugin",
+          "header_size": "div",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.4,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "5235874",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Alles-in-één SEO-plugin die direct in WordPress draait. SERP-analyse, AI-content, rank tracking, schema, interne links en meer — zonder apart dashboard.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "527cf46",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "5247cf3",
+            "text": "40+ functies in één plugin",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "524b1b7",
+            "text": "Keuze uit GPT, Claude of Mistral",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "5267576",
+            "text": "White-label voor bureaus",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "526d37e",
+            "text": "Maandelijks opzegbaar",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "icon_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "icon_color": "#6ee7b7",
+          "text_color": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "text_indent": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "custom_css": "selector{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}selector .elementor-icon-list-icon{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.2);display:inline-flex!important;align-items:center;justify-content:center;flex:none}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "531f181",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 120,
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.45);border-color:#8F39AC!important}"
+       },
+       "elements": [
+        {
+         "id": "52adc56",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "flex_direction": "row",
+          "flex_justify_content": "space-between",
+          "flex_align_items": "center",
+          "flex_gap": {
+           "unit": "px",
+           "size": 12,
+           "column": "12",
+           "row": "12"
+          }
+         },
+         "elements": [
+          {
+           "id": "5297647",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "WP SEO AI",
+            "header_size": "h3",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 21,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.25
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -0.2,
+             "sizes": []
+            }
+           },
+           "elements": []
+          }
+         ]
+        },
+        {
+         "id": "52c098e",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Vanaf €420/mnd · Managed service",
+          "header_size": "div",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.4,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "52ce16d",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Volledig beheerde SEO-service met WordPress-integratie. Het team schrijft en publiceert content voor je — maar tegen een forse prijs en met contractverplichting.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "531a2f8",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "52d3775",
+            "text": "Volledig beheerd, geen eigen werk",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "52ea95d",
+            "text": "SEO + GEO gecombineerd",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "52f614f",
+            "text": "Minimaal 12 maanden contract",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "52ffac2",
+            "text": "7× duurder dan Fyndable Starter",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "icon_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "icon_color": "#6ee7b7",
+          "text_color": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "text_indent": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "custom_css": "selector{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}selector .elementor-icon-list-icon{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.2);display:inline-flex!important;align-items:center;justify-content:center;flex:none}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon{background:rgba(239,68,68,.18)}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon i{color:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon svg{fill:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-text{color:#c9c3d6!important}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "53b23df",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 240,
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.45);border-color:#8F39AC!important}"
+       },
+       "elements": [
+        {
+         "id": "533dfbb",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "flex_direction": "row",
+          "flex_justify_content": "space-between",
+          "flex_align_items": "center",
+          "flex_gap": {
+           "unit": "px",
+           "size": 12,
+           "column": "12",
+           "row": "12"
+          }
+         },
+         "elements": [
+          {
+           "id": "5332520",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "Surfer SEO",
+            "header_size": "h3",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 21,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.25
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -0.2,
+             "sizes": []
+            }
+           },
+           "elements": []
+          }
+         ]
+        },
+        {
+         "id": "534f159",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Vanaf €45/mnd · Cloud SaaS",
+          "header_size": "div",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.4,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "535aea0",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Sterke content editor en optimalisatie-scores. Puur gericht op content — geen rank tracking, geen WordPress-plugin, geen technische SEO.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "53aa9f8",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "536a4be",
+            "text": "Beste content editor op de markt",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "537f46c",
+            "text": "SERP-analyse en NLP-scoring",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "53919c1",
+            "text": "Geen WordPress-plugin",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "53a358f",
+            "text": "Geen rank tracking of technische SEO",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "icon_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "icon_color": "#6ee7b7",
+          "text_color": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "text_indent": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "custom_css": "selector{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}selector .elementor-icon-list-icon{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.2);display:inline-flex!important;align-items:center;justify-content:center;flex:none}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon{background:rgba(239,68,68,.18)}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon i{color:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon svg{fill:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-text{color:#c9c3d6!important}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "5454e74",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 0,
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.45);border-color:#8F39AC!important}"
+       },
+       "elements": [
+        {
+         "id": "53dcea3",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "flex_direction": "row",
+          "flex_justify_content": "space-between",
+          "flex_align_items": "center",
+          "flex_gap": {
+           "unit": "px",
+           "size": 12,
+           "column": "12",
+           "row": "12"
+          }
+         },
+         "elements": [
+          {
+           "id": "53cae4b",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "Scalenut",
+            "header_size": "h3",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 21,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.25
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -0.2,
+             "sizes": []
+            }
+           },
+           "elements": []
+          }
+         ]
+        },
+        {
+         "id": "53e5f1f",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Vanaf €55/mnd · Cloud SaaS",
+          "header_size": "div",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.4,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "53ef3a8",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">AI-contentplatform met GEO-artikelen en keyword clustering. Goed voor contentproductie op schaal, maar mist WordPress-integratie en technische SEO.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "54476c6",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "540706b",
+            "text": "GEO-artikelen en AI-zichtbaarheid",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "5418673",
+            "text": "Keyword clustering",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "5429508",
+            "text": "Geen WordPress-plugin",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "5433e0f",
+            "text": "Geen rank tracking of schema",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "icon_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "icon_color": "#6ee7b7",
+          "text_color": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "text_indent": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "custom_css": "selector{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}selector .elementor-icon-list-icon{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.2);display:inline-flex!important;align-items:center;justify-content:center;flex:none}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon{background:rgba(239,68,68,.18)}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon i{color:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon svg{fill:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-text{color:#c9c3d6!important}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "54ee80a",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 120,
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.45);border-color:#8F39AC!important}"
+       },
+       "elements": [
+        {
+         "id": "5468de4",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "flex_direction": "row",
+          "flex_justify_content": "space-between",
+          "flex_align_items": "center",
+          "flex_gap": {
+           "unit": "px",
+           "size": 12,
+           "column": "12",
+           "row": "12"
+          }
+         },
+         "elements": [
+          {
+           "id": "545e63c",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "Keytomic",
+            "header_size": "h3",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 21,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.25
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -0.2,
+             "sizes": []
+            }
+           },
+           "elements": []
+          }
+         ]
+        },
+        {
+         "id": "5476b42",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Vanaf €92/mnd · Cloud SaaS",
+          "header_size": "div",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.4,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "548ed2d",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Automatiseert de SEO-workflow van keyword research tot publicatie. Sterke autopilot, maar geen content optimizer en beperkte WordPress-integratie.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "54d62f4",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "549ba0a",
+            "text": "30-dagen contentkalender",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "54a696d",
+            "text": "Auto-indexing en auto-publishing",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "54b7aa4",
+            "text": "Geen echte content optimizer",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "54c4f55",
+            "text": "Geen rank tracking of schema",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "icon_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "icon_color": "#6ee7b7",
+          "text_color": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "text_indent": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "custom_css": "selector{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}selector .elementor-icon-list-icon{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.2);display:inline-flex!important;align-items:center;justify-content:center;flex:none}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon{background:rgba(239,68,68,.18)}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon i{color:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon svg{fill:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-text{color:#c9c3d6!important}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "557fe9a",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 48
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 14,
+         "column": "14",
+         "row": "14"
+        },
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 240,
+        "background_background": "classic",
+        "background_color": "rgba(255,255,255,0.05)",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "1",
+         "right": "1",
+         "bottom": "1",
+         "left": "1",
+         "isLinked": true
+        },
+        "border_color": "rgba(255,255,255,0.12)",
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.45);border-color:#8F39AC!important}"
+       },
+       "elements": [
+        {
+         "id": "550b6a6",
+         "elType": "container",
+         "isInner": true,
+         "settings": {
+          "content_width": "full",
+          "padding": {
+           "unit": "px",
+           "top": "0",
+           "right": "0",
+           "bottom": "0",
+           "left": "0",
+           "isLinked": false
+          },
+          "flex_direction": "row",
+          "flex_justify_content": "space-between",
+          "flex_align_items": "center",
+          "flex_gap": {
+           "unit": "px",
+           "size": 12,
+           "column": "12",
+           "row": "12"
+          }
+         },
+         "elements": [
+          {
+           "id": "54f8c2f",
+           "elType": "widget",
+           "widgetType": "heading",
+           "isInner": false,
+           "settings": {
+            "title": "RankReady",
+            "header_size": "h3",
+            "title_color": "#ffffff",
+            "typography_typography": "custom",
+            "typography_font_family": "Outfit",
+            "typography_font_size": {
+             "unit": "px",
+             "size": 21,
+             "sizes": []
+            },
+            "typography_font_weight": "700",
+            "typography_line_height": {
+             "unit": "em",
+             "size": 1.25
+            },
+            "typography_letter_spacing": {
+             "unit": "px",
+             "size": -0.2,
+             "sizes": []
+            }
+           },
+           "elements": []
+          }
+         ]
+        },
+        {
+         "id": "5513a1d",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Gratis · WordPress-plugin",
+          "header_size": "div",
+          "title_color": "#d8b4e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 12,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.4,
+           "sizes": []
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "551d88c",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Gratis plugin gericht op AI-zichtbaarheid en GEO. Genereert llms.txt en schema voor AI-crawlers — maar doet verder niks aan content of ranking.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "556fb07",
+         "elType": "widget",
+         "widgetType": "icon-list",
+         "isInner": false,
+         "settings": {
+          "icon_list": [
+           {
+            "_id": "5537309",
+            "text": "Volledig gratis, geen telemetrie",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "553f565",
+            "text": "AI-zichtbaarheid en llms.txt",
+            "selected_icon": {
+             "value": "fas fa-check",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "554a6a5",
+            "text": "Geen content of keyword tools",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           },
+           {
+            "_id": "555f301",
+            "text": "Geen rank tracking of analytics",
+            "selected_icon": {
+             "value": "fas fa-times",
+             "library": "fa-solid"
+            }
+           }
+          ],
+          "space_between": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "icon_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "icon_color": "#6ee7b7",
+          "text_color": "#ffffff",
+          "icon_typography_typography": "custom",
+          "icon_typography_font_family": "Outfit",
+          "icon_typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "icon_typography_font_weight": "500",
+          "icon_typography_line_height": {
+           "unit": "em",
+           "size": 1.4
+          },
+          "text_indent": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "custom_css": "selector{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}selector .elementor-icon-list-icon{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.2);display:inline-flex!important;align-items:center;justify-content:center;flex:none}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon{background:rgba(239,68,68,.18)}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon i{color:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-icon svg{fill:#fca5a5!important}selector .elementor-icon-list-item:nth-child(n+3) .elementor-icon-list-text{color:#c9c3d6!important}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "55a1d84",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  },
+  {
+   "id": "5669f71",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_gap": {
+     "unit": "px",
+     "size": 48,
+     "column": "48",
+     "row": "48"
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "64",
+     "right": "16",
+     "bottom": "64",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "classic",
+    "background_color": "#ffffff"
+   },
+   "elements": [
+    {
+     "id": "55e8618",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "column",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 14,
+       "column": "14",
+       "row": "14"
+      }
+     },
+     "elements": [
+      {
+       "id": "55ba8cd",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Waarom Fyndable",
+        "header_size": "span",
+        "align": "center",
+        "title_color": "#8F39AC",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 0.6,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase",
+        "_background_background": "classic",
+        "_background_color": "#f3e8f7",
+        "_padding": {
+         "unit": "px",
+         "top": "7",
+         "right": "14",
+         "bottom": "7",
+         "left": "14",
+         "isLinked": false
+        },
+        "_border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "_element_width": "auto",
+        "_animation": "fadeInUp",
+        "_animation_delay": 0
+       },
+       "elements": []
+      },
+      {
+       "id": "55c1938",
+       "elType": "widget",
+       "widgetType": "heading",
+       "isInner": false,
+       "settings": {
+        "title": "Waarom Fyndable <span style=\"color:#8F39AC\">de beste keuze is</span>",
+        "header_size": "h2",
+        "align": "center",
+        "title_color": "#333333",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 46,
+         "sizes": []
+        },
+        "typography_font_weight": "700",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.12
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": -1.1,
+         "sizes": []
+        },
+        "typography_font_size_mobile": {
+         "unit": "px",
+         "size": 30,
+         "sizes": []
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 100,
+        "custom_css": "selector{max-width:760px}"
+       },
+       "elements": []
+      },
+      {
+       "id": "55d68bd",
+       "elType": "widget",
+       "widgetType": "text-editor",
+       "isInner": false,
+       "settings": {
+        "editor": "<p style=\"margin:0;text-align:center\">De enige tool die alles combineert — zonder je WordPress-omgeving te verlaten.</p>",
+        "text_color": "#4b5563",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_font_weight": "400",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6
+        },
+        "_animation": "fadeInUp",
+        "_animation_delay": 200,
+        "custom_css": "selector{max-width:640px}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "56474c7",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "flex_direction": "row",
+      "flex_wrap": "wrap",
+      "flex_gap": {
+       "unit": "px",
+       "size": 24,
+       "column": "24",
+       "row": "24"
+      }
+     },
+     "elements": [
+      {
+       "id": "5606c16",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "box_shadow_box_shadow_type": "yes",
+        "box_shadow_box_shadow": {
+         "horizontal": 0,
+         "vertical": 10,
+         "blur": 15,
+         "spread": -3,
+         "color": "rgba(0,0,0,0.1)"
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 0,
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.25)}"
+       },
+       "elements": [
+        {
+         "id": "55f84cb",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-plug",
+           "library": "fa-solid"
+          },
+          "view": "stacked",
+          "shape": "square",
+          "position": "top",
+          "title_text": "Eén tool, nul tabbladen",
+          "description_text": "Geen aparte SaaS-dashboards of browser-extensies. Alles draait in je WordPress-admin — dezelfde plek waar je al werkt.",
+          "title_size": "h3",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 20,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "text_align": "left",
+          "icon_space": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "title_bottom_space": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 20,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "description_color": "#4b5563",
+          "description_typography_typography": "custom",
+          "description_typography_font_family": "Outfit",
+          "description_typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "description_typography_font_weight": "400",
+          "description_typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          },
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;border-radius:12px!important}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "5623635",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "box_shadow_box_shadow_type": "yes",
+        "box_shadow_box_shadow": {
+         "horizontal": 0,
+         "vertical": 10,
+         "blur": 15,
+         "spread": -3,
+         "color": "rgba(0,0,0,0.1)"
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 120,
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.25)}"
+       },
+       "elements": [
+        {
+         "id": "560c4a6",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-euro-sign",
+           "library": "fa-solid"
+          },
+          "view": "stacked",
+          "shape": "square",
+          "position": "top",
+          "title_text": "Tot 80% goedkoper",
+          "description_text": "Surfer + Ahrefs + aparte rank tracker kost makkelijk €300–€500/mnd. Fyndable doet het allemaal vanaf €60, zonder contractverplichting.",
+          "title_size": "h3",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 20,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "text_align": "left",
+          "icon_space": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "title_bottom_space": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 20,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "description_color": "#4b5563",
+          "description_typography_typography": "custom",
+          "description_typography_font_family": "Outfit",
+          "description_typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "description_typography_font_weight": "400",
+          "description_typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          },
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;border-radius:12px!important}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "563a42c",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "32",
+         "right": "28",
+         "bottom": "32",
+         "left": "28",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 31.5
+        },
+        "width_tablet": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "border_radius": {
+         "unit": "px",
+         "top": "12",
+         "right": "12",
+         "bottom": "12",
+         "left": "12",
+         "isLinked": true
+        },
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "box_shadow_box_shadow_type": "yes",
+        "box_shadow_box_shadow": {
+         "horizontal": 0,
+         "vertical": 10,
+         "blur": 15,
+         "spread": -3,
+         "color": "rgba(0,0,0,0.1)"
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 240,
+        "custom_css": "selector{transition:all .2s ease}selector:hover{transform:translateY(-4px);box-shadow:0 10px 24px -6px rgba(143,57,172,.25)}"
+       },
+       "elements": [
+        {
+         "id": "5637eeb",
+         "elType": "widget",
+         "widgetType": "icon-box",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-users",
+           "library": "fa-solid"
+          },
+          "view": "stacked",
+          "shape": "square",
+          "position": "top",
+          "title_text": "Gebouwd voor bureaus",
+          "description_text": "White-label branding, multi-tenant beheer en gelaagde plannen. Schaal van één klantsite naar honderd zonder van tool te wisselen.",
+          "title_size": "h3",
+          "primary_color": "#8F39AC",
+          "secondary_color": "#ffffff",
+          "icon_size": {
+           "unit": "px",
+           "size": 20,
+           "sizes": []
+          },
+          "icon_padding": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "text_align": "left",
+          "icon_space": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "title_bottom_space": {
+           "unit": "px",
+           "size": 10,
+           "sizes": []
+          },
+          "title_color": "#333333",
+          "title_typography_typography": "custom",
+          "title_typography_font_family": "Outfit",
+          "title_typography_font_size": {
+           "unit": "px",
+           "size": 20,
+           "sizes": []
+          },
+          "title_typography_font_weight": "600",
+          "title_typography_line_height": {
+           "unit": "em",
+           "size": 1.3
+          },
+          "description_color": "#4b5563",
+          "description_typography_typography": "custom",
+          "description_typography_font_family": "Outfit",
+          "description_typography_font_size": {
+           "unit": "px",
+           "size": 15,
+           "sizes": []
+          },
+          "description_typography_font_weight": "400",
+          "description_typography_line_height": {
+           "unit": "em",
+           "size": 1.6
+          },
+          "custom_css": "selector .elementor-icon{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;border-radius:12px!important}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "56586fe",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  },
+  {
+   "id": "567b2fa",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "padding": {
+     "unit": "px",
+     "top": "0",
+     "right": "40",
+     "bottom": "96",
+     "left": "40",
+     "isLinked": false
+    },
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "padding_mobile": {
+     "unit": "px",
+     "top": "32",
+     "right": "16",
+     "bottom": "32",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "fyn-lib",
+    "background_background": "classic",
+    "background_color": "#ffffff"
+   },
+   "elements": [
+    {
+     "id": "56923f4",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "padding": {
+       "unit": "px",
+       "top": "56",
+       "right": "56",
+       "bottom": "56",
+       "left": "56",
+       "isLinked": false
+      },
+      "flex_direction": "row",
+      "flex_direction_mobile": "column",
+      "flex_justify_content": "space-between",
+      "flex_align_items": "center",
+      "flex_align_items_mobile": "flex-start",
+      "flex_gap": {
+       "unit": "px",
+       "size": 32,
+       "column": "32",
+       "row": "32"
+      },
+      "flex_wrap": "wrap",
+      "padding_mobile": {
+       "unit": "px",
+       "top": "36",
+       "right": "24",
+       "bottom": "36",
+       "left": "24",
+       "isLinked": false
+      },
+      "border_radius": {
+       "unit": "px",
+       "top": "12",
+       "right": "12",
+       "bottom": "12",
+       "left": "12",
+       "isLinked": true
+      },
+      "background_background": "gradient",
+      "background_color": "#2A1533",
+      "background_color_b": "#132A38",
+      "background_gradient_angle": {
+       "unit": "deg",
+       "size": 135
+      },
+      "custom_css": "selector{position:relative;overflow:hidden}selector::before{content:\"\";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#8F39AC,#379FD3);z-index:2}selector::after{content:\"\";position:absolute;top:0;left:0;width:25%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:fynSweep 4s ease-in-out infinite;z-index:3}selector{box-shadow:0 20px 40px -12px rgba(143,57,172,.45)}",
+      "animation": "fadeInUp"
+     },
+     "elements": [
+      {
+       "id": "569afaa",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "padding": {
+         "unit": "px",
+         "top": "0",
+         "right": "0",
+         "bottom": "0",
+         "left": "0",
+         "isLinked": false
+        },
+        "width": {
+         "unit": "%",
+         "size": 62
+        },
+        "width_mobile": {
+         "unit": "%",
+         "size": 100
+        },
+        "flex_direction": "column",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        }
+       },
+       "elements": [
+        {
+         "id": "56aad49",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Zet je SEO deze week <span style=\"color:#d8b4e8\">op de automaat</span>",
+          "header_size": "h2",
+          "title_color": "#ffffff",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 34,
+           "sizes": []
+          },
+          "typography_font_weight": "700",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.15
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": -0.8,
+           "sizes": []
+          },
+          "typography_font_size_mobile": {
+           "unit": "px",
+           "size": 26,
+           "sizes": []
+          },
+          "_animation": "fadeInLeft",
+          "_animation_delay": 150
+         },
+         "elements": []
+        },
+        {
+         "id": "56b0be7",
+         "elType": "widget",
+         "widgetType": "text-editor",
+         "isInner": false,
+         "settings": {
+          "editor": "<p style=\"margin:0\">Installeer de plugin, plak je licentiesleutel en draai je eerste analyse.</p>",
+          "text_color": "#e6e7e8",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 17,
+           "sizes": []
+          },
+          "typography_font_weight": "400",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.55
+          },
+          "_animation": "fadeInLeft",
+          "_animation_delay": 250
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "56c302d",
+       "elType": "widget",
+       "widgetType": "button",
+       "isInner": false,
+       "settings": {
+        "text": "Word early adopter",
+        "link": {
+         "url": "https://fyndable.ai/prijzen/"
+        },
+        "selected_icon": {
+         "value": "fas fa-arrow-right",
+         "library": "fa-solid"
+        },
+        "icon_align": "row-reverse",
+        "icon_indent": {
+         "unit": "px",
+         "size": 10,
+         "sizes": []
+        },
+        "background_background": "gradient",
+        "background_color": "#8F39AC",
+        "background_color_b": "#379FD3",
+        "button_text_color": "#ffffff",
+        "border_radius": {
+         "unit": "px",
+         "top": "8",
+         "right": "8",
+         "bottom": "8",
+         "left": "8",
+         "isLinked": true
+        },
+        "text_padding": {
+         "unit": "px",
+         "top": "16",
+         "right": "28",
+         "bottom": "16",
+         "left": "28",
+         "isLinked": false
+        },
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 15,
+         "sizes": []
+        },
+        "typography_font_weight": "600",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1
+        },
+        "_animation": "fadeInRight",
+        "_animation_delay": 350,
+        "custom_css": "selector .elementor-button{background:linear-gradient(135deg,#8F39AC,#379FD3)!important;box-shadow:0 4px 12px rgba(143,57,172,.35);transition:all .2s ease}selector .elementor-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(143,57,172,.55)}selector .elementor-button-icon{transition:transform .2s ease}selector .elementor-button:hover .elementor-button-icon{transform:translateX(4px)}"
+       },
+       "elements": []
+      }
+     ]
+    },
+    {
+     "id": "56d2a6a",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<style>@keyframes fynSweep{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}@keyframes fynPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}@keyframes fynWords{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}.fyn-stat-num .elementor-heading-title{background:none!important;-webkit-text-fill-color:currentColor!important}.fyn-stat-num,.fyn-stat-num *{visibility:visible!important;opacity:1!important}</style><script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__fynLib)return;window.__fynLib=1;var END=0.45;\nfunction prog(el){var vh=innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}\nfunction run(){[].forEach.call(document.querySelectorAll('.fyn-live'),function(el){if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');});}\nvar q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}\naddEventListener('scroll',on,{passive:true});addEventListener('resize',on);document.addEventListener('scroll',on,{passive:true,capture:true});\nfunction init(){run();var y=new Date().getFullYear();[].forEach.call(document.querySelectorAll('.fyn-year'),function(e){e.textContent=y;});[].forEach.call(document.querySelectorAll('.fyn-top a,a.fyn-top'),function(a){a.addEventListener('click',function(e){e.preventDefault();scrollTo({top:0,behavior:'smooth'});});});}\nif(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);addEventListener('load',run);setInterval(run,300);\nsetInterval(function(){var vh=innerHeight;[].forEach.call(document.querySelectorAll('.fyn-lib .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_position": "absolute",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      }
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": {}
+}

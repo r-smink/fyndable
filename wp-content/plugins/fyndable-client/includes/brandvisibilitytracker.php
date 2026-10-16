@@ -133,6 +133,12 @@ class BrandVisibilityTracker
      */
     public function runScan(): array
     {
+        // Brand visibility scans multiple platforms and queries sequentially;
+        // each LLM call may take a while, so remove the PHP execution time limit.
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0);
+        }
+
         $config = $this->getSettings();
         $brandName = $config['brand_name'];
 
@@ -227,7 +233,8 @@ class BrandVisibilityTracker
             [
                 'endpoint' => 'brand_visibility.scan',
                 'context' => 'platform:' . $platformKey . ' query:' . substr($query, 0, 100),
-            ]
+            ],
+            'brand_visibility'
         );
 
         $durationMs = (int)((microtime(true) - $startTime) * 1000);

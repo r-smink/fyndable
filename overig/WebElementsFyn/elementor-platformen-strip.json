@@ -1,0 +1,671 @@
+{
+ "version": "0.4",
+ "title": "Fyndable – Ondersteunde platformen",
+ "type": "section",
+ "content": [
+  {
+   "id": "b12419a",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "boxed",
+    "boxed_width": {
+     "unit": "px",
+     "size": 1200,
+     "sizes": []
+    },
+    "flex_direction": "row",
+    "flex_direction_mobile": "column",
+    "flex_justify_content": "space-between",
+    "flex_align_items": "center",
+    "flex_align_items_mobile": "flex-start",
+    "flex_gap": {
+     "unit": "px",
+     "size": 24,
+     "column": "24",
+     "row": "24"
+    },
+    "flex_wrap": "wrap",
+    "background_background": "classic",
+    "background_color": "#ffffff",
+    "border_border": "solid",
+    "border_width": {
+     "unit": "px",
+     "top": "1",
+     "right": "0",
+     "bottom": "1",
+     "left": "0",
+     "isLinked": false
+    },
+    "border_color": "#f0f1f3",
+    "padding": {
+     "unit": "px",
+     "top": "28",
+     "right": "40",
+     "bottom": "28",
+     "left": "40",
+     "isLinked": false
+    },
+    "padding_mobile": {
+     "unit": "px",
+     "top": "24",
+     "right": "16",
+     "bottom": "24",
+     "left": "16",
+     "isLinked": false
+    },
+    "css_classes": "geo-platforms"
+   },
+   "elements": [
+    {
+     "id": "b10056c",
+     "elType": "widget",
+     "widgetType": "heading",
+     "isInner": false,
+     "settings": {
+      "title": "Ondersteunde platformen",
+      "header_size": "span",
+      "title_color": "#9ca3af",
+      "typography_typography": "custom",
+      "typography_font_family": "Outfit",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 12,
+       "sizes": []
+      },
+      "typography_font_weight": "600",
+      "typography_line_height": {
+       "unit": "em",
+       "size": 1
+      },
+      "typography_letter_spacing": {
+       "unit": "px",
+       "size": 0.6,
+       "sizes": []
+      },
+      "typography_text_transform": "uppercase",
+      "_animation": "fadeInLeft"
+     },
+     "elements": []
+    },
+    {
+     "id": "b120dfd",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "width": {
+       "unit": "px",
+       "size": 0
+      },
+      "flex_direction": "row",
+      "flex_align_items": "center",
+      "flex_gap": {
+       "unit": "px",
+       "size": 12,
+       "column": "12",
+       "row": "12"
+      },
+      "flex_wrap": "wrap",
+      "padding": {
+       "unit": "px",
+       "top": "0",
+       "right": "0",
+       "bottom": "0",
+       "left": "0",
+       "isLinked": false
+      },
+      "custom_css": "selector{width:auto!important}"
+     },
+     "elements": [
+      {
+       "id": "b107a1e",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "px",
+         "size": 0
+        },
+        "_flex_size": "none",
+        "flex_direction": "row",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "flex_wrap": "nowrap",
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "2",
+         "right": "2",
+         "bottom": "2",
+         "left": "2",
+         "isLinked": true
+        },
+        "border_color": "#e9d5f0",
+        "border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "padding": {
+         "unit": "px",
+         "top": "8",
+         "right": "10",
+         "bottom": "8",
+         "left": "14",
+         "isLinked": false
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 0,
+        "css_classes": "geo-pf-pill",
+        "custom_css": "@keyframes geoSpin{to{rotate:360deg}}\nselector{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;width:auto!important;position:relative;overflow:hidden;isolation:isolate}\nselector::before{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none}\nselector::after{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none}\nselector:hover::before{translate:0 calc(-100% + 70px)}\nselector:hover::after{translate:0 calc(-100% + 62px)}\nselector:hover{transform:translateY(-2px);border-color:#8F39AC!important;box-shadow:0 8px 20px rgba(143,57,172,.3)}\nselector .elementor-heading-title,selector .elementor-icon,selector .elementor-icon i{transition:color .3s ease .2s,background-color .3s ease .2s}\nselector:hover .elementor-heading-title,selector:hover .elementor-icon,selector:hover .elementor-icon i{color:#fff!important;opacity:1!important}\nselector:hover .elementor-icon svg{fill:#fff!important}\nselector:hover .geo-pf-badge .elementor-heading-title{background:rgba(255,255,255,.22)!important;color:#fff!important}"
+       },
+       "elements": [
+        {
+         "id": "b103b7c",
+         "elType": "widget",
+         "widgetType": "icon",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fab fa-wordpress",
+           "library": "fa-brands"
+          },
+          "primary_color": "#8F39AC",
+          "size": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "align": "center"
+         },
+         "elements": []
+        },
+        {
+         "id": "b1040db",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "WordPress",
+          "header_size": "span",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "b106993",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Beschikbaar",
+          "header_size": "span",
+          "title_color": "#047857",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.5,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase",
+          "_css_classes": "geo-pf-badge",
+          "custom_css": "selector .elementor-heading-title{background:#d1fae5;padding:5px 9px;border-radius:20px;display:inline-block;transition:all .3s ease .1s}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "b10f429",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "px",
+         "size": 0
+        },
+        "_flex_size": "none",
+        "flex_direction": "row",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "flex_wrap": "nowrap",
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "2",
+         "right": "2",
+         "bottom": "2",
+         "left": "2",
+         "isLinked": true
+        },
+        "border_color": "#e9d5f0",
+        "border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "padding": {
+         "unit": "px",
+         "top": "8",
+         "right": "10",
+         "bottom": "8",
+         "left": "14",
+         "isLinked": false
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 150,
+        "css_classes": "geo-pf-pill",
+        "custom_css": "@keyframes geoSpin{to{rotate:360deg}}\nselector{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;width:auto!important;position:relative;overflow:hidden;isolation:isolate}\nselector::before{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none}\nselector::after{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none}\nselector:hover::before{translate:0 calc(-100% + 70px)}\nselector:hover::after{translate:0 calc(-100% + 62px)}\nselector:hover{transform:translateY(-2px);border-color:#8F39AC!important;box-shadow:0 8px 20px rgba(143,57,172,.3)}\nselector .elementor-heading-title,selector .elementor-icon,selector .elementor-icon i{transition:color .3s ease .2s,background-color .3s ease .2s}\nselector:hover .elementor-heading-title,selector:hover .elementor-icon,selector:hover .elementor-icon i{color:#fff!important;opacity:1!important}\nselector:hover .elementor-icon svg{fill:#fff!important}\nselector:hover .geo-pf-badge .elementor-heading-title{background:rgba(255,255,255,.22)!important;color:#fff!important}"
+       },
+       "elements": [
+        {
+         "id": "b10b870",
+         "elType": "widget",
+         "widgetType": "icon",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fab fa-shopify",
+           "library": "fa-brands"
+          },
+          "primary_color": "#8F39AC",
+          "size": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "align": "center"
+         },
+         "elements": []
+        },
+        {
+         "id": "b10bd7f",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Shopify",
+          "header_size": "span",
+          "title_color": "#333333",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "b10f2d1",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Beta",
+          "header_size": "span",
+          "title_color": "#1d6fa0",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.5,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase",
+          "_css_classes": "geo-pf-badge",
+          "custom_css": "selector .elementor-heading-title{background:#e0f0fa;padding:5px 9px;border-radius:20px;display:inline-block;transition:all .3s ease .1s}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "b117bf4",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "px",
+         "size": 0
+        },
+        "_flex_size": "none",
+        "flex_direction": "row",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "flex_wrap": "nowrap",
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "2",
+         "right": "2",
+         "bottom": "2",
+         "left": "2",
+         "isLinked": true
+        },
+        "border_color": "#e5e7eb",
+        "border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "padding": {
+         "unit": "px",
+         "top": "8",
+         "right": "10",
+         "bottom": "8",
+         "left": "14",
+         "isLinked": false
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 300,
+        "css_classes": "geo-pf-pill geo-pf-road",
+        "custom_css": "@keyframes geoSpin{to{rotate:360deg}}\nselector{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;width:auto!important;position:relative;overflow:hidden;isolation:isolate}\nselector::before{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none}\nselector::after{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none}\nselector:hover::before{translate:0 calc(-100% + 70px)}\nselector:hover::after{translate:0 calc(-100% + 62px)}\nselector:hover{transform:translateY(-2px);border-color:#8F39AC!important;box-shadow:0 8px 20px rgba(143,57,172,.3)}\nselector .elementor-heading-title,selector .elementor-icon,selector .elementor-icon i{transition:color .3s ease .2s,background-color .3s ease .2s}\nselector:hover .elementor-heading-title,selector:hover .elementor-icon,selector:hover .elementor-icon i{color:#fff!important;opacity:1!important}\nselector:hover .elementor-icon svg{fill:#fff!important}\nselector:hover .geo-pf-badge .elementor-heading-title{background:rgba(255,255,255,.22)!important;color:#fff!important}"
+       },
+       "elements": [
+        {
+         "id": "b111432",
+         "elType": "widget",
+         "widgetType": "icon",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fas fa-mobile-alt",
+           "library": "fa-solid"
+          },
+          "primary_color": "#9ca3af",
+          "size": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "align": "center"
+         },
+         "elements": []
+        },
+        {
+         "id": "b1138c5",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Mobile app",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "b115d03",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Roadmap",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.5,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase",
+          "_css_classes": "geo-pf-badge",
+          "custom_css": "selector .elementor-heading-title{background:#f3f4f6;padding:5px 9px;border-radius:20px;display:inline-block;transition:all .3s ease .1s}"
+         },
+         "elements": []
+        }
+       ]
+      },
+      {
+       "id": "b11fd7a",
+       "elType": "container",
+       "isInner": true,
+       "settings": {
+        "content_width": "full",
+        "width": {
+         "unit": "px",
+         "size": 0
+        },
+        "_flex_size": "none",
+        "flex_direction": "row",
+        "flex_align_items": "center",
+        "flex_gap": {
+         "unit": "px",
+         "size": 10,
+         "column": "10",
+         "row": "10"
+        },
+        "flex_wrap": "nowrap",
+        "background_background": "classic",
+        "background_color": "#ffffff",
+        "border_border": "solid",
+        "border_width": {
+         "unit": "px",
+         "top": "2",
+         "right": "2",
+         "bottom": "2",
+         "left": "2",
+         "isLinked": true
+        },
+        "border_color": "#e5e7eb",
+        "border_radius": {
+         "unit": "px",
+         "top": "20",
+         "right": "20",
+         "bottom": "20",
+         "left": "20",
+         "isLinked": true
+        },
+        "padding": {
+         "unit": "px",
+         "top": "8",
+         "right": "10",
+         "bottom": "8",
+         "left": "14",
+         "isLinked": false
+        },
+        "animation": "fadeInUp",
+        "animation_delay": 450,
+        "css_classes": "geo-pf-pill geo-pf-road",
+        "custom_css": "@keyframes geoSpin{to{rotate:360deg}}\nselector{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;width:auto!important;position:relative;overflow:hidden;isolation:isolate}\nselector::before{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:0.45;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1) .06s;animation:geoSpin 9s linear infinite reverse;z-index:-1;pointer-events:none}\nselector::after{content:\"\";position:absolute;left:50%;top:0;width:320%;aspect-ratio:1;margin-left:-160%;background:linear-gradient(135deg,#8F39AC,#379FD3,#8F39AC);border-radius:42%;opacity:1;translate:0 calc(-100% - 60px);transition:translate .8s cubic-bezier(.5,0,.2,1);animation:geoSpin 6s linear infinite;z-index:-1;pointer-events:none}\nselector:hover::before{translate:0 calc(-100% + 70px)}\nselector:hover::after{translate:0 calc(-100% + 62px)}\nselector:hover{transform:translateY(-2px);border-color:#8F39AC!important;box-shadow:0 8px 20px rgba(143,57,172,.3)}\nselector .elementor-heading-title,selector .elementor-icon,selector .elementor-icon i{transition:color .3s ease .2s,background-color .3s ease .2s}\nselector:hover .elementor-heading-title,selector:hover .elementor-icon,selector:hover .elementor-icon i{color:#fff!important;opacity:1!important}\nselector:hover .elementor-icon svg{fill:#fff!important}\nselector:hover .geo-pf-badge .elementor-heading-title{background:rgba(255,255,255,.22)!important;color:#fff!important}"
+       },
+       "elements": [
+        {
+         "id": "b118ee2",
+         "elType": "widget",
+         "widgetType": "icon",
+         "isInner": false,
+         "settings": {
+          "selected_icon": {
+           "value": "fab fa-magento",
+           "library": "fa-brands"
+          },
+          "primary_color": "#9ca3af",
+          "size": {
+           "unit": "px",
+           "size": 18,
+           "sizes": []
+          },
+          "align": "center"
+         },
+         "elements": []
+        },
+        {
+         "id": "b11c72f",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Magento",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 14,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1.2
+          }
+         },
+         "elements": []
+        },
+        {
+         "id": "b11d863",
+         "elType": "widget",
+         "widgetType": "heading",
+         "isInner": false,
+         "settings": {
+          "title": "Roadmap",
+          "header_size": "span",
+          "title_color": "#6b7280",
+          "typography_typography": "custom",
+          "typography_font_family": "Outfit",
+          "typography_font_size": {
+           "unit": "px",
+           "size": 11,
+           "sizes": []
+          },
+          "typography_font_weight": "600",
+          "typography_line_height": {
+           "unit": "em",
+           "size": 1
+          },
+          "typography_letter_spacing": {
+           "unit": "px",
+           "size": 0.5,
+           "sizes": []
+          },
+          "typography_text_transform": "uppercase",
+          "_css_classes": "geo-pf-badge",
+          "custom_css": "selector .elementor-heading-title{background:#f3f4f6;padding:5px 9px;border-radius:20px;display:inline-block;transition:all .3s ease .1s}"
+         },
+         "elements": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "b123520",
+     "elType": "widget",
+     "widgetType": "html",
+     "isInner": false,
+     "settings": {
+      "html": "<script data-no-optimize=\"1\" data-no-defer=\"1\" data-cfasync=\"false\">(function(){if(window.__geoPf)return;window.__geoPf=1;setInterval(function(){var vh=window.innerHeight;[].forEach.call(document.querySelectorAll('.geo-platforms .elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*.95&&r.bottom>0){if(!e.__s){e.__s=Date.now();return;}if(Date.now()-e.__s>1500){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);})();</script>",
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 0
+      },
+      "_position": "absolute"
+     },
+     "elements": []
+    }
+   ]
+  }
+ ],
+ "page_settings": []
+}

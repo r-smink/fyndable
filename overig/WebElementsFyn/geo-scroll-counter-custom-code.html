@@ -1,0 +1,22 @@
+<style>
+body .geo-stat-number,body .geo-stat-number *{visibility:visible!important;opacity:1!important}
+body .geo-stat-number .elementor-heading-title{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important}
+body .geo-stat-number:not(.geo-neg-num) .elementor-heading-title,body .geo-stat-number:not(.geo-neg-num) .elementor-heading-title *{color:#8F39AC!important;-webkit-text-fill-color:#8F39AC!important}
+body .geo-stat-number.geo-neg-num .elementor-heading-title,body .geo-stat-number.geo-neg-num .elementor-heading-title *{color:#b91c1c!important;-webkit-text-fill-color:#b91c1c!important}
+</style>
+<script data-no-optimize="1" data-no-defer="1" data-cfasync="false">(function(){
+if(window.__geoScroll8)return;window.__geoScroll8=1;var END=0.45;
+function prog(el){var vh=window.innerHeight||document.documentElement.clientHeight;if(!vh)return 1;var t=el.getBoundingClientRect().top;return Math.max(0,Math.min(1,(vh-t)/(vh-vh*END)));}
+function run(){
+[].forEach.call(document.querySelectorAll('.geo-live'),function(el){try{
+if(el.__to==null){var raw=el.getAttribute('data-to')||el.textContent;el.__d=(String(raw).split(/[.,]/)[1]||'').length;el.__to=parseFloat(String(raw).replace(',','.'))||0;}
+el.textContent=(el.__to*prog(el)).toFixed(el.__d).replace('.',',');}catch(e){}});
+[].forEach.call(document.querySelectorAll('.geo-scroll-bar'),function(w){try{if(w.parentElement&&w.parentElement.closest('.geo-scroll-bar'))return;
+var b=w.querySelector('.elementor-progress-bar');if(!b)return;var m=(' '+w.className+' ').match(/ geo-max-([0-9]+) /);var max=parseFloat(m?m[1]:b.getAttribute('data-max'))||0;
+var p=prog(b);b.style.transition='none';b.style.width=(max*p)+'%';var pc=w.querySelector('.elementor-progress-percentage');if(pc)pc.textContent=Math.round(max*p)+'%';}catch(e){}});}
+var q=0;function on(){if(!q){q=requestAnimationFrame(function(){q=0;run();});}}
+['scroll','resize','load'].forEach(function(e){window.addEventListener(e,on,{passive:true});});
+document.addEventListener('scroll',on,{passive:true,capture:true});
+if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);
+setInterval(run,300);setInterval(function(){var vh=window.innerHeight;[].forEach.call(document.querySelectorAll('.elementor-invisible'),function(e){var r=e.getBoundingClientRect();if(r.top<vh*0.9&&r.bottom>0){if(!e.__geoSeen){e.__geoSeen=Date.now();return;}if(Date.now()-e.__geoSeen>1200){e.classList.remove('elementor-invisible');e.style.visibility='visible';e.style.opacity='1';}}});},400);
+})();</script>

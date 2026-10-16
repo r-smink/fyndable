@@ -279,13 +279,18 @@ class DataForSeoClient
      */
     public function llmResponseLive(string $provider, array $params): array|\WP_Error
     {
-        $allowed = ['chatgpt', 'claude', 'gemini', 'perplexity'];
+        $paths = [
+            'chatgpt'    => 'chat_gpt',
+            'claude'     => 'claude',
+            'gemini'     => 'gemini',
+            'perplexity' => 'perplexity',
+        ];
         $provider = strtolower($provider);
-        if (!in_array($provider, $allowed, true)) {
+        if (!isset($paths[$provider])) {
             return new \WP_Error('invalid_provider', sprintf(__('Unknown LLM provider: %s', 'sseo-ai-saas'), $provider));
         }
 
-        return $this->request('/ai_optimization/' . $provider . '/llm_responses/live', [$params], 'llm_response');
+        return $this->request('/ai_optimization/' . $paths[$provider] . '/llm_responses/live', [$params], 'llm_response');
     }
 
     // -------------------------------------------------------------------------

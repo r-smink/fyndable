@@ -22,6 +22,19 @@ class DashboardShell
     public function register(): void
     {
         add_action('admin_head', [$this, 'hideWpChrome']);
+        add_action('wp_ajax_sseo_ai_toggle_theme', [$this, 'toggleTheme']);
+    }
+
+    public function toggleTheme(): void
+    {
+        check_ajax_referer('sseo_ai_toggle_theme', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'ai-seo-client')], 403);
+        }
+
+        $dark = isset($_POST['dark']) && $_POST['dark'] === '1';
+        update_option('sseo_ai_client_dark_theme', $dark ? '1' : '0');
+        wp_send_json_success(['dark' => $dark]);
     }
 
     /**
@@ -71,6 +84,14 @@ class DashboardShell
                 ];
             }
 
+            if (in_array($tier, ['professional', 'business', 'agency', 'dev'], true)) {
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-automation',
+                    'label' => __('ApexFlow', 'ai-seo-client'),
+                    'icon' => '&#9889;',
+                ];
+            }
+
             $this->menuItems[] = [
                 'slug' => 'ai-seo-content-calendar',
                 'label' => __('Content Calendar', 'ai-seo-client'),
@@ -86,6 +107,19 @@ class DashboardShell
                 'label' => __('Competitors', 'ai-seo-client'),
                 'icon' => '&#128269;',
             ];
+
+            if ($isPro) {
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-backlinks',
+                    'label' => __('Backlinks', 'ai-seo-client'),
+                    'icon' => '&#128279;',
+                ];
+                $this->menuItems[] = [
+                    'slug' => 'ai-seo-advanced-backlinks',
+                    'label' => __('Adv. Backlinks', 'ai-seo-client'),
+                    'icon' => '&#129517;',
+                ];
+            }
 
             if ($isPro) {
                 $this->menuItems[] = [
@@ -268,7 +302,8 @@ class DashboardShell
                     document.head.appendChild(style);
 
                     // Intercept links to dashboard admin pages: append fyndable_shell=1
-                    // so they stay inside the iframe shell
+                    // and the current theme flag so they stay inside the iframe shell
+                    // and keep the selected light/dark mode.
                     document.addEventListener("click", function(e) {
                         var link = e.target.closest("a");
                         if (!link || !link.href) return;
@@ -276,13 +311,19 @@ class DashboardShell
                         // Only intercept links to admin.php with page=ai-seo- or page=fyndable-
                         if (url.indexOf("admin.php") === -1) return;
                         if (url.indexOf("page=ai-seo-") === -1 && url.indexOf("page=fyndable-") === -1) return;
-                        // Skip if already has fyndable_shell
-                        if (url.indexOf("fyndable_shell") !== -1) return;
                         // Skip links with target=_blank
                         if (link.target === "_blank") return;
                         e.preventDefault();
                         var sep = url.indexOf("?") !== -1 ? "&" : "?";
-                        window.location.href = url + sep + "fyndable_shell=1";
+                        if (url.indexOf("fyndable_shell") === -1) {
+                            url += sep + "fyndable_shell=1";
+                            sep = "&";
+                        }
+                        if (url.indexOf("fyndable_dark") === -1) {
+                            var darkParam = document.body.classList.contains("fyndable-dark") ? "1" : "0";
+                            url += sep + "fyndable_dark=" + darkParam;
+                        }
+                        window.location.href = url;
                     });
 
                     // Also intercept form submissions that redirect to dashboard admin pages
@@ -292,11 +333,12 @@ class DashboardShell
                         document.querySelectorAll("form").forEach(function(form) {
                             var formAction = form.getAttribute("action") || "";
                             if (formAction.indexOf("options.php") !== -1) {
-                                // Update the _wp_http_referer to include fyndable_shell
+                                // Update the _wp_http_referer to include fyndable_shell and theme
                                 var referrer = form.querySelector("input[name=_wp_http_referer]");
                                 if (referrer && referrer.value.indexOf("fyndable_shell") === -1) {
                                     var sep = referrer.value.indexOf("?") !== -1 ? "&" : "?";
-                                    referrer.value = referrer.value + sep + "fyndable_shell=1";
+                                    var darkParam = document.body.classList.contains("fyndable-dark") ? "1" : "0";
+                                    referrer.value = referrer.value + sep + "fyndable_shell=1&fyndable_dark=" + darkParam;
                                 }
                             }
                         });
@@ -367,10 +409,13 @@ class DashboardShell
             $currentPage = 'ai-seo-client';
         }
 
+        $darkTheme = get_option('sseo_ai_client_dark_theme', '0') === '1';
+
         // Build iframe URL
         $iframeUrl = admin_url('admin.php');
         $iframeUrl = add_query_arg('page', $currentPage, $iframeUrl);
         $iframeUrl = add_query_arg('fyndable_shell', '1', $iframeUrl);
+        $iframeUrl = add_query_arg('fyndable_dark', $darkTheme ? '1' : '0', $iframeUrl);
 
         // Pass through relevant query parameters (e.g. keyword, error messages)
         // to the iframe so the loaded page can display them.
@@ -477,6 +522,39 @@ class DashboardShell
                 background: rgba(255,255,255,0.25);
                 color: #fff;
             }
+            .fyndable-theme-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                min-height: 32px;
+                padding: 5px 10px;
+                border: 1px solid rgba(255,255,255,.3);
+                border-radius: 8px;
+                background: rgba(255,255,255,.15);
+                color: #fff;
+                cursor: pointer;
+            }
+            .fyndable-theme-toggle:hover { background: rgba(255,255,255,.25); }
+            .fyndable-theme-toggle-icon { font-size: 17px; line-height: 1; }
+            .fyndable-theme-toggle-track {
+                position: relative;
+                width: 30px;
+                height: 16px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.35);
+            }
+            .fyndable-theme-toggle-track::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #fff;
+                transition: transform .2s ease;
+            }
+            .fyndable-theme-toggle[aria-pressed="true"] .fyndable-theme-toggle-track::after { transform: translateX(14px); }
             .fyndable-exit-x {
                 font-size: 18px;
                 line-height: 1;
@@ -632,6 +710,11 @@ class DashboardShell
                     <div class="fyndable-topbar-badge"><?php esc_html_e('Dashboard', 'ai-seo-client'); ?></div>
                 </div>
                 <div class="fyndable-topbar-actions">
+                    <button type="button" id="fyndable-theme-toggle" class="fyndable-theme-toggle" aria-pressed="<?php echo $darkTheme ? 'true' : 'false'; ?>" title="<?php esc_attr_e('Switch light/dark theme', 'ai-seo-client'); ?>">
+                        <span class="fyndable-theme-toggle-icon" aria-hidden="true">☀</span>
+                        <span class="fyndable-theme-toggle-track" aria-hidden="true"></span>
+                        <span class="fyndable-theme-toggle-icon" aria-hidden="true">☾</span>
+                    </button>
                     <a href="<?php echo esc_url($exitUrl); ?>" class="fyndable-exit-btn" title="<?php esc_attr_e('Exit to WordPress', 'ai-seo-client'); ?>">
                         <span class="fyndable-exit-x">&times;</span>
                         <span><?php esc_html_e('Exit', 'ai-seo-client'); ?></span>
@@ -685,11 +768,61 @@ class DashboardShell
             var iframe = document.getElementById('fyndable-frame');
             var loading = document.getElementById('fyndable-loading');
             var navLinks = document.querySelectorAll('.fyndable-sidebar-nav a');
+            var themeToggle = document.getElementById('fyndable-theme-toggle');
+            var storageKey = 'fyndableDarkTheme';
 
-            // Hide loading when iframe loads
+            // Determine current theme: prefer localStorage so the shell and iframe stay
+            // in sync even if the async DB update has not completed yet.
+            var storedDark = localStorage.getItem(storageKey);
+            var isDark = storedDark !== null
+                ? storedDark === '1'
+                : themeToggle.getAttribute('aria-pressed') === 'true';
+
+            function applyTheme(dark) {
+                themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+                document.body.classList.toggle('fyndable-dark', dark);
+                try {
+                    if (iframe.contentDocument && iframe.contentDocument.body) {
+                        iframe.contentDocument.body.classList.toggle('fyndable-dark', dark);
+                    }
+                } catch (e) {}
+            }
+
+            function setTheme(dark) {
+                isDark = dark;
+                localStorage.setItem(storageKey, dark ? '1' : '0');
+                applyTheme(dark);
+            }
+
+            applyTheme(isDark);
+
+            // Hide loading when iframe loads and ensure the loaded page follows the theme.
             iframe.addEventListener('load', function() {
                 loading.classList.add('hidden');
+                applyTheme(isDark);
             });
+
+            themeToggle.addEventListener('click', function() {
+                var dark = !isDark;
+                setTheme(dark);
+
+                var data = new FormData();
+                data.append('action', 'sseo_ai_toggle_theme');
+                data.append('nonce', '<?php echo esc_js(wp_create_nonce('sseo_ai_toggle_theme')); ?>');
+                data.append('dark', dark ? '1' : '0');
+                fetch('<?php echo esc_js(admin_url('admin-ajax.php')); ?>', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: data
+                });
+            });
+
+            function buildIframeUrl(slug) {
+                return '<?php echo esc_js(admin_url('admin.php')); ?>' +
+                    '?page=' + encodeURIComponent(slug) +
+                    '&fyndable_shell=1' +
+                    '&fyndable_dark=' + (isDark ? '1' : '0');
+            }
 
             // Navigation switching
             navLinks.forEach(function(link) {
@@ -704,10 +837,7 @@ class DashboardShell
 
                     // Show loading and update iframe
                     loading.classList.remove('hidden');
-                    var url = '<?php echo esc_js(admin_url('admin.php')); ?>' +
-                        '?page=' + encodeURIComponent(slug) +
-                        '&fyndable_shell=1';
-                    iframe.src = url;
+                    iframe.src = buildIframeUrl(slug);
 
                     // Update URL hash for state persistence
                     window.location.hash = slug;
@@ -726,9 +856,7 @@ class DashboardShell
                         navLinks.forEach(function(l) { l.classList.remove('active'); });
                         link.classList.add('active');
                         loading.classList.remove('hidden');
-                        iframe.src = '<?php echo esc_js(admin_url('admin.php')); ?>' +
-                            '?page=' + encodeURIComponent(hash) +
-                            '&fyndable_shell=1';
+                        iframe.src = buildIframeUrl(hash);
                     }
                 });
             }

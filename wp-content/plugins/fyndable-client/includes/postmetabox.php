@@ -54,6 +54,7 @@ class PostMetaBox
     {
         add_action('add_meta_boxes', [$this, 'addMetaBox']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueueEditorLoader']);
     }
 
     public function addMetaBox(): void
@@ -114,10 +115,45 @@ class PostMetaBox
 
         wp_register_script('fyndable-post-metabox', false);
         wp_enqueue_script('fyndable-post-metabox');
-        wp_localize_script('fyndable-post-metabox', 'sseoAiLoaderText', [
-            'text' => __('AI is generating... Please wait.', 'ai-seo-client'),
-        ]);
         wp_add_inline_script('fyndable-post-metabox', $this->getInlineJS());
+
+        // Global AI loader (animated Fyndable logo) — scoped to our metaboxes so
+        // WordPress core spinners on the edit screen are left untouched.
+        $this->enqueueFyndableLoader('#fyndable_seo_meta, #fyndable_seo_meta_attachment');
+    }
+
+    /**
+     * Load the AI loader inside the block editor as well. When the editor runs
+     * iframed, admin_enqueue_scripts lands in the parent document while the
+     * plugin sidebar JS runs inside the iframe — this covers both.
+     */
+    public function enqueueEditorLoader(): void
+    {
+        $this->enqueueFyndableLoader('#fyndable_seo_meta, #fyndable_seo_meta_attachment');
+    }
+
+    private function enqueueFyndableLoader(string $scopeSelector): void
+    {
+        $whiteLabel = get_option('sseo_ai_white_label', []);
+        $loaderColors = null;
+        if (!empty($whiteLabel['company_name']) && (!empty($whiteLabel['primary_color']) || !empty($whiteLabel['secondary_color']))) {
+            $loaderColors = [
+                sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3',
+                sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac',
+            ];
+        }
+        wp_enqueue_script(
+            'fyndable-loader',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/fyndable-loader.js',
+            ['jquery'],
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/fyndable-loader.js'),
+            true
+        );
+        wp_localize_script('fyndable-loader', 'fyndableLoaderConfig', [
+            'text' => __('AI is generating', 'ai-seo-client'),
+            'scopeSelector' => $scopeSelector,
+            'colors' => $loaderColors,
+        ]);
     }
 
     public function renderMetaBox(\WP_Post $post): void
@@ -358,23 +394,6 @@ class PostMetaBox
 #fyndable_seo_meta_attachment .postbox-header { display: none; }
 #fyndable_seo_meta .inside,
 #fyndable_seo_meta_attachment .inside { padding: 0; margin: 0; }
-
-/* Global AI loader overlay */
-#sseo-ai-loader-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); z-index: 100001; justify-content: center; align-items: center;
-    flex-direction: column; backdrop-filter: blur(4px);
-}
-#sseo-ai-loader-overlay.active { display: flex !important; }
-#sseo-ai-loader-overlay .sseo-loader-spinner {
-    width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
-    border-top-color: #fff; border-radius: 50%; animation: sseo-spin 1s linear infinite;
-}
-#sseo-ai-loader-overlay .sseo-loader-text {
-    color: #fff; margin-top: 20px; font-size: 16px; font-weight: 500;
-    text-align: center; max-width: 300px; line-height: 1.5;
-}
-@keyframes sseo-spin { to { transform: rotate(360deg); } }
 CSS;
 
         return str_replace(
@@ -390,15 +409,8 @@ CSS;
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
 
-        // Inject global AI loader overlay if not present
-        if (!document.getElementById('sseo-ai-loader-overlay')) {
-            var overlay = document.createElement('div');
-            overlay.id = 'sseo-ai-loader-overlay';
-            overlay.innerHTML = '<div class="sseo-loader-spinner"></div><div class="sseo-loader-text">' + (window.sseoAiLoaderText ? window.sseoAiLoaderText.text : 'AI is generating...') + '</div>';
-            document.body.appendChild(overlay);
-        }
-        window.sseoShowLoader = function() { jQuery('#sseo-ai-loader-overlay').addClass('active'); };
-        window.sseoHideLoader = function() { jQuery('#sseo-ai-loader-overlay').removeClass('active'); };
+        // Global AI loader overlay is provided by assets/fyndable-loader.js
+        // (enqueued above); sseoShowLoader/sseoHideLoader come from there.
 
         // Accordion group toggle (exclusive — opening one closes others)
         var container = document.querySelector('.fyndable-seo-container');

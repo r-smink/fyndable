@@ -68,6 +68,14 @@ class LicenseAPI
                     'type' => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
+                'platform' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function ($v) {
+                        return in_array(strtolower($v), ['wordpress', 'shopify', 'webflow', ''], true);
+                    },
+                ],
             ],
         ]);
 
@@ -235,7 +243,7 @@ class LicenseAPI
             'permission_callback' => function() { return current_user_can('manage_options'); },
             'args' => [
                 'license_key' => ['required' => true, 'type' => 'string'],
-                'features' => ['required' => true, 'type' => 'array'],
+                'features' => ['required' => true, 'type' => 'object'],
             ],
         ]);
 
@@ -266,6 +274,18 @@ class LicenseAPI
                 'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'code' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+            ],
+        ]);
+
+        // Google OAuth proxy: refresh access token (secret stays server-side)
+        register_rest_route($this->namespace, '/google/refresh', [
+            'methods' => 'POST',
+            'callback' => [$this, 'refreshGoogleToken'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'refresh_token' => ['required' => true, 'type' => 'string'],
             ],
         ]);
 
@@ -390,10 +410,12 @@ class LicenseAPI
         $licenseKey = $request->get_param('license_key');
         $siteUrl = $request->get_param('site_url');
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
+        $platform = $request->get_param('platform') ?: 'wordpress';
 
         error_log('SSEO AI Dashboard: License activation request received');
         error_log('SSEO AI Dashboard: License Key: ' . substr($licenseKey, 0, 15) . '...');
         error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
+        error_log('SSEO AI Dashboard: Platform: ' . $platform);
 
         // Get client IP
         $ipAddress = $this->getClientIp();
@@ -402,6 +424,7 @@ class LicenseAPI
             'site_url' => $siteUrl,
             'site_name' => $siteName,
             'ip_address' => $ipAddress,
+            'platform' => $platform,
         ];
 
         $result = $this->licenseGenerator->activateLicense($licenseKey, $activationData);
@@ -643,7 +666,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -689,7 +712,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -727,7 +750,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -754,7 +777,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -882,7 +905,7 @@ class LicenseAPI
 
         // Verify tenant belongs to this license
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'error' => 'invalid_tenant',
@@ -1040,7 +1063,7 @@ class LicenseAPI
         }
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_Error('invalid_credentials', 'Invalid license or tenant credentials');
         }
 
@@ -1071,7 +1094,7 @@ class LicenseAPI
         return new \WP_REST_Response([
             'success' => true,
             'client_id' => $clientId,
-            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords',
+            'scopes' => 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly',
         ], 200);
     }
 
@@ -1121,6 +1144,61 @@ class LicenseAPI
 
         if ($statusCode !== 200 || !is_array($body)) {
             return new \WP_REST_Response(['success' => false, 'error' => 'exchange_failed', 'message' => 'Token exchange failed', 'details' => $body], 400);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'tokens' => $body,
+        ], 200);
+    }
+
+    /**
+     * REST: Refresh Google access token (server-side, secret never exposed)
+     * Client sites cannot refresh directly — Google requires the client_secret
+     * for Web-application OAuth clients, which only lives on this dashboard.
+     */
+    public function refreshGoogleToken(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+
+        // Track OAuth refresh call
+        $this->tenants->trackGoogleApiUsage($request->get_param('tenant_key'), 'oauth');
+
+        $refreshToken = $request->get_param('refresh_token');
+        if (empty($refreshToken)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'missing_refresh_token', 'message' => 'Refresh token is required'], 400);
+        }
+
+        $settings = new SaaSSettings();
+        $clientId = $settings->getGoogleClientId();
+        $clientSecret = $settings->getGoogleClientSecret();
+
+        if (empty($clientId) || empty($clientSecret)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google OAuth is not configured on the SaaS dashboard'], 400);
+        }
+
+        $response = wp_remote_post('https://oauth2.googleapis.com/token', [
+            'timeout' => 15,
+            'body' => [
+                'refresh_token' => $refreshToken,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'grant_type' => 'refresh_token',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'refresh_failed', 'message' => $response->get_error_message()], 500);
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode !== 200 || !is_array($body)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'refresh_failed', 'message' => 'Token refresh failed', 'details' => $body], 400);
         }
 
         return new \WP_REST_Response([
@@ -1189,7 +1267,7 @@ class LicenseAPI
 
         // Validate tenant
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
         }
         if ($tenant['status'] !== 'active') {
@@ -1207,7 +1285,7 @@ class LicenseAPI
         $globalCompanyName = $enabled ? get_option('sseo_ai_saas_wl_company_name', '') : '';
         $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : ($globalCompanyName ?: 'Fyndable');
 
-        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/adwords';
+        $scopes = 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly';
         $exchangeUrl = rest_url($this->namespace . '/google/exchange');
 
         // SECURITY: restrict postMessage target origin to the tenant's registered
@@ -1388,7 +1466,7 @@ class LicenseAPI
         }
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Invalid tenant or license mismatch.',
@@ -1442,7 +1520,7 @@ class LicenseAPI
         $tenantKey = $request->get_param('tenant_key');
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Invalid tenant or license mismatch.',

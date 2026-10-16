@@ -1,0 +1,12 @@
+/* Fyndable — element defaults. Kept deliberately thin; components carry their own styling. */
+body{margin:0;font-family:var(--font-core);font-size:var(--text-ui);line-height:var(--leading-normal);color:var(--text-body);background:var(--surface-page);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-core);color:var(--text-heading);margin:0 0 var(--space-4);font-weight:var(--weight-semibold);line-height:var(--leading-snug)}
+h1{font-size:var(--text-xl);font-weight:var(--weight-bold);letter-spacing:var(--tracking-tight)}
+h2{font-size:var(--text-md)}
+h3{font-size:var(--text-base)}
+p{margin:0 0 var(--space-5);text-wrap:pretty}
+a{color:var(--text-link);text-decoration:none;transition:var(--transition)}
+a:hover{color:var(--text-link-hover);text-decoration:underline}
+code{background:var(--fyn-gray-100);padding:2px 8px;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--fyn-gray-700)}
+::selection{background:var(--fyn-purple-tint);color:var(--fyn-purple-dark)}
+*{box-sizing:border-box}

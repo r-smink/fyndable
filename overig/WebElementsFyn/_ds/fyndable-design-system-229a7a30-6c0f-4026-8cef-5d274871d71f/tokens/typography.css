@@ -1,0 +1,33 @@
+/* Fyndable — type tokens. Single family: Outfit (CVI). Sizes lifted from product CSS. */
+:root{
+  --font-core:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  --font-mono:'Courier New',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --weight-extralight:200;
+  --weight-light:300;
+  --weight-regular:400;
+  --weight-medium:500;
+  --weight-semibold:600;
+  --weight-bold:700;
+
+  --text-3xl:36px;  /* stat values, big numbers */
+  --text-2xl:32px;  /* connection-card headline */
+  --text-xl:28px;   /* page title in the dark header */
+  --text-lg:22px;   /* dashboard card title */
+  --text-md:20px;   /* settings section title */
+  --text-base:18px; /* card header / tool card title */
+  --text-sm:16px;   /* lead paragraph, hero button */
+  --text-body:15px; /* form inputs, body copy in cards */
+  --text-ui:14px;   /* default UI text, buttons, labels */
+  --text-xs:13px;   /* table body, descriptions */
+  --text-2xs:12px;  /* stat labels, small badges */
+  --text-3xs:11px;  /* pill counters, tags */
+
+  --leading-tight:1.2;
+  --leading-snug:1.3;
+  --leading-normal:1.5;
+  --leading-relaxed:1.6;
+
+  --tracking-tight:-.025em; /* page titles */
+  --tracking-wide:.05em;    /* uppercase labels */
+}

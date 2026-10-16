@@ -61,30 +61,30 @@ class AIImageGenerator
                 <div class="sseo-ai-dashboard-card">
                     <h2><?php esc_html_e('AI Image Overview', 'ai-seo-client'); ?></h2>
                 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #2271b1;">
+                <div class="sseo-stat-grid">
+                    <div class="sseo-stat-card sseo-stat-card--neutral">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #2271b1;">
                             <?php echo esc_html($stats['total_generated']); ?>
                         </div>
-                        <div><?php esc_html_e('Images Generated', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Images Generated', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #00a32a;">
+                    <div class="sseo-stat-card sseo-stat-card--success">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #00a32a;">
                             <?php echo esc_html($stats['featured_images']); ?>
                         </div>
-                        <div><?php esc_html_e('Featured Images', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Featured Images', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #856404;">
+                    <div class="sseo-stat-card sseo-stat-card--warning">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #856404;">
                             <?php echo esc_html($stats['social_images']); ?>
                         </div>
-                        <div><?php esc_html_e('Social Images', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Social Images', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #d63638;">
+                    <div class="sseo-stat-card sseo-stat-card--danger">
+                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #d63638;">
                             <?php echo esc_html($stats['missing_featured']); ?>
                         </div>
-                        <div><?php esc_html_e('Posts Without Featured', 'ai-seo-client'); ?></div>
+                        <div class="sseo-stat-description"><?php esc_html_e('Posts Without Featured', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
             </div>
@@ -415,6 +415,9 @@ class AIImageGenerator
     public function generateFeaturedImage(int $postId, string $style = 'photorealistic', string $context = '', int $wordCount = 100, bool $useStoredPrompt = false): ?int
     {
         $post = get_post($postId);
+        if (!$post) {
+            return null;
+        }
 
         // On regenerate, reuse the stored prompt from the original generation when no new context is provided
         if ($useStoredPrompt && empty($context)) {
@@ -493,26 +496,26 @@ class AIImageGenerator
         // Build brand reference description from photo portfolio
         $brandReferenceDesc = $this->getBrandReferenceDescription();
 
-        if (!empty($context)) {
-            $aiPrompt = "Generate a detailed image prompt for creating a {$style} image.
+        // Custom prompt instructions configured on the settings page apply to all AI prompts
+        $customInstructions = trim((string) get_option('sseo_ai_prompt_settings', ''));
+        $customSection = $customInstructions !== ''
+            ? "\nAdditional instructions (always apply): {$customInstructions}\n"
+            : '';
 
-User context: {$context}
-Target prompt length: approximately {$wordCount} words.
-{$brandReferenceDesc}
+        $content = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags($post->post_content)));
+        $excerpt = mb_substr($content, 0, 1500);
+        $keyword = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
+        $contextSection = !empty($context) ? "Additional user context: {$context}\n" : '';
 
-Create a concise, descriptive prompt that captures the essence. Focus on visual elements, mood, and composition.";
-        } else {
-            $content = wp_strip_all_tags($post->post_content);
-            $excerpt = substr($content, 0, 500);
+        $aiPrompt = "Create one detailed prompt for a {$style} featured image that is specifically and unmistakably relevant to this article.
 
-            $aiPrompt = "Generate a detailed image prompt for creating a {$style} image about:
+Article title: {$post->post_title}
+Focus keyword: {$keyword}
+Article summary: {$excerpt}
+{$contextSection}Target prompt length: approximately {$wordCount} words.
+{$brandReferenceDesc}{$customSection}
 
-Title: {$post->post_title}
-Content: {$excerpt}
-{$brandReferenceDesc}
-
-Create a concise, descriptive prompt (max {$wordCount} words) that captures the essence of this content. Focus on visual elements, mood, and composition.";
-        }
+Describe a concrete scene, objects, environment and composition tied directly to the article subject. Prefer subject matter, tools, interfaces, locations or visual metaphors over generic stock photography. Do not depict a woman, man, portrait, model, team or other person unless people are essential to the article subject. Do not introduce cats, pets or unrelated decorative characters. Do not request readable text, captions, logos or watermarks in the image. If a person reference exists in the brand portfolio, use it only when a person is genuinely required by the article. Return only the final image prompt.";
 
         $imagePrompt = $this->llm->generateText($aiPrompt, [
             'max_tokens' => max(150, (int)($wordCount * 2)),
@@ -525,7 +528,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
 
         if (is_wp_error($imagePrompt)) {
             // Fallback to simple prompt
-            $fallback = (!empty($context) ? $context : $post->post_title) . ", {$style} style, {$size}, high quality";
+            $fallback = (!empty($context) ? $context : $post->post_title) . ", directly relevant subject matter, no generic portraits or unrelated animals, no text or watermark, {$style} style, {$size}, high quality";
             if (!empty($brandReferenceDesc)) {
                 $fallback .= ". Match the brand's visual identity.";
             }
@@ -551,8 +554,9 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
             return '';
         }
 
-        // Check cache (1 week)
-        $cacheKey = 'sseo_ai_brand_ref_desc';
+        // Check cache (1 week). The key is tied to the portfolio contents so
+        // adding/removing/changing reference images invalidates it automatically.
+        $cacheKey = 'sseo_ai_brand_ref_desc_' . md5(wp_json_encode($portfolio));
         $cached = get_transient($cacheKey);
         if ($cached !== false && is_string($cached)) {
             return $cached;
@@ -582,9 +586,13 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
 
             $result = $this->llm->callWithImage($visionPrompt, $url, null, 100, 'image_alt_text');
 
-            if (!is_wp_error($result) && !empty($result['text'])) {
-                $desc = trim($result['text']);
-                $descriptions[] = "{$label}: {$desc}";
+            if (is_wp_error($result)) {
+                error_log('Fyndable Image: Vision call failed for portfolio reference ' . $url . ' - ' . $result->get_error_message());
+                continue;
+            }
+
+            if (!empty($result['text'])) {
+                $descriptions[] = "{$label}: " . trim($result['text']);
             }
         }
 
@@ -1212,7 +1220,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         
         $postId = (int)($_POST['post_id'] ?? 0);
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
-        $context = sanitize_text_field($_POST['context'] ?? '');
+        $context = sanitize_textarea_field($_POST['context'] ?? '');
         $wordCount = (int)($_POST['word_count'] ?? 100);
         $useStoredPrompt = isset($_POST['use_stored_prompt']) && $_POST['use_stored_prompt'] === 'true';
 
@@ -1241,7 +1249,7 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
         
         $postId = (int)($_POST['post_id'] ?? 0);
         $style = sanitize_text_field($_POST['style'] ?? 'photorealistic');
-        $context = sanitize_text_field($_POST['context'] ?? '');
+        $context = sanitize_textarea_field($_POST['context'] ?? '');
         $wordCount = (int)($_POST['word_count'] ?? 100);
         
         if (!$postId) {
@@ -1274,9 +1282,13 @@ Create a concise, descriptive prompt (max {$wordCount} words) that captures the 
     public function restGenerateImage(\WP_REST_Request $request): array
     {
         $postId = (int)$request->get_param('id');
-        $style = $request->get_param('style') ?? 'photorealistic';
-        
-        $attachmentId = $this->generateFeaturedImage($postId, $style);
+        $style = sanitize_text_field($request->get_param('style') ?? 'photorealistic');
+        $context = sanitize_textarea_field((string) ($request->get_param('context') ?? ''));
+        $wordCount = (int)($request->get_param('word_count') ?? 100);
+        $useStoredPrompt = $request->get_param('use_stored_prompt') === true
+            || $request->get_param('use_stored_prompt') === 'true';
+
+        $attachmentId = $this->generateFeaturedImage($postId, $style, $context, $wordCount, $useStoredPrompt);
         
         if (!$attachmentId) {
             return ['error' => 'Failed to generate image'];

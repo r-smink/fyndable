@@ -93,7 +93,7 @@ class SupportTickets
         }
 
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return false;
         }
 
@@ -117,7 +117,7 @@ class SupportTickets
     {
         [$licenseKey, $tenantKey] = $this->getCredentialsFromRequest($request);
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return null;
         }
         return $tenant;

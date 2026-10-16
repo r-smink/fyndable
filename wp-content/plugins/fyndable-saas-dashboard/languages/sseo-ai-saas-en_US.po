@@ -901,3 +901,45 @@ msgstr "You have reached your sub-license quota. Contact the administrator to in
 msgid "Your White-Label Client Plugin"
 msgstr "Your White-Label Client Plugin"
 
+msgid "AI-platformzichtbaarheid controleren…"
+msgstr "Checking AI platform visibility…"
+
+msgid "AI-platformtest: %s (%d/%d)"
+msgstr "AI platform test: %s (%d/%d)"
+
+msgid "Download PDF"
+msgstr "Download PDF"
+
+msgid "Sluiten"
+msgstr "Close"
+
+msgid "Kies een cover"
+msgstr "Choose a cover"
+
+msgid "Selecteer de cover voor het prospectrapport."
+msgstr "Select the cover for the prospect report."
+
+msgid "SCAN RAPPORT"
+msgstr "SCAN REPORT"
+
+msgid "Lichte cover"
+msgstr "Light cover"
+
+msgid "Donkere cover"
+msgstr "Dark cover"
+
+msgid "Annuleren"
+msgstr "Cancel"
+
+msgid "Je hebt geen toestemming om dit rapport te downloaden."
+msgstr "You do not have permission to download this report."
+
+msgid "PDF genereren mislukt"
+msgstr "PDF generation failed"
+
+msgid "Het voltooide scanrapport is niet gevonden."
+msgstr "The completed scan report was not found."
+
+msgid "De PDF-renderer is niet beschikbaar."
+msgstr "The PDF renderer is unavailable."
+

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0;font-family:Outfit,sans-serif;color:#333}a{color:#8F39AC}a:hover{color:#379FD3}
+@keyframes fynRise{0%{top:108%;transform:translateX(0) scale(1,1)}20%{transform:translateX(18px) scale(.92,1.1)}50%{transform:translateX(-14px) scale(1.08,.94)}80%{transform:translateX(10px) scale(.95,1.06)}100%{top:-28%;transform:translateX(0) scale(1,1)}}@keyframes fynPool{0%,100%{transform:scale(1,1)}50%{transform:scale(1.06,.9)}}</style>
+</helmet>
+<div style="position:relative;overflow:hidden;isolation:isolate;min-height:560px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:96px 40px;box-sizing:border-box">
+<div style="position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none"><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="fyn-goo"><feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/><feColorMatrix in="b" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -12"/></filter></svg><div style="position:absolute;inset:0;filter:url(#fyn-goo);opacity:.42"><span style="position:absolute;left:8%;top:108%;width:120px;height:120px;margin-left:-60px;border-radius:50%;background:linear-gradient(160deg,#8F39AC,#379FD3);animation:fynRise 21s 0s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:22%;top:108%;width:90px;height:90px;margin-left:-45px;border-radius:50%;background:linear-gradient(160deg,#379FD3,#6a5fc4);animation:fynRise 27s -6s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:38%;top:108%;width:150px;height:150px;margin-left:-75px;border-radius:50%;background:linear-gradient(160deg,#6a5fc4,#a24fc0);animation:fynRise 33s -14s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:52%;top:108%;width:80px;height:80px;margin-left:-40px;border-radius:50%;background:linear-gradient(160deg,#a24fc0,#4b8fd8);animation:fynRise 24s -3s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:64%;top:108%;width:130px;height:130px;margin-left:-65px;border-radius:50%;background:linear-gradient(160deg,#4b8fd8,#8F39AC);animation:fynRise 29s -19s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:78%;top:108%;width:100px;height:100px;margin-left:-50px;border-radius:50%;background:linear-gradient(160deg,#8F39AC,#379FD3);animation:fynRise 23s -9s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:88%;top:108%;width:70px;height:70px;margin-left:-35px;border-radius:50%;background:linear-gradient(160deg,#379FD3,#6a5fc4);animation:fynRise 31s -24s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:30%;top:108%;width:60px;height:60px;margin-left:-30px;border-radius:50%;background:linear-gradient(160deg,#6a5fc4,#a24fc0);animation:fynRise 19s -11s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position:absolute;left:-10%;right:-10%;bottom:-120px;height:220px;border-radius:50%;background:linear-gradient(90deg,#8F39AC,#379FD3);animation:fynPool 9s ease-in-out infinite"></span><span style="position:absolute;left:-10%;right:-10%;top:-150px;height:210px;border-radius:50%;background:linear-gradient(90deg,#379FD3,#8F39AC);animation:fynPool 11s ease-in-out infinite reverse"></span></div></div>
+<h2 style="position:relative;z-index:1;margin:0;text-align:center;font:700 clamp(32px,4.4vw,52px)/1.1 Outfit,sans-serif;letter-spacing:-.025em;color:#333">Jouw kop hier</h2>
+<p style="position:relative;z-index:1;margin:0;max-width:640px;text-align:center;font:400 17px/1.6 Outfit,sans-serif;color:#4b5563">Jouw tekst hier.</p>
+</div>
+</x-dc>
+</body>
+</html>

@@ -79,15 +79,15 @@ class CompetitorResearch
             <!-- Add Competitor -->
             <div class="sseo-ai-dashboard-card">
                 <h2><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h2>
-                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                    <div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <div style="align-self: flex-start;">
                         <label for="competitor-domain">
                             <strong><?php esc_html_e('Competitor Domain:', 'ai-seo-client'); ?></strong>
                         </label><br>
                         <input type="text" id="competitor-domain" class="regular-text"
                                placeholder="competitor.com">
                     </div>
-                    <div>
+                    <div style="align-self: flex-start;">
                         <label for="competitor-sitemap">
                             <strong><?php esc_html_e('Sitemap URL (optional):', 'ai-seo-client'); ?></strong>
                         </label><br>
@@ -97,7 +97,7 @@ class CompetitorResearch
                             <?php esc_html_e('Leave empty to auto-detect. Use a sitemap index URL for a full-site check.', 'ai-seo-client'); ?>
                         </p>
                     </div>
-                    <div style="display:flex;align-items:center;gap:5px;padding-bottom:5px;">
+                    <div style="display:flex;align-items:center;gap:5px;">
                         <input type="checkbox" id="competitor-fullsite" value="1">
                         <label for="competitor-fullsite" style="white-space:nowrap;">
                             <strong><?php esc_html_e('Full site', 'ai-seo-client'); ?></strong>

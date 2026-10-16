@@ -114,7 +114,7 @@ class UpdateServer
 
         // Validate tenant
         $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || $tenant['license_key'] !== $licenseKey) {
+        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
             return new \WP_REST_Response([
                 'success' => false,
                 'message' => 'Invalid license or tenant.',
