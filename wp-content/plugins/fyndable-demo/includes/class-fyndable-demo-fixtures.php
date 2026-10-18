@@ -337,7 +337,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Start elke klantpresentatie hier: de score van 74 is direct begrijpelijk en creëert urgentie zonder technisch jargon.',
                 'audio' => $a('step-01-dashboard-score'),
-                'voiceover' => 'Welkom in Fyndable. We beginnen bij de gezondheidscheck van de website. Met één klik op "Analyze Site" scant de plugin alle pagina's en posts en vertaalt dat naar een totale SEO-score. Groen betekent gezond, oranje vraagt aandacht, rood is kritiek. Deze demowebsite van Van Dijk Klimaattechniek scoort 74 — er is dus ruimte voor winst. Onder de score zie je hoeveel pagina's zijn meegenomen in de analyse.',
+                'voiceover' => 'Welkom in Fyndable. We beginnen bij de gezondheidscheck van de website. Met één klik op "Analyze Site" scant de plugin alle pagina\'s en posts en vertaalt dat naar een totale SEO-score. Groen betekent gezond, oranje vraagt aandacht, rood is kritiek. Deze demowebsite van Van Dijk Klimaattechniek scoort 74 — er is dus ruimte voor winst. Onder de score zie je hoeveel pagina\'s zijn meegenomen in de analyse.',
             ],
             [
                 'id' => 'step-02-dashboard-breakdown', 'slug' => 'ai-seo-dashboard',
@@ -350,7 +350,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Gebruik de breakdown om te laten zien dat SEO geen black box is maar een checklist die systematisch wordt afgerond.',
                 'audio' => $a('step-02-dashboard-breakdown'),
-                'voiceover' => 'Naast de score zie je de breakdown: per SEO-onderdeel hoeveel pagina's al op orde zijn. Denk aan titels, meta descriptions, focus keyphrases, Open Graph-tags, interne links en contentlengte. Elke balk is een voortgangsmeter. De oranje balken zijn je snelste verbeterpunten — daar ligt de grootste relatieve winst voor de klant.',
+                'voiceover' => 'Naast de score zie je de breakdown: per SEO-onderdeel hoeveel pagina\'s al op orde zijn. Denk aan titels, meta descriptions, focus keyphrases, Open Graph-tags, interne links en contentlengte. Elke balk is een voortgangsmeter. De oranje balken zijn je snelste verbeterpunten — daar ligt de grootste relatieve winst voor de klant.',
             ],
             [
                 'id' => 'step-03-dashboard-issues', 'slug' => 'ai-seo-dashboard',
@@ -363,7 +363,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Wijs hier op de 8 ontbrekende SEO-titels: dat is exact het soort werk dat Fyndable geautomatiseerd oplost.',
                 'audio' => $a('step-03-dashboard-issues'),
-                'voiceover' => 'Hieronder de concrete bevindingen. Links de issues: acht pagina's missen bijvoorbeeld een SEO-titel. Klik erop en je ziet precies welke pagina's. Rechts de quick wins — pagina's met goede content maar ontbrekende meta-data. Met de Bulk Optimizer los je die in minuten op. Perfecte openingscasus voor een demo: dit is precies het werk dat Fyndable geautomatiseerd oppakt.',
+                'voiceover' => 'Hieronder de concrete bevindingen. Links de issues: acht pagina\'s missen bijvoorbeeld een SEO-titel. Klik erop en je ziet precies welke pagina\'s. Rechts de quick wins — pagina\'s met goede content maar ontbrekende meta-data. Met de Bulk Optimizer los je die in minuten op. Perfecte openingscasus voor een demo: dit is precies het werk dat Fyndable geautomatiseerd oppakt.',
             ],
             // 2. Keywords
             [
@@ -450,7 +450,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Voor Van Dijk Klimaattechniek is "klimaatbeheersing utrecht" het kernthema — hieronder staat de opgeslagen voorbeeldmap.',
                 'audio' => $a('step-09-clusters-generator'),
-                'voiceover' => 'Nu komt het strategische deel. De Topic Cluster Generator zet één kernthema om in een complete contentarchitectuur: een pillar page met hub- en ondersteunende pagina's. Voor Van Dijk is "klimaatbeheersing utrecht" het kernthema. Kies taal en diepte, audit eventueel je bestaande content, en klik "Generate Map". Hieronder staat al een opgeslagen voorbeeld.',
+                'voiceover' => 'Nu komt het strategische deel. De Topic Cluster Generator zet één kernthema om in een complete contentarchitectuur: een pillar page met hub- en ondersteunende pagina\'s. Voor Van Dijk is "klimaatbeheersing utrecht" het kernthema. Kies taal en diepte, audit eventueel je bestaande content, en klik "Generate Map". Hieronder staat al een opgeslagen voorbeeld.',
             ],
             [
                 'id' => 'step-10-clusters-pillar', 'slug' => 'ai-seo-topic-clusters',
@@ -464,7 +464,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => '13 geplande pagina’s in 3 clusters = drie maanden gestructureerde contentvoorraad.',
                 'audio' => $a('step-10-clusters-pillar'),
-                'voiceover' => 'Dit is een gegenereerde clustermap. Bovenaan een complete gids — de pillar page — waar alle clusters naartoe linken. Eronder drie clusters met elk een hubpagina en ondersteunende artikelen, compleet met doelzoekwoord, woordenaantal en prioriteit. Dertien geplande pagina's, gespreid over drie maanden: een hele kwartaalplanning in één scherm.',
+                'voiceover' => 'Dit is een gegenereerde clustermap. Bovenaan een complete gids — de pillar page — waar alle clusters naartoe linken. Eronder drie clusters met elk een hubpagina en ondersteunende artikelen, compleet met doelzoekwoord, woordenaantal en prioriteit. Dertien geplande pagina\'s, gespreid over drie maanden: een hele kwartaalplanning in één scherm.',
             ],
             [
                 'id' => 'step-11-clusters-generate', 'slug' => 'ai-seo-topic-clusters',
@@ -478,7 +478,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'De geschatte API-kosten staan erbij — je weet vooraf wat een bulk-run kost.',
                 'audio' => $a('step-11-clusters-generate'),
-                'voiceover' => 'Van plan naar publicatie. Klik "Review All Pages", selecteer welke pagina's je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.',
+                'voiceover' => 'Van plan naar publicatie. Klik "Review All Pages", selecteer welke pagina\'s je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.',
             ],
             // 5. Content Calendar
             [
@@ -524,7 +524,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Hoe beter de business-context, hoe scherper de gegenereerde content. Denk aan USP’s, regio en no-go-onderwerpen.',
                 'audio' => $a('step-14-apexflow-profile'),
-                'voiceover' => 'ApexFlow is de content-autopilot. Hij scant de site en bepaalt zelf niche, doelgroep en kernthema's. Hier stuur je dat bij: industry, doelgroep, business-context en eigen zoekwoorden die voorrang krijgen. Onderwerpen die je uitsluit, blijven buiten de deur. Hoe beter de context, hoe scherper de output — denk aan USP's, regio en no-go-onderwerpen.',
+                'voiceover' => 'ApexFlow is de content-autopilot. Hij scant de site en bepaalt zelf niche, doelgroep en kernthema\'s. Hier stuur je dat bij: industry, doelgroep, business-context en eigen zoekwoorden die voorrang krijgen. Onderwerpen die je uitsluit, blijven buiten de deur. Hoe beter de context, hoe scherper de output — denk aan USP\'s, regio en no-go-onderwerpen.',
             ],
             [
                 'id' => 'step-15-apexflow-schedule', 'slug' => 'ai-seo-automation',
@@ -583,7 +583,7 @@ final class Fyndable_Demo_Fixtures
                 ],
                 'tip' => 'Voor Van Dijk Klimaattechniek is de geo-grid dé eye-opener: zichtbaarheid verschilt echt per stadswijk.',
                 'audio' => $a('step-18-rank-local'),
-                'voiceover' => 'Twee extra tabbladen. Local SERP meet je positie in de Google Maps-pack via een geo-grid rond de vestiging — per meetpunt zie je of je bedrijf in de local pack staat. Voor een lokale dienstverlener als Van Dijk is dat dé eye-opener: zichtbaarheid verschilt echt per stadswijk. De Cannibalization-tab detecteert pagina's die onderling om hetzelfde zoekwoord strijden.',
+                'voiceover' => 'Twee extra tabbladen. Local SERP meet je positie in de Google Maps-pack via een geo-grid rond de vestiging — per meetpunt zie je of je bedrijf in de local pack staat. Voor een lokale dienstverlener als Van Dijk is dat dé eye-opener: zichtbaarheid verschilt echt per stadswijk. De Cannibalization-tab detecteert pagina\'s die onderling om hetzelfde zoekwoord strijden.',
             ],
             // 8. LLM Tracker
             [
