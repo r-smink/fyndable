@@ -124,39 +124,70 @@
 
     function showModeChooser(callback) {
         var overlay = document.createElement('div');
-        overlay.className = 'fyndable-mode-overlay';
+        overlay.id = 'fyndable-mode-overlay';
+        // Inline styles guarantee visibility even if the cached stylesheet
+        // is stale or missing; CSS classes still provide the polished look.
+        overlay.style.alignItems = 'center';
+        overlay.style.background = 'rgba(15, 23, 42, .55)';
+        overlay.style.display = 'flex';
+        overlay.style.inset = '0';
+        overlay.style.justifyContent = 'center';
+        overlay.style.position = 'fixed';
+        overlay.style.zIndex = '100010';
         var L = labels();
         overlay.innerHTML =
-            '<div class="fyndable-mode-dialog">' +
-                '<h2>' + escapeHtml(L.chooseModeTitle || 'Hoe wil je de tour volgen?') + '</h2>' +
-                '<p>' + escapeHtml(L.chooseModeDesc || 'Kies of je de toelichting wilt horen (voice-over) of lezen (tekst in de popup).') + '</p>' +
+            '<div class="fyndable-mode-dialog" style="background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(15,23,42,.35);max-width:480px;padding:32px 28px 28px;text-align:center;width:90vw;">' +
+                '<h2 style="color:#111827;font:700 22px/1.25 Outfit,system-ui,sans-serif;margin:0 0 8px;">' + escapeHtml(L.chooseModeTitle || 'Hoe wil je de tour volgen?') + '</h2>' +
+                '<p style="color:#6b7280;font:400 14px/1.5 Outfit,system-ui,sans-serif;margin:0 0 24px;">' + escapeHtml(L.chooseModeDesc || 'Kies of je de toelichting wilt horen (voice-over) of lezen (tekst in de popup).') + '</p>' +
                 '<div class="fyndable-mode-options">' +
-                    '<button type="button" class="fyndable-mode-btn" data-mode="voice">' +
-                        '<span class="fyndable-mode-icon">&#x1F50A;</span>' +
-                        '<span class="fyndable-mode-label">' + escapeHtml(L.modeVoice || 'Met voice-over') + '</span>' +
-                        '<span class="fyndable-mode-hint">' + escapeHtml(L.modeVoiceHint || 'Audio-toelichting bij elke stap') + '</span>' +
+                    '<button type="button" class="fyndable-mode-btn" data-mode="voice" style="align-items:center;background:#f9fafb;border:2px solid #e5e7eb;border-radius:14px;cursor:pointer;display:flex;flex:1;flex-direction:column;gap:6px;max-width:200px;padding:20px 16px;">' +
+                        '<span class="fyndable-mode-icon" style="font-size:28px;line-height:1;">&#x1F50A;</span>' +
+                        '<span class="fyndable-mode-label" style="color:#111827;font:700 15px/1.2 Outfit,system-ui,sans-serif;">' + escapeHtml(L.modeVoice || 'Met voice-over') + '</span>' +
+                        '<span class="fyndable-mode-hint" style="color:#9ca3af;font:400 12px/1.35 Outfit,system-ui,sans-serif;">' + escapeHtml(L.modeVoiceHint || 'Audio-toelichting bij elke stap') + '</span>' +
                     '</button>' +
-                    '<button type="button" class="fyndable-mode-btn" data-mode="text">' +
-                        '<span class="fyndable-mode-icon">&#x1F4DD;</span>' +
-                        '<span class="fyndable-mode-label">' + escapeHtml(L.modeText || 'Met tekst') + '</span>' +
-                        '<span class="fyndable-mode-hint">' + escapeHtml(L.modeTextHint || 'Toelichting als tekst in de popup') + '</span>' +
+                    '<button type="button" class="fyndable-mode-btn" data-mode="text" style="align-items:center;background:#f9fafb;border:2px solid #e5e7eb;border-radius:14px;cursor:pointer;display:flex;flex:1;flex-direction:column;gap:6px;max-width:200px;padding:20px 16px;">' +
+                        '<span class="fyndable-mode-icon" style="font-size:28px;line-height:1;">&#x1F4DD;</span>' +
+                        '<span class="fyndable-mode-label" style="color:#111827;font:700 15px/1.2 Outfit,system-ui,sans-serif;">' + escapeHtml(L.modeText || 'Met tekst') + '</span>' +
+                        '<span class="fyndable-mode-hint" style="color:#9ca3af;font:400 12px/1.35 Outfit,system-ui,sans-serif;">' + escapeHtml(L.modeTextHint || 'Toelichting als tekst in de popup') + '</span>' +
                     '</button>' +
                 '</div>' +
             '</div>';
         document.body.appendChild(overlay);
-        // Force reflow then add visible class for transition
-        overlay.offsetHeight; // eslint-disable-line no-unused-expressions
-        overlay.classList.add('is-visible');
+
+        function closestModeButton(target) {
+            if (!target || target.nodeType !== 1) return null;
+            if (target.getAttribute('data-mode')) return target;
+            if (target.closest) return target.closest('[data-mode]');
+            // Fallback for very old browsers
+            var node = target;
+            while (node && node !== overlay) {
+                if (node.getAttribute && node.getAttribute('data-mode')) return node;
+                node = node.parentNode;
+            }
+            return null;
+        }
+
+        function choose(mode) {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            document.removeEventListener('keydown', onKey);
+            callback(mode);
+        }
+
+        function onKey(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                choose('voice'); // safe default when user dismisses dialog
+            }
+        }
+
         overlay.addEventListener('click', function (e) {
-            var btn = e.target.closest ? e.target.closest('[data-mode]') : null;
+            var btn = closestModeButton(e.target);
             if (!btn) return;
             var mode = btn.getAttribute('data-mode');
-            overlay.classList.remove('is-visible');
-            window.setTimeout(function () {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                callback(mode);
-            }, 250);
+            choose(mode);
         });
+
+        document.addEventListener('keydown', onKey);
     }
 
     function stop() {
