@@ -653,6 +653,95 @@ $Translations = [ordered]@{
     "No valid mandate found for Mollie customer. The payment method may not support recurring payments." = "Geen geldig mandaat gevonden voor Mollie klant. De betalingsmethode ondersteunt mogelijk geen terugkerende betalingen."
     'Mollie is set to %s mode but the API key does not start with "%s".' = 'Mollie is ingesteld op %s modus maar de API sleutel begint niet met "%s".'
     "Payment failed for tenant: %s\nProvider: %s\nTenant Email: %s\n\nPlease check the payment status and follow up if needed." = "Betaling mislukt voor tenant: %s\nProvider: %s\nTenant E-mail: %s\n\nControleer de betalingsstatus en volg op indien nodig."
+
+    # ── Custom Plan (admin + agency portal) ──
+    "Fyndable SmartSEO custom plan — %d license(s)" = "Fyndable SmartSEO custom plan — %d licentie(s)"
+    "This tenant has no custom plan configured." = "Deze tenant heeft geen custom plan geconfigureerd."
+    "This plan allows at most %d licenses." = "Dit plan staat maximaal %d licenties toe."
+    "Custom plan price resolves to a zero amount." = "De prijs van het custom plan komt uit op een nulbedrag."
+    "Valid name and email are required." = "Een geldige naam en e-mailadres zijn vereist."
+    "Price per license must be greater than zero." = "De prijs per licentie moet groter dan nul zijn."
+    "Initial licenses cannot exceed the maximum." = "Initiële licenties mogen het maximum niet overschrijden."
+    "This email already has an agency/custom-plan account." = "Dit e-mailadres heeft al een agency-/custom-plan account."
+    "A tenant with this email already exists." = "Er bestaat al een tenant met dit e-mailadres."
+    "Custom plan created for %s (€%s per license). An invite email has been sent — the customer can activate the plan from the portal, or generate a payment link below." = "Custom plan aangemaakt voor %s (€%s per licentie). Er is een uitnodigingsmail verstuurd — de klant kan het plan activeren via het portal, of genereer hieronder een betaallink."
+    "No custom plan configured for this tenant." = "Geen custom plan geconfigureerd voor deze tenant."
+    "Payment link created and emailed to the customer." = "Betaallink aangemaakt en naar de klant gemaild."
+    "Payment link created — copy it below and send it to the customer." = "Betaallink aangemaakt — kopieer hem hieronder en stuur hem naar de klant."
+    'Custom plan updated. Use "Sync subscription" to apply the new pricing to the live Mollie subscription if needed.' = 'Custom plan bijgewerkt. Gebruik "Sync subscription" om de nieuwe prijzen op het lopende Mollie-abonnement toe te passen indien nodig.'
+    "Subscription amount synced to €%s/month (%d licenses)." = "Abonnementsbedrag gesynchroniseerd naar €%s/maand (%d licenties)."
+    "Your Fyndable custom plan is ready" = "Je Fyndable custom plan is klaar"
+    'Hi %s,\n\nYour custom Fyndable plan has been created: %d license(s) at €%s each, €%s per month.\n\nSet your password and log in to activate your subscription:\n%s\n\nAfter logging in, click "Activate subscription" to complete the first payment. Subsequent licenses are added to your monthly direct debit.\n\n— The Fyndable Team' = 'Hoi %s,\n\nJe Fyndable custom plan is aangemaakt: %d licentie(s) à €%s, €%s per maand.\n\nStel je wachtwoord in en log in om je abonnement te activeren:\n%s\n\nKlik na het inloggen op "Abonnement activeren" om de eerste betaling te voltooien. Extra licenties worden bij je maandelijkse incasso meegenomen.\n\n— Het Fyndable Team'
+    "Fyndable custom plan — payment link" = "Fyndable custom plan — betaallink"
+    "Hi %s,\n\nUse this link to complete the payment for your custom plan (%d license(s), €%s per month):\n\n%s\n\nAfter payment, future monthly charges are collected automatically via direct debit.\n\n— The Fyndable Team" = "Hoi %s,\n\nGebruik deze link om de betaling voor je custom plan te voltooien (%d licentie(s), €%s per maand):\n\n%s\n\nNa de betaling worden de maandelijkse kosten automatisch via incasso geïnd.\n\n— Het Fyndable Team"
+    "Payment link:" = "Betaallink:"
+    "Create Custom Plan" = "Custom Plan Aanmaken"
+    "Create a per-customer plan on agency-tier features with your own price per license. The customer activates it via a Mollie first payment; subsequent licenses are added to the monthly direct debit automatically." = "Maak een plan per klant op agency-tier features met je eigen prijs per licentie. De klant activeert het via een Mollie eerste betaling; extra licenties worden automatisch bij de maandelijkse incasso meegenomen."
+    "Customer Name" = "Klantnaam"
+    "Customer Email" = "Klant E-mail"
+    "Price per License (€/mo)" = "Prijs per Licentie (€/mnd)"
+    "Monthly amount charged per license, e.g. 150.00." = "Maandelijks bedrag per licentie, bijv. 150,00."
+    "Initial Licenses" = "Initiële Licenties"
+    "Licenses covered by the first payment." = "Licenties die door de eerste betaling worden gedekt."
+    "Max Licenses" = "Max Licenties"
+    "Hard cap on paid licenses. 0 = unlimited." = "Harde limiet op betaalde licenties. 0 = onbeperkt."
+    "Volume Discounts" = "Volumekortingen"
+    "Discount applies to the total monthly amount once the license count reaches the threshold. Leave a row empty to skip it." = "Korting geldt op het totale maandbedrag zodra het licentieaantal de drempel bereikt. Laat een rij leeg om die over te slaan."
+    "Custom Plans" = "Custom Plans"
+    "Price/License" = "Prijs/Licentie"
+    "Discounts" = "Kortingen"
+    "Paid Licenses" = "Betaalde Licenties"
+    "Monthly" = "Maandelijks"
+    "Payment Status" = "Betaalstatus"
+    "No custom plans yet." = "Nog geen custom plans."
+    "Edit" = "Bewerken"
+    "Consent log" = "Akkoord-log"
+    "Edit Custom Plan — %s" = "Custom Plan Bewerken — %s"
+    "Save Custom Plan" = "Custom Plan Opslaan"
+    "Also email the link to the customer" = "Mail de link ook naar de klant"
+    "Generate Payment Link" = "Betaallink Genereren"
+    "Sync Subscription Amount" = "Abonnementsbedrag Synchroniseren"
+    'The payment link creates a Mollie first payment for the plan''s initial licenses — share it with the customer or let them use the "Activate subscription" button in their portal. "Sync" forces the live Mollie subscription amount to match the computed plan total (paid licenses × price − discount).' = 'De betaallink maakt een Mollie eerste betaling voor de initiële licenties van het plan — deel hem met de klant of laat ze de "Abonnement activeren"-knop in hun portal gebruiken. "Sync" zet het lopende Mollie-abonnementsbedrag gelijk aan het berekende plantotaal (betaalde licenties × prijs − korting).'
+    "Consent Log — %s" = "Akkoord-log — %s"
+    "User" = "Gebruiker"
+    "Effective" = "Ingangsdatum"
+    "No consent entries yet." = "Nog geen akkoord-registraties."
+    "Payment received. Your subscription is being activated — it will be ready within a few moments." = "Betaling ontvangen. Je abonnement wordt geactiveerd — het is binnen enkele ogenblikken klaar."
+    "Your plan is not active yet." = "Je plan is nog niet actief."
+    "Activate your subscription to start generating licenses." = "Activeer je abonnement om licenties te kunnen genereren."
+    "Activate Subscription" = "Abonnement Activeren"
+    "Your Plan & Licenses" = "Jouw Plan & Licenties"
+    "Payment received. Your subscription is being activated — licenses become available within a few moments." = "Betaling ontvangen. Je abonnement wordt geactiveerd — licenties zijn binnen enkele ogenblikken beschikbaar."
+    "Licenses added. The new monthly amount will be charged on the next direct debit." = "Licenties toegevoegd. Het nieuwe maandbedrag wordt bij de eerstvolgende incasso geïnd."
+    "Activate your subscription" = "Activeer je abonnement"
+    "Your custom plan: €%s per license per month. First payment: %d license(s) = €%s." = "Jouw custom plan: €%s per licentie per maand. Eerste betaling: %d licentie(s) = €%s."
+    "Pay via iDEAL, credit card or Bancontact. This first payment authorizes a monthly SEPA direct debit — subsequent payments are collected automatically. Additional licenses you add later are included in the next direct debit." = "Betaal via iDEAL, creditcard of Bancontact. Deze eerste betaling machtigt een maandelijkse SEPA-incasso — vervolgbetalingen worden automatisch geïnd. Extra licenties die je later toevoegt, worden bij de eerstvolgende incasso meegenomen."
+    "Activate Subscription — €%s" = "Abonnement Activeren — €%s"
+    "Plan status" = "Planstatus"
+    "%d generated" = "%d gegenereerd"
+    "Price per license" = "Prijs per licentie"
+    "month" = "maand"
+    "Current monthly debit" = "Huidige maandelijkse incasso"
+    "Next debit date" = "Volgende incassodatum"
+    '%1$d+ licenses → %2$s%% off' = 'vanaf %1$d licenties → %2$s%% korting'
+    "Add licenses" = "Licenties toevoegen"
+    "Each additional license costs €%s per month and is charged on your next direct debit. You can generate the license immediately." = "Elke extra licentie kost €%s per maand en wordt bij je eerstvolgende incasso geïnd. Je kunt de licentie direct genereren."
+    "Licenses to add" = "Licenties om toe te voegen"
+    "New monthly amount" = "Nieuw maandbedrag"
+    "volume discount applied" = "volumekorting toegepast"
+    "Effective from your next debit on %s." = "Ingang vanaf je eerstvolgende incasso op %s."
+    "Effective from your next direct debit." = "Ingang vanaf je eerstvolgende incasso."
+    "Confirmation" = "Bevestiging"
+    "I agree that my monthly direct debit changes to the amount shown, effective from the next debit date." = "Ik ga akkoord dat mijn maandelijkse incasso wijzigt naar het getoonde bedrag, ingaand vanaf de eerstvolgende incassodatum."
+    "You do not have permission to manage this plan." = "Je hebt geen toestemming om dit plan te beheren."
+    "Account not found." = "Account niet gevonden."
+    "No custom plan found for this account." = "Geen custom plan gevonden voor dit account."
+    "Your subscription is already active." = "Je abonnement is al actief."
+    "You must agree to the monthly debit increase before adding licenses." = "Je moet akkoord gaan met de verhoging van de maandelijkse incasso voordat je licenties toevoegt."
+    "Activate your subscription before adding licenses." = "Activeer je abonnement voordat je licenties toevoegt."
+    "You have used all your paid licenses." = "Je hebt al je betaalde licenties gebruikt."
+    "Add a license" = "Voeg een licentie toe"
+    "to raise your quota — the cost is added to your next direct debit." = "om je quota te verhogen — de kosten worden bij je eerstvolgende incasso meegenomen."
 }
 
 # ─── Extract strings from PHP files ──────────────────────────────────────────
@@ -661,8 +750,8 @@ function Extract-StringsFromPhp {
     $content = Get-Content $FilePath -Raw -Encoding UTF8
     $strings = [System.Collections.Generic.HashSet[string]]::new()
     # Simple pattern: match strings without escaped quotes (covers 99% of cases)
-    $pattern1 = "(?:__|esc_html__|esc_attr__)\(\s*'([^']*)'\s*,\s*'sseo-ai-saas'"
-    $pattern2 = '(?:__|esc_html__|esc_attr__)\(\s*"([^"]*)"\s*,\s*''sseo-ai-saas'''
+    $pattern1 = "(?:__|esc_html__|esc_attr__|esc_html_e|esc_attr_e|_e)\(\s*'([^']*)'\s*,\s*'sseo-ai-saas'"
+    $pattern2 = '(?:__|esc_html__|esc_attr__|esc_html_e|esc_attr_e|_e)\(\s*"([^"]*)"\s*,\s*''sseo-ai-saas'''
     foreach ($match in [regex]::Matches($content, $pattern1)) {
         $s = $match.Groups[1].Value -replace "\\\'", "'"
         [void]$strings.Add($s)
@@ -692,8 +781,39 @@ if (Test-Path $mainFile) {
 
 Write-Host "Found $($allStrings.Count) unique strings."
 
-# Build final translations dict (case-sensitive lookup with case-insensitive fallback)
-$finalTranslations = [ordered]@{}
+# ─── Load existing .po translations as fallback ─────────────────────────────
+# Preserves msgstr values for strings not in the dictionary (e.g. previously
+# hand-translated entries) instead of resetting them to English.
+$poPath = Join-Path $LanguagesDir "sseo-ai-saas-nl_NL.po"
+$existingPo = @{}
+if (Test-Path $poPath) {
+    function Unescape-PoString($s) {
+        return $s -replace '\\n', "`n" -replace '\\"', '"' -replace '\\\\', '\'
+    }
+    $curId = $null; $curStr = $null; $state = ''
+    foreach ($line in (Get-Content $poPath -Encoding UTF8)) {
+        if ($line -match '^msgid "(.*)"$') { $curId = $Matches[1]; $curStr = $null; $state = 'id' }
+        elseif ($line -match '^msgstr "(.*)"$') { $curStr = $Matches[1]; $state = 'str' }
+        elseif ($line -match '^"(.*)"$') {
+            if ($state -eq 'id') { $curId += $Matches[1] }
+            elseif ($state -eq 'str') { $curStr += $Matches[1] }
+        }
+        else {
+            if ($null -ne $curId -and $null -ne $curStr -and $curId -ne '' -and $curStr -ne '') {
+                $existingPo[(Unescape-PoString $curId)] = (Unescape-PoString $curStr)
+            }
+            $curId = $null; $curStr = $null; $state = ''
+        }
+    }
+    if ($null -ne $curId -and $null -ne $curStr -and $curId -ne '' -and $curStr -ne '') {
+        $existingPo[(Unescape-PoString $curId)] = (Unescape-PoString $curStr)
+    }
+    Write-Host "Loaded $($existingPo.Count) existing translations from .po as fallback."
+}
+
+# Build final translations dict (case-sensitive keys — 'Licenses' and 'licenses'
+# are distinct msgids; an OrderedDictionary would collapse them)
+$finalTranslations = New-Object 'System.Collections.Generic.Dictionary`2[string,string]' ([StringComparer]::Ordinal)
 $missing = @()
 foreach ($s in ($allStrings | Sort-Object)) {
     if ($Translations.Contains($s)) {
@@ -703,9 +823,16 @@ foreach ($s in ($allStrings | Sort-Object)) {
         $ciMatch = $Translations.Keys | Where-Object { $_ -ieq $s } | Select-Object -First 1
         if ($ciMatch) {
             $finalTranslations[$s] = $Translations[$ciMatch]
+        } elseif ($existingPo.Contains($s)) {
+            $finalTranslations[$s] = $existingPo[$s]
         } else {
-            $finalTranslations[$s] = $s
-            $missing += $s
+            $poCi = $existingPo.Keys | Where-Object { $_ -ieq $s } | Select-Object -First 1
+            if ($poCi) {
+                $finalTranslations[$s] = $existingPo[$poCi]
+            } else {
+                $finalTranslations[$s] = $s
+                $missing += $s
+            }
         }
     }
 }

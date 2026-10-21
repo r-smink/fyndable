@@ -105,6 +105,12 @@ class LicenseAdmin
             'sseo-ai-agency-accounts',
             [$this, 'renderAgencyAccountsPage']
         );
+
+        // Custom plan admin actions
+        add_action('admin_post_sseo_ai_create_custom_plan', [$this, 'handleCreateCustomPlan']);
+        add_action('admin_post_sseo_ai_custom_plan_payment_link', [$this, 'handleCustomPlanPaymentLink']);
+        add_action('admin_post_sseo_ai_custom_plan_update', [$this, 'handleCustomPlanUpdate']);
+        add_action('admin_post_sseo_ai_custom_plan_sync', [$this, 'handleCustomPlanSync']);
     }
     
     /**
@@ -1384,7 +1390,571 @@ class LicenseAdmin
                     </tbody>
                 </table>
             </div>
+
+            <?php $this->renderCustomPlansSection(); ?>
         </div>
+        <?php
+    }
+
+    /**
+     * Redirect back to the agency accounts page with a notice.
+     */
+    private function customPlanRedirect(array $args = []): void
+    {
+        wp_safe_redirect(add_query_arg(
+            array_merge(['page' => 'sseo-ai-agency-accounts'], $args),
+            admin_url('admin.php')
+        ));
+        exit;
+    }
+
+    /**
+     * Create a custom plan: agency-tier tenant + WP user (agency_partner)
+     * + per-tenant pricing config. License quota stays 0 until the first
+     * payment activates the subscription.
+     */
+    public function handleCreateCustomPlan(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Permission denied.', 'sseo-ai-saas'));
+        }
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_create_custom_plan')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        $email = sanitize_email($_POST['cp_email'] ?? '');
+        $name = sanitize_text_field($_POST['cp_name'] ?? '');
+        $price = (float) ($_POST['cp_price_per_license'] ?? 0);
+        $initial = max(1, (int) ($_POST['cp_initial_licenses'] ?? 1));
+        $maxLicenses = max(0, (int) ($_POST['cp_max_licenses'] ?? 0));
+
+        if (empty($email) || !is_email($email) || empty($name)) {
+            $this->customPlanRedirect(['custom_error' => __('Valid name and email are required.', 'sseo-ai-saas')]);
+        }
+        if ($price <= 0) {
+            $this->customPlanRedirect(['custom_error' => __('Price per license must be greater than zero.', 'sseo-ai-saas')]);
+        }
+        if ($maxLicenses > 0 && $initial > $maxLicenses) {
+            $this->customPlanRedirect(['custom_error' => __('Initial licenses cannot exceed the maximum.', 'sseo-ai-saas')]);
+        }
+
+        // Guard against orphaned tenants: bail early when this email already
+        // has an agency account or a tenant row.
+        $existingUser = get_user_by('email', $email);
+        if ($existingUser && $this->tenants->getAgencyAccount((int) $existingUser->ID)) {
+            $this->customPlanRedirect(['custom_error' => __('This email already has an agency/custom-plan account.', 'sseo-ai-saas')]);
+        }
+        if ($this->tenants->findTenantByEmail($email)) {
+            $this->customPlanRedirect(['custom_error' => __('A tenant with this email already exists.', 'sseo-ai-saas')]);
+        }
+
+        $discounts = $this->parseDiscountRows();
+
+        $tenantResult = $this->tenants->createTenant([
+            'name' => $name,
+            'email' => $email,
+            'tier' => 'agency',
+            'status' => 'active',
+        ]);
+        if (is_wp_error($tenantResult)) {
+            $this->customPlanRedirect(['custom_error' => $tenantResult->get_error_message()]);
+        }
+
+        $tenantKey = $tenantResult['tenant_key'];
+        $this->tenants->updateTenant($tenantKey, ['payment_status' => 'pending']);
+
+        $customPlan = new CustomPlan($this->tenants);
+        $customPlan->savePlan($tenantKey, [
+            'price_per_license' => $price,
+            'discounts' => $discounts,
+            'max_licenses' => $maxLicenses,
+            'initial_licenses' => $initial,
+            'name' => $name,
+        ]);
+
+        $roleManager = new AgencyRoleManager($this->tenants);
+        $userResult = $roleManager->createAgencyUser($email, $name, (int) $tenantResult['id'], 0);
+        if (is_wp_error($userResult)) {
+            $this->customPlanRedirect(['custom_error' => $userResult->get_error_message()]);
+        }
+
+        $this->sendCustomPlanInvite($email, $name, (int) $userResult['user_id'], $price, $initial);
+
+        $this->customPlanRedirect(['custom_notice' => sprintf(
+            __('Custom plan created for %s (€%s per license). An invite email has been sent — the customer can activate the plan from the portal, or generate a payment link below.', 'sseo-ai-saas'),
+            $email,
+            number_format($price, 2, ',', '')
+        )]);
+    }
+
+    /**
+     * Generate a Mollie checkout link for a custom plan's first payment
+     * and show it so the admin can copy/send it to the customer.
+     */
+    public function handleCustomPlanPaymentLink(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Permission denied.', 'sseo-ai-saas'));
+        }
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_custom_plan_payment_link')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        $tenantId = (int) ($_POST['tenant_id'] ?? 0);
+        $tenant = $this->tenants->getTenantById($tenantId);
+        if (!$tenant) {
+            $this->customPlanRedirect(['custom_error' => __('Tenant not found.', 'sseo-ai-saas')]);
+        }
+
+        $sendEmail = !empty($_POST['cp_send_email']);
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($tenant['tenant_key']);
+        if ($plan === null) {
+            $this->customPlanRedirect(['custom_error' => __('No custom plan configured for this tenant.', 'sseo-ai-saas')]);
+        }
+
+        $licenseCount = max(1, $customPlan->paidLicenseCount($tenant) ?: $plan['initial_licenses']);
+
+        $processor = new PaymentProcessor($this->tenants);
+        $result = $processor->createCustomPlanCheckout($tenant, $licenseCount);
+        if (is_wp_error($result)) {
+            $this->customPlanRedirect(['custom_error' => $result->get_error_message()]);
+        }
+
+        $checkoutUrl = $result['checkout_url'] ?? '';
+        if ($sendEmail && $checkoutUrl !== '') {
+            $this->sendCustomPlanPaymentEmail($tenant, $result);
+        }
+
+        $this->customPlanRedirect([
+            'custom_notice' => $sendEmail
+                ? __('Payment link created and emailed to the customer.', 'sseo-ai-saas')
+                : __('Payment link created — copy it below and send it to the customer.', 'sseo-ai-saas'),
+            'payment_url' => $checkoutUrl,
+        ]);
+    }
+
+    /**
+     * Update an existing custom plan's pricing/discount settings.
+     */
+    public function handleCustomPlanUpdate(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Permission denied.', 'sseo-ai-saas'));
+        }
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_custom_plan_update')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        $tenantId = (int) ($_POST['tenant_id'] ?? 0);
+        $tenant = $this->tenants->getTenantById($tenantId);
+        if (!$tenant) {
+            $this->customPlanRedirect(['custom_error' => __('Tenant not found.', 'sseo-ai-saas')]);
+        }
+
+        $price = (float) ($_POST['cp_price_per_license'] ?? 0);
+        if ($price <= 0) {
+            $this->customPlanRedirect(['custom_error' => __('Price per license must be greater than zero.', 'sseo-ai-saas'), 'edit_custom' => $tenantId]);
+        }
+
+        $customPlan = new CustomPlan($this->tenants);
+        $customPlan->savePlan($tenant['tenant_key'], [
+            'price_per_license' => $price,
+            'discounts' => $this->parseDiscountRows(),
+            'max_licenses' => max(0, (int) ($_POST['cp_max_licenses'] ?? 0)),
+            'initial_licenses' => max(1, (int) ($_POST['cp_initial_licenses'] ?? 1)),
+            'name' => sanitize_text_field($_POST['cp_name'] ?? ($tenant['name'] ?? '')),
+        ]);
+
+        $this->customPlanRedirect([
+            'custom_notice' => __('Custom plan updated. Use "Sync subscription" to apply the new pricing to the live Mollie subscription if needed.', 'sseo-ai-saas'),
+            'edit_custom' => $tenantId,
+        ]);
+    }
+
+    /**
+     * Sync the live Mollie subscription amount with the current computed
+     * plan total (paid licenses × price × (1 - discount)).
+     */
+    public function handleCustomPlanSync(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Permission denied.', 'sseo-ai-saas'));
+        }
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'sseo_ai_custom_plan_sync')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+
+        $tenantId = (int) ($_POST['tenant_id'] ?? 0);
+        $tenant = $this->tenants->getTenantById($tenantId);
+        if (!$tenant) {
+            $this->customPlanRedirect(['custom_error' => __('Tenant not found.', 'sseo-ai-saas')]);
+        }
+
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($tenant['tenant_key']);
+        if ($plan === null) {
+            $this->customPlanRedirect(['custom_error' => __('No custom plan configured for this tenant.', 'sseo-ai-saas')]);
+        }
+
+        $count = max(1, $customPlan->paidLicenseCount($tenant));
+        $amount = $customPlan->monthlyAmount($plan, $count);
+
+        $processor = new PaymentProcessor($this->tenants);
+        $result = $processor->setMollieSubscriptionAmount($tenant['tenant_key'], $amount);
+        if (is_wp_error($result)) {
+            $this->customPlanRedirect(['custom_error' => $result->get_error_message(), 'edit_custom' => $tenantId]);
+        }
+
+        $this->customPlanRedirect([
+            'custom_notice' => sprintf(
+                __('Subscription amount synced to €%s/month (%d licenses).', 'sseo-ai-saas'),
+                number_format($amount, 2, ',', ''),
+                $count
+            ),
+            'edit_custom' => $tenantId,
+        ]);
+    }
+
+    /**
+     * Parse the discount threshold rows (min[] / pct[] pairs) from POST.
+     */
+    private function parseDiscountRows(): array
+    {
+        $mins = array_map('intval', (array) ($_POST['cp_discount_min'] ?? []));
+        $pcts = array_map('floatval', (array) ($_POST['cp_discount_pct'] ?? []));
+
+        $discounts = [];
+        foreach ($mins as $i => $min) {
+            $pct = $pcts[$i] ?? 0;
+            if ($min >= 1 && $pct > 0 && $pct < 100) {
+                $discounts[] = ['min' => $min, 'pct' => $pct];
+            }
+        }
+        return $discounts;
+    }
+
+    /**
+     * Invite email for a new custom-plan customer: set-password link +
+     * portal URL where they can activate the subscription.
+     */
+    private function sendCustomPlanInvite(string $email, string $name, int $userId, float $price, int $initialLicenses): void
+    {
+        $user = get_user_by('ID', $userId);
+        if (!$user) {
+            return;
+        }
+
+        $portalUrl = admin_url('admin.php?page=sseo-ai-agency');
+        $setPasswordUrl = wp_login_url($portalUrl);
+        $key = get_password_reset_key($user);
+        if (!is_wp_error($key)) {
+            $setPasswordUrl = home_url(
+                '/set-password?key=' . rawurlencode($key)
+                . '&login=' . rawurlencode($user->user_login)
+                . '&redirect_to=' . rawurlencode($portalUrl)
+            );
+        }
+
+        $monthly = number_format($price * $initialLicenses, 2, ',', '');
+        $subject = __('Your Fyndable custom plan is ready', 'sseo-ai-saas');
+        $message = sprintf(
+            __("Hi %s,\n\nYour custom Fyndable plan has been created: %d license(s) at €%s each, €%s per month.\n\nSet your password and log in to activate your subscription:\n%s\n\nAfter logging in, click \"Activate subscription\" to complete the first payment. Subsequent licenses are added to your monthly direct debit.\n\n— The Fyndable Team", 'sseo-ai-saas'),
+            $name ?: 'there',
+            $initialLicenses,
+            number_format($price, 2, ',', ''),
+            $monthly,
+            $setPasswordUrl
+        );
+
+        wp_mail($email, $subject, $message);
+    }
+
+    /**
+     * Email the Mollie checkout link for a custom plan's first payment.
+     */
+    private function sendCustomPlanPaymentEmail(array $tenant, array $checkout): void
+    {
+        $amount = number_format((float) ($checkout['amount'] ?? 0), 2, ',', '');
+        $subject = __('Fyndable custom plan — payment link', 'sseo-ai-saas');
+        $message = sprintf(
+            __("Hi %s,\n\nUse this link to complete the payment for your custom plan (%d license(s), €%s per month):\n\n%s\n\nAfter payment, future monthly charges are collected automatically via direct debit.\n\n— The Fyndable Team", 'sseo-ai-saas'),
+            $tenant['name'] ?? 'there',
+            (int) ($checkout['license_count'] ?? 1),
+            $amount,
+            $checkout['checkout_url'] ?? ''
+        );
+
+        wp_mail($tenant['email'] ?? '', $subject, $message);
+    }
+
+    /**
+     * Render the custom plans section on the agency accounts page:
+     * create card, plans table, edit form, consent log.
+     */
+    private function renderCustomPlansSection(): void
+    {
+        $customPlan = new CustomPlan($this->tenants);
+        $planTenants = $customPlan->getCustomPlanTenants();
+
+        $editId = (int) ($_GET['edit_custom'] ?? 0);
+        $consentId = (int) ($_GET['view_consent'] ?? 0);
+        $notice = sanitize_text_field($_GET['custom_notice'] ?? '');
+        $error = sanitize_text_field($_GET['custom_error'] ?? '');
+        $paymentUrl = esc_url_raw($_GET['payment_url'] ?? '');
+        ?>
+            <?php if ($notice): ?>
+                <div class="notice notice-success"><p><?php echo esc_html($notice); ?></p></div>
+            <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
+            <?php endif; ?>
+            <?php if ($paymentUrl): ?>
+                <div class="notice notice-info"><p>
+                    <strong><?php esc_html_e('Payment link:', 'sseo-ai-saas'); ?></strong><br>
+                    <code style="word-break: break-all;"><?php echo esc_html($paymentUrl); ?></code>
+                </p></div>
+            <?php endif; ?>
+
+            <div class="sseo-ai-card" style="margin-top: 25px;">
+                <h2><?php esc_html_e('Create Custom Plan', 'sseo-ai-saas'); ?></h2>
+                <p class="description"><?php esc_html_e('Create a per-customer plan on agency-tier features with your own price per license. The customer activates it via a Mollie first payment; subsequent licenses are added to the monthly direct debit automatically.', 'sseo-ai-saas'); ?></p>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_create_custom_plan')); ?>">
+                    <?php wp_nonce_field('sseo_ai_create_custom_plan'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="cp_name"><?php esc_html_e('Customer Name', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" name="cp_name" id="cp_name" class="regular-text" required></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cp_email"><?php esc_html_e('Customer Email', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="email" name="cp_email" id="cp_email" class="regular-text" required></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cp_price_per_license"><?php esc_html_e('Price per License (€/mo)', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="cp_price_per_license" id="cp_price_per_license" value="150" min="0.01" step="0.01" class="small-text" required>
+                                <p class="description"><?php esc_html_e('Monthly amount charged per license, e.g. 150.00.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cp_initial_licenses"><?php esc_html_e('Initial Licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="cp_initial_licenses" id="cp_initial_licenses" value="1" min="1" max="100" class="small-text">
+                                <p class="description"><?php esc_html_e('Licenses covered by the first payment.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cp_max_licenses"><?php esc_html_e('Max Licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="number" name="cp_max_licenses" id="cp_max_licenses" value="0" min="0" max="500" class="small-text">
+                                <p class="description"><?php esc_html_e('Hard cap on paid licenses. 0 = unlimited.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Volume Discounts', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <p>
+                                    <?php esc_html_e('From', 'sseo-ai-saas'); ?>
+                                    <input type="number" name="cp_discount_min[]" value="5" min="1" class="small-text">
+                                    <?php esc_html_e('licenses', 'sseo-ai-saas'); ?> →
+                                    <input type="number" name="cp_discount_pct[]" value="5" min="0" max="99" step="0.1" class="small-text">%
+                                </p>
+                                <p>
+                                    <?php esc_html_e('From', 'sseo-ai-saas'); ?>
+                                    <input type="number" name="cp_discount_min[]" value="10" min="1" class="small-text">
+                                    <?php esc_html_e('licenses', 'sseo-ai-saas'); ?> →
+                                    <input type="number" name="cp_discount_pct[]" value="10" min="0" max="99" step="0.1" class="small-text">%
+                                </p>
+                                <p>
+                                    <?php esc_html_e('From', 'sseo-ai-saas'); ?>
+                                    <input type="number" name="cp_discount_min[]" value="" min="1" class="small-text">
+                                    <?php esc_html_e('licenses', 'sseo-ai-saas'); ?> →
+                                    <input type="number" name="cp_discount_pct[]" value="" min="0" max="99" step="0.1" class="small-text">%
+                                </p>
+                                <p class="description"><?php esc_html_e('Discount applies to the total monthly amount once the license count reaches the threshold. Leave a row empty to skip it.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Create Custom Plan', 'sseo-ai-saas'), 'primary', 'create_custom_plan'); ?>
+                </form>
+            </div>
+
+            <div class="sseo-ai-card">
+                <h2><?php esc_html_e('Custom Plans', 'sseo-ai-saas'); ?></h2>
+                <table class="wp-list-table widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Customer', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Email', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Price/License', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Discounts', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Paid Licenses', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Monthly', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Payment Status', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($planTenants)): ?>
+                            <tr><td colspan="8"><?php esc_html_e('No custom plans yet.', 'sseo-ai-saas'); ?></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($planTenants as $t):
+                                $plan = $t['custom_plan'];
+                                $paidCount = $customPlan->paidLicenseCount($t);
+                                $monthly = $customPlan->monthlyAmount($plan, $paidCount);
+                                $discountLabels = array_map(function ($d) {
+                                    return $d['min'] . '+ → ' . rtrim(rtrim(number_format((float)$d['pct'], 1), '0'), '.') . '%';
+                                }, $plan['discounts']);
+                            ?>
+                                <tr>
+                                    <td><?php echo esc_html($t['name']); ?></td>
+                                    <td><?php echo esc_html($t['email']); ?></td>
+                                    <td>&euro;<?php echo esc_html(number_format($plan['price_per_license'], 2, ',', '')); ?></td>
+                                    <td><?php echo esc_html($discountLabels ? implode(', ', $discountLabels) : '—'); ?></td>
+                                    <td><?php echo esc_html($paidCount . ($plan['max_licenses'] > 0 ? ' / ' . $plan['max_licenses'] : '')); ?></td>
+                                    <td>&euro;<?php echo esc_html(number_format($monthly, 2, ',', '')); ?></td>
+                                    <td><span class="badge badge-<?php echo esc_attr($t['payment_status'] ?: 'none'); ?>"><?php echo esc_html(ucfirst($t['payment_status'] ?: 'pending')); ?></span></td>
+                                    <td>
+                                        <a href="<?php echo esc_url(add_query_arg(['page' => 'sseo-ai-agency-accounts', 'edit_custom' => (int)$t['id']], admin_url('admin.php'))); ?>"><?php esc_html_e('Edit', 'sseo-ai-saas'); ?></a> |
+                                        <a href="<?php echo esc_url(add_query_arg(['page' => 'sseo-ai-agency-accounts', 'view_consent' => (int)$t['id']], admin_url('admin.php'))); ?>"><?php esc_html_e('Consent log', 'sseo-ai-saas'); ?></a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <?php
+            if ($editId > 0) {
+                $this->renderCustomPlanEditForm($editId, $customPlan);
+            }
+            if ($consentId > 0) {
+                $this->renderCustomPlanConsentLog($consentId, $customPlan);
+            }
+            ?>
+        <?php
+    }
+
+    /**
+     * Render the inline edit form + payment-link / sync actions for a
+     * custom plan tenant.
+     */
+    private function renderCustomPlanEditForm(int $tenantId, CustomPlan $customPlan): void
+    {
+        $tenant = $this->tenants->getTenantById($tenantId);
+        if (!$tenant) {
+            return;
+        }
+        $plan = $customPlan->getPlan($tenant['tenant_key']);
+        if ($plan === null) {
+            return;
+        }
+        $discounts = array_pad($plan['discounts'], 3, ['min' => '', 'pct' => '']);
+        ?>
+            <div class="sseo-ai-card">
+                <h2><?php printf(esc_html__('Edit Custom Plan — %s', 'sseo-ai-saas'), esc_html($tenant['name'])); ?></h2>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_custom_plan_update')); ?>">
+                    <?php wp_nonce_field('sseo_ai_custom_plan_update'); ?>
+                    <input type="hidden" name="tenant_id" value="<?php echo esc_attr($tenantId); ?>">
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="cp_edit_price"><?php esc_html_e('Price per License (€/mo)', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="number" name="cp_price_per_license" id="cp_edit_price" value="<?php echo esc_attr(number_format($plan['price_per_license'], 2, '.', '')); ?>" min="0.01" step="0.01" class="small-text" required></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cp_edit_initial"><?php esc_html_e('Initial Licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="number" name="cp_initial_licenses" id="cp_edit_initial" value="<?php echo esc_attr($plan['initial_licenses']); ?>" min="1" max="100" class="small-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="cp_edit_max"><?php esc_html_e('Max Licenses', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="number" name="cp_max_licenses" id="cp_edit_max" value="<?php echo esc_attr($plan['max_licenses']); ?>" min="0" max="500" class="small-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Volume Discounts', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <?php foreach ($discounts as $d): ?>
+                                <p>
+                                    <?php esc_html_e('From', 'sseo-ai-saas'); ?>
+                                    <input type="number" name="cp_discount_min[]" value="<?php echo esc_attr($d['min']); ?>" min="1" class="small-text">
+                                    <?php esc_html_e('licenses', 'sseo-ai-saas'); ?> →
+                                    <input type="number" name="cp_discount_pct[]" value="<?php echo esc_attr($d['pct']); ?>" min="0" max="99" step="0.1" class="small-text">%
+                                </p>
+                                <?php endforeach; ?>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Save Custom Plan', 'sseo-ai-saas'), 'primary', 'save_custom_plan'); ?>
+                </form>
+
+                <hr>
+                <h3><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></h3>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_custom_plan_payment_link')); ?>">
+                        <?php wp_nonce_field('sseo_ai_custom_plan_payment_link'); ?>
+                        <input type="hidden" name="tenant_id" value="<?php echo esc_attr($tenantId); ?>">
+                        <label style="display:block;margin-bottom:6px;">
+                            <input type="checkbox" name="cp_send_email" value="1">
+                            <?php esc_html_e('Also email the link to the customer', 'sseo-ai-saas'); ?>
+                        </label>
+                        <?php submit_button(__('Generate Payment Link', 'sseo-ai-saas'), 'secondary', 'generate_payment_link', false); ?>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_custom_plan_sync')); ?>">
+                        <?php wp_nonce_field('sseo_ai_custom_plan_sync'); ?>
+                        <input type="hidden" name="tenant_id" value="<?php echo esc_attr($tenantId); ?>">
+                        <?php submit_button(__('Sync Subscription Amount', 'sseo-ai-saas'), 'secondary', 'sync_subscription', false); ?>
+                    </form>
+                </div>
+                <p class="description"><?php esc_html_e('The payment link creates a Mollie first payment for the plan\'s initial licenses — share it with the customer or let them use the "Activate subscription" button in their portal. "Sync" forces the live Mollie subscription amount to match the computed plan total (paid licenses × price − discount).', 'sseo-ai-saas'); ?></p>
+            </div>
+        <?php
+    }
+
+    /**
+     * Render the consent log for a custom plan tenant.
+     */
+    private function renderCustomPlanConsentLog(int $tenantId, CustomPlan $customPlan): void
+    {
+        $tenant = $this->tenants->getTenantById($tenantId);
+        if (!$tenant) {
+            return;
+        }
+        $log = array_reverse($customPlan->getConsentLog($tenant['tenant_key']));
+        ?>
+            <div class="sseo-ai-card">
+                <h2><?php printf(esc_html__('Consent Log — %s', 'sseo-ai-saas'), esc_html($tenant['name'])); ?></h2>
+                <table class="wp-list-table widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('User', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Licenses', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Monthly', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Effective', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('IP', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($log)): ?>
+                            <tr><td colspan="6"><?php esc_html_e('No consent entries yet.', 'sseo-ai-saas'); ?></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($log as $entry):
+                                $user = get_user_by('ID', (int) ($entry['user_id'] ?? 0));
+                            ?>
+                                <tr>
+                                    <td><?php echo esc_html($entry['at'] ?? ''); ?></td>
+                                    <td><?php echo esc_html($user ? $user->user_email : '#' . (int) ($entry['user_id'] ?? 0)); ?></td>
+                                    <td><?php echo esc_html(($entry['licenses_before'] ?? '?') . ' → ' . ($entry['licenses_after'] ?? '?')); ?></td>
+                                    <td>&euro;<?php echo esc_html(number_format((float)($entry['old_amount'] ?? 0), 2, ',', '')) . ' → €' . esc_html(number_format((float)($entry['new_amount'] ?? 0), 2, ',', '')); ?></td>
+                                    <td><?php echo esc_html($entry['next_payment_date'] ?? '—'); ?></td>
+                                    <td><?php echo esc_html($entry['ip'] ?? ''); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php
     }
 }

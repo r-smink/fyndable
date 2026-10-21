@@ -357,9 +357,20 @@ class PaymentProcessor
 
         error_log('SSEO AI SaaS: Creating Mollie subscription for tenant ' . $tenantKey . ' with mandate ' . $mandateId . ' (customer ' . $customerId . ', interval ' . $mollieInterval . ')');
 
-        $pricing = $this->getTierPricing($tier, $interval);
-        if (is_wp_error($pricing)) {
-            return $pricing;
+        // Custom plan: monthly amount comes from the per-tenant plan
+        // (license_count × price_per_license × (1 - discount)) instead of
+        // the standard agency tier price — which may not be configured.
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($tenantKey);
+        $customLicenseCount = 0;
+        if ($plan !== null) {
+            $customLicenseCount = max(1, (int) ($payment['metadata']['license_count'] ?? $plan['initial_licenses']));
+            $pricing = ['amount' => $customPlan->monthlyAmount($plan, $customLicenseCount)];
+        } else {
+            $pricing = $this->getTierPricing($tier, $interval);
+            if (is_wp_error($pricing)) {
+                return $pricing;
+            }
         }
 
         $isTrialMandate = ($payment['metadata']['type'] ?? '') === 'trial_mandate';
@@ -415,6 +426,17 @@ class PaymentProcessor
                 'last_payment_at' => current_time('mysql'),
                 'expires_at' => gmdate('Y-m-d H:i:s', strtotime($expiresPeriod)),
             ]);
+        }
+
+        // Custom plan: the number of licenses covered by the first payment
+        // becomes the paid-license quota on the linked agency account.
+        if ($plan !== null) {
+            $account = $this->tenants->getAgencyAccountByTenant((int) $tenant['id']);
+            if ($account && (int) $account['max_sub_licenses'] < $customLicenseCount) {
+                $this->tenants->updateAgencyAccount((int) $account['id'], [
+                    'max_sub_licenses' => $customLicenseCount,
+                ]);
+            }
         }
 
         return $subscription;
@@ -1096,6 +1118,145 @@ class PaymentProcessor
             'message' => __('Redirect to Mollie to verify your payment method for the trial.', 'sseo-ai-saas'),
             'checkout_url' => $payment['_links']['checkout']['href'] ?? '',
             'trial_days' => $trialDays,
+        ];
+    }
+
+    /**
+     * Set the Mollie subscription amount to an absolute value.
+     *
+     * Unlike updateMollieSubscriptionAmount() (which adds a delta), this
+     * sets the exact new monthly total — required for custom plans where
+     * volume discounts change the effective per-license price.
+     */
+    public function setMollieSubscriptionAmount(string $tenantKey, float $newAmount): array|\WP_Error
+    {
+        $customerId = $this->tenants->getTenantSetting($tenantKey, 'mollie_customer_id', '');
+        $subscriptionId = $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '');
+
+        if (empty($customerId) || empty($subscriptionId)) {
+            return new \WP_Error('not_configured', __('Mollie subscription not configured for this tenant', 'sseo-ai-saas'));
+        }
+
+        $subscription = $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [], 'GET');
+        if (is_wp_error($subscription)) {
+            return $subscription;
+        }
+
+        $currency = $subscription['amount']['currency'] ?? $this->currency;
+
+        return $this->mollieRequest('customers/' . $customerId . '/subscriptions/' . $subscriptionId, [
+            'amount' => [
+                'currency' => $currency,
+                'value' => number_format($newAmount, 2, '.', ''),
+            ],
+        ], 'PATCH');
+    }
+
+    /**
+     * Create a Mollie first payment for a custom plan.
+     *
+     * The customer pays for `licenseCount` licenses at the plan's
+     * price_per_license (with volume discount applied). On success the
+     * webhook turns this into a mandate + monthly subscription whose
+     * amount equals the same monthly total.
+     *
+     * @param array $tenant       Tenant record.
+     * @param int   $licenseCount Number of licenses covered by the first payment.
+     * @param string|null $returnUrl Optional redirect URL after payment.
+     * @return array|\WP_Error Checkout result with checkout_url, or WP_Error.
+     */
+    public function createCustomPlanCheckout(array $tenant, int $licenseCount = 1, ?string $returnUrl = null): array|\WP_Error
+    {
+        if (empty($this->mollieApiKey)) {
+            return new \WP_Error('mollie_not_configured', __('Mollie API key is not configured', 'sseo-ai-saas'));
+        }
+
+        $expectedPrefix = $this->mollieMode === 'test' ? 'test_' : 'live_';
+        if (strpos($this->mollieApiKey, $expectedPrefix) !== 0) {
+            return new \WP_Error(
+                'mollie_key_mismatch',
+                sprintf(__('Mollie is set to %s mode but the API key does not start with "%s".', 'sseo-ai-saas'), $this->mollieMode, $expectedPrefix)
+            );
+        }
+
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($tenant['tenant_key'] ?? '');
+        if ($plan === null) {
+            return new \WP_Error('no_custom_plan', __('This tenant has no custom plan configured.', 'sseo-ai-saas'));
+        }
+
+        $licenseCount = max(1, $licenseCount);
+        if ($plan['max_licenses'] > 0 && $licenseCount > $plan['max_licenses']) {
+            return new \WP_Error(
+                'over_plan_max',
+                sprintf(__('This plan allows at most %d licenses.', 'sseo-ai-saas'), $plan['max_licenses'])
+            );
+        }
+
+        $amount = $customPlan->monthlyAmount($plan, $licenseCount);
+        if ($amount <= 0) {
+            return new \WP_Error('invalid_amount', __('Custom plan price resolves to a zero amount.', 'sseo-ai-saas'));
+        }
+
+        $customer = $this->createMollieCustomer($tenant);
+        if (is_wp_error($customer)) {
+            return $customer;
+        }
+
+        $customerId = $customer['id'];
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_customer_id', $customerId);
+
+        if (empty($returnUrl)) {
+            $returnUrl = add_query_arg(
+                'plan_payment',
+                'done',
+                admin_url('admin.php?page=sseo-ai-agency-add-licenses')
+            );
+        }
+
+        $payment = $this->mollieRequest('payments', [
+            'amount' => $this->mollieAmount($amount),
+            'customerId' => $customerId,
+            'sequenceType' => 'first',
+            'description' => sprintf(
+                __('Fyndable SmartSEO custom plan — %d license(s)', 'sseo-ai-saas'),
+                $licenseCount
+            ),
+            'redirectUrl' => $returnUrl,
+            'webhookUrl' => $this->getWebhookUrl('mollie'),
+            'metadata' => [
+                'tenant_key' => $tenant['tenant_key'],
+                'tier' => $tenant['tier'] ?? 'agency',
+                'type' => 'custom_plan',
+                'license_count' => $licenseCount,
+            ],
+        ]);
+
+        if (is_wp_error($payment)) {
+            return $payment;
+        }
+
+        error_log(sprintf(
+            'SSEO AI SaaS: Custom plan first payment created — tenant=%s customer=%s payment=%s licenses=%d amount=%s %s',
+            $tenant['tenant_key'],
+            $customerId,
+            $payment['id'] ?? '',
+            $licenseCount,
+            $amount,
+            strtoupper($this->currency)
+        ));
+
+        $this->tenants->setTenantSetting($tenant['tenant_key'], 'mollie_payment_id', $payment['id']);
+
+        return [
+            'provider' => 'mollie',
+            'tenant_key' => $tenant['tenant_key'],
+            'license_count' => $licenseCount,
+            'amount' => $amount,
+            'currency' => $this->currency,
+            'status' => 'pending_payment',
+            'checkout_url' => $payment['_links']['checkout']['href'] ?? '',
+            'payment_id' => $payment['id'] ?? '',
         ];
     }
 }
