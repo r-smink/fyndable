@@ -325,23 +325,27 @@ class DataForSeoClient
 
     /**
      * Get backlinks summary for a target domain.
-     * Endpoint: /v3/backlinks/{target}/summary/live
+     * Endpoint: /v3/backlinks/summary/live (target goes in the task body, not the path).
+     * Ranks are returned on a 0-100 scale so they read like a Domain Rating.
      */
     public function backlinksSummaryLive(string $target): array|\WP_Error
     {
         $target = $this->normalizeTarget($target);
-        return $this->request('/backlinks/' . urlencode($target) . '/summary/live', [['target' => $target]], 'backlinks');
+        return $this->request('/backlinks/summary/live', [[
+            'target'     => $target,
+            'rank_scale' => 'one_hundred',
+        ]], 'backlinks');
     }
 
     /**
      * Get backlinks list for a target domain.
-     * Endpoint: /v3/backlinks/{target}/backlinks/live
+     * Endpoint: /v3/backlinks/backlinks/live (target goes in the task body, not the path).
      */
     public function backlinksLive(string $target, array $params = []): array|\WP_Error
     {
         $target = $this->normalizeTarget($target);
-        $task = array_merge(['target' => $target], $params);
-        return $this->request('/backlinks/' . urlencode($target) . '/backlinks/live', [$task], 'backlinks');
+        $task = array_merge(['target' => $target, 'rank_scale' => 'one_hundred'], $params);
+        return $this->request('/backlinks/backlinks/live', [$task], 'backlinks');
     }
 
     // -------------------------------------------------------------------------

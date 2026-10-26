@@ -736,7 +736,7 @@ class ApiGateway
         $locale = $this->getSerpApiLocaleByCountry($country);
         $radiusMeters = min(15028132, max(1, (int) round($radius * 1000)));
 
-        $url = add_query_arg([
+        $url = add_query_arg(rawurlencode_deep([
             'engine' => 'google_maps',
             'q' => $keyword,
             'lat' => $lat,
@@ -746,7 +746,7 @@ class ApiGateway
             'gl' => $locale['gl'] ?? $country,
             'api_key' => $apiKey,
             'output' => 'json',
-        ], 'https://serpapi.com/search');
+        ]), 'https://serpapi.com/search'); // tenant-controlled values: encode so '&' or '#' can't inject provider params
 
         $response = wp_remote_get($url, ['timeout' => 60]);
 
@@ -1439,7 +1439,7 @@ class ApiGateway
     /**
      * Handle DataForSEO Backlinks — Live backlinks list.
      *
-     * Body: { target: "example.com", limit?, filters?, ... }
+     * Body: { target: "example.com", limit?, offset?, order_by?[], filters?, mode?, backlinks_status_type? }
      */
     public function handleBacklinksLive(\WP_REST_Request $request): \WP_REST_Response
     {
@@ -1462,16 +1462,24 @@ class ApiGateway
 
         $params = [];
         if (!empty($body['limit'])) {
-            $params['limit'] = (int) $body['limit'];
+            $params['limit'] = max(1, min(1000, (int) $body['limit']));
         }
         if (!empty($body['offset'])) {
-            $params['offset'] = (int) $body['offset'];
+            $params['offset'] = max(0, min(20000, (int) $body['offset']));
         }
         if (!empty($body['order_by'])) {
-            $params['order_by'] = sanitize_text_field($body['order_by']);
+            // DataForSEO expects an array of "field,asc|desc" rules (max 3).
+            $orderBy = is_array($body['order_by']) ? $body['order_by'] : [$body['order_by']];
+            $params['order_by'] = array_slice(array_map('sanitize_text_field', array_filter($orderBy, 'is_string')), 0, 3);
         }
         if (!empty($body['filters']) && is_array($body['filters'])) {
             $params['filters'] = $body['filters'];
+        }
+        if (!empty($body['mode']) && in_array($body['mode'], ['as_is', 'one_per_domain', 'one_per_anchor'], true)) {
+            $params['mode'] = $body['mode'];
+        }
+        if (!empty($body['backlinks_status_type']) && in_array($body['backlinks_status_type'], ['all', 'live', 'lost'], true)) {
+            $params['backlinks_status_type'] = $body['backlinks_status_type'];
         }
 
         $result = $this->dataForSeoClient->backlinksLive($target, $params);
@@ -1603,7 +1611,7 @@ class ApiGateway
     {
         $locale = $this->getSerpApiLocale($location);
 
-        $url = add_query_arg([
+        $url = add_query_arg(rawurlencode_deep([
             'q' => $keyword,
             'location' => $location,
             'google_domain' => $locale['domain'],
@@ -1611,7 +1619,7 @@ class ApiGateway
             'hl' => $languageCode !== '' ? $languageCode : $locale['hl'],
             'api_key' => $apiKey,
             'output' => 'json',
-        ], 'https://serpapi.com/search');
+        ]), 'https://serpapi.com/search'); // tenant-controlled values: encode so '&' or '#' can't inject provider params
 
         $response = wp_remote_get($url, ['timeout' => 60]);
 
@@ -1854,13 +1862,13 @@ class ApiGateway
         $components = sanitize_text_field($body['components'] ?? 'country:nl');
         $types = sanitize_text_field($body['types'] ?? '(cities)');
 
-        $url = add_query_arg([
+        $url = add_query_arg(rawurlencode_deep([
             'input' => $input,
             'key' => $apiKey,
             'types' => $types,
             'language' => $language,
             'components' => $components,
-        ], 'https://maps.googleapis.com/maps/api/place/autocomplete/json');
+        ]), 'https://maps.googleapis.com/maps/api/place/autocomplete/json'); // tenant-controlled values: encode so '&' or '#' can't inject provider params
 
         $response = wp_remote_get($url, [
             'timeout' => 15,
@@ -1930,13 +1938,13 @@ class ApiGateway
             return new \WP_REST_Response($cached, 200);
         }
 
-        $url = add_query_arg([
+        $url = add_query_arg(rawurlencode_deep([
             'address' => $address,
             'key' => $apiKey,
             'language' => 'nl',
             'region' => 'nl',
             'components' => 'country:NL',
-        ], 'https://maps.googleapis.com/maps/api/geocode/json');
+        ]), 'https://maps.googleapis.com/maps/api/geocode/json'); // tenant-controlled values: encode so '&' or '#' can't inject provider params
 
         $response = wp_remote_get($url, [
             'timeout' => 15,

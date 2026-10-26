@@ -506,11 +506,15 @@ class LicenseAPI
     private function getImageApiData(): array
     {
         $settings = new \SSEOAISaaS\SaaSSettings();
+        // Prefer a dedicated (credit-limited) OpenRouter image key so the
+        // central LLM key doesn't leave the server. Falls back to the central
+        // key for backward compatibility — see security-patch-1.md.
+        $openRouterImageKey = (string) get_option('sseo_ai_saas_openrouter_image_api_key', '');
         return [
             'provider' => $settings->getImageApiProvider(),
             'key' => match ($settings->getImageApiProvider()) {
                 'openart' => get_option('ai_seo_saas_openart_api_key', ''),
-                'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                'openrouter' => $openRouterImageKey !== '' ? $openRouterImageKey : get_option('sseo_ai_saas_openrouter_api_key', ''),
                 default => $settings->getImageApiKey(),
             },
             'model' => $settings->getImageApiModel(),
@@ -805,31 +809,33 @@ class LicenseAPI
             ], 429);
         }
 
-        $email = $request->get_param('email');
+        $email = (string) $request->get_param('email');
         $name = $request->get_param('name');
         $siteUrl = $request->get_param('site_url');
 
-        // Check if email already has a tenant (prevent trial abuse)
-        $allTenants = $this->tenants->getAllTenants(500);
-        foreach ($allTenants as $existing) {
-            if (($existing['email'] ?? '') === $email) {
-                $tier = $existing['tier'] ?? '';
-                if ($tier === 'trial') {
-                    // Never return the existing license_key — knowing the email
-                    // address alone must not expose credentials. The key was
-                    // emailed at signup; the user can request a resend.
-                    return new \WP_REST_Response([
-                        'success' => false,
-                        'error' => 'trial_exists',
-                        'message' => 'You already have a trial account. Your license key was sent by email — use it or upgrade.',
-                    ], 409);
-                }
-                return new \WP_REST_Response([
-                    'success' => false,
-                    'error' => 'account_exists',
-                    'message' => 'An account with this email already exists.',
-                ], 409);
-            }
+        if (!is_email($email)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_email',
+                'message' => 'Please provide a valid email address.',
+            ], 400);
+        }
+
+        // SECURITY: the license key is delivered only by email (welcome email
+        // via sseo_ai_license_activated), never in this response. Returning it
+        // let anyone create a trial with a fake address and use the
+        // credentials immediately (incl. getTenantStatus → image_api key).
+        // The response is identical for new and existing addresses so the
+        // endpoint can't be used to enumerate customer emails.
+        $genericResponse = new \WP_REST_Response([
+            'success' => true,
+            'email_sent' => true,
+            'message' => 'If this email address is eligible for a trial, the license key has been sent to it.',
+        ], 200);
+
+        // One account per email (prevent trial abuse) — direct lookup, no 500-row cap.
+        if (!empty($this->tenants->findTenantsByEmail($email))) {
+            return $genericResponse;
         }
 
         // Generate license key for trial
@@ -873,7 +879,7 @@ class LicenseAPI
 
         $tenantKey = $tenantResult['tenant_key'];
 
-        // Fire activation hook for welcome email
+        // Fire activation hook for welcome email (contains the license key)
         do_action('sseo_ai_license_activated', $tenantKey, [
             'email' => $email,
             'tier' => 'trial',
@@ -881,14 +887,7 @@ class LicenseAPI
             'expires_at' => $expiresAt,
         ]);
 
-        return new \WP_REST_Response([
-            'success' => true,
-            'license_key' => $licenseKey,
-            'tenant_key' => $tenantKey,
-            'tier' => 'trial',
-            'expires_at' => $expiresAt,
-            'trial_days' => $trialDays,
-        ], 200);
+        return $genericResponse;
     }
 
     /**
@@ -1286,8 +1285,8 @@ class LicenseAPI
 
         // SECURITY: restrict postMessage target origin to the tenant's registered
         // domain so OAuth tokens cannot be intercepted by an arbitrary opener.
-        // Falls back to '*' only when the domain cannot be parsed (never breaks flow).
-        $clientOrigin = '*';
+        // No '*' fallback: without a parseable domain the flow stops.
+        $clientOrigin = '';
         if (!empty($tenant['domain'])) {
             $parsed = wp_parse_url($tenant['domain']);
             if (!empty($parsed['host'])) {
@@ -1296,6 +1295,9 @@ class LicenseAPI
                     $clientOrigin .= ':' . $parsed['port'];
                 }
             }
+        }
+        if ($clientOrigin === '') {
+            wp_die(__('No site domain is registered for this license. Re-activate the license on your site and try again.', 'sseo-ai-saas'), 400);
         }
 
         header('Content-Type: text/html; charset=utf-8');
@@ -1341,7 +1343,11 @@ class LicenseAPI
             var statusArea = document.getElementById('status-area');
 
             function setStatus(msg, isError) {
-                statusArea.innerHTML = '<p class="status' + (isError ? ' error' : '') + '">' + msg + '</p>';
+                // textContent: msg can contain provider error text.
+                var p = document.createElement('p');
+                p.className = 'status' + (isError ? ' error' : '');
+                p.textContent = msg;
+                statusArea.replaceChildren(p);
             }
 
             function closePopup() {

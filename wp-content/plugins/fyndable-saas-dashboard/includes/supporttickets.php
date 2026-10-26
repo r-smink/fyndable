@@ -396,7 +396,17 @@ class SupportTickets
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/image.php';
 
-        $upload = wp_handle_upload($files['screenshot'], ['test_form' => false]);
+        // Screenshots only — otherwise tenants could host any WP-allowed file type
+        // (PDF, Office, video) on the portal domain.
+        $upload = wp_handle_upload($files['screenshot'], [
+            'test_form' => false,
+            'mimes' => [
+                'jpg|jpeg|jpe' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+            ],
+        ]);
         if (!empty($upload['error'])) {
             return new \WP_REST_Response([
                 'success' => false,

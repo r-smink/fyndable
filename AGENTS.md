@@ -72,7 +72,7 @@ When enabled, the GEO scan runs the same page through multiple AI models sequent
 
 `publicapi.php` — class `PublicApi`, key managed via GEO Scan admin page (integratiekaart, `SaaSSettings::getWebsiteScanKey()` / `regenerateWebsiteScanKey()`, option `sseo_ai_saas_website_scan_key`):
 
-- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; idempotent per email: an existing non-expired non-failed website scan returns `200 {scan_id, duplicate:true}` instead of a new scan; IP rate limit 10/h → `201 {scan_id}` for new scans
+- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; one active scan per email: an existing non-expired non-failed website scan returns `409 already_scanned` (no id/token — security-patch-1 N7); IP rate limit 10/h → `201 {scan_id}` for new scans
 - `GET /ai-seo-saas/v1/public/geo-scan/{id}/status` — `{status, progress, progress_label}` + `teaser` (score, top-3 strengths/weaknesses/findings, keyword flags) when completed — full report stays internal
 - `POST /admin/geo-scan` (AdminApi) is now async too: returns `202 {scan_id, status:'queued'}` — poll `GET /admin/geo-scan/{id}`
 
@@ -431,3 +431,24 @@ New scans may take longer because of up to 9 additional live platform requests. 
 - Webhook (`webhookhandler.php`): `type=custom_plan` loopt via de generieke `sequenceType=first` → `createMollieSubscription`; bij niet-`paid` status wordt `cleanupPendingSignup` **overgeslagen** voor custom-plan tenants (anders verdwijnen tenant + plan bij een mislukte eerste betaling).
 - Vertalingen: `generate_nl_translations.ps1` scant nu ook `esc_html_e`/`esc_attr_e`/`_e` (1176 extra strings) en merge't bestaande `.po`-vertalingen als fallback; `$finalTranslations` is een case-sensitive `Dictionary` ('Licenses' vs 'licenses' zijn aparte msgids). Let op: msgids met `%1$d`-placeholders MOETEN single-quoted in de dictionary (`$d` interpoleert anders als variabele).
 - Verificatie: `C:\Devtools\php\php.exe -l` (PHP binary staat niet op PATH maar bestaat wel).
+
+## Backlinks — echte data voor Advanced Backlinks / Competitor Research (2026-10-23)
+
+- **DataForSEO-pad gefixt** (SaaS `dataforseoclient.php` + client `dataforseobacklinksclient.php`): target zat in het URL-pad (`/backlinks/{domain}/backlinks/live`) → nu `/v3/backlinks/backlinks/live` en `/v3/backlinks/summary/live` met `target` in de body, `rank_scale: one_hundred` (DR 0-100). Summary-DR komt uit `rank` (was `domain_rank`). De backlinkcalls gaven daarvoor geen data. **Portal moet gedeployed worden** voordat de proxy werkt.
+- `apigateway.php` `handleBacklinksLive` laat nu ook `mode` (as_is|one_per_domain|one_per_anchor), `backlinks_status_type` en `order_by[]` (array) door; limit/offset worden begrensd.
+- `BacklinkAnalyzer` is de gedeelde databron: `getBacklinkItems($domain, $query)` levert genormaliseerde links (source_url/domain, target_url, anchor_text, domain_rating, link_type, item_type, attributes, page_title, spam_score, is_broken, target_status, first_seen), met DataForSEO-filtering wanneer `$query` gezet is (cache 24u, negatief 15 min). Daarnaast `getLinkGap()` (one_per_domain vs. eigen domein, spam ≥50 eruit), `classifyLink()`, `getCompetitorDomains()`, `normalizeDomain()`. Ahrefs/SE Ranking-profielen lopen via dezelfde `normalizeLink()`/`buildProfile()`.
+- Concurrenten: `sseo_ai_add_competitor` / `sseo_ai_remove_competitor` (max 5, option `sseo_ai_competitor_domains` = `[{domain, added_at}]`; legacy strings worden ook gelezen). Voorheen bestond geen handler, dus de option bleef altijd leeg.
+- Toxic: score = `backlink_spam_score` + 50 voor spam-ankers (casino/porn/viagra…) + 15 bij DR<5; toxic vanaf 50. Output bevat nu `toxicity` + `reason` (de UI verwachtte die al).
+- `POST /sseo-ai/v1/backlinks/analyze` (`restAnalyzeBacklinks`) bestaat nu; `GET /backlinks/opportunities` geeft de link gap (optioneel `competitor`, `keyword`).
+- `AdvancedBacklinks` (krijgt `BacklinkAnalyzer` geïnjecteerd): broken links via DataForSEO-filter `is_broken = true` (geen HEAD-requests meer), competitor targets = link gap over alle concurrenten, ankeranalyse op eigen links met merktermen (sitenaam/domein) + doelkeywords uit actieve getrackte keywords + `_sseo_ai_focus_keyphrase` (was hardcoded), AI-aanbevelingen gecachet (1 week). Nieuwe handler `sseo_ai_generate_outreach` (LLM; e-mail via `.val()` in de textarea gezet).
+- `CompetitorResearch` (krijgt `BacklinkAnalyzer`): echte categorisering, topbronnen met DR, ankerverdeling, samenvatting op basis van data; nieuwe handler `sseo_ai_get_backlink_strategy` (HTML-fragment). Andere tab-handlers (`sseo_ai_get_keyword_strategy`, `_content_calendar`, `_win_loss`, `_ad_copy`) bestaan nog steeds niet.
+- Nog open: `sseo_ai_disavow_link` heeft geen handler; geen historie of tracking over tijd (punt 2/3 van het backlinkplan).
+
+## Security patch 1 (2026-10-23)
+
+Volledig verslag: `security-patch-1.md` (repo root). Kort:
+- `/license/trial` en `/signup/activate` geven geen `license_key`/`tenant_key` meer in de response; de key gaat alleen via de welkomstmail. Trial-respons is identiek voor nieuwe/bestaande e-mails. Duplicaatchecks via `TenantRepository::findTenantsByEmail()` (geen `getAllTenants(500)`-loop meer).
+- `getImageApiData()` stuurt `sseo_ai_saas_openrouter_image_api_key` (Settings → Image, aparte gelimiteerde key) mee als die gezet is, anders nog de centrale OpenRouter-key — **centrale key roteren + image-proxy bouwen staat open**.
+- Client-activatie volgt alleen redirects binnen de dashboard-host (`DashboardAPI::isSameDashboardHost()`); cURL-fallback volgt geen redirects.
+- Custom plans: `GET_LOCK` rond add-licenses, qty 1-100 server-side, `createMollieSubscription()` idempotent per first payment (`mollie_subscription_source_payment`), dashboard-return maakt geen tweede abonnement.
+- `HtmlFetcher::isUrlSafe()`: alleen http(s), volledige IPv6-check + AAAA. Competitor-sitemap-fetches via `wp_safe_remote_get`. SerpAPI/Places-query-args via `rawurlencode_deep()`. Support-screenshots alleen afbeeldingen. OAuth-popup: geen `'*'`-fallback meer.

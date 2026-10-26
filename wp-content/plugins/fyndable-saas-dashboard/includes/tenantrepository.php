@@ -389,6 +389,31 @@ class TenantRepository
 
         return $row;
     }
+
+    /**
+     * Find all tenants with an email address (direct WHERE lookup, no row cap).
+     */
+    public function findTenantsByEmail(string $email): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($email === '') {
+            return [];
+        }
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE email = %s ORDER BY id DESC",
+            $email
+        ), ARRAY_A) ?: [];
+
+        foreach ($rows as &$row) {
+            $row['metadata'] = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+        }
+        unset($row);
+
+        return $rows;
+    }
     
     /**
      * Update tenant

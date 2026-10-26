@@ -1010,3 +1010,127 @@ msgstr "'Pool nu verversen' bouwt de keyword-pool direct opnieuw op (verbruikt S
 
 msgid "last 50 entries"
 msgstr "laatste 50 regels"
+
+#, php-format
+msgid "Up to %d competitors. Used for link gap and broken-link prospecting."
+msgstr "Maximaal %d concurrenten. Gebruikt voor de link gap en broken-link prospecting."
+
+msgid "Remove"
+msgstr "Verwijderen"
+
+msgid "Remove this competitor?"
+msgstr "Deze concurrent verwijderen?"
+
+#, php-format
+msgid "high spam score (%d)"
+msgstr "hoge spamscore (%d)"
+
+msgid "spam-related anchor text"
+msgstr "spamgerelateerde ankertekst"
+
+msgid "very low authority domain"
+msgstr "domein met zeer lage autoriteit"
+
+msgid "Invalid domain"
+msgstr "Ongeldig domein"
+
+msgid "Please enter a valid domain, e.g. competitor.com"
+msgstr "Voer een geldig domein in, bijv. concurrent.nl"
+
+msgid "This is your own domain."
+msgstr "Dit is je eigen domein."
+
+msgid "This competitor is already added."
+msgstr "Deze concurrent is al toegevoegd."
+
+#, php-format
+msgid "You can track up to %d competitors."
+msgstr "Je kunt maximaal %d concurrenten volgen."
+
+msgid "No backlink data source is available."
+msgstr "Er is geen bron voor backlinkdata beschikbaar."
+
+msgid "Competitors Linked"
+msgstr "Gelinkte concurrenten"
+
+msgid "Guest Post"
+msgstr "Gastblog"
+
+msgid "Directory"
+msgstr "Bedrijvengids"
+
+msgid "Forum"
+msgstr "Forum"
+
+msgid "Social"
+msgstr "Social"
+
+msgid "Editorial"
+msgstr "Redactioneel"
+
+msgid "Source URL required"
+msgstr "Bron-URL is verplicht"
+
+msgid "Unable to generate recommendations at this time."
+msgstr "Er kunnen op dit moment geen aanbevelingen worden gegenereerd."
+
+msgid "Guest posts"
+msgstr "Gastblogs"
+
+msgid "Directories"
+msgstr "Bedrijvengidsen"
+
+msgid "Forums"
+msgstr "Forums"
+
+msgid "No backlink data available for this competitor."
+msgstr "Geen backlinkdata beschikbaar voor deze concurrent."
+
+#, php-format
+msgid "Most recognizable link type: %1$s (%2$d%% of analyzed links)."
+msgstr "Meest herkenbare linktype: %1$s (%2$d%% van de geanalyseerde links)."
+
+#, php-format
+msgid "%d%% of the links are dofollow."
+msgstr "%d%% van de links is dofollow."
+
+#, php-format
+msgid "Strongest sources: %s."
+msgstr "Sterkste bronnen: %s."
+
+msgid "No backlink data available for this competitor. Check your backlink provider under Integrations."
+msgstr "Geen backlinkdata beschikbaar voor deze concurrent. Controleer je backlinkprovider onder Integraties."
+
+#, php-format
+msgid "Analyzed links: %d"
+msgstr "Geanalyseerde links: %d"
+
+#, php-format
+msgid "Dofollow: %s%%"
+msgstr "Dofollow: %s%%"
+
+#, php-format
+msgid "Branded anchors: %s%%"
+msgstr "Merkankers: %s%%"
+
+#, php-format
+msgid "Keyword anchors: %s%%"
+msgstr "Keyword-ankers: %s%%"
+
+msgid "Link Type"
+msgstr "Linktype"
+
+msgid "Links"
+msgstr "Links"
+
+msgid "Top Sources"
+msgstr "Topbronnen"
+
+msgid "DR"
+msgstr "DR"
+
+msgid "Anchor Text"
+msgstr "Ankertekst"
+
+msgid "Count"
+msgstr "Aantal"

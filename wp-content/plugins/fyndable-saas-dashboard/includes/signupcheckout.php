@@ -316,17 +316,15 @@ class SignupCheckout
         }
 
         // Check if email already exists; allow retrying a failed/cancelled pending payment
-        $existingTenants = $this->tenants->getAllTenants(500);
-        foreach ($existingTenants as $existing) {
-            if (($existing['email'] ?? '') === $email) {
-                if (($existing['status'] ?? '') === 'pending_payment') {
-                    $this->cleanupPendingSignup($existing);
-                } else {
-                    return new \WP_REST_Response([
-                        'success' => false,
-                        'message' => 'An account with this email already exists. Please log in or use a different email.',
-                    ], 409);
-                }
+        // Direct lookup — the old getAllTenants(500) loop missed duplicates beyond 500 tenants.
+        foreach ($this->tenants->findTenantsByEmail((string) $email) as $existing) {
+            if (($existing['status'] ?? '') === 'pending_payment') {
+                $this->cleanupPendingSignup($existing);
+            } else {
+                return new \WP_REST_Response([
+                    'success' => false,
+                    'message' => 'An account with this email already exists. Please log in or use a different email.',
+                ], 409);
             }
         }
 
@@ -599,10 +597,15 @@ class SignupCheckout
             ]);
         }
 
+        // SECURITY: never return the license key here. tenant_key appears in
+        // payment return URLs (history, Referer, analytics, PSP dashboard), so
+        // tenant_key → license_key would hand out the full credential pair.
+        // The key is delivered by email (sseo_ai_payment_success → welcome mail).
         return new \WP_REST_Response([
             'success' => true,
-            'license_key' => $tenant['license_key'],
-            'redirect_url' => $this->getSuccessUrl($tenant['license_key']),
+            'activated' => true,
+            'email_sent' => true,
+            'redirect_url' => $this->getSuccessUrl(),
         ], 200);
     }
 
@@ -642,12 +645,27 @@ class SignupCheckout
      */
     public function handlePaymentReturn(): void
     {
-        if (is_admin() || wp_doing_ajax() || empty($_GET['fyndable_payment']) || empty($_GET['tenant_key'])) {
+        if (is_admin() || wp_doing_ajax() || empty($_GET['fyndable_payment'])) {
             return;
         }
 
         $state = sanitize_text_field($_GET['fyndable_payment']);
-        $tenantKey = sanitize_text_field($_GET['tenant_key']);
+
+        // Resolve tenant_key from either the new opaque ref token or the
+        // legacy tenant_key parameter (for in-flight payments created before
+        // this change was deployed).
+        $tenantKey = '';
+        if (!empty($_GET['ref'])) {
+            $tenantKey = (string) $this->paymentProcessor->resolvePaymentReturnRef(
+                sanitize_text_field($_GET['ref'])
+            );
+        }
+        if ($tenantKey === '' && !empty($_GET['tenant_key'])) {
+            $tenantKey = sanitize_text_field($_GET['tenant_key']);
+        }
+        if ($tenantKey === '') {
+            return;
+        }
         $provider = isset($_GET['provider']) ? sanitize_text_field($_GET['provider']) : '';
         $paymentId = isset($_GET['paymentId'])
             ? sanitize_text_field($_GET['paymentId'])
@@ -867,12 +885,11 @@ class SignupCheckout
     }
 
     /**
-     * Get success URL with license key.
+     * Get success URL (no credentials in the URL — the key is emailed).
      */
-    private function getSuccessUrl(string $licenseKey): string
+    private function getSuccessUrl(): string
     {
         return add_query_arg([
-            'license_key' => $licenseKey,
             'signup' => 'complete',
         ], home_url('/thank-you/'));
     }

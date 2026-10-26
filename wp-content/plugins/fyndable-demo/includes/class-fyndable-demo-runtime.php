@@ -12,6 +12,11 @@ final class Fyndable_Demo_Runtime
 
     public function register(): void
     {
+        // Always register the settings page and save handler so admins
+        // can enable/disable the demo even when it is currently off.
+        add_action('admin_menu', [$this, 'registerSettingsPage'], 50);
+        add_action('wp_ajax_fyndable_demo_save_settings', [$this, 'saveSettings']);
+
         if (!$this->isEnabled()) {
             return;
         }
@@ -28,16 +33,14 @@ final class Fyndable_Demo_Runtime
         add_filter('pre_option_sseo_ai_apexflow_keyword_pool', [$this, 'fixtureApexflowPool']);
         add_filter('pre_option_sseo_ai_apexflow_plan', [$this, 'fixtureApexflowPlan']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets'], 100);
-        add_action('admin_menu', [$this, 'registerSettingsPage'], 50);
         add_action('admin_bar_menu', [$this, 'addAdminBarMenu'], 999);
         add_action('admin_notices', [$this, 'showNotice']);
         add_action('wp_ajax_fyndable_demo_reset', [$this, 'resetState']);
-        add_action('wp_ajax_fyndable_demo_save_settings', [$this, 'saveSettings']);
     }
 
     private function isEnabled(): bool
     {
-        return get_option('fyndable_demo_enabled', '1') === '1';
+        return get_option('fyndable_demo_enabled', '0') === '1';
     }
 
     private function canUseDemo(): bool
@@ -65,15 +68,34 @@ final class Fyndable_Demo_Runtime
      * so sites that already configured these features keep their own values.
      * Returning an array short-circuits get_option(); returning false falls
      * through to the stored option.
+     *
+     * pre_option filters receive false by default. We temporarily remove our
+     * own filter, read the real value, and re-attach. If a real value exists,
+     * we fall through (return false) so get_option() returns it.
      */
     public function fixtureCompetitors()
     {
-        return $this->canUseDemo() ? Fyndable_Demo_Fixtures::competitors() : false;
+        if (!$this->canUseDemo()) {
+            return false;
+        }
+        remove_filter('pre_option_sseo_ai_tracked_competitors', [$this, 'fixtureCompetitors']);
+        $real = get_option('sseo_ai_tracked_competitors');
+        add_filter('pre_option_sseo_ai_tracked_competitors', [$this, 'fixtureCompetitors']);
+        if (!empty($real)) {
+            return false;
+        }
+        return Fyndable_Demo_Fixtures::competitors();
     }
 
     public function fixtureApexflowProfile()
     {
         if (!$this->canUseDemo()) {
+            return false;
+        }
+        remove_filter('pre_option_sseo_ai_apexflow_profile', [$this, 'fixtureApexflowProfile']);
+        $real = get_option('sseo_ai_apexflow_profile');
+        add_filter('pre_option_sseo_ai_apexflow_profile', [$this, 'fixtureApexflowProfile']);
+        if (!empty($real)) {
             return false;
         }
         $fixture = Fyndable_Demo_Fixtures::apexflow();
@@ -89,12 +111,30 @@ final class Fyndable_Demo_Runtime
 
     public function fixtureApexflowPool()
     {
-        return $this->canUseDemo() ? Fyndable_Demo_Fixtures::apexflowPool() : false;
+        if (!$this->canUseDemo()) {
+            return false;
+        }
+        remove_filter('pre_option_sseo_ai_apexflow_keyword_pool', [$this, 'fixtureApexflowPool']);
+        $real = get_option('sseo_ai_apexflow_keyword_pool');
+        add_filter('pre_option_sseo_ai_apexflow_keyword_pool', [$this, 'fixtureApexflowPool']);
+        if (!empty($real)) {
+            return false;
+        }
+        return Fyndable_Demo_Fixtures::apexflowPool();
     }
 
     public function fixtureApexflowPlan()
     {
-        return $this->canUseDemo() ? Fyndable_Demo_Fixtures::apexflowPlanOption() : false;
+        if (!$this->canUseDemo()) {
+            return false;
+        }
+        remove_filter('pre_option_sseo_ai_apexflow_plan', [$this, 'fixtureApexflowPlan']);
+        $real = get_option('sseo_ai_apexflow_plan');
+        add_filter('pre_option_sseo_ai_apexflow_plan', [$this, 'fixtureApexflowPlan']);
+        if (!empty($real)) {
+            return false;
+        }
+        return Fyndable_Demo_Fixtures::apexflowPlanOption();
     }
 
     public function blockPortalRequests($preempt, array $args, string $url)
@@ -182,8 +222,10 @@ final class Fyndable_Demo_Runtime
 
     public function renderSettingsPage(): void
     {
+        $demoEnabled = $this->isEnabled();
         $liveEnabled = get_option('fyndable_demo_live_enabled', '0') === '1';
         $state = $this->getState();
+        $nonce = wp_create_nonce('fyndable_demo');
         ?>
         <div class="wrap sseo-ai-modern">
             <h1><?php esc_html_e('Fyndable salesdemo', 'fyndable-demo'); ?></h1>
@@ -192,6 +234,11 @@ final class Fyndable_Demo_Runtime
                 <p><strong><?php esc_html_e('Clientplugin:', 'fyndable-demo'); ?></strong> <?php echo class_exists('SSEOAIClient\\Client') ? esc_html__('gereed', 'fyndable-demo') : esc_html__('ontbreekt', 'fyndable-demo'); ?></p>
                 <p><strong><?php esc_html_e('Scenario:', 'fyndable-demo'); ?></strong> Van Dijk Klimaattechniek (NL)</p>
                 <p><strong><?php esc_html_e('Live calls deze sessie:', 'fyndable-demo'); ?></strong> <?php echo esc_html((string) $state['live_calls']); ?> / <?php echo esc_html((string) self::LIVE_LIMIT); ?></p>
+                <label style="display:block;margin:20px 0;">
+                    <input type="checkbox" id="fyndable-demo-enabled" <?php checked($demoEnabled); ?>>
+                    <?php esc_html_e('Demo-modus inschakelen', 'fyndable-demo'); ?>
+                </label>
+                <p class="description"><?php esc_html_e('Wanneer uitgeschakeld zijn alle demo-interceptors en fixtures inactief.', 'fyndable-demo'); ?></p>
                 <label style="display:block;margin:20px 0;">
                     <input type="checkbox" id="fyndable-demo-live" <?php checked($liveEnabled); ?>>
                     <?php esc_html_e('Sta bevestigde live generatie van contentbriefs toe', 'fyndable-demo'); ?>
@@ -203,6 +250,24 @@ final class Fyndable_Demo_Runtime
                 </p>
             </div>
         </div>
+        <script>
+        (function() {
+            var saveBtn = document.getElementById('fyndable-demo-save-settings');
+            if (!saveBtn) return;
+            saveBtn.addEventListener('click', function() {
+                var data = new FormData();
+                data.append('action', 'fyndable_demo_save_settings');
+                data.append('nonce', <?php echo wp_json_encode($nonce); ?>);
+                data.append('demo_enabled', document.getElementById('fyndable-demo-enabled').checked ? '1' : '0');
+                data.append('live_enabled', document.getElementById('fyndable-demo-live').checked ? '1' : '0');
+                fetch(<?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>, {
+                    method: 'POST',
+                    body: data,
+                    credentials: 'same-origin'
+                }).then(function() { location.reload(); });
+            });
+        })();
+        </script>
         <?php
     }
 
@@ -447,16 +512,21 @@ final class Fyndable_Demo_Runtime
         if (!$this->canUseDemo()) {
             wp_send_json_error(['message' => __('Permission denied.', 'fyndable-demo')], 403);
         }
-        delete_user_meta(get_current_user_id(), self::STATE_META);
+        // Preserve the live_calls counter across resets so admins cannot
+        // bypass the limit by resetting the demo state repeatedly.
+        $state = $this->getState();
+        $liveCalls = (int) $state['live_calls'];
+        $this->saveState(['keywords' => [], 'deleted_keywords' => [], 'live_calls' => $liveCalls]);
         wp_send_json_success(['message' => __('Demo reset.', 'fyndable-demo')]);
     }
 
     public function saveSettings(): void
     {
         check_ajax_referer('fyndable_demo', 'nonce');
-        if (!$this->canUseDemo()) {
+        if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => __('Permission denied.', 'fyndable-demo')], 403);
         }
+        update_option('fyndable_demo_enabled', isset($_POST['demo_enabled']) && $_POST['demo_enabled'] === '1' ? '1' : '0');
         update_option('fyndable_demo_live_enabled', isset($_POST['live_enabled']) && $_POST['live_enabled'] === '1' ? '1' : '0');
         wp_send_json_success();
     }

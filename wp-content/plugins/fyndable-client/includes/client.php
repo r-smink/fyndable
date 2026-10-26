@@ -528,7 +528,7 @@ class Client
             $this->backlinkAnalyzer->register();
             
             // Competitor Research
-            $this->competitorResearch = new CompetitorResearch($this->settings, $this->llmClient, $this->dashboardAPI);
+            $this->competitorResearch = new CompetitorResearch($this->settings, $this->llmClient, $this->dashboardAPI, $this->backlinkAnalyzer);
             $this->competitorResearch->register();
             
             // International SEO
@@ -540,7 +540,7 @@ class Client
             $this->technicalSEOAuditor->register();
             
             // Advanced Backlinks
-            $this->advancedBacklinks = new AdvancedBacklinks($this->settings, $this->llmClient);
+            $this->advancedBacklinks = new AdvancedBacklinks($this->settings, $this->llmClient, $this->backlinkAnalyzer);
             $this->advancedBacklinks->register();
             
             // A/B Testing
@@ -2748,7 +2748,7 @@ class Client
                             var hidden = document.getElementById('locations');
                             if (!container || !input || !hidden) return;
 
-                            var ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_places_autocomplete')); ?>';
+                            var ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_places_autocomplete&_ajax_nonce=' . wp_create_nonce('sseo_ai_client_nonce'))); ?>';
                             var existingLocations = (hidden.value || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
                             var debounceTimer = null;
 
@@ -2888,7 +2888,7 @@ class Client
 
                             if (!geocodeBtn || !houseInput || !postalInput) return;
 
-                            var ajaxUrlBase = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_geocode_address&address=')); ?>';
+                            var ajaxUrlBase = '<?php echo esc_url(admin_url('admin-ajax.php?action=sseo_ai_geocode_address&_ajax_nonce=' . wp_create_nonce('sseo_ai_client_nonce') . '&address=')); ?>';
 
                             geocodeBtn.addEventListener('click', function() {
                                 var house = houseInput.value.trim();
@@ -3047,6 +3047,8 @@ class Client
      */
     public function ajaxPlacesAutocomplete(): void
     {
+        check_ajax_referer('sseo_ai_client_nonce', '_ajax_nonce');
+
         if (!current_user_can('manage_options')) {
             wp_send_json(['success' => false, 'predictions' => []]);
         }
@@ -3069,6 +3071,8 @@ class Client
      */
     public function ajaxGeocodeAddress(): void
     {
+        check_ajax_referer('sseo_ai_client_nonce', '_ajax_nonce');
+
         if (!current_user_can('manage_options')) {
             wp_send_json(['success' => false, 'error' => 'unauthorized', 'address' => [], 'coordinates' => []]);
         }

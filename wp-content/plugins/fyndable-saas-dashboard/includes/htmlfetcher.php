@@ -136,6 +136,11 @@ class HtmlFetcher
      */
     private function isUrlSafe(string $url): bool
     {
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
         $host = parse_url($url, PHP_URL_HOST);
         if (empty($host)) {
             return false;
@@ -155,15 +160,18 @@ class HtmlFetcher
             return $this->isIpSafe($literalIp);
         }
 
-        // Resolve host to IPs and check each against blocked ranges.
-        // Note: gethostbynamel() returns only IPv4; for IPv6 we rely on
-        // host-name blocklist above. This is defense-in-depth, not exhaustive.
-        $ips = gethostbynamel($host);
-        if (is_array($ips)) {
-            foreach ($ips as $ip) {
-                if (!$this->isIpSafe($ip)) {
-                    return false;
+        // Resolve host to IPv4 + IPv6 addresses and check each against blocked ranges.
+        $ips = gethostbynamel($host) ?: [];
+        if (function_exists('dns_get_record')) {
+            foreach (@dns_get_record($host, DNS_AAAA) ?: [] as $record) {
+                if (!empty($record['ipv6'])) {
+                    $ips[] = $record['ipv6'];
                 }
+            }
+        }
+        foreach ($ips as $ip) {
+            if (!$this->isIpSafe($ip)) {
+                return false;
             }
         }
 
@@ -176,18 +184,30 @@ class HtmlFetcher
     private function isIpSafe(string $ip): bool
     {
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            // IPv6: block ::1 (loopback) and fc00::/7 (unique local)
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                if ($ip === '::1') {
-                    return false;
-                }
-                $packed = inet_pton($ip);
-                if ($packed !== false && (ord($packed[0]) & 0xfe) === 0xfc) {
-                    return false; // ULA fc00::/7
-                }
-                return true;
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                return false;
             }
-            return false;
+            $packed = inet_pton($ip);
+            if ($packed === false) {
+                return false;
+            }
+            // IPv4-mapped (::ffff:a.b.c.d) → judge the embedded IPv4 address
+            if (substr($packed, 0, 12) === str_repeat("\0", 10) . "\xff\xff") {
+                return $this->isIpSafe(inet_ntop(substr($packed, 12)));
+            }
+            // ::/128, ::1/128
+            if (substr($packed, 0, 15) === str_repeat("\0", 15)) {
+                return false;
+            }
+            $first = ord($packed[0]);
+            $second = ord($packed[1]);
+            if (($first & 0xfe) === 0xfc) {
+                return false; // ULA fc00::/7
+            }
+            if ($first === 0xfe && ($second & 0xc0) === 0x80) {
+                return false; // link-local fe80::/10
+            }
+            return true;
         }
 
         // Block loopback, private, link-local, reserved ranges

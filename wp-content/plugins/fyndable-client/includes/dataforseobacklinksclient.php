@@ -4,8 +4,10 @@ namespace SSEOAIClient;
 
 /**
  * DataForSEO Backlinks API Client
- * 
+ *
  * Provides domain summary and backlink profile data from DataForSEO.
+ * Used as fallback when the Portal proxy is unavailable and the customer
+ * has configured their own DataForSEO key.
  */
 class DataForSEOBacklinksClient
 {
@@ -23,86 +25,45 @@ class DataForSEOBacklinksClient
     public function getDomainMetrics(string $domain): array
     {
         $domain = $this->normalizeTarget($domain);
-        $response = $this->request(self::API_BASE . $domain . '/summary/live', [
-            ['target' => $domain],
+        $response = $this->request(self::API_BASE . 'summary/live', [
+            ['target' => $domain, 'rank_scale' => 'one_hundred'],
         ]);
 
         if (is_wp_error($response)) {
             return $this->getDefaultMetrics();
         }
 
-        $result = $response[0]['result'][0] ?? [];
-        $summary = $result['summary'] ?? $result ?? [];
+        $summary = $response[0]['result'][0] ?? [];
 
         return [
-            'domain_rating' => (int) ($summary['domain_rank'] ?? $summary['domain_rating'] ?? 0),
+            'domain_rating' => (int) ($summary['rank'] ?? 0),
             'referring_domains' => (int) ($summary['referring_domains'] ?? 0),
             'backlinks' => (int) ($summary['backlinks'] ?? 0),
-            'organic_traffic' => (int) ($summary['organic_traffic'] ?? 0),
-            'organic_keywords' => (int) ($summary['organic_keywords'] ?? 0),
+            'organic_traffic' => 0, // Not part of the Backlinks summary
+            'organic_keywords' => 0,
         ];
     }
 
     /**
-     * Get backlink profile summary (dofollow/nofollow, top anchors).
+     * Get raw backlink items (DataForSEO item shape).
+     *
+     * @param array $params Extra task params: limit, mode, filters, order_by, backlinks_status_type.
      */
-    public function getBacklinks(string $domain, int $limit = 1000): array
+    public function getBacklinkItems(string $domain, array $params = []): array|\WP_Error
     {
         $domain = $this->normalizeTarget($domain);
-        $response = $this->request(self::API_BASE . $domain . '/backlinks/live', [
-            [
-                'target' => $domain,
-                'limit' => $limit,
-            ],
-        ]);
+        $task = array_merge([
+            'target' => $domain,
+            'limit' => 1000,
+            'rank_scale' => 'one_hundred',
+        ], $params);
 
+        $response = $this->request(self::API_BASE . 'backlinks/live', [$task]);
         if (is_wp_error($response)) {
-            return $this->getDefaultProfile();
+            return $response;
         }
 
-        $items = $response[0]['result'][0]['items'] ?? [];
-
-        $dofollow = 0;
-        $nofollow = 0;
-        $redirect = 0;
-        $anchors = [];
-
-        foreach ($items as $link) {
-            $linkType = $link['link_type'] ?? '';
-            $isDofollow = ($linkType === 'dofollow' || ($link['dofollow'] ?? false));
-
-            if ($isDofollow) {
-                $dofollow++;
-            } else {
-                $nofollow++;
-            }
-
-            if (!empty($link['is_redirect']) || stripos($link['type'] ?? '', 'redirect') !== false) {
-                $redirect++;
-            }
-
-            $anchor = $link['anchor_text'] ?? $link['anchor'] ?? '';
-            if (!empty($anchor)) {
-                if (!isset($anchors[$anchor])) {
-                    $anchors[$anchor] = 0;
-                }
-                $anchors[$anchor]++;
-            }
-        }
-
-        arsort($anchors);
-        $topAnchors = [];
-        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
-            $topAnchors[] = ['text' => $text, 'count' => $count];
-        }
-
-        return [
-            'dofollow' => $dofollow,
-            'nofollow' => $nofollow,
-            'redirect' => $redirect,
-            'top_anchors' => $topAnchors,
-            'items' => $items,
-        ];
+        return $response[0]['result'][0]['items'] ?? [];
     }
 
     /**
@@ -131,7 +92,7 @@ class DataForSEOBacklinksClient
         $statusCode = wp_remote_retrieve_response_code($response);
         $data = json_decode(wp_remote_retrieve_body($response), true);
 
-        if ($statusCode !== 200 || empty($data['tasks'][0])) {
+        if ($statusCode !== 200 || empty($data['tasks'][0]) || (int) ($data['tasks'][0]['status_code'] ?? 20000) >= 40000) {
             return new \WP_Error('dataforseo_backlinks_error', $data['tasks'][0]['status_message'] ?? __('DataForSEO request failed', 'ai-seo-client'));
         }
 
@@ -146,7 +107,7 @@ class DataForSEOBacklinksClient
         $domain = trim($domain);
         $domain = preg_replace('#^https?://#', '', $domain);
         $domain = preg_replace('#^www\.#', '', $domain);
-        return $domain;
+        return rtrim($domain, '/');
     }
 
     private function getDefaultMetrics(): array
@@ -157,17 +118,6 @@ class DataForSEOBacklinksClient
             'backlinks' => 0,
             'organic_traffic' => 0,
             'organic_keywords' => 0,
-        ];
-    }
-
-    private function getDefaultProfile(): array
-    {
-        return [
-            'dofollow' => 0,
-            'nofollow' => 0,
-            'redirect' => 0,
-            'top_anchors' => [],
-            'items' => [],
         ];
     }
 }

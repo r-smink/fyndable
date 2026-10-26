@@ -5,20 +5,26 @@ namespace SSEOAIClient;
 /**
  * Backlink & Authority Analysis
  * 
- * Integrates with Ahrefs and Semrush APIs to provide:
+ * Integrates with DataForSEO (via Portal proxy), Ahrefs, SE Ranking and Semrush to provide:
  * - Domain Authority (DA) / Page Authority (PA)
  * - Backlink profile analysis
  * - Toxic link detection
- * - Referring domain tracking
- * - Link building opportunities
+ * - Link building opportunities (link gap vs. competitors)
  * - Anchor text analysis
  * - Competitor backlink analysis
+ *
+ * Also the shared backlink data source for AdvancedBacklinks and CompetitorResearch.
  */
 class BacklinkAnalyzer
 {
     private Settings $settings;
     private ?DashboardAPI $dashboardAPI = null;
     private const CACHE_TTL = DAY_IN_SECONDS;
+    private const ERROR_CACHE_TTL = 15 * MINUTE_IN_SECONDS;
+    private const COMPETITORS_OPTION = 'sseo_ai_competitor_domains';
+    private const MAX_COMPETITORS = 5;
+    /** DataForSEO backlink_spam_score (0-100) from which a link counts as toxic. */
+    private const SPAM_SCORE_TOXIC = 50;
 
     public function __construct(Settings $settings, ?DashboardAPI $dashboardAPI = null)
     {
@@ -32,6 +38,8 @@ class BacklinkAnalyzer
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_analyze_backlinks', [$this, 'ajaxAnalyzeBacklinks']);
         add_action('wp_ajax_sseo_ai_check_toxic_links', [$this, 'ajaxCheckToxicLinks']);
+        add_action('wp_ajax_sseo_ai_add_competitor', [$this, 'ajaxAddCompetitor']);
+        add_action('wp_ajax_sseo_ai_remove_competitor', [$this, 'ajaxRemoveCompetitor']);
     }
     
     public function addMenu(): void
@@ -58,8 +66,8 @@ class BacklinkAnalyzer
         $domainMetrics = $this->getDomainAuthority($domain);
         $backlinkProfile = $this->getBacklinkProfile($domain);
         $toxicLinks = $this->getToxicLinks($domain);
-        $competitors = get_option('sseo_ai_competitor_domains', []);
-        
+        $competitors = $this->getCompetitorDomains();
+
         ?>
         <style>
             .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -242,6 +250,9 @@ class BacklinkAnalyzer
                         <button type="button" class="button" onclick="sseoAddCompetitor()">
                             <?php esc_html_e('Add', 'ai-seo-client'); ?>
                         </button>
+                        <p class="description">
+                            <?php echo esc_html(sprintf(__('Up to %d competitors. Used for link gap and broken-link prospecting.', 'ai-seo-client'), self::MAX_COMPETITORS)); ?>
+                        </p>
                     </div>
 
                     <?php if (!empty($competitors)): ?>
@@ -256,16 +267,21 @@ class BacklinkAnalyzer
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($competitors as $comp): ?>
+                            <?php foreach ($competitors as $compDomain): ?>
+                            <?php $compMetrics = $this->getDomainAuthority($compDomain); ?>
                             <tr>
-                                <td><?php echo esc_html($comp['domain']); ?></td>
-                                <td><?php echo esc_html($comp['dr'] ?? 'N/A'); ?></td>
-                                <td><?php echo esc_html(number_format($comp['backlinks'] ?? 0)); ?></td>
-                                <td><?php echo esc_html(number_format($comp['ref_domains'] ?? 0)); ?></td>
+                                <td><?php echo esc_html($compDomain); ?></td>
+                                <td><?php echo esc_html($compMetrics['domain_rating'] ?: 'N/A'); ?></td>
+                                <td><?php echo esc_html(number_format($compMetrics['backlinks'] ?? 0)); ?></td>
+                                <td><?php echo esc_html(number_format($compMetrics['referring_domains'] ?? 0)); ?></td>
                                 <td>
                                     <button type="button" class="button button-small"
-                                            onclick="sseoFindLinkOpportunities('<?php echo esc_js($comp['domain']); ?>')">
+                                            onclick="sseoFindLinkOpportunities('<?php echo esc_js($compDomain); ?>')">
                                         <?php esc_html_e('Find Opportunities', 'ai-seo-client'); ?>
+                                    </button>
+                                    <button type="button" class="button button-small button-link-delete"
+                                            onclick="sseoRemoveCompetitor('<?php echo esc_js($compDomain); ?>')">
+                                        <?php esc_html_e('Remove', 'ai-seo-client'); ?>
                                     </button>
                                 </td>
                             </tr>
@@ -345,7 +361,25 @@ class BacklinkAnalyzer
                 }
             });
         }
-        
+
+        function sseoRemoveCompetitor(domain) {
+            if (!confirm('<?php echo esc_js(__('Remove this competitor?', 'ai-seo-client')); ?>')) {
+                return;
+            }
+
+            jQuery.post(ajaxurl, {
+                action: 'sseo_ai_remove_competitor',
+                domain: domain,
+                nonce: '<?php echo wp_create_nonce('sseo_backlinks'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.data.message || 'Error removing competitor');
+                }
+            });
+        }
+
         function sseoFindLinkOpportunities(domain) {
             var url = 'admin.php?page=ai-seo-advanced-backlinks&competitor=' + encodeURIComponent(domain);
             if (window.self !== window.top) {
@@ -365,6 +399,10 @@ class BacklinkAnalyzer
      */
     public function getDomainAuthority(string $domain): array
     {
+        $domain = $this->normalizeDomain($domain);
+        if ($domain === '') {
+            return $this->getDefaultMetrics();
+        }
         $cacheKey = 'sseo_da_' . md5($domain);
         $cached = get_transient($cacheKey);
         
@@ -391,6 +429,10 @@ class BacklinkAnalyzer
      */
     public function getBacklinkProfile(string $domain): array
     {
+        $domain = $this->normalizeDomain($domain);
+        if ($domain === '') {
+            return $this->getDefaultBacklinkProfile();
+        }
         $cacheKey = 'sseo_backlinks_' . md5($domain);
         $cached = get_transient($cacheKey);
         
@@ -411,7 +453,167 @@ class BacklinkAnalyzer
         set_transient($cacheKey, $profile, self::CACHE_TTL);
         return $profile;
     }
-    
+
+    /**
+     * Normalized backlink list for a domain (cached).
+     *
+     * Without a query this returns the items of the regular backlink profile
+     * (shared cache with the Backlinks page). With a query — mode, filters,
+     * order_by, limit, backlinks_status_type — a dedicated DataForSEO
+     * request is made, since only DataForSEO supports server-side filtering.
+     *
+     * Each item: source_url, source_domain, target_url, anchor_text,
+     * domain_rating (0-100), page_rating, link_type (dofollow|nofollow),
+     * item_type, attributes[], page_title, spam_score, is_broken,
+     * target_status, first_seen.
+     */
+    public function getBacklinkItems(string $domain, array $query = []): array
+    {
+        $domain = $this->normalizeDomain($domain);
+        if ($domain === '') {
+            return [];
+        }
+
+        if (empty($query)) {
+            return $this->getBacklinkProfile($domain)['items'] ?? [];
+        }
+
+        $cacheKey = 'sseo_bl_items_' . md5($domain . wp_json_encode($query));
+        $cached = get_transient($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $items = $this->fetchDataForSeoItems($domain, $query);
+        if (is_wp_error($items)) {
+            // Short negative cache so a failing API doesn't stall every page load.
+            set_transient($cacheKey, [], self::ERROR_CACHE_TTL);
+            return [];
+        }
+
+        $items = array_map([$this, 'normalizeLink'], $items);
+        set_transient($cacheKey, $items, self::CACHE_TTL);
+        return $items;
+    }
+
+    /**
+     * Referring domains that link to a competitor but not to our own site.
+     *
+     * Compares one-link-per-domain lists (max 1000 referring domains each),
+     * so for very large sites the result is an approximation.
+     */
+    public function getLinkGap(string $competitorDomain, int $limit = 100): array
+    {
+        $competitorDomain = $this->normalizeDomain($competitorDomain);
+        $ownDomain = $this->getOwnDomain();
+        if ($competitorDomain === '' || $competitorDomain === $ownDomain) {
+            return [];
+        }
+
+        $query = [
+            'mode'     => 'one_per_domain',
+            'limit'    => 1000,
+            'order_by' => ['domain_from_rank,desc'],
+        ];
+
+        $competitorLinks = $this->getBacklinkItems($competitorDomain, $query);
+        if (empty($competitorLinks)) {
+            return [];
+        }
+
+        $ownReferrers = array_flip(array_column($this->getBacklinkItems($ownDomain, $query), 'source_domain'));
+
+        $gap = [];
+        foreach ($competitorLinks as $link) {
+            $source = $link['source_domain'];
+            if ($source === '' || $source === $ownDomain || isset($ownReferrers[$source])) {
+                continue;
+            }
+            if ($link['spam_score'] >= self::SPAM_SCORE_TOXIC) {
+                continue;
+            }
+            $gap[] = $link;
+            if (count($gap) >= $limit) {
+                break;
+            }
+        }
+
+        return $gap;
+    }
+
+    /**
+     * Classify a normalized backlink by source type.
+     *
+     * @return string guest_posts|directories|forums|social|editorial|other
+     */
+    public function classifyLink(array $link): string
+    {
+        $domain = $link['source_domain'] ?? '';
+        $url = strtolower($link['source_url'] ?? '');
+        $title = strtolower($link['page_title'] ?? '');
+        $attributes = array_map('strtolower', (array) ($link['attributes'] ?? []));
+
+        if (preg_match('/(^|\.)(facebook\.com|twitter\.com|x\.com|linkedin\.com|instagram\.com|pinterest\.[a-z.]+|youtube\.com|tiktok\.com|threads\.net|mastodon\.social)$/', $domain)) {
+            return 'social';
+        }
+        if (preg_match('/(^|\.)(reddit|quora|stackexchange|stackoverflow)\.[a-z.]+$/', $domain)
+            || preg_match('#/(forum|forums|thread|threads|topic|community|discussion|viewtopic)[/.?-]#', $url)) {
+            return 'forums';
+        }
+        if (in_array('sponsored', $attributes, true)
+            || preg_match('/guest[- ]?post|gastblog|gastartikel|write[- ]for[- ]us|sponsored|gesponsord/', $url . ' ' . $title)) {
+            return 'guest_posts';
+        }
+        if (preg_match('/(^|\.)(yelp|trustpilot|startpagina|goudengids|yellowpages|tripadvisor|kvk|openingstijden|cylex|hotfrog)\.[a-z.]+$/', $domain)
+            || preg_match('#/(directory|directories|listing|listings|bedrijven|company|companies|links)[/.?-]#', $url)) {
+            return 'directories';
+        }
+        if (($link['item_type'] ?? 'anchor') === 'anchor'
+            && preg_match('#/(blog|blogs|news|nieuws|article|articles|artikel|artikelen|magazine|\d{4}/\d{2})/#', $url)) {
+            return 'editorial';
+        }
+
+        return 'other';
+    }
+
+    /**
+     * Configured competitor domains (normalized, unique).
+     */
+    public function getCompetitorDomains(): array
+    {
+        $domains = [];
+        foreach ((array) get_option(self::COMPETITORS_OPTION, []) as $entry) {
+            $domain = $this->normalizeDomain(is_array($entry) ? (string) ($entry['domain'] ?? '') : (string) $entry);
+            if ($domain !== '') {
+                $domains[$domain] = $domain;
+            }
+        }
+        return array_values($domains);
+    }
+
+    /**
+     * Own site domain (normalized; raw host for local/dev hosts).
+     */
+    public function getOwnDomain(): string
+    {
+        $host = (string) parse_url(get_site_url(), PHP_URL_HOST);
+        return $this->normalizeDomain($host) ?: $host;
+    }
+
+    /**
+     * Normalize user input / URLs to a bare registrable host. Returns '' when invalid.
+     */
+    public function normalizeDomain(string $domain): string
+    {
+        $domain = strtolower(trim($domain));
+        $domain = preg_replace('#^[a-z][a-z0-9+.-]*://#', '', $domain);
+        $domain = preg_replace('#[/?\#].*$#', '', $domain);
+        $domain = preg_replace('#:\d+$#', '', $domain);
+        $domain = preg_replace('#^www\.#', '', $domain);
+
+        return preg_match('/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9-]{2,}$/', $domain) ? $domain : '';
+    }
+
     /**
      * Build provider chain: primary first, then configured fallbacks.
      */
@@ -528,45 +730,9 @@ class BacklinkAnalyzer
         }
         
         $data = json_decode(wp_remote_retrieve_body($response), true);
-        $backlinks = $data['backlinks'] ?? [];
-        
-        $dofollow = 0;
-        $nofollow = 0;
-        $redirect = 0;
-        $anchors = [];
-        
-        foreach ($backlinks as $link) {
-            if ($link['is_dofollow']) {
-                $dofollow++;
-            } else {
-                $nofollow++;
-            }
-            
-            if ($link['is_redirect']) {
-                $redirect++;
-            }
-            
-            $anchor = $link['anchor'] ?? '';
-            if (!empty($anchor)) {
-                if (!isset($anchors[$anchor])) {
-                    $anchors[$anchor] = 0;
-                }
-                $anchors[$anchor]++;
-            }
-        }
-        
-        arsort($anchors);
-        $topAnchors = [];
-        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
-            $topAnchors[] = ['text' => $text, 'count' => $count];
-        }
-        
-        return [
-            'dofollow' => $dofollow,
-            'nofollow' => $nofollow,
-            'redirect' => $redirect,
-            'top_anchors' => $topAnchors,
-        ];
+        $backlinks = is_array($data['backlinks'] ?? null) ? $data['backlinks'] : [];
+
+        return $this->buildProfile(array_map([$this, 'normalizeLink'], $backlinks));
     }
     
     /**
@@ -699,25 +865,45 @@ class BacklinkAnalyzer
      */
     private function getDataForSEOBacklinks(string $domain): array
     {
-        // Primary: Portal proxy
-        if ($this->dashboardAPI) {
-            $response = $this->dashboardAPI->request('backlinks/live', [
-                'target' => $domain,
-                'limit'  => 1000,
-            ]);
-            if (!is_wp_error($response) && !empty($response['data'])) {
-                return $this->parseDataForSeoBacklinks($response['data']);
-            }
-        }
+        $items = $this->fetchDataForSeoItems($domain, [
+            'limit'    => 1000,
+            'order_by' => ['domain_from_rank,desc'],
+        ]);
 
-        // Fallback: client-side direct call
-        $apiKey = get_option('sseo_ai_dataforseo_api_key', '');
-        if (empty($apiKey)) {
+        if (is_wp_error($items)) {
             return $this->getDefaultBacklinkProfile();
         }
 
+        return $this->buildProfile(array_map([$this, 'normalizeLink'], $items));
+    }
+
+    /**
+     * Raw DataForSEO backlink items: Portal proxy first (central key + usage
+     * tracking), then the customer's own DataForSEO key.
+     */
+    private function fetchDataForSeoItems(string $domain, array $params): array|\WP_Error
+    {
+        $error = new \WP_Error('backlinks_unavailable', __('No backlink data source is available.', 'ai-seo-client'));
+
+        if ($this->dashboardAPI) {
+            $response = $this->dashboardAPI->request('backlinks/live', array_merge(['target' => $domain], $params));
+            if (!is_wp_error($response) && !empty($response['data'])) {
+                $items = $response['data']['tasks'][0]['result'][0]['items'] ?? [];
+                return is_array($items) ? array_filter($items, 'is_array') : [];
+            }
+            if (is_wp_error($response)) {
+                $error = $response;
+            }
+        }
+
+        $apiKey = get_option('sseo_ai_dataforseo_api_key', '');
+        if (empty($apiKey)) {
+            return $error;
+        }
+
         $client = new DataForSEOBacklinksClient($apiKey);
-        return $client->getBacklinks($domain);
+        $items = $client->getBacklinkItems($domain, $params);
+        return is_wp_error($items) ? $items : array_filter($items, 'is_array');
     }
 
     /**
@@ -726,60 +912,81 @@ class BacklinkAnalyzer
      */
     private function parseDataForSeoSummaryMetrics(array $data): array
     {
-        $tasks = $data['tasks'] ?? [];
-        $result = $tasks[0]['result'][0] ?? [];
-        $summary = $result['summary'] ?? $result;
+        $summary = $data['tasks'][0]['result'][0] ?? [];
 
         return [
-            'domain_rating'    => (int) ($summary['domain_rank'] ?? $summary['domain_rating'] ?? 0),
+            'domain_rating'    => (int) ($summary['rank'] ?? 0),
             'referring_domains'=> (int) ($summary['referring_domains'] ?? 0),
             'backlinks'        => (int) ($summary['backlinks'] ?? 0),
-            'organic_traffic'  => (int) ($summary['organic_traffic'] ?? 0),
-            'organic_keywords' => (int) ($summary['organic_keywords'] ?? 0),
+            'organic_traffic'  => 0, // Not part of the Backlinks summary
+            'organic_keywords' => 0,
         ];
     }
 
     /**
-     * Parse DataForSEO backlinks list response (from Portal proxy) into the
-     * normalized backlink profile shape used by this class.
+     * Map a provider-specific backlink (DataForSEO, Ahrefs, SE Ranking) to
+     * the normalized item shape documented on getBacklinkItems().
      */
-    private function parseDataForSeoBacklinks(array $data): array
+    private function normalizeLink(array $link): array
     {
-        $tasks = $data['tasks'] ?? [];
-        $items = $tasks[0]['result'][0]['items'] ?? [];
+        $sourceUrl = (string) ($link['url_from'] ?? $link['source_url'] ?? $link['url'] ?? '');
+        $sourceDomain = (string) ($link['domain_from'] ?? $link['source_domain'] ?? (parse_url($sourceUrl, PHP_URL_HOST) ?: ''));
 
+        $dofollow = $link['dofollow'] ?? $link['is_dofollow'] ?? (isset($link['nofollow']) ? !$link['nofollow'] : null);
+        if ($dofollow === null) {
+            $dofollow = (($link['link_type'] ?? $link['type'] ?? '') === 'dofollow');
+        }
+
+        $status = (int) ($link['url_to_status_code'] ?? $link['http_code_target'] ?? 0);
+
+        return [
+            'source_url'    => $sourceUrl,
+            'source_domain' => preg_replace('#^www\.#', '', strtolower($sourceDomain)),
+            'target_url'    => (string) ($link['url_to'] ?? $link['target_url'] ?? ''),
+            'anchor_text'   => trim((string) ($link['anchor'] ?? $link['anchor_text'] ?? '')),
+            'domain_rating' => (int) round((float) ($link['domain_from_rank'] ?? $link['domain_rating_source'] ?? $link['domain_rating'] ?? 0)),
+            'page_rating'   => (int) round((float) ($link['page_from_rank'] ?? $link['url_rating_source'] ?? 0)),
+            'link_type'     => $dofollow ? 'dofollow' : 'nofollow',
+            'item_type'     => (string) ($link['item_type'] ?? (!empty($link['is_redirect']) ? 'redirect' : 'anchor')),
+            'attributes'    => array_values(array_filter((array) ($link['attributes'] ?? []), 'is_string')),
+            'page_title'    => (string) ($link['page_from_title'] ?? $link['title'] ?? ''),
+            'spam_score'    => (int) ($link['backlink_spam_score'] ?? 0),
+            'is_broken'     => !empty($link['is_broken']) || $status >= 400,
+            'target_status' => $status,
+            'first_seen'    => (string) ($link['first_seen'] ?? ''),
+        ];
+    }
+
+    /**
+     * Aggregate normalized items into the backlink profile shape.
+     */
+    private function buildProfile(array $items): array
+    {
         $dofollow = 0;
         $nofollow = 0;
         $redirect = 0;
         $anchors = [];
 
         foreach ($items as $link) {
-            $linkType = $link['link_type'] ?? '';
-            $isDofollow = ($linkType === 'dofollow' || ($link['dofollow'] ?? false));
-
-            if ($isDofollow) {
+            if ($link['link_type'] === 'dofollow') {
                 $dofollow++;
             } else {
                 $nofollow++;
             }
 
-            if (!empty($link['is_redirect']) || stripos($link['type'] ?? '', 'redirect') !== false) {
+            if ($link['item_type'] === 'redirect') {
                 $redirect++;
             }
 
-            $anchor = $link['anchor_text'] ?? $link['anchor'] ?? '';
-            if (!empty($anchor)) {
-                if (!isset($anchors[$anchor])) {
-                    $anchors[$anchor] = 0;
-                }
-                $anchors[$anchor]++;
+            if ($link['anchor_text'] !== '') {
+                $anchors[$link['anchor_text']] = ($anchors[$link['anchor_text']] ?? 0) + 1;
             }
         }
 
         arsort($anchors);
         $topAnchors = [];
         foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
-            $topAnchors[] = ['text' => $text, 'count' => $count];
+            $topAnchors[] = ['text' => (string) $text, 'count' => $count];
         }
 
         return [
@@ -787,7 +994,7 @@ class BacklinkAnalyzer
             'nofollow'    => $nofollow,
             'redirect'    => $redirect,
             'top_anchors' => $topAnchors,
-            'items'       => $items,
+            'items'       => array_values($items),
         ];
     }
     
@@ -837,97 +1044,73 @@ class BacklinkAnalyzer
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
         $items = $body['data'] ?? $body['backlinks'] ?? [];
+        $items = is_array($items) ? array_filter($items, 'is_array') : [];
 
-        $dofollow = 0;
-        $nofollow = 0;
-        $anchors = [];
-
-        foreach ($items as $link) {
-            $isDofollow = ($link['type'] ?? '') === 'dofollow' || ($link['dofollow'] ?? false);
-            if ($isDofollow) {
-                $dofollow++;
-            } else {
-                $nofollow++;
-            }
-
-            $anchor = $link['anchor'] ?? $link['anchor_text'] ?? '';
-            if (!empty($anchor)) {
-                $anchors[$anchor] = ($anchors[$anchor] ?? 0) + 1;
-            }
-        }
-
-        arsort($anchors);
-        $topAnchors = [];
-        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
-            $topAnchors[] = ['text' => $text, 'count' => $count];
-        }
-
-        return [
-            'dofollow' => $dofollow,
-            'nofollow' => $nofollow,
-            'redirect' => 0,
-            'top_anchors' => $topAnchors,
-            'items' => $items,
-        ];
+        return $this->buildProfile(array_map([$this, 'normalizeLink'], $items));
     }
     
     /**
      * Detect toxic links using backlink profile items.
+     *
+     * Score (0-100) = DataForSEO backlink_spam_score, plus penalties for
+     * spam-vertical anchors and near-zero authority sources. Providers that
+     * don't return per-link items (Semrush) yield no toxic list.
      */
     public function getToxicLinks(string $domain): array
     {
+        $domain = $this->normalizeDomain($domain);
+        if ($domain === '') {
+            return [];
+        }
         $cacheKey = 'sseo_toxic_' . md5($domain);
         $cached = get_transient($cacheKey);
-        
+
         if ($cached !== false) {
             return $cached;
         }
-        
-        $profile = $this->getBacklinkProfile($domain);
+
+        $items = $this->getBacklinkItems($domain);
         $toxicLinks = [];
-        
-        $items = $profile['items'] ?? [];
-        if (empty($items)) {
-            set_transient($cacheKey, [], self::CACHE_TTL);
-            return [];
-        }
-        
-        $suspiciousAnchors = ['click here', 'read more', 'here', 'link', 'website', 'buy now', 'cheap', 'free', 'porn', 'xxx', 'casino'];
-        
+
+        $spamAnchorPattern = '/\b(casino|poker|gambling|betting|porn|xxx|viagra|cialis|escort|payday|replica|crypto ?signals?|cheap (?:pills|meds))\b/i';
+
         foreach ($items as $link) {
-            $url = $link['url'] ?? $link['target'] ?? '';
-            $anchor = strtolower($link['anchor_text'] ?? $link['anchor'] ?? '');
-            $referringDomain = parse_url($url, PHP_URL_HOST) ?: '';
-            $isToxic = false;
+            $score = $link['spam_score'];
             $reasons = [];
-            
-            foreach ($suspiciousAnchors as $suspicious) {
-                if (str_contains($anchor, $suspicious)) {
-                    $isToxic = true;
-                    $reasons[] = 'suspicious anchor';
-                    break;
-                }
+
+            if ($link['spam_score'] >= self::SPAM_SCORE_TOXIC) {
+                $reasons[] = sprintf(__('high spam score (%d)', 'ai-seo-client'), $link['spam_score']);
             }
-            
-            if (!empty($link['referring_domain_attributes']['domain_rank']) && (int) $link['referring_domain_attributes']['domain_rank'] < 5) {
-                $isToxic = true;
-                $reasons[] = 'low authority domain';
+
+            if ($link['anchor_text'] !== '' && preg_match($spamAnchorPattern, $link['anchor_text'])) {
+                $score += 50;
+                $reasons[] = __('spam-related anchor text', 'ai-seo-client');
             }
-            
-            if ($isToxic) {
+
+            if ($link['domain_rating'] > 0 && $link['domain_rating'] < 5) {
+                $score += 15;
+                $reasons[] = __('very low authority domain', 'ai-seo-client');
+            }
+
+            $score = min(100, $score);
+            if ($score >= self::SPAM_SCORE_TOXIC) {
                 $toxicLinks[] = [
-                    'url' => $url,
-                    'domain' => $referringDomain,
-                    'anchor' => $anchor,
-                    'reasons' => array_unique($reasons),
+                    'url' => $link['source_url'],
+                    'domain' => $link['source_domain'],
+                    'anchor' => $link['anchor_text'],
+                    'toxicity' => $score,
+                    'reason' => implode(', ', $reasons),
+                    'reasons' => $reasons,
                 ];
             }
         }
-        
+
+        usort($toxicLinks, fn($a, $b) => $b['toxicity'] <=> $a['toxicity']);
+
         set_transient($cacheKey, $toxicLinks, self::CACHE_TTL);
         return $toxicLinks;
     }
-    
+
     /**
      * Default metrics when API is not available
      */
@@ -941,7 +1124,7 @@ class BacklinkAnalyzer
             'organic_keywords' => 0,
         ];
     }
-    
+
     /**
      * Default backlink profile
      */
@@ -952,9 +1135,21 @@ class BacklinkAnalyzer
             'nofollow' => 0,
             'redirect' => 0,
             'top_anchors' => [],
+            'items' => [],
         ];
     }
-    
+
+    /**
+     * Drop cached metrics/profile/toxic data for a domain.
+     */
+    private function clearDomainCache(string $domain): void
+    {
+        $domain = $this->normalizeDomain($domain) ?: $domain;
+        delete_transient('sseo_da_' . md5($domain));
+        delete_transient('sseo_backlinks_' . md5($domain));
+        delete_transient('sseo_toxic_' . md5($domain));
+    }
+
     /**
      * Register REST API routes
      */
@@ -967,7 +1162,7 @@ class BacklinkAnalyzer
                 return current_user_can('manage_options');
             },
         ]);
-        
+
         register_rest_route('sseo-ai/v1', '/backlinks/opportunities', [
             'methods' => 'GET',
             'callback' => [$this, 'restGetLinkOpportunities'],
@@ -976,78 +1171,196 @@ class BacklinkAnalyzer
             },
         ]);
     }
-    
+
+    /**
+     * REST: Analyze a domain (default: own site).
+     * Body: { domain?, force_refresh? }
+     */
+    public function restAnalyzeBacklinks(\WP_REST_Request $request): array|\WP_Error
+    {
+        $input = (string) ($request->get_param('domain') ?? '');
+        $domain = $input === '' ? $this->getOwnDomain() : $this->normalizeDomain($input);
+        if ($domain === '') {
+            return new \WP_Error('invalid_domain', __('Invalid domain', 'ai-seo-client'), ['status' => 400]);
+        }
+
+        if (!empty($request->get_param('force_refresh'))) {
+            $this->clearDomainCache($domain);
+        }
+
+        $profile = $this->getBacklinkProfile($domain);
+        unset($profile['items']);
+
+        return [
+            'domain' => $domain,
+            'metrics' => $this->getDomainAuthority($domain),
+            'profile' => $profile,
+            'toxic_links' => $this->getToxicLinks($domain),
+        ];
+    }
+
     /**
      * AJAX: Analyze backlinks
      */
     public function ajaxAnalyzeBacklinks(): void
     {
         check_ajax_referer('sseo_backlinks', 'nonce');
-        
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
-        
+
         $domain = sanitize_text_field($_POST['domain'] ?? '');
         $forceRefresh = !empty($_POST['force_refresh']);
-        
+
         if ($forceRefresh) {
-            delete_transient('sseo_da_' . md5($domain));
-            delete_transient('sseo_backlinks_' . md5($domain));
+            $this->clearDomainCache($domain);
         }
-        
+
         $metrics = $this->getDomainAuthority($domain);
-        
+
         wp_send_json_success(['metrics' => $metrics]);
     }
-    
+
     /**
      * AJAX: Check toxic links
      */
     public function ajaxCheckToxicLinks(): void
     {
         check_ajax_referer('sseo_backlinks', 'nonce');
-        
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
-        
+
         $domain = sanitize_text_field($_POST['domain'] ?? '');
-        
-        delete_transient('sseo_toxic_' . md5($domain));
+
+        delete_transient('sseo_toxic_' . md5($this->normalizeDomain($domain) ?: $domain));
         $toxicLinks = $this->getToxicLinks($domain);
-        
+
         wp_send_json_success(['toxic_links' => $toxicLinks]);
     }
-    
+
+    /**
+     * AJAX: Add a competitor domain
+     */
+    public function ajaxAddCompetitor(): void
+    {
+        check_ajax_referer('sseo_backlinks', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $domain = $this->normalizeDomain(sanitize_text_field(wp_unslash($_POST['domain'] ?? '')));
+        if ($domain === '') {
+            wp_send_json_error(['message' => __('Please enter a valid domain, e.g. competitor.com', 'ai-seo-client')]);
+        }
+        if ($domain === $this->getOwnDomain()) {
+            wp_send_json_error(['message' => __('This is your own domain.', 'ai-seo-client')]);
+        }
+
+        $competitors = $this->getCompetitorDomains();
+        if (in_array($domain, $competitors, true)) {
+            wp_send_json_error(['message' => __('This competitor is already added.', 'ai-seo-client')]);
+        }
+        if (count($competitors) >= self::MAX_COMPETITORS) {
+            wp_send_json_error(['message' => sprintf(__('You can track up to %d competitors.', 'ai-seo-client'), self::MAX_COMPETITORS)]);
+        }
+
+        $this->saveCompetitorDomains(array_merge($competitors, [$domain]));
+
+        wp_send_json_success([
+            'domain' => $domain,
+            'metrics' => $this->getDomainAuthority($domain),
+        ]);
+    }
+
+    /**
+     * AJAX: Remove a competitor domain
+     */
+    public function ajaxRemoveCompetitor(): void
+    {
+        check_ajax_referer('sseo_backlinks', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $domain = $this->normalizeDomain(sanitize_text_field(wp_unslash($_POST['domain'] ?? '')));
+        $this->saveCompetitorDomains(array_diff($this->getCompetitorDomains(), [$domain]));
+
+        wp_send_json_success(['domain' => $domain]);
+    }
+
+    private function saveCompetitorDomains(array $domains): void
+    {
+        $existing = [];
+        foreach ((array) get_option(self::COMPETITORS_OPTION, []) as $entry) {
+            if (is_array($entry) && !empty($entry['domain'])) {
+                $existing[$this->normalizeDomain((string) $entry['domain'])] = $entry;
+            }
+        }
+
+        $entries = [];
+        foreach (array_values(array_unique($domains)) as $domain) {
+            $entries[] = $existing[$domain] ?? ['domain' => $domain, 'added_at' => current_time('mysql')];
+        }
+
+        update_option(self::COMPETITORS_OPTION, $entries, false);
+    }
+
     /**
      * REST: Get link building opportunities
+     * Query: competitor? (default: all configured competitors), keyword? (filters on anchor/page title)
      */
     public function restGetLinkOpportunities(\WP_REST_Request $request): array
     {
-        $keyword = $request->get_param('keyword');
-        $competitorDomain = $request->get_param('competitor');
-        
-        // Find link opportunities based on competitor backlinks
+        $keyword = sanitize_text_field((string) ($request->get_param('keyword') ?? ''));
+        $competitorDomain = sanitize_text_field((string) ($request->get_param('competitor') ?? ''));
+
         $opportunities = $this->findLinkOpportunities($keyword, $competitorDomain);
-        
+
         return ['opportunities' => $opportunities];
     }
-    
+
     /**
-     * Find link building opportunities
+     * Find link building opportunities: referring domains of competitors
+     * that don't link to us yet, optionally narrowed to a keyword.
      */
     private function findLinkOpportunities(string $keyword, string $competitorDomain): array
     {
-        // Get competitor's backlinks
-        $competitorBacklinks = $this->getBacklinkProfile($competitorDomain);
-        
-        // Filter for high-quality opportunities
+        $competitors = $competitorDomain !== ''
+            ? array_filter([$this->normalizeDomain($competitorDomain)])
+            : $this->getCompetitorDomains();
+
         $opportunities = [];
-        
-        // This would analyze competitor backlinks and suggest similar opportunities
-        // Implementation depends on API capabilities
-        
-        return $opportunities;
+        foreach ($competitors as $competitor) {
+            foreach ($this->getLinkGap($competitor, 200) as $link) {
+                if ($keyword !== ''
+                    && stripos($link['anchor_text'], $keyword) === false
+                    && stripos($link['page_title'], $keyword) === false) {
+                    continue;
+                }
+
+                $domain = $link['source_domain'];
+                if (!isset($opportunities[$domain])) {
+                    $opportunities[$domain] = [
+                        'domain' => $domain,
+                        'domain_rating' => $link['domain_rating'],
+                        'sample_url' => $link['source_url'],
+                        'anchor_text' => $link['anchor_text'],
+                        'link_type' => $link['link_type'],
+                        'category' => $this->classifyLink($link),
+                        'competitors' => [],
+                    ];
+                }
+                $opportunities[$domain]['competitors'][] = $competitor;
+            }
+        }
+
+        usort($opportunities, fn($a, $b) => [count($b['competitors']), $b['domain_rating']] <=> [count($a['competitors']), $a['domain_rating']]);
+
+        return array_slice($opportunities, 0, 100);
     }
 }

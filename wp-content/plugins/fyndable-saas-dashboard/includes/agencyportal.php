@@ -208,7 +208,11 @@ class AgencyPortal
             $planPaymentDone = true;
             // The webhook normally creates the subscription; if it lagged,
             // create it here from the last paid first payment.
-            if (($ctx['tenant']['payment_status'] ?? '') !== 'active') {
+            // Same guard as the add-licenses page: never re-create a subscription that
+            // already exists (a failed monthly debit would otherwise yield a free month
+            // plus a duplicate subscription).
+            $hasSubscription = $this->tenants->getTenantSetting($ctx['tenant']['tenant_key'] ?? '', 'mollie_subscription_id', '') !== '';
+            if (($ctx['tenant']['payment_status'] ?? '') !== 'active' && !$hasSubscription) {
                 $result = $this->paymentProcessor->createMollieSubscriptionFromLastPayment($ctx['tenant']['tenant_key']);
                 if (is_wp_error($result)) {
                     error_log('SSEO AI SaaS: Custom plan return — subscription fallback failed for ' . $ctx['tenant']['tenant_key'] . ': ' . $result->get_error_message());
@@ -1992,7 +1996,8 @@ class AgencyPortal
         }
 
         $quantity = (int) ($_POST['extra_licenses'] ?? 0);
-        if ($quantity < 1) {
+        // Server-side cap (the HTML max="100" is client-side only).
+        if ($quantity < 1 || $quantity > 100) {
             wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=invalid_quantity'));
             exit;
         }
@@ -2328,6 +2333,21 @@ class AgencyPortal
             $redirect(['error' => __('Activate your subscription before adding licenses.', 'sseo-ai-saas')]);
         }
 
+        // SECURITY: serialize read → Mollie PATCH → quota write per tenant.
+        // Without a lock two concurrent requests both read the same count and
+        // the last DB write can exceed what Mollie bills (unpaid licenses).
+        // The named lock is released explicitly and, as a fallback, when the
+        // DB connection closes at the end of the request (every $redirect exits).
+        global $wpdb;
+        $lockName = 'sseo_cp_' . md5((string) $tenant['tenant_key']);
+        if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 10)', $lockName)) !== 1) {
+            $redirect(['error' => __('Another license change is in progress. Please try again in a moment.', 'sseo-ai-saas')]);
+        }
+        register_shutdown_function(static function () use ($wpdb, $lockName): void {
+            $wpdb->query($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lockName));
+        });
+
+        // Read the count inside the lock.
         $oldCount = $customPlan->paidLicenseCount($tenant);
         $newCount = $oldCount + $quantity;
         if ($plan['max_licenses'] > 0 && $newCount > $plan['max_licenses']) {

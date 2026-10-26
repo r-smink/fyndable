@@ -113,7 +113,10 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_model', ['default' => 'dall-e-3']);
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openart_api_key');
-        
+        // Dedicated, credit-limited OpenRouter key that is handed to client sites
+        // for image generation instead of the central LLM key.
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_openrouter_image_api_key', ['sanitize_callback' => 'sanitize_text_field']);
+
         // Usage limits per tier
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_starter_api_calls', ['default' => 200]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_early_adopters_api_calls', ['default' => 200]);
@@ -889,6 +892,17 @@ class SaaSSettings
                         <?php endif; ?>
                     </p>
                     <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="openrouter_image_api_key"><?php esc_html_e('OpenRouter Image Key (client-side)', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="sseo_ai_saas_openrouter_image_api_key" id="openrouter_image_api_key"
+                                       value="<?php echo esc_attr(get_option('sseo_ai_saas_openrouter_image_api_key', '')); ?>" class="regular-text" autocomplete="off"
+                                       placeholder="sk-or-...">
+                                <p class="description">
+                                    <?php esc_html_e('Security: client sites generate images themselves and receive an OpenRouter key on license activation. Without this field they receive the central OpenRouter key. Create a separate key with a credit limit in OpenRouter and enter it here.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
                         <tr class="sseo-ai-image-provider-row"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
                             <th scope="row"><label for="image_api_provider"><?php esc_html_e('Image API Provider', 'sseo-ai-saas'); ?></label></th>
                             <td>

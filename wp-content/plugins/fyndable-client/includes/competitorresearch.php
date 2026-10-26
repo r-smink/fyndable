@@ -18,20 +18,23 @@ class CompetitorResearch
     private Settings $settings;
     private LLMClient $llm;
     private DashboardAPI $dashboardAPI;
-    
-    public function __construct(Settings $settings, LLMClient $llm, DashboardAPI $dashboardAPI)
+    private ?BacklinkAnalyzer $backlinkAnalyzer;
+
+    public function __construct(Settings $settings, LLMClient $llm, DashboardAPI $dashboardAPI, ?BacklinkAnalyzer $backlinkAnalyzer = null)
     {
         $this->settings = $settings;
         $this->llm = $llm;
         $this->dashboardAPI = $dashboardAPI;
+        $this->backlinkAnalyzer = $backlinkAnalyzer;
     }
-    
+
     public function register(): void
     {
         // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_analyze_competitor', [$this, 'ajaxAnalyzeCompetitor']);
         add_action('wp_ajax_sseo_ai_detect_ai_content', [$this, 'ajaxDetectAIContent']);
+        add_action('wp_ajax_sseo_ai_get_backlink_strategy', [$this, 'ajaxGetBacklinkStrategy']);
     }
     
     public function addMenu(): void
@@ -535,7 +538,8 @@ Provide a concise analysis (3-4 sentences):";
             }
             $visitedUrls[$url] = true;
 
-            $response = wp_remote_get($url, ['timeout' => 20]);
+            // wp_safe_*: URLs come from the competitor's own sitemap — block private/loopback targets (SSRF).
+            $response = wp_safe_remote_get($url, ['timeout' => 20]);
             if (is_wp_error($response)) {
                 continue;
             }
@@ -622,7 +626,7 @@ Provide a brief analysis (2-3 sentences):";
                     $visited[$subLoc] = true;
                     $subSitemapCount++;
 
-                    $subResponse = wp_remote_get($subLoc, ['timeout' => 20]);
+                    $subResponse = wp_safe_remote_get($subLoc, ['timeout' => 20]);
                     if (is_wp_error($subResponse)) {
                         continue;
                     }
@@ -790,7 +794,7 @@ Respond in JSON format:
     private function getCompetitorPosts(string $domain, int $limit = 10): array
     {
         $sitemapUrl = "https://{$domain}/sitemap.xml";
-        $response = wp_remote_get($sitemapUrl, ['timeout' => 15]);
+        $response = wp_safe_remote_get($sitemapUrl, ['timeout' => 15]);
         
         if (is_wp_error($response)) {
             return [];
@@ -807,7 +811,7 @@ Respond in JSON format:
      */
     private function scrapePostContent(string $url): string
     {
-        $response = wp_remote_get($url, [
+        $response = wp_safe_remote_get($url, [
             'timeout' => 20,
             'user-agent' => 'Mozilla/5.0 (compatible; SSEOBot/1.0)',
         ]);
@@ -915,33 +919,36 @@ Respond in JSON format:
      */
     private function analyzeBacklinkStrategy(string $domain): array
     {
-        // Get competitor backlinks from Ahrefs/Semrush
         $backlinks = $this->getCompetitorBacklinks($domain);
-        
+
         // Analyze patterns
         $linkTypes = $this->categorizeBacklinks($backlinks);
         $topSources = $this->getTopBacklinkSources($backlinks);
-        $anchorStrategy = $this->analyzeAnchorTextStrategy($backlinks);
-        
+        $anchorStrategy = $this->analyzeAnchorTextStrategy($backlinks, $domain);
+        $dofollow = count(array_filter($backlinks, fn($link) => $link['link_type'] === 'dofollow'));
+
         return [
             'total_backlinks' => count($backlinks),
+            'dofollow_percentage' => $backlinks ? round($dofollow / count($backlinks) * 100, 1) : 0,
             'link_types' => $linkTypes,
             'top_sources' => $topSources,
             'anchor_strategy' => $anchorStrategy,
-            'strategy_summary' => $this->summarizeBacklinkStrategy($linkTypes, $topSources),
+            'strategy_summary' => $this->summarizeBacklinkStrategy($backlinks, $linkTypes, $topSources),
         ];
     }
-    
+
     /**
-     * Get competitor backlinks
+     * Get competitor backlinks (normalized items, see BacklinkAnalyzer::getBacklinkItems)
      */
     private function getCompetitorBacklinks(string $domain): array
     {
-        // This would use Ahrefs or Semrush API
-        // Placeholder implementation
-        return [];
+        if (!$this->backlinkAnalyzer) {
+            return [];
+        }
+
+        return $this->backlinkAnalyzer->getBacklinkItems($domain);
     }
-    
+
     /**
      * Categorize backlinks
      */
@@ -955,63 +962,207 @@ Respond in JSON format:
             'editorial' => 0,
             'other' => 0,
         ];
-        
-        // Categorization logic would go here
-        
+
+        if (!$this->backlinkAnalyzer) {
+            return $categories;
+        }
+
+        foreach ($backlinks as $link) {
+            $categories[$this->backlinkAnalyzer->classifyLink($link)]++;
+        }
+
         return $categories;
     }
-    
+
     /**
-     * Get top backlink sources
+     * Get top backlink sources: [{domain, links, domain_rating}]
      */
     private function getTopBacklinkSources(array $backlinks): array
     {
         $sources = [];
-        
+
         foreach ($backlinks as $link) {
-            $domain = parse_url($link['source_url'] ?? '', PHP_URL_HOST);
-            if (!isset($sources[$domain])) {
-                $sources[$domain] = 0;
+            $domain = $link['source_domain'] ?? '';
+            if ($domain === '') {
+                continue;
             }
-            $sources[$domain]++;
+            if (!isset($sources[$domain])) {
+                $sources[$domain] = ['domain' => $domain, 'links' => 0, 'domain_rating' => 0];
+            }
+            $sources[$domain]['links']++;
+            $sources[$domain]['domain_rating'] = max($sources[$domain]['domain_rating'], (int) $link['domain_rating']);
         }
-        
-        arsort($sources);
-        return array_slice($sources, 0, 10, true);
+
+        usort($sources, fn($a, $b) => [$b['domain_rating'], $b['links']] <=> [$a['domain_rating'], $a['links']]);
+        return array_slice($sources, 0, 10);
     }
-    
+
     /**
      * Analyze anchor text strategy
      */
-    private function analyzeAnchorTextStrategy(array $backlinks): array
+    private function analyzeAnchorTextStrategy(array $backlinks, string $domain = ''): array
     {
         $anchors = [];
-        
+        $total = 0;
+        $branded = 0;
+        $generic = 0;
+        $keywordRich = 0;
+
+        $brandLabel = strtolower(explode('.', $domain)[0] ?? '');
+        $genericPattern = '/^(click here|read more|here|website|link|visit|more info|klik hier|lees meer|hier|bekijk|meer info|deze website)$/i';
+
         foreach ($backlinks as $link) {
             $anchor = $link['anchor_text'] ?? '';
-            if (empty($anchor)) continue;
-            
-            if (!isset($anchors[$anchor])) {
-                $anchors[$anchor] = 0;
+            if ($anchor === '') continue;
+
+            $total++;
+            $lower = mb_strtolower($anchor);
+            if (($brandLabel !== '' && str_contains($lower, $brandLabel)) || preg_match('#^(https?://|www\.)#', $lower)) {
+                $branded++;
+            } elseif (preg_match($genericPattern, trim($lower))) {
+                $generic++;
+            } else {
+                $keywordRich++;
             }
-            $anchors[$anchor]++;
+
+            $anchors[$anchor] = ($anchors[$anchor] ?? 0) + 1;
         }
-        
+
         arsort($anchors);
-        
+
         return [
             'top_anchors' => array_slice($anchors, 0, 10, true),
-            'branded_percentage' => 0, // Would calculate
-            'exact_match_percentage' => 0, // Would calculate
+            'branded_percentage' => $total ? round($branded / $total * 100, 1) : 0,
+            // Non-branded, non-generic anchors — the competitor's keyword targeting
+            'exact_match_percentage' => $total ? round($keywordRich / $total * 100, 1) : 0,
+            'generic_percentage' => $total ? round($generic / $total * 100, 1) : 0,
         ];
     }
-    
+
     /**
      * Summarize backlink strategy
      */
-    private function summarizeBacklinkStrategy(array $linkTypes, array $topSources): string
+    private function summarizeBacklinkStrategy(array $backlinks, array $linkTypes, array $topSources): string
     {
-        return 'Competitor focuses on guest posting and editorial links from high-authority domains.';
+        if (empty($backlinks)) {
+            return __('No backlink data available for this competitor.', 'ai-seo-client');
+        }
+
+        $labels = $this->getLinkTypeLabels();
+        $classified = $linkTypes;
+        unset($classified['other']);
+        arsort($classified);
+        $mainType = (string) array_key_first($classified);
+        $mainShare = round(($classified[$mainType] ?? 0) / count($backlinks) * 100);
+
+        $dofollow = count(array_filter($backlinks, fn($link) => $link['link_type'] === 'dofollow'));
+        $parts = [];
+
+        if ($mainShare > 0) {
+            $parts[] = sprintf(
+                __('Most recognizable link type: %1$s (%2$d%% of analyzed links).', 'ai-seo-client'),
+                $labels[$mainType] ?? $mainType,
+                $mainShare
+            );
+        }
+        $parts[] = sprintf(__('%d%% of the links are dofollow.', 'ai-seo-client'), round($dofollow / count($backlinks) * 100));
+
+        $strong = array_filter($topSources, fn($source) => $source['domain_rating'] >= 50);
+        if ($strong) {
+            $parts[] = sprintf(
+                __('Strongest sources: %s.', 'ai-seo-client'),
+                implode(', ', array_map(fn($source) => $source['domain'] . ' (DR ' . $source['domain_rating'] . ')', array_slice($strong, 0, 3)))
+            );
+        }
+
+        return implode(' ', $parts);
+    }
+
+    private function getLinkTypeLabels(): array
+    {
+        return [
+            'guest_posts' => __('Guest posts', 'ai-seo-client'),
+            'directories' => __('Directories', 'ai-seo-client'),
+            'forums' => __('Forums', 'ai-seo-client'),
+            'social' => __('Social', 'ai-seo-client'),
+            'editorial' => __('Editorial', 'ai-seo-client'),
+            'other' => __('Other', 'ai-seo-client'),
+        ];
+    }
+
+    /**
+     * AJAX: Backlink strategy tab (HTML fragment)
+     */
+    public function ajaxGetBacklinkStrategy(): void
+    {
+        check_ajax_referer('sseo_competitor', 'nonce');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $domain = sanitize_text_field(wp_unslash($_GET['domain'] ?? ''));
+        if ($domain === '') {
+            wp_send_json_error(['message' => 'Domain required']);
+        }
+
+        $tracked = get_option('sseo_ai_tracked_competitors', []);
+        $strategy = $tracked[$domain]['backlink_strategy'] ?? null;
+        if (empty($strategy['total_backlinks']) || !isset($strategy['dofollow_percentage'])) {
+            $strategy = $this->analyzeBacklinkStrategy($domain);
+            if (isset($tracked[$domain])) {
+                $tracked[$domain]['backlink_strategy'] = $strategy;
+                update_option('sseo_ai_tracked_competitors', $tracked);
+            }
+        }
+
+        wp_send_json_success(['html' => $this->renderBacklinkStrategy($strategy)]);
+    }
+
+    private function renderBacklinkStrategy(array $strategy): string
+    {
+        if (empty($strategy['total_backlinks'])) {
+            return '<p>' . esc_html__('No backlink data available for this competitor. Check your backlink provider under Integrations.', 'ai-seo-client') . '</p>';
+        }
+
+        $labels = $this->getLinkTypeLabels();
+        ob_start();
+        ?>
+        <p><?php echo esc_html($strategy['strategy_summary']); ?></p>
+        <p>
+            <?php echo esc_html(sprintf(__('Analyzed links: %d', 'ai-seo-client'), $strategy['total_backlinks'])); ?> ·
+            <?php echo esc_html(sprintf(__('Dofollow: %s%%', 'ai-seo-client'), $strategy['dofollow_percentage'])); ?> ·
+            <?php echo esc_html(sprintf(__('Branded anchors: %s%%', 'ai-seo-client'), $strategy['anchor_strategy']['branded_percentage'] ?? 0)); ?> ·
+            <?php echo esc_html(sprintf(__('Keyword anchors: %s%%', 'ai-seo-client'), $strategy['anchor_strategy']['exact_match_percentage'] ?? 0)); ?>
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+            <table class="wp-list-table widefat striped">
+                <thead><tr><th><?php esc_html_e('Link Type', 'ai-seo-client'); ?></th><th><?php esc_html_e('Links', 'ai-seo-client'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach ($strategy['link_types'] as $type => $count): ?>
+                    <tr><td><?php echo esc_html($labels[$type] ?? $type); ?></td><td><?php echo esc_html(number_format((int) $count)); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <table class="wp-list-table widefat striped">
+                <thead><tr><th><?php esc_html_e('Top Sources', 'ai-seo-client'); ?></th><th><?php esc_html_e('DR', 'ai-seo-client'); ?></th><th><?php esc_html_e('Links', 'ai-seo-client'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach ($strategy['top_sources'] as $source): ?>
+                    <tr><td><?php echo esc_html($source['domain']); ?></td><td><?php echo esc_html($source['domain_rating']); ?></td><td><?php echo esc_html($source['links']); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <table class="wp-list-table widefat striped">
+                <thead><tr><th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th><th><?php esc_html_e('Count', 'ai-seo-client'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach (($strategy['anchor_strategy']['top_anchors'] ?? []) as $anchor => $count): ?>
+                    <tr><td><?php echo esc_html((string) $anchor); ?></td><td><?php echo esc_html($count); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        return (string) ob_get_clean();
     }
     
     /**

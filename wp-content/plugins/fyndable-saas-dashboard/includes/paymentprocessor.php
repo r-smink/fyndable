@@ -325,6 +325,20 @@ class PaymentProcessor
             return new \WP_Error('tenant_not_found', __('Tenant not found', 'sseo-ai-saas'));
         }
 
+        // Idempotency: the same first payment must never create a second
+        // subscription — Mollie re-calls the webhook on refunds/chargebacks, and
+        // the return-URL fallbacks race the webhook. A *different* first payment
+        // (e.g. converting to a custom plan) still creates a new subscription.
+        $paymentId = (string) ($payment['id'] ?? '');
+        $sourcePaymentId = (string) $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_source_payment', '');
+        if ($paymentId !== '' && hash_equals($sourcePaymentId, $paymentId)
+            && $this->tenants->getTenantSetting($tenantKey, 'mollie_subscription_id', '') !== '') {
+            $existing = $this->fetchMollieSubscription($tenantKey);
+            if (!is_wp_error($existing) && in_array($existing['status'] ?? '', ['active', 'pending'], true)) {
+                return $existing;
+            }
+        }
+
         $customerId = $payment['customerId'] ?? '';
         $mandateId = $payment['mandateId'] ?? '';
         $tier = $payment['metadata']['tier'] ?? $tenant['tier'];
@@ -406,6 +420,7 @@ class PaymentProcessor
         }
 
         $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_id', $subscription['id']);
+        $this->tenants->setTenantSetting($tenantKey, 'mollie_subscription_source_payment', $paymentId);
         $this->tenants->setTenantSetting($tenantKey, 'mollie_mandate_id', $mandateId);
         $this->tenants->setTenantSetting($tenantKey, 'subscription_interval', $interval);
         $this->tenants->setTenantSetting($tenantKey, 'mollie_interval', $mollieInterval);
@@ -642,14 +657,20 @@ class PaymentProcessor
     }
 
     /**
-     * Return URL after payment
+     * Return URL after payment.
+     *
+     * Instead of exposing the tenant_key in the URL (where it leaks via
+     * browser history, Referer headers, analytics and the PSP dashboard),
+     * we store an opaque, single-use reference token in a transient that
+     * maps back to the tenant_key.
      */
     private function getReturnUrl(string $tenantKey, string $provider): string
     {
+        $ref = $this->createPaymentReturnRef($tenantKey);
         return add_query_arg([
             'fyndable_payment' => 'success',
             'provider' => $provider,
-            'tenant_key' => $tenantKey,
+            'ref' => $ref,
         ], home_url('/thank-you/'));
     }
 
@@ -658,10 +679,40 @@ class PaymentProcessor
      */
     private function getCancelUrl(string $tenantKey): string
     {
+        $ref = $this->createPaymentReturnRef($tenantKey);
         return add_query_arg([
             'fyndable_payment' => 'cancel',
-            'tenant_key' => $tenantKey,
+            'ref' => $ref,
         ], home_url('/pricing/'));
+    }
+
+    /**
+     * Create an opaque, one-time reference token that maps to a tenant_key.
+     * The transient expires after 2 hours (generous for PSP redirects).
+     */
+    private function createPaymentReturnRef(string $tenantKey): string
+    {
+        $ref = wp_generate_password(32, false, false);
+        set_transient('fyndable_pay_ref_' . $ref, $tenantKey, 2 * HOUR_IN_SECONDS);
+        return $ref;
+    }
+
+    /**
+     * Resolve a payment return reference to a tenant_key.
+     * Returns null if the ref is invalid or expired.
+     */
+    public function resolvePaymentReturnRef(string $ref): ?string
+    {
+        if (empty($ref) || strlen($ref) !== 32) {
+            return null;
+        }
+        $tenantKey = get_transient('fyndable_pay_ref_' . $ref);
+        if ($tenantKey === false || !is_string($tenantKey) || $tenantKey === '') {
+            return null;
+        }
+        // Delete after use (single-use token).
+        delete_transient('fyndable_pay_ref_' . $ref);
+        return $tenantKey;
     }
 
     /**
