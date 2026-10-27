@@ -225,12 +225,14 @@ class DashboardShell
                         html.wp-toolbar {\
                             padding-top: 0 !important;\
                         }\
-                        .wrap, .wrap.sseo-ai-modern, .wrap.fyn-animate-in {\
+                        .wrap, .wrap.sseo-ai-modern {\
                             margin: 0 !important;\
                             padding: 0 !important;\
                         }\
-                        .fyn-card, .sseo-ai-dashboard-card {\
-                            margin: 20px 0px !important;\
+                        .wrap.fyn-animate-in {\
+                            margin: 0 auto !important;\
+                            padding: 28px 32px 48px !important;\
+                            max-width: 1440px;\
                         }\
                         html, body {\
                             overflow-x: hidden !important;\
@@ -297,12 +299,14 @@ class DashboardShell
                     html.wp-toolbar {
                         padding-top: 0 !important;
                     }
-                    .wrap, .wrap.sseo-ai-modern, .wrap.fyn-animate-in {
+                    .wrap, .wrap.sseo-ai-modern {
                         margin: 0 !important;
                         padding: 0 !important;
                     }
-                    .fyn-card, .sseo-ai-dashboard-card {
-                        margin: 20px 0px !important;
+                    .wrap.fyn-animate-in {
+                        margin: 0 auto !important;
+                        padding: 28px 32px 48px !important;
+                        max-width: 1440px;
                     }
                     html, body {
                         overflow-x: hidden !important;

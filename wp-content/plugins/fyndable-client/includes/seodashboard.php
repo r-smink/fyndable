@@ -356,8 +356,44 @@ class SeoDashboard
                 </div>
             </div>
 
-            <!-- Score + Breakdown row -->
+            <!-- Stat tiles row -->
             <div id="seo-dash-main" style="display:none;">
+                <div class="fyn-grid-4" style="margin-bottom:24px;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-tile-top">
+                            <span class="fyn-stat-tile-label"><?php esc_html_e('SEO Score', 'ai-seo-client'); ?></span>
+                            <span class="dashicons dashicons-awards"></span>
+                        </div>
+                        <div class="fyn-stat-tile-value" id="seo-tile-score">&mdash;</div>
+                        <div class="fyn-stat-tile-footer" id="seo-tile-score-badge"></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-tile-top">
+                            <span class="fyn-stat-tile-label"><?php esc_html_e('Analyzed', 'ai-seo-client'); ?></span>
+                            <span class="dashicons dashicons-search"></span>
+                        </div>
+                        <div class="fyn-stat-tile-value" id="seo-tile-analyzed">&mdash;</div>
+                        <div class="fyn-stat-tile-footer"><?php esc_html_e('posts & pages', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-tile-top">
+                            <span class="fyn-stat-tile-label"><?php esc_html_e('Issues', 'ai-seo-client'); ?></span>
+                            <span class="dashicons dashicons-warning"></span>
+                        </div>
+                        <div class="fyn-stat-tile-value" id="seo-tile-issues">&mdash;</div>
+                        <div class="fyn-stat-tile-footer" id="seo-tile-issues-detail"></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-tile-top">
+                            <span class="fyn-stat-tile-label"><?php esc_html_e('Quick Wins', 'ai-seo-client'); ?></span>
+                            <span class="dashicons dashicons-yes-alt"></span>
+                        </div>
+                        <div class="fyn-stat-tile-value" id="seo-tile-quickwins">&mdash;</div>
+                        <div class="fyn-stat-tile-footer"><?php esc_html_e('easy to fix with AI', 'ai-seo-client'); ?></div>
+                    </div>
+                </div>
+
+                <!-- Score + Breakdown row -->
                 <div style="display:grid; grid-template-columns:300px 1fr; gap:20px; margin-bottom:24px;">
                     <!-- Score Ring card -->
                     <div class="fyn-card" style="text-align:center;padding:30px 22px;">
@@ -437,15 +473,34 @@ class SeoDashboard
 
             function renderDashboard(data) {
                 var cls = getScoreClass(data.score);
+
+                // Stat tiles
+                $('#seo-tile-score').text(data.score);
+                var pillCls = 'fyn-badge fyn-badge--' + cls;
+                $('#seo-tile-score-badge').html('<span class="' + pillCls + '">' + getScoreLabel(data.score) + '</span>');
+                $('#seo-tile-analyzed').text(data.total_posts);
+                var totalIssueCount = 0;
+                data.issues.forEach(function(i) { totalIssueCount += (i.count || 0); });
+                $('#seo-tile-issues').text(totalIssueCount);
+                var critCount = 0;
+                data.issues.forEach(function(i) { if (i.type === 'critical') critCount += (i.count || 0); });
+                $('#seo-tile-issues-detail').html(critCount > 0
+                    ? '<span class="fyn-badge fyn-badge--danger">' + critCount + ' <?php echo esc_js(__('critical', 'ai-seo-client')); ?></span>'
+                    : '<span class="fyn-badge fyn-badge--success"><?php echo esc_js(__('no critical issues', 'ai-seo-client')); ?></span>'
+                );
+                $('#seo-tile-quickwins').text(data.quick_wins.length);
+
+                // Score ring
                 $('#seo-score-num').text(data.score);
                 $('#seo-score-circle').attr('stroke-dasharray', data.score + ', 100');
-                var pillCls = 'fyn-badge fyn-badge--' + cls;
-                $('#seo-score-label').html('<span class="' + pillCls + '">' + getScoreLabel(data.score) + '</span>');
+                var scorePillCls = 'fyn-badge fyn-badge--' + cls;
+                $('#seo-score-label').html('<span class="' + scorePillCls + '">' + getScoreLabel(data.score) + '</span>');
                 $('#seo-score-posts').text(data.total_posts + ' <?php echo esc_js(__('posts analyzed', 'ai-seo-client')); ?>');
 
+                // Breakdown bars
                 var bHtml = '';
                 data.breakdown.forEach(function(b) {
-                    var barCls = getScoreClass(b.pct);
+                    var barCls = b.pct >= 100 ? 'full' : getScoreClass(b.pct);
                     bHtml += '<div style="margin-bottom:14px;">' +
                         '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
                         '<span style="font-weight:600;font-size:13px;color:var(--text-b)">' + b.label + '</span>' +

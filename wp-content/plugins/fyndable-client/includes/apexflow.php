@@ -1710,7 +1710,7 @@ Keywords:
                 .sseo-apexflow-page .large-text { width: 100%; }
             }
         </style>
-        <div class="fyn-animate-in sseo-apexflow-page">
+        <div class="wrap fyn-animate-in sseo-apexflow-page" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
             <div class="fyn-page-header">
                 <span class="fyn-breadcrumb">Automatisering &rsaquo; ApexFlow</span>
                 <h1><?php esc_html_e('ApexFlow — Content Autopilot', 'ai-seo-client'); ?></h1>

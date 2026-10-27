@@ -132,9 +132,9 @@ body.fyndable-ui {
     --nav-section: #9a95a8;
     --nav-hover: #f5f2fb;
     --card: #ffffff;
-    --card-border: #ececf1;
-    --card-shadow: 0 1px 3px rgba(20,14,30,.07), 0 1px 2px rgba(20,14,30,.04);
-    --card-shadow-lg: 0 10px 24px -8px rgba(20,14,30,.14);
+    --card-border: #e2e1ea;
+    --card-shadow: 0 2px 8px rgba(20,14,30,.08), 0 1px 3px rgba(20,14,30,.06);
+    --card-shadow-lg: 0 10px 24px -8px rgba(20,14,30,.18);
     --text-h: #1a1430;
     --text-b: #413b52;
     --text-m: #746e82;
@@ -146,6 +146,32 @@ body.fyndable-ui {
     --input-bg: #ffffff;
     --input-border: #dcdae4;
     --sev-track: #e9e7f0;
+}
+
+/* Apply base styles (not just vars) so the shell-page bg, font, and
+   text colour actually take effect on iframe-loaded pages. */
+body.fyndable-ui,
+body.fyndable-ui #wpcontent,
+body.fyndable-ui #wpbody,
+body.fyndable-ui #wpbody-content {
+    background: var(--shell-page, #f4f5f8) !important;
+}
+body.fyndable-ui {
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color: var(--text-b, #413b52);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+body.fyndable-ui h1,
+body.fyndable-ui h2,
+body.fyndable-ui h3,
+body.fyndable-ui h4 {
+    font-family: inherit;
+    color: var(--text-h, #1a1430);
+}
+body.fyndable-ui .wrap {
+    background: transparent !important;
 }
 
 /* Dark theme overrides */
@@ -413,6 +439,53 @@ body.fyndable-ui.fyndable-dark {
     height: 16px;
 }
 
+/* WP native button override inside fyndable shell */
+body.fyndable-ui .button.button-primary,
+body.fyndable-ui input[type="submit"].button-primary,
+body.fyndable-ui .wrap .button.button-primary {
+    background: var(--fyn-gradient) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 9px !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    box-shadow: 0 4px 12px rgba(143,57,172,.2) !important;
+    text-shadow: none !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+body.fyndable-ui .button.button-primary:hover,
+body.fyndable-ui input[type="submit"].button-primary:hover {
+    box-shadow: 0 6px 20px rgba(143,57,172,.3) !important;
+    transform: translateY(-1px);
+}
+body.fyndable-ui .button:not(.button-primary):not(.button-link),
+body.fyndable-ui .wrap .button:not(.button-primary):not(.button-link) {
+    background: var(--card, #fff) !important;
+    color: var(--text-b, #413b52) !important;
+    border: 1px solid var(--card-border, #e2e1ea) !important;
+    border-radius: 9px !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+body.fyndable-ui .button:not(.button-primary):not(.button-link):hover {
+    border-color: var(--fyn-purple) !important;
+    color: var(--fyn-purple) !important;
+    background: var(--fyn-purple-tint) !important;
+}
+
 /* --- Badges / pills --- */
 .fyn-badge {
     display: inline-flex;
@@ -447,6 +520,7 @@ body.fyndable-ui.fyndable-dark {
 .fyn-progress-bar--success { background: var(--fyn-success); }
 .fyn-progress-bar--warning { background: var(--fyn-warning); }
 .fyn-progress-bar--danger  { background: var(--fyn-danger); }
+.fyn-progress-bar--full    { background: var(--fyn-gradient-flat) !important; }
 
 /* --- Tabs (underlined, e.g. Zoekwoorden) --- */
 .fyn-tabs {

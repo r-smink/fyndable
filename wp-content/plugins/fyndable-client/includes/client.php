@@ -11,7 +11,7 @@ namespace SSEOAIClient;
 class Client
 {
     public LicenseValidator $licenseValidator;
-    private DashboardAPI $dashboardAPI;
+    public DashboardAPI $dashboardAPI;
     private Settings $settings;
     private ?LlmClient $llmClient = null;
     private ?HealthLogger $healthLogger = null;
@@ -45,7 +45,7 @@ class Client
     private ?ContentOptimizer $contentOptimizer = null;
     private ?SerpCompetitor $serpCompetitor = null;
     private ?TopicCluster $topicCluster = null;
-    private ?ApexFlow $apexFlow = null;
+    public ?ApexFlow $apexFlow = null;
     private ?KeywordDifficulty $keywordDifficulty = null;
     private ?LSIKeywords $lsiKeywords = null;
     private ?AIRepurposer $aiRepurposer = null;
@@ -59,7 +59,7 @@ class Client
     private ?IndexNow $indexNow = null;
     private ?DirectIndex $directIndex = null;
     private ?GscDashboard $gscDashboard = null;
-    private ?BacklinkAnalyzer $backlinkAnalyzer = null;
+    public ?BacklinkAnalyzer $backlinkAnalyzer = null;
     private ?SerpFeatureTracker $serpFeatureTracker = null;
     private ?AiOptimizationTracker $aiOptimizationTracker = null;
     private ?ExternalIntegrations $externalIntegrations = null;
@@ -70,7 +70,7 @@ class Client
     private ?TechnicalSEOAuditor $technicalSEOAuditor = null;
     private ?ContentCalendar $contentCalendar = null;
     private ?PromptTemplateLibrary $promptTemplateLibrary = null;
-    private ?AdvancedBacklinks $advancedBacklinks = null;
+    public ?AdvancedBacklinks $advancedBacklinks = null;
     private ?SmartInternalLinking $smartInternalLinking = null;
     private ?EEATValidator $eeatValidator = null;
     private ?FactChecker $factChecker = null;
@@ -1403,7 +1403,7 @@ class Client
         $companyName = $this->getBrandName();
         $brandName = $companyName . ' ' . __('License Activation', 'ai-seo-client');
         ?>
-        <div class="wrap ai-seo-client">
+        <div class="wrap fyn-animate-in ai-seo-client" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
             <h1><?php echo esc_html($brandName); ?></h1>
 
             <?php
@@ -3535,34 +3535,34 @@ class Client
         // Feature benefits by tier
         $tierBenefits = [
             'Starter' => [
-                'Link Assistant - AI internal linking',
-                'Redirect Manager',
-                'Image Alt Generator',
-                'Content Rewriter',
-                '500 API calls/month',
+                __('Link Assistant — AI internal linking', 'ai-seo-client'),
+                __('Redirect Manager', 'ai-seo-client'),
+                __('Image Alt Generator', 'ai-seo-client'),
+                __('Content Rewriter', 'ai-seo-client'),
+                __('500 API calls/month', 'ai-seo-client'),
             ],
             'Professional' => [
-                'Rank Tracker - Daily SERP positions',
-                'Schema Markup - 10+ structured data types',
-                'Topic Clusters - AI content strategy',
-                'Content Optimizer - NLP scoring',
-                'Google Search Console integration',
-                'SERP Competitor Analysis',
-                '2,000 API calls/month',
+                __('Rank Tracker — daily SERP positions', 'ai-seo-client'),
+                __('Schema Markup — 10+ structured data types', 'ai-seo-client'),
+                __('Topic Clusters — AI content strategy', 'ai-seo-client'),
+                __('Content Optimizer — NLP scoring', 'ai-seo-client'),
+                __('Google Search Console integration', 'ai-seo-client'),
+                __('SERP Competitor Analysis', 'ai-seo-client'),
+                __('2,000 API calls/month', 'ai-seo-client'),
             ],
             'Business' => [
-                'AI Content Writer - Full article generation',
-                'Content Repurposer',
-                'Bulk AI Optimizer',
-                'Content Decay Monitor',
-                '10,000 API calls/month',
+                __('AI Content Writer — full article generation', 'ai-seo-client'),
+                __('Content Repurposer', 'ai-seo-client'),
+                __('Bulk AI Optimizer', 'ai-seo-client'),
+                __('Content Decay Monitor', 'ai-seo-client'),
+                __('10,000 API calls/month', 'ai-seo-client'),
             ],
             'Agency' => [
-                'SEO Revisions - Track all changes',
-                'Plagiarism Checker',
-                'White Label - Custom branding',
-                'Unlimited API calls',
-                'Priority support',
+                __('SEO Revisions — track all changes', 'ai-seo-client'),
+                __('Plagiarism Checker', 'ai-seo-client'),
+                __('White Label — custom branding', 'ai-seo-client'),
+                __('Unlimited API calls', 'ai-seo-client'),
+                __('Priority support', 'ai-seo-client'),
             ],
         ];
         $benefits = $tierBenefits[$nextTier] ?? $tierBenefits['Professional'];

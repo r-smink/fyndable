@@ -2569,7 +2569,9 @@ PROMPT;
                             path: '/sseo-ai/v1/clusters/queue/' + queueId
                         }).then(function(status) {
                             var percent = Math.round((status.completed + status.failed) / status.total * 100);
-                            $('#tc-progress-bar').css('width', percent + '%').text(percent + '%');
+                            $('#tc-progress-bar').css('width', percent + '%').text(percent + '%')
+                                .toggleClass('fyn-progress-bar--success', percent < 100)
+                                .toggleClass('fyn-progress-bar--full', percent >= 100);
                             $('#tc-progress-text').text(
                                 status.completed + ' <?php echo esc_js(__('completed', 'ai-seo-client')); ?>, ' +
                                 status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>, ' +
@@ -2600,7 +2602,7 @@ PROMPT;
                                     '<h4 style="margin:0 0 15px 0;color:#166534;">✅ <?php echo esc_js(__('Content Generation Complete!', 'ai-seo-client')); ?></h4>' +
                                     '<p><?php echo esc_js(__('Generated', 'ai-seo-client')); ?> ' + status.completed + ' <?php echo esc_js(__('posts', 'ai-seo-client')); ?>' +
                                     (status.failed > 0 ? ', ' + status.failed + ' <?php echo esc_js(__('failed', 'ai-seo-client')); ?>' : '') + '.</p>' +
-                                    '<a href="<?php echo esc_url(admin_url('edit.php?post_status=future&post_type=post')); ?>" class="button button-primary" style="background:#16a34a;border-color:#16a34a;margin-right:10px;"><?php echo esc_js(__('View Scheduled Posts', 'ai-seo-client')); ?></a>' +
+                                    '<a href="<?php echo esc_url(admin_url('edit.php?post_status=future&post_type=post')); ?>" class="button button-primary" style="margin-right:10px;"><?php echo esc_js(__('View Scheduled Posts', 'ai-seo-client')); ?></a>' +
                                     '<a href="<?php echo esc_url(admin_url('edit.php?post_status=draft&post_type=post')); ?>" class="button"><?php echo esc_js(__('View Drafts', 'ai-seo-client')); ?></a>' +
                                     '</div>';
                                 $('#tc-bulk-results').html(resultsHtml).show();
