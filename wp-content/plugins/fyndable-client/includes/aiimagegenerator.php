@@ -51,121 +51,97 @@ class AIImageGenerator
         $stats = $this->getImageStats();
         
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('AI Image Generator', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('AI Images', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('AI Image Generator', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Automatically generate featured and social images with AI.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
-                <!-- Image Statistics -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('AI Image Overview', 'ai-seo-client'); ?></h2>
-                
-                <div class="sseo-stat-grid">
-                    <div class="sseo-stat-card sseo-stat-card--neutral">
-                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #2271b1;">
-                            <?php echo esc_html($stats['total_generated']); ?>
-                        </div>
-                        <div class="sseo-stat-description"><?php esc_html_e('Images Generated', 'ai-seo-client'); ?></div>
+
+            <!-- Image Statistics -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-format-image"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('AI Image Overview', 'ai-seo-client'); ?></h3>
+                </div>
+                <div class="fyn-stats-grid">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($stats['total_generated']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Images Generated', 'ai-seo-client'); ?></div>
                     </div>
-                    <div class="sseo-stat-card sseo-stat-card--success">
-                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #00a32a;">
-                            <?php echo esc_html($stats['featured_images']); ?>
-                        </div>
-                        <div class="sseo-stat-description"><?php esc_html_e('Featured Images', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html($stats['featured_images']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Featured Images', 'ai-seo-client'); ?></div>
                     </div>
-                    <div class="sseo-stat-card sseo-stat-card--warning">
-                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #856404;">
-                            <?php echo esc_html($stats['social_images']); ?>
-                        </div>
-                        <div class="sseo-stat-description"><?php esc_html_e('Social Images', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-warning);"><?php echo esc_html($stats['social_images']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Social Images', 'ai-seo-client'); ?></div>
                     </div>
-                    <div class="sseo-stat-card sseo-stat-card--danger">
-                        <div class="sseo-stat-value" style="font-size: 36px; font-weight: bold; color: #d63638;">
-                            <?php echo esc_html($stats['missing_featured']); ?>
-                        </div>
-                        <div class="sseo-stat-description"><?php esc_html_e('Posts Without Featured', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html($stats['missing_featured']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Posts Without Featured', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Bulk Image Generation -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Bulk Image Generation', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-images-alt2"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Bulk Image Generation', 'ai-seo-client'); ?></h3>
+                </div>
+
                 <form method="post" id="bulk-image-form">
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row">
-                                <label><?php esc_html_e('Image Type', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="generate_featured" value="1" checked>
-                                    <?php esc_html_e('Featured Images', 'ai-seo-client'); ?>
-                                </label><br>
-                                <label>
-                                    <input type="checkbox" name="generate_og" value="1">
-                                    <?php esc_html_e('Open Graph Images (1200x630)', 'ai-seo-client'); ?>
-                                </label><br>
-                                <label>
-                                    <input type="checkbox" name="generate_twitter" value="1">
-                                    <?php esc_html_e('Twitter Card Images (1200x600)', 'ai-seo-client'); ?>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">
-                                <label><?php esc_html_e('Target Posts', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <label>
-                                    <input type="radio" name="target" value="missing" checked>
-                                    <?php esc_html_e('Only posts without featured images', 'ai-seo-client'); ?>
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="target" value="all">
-                                    <?php esc_html_e('All published posts', 'ai-seo-client'); ?>
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="target" value="recent">
-                                    <?php esc_html_e('Recent posts (last 30 days)', 'ai-seo-client'); ?>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">
-                                <label><?php esc_html_e('Image Style', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <select name="image_style">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-bottom:20px;">
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em;"><?php esc_html_e('Image Type', 'ai-seo-client'); ?></label>
+                            <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-b);">
+                                <label><input type="checkbox" name="generate_featured" value="1" checked> <?php esc_html_e('Featured Images', 'ai-seo-client'); ?></label>
+                                <label><input type="checkbox" name="generate_og" value="1"> <?php esc_html_e('Open Graph Images (1200x630)', 'ai-seo-client'); ?></label>
+                                <label><input type="checkbox" name="generate_twitter" value="1"> <?php esc_html_e('Twitter Card Images (1200x600)', 'ai-seo-client'); ?></label>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em;"><?php esc_html_e('Target Posts', 'ai-seo-client'); ?></label>
+                            <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-b);">
+                                <label><input type="radio" name="target" value="missing" checked> <?php esc_html_e('Only posts without featured images', 'ai-seo-client'); ?></label>
+                                <label><input type="radio" name="target" value="all"> <?php esc_html_e('All published posts', 'ai-seo-client'); ?></label>
+                                <label><input type="radio" name="target" value="recent"> <?php esc_html_e('Recent posts (last 30 days)', 'ai-seo-client'); ?></label>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em;"><?php esc_html_e('Image Style', 'ai-seo-client'); ?></label>
+                            <div style="margin-top:8px;">
+                                <select name="image_style" class="fyn-input" style="width:100%;">
                                     <option value="photorealistic"><?php esc_html_e('Photorealistic', 'ai-seo-client'); ?></option>
                                     <option value="illustration"><?php esc_html_e('Illustration', 'ai-seo-client'); ?></option>
                                     <option value="abstract"><?php esc_html_e('Abstract', 'ai-seo-client'); ?></option>
                                     <option value="minimalist"><?php esc_html_e('Minimalist', 'ai-seo-client'); ?></option>
                                     <option value="3d-render"><?php esc_html_e('3D Render', 'ai-seo-client'); ?></option>
                                 </select>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <p class="submit">
-                        <button type="button" class="button button-primary button-hero" onclick="sseoBulkGenerateImages()">
-                            <?php esc_html_e('Start Bulk Generation', 'ai-seo-client'); ?>
-                        </button>
-                    </p>
-                </form>
-                
-                <div id="bulk-progress" style="display: none; margin-top: 20px;">
-                    <div style="background: #f0f6fc; padding: 15px; border-left: 4px solid #2271b1;">
-                        <h4><?php esc_html_e('Generation Progress', 'ai-seo-client'); ?></h4>
-                        <div class="progress-bar" style="background: #e0e0e0; height: 30px; border-radius: 4px; overflow: hidden;">
-                            <div id="progress-fill" style="background: #2271b1; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                            </div>
                         </div>
-                        <p id="progress-text" style="margin-top: 10px;">0 / 0 images generated</p>
+                    </div>
+
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoBulkGenerateImages()">
+                        <span class="dashicons dashicons-format-image"></span>
+                        <?php esc_html_e('Start Bulk Generation', 'ai-seo-client'); ?>
+                    </button>
+                </form>
+
+                <div id="bulk-progress" style="display:none;margin-top:20px;">
+                    <div class="fyn-well" style="padding:16px;border-radius:9px;border-left:4px solid var(--fyn-blue);">
+                        <h4 style="margin:0 0 10px;font-size:14px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Generation Progress', 'ai-seo-client'); ?></h4>
+                        <div class="fyn-progress" style="height:24px;">
+                            <div class="fyn-progress-bar" id="progress-fill" style="width:0%;"></div>
+                        </div>
+                        <p id="progress-text" style="margin:8px 0 0;font-size:13px;color:var(--text-m);">0 / 0</p>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
         

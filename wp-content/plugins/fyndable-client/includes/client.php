@@ -814,7 +814,7 @@ class Client
         echo '<div class="wrap"><h1>' . esc_html($menuName) . ' — Network Overview</h1>';
         echo '<p>Manage plugin settings across all sites in your network.</p>';
 
-        echo '<table class="wp-list-table widefat fixed striped"><thead><tr>';
+        echo '<table class="fyn-table"><thead><tr>';
         echo '<th>Site</th><th>Domain</th><th>License Status</th><th>Tier</th><th>Actions</th>';
         echo '</tr></thead><tbody>';
 
@@ -1316,67 +1316,50 @@ class Client
                 :root {
                     --sseo-primary-color: {$primaryColor};
                     --sseo-secondary-color: {$secondaryColor};
-                    --sseo-sa-primary: {$primaryColor};
-                    --sseo-sa-secondary: {$secondaryColor};
                 }
-                /* Move the brand gradient to the page wrapper; header/content stay transparent */
-                .wrap.sseo-ai-modern {
-                    background: {$bgGradient};
-                }
-                .sseo-ai-header {
-                    border-color: {$primaryColor} !important;
-                }
-                .sseo-ai-header h1::before {
-                    color: {$primaryColor};
+                /* Fyndable design-system overrides for white-label colors */
+                body.fyndable-ui {
+                    --fyn-blue: {$primaryColor};
+                    --fyn-purple: {$secondaryColor};
+                    --fyn-gradient: {$bgGradient};
                 }
                 /* Primary buttons */
-                .button-primary.sseo-btn, .sseo-ai-btn-primary,
+                .fyn-btn-primary,
                 .sseo-ai-connection-card .button-primary,
                 .sseo-onboarding-actions .button-primary {
                     background-color: {$primaryColor} !important;
                     border-color: {$primaryColor} !important;
                 }
-                .button-primary.sseo-btn:hover, .sseo-ai-btn-primary:hover,
+                .fyn-btn-primary:hover,
                 .sseo-ai-connection-card .button-primary:hover,
                 .sseo-onboarding-actions .button-primary:hover {
                     background-color: {$secondaryColor} !important;
                     border-color: {$secondaryColor} !important;
                 }
-                /* Accent colors — focus borders, hover states, active tabs */
-                .form-field input:focus, .form-field select:focus, .form-field textarea:focus,
+                /* Accent colors — focus borders, hover states */
+                .fyn-input:focus, .connection-form input:focus,
                 .sseo-form-field select:focus, .sseo-reply-form textarea:focus,
-                .connection-form input:focus, .sseo-onboarding-field input:focus,
+                .sseo-onboarding-field input:focus,
                 .sseo-onboarding-field select:focus, .sseo-onboarding-field textarea:focus {
                     border-color: {$primaryColor} !important;
                     box-shadow: 0 0 0 3px rgba({$rgbStr}, 0.1) !important;
                 }
-                .ai-tool-card:hover {
-                    border-color: {$primaryColor} !important;
-                    box-shadow: 0 10px 20px rgba({$rgbStr}, 0.15) !important;
-                }
-                .sseo-ticket-item:hover {
+                .ai-tool-card:hover, .sseo-ticket-item:hover {
                     border-color: {$primaryColor} !important;
                     box-shadow: 0 4px 12px rgba({$rgbStr}, 0.1) !important;
-                }
-                .sseo-ticket-item a:hover, .sseo-card-controls button:hover,
-                .sseo-reorder-toggle:hover {
-                    color: {$primaryColor} !important;
-                    border-color: {$primaryColor} !important;
                 }
                 .sseo-file-drop:hover {
                     border-color: {$primaryColor} !important;
                 }
                 /* Active states */
                 .google-tab.active, .bv-period-tab.active {
-                    color: {$primaryColor} !important;
-                    border-bottom-color: {$primaryColor} !important;
                     background: {$primaryColor} !important;
                 }
                 .bv-pagination a:hover, .bv-pagination span.current,
                 .bv-scan-btn, .bv-competitor-bar-fill {
                     background: {$primaryColor} !important;
                 }
-                /* Spinner */
+                /* Spinner / loader */
                 .sseo-ai-connection-loader .spinner,
                 .sseo-onboarding-loader .spinner {
                     border-top-color: {$primaryColor} !important;
@@ -1387,11 +1370,10 @@ class Client
                     -webkit-background-clip: text !important;
                     -webkit-text-fill-color: transparent !important;
                 }
-                /* Progress circle active state */
+                /* Onboarding */
                 .sseo-onboarding-progress-step.active .sseo-onboarding-progress-circle {
                     color: {$primaryColor} !important;
                 }
-                /* Checkbox/item hover */
                 .sseo-onboarding-checkbox-item:hover {
                     border-color: {$primaryColor} !important;
                 }
@@ -1613,68 +1595,51 @@ class Client
         }
         ?>
         <style>
-            /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #379fd3; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15); }
-            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
-            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+            .ai-tool-card { display:block; background:var(--card); border:2px solid var(--card-border); border-radius:13px; padding:24px; transition:all .2s ease; text-decoration:none; }
+            .ai-tool-card:hover { border-color:var(--fyn-purple); transform:translateY(-3px); box-shadow:var(--shadow-md); }
+            .ai-tool-card h3 { font-size:16px; font-weight:700; color:var(--text-h); margin:0 0 8px 0; }
+            .ai-tool-card p { font-size:13px; color:var(--text-m); margin:0; line-height:1.6; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('AI Tools', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('AI Tools', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('AI Tools', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('AI-powered tools for content, images and optimization.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Available AI Tools', 'ai-seo-client'); ?></h2>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
-                        
-                        <div class="ai-tool-card">
-                            <h3>🤖 <?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('AI-powered content generation for blog posts and articles', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>✍️ <?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Bulk generate meta titles and descriptions', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🎨 <?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Generate featured images and graphics', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🖼️ <?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Available in post editor sidebar', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>❓ <?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Generate FAQ schema from content', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🎥 <?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Video transcript generation and optimization', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>🔄 <?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                        <div class="ai-tool-card">
-                            <h3>📊 <?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
-                            <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
-                        </div>
-                        
-                    </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-edit" style="color:var(--fyn-purple);margin-right:6px;"></span><?php esc_html_e('Content Writer', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('AI-powered content generation for blog posts and articles', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-admin-page" style="color:var(--fyn-blue);margin-right:6px;"></span><?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('Bulk generate meta titles and descriptions', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-format-image" style="color:var(--fyn-success);margin-right:6px;"></span><?php esc_html_e('Image Generator', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('Generate featured images and graphics', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-images-alt2" style="color:var(--fyn-warning);margin-right:6px;"></span><?php esc_html_e('Image Alt Generator', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('Available in post editor sidebar', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-editor-help" style="color:var(--fyn-purple);margin-right:6px;"></span><?php esc_html_e('FAQ Generator', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('Generate FAQ schema from content', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-video-alt3" style="color:var(--fyn-blue);margin-right:6px;"></span><?php esc_html_e('Video SEO', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('Video transcription and optimization', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-controls-repeat" style="color:var(--fyn-success);margin-right:6px;"></span><?php esc_html_e('Content Repurposer', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('Repurpose content for different formats', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="ai-tool-card">
+                    <h3><span class="dashicons dashicons-chart-bar" style="color:var(--fyn-warning);margin-right:6px;"></span><?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h3>
+                    <p><?php esc_html_e('AI-powered content optimization suggestions', 'ai-seo-client'); ?></p>
                 </div>
             </div>
         </div>
@@ -1969,37 +1934,39 @@ class Client
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sitemap-status { display: flex; align-items: center; gap: 15px; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
-            .sitemap-status.ok { background: #d1fae5; border-left: 4px solid #00a32a; }
-            .sitemap-status.error { background: #fee2e2; border-left: 4px solid #d63638; }
-            .sitemap-status.warning { background: #fff3cd; border-left: 4px solid #dba617; }
-            .sitemap-url { font-family: monospace; background: #f3f4f6; padding: 10px 15px; border-radius: 6px; display: inline-block; margin: 5px 0; }
+            .sitemap-status { display: flex; align-items: center; gap: 15px; padding: 16px; border-radius: 9px; margin-bottom: 12px; }
+            .sitemap-status.ok { background: color-mix(in srgb, var(--fyn-success) 12%, transparent); border-left: 4px solid var(--fyn-success); }
+            .sitemap-status.error { background: color-mix(in srgb, var(--fyn-danger) 12%, transparent); border-left: 4px solid var(--fyn-danger); }
+            .sitemap-status.warning { background: color-mix(in srgb, var(--fyn-warning) 12%, transparent); border-left: 4px solid var(--fyn-warning); }
+            .sitemap-url { font-family: monospace; background: var(--well); padding: 8px 14px; border-radius: 7px; display: inline-block; margin: 5px 0; font-size: 13px; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('XML Sitemaps', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Sitemaps', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('XML Sitemaps', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage and check your XML sitemaps.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <div style="max-width: 900px;">
-                    
-                    <!-- Main Sitemap Status -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Sitemap Status', 'ai-seo-client'); ?></h2>
+
+            <!-- Main Sitemap Status -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-networking"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Sitemap Status', 'ai-seo-client'); ?></h3>
+                </div>
                         <div id="sitemap-status-content">
                             <p><?php esc_html_e('Loading sitemap status...', 'ai-seo-client'); ?></p>
                         </div>
                         
-                        <p style="margin-top: 20px;">
-                            <button type="button" id="run-sitemap-check" class="button button-primary">
-                                <?php esc_html_e('Run Full Sitemap Health Check', 'ai-seo-client'); ?>
-                            </button>
-                            <span class="spinner" style="float: none; margin-left: 10px;"></span>
-                        </p>
+                <p style="margin-top:16px;">
+                    <button type="button" id="run-sitemap-check" class="fyn-btn fyn-btn-primary">
+                        <span class="dashicons dashicons-search"></span>
+                        <?php esc_html_e('Full Health Check', 'ai-seo-client'); ?>
+                    </button>
+                    <span class="spinner" style="float:none;margin-left:10px;"></span>
+                </p>
                         
                         <div id="sitemap-check-results" style="margin-top: 30px;"></div>
                         
@@ -2063,54 +2030,41 @@ class Client
                                 }).then(function(response) {
                                     if (response.success && response.audit && response.audit.sitemap) {
                                         var sitemap = response.audit.sitemap;
-                                        var html = '<div class="sseo-ai-dashboard-card" style="background: white; padding: 30px; border-radius: 8px;">';
-                                        html += '<h3><?php echo esc_js(__('Sitemap Health Check Results', 'ai-seo-client')); ?></h3>';
-                                        
-                                        // Sitemap URL
-                                        html += '<p><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
-                                        
-                                        // Stats
-                                        html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">';
-                                        html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; text-align: center;">';
-                                        html += '<div style="font-size: 32px; font-weight: bold; color: #379fd3;">' + (sitemap.total_urls || 0) + '</div>';
-                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div>';
-                                        html += '</div>';
-                                        html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; text-align: center;">';
-                                        html += '<div style="font-size: 32px; font-weight: bold; color: #00a32a;">' + (sitemap.valid_urls || 0) + '</div>';
-                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div>';
-                                        html += '</div>';
-                                        html += '<div style="background: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">';
-                                        html += '<div style="font-size: 32px; font-weight: bold; color: #d63638;">' + (sitemap.invalid_urls || 0) + '</div>';
-                                        html += '<div style="color: #6b7280;"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div>';
-                                        html += '</div>';
+                                        var html = '<div class="fyn-card" style="box-shadow:none;border:1px solid var(--card-border);">';
+                                        html += '<div class="fyn-card-header"><h3 class="fyn-card-title"><?php echo esc_js(__('Health Check Results', 'ai-seo-client')); ?></h3></div>';
+                                        html += '<p style="color:var(--text-b);"><strong><?php echo esc_js(__('Sitemap URL:', 'ai-seo-client')); ?></strong> <a href="' + sitemap.url + '" target="_blank">' + sitemap.url + '</a></p>';
+                                        html += '<div class="fyn-stats-grid" style="margin:16px 0;">';
+                                        html += '<div class="fyn-stat-tile"><div class="fyn-stat-value" style="color:var(--fyn-blue);">' + (sitemap.total_urls || 0) + '</div><div class="fyn-stat-label"><?php echo esc_js(__('Total URLs', 'ai-seo-client')); ?></div></div>';
+                                        html += '<div class="fyn-stat-tile"><div class="fyn-stat-value" style="color:var(--fyn-success);">' + (sitemap.valid_urls || 0) + '</div><div class="fyn-stat-label"><?php echo esc_js(__('Valid URLs', 'ai-seo-client')); ?></div></div>';
+                                        html += '<div class="fyn-stat-tile"><div class="fyn-stat-value" style="color:var(--fyn-danger);">' + (sitemap.invalid_urls || 0) + '</div><div class="fyn-stat-label"><?php echo esc_js(__('Invalid URLs', 'ai-seo-client')); ?></div></div>';
                                         html += '</div>';
                                         
                                         // Issues
                                         if (sitemap.issues && sitemap.issues.length > 0) {
-                                            html += '<h4 style="margin-top: 20px;"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
-                                            html += '<ul style="list-style: none; padding: 0;">';
+                                            html += '<h4 style="margin-top:16px;color:var(--text-a);"><?php echo esc_js(__('Issues Found', 'ai-seo-client')); ?></h4>';
+                                            html += '<ul style="list-style:none;padding:0;">';
                                             sitemap.issues.forEach(function(issue) {
-                                                html += '<li style="padding: 10px; margin: 5px 0; background: #fff3cd; border-left: 3px solid #dba617; border-radius: 4px;">';
+                                                html += '<li class="sitemap-status warning">';
                                                 html += '<strong>' + issue.type + ':</strong> ' + issue.description;
                                                 html += '</li>';
                                             });
                                             html += '</ul>';
                                         } else {
-                                            html += '<div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #00a32a;">';
-                                            html += '<strong>✓</strong> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
+                                            html += '<div class="sitemap-status ok" style="margin-top:16px;">';
+                                            html += '<span class="dashicons dashicons-yes-alt" style="color:var(--fyn-success);"></span> <?php echo esc_js(__('No issues found! Your sitemap is healthy.', 'ai-seo-client')); ?>';
                                             html += '</div>';
                                         }
                                         
                                         html += '</div>';
                                         results.html(html);
                                     } else {
-                                        results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><?php echo esc_js(__('Failed to run sitemap check. Please try again.', 'ai-seo-client')); ?></div>');
+                                        results.html('<div class="sitemap-status error"><?php echo esc_js(__('Sitemap check failed. Please try again.', 'ai-seo-client')); ?></div>');
                                     }
                                     
                                     btn.prop('disabled', false);
                                     spinner.removeClass('is-active');
                                 }).catch(function(error) {
-                                    results.html('<div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-left: 4px solid #d63638;"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>';
+                                    results.html('<div class="sitemap-status error"><strong><?php echo esc_js(__('Error:', 'ai-seo-client')); ?></strong> ' + (error.message || '<?php echo esc_js(__('Unknown error', 'ai-seo-client')); ?>') + '</div>';
                                     btn.prop('disabled', false);
                                     spinner.removeClass('is-active');
                                 });
@@ -2119,30 +2073,34 @@ class Client
                         </script>
                     </div>
                     
-                    <!-- Extended Sitemaps Info -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Extended Sitemaps', 'ai-seo-client'); ?></h2>
-                        <p><?php esc_html_e('The plugin automatically generates the following sitemap types:', 'ai-seo-client'); ?></p>
-                        <ul style="list-style: disc; margin-left: 20px;">
-                            <li><strong><?php esc_html_e('Sitemap Index:', 'ai-seo-client'); ?></strong> <code>sitemap_index.xml</code> <?php esc_html_e('(main entry point)', 'ai-seo-client'); ?></li>
-                            <li><strong><?php esc_html_e('Main Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap.xml</code></li>
-                            <li><strong><?php esc_html_e('RSS Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-rss.xml</code></li>
-                            <li><strong><?php esc_html_e('Video Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-videos.xml</code></li>
-                            <li><strong><?php esc_html_e('News Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-news.xml</code></li>
-                            <li><strong><?php esc_html_e('Image Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-images.xml</code></li>
-                            <li><strong><?php esc_html_e('Author Sitemap:', 'ai-seo-client'); ?></strong> <code>sitemap-authors.xml</code></li>
-                        </ul>
-                    </div>
-
-                    <!-- Sitemap Settings -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Sitemap Settings', 'ai-seo-client'); ?></h2>
-                        <p><?php esc_html_e('Choose which post types and taxonomies to include in your sitemap.', 'ai-seo-client'); ?></p>
-                        <?php $this->sitemapGenerator->renderSettings(); ?>
-                    </div>
-                    
+            <!-- Extended Sitemaps Info -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-list-view"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Extended Sitemaps', 'ai-seo-client'); ?></h3>
                 </div>
+                <p style="color:var(--text-m);margin-bottom:12px;"><?php esc_html_e('The plugin automatically generates the following sitemap types:', 'ai-seo-client'); ?></p>
+                <ul style="list-style:disc;margin-left:20px;color:var(--text-b);font-size:13px;">
+                    <li><strong><?php esc_html_e('Sitemap Index:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap_index.xml</code> <?php esc_html_e('(main entry point)', 'ai-seo-client'); ?></li>
+                    <li><strong><?php esc_html_e('Main Sitemap:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap.xml</code></li>
+                    <li><strong><?php esc_html_e('RSS Sitemap:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap-rss.xml</code></li>
+                    <li><strong><?php esc_html_e('Video Sitemap:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap-videos.xml</code></li>
+                    <li><strong><?php esc_html_e('News Sitemap:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap-news.xml</code></li>
+                    <li><strong><?php esc_html_e('Image Sitemap:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap-images.xml</code></li>
+                    <li><strong><?php esc_html_e('Author Sitemap:', 'ai-seo-client'); ?></strong> <code style="background:var(--well);padding:2px 6px;border-radius:4px;">sitemap-authors.xml</code></li>
+                </ul>
             </div>
+
+            <!-- Sitemap Settings -->
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-generic"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Sitemap Settings', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="color:var(--text-m);margin-bottom:12px;"><?php esc_html_e('Choose which post types and taxonomies are included in your sitemap.', 'ai-seo-client'); ?></p>
+                <?php $this->sitemapGenerator->renderSettings(); ?>
+            </div>
+
         </div>
         <?php
     }
@@ -2154,34 +2112,26 @@ class Client
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .ai-tool-card { display: block; background: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 24px; transition: all .2s ease; }
-            .ai-tool-card:hover { border-color: #379fd3; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(55, 159, 211, 0.15); }
-            .ai-tool-card h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 12px 0; }
-            .ai-tool-card p { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6; }
+            .fyn-feature-card { display:block; background:var(--card); border:2px solid var(--card-border); border-radius:13px; padding:24px; transition:all .2s ease; }
+            .fyn-feature-card:hover { border-color:var(--fyn-purple); transform:translateY(-3px); box-shadow:var(--shadow-md); }
+            .fyn-feature-card h3 { font-size:16px; font-weight:700; color:var(--text-h); margin:0 0 8px 0; }
+            .fyn-feature-card p { font-size:13px; color:var(--text-m); margin:0; line-height:1.6; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php echo esc_html($title); ?></h1>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php echo esc_html($heading); ?></h2>
-                    <p style="margin-bottom: 30px; color: #646970;"><?php echo esc_html($description); ?></p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                        <?php foreach ($cards as $card): ?>
-                        <div class="ai-tool-card">
-                            <h3><?php echo esc_html($card['icon'] . ' ' . $card['title']); ?></h3>
-                            <p><?php echo esc_html($card['desc']); ?></p>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php echo esc_html($title); ?></span></div>
+                    <h1><?php echo esc_html($heading); ?></h1>
+                    <p class="fyn-page-desc"><?php echo esc_html($description); ?></p>
                 </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+                <?php foreach ($cards as $card): ?>
+                <div class="fyn-feature-card">
+                    <h3><?php echo esc_html($card['icon'] . ' ' . $card['title']); ?></h3>
+                    <p><?php echo esc_html($card['desc']); ?></p>
+                </div>
+                <?php endforeach; ?>
             </div>
         </div>
         <?php
@@ -2248,73 +2198,61 @@ class Client
         
         ?>
         <style>
-            /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-settings-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); max-width: 1200px; margin: 0 auto; }
-            .sseo-ai-notice { padding: 16px 20px; border-radius: 6px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-            .sseo-ai-notice-success { background: #d1fae5; color: #10b981; border-left: 4px solid #10b981; }
-            .settings-section { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 2px solid #f3f4f6; }
-            .settings-section h2 { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 8px 0; }
-            .form-field { margin-bottom: 24px; }
-            .form-field label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-            .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55, 159, 211, 0.1); }
+            .fyn-settings-field { margin-bottom: 20px; }
+            .fyn-settings-field > label { display: block; font-size: 13px; font-weight: 600; color: var(--text-h); margin-bottom: 6px; }
+            .fyn-settings-field .field-description { font-size: 12px; color: var(--text-m); margin: 4px 0 0; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Settings', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Settings', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Settings', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage brand, content and advanced settings.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-settings-card">
-                    
+
                     <?php if ($success): ?>
-                        <div class="sseo-ai-notice sseo-ai-notice-success">
-                            <strong>✓</strong> <?php esc_html_e('Settings saved successfully!', 'ai-seo-client'); ?>
+                        <div class="fyn-card" style="background:color-mix(in srgb,var(--fyn-success) 12%,var(--card));border-left:4px solid var(--fyn-success);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+                            <strong style="color:var(--fyn-success);">&#10003;</strong> <span style="color:var(--text-h);"><?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></span>
                         </div>
                     <?php endif; ?>
 
-                    <div class="settings-section" style="background:#f0f6ff;border-radius:8px;padding:20px;">
-                        <h2><?php esc_html_e('Setup Wizard', 'ai-seo-client'); ?></h2>
-                        <p class="description">
-                            <?php esc_html_e('Re-run the Fyndable setup wizard to review or change your onboarding settings.', 'ai-seo-client'); ?>
+                    <div class="fyn-card" style="background:var(--well);margin-bottom:20px;">
+                        <div class="fyn-card-header"><span class="dashicons dashicons-welcome-learn-more"></span><h3 class="fyn-card-title"><?php esc_html_e('Setup Wizard', 'ai-seo-client'); ?></h3></div>
+                        <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;">
+                            <?php esc_html_e('Run the Fyndable setup wizard again to review or change your onboarding settings.', 'ai-seo-client'); ?>
                         </p>
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:15px;">
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                             <input type="hidden" name="action" value="sseo_ai_onboarding_restart">
                             <?php wp_nonce_field('sseo_ai_onboarding_restart'); ?>
-                            <button type="submit" class="button button-primary">
+                            <button type="submit" class="fyn-btn fyn-btn-primary">
                                 <?php esc_html_e('Start Wizard', 'ai-seo-client'); ?>
                             </button>
                         </form>
                     </div>
                     
                     <?php if ($rateLimitStatus['limit'] > 0): ?>
-                    <div class="settings-section">
-                        <h2><?php esc_html_e('API Usage Status', 'ai-seo-client'); ?></h2>
-                        <p class="description"><?php esc_html_e('Current AI API call usage and limits', 'ai-seo-client'); ?></p>
-                        
-                        <div style="background:#f9f9f9;padding:20px;border-radius:8px;margin:20px 0;">
-                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center;">
-                                <div>
-                                    <div style="font-size:28px;font-weight:bold;color:#2271b1;"><?php echo esc_html($rateLimitStatus['calls']); ?></div>
-                                    <div style="color:#666;font-size:13px;"><?php esc_html_e('Calls Made', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div>
-                                    <div style="font-size:28px;font-weight:bold;color:#00a32a;"><?php echo esc_html($rateLimitStatus['remaining']); ?></div>
-                                    <div style="color:#666;font-size:13px;"><?php esc_html_e('Remaining', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div>
-                                    <div style="font-size:28px;font-weight:bold;color:#d63638;"><?php echo esc_html($rateLimitStatus['limit']); ?></div>
-                                    <div style="color:#666;font-size:13px;"><?php esc_html_e('Hourly Limit', 'ai-seo-client'); ?></div>
-                                </div>
+                    <div class="fyn-card" style="margin-bottom:20px;">
+                        <div class="fyn-card-header"><span class="dashicons dashicons-chart-bar"></span><h3 class="fyn-card-title"><?php esc_html_e('API Usage Status', 'ai-seo-client'); ?></h3></div>
+                        <p style="font-size:13px;color:var(--text-m);margin:0 0 14px;"><?php esc_html_e('Current AI API usage and limits', 'ai-seo-client'); ?></p>
+                        <div class="fyn-stats-grid" style="grid-template-columns:repeat(3,1fr);">
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" style="color:var(--fyn-blue);"><?php echo esc_html($rateLimitStatus['calls']); ?></div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Used', 'ai-seo-client'); ?></div>
                             </div>
-                            <p style="text-align:center;margin:15px 0 0;color:#666;">
-                                <?php printf(esc_html__('Limit resets in %d minutes', 'ai-seo-client'), $rateLimitStatus['reset_in_minutes']); ?>
-                            </p>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html($rateLimitStatus['remaining']); ?></div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Remaining', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html($rateLimitStatus['limit']); ?></div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Rate Limit', 'ai-seo-client'); ?></div>
+                            </div>
                         </div>
+                        <p style="text-align:center;margin:10px 0 0;color:var(--text-m);font-size:12px;">
+                            <?php printf(esc_html__('Rate limit resets in %d minutes', 'ai-seo-client'), $rateLimitStatus['reset_in_minutes']); ?>
+                        </p>
                     </div>
                     <?php endif; ?>
 
@@ -2322,21 +2260,21 @@ class Client
                         <input type="hidden" name="action" value="ai_seo_save_settings">
                         <?php wp_nonce_field('save_settings'); ?>
                         
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Brand Information', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Configure your brand details for AI-generated content', 'ai-seo-client'); ?></p>
-                            
-                            <div class="form-field">
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-megaphone"></span><h3 class="fyn-card-title"><?php esc_html_e('Brand Information', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Set your brand details for AI-generated content', 'ai-seo-client'); ?></p>
+
+                            <div class="fyn-settings-field">
                                 <label for="brand_name"><?php esc_html_e('Brand Name', 'ai-seo-client'); ?></label>
-                                <input type="text" name="brand_name" id="brand_name" 
-                                       value="<?php echo esc_attr($brandName); ?>" 
-                                       placeholder="e.g., NextBuzz">
+                                <input type="text" class="fyn-input" name="brand_name" id="brand_name"
+                                       value="<?php echo esc_attr($brandName); ?>"
+                                       placeholder="bv. NextBuzz">
                                 <p class="field-description"><?php esc_html_e('Your company or brand name', 'ai-seo-client'); ?></p>
                             </div>
-                            
-                            <div class="form-field">
+
+                            <div class="fyn-settings-field">
                                 <label for="brand_voice"><?php esc_html_e('Brand Voice & Tone', 'ai-seo-client'); ?></label>
-                                <select name="brand_voice" id="brand_voice">
+                                <select class="fyn-input" name="brand_voice" id="brand_voice">
                                     <option value=""><?php esc_html_e('Select tone...', 'ai-seo-client'); ?></option>
                                     <option value="professional" <?php selected($brandVoice, 'professional'); ?>><?php esc_html_e('Professional', 'ai-seo-client'); ?></option>
                                     <option value="friendly" <?php selected($brandVoice, 'friendly'); ?>><?php esc_html_e('Friendly', 'ai-seo-client'); ?></option>
@@ -2345,61 +2283,59 @@ class Client
                                     <option value="conversational" <?php selected($brandVoice, 'conversational'); ?>><?php esc_html_e('Conversational', 'ai-seo-client'); ?></option>
                                     <option value="technical" <?php selected($brandVoice, 'technical'); ?>><?php esc_html_e('Technical', 'ai-seo-client'); ?></option>
                                 </select>
-                                <p class="field-description"><?php esc_html_e('The tone of voice for AI-generated content', 'ai-seo-client'); ?></p>
+                                <p class="field-description"><?php esc_html_e('The tone for AI-generated content', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
                         
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Define who your content is for', 'ai-seo-client'); ?></p>
-                            
-                            <div class="form-field">
-                                <label for="targeted_audience"><?php esc_html_e('Targeted Audience', 'ai-seo-client'); ?></label>
-                                <textarea name="targeted_audience" id="targeted_audience" rows="4" 
-                                          placeholder="e.g., Small business owners, marketing professionals, entrepreneurs aged 25-45"><?php echo esc_textarea($targetedAudience); ?></textarea>
-                                <p class="field-description"><?php esc_html_e('Describe your target audience demographics, interests, and characteristics', 'ai-seo-client'); ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Location Settings', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-groups"></span><h3 class="fyn-card-title"><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Define who your content is intended for', 'ai-seo-client'); ?></p>
 
-                            <div class="form-field">
-                                <p class="field-description" style="margin-top: 0;">
-                                    <?php esc_html_e('Locatie-autocomplete wordt centraal geleverd via het Fyndable SaaS-platform. Vraag de beheerder om een Google Places API key in het SaaS-dashboard in te stellen.', 'ai-seo-client'); ?>
+                            <div class="fyn-settings-field">
+                                <label for="targeted_audience"><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></label>
+                                <textarea class="fyn-input" name="targeted_audience" id="targeted_audience" rows="4"
+                                          placeholder="bv. MKB-eigenaren, marketingprofessionals, ondernemers 25-45 jaar"><?php echo esc_textarea($targetedAudience); ?></textarea>
+                                <p class="field-description"><?php esc_html_e('Describe the demographics, interests and characteristics of your target audience', 'ai-seo-client'); ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-location"></span><h3 class="fyn-card-title"><?php esc_html_e('Location Settings', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Configure geographic targeting for local SEO', 'ai-seo-client'); ?></p>
+
+                            <div class="fyn-settings-field">
+                                <p class="field-description" style="margin-top:0;">
+                                    <?php esc_html_e('Location autocomplete is provided centrally via the Fyndable SaaS platform. Ask the administrator to set a Google Places API key in the SaaS dashboard.', 'ai-seo-client'); ?>
                                 </p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="locations"><?php esc_html_e('Target Locations', 'ai-seo-client'); ?></label>
-                                <div id="locations-tag-container" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid #ddd;border-radius:4px;min-height:42px;background:#fff;cursor:text;">
-                                    <!-- Tag chips will be inserted here by JS -->
+                                <div id="locations-tag-container" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--card-border);border-radius:9px;min-height:42px;background:var(--card);cursor:text;">
                                 </div>
-                                <input type="text" id="locations-input" class="regular-text"
-                                       placeholder="<?php esc_attr_e('Typ een plaatsnaam en selecteer uit de suggesties...', 'ai-seo-client'); ?>"
-                                       style="margin-top:6px;width:100%;"
+                                <input type="text" id="locations-input" class="fyn-input"
+                                       placeholder="<?php esc_attr_e('Type a place name and select from suggestions...', 'ai-seo-client'); ?>"
+                                       style="margin-top:6px;"
                                        autocomplete="off">
-                                <!-- Hidden textarea for backward-compatible comma-separated storage -->
                                 <textarea name="locations" id="locations" rows="3" style="display:none;"><?php echo esc_textarea($locations); ?></textarea>
-                                <p class="field-description"><?php esc_html_e('Steden, regio\'s of landen. Suggesties verschijnen automatisch tijdens het typen.', 'ai-seo-client'); ?></p>
+                                <p class="field-description"><?php esc_html_e('Cities, regions or countries. Suggestions appear automatically while typing.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
 
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Local Business', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Used for LocalBusiness schema and Local SERP radius scans', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-store"></span><h3 class="fyn-card-title"><?php esc_html_e('Local Business', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Used for LocalBusiness schema and Local SERP scans', 'ai-seo-client'); ?></p>
 
                             <?php
                             $localOptions = $this->settings->all();
                             ?>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_business_name"><?php esc_html_e('Business Name', 'ai-seo-client'); ?></label>
                                 <input type="text" name="local_business_name" id="local_business_name" value="<?php echo esc_attr($localOptions['local_business_name'] ?? ''); ?>">
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_business_type"><?php esc_html_e('Business Type', 'ai-seo-client'); ?></label>
                                 <select name="local_business_type" id="local_business_type">
                                     <option value="LocalBusiness" <?php selected($localOptions['local_business_type'] ?? 'LocalBusiness', 'LocalBusiness'); ?>><?php esc_html_e('Local Business', 'ai-seo-client'); ?></option>
@@ -2416,21 +2352,21 @@ class Client
                                 </select>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_description"><?php esc_html_e('Description', 'ai-seo-client'); ?></label>
                                 <textarea name="local_description" id="local_description" rows="3"><?php echo esc_textarea($localOptions['local_description'] ?? ''); ?></textarea>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label><?php esc_html_e('Autofill Address', 'ai-seo-client'); ?></label>
                                 <p style="display:flex;gap:8px;margin:0;">
-                                    <input type="text" id="sseo-ai-house-number" placeholder="<?php esc_attr_e('Huisnummer', 'ai-seo-client'); ?>" style="flex:1;">
-                                    <button type="button" id="sseo-ai-geocode-btn" class="button" style="white-space:nowrap;"><?php esc_html_e('Zoek adres', 'ai-seo-client'); ?></button>
+                                    <input type="text" id="sseo-ai-house-number" placeholder="<?php esc_attr_e('House number', 'ai-seo-client'); ?>" style="flex:1;">
+                                    <button type="button" id="sseo-ai-geocode-btn" class="fyn-btn fyn-btn-outline" style="white-space:nowrap;"><?php esc_html_e('Lookup Address', 'ai-seo-client'); ?></button>
                                 </p>
-                                <p class="field-description"><?php esc_html_e('Vul huisnummer in (en pas eventueel de postcode hieronder aan) en klik op Zoek om straat, plaats, land en coördinaten automatisch in te vullen.', 'ai-seo-client'); ?></p>
+                                <p class="field-description"><?php esc_html_e('Enter house number (and optionally adjust the postal code below) and click Lookup to auto-fill street, city, country and coordinates.', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_street"><?php esc_html_e('Address', 'ai-seo-client'); ?></label>
                                 <input type="text" name="local_street" id="local_street" value="<?php echo esc_attr($localOptions['local_street'] ?? ''); ?>" placeholder="Street">
                                 <p style="margin-top:8px;display:flex;gap:8px;">
@@ -2441,7 +2377,7 @@ class Client
                                 </p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_latitude"><?php esc_html_e('Coordinates (Lat, Lng)', 'ai-seo-client'); ?></label>
                                 <p style="display:flex;gap:8px;">
                                     <input type="text" name="local_latitude" id="local_latitude" value="<?php echo esc_attr($localOptions['local_latitude'] ?? ''); ?>" placeholder="Latitude" style="flex:1;">
@@ -2450,7 +2386,7 @@ class Client
                                 <p class="field-description"><?php esc_html_e('Required for Local SERP radius scans', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_search_radius"><?php esc_html_e('Default Local SERP Radius (km)', 'ai-seo-client'); ?></label>
                                 <select name="local_search_radius" id="local_search_radius">
                                     <?php foreach ([1, 2, 5, 10, 15, 25, 50, 100] as $km): ?>
@@ -2459,7 +2395,7 @@ class Client
                                 </select>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_search_grid"><?php esc_html_e('Default Local SERP Grid', 'ai-seo-client'); ?></label>
                                 <select name="local_search_grid" id="local_search_grid">
                                     <option value="1" <?php selected((int) ($localOptions['local_search_grid'] ?? 1), 1); ?>><?php esc_html_e('Single center (Professional)', 'ai-seo-client'); ?></option>
@@ -2469,7 +2405,7 @@ class Client
                                 </select>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_phone"><?php esc_html_e('Contact', 'ai-seo-client'); ?></label>
                                 <p style="display:flex;gap:8px;">
                                     <input type="text" name="local_phone" value="<?php echo esc_attr($localOptions['local_phone'] ?? ''); ?>" placeholder="Phone" style="flex:1;">
@@ -2477,27 +2413,27 @@ class Client
                                 </p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_url"><?php esc_html_e('Business URL', 'ai-seo-client'); ?></label>
                                 <input type="url" name="local_url" id="local_url" value="<?php echo esc_attr($localOptions['local_url'] ?? ''); ?>">
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_image"><?php esc_html_e('Business Image', 'ai-seo-client'); ?></label>
                                 <input type="url" name="local_image" id="local_image" value="<?php echo esc_attr($localOptions['local_image'] ?? ''); ?>">
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="local_opening_hours"><?php esc_html_e('Opening Hours', 'ai-seo-client'); ?></label>
                                 <textarea name="local_opening_hours" id="local_opening_hours" rows="3" placeholder="Mo-Fr 09:00-17:00&#10;Sa 10:00-14:00"><?php echo esc_textarea($localOptions['local_opening_hours'] ?? ''); ?></textarea>
                             </div>
                         </div>
                         
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('AI Prompt Settings', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Custom instructions for AI content generation', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-admin-customizer"></span><h3 class="fyn-card-title"><?php esc_html_e('AI Prompt Settings', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Custom instructions for AI content generation', 'ai-seo-client'); ?></p>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="content_language"><?php esc_html_e('Content Language', 'ai-seo-client'); ?></label>
                                 <select name="content_language" id="content_language">
                                     <option value="nl" <?php selected($contentLanguage, 'nl'); ?>>Nederlands</option>
@@ -2512,21 +2448,21 @@ class Client
                                 <p class="field-description"><?php esc_html_e('Output language for AI-generated content such as LSI keywords. Defaults to the WordPress site language when not set.', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="default_word_count"><?php esc_html_e('Default Word Count', 'ai-seo-client'); ?></label>
                                 <input type="number" name="default_word_count" id="default_word_count" min="100" max="5000" step="50"
                                        value="<?php echo esc_attr($defaultWordCount); ?>">
                                 <p class="field-description"><?php esc_html_e('Default number of words for AI-generated content (used when no specific count is set)', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="prompt_settings"><?php esc_html_e('Custom Prompt Instructions', 'ai-seo-client'); ?></label>
                                 <textarea name="prompt_settings" id="prompt_settings" rows="6"
                                           placeholder="e.g., Always include actionable tips, use bullet points for readability, focus on practical examples..."><?php echo esc_textarea($promptSettings); ?></textarea>
                                 <p class="field-description"><?php esc_html_e('Additional instructions that will be included in all AI prompts', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="default_include_faq">
                                     <input type="checkbox" name="default_include_faq" id="default_include_faq" value="1" <?php checked($this->settings->get('default_include_faq', true), true); ?>>
                                     <?php esc_html_e('Generate FAQ section by default', 'ai-seo-client'); ?>
@@ -2535,9 +2471,9 @@ class Client
                             </div>
                         </div>
 
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Post Auto-Cleaner', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Automatically trash AI-generated posts that receive no traffic within a configurable period. Uses an internal view counter (bots and logged-in users excluded).', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-trash"></span><h3 class="fyn-card-title"><?php esc_html_e('Post Auto-Cleaner', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Automatically trash AI posts without traffic. Uses an internal counter (bots and logged-in users excluded).', 'ai-seo-client'); ?></p>
 
                             <?php
                             $autocleanEnabled = get_option('sseo_ai_client_autoclean_enabled', '0') === '1';
@@ -2547,7 +2483,7 @@ class Client
                             $autocleanLastCount = (int) get_option('sseo_ai_client_autoclean_last_count', 0);
                             ?>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="autoclean_enabled">
                                     <input type="checkbox" name="autoclean_enabled" id="autoclean_enabled" value="1" <?php checked($autocleanEnabled); ?>>
                                     <?php esc_html_e('Enable auto-cleanup', 'ai-seo-client'); ?>
@@ -2555,14 +2491,14 @@ class Client
                                 <p class="field-description"><?php esc_html_e('When enabled, a daily check trashes AI-generated posts that meet the criteria below.', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="autoclean_days"><?php esc_html_e('Days threshold', 'ai-seo-client'); ?></label>
                                 <input type="number" name="autoclean_days" id="autoclean_days" min="1" max="3650" step="1"
                                        value="<?php echo esc_attr($autocleanDays); ?>">
                                 <p class="field-description"><?php esc_html_e('Posts older than this many days are eligible for cleanup. Default: 60.', 'ai-seo-client'); ?></p>
                             </div>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="autoclean_max_clicks"><?php esc_html_e('Max views before cleanup', 'ai-seo-client'); ?></label>
                                 <input type="number" name="autoclean_max_clicks" id="autoclean_max_clicks" min="0" max="1000000" step="1"
                                        value="<?php echo esc_attr($autocleanMaxClicks); ?>">
@@ -2570,7 +2506,7 @@ class Client
                             </div>
 
                             <?php if (!empty($autocleanLastRun)): ?>
-                            <p class="field-description" style="color:#666;">
+                            <p class="field-description" style="color:var(--text-m);">
                                 <?php printf(
                                     /* translators: 1: date/time, 2: number of posts */
                                     esc_html__('Last run: %1$s — %2$s post(s) trashed.', 'ai-seo-client'),
@@ -2581,45 +2517,45 @@ class Client
                             <?php endif; ?>
                         </div>
                         
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Photo Portfolio / Huisstijl Referenties', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Upload referentie-afbeeldingen (logo\'s, personen, omgeving, producten) die als stijl-referentie worden gebruikt bij het genereren van afbeeldingen. De AI beschrijft deze referenties en past de huisstijl toe in gegenereerde afbeeldingen.', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-format-gallery"></span><h3 class="fyn-card-title"><?php esc_html_e('Brand Style References', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Upload reference images that will be used as style references when generating images.', 'ai-seo-client'); ?></p>
 
                             <?php
                             $photoPortfolio = get_option('sseo_ai_client_photo_portfolio', []);
                             if (!is_array($photoPortfolio)) { $photoPortfolio = []; }
                             ?>
 
-                            <div class="form-field">
-                                <label><?php esc_html_e('Referentie-afbeeldingen', 'ai-seo-client'); ?></label>
+                            <div class="fyn-settings-field">
+                                <label><?php esc_html_e('Reference Images', 'ai-seo-client'); ?></label>
                                 <div id="photo-portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:10px;">
                                     <?php foreach ($photoPortfolio as $idx => $ref): ?>
-                                        <div class="photo-portfolio-item" data-idx="<?php echo esc_attr($idx); ?>" style="position:relative;border:1px solid #ddd;border-radius:8px;padding:8px;text-align:center;">
+                                        <div class="photo-portfolio-item" data-idx="<?php echo esc_attr($idx); ?>" style="position:relative;border:1px solid var(--card-border);border-radius:9px;padding:8px;text-align:center;">
                                             <img src="<?php echo esc_url($ref['url'] ?? ''); ?>" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">
                                             <select class="photo-ref-type" data-idx="<?php echo esc_attr($idx); ?>" style="width:100%;font-size:11px;margin-bottom:3px;">
                                                 <option value="logo" <?php selected($ref['type'] ?? '', 'logo'); ?>><?php esc_html_e('Logo', 'ai-seo-client'); ?></option>
-                                                <option value="person" <?php selected($ref['type'] ?? '', 'person'); ?>><?php esc_html_e('Persoon', 'ai-seo-client'); ?></option>
-                                                <option value="environment" <?php selected($ref['type'] ?? '', 'environment'); ?>><?php esc_html_e('Omgeving/Pand', 'ai-seo-client'); ?></option>
+                                                <option value="person" <?php selected($ref['type'] ?? '', 'person'); ?>><?php esc_html_e('Person', 'ai-seo-client'); ?></option>
+                                                <option value="environment" <?php selected($ref['type'] ?? '', 'environment'); ?>><?php esc_html_e('Environment/Building', 'ai-seo-client'); ?></option>
                                                 <option value="product" <?php selected($ref['type'] ?? '', 'product'); ?>><?php esc_html_e('Product', 'ai-seo-client'); ?></option>
-                                                <option value="style" <?php selected($ref['type'] ?? '', 'style'); ?>><?php esc_html_e('Huisstijl/sfeer', 'ai-seo-client'); ?></option>
+                                                <option value="style" <?php selected($ref['type'] ?? '', 'style'); ?>><?php esc_html_e('Brand Style/Mood', 'ai-seo-client'); ?></option>
                                             </select>
-                                            <button type="button" class="button button-small photo-ref-remove" data-idx="<?php echo esc_attr($idx); ?>" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; <?php esc_html_e('Verwijder', 'ai-seo-client'); ?></button>
+                                            <button type="button" class="fyn-btn fyn-btn-outline photo-ref-remove" data-idx="<?php echo esc_attr($idx); ?>" style="color:var(--fyn-danger);border-color:var(--fyn-danger);width:100%;font-size:11px;padding:4px 8px;">&times; <?php esc_html_e('Remove', 'ai-seo-client'); ?></button>
                                             <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][attachment_id]" value="<?php echo esc_attr($ref['attachment_id'] ?? 0); ?>">
                                             <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][url]" value="<?php echo esc_attr($ref['url'] ?? ''); ?>">
                                             <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][type]" class="photo-ref-type-hidden" value="<?php echo esc_attr($ref['type'] ?? 'logo'); ?>">
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
-                                <button type="button" class="button" id="photo-portfolio-add"><?php esc_html_e('+ Referentie toevoegen', 'ai-seo-client'); ?></button>
-                                <p class="field-description"><?php esc_html_e('De AI gebruikt deze afbeeldingen om logo\'s, kleuren, sfeer en personen te herkennen en toe te passen in gegenereerde afbeeldingen.', 'ai-seo-client'); ?></p>
+                                <button type="button" class="fyn-btn fyn-btn-outline" id="photo-portfolio-add"><?php esc_html_e('+ Add Reference', 'ai-seo-client'); ?></button>
+                                <p class="field-description"><?php esc_html_e('The AI uses these images to recognize and apply logos, colors, mood and persons in generated images.', 'ai-seo-client'); ?></p>
                             </div>
                         </div>
 
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Social & Sharing', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Configure the built-in social share buttons', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-share"></span><h3 class="fyn-card-title"><?php esc_html_e('Social & Sharing', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Configure the built-in social share buttons', 'ai-seo-client'); ?></p>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="show_share_buttons">
                                     <input type="checkbox" name="show_share_buttons" id="show_share_buttons" value="1" <?php checked($showShareButtons, true); ?>>
                                     <?php esc_html_e('Show social share buttons', 'ai-seo-client'); ?>
@@ -2628,15 +2564,15 @@ class Client
                             </div>
                         </div>
 
-                        <div class="settings-section">
+                        <div class="fyn-card" style="margin-bottom:20px;">
                             <?php do_action('sseo_ai_render_llmstxt_settings'); ?>
                         </div>
 
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Appearance', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Customize the look of the Fyndable backend.', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-art"></span><h3 class="fyn-card-title"><?php esc_html_e('Appearance', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Customize the appearance of the Fyndable backend.', 'ai-seo-client'); ?></p>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="dark_theme">
                                     <input type="checkbox" name="dark_theme" id="dark_theme" value="1" <?php checked($darkTheme, true); ?>>
                                     <?php esc_html_e('Enable dark theme', 'ai-seo-client'); ?>
@@ -2645,11 +2581,11 @@ class Client
                             </div>
                         </div>
 
-                        <div class="settings-section">
-                            <h2><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h2>
-                            <p class="description"><?php esc_html_e('Security and connectivity options', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-admin-tools"></span><h3 class="fyn-card-title"><?php esc_html_e('Advanced Settings', 'ai-seo-client'); ?></h3></div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Security and connection options', 'ai-seo-client'); ?></p>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="ssl_verify">
                                     <input type="checkbox" name="ssl_verify" id="ssl_verify" value="1" <?php checked($sslVerify, true); ?>>
                                     <?php esc_html_e('Verify SSL certificates for API calls', 'ai-seo-client'); ?>
@@ -2658,28 +2594,32 @@ class Client
                             </div>
                         </div>
 
-                        <div class="settings-section" style="border:2px solid #f59e0b;background:#fffbeb;border-radius:8px;">
-                            <h2>
-                                <?php esc_html_e('Demo Mode', 'ai-seo-client'); ?>
-                                <?php if ($demoMode): ?>
-                                    <span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;letter-spacing:0.5px;margin-left:8px;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
-                                <?php endif; ?>
-                            </h2>
-                            <p class="description"><?php esc_html_e('When enabled, the plugin uses fictitious data and bypasses license validation for demo purposes.', 'ai-seo-client'); ?></p>
+                        <div class="fyn-card" style="margin-bottom:20px;border:2px solid var(--fyn-warning);">
+                            <div class="fyn-card-header">
+                                <span class="dashicons dashicons-visibility"></span>
+                                <h3 class="fyn-card-title">
+                                    <?php esc_html_e('Demo Mode', 'ai-seo-client'); ?>
+                                    <?php if ($demoMode): ?>
+                                        <span class="fyn-badge fyn-badge--warning" style="margin-left:8px;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
+                                    <?php endif; ?>
+                                </h3>
+                            </div>
+                            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('When enabled, the plugin uses dummy data and bypasses license verification.', 'ai-seo-client'); ?></p>
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="demo_mode">
                                     <input type="checkbox" name="demo_mode" id="demo_mode" value="1" <?php checked($demoMode, true); ?>>
                                     <?php esc_html_e('Enable demo mode', 'ai-seo-client'); ?>
                                 </label>
-                                <p class="field-description" style="color:#92400e;">
+                                <p class="field-description" style="color:var(--fyn-warning);">
                                     <?php esc_html_e('All data shown while demo mode is active is fictitious and clearly labelled.', 'ai-seo-client'); ?>
                                 </p>
                             </div>
                         </div>
 
-                        <div class="settings-actions">
-                            <button type="submit" class="button button-primary button-large">
+                        <div style="margin-top:20px;">
+                            <button type="submit" class="fyn-btn fyn-btn-primary" style="font-size:14px;padding:12px 32px;">
+                                <span class="dashicons dashicons-saved" style="margin-right:6px;"></span>
                                 <?php esc_html_e('Save Settings', 'ai-seo-client'); ?>
                             </button>
                         </div>
@@ -2710,7 +2650,7 @@ class Client
 
                             addBtn.addEventListener('click', function() {
                                 var frame = wp.media({
-                                    title: '<?php echo esc_js(__('Selecteer referentie-afbeelding', 'ai-seo-client')); ?>',
+                                    title: '<?php echo esc_js(__('Select Reference Image', 'ai-seo-client')); ?>',
                                     multiple: false,
                                     library: { type: 'image' }
                                 });
@@ -2725,12 +2665,12 @@ class Client
                                         '<img src="' + attachment.url + '" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">' +
                                         '<select class="photo-ref-type" data-idx="' + idx + '" style="width:100%;font-size:11px;margin-bottom:3px;">' +
                                         '<option value="logo">Logo</option>' +
-                                        '<option value="person">Persoon</option>' +
-                                        '<option value="environment">Omgeving/Pand</option>' +
+                                        '<option value="person">Person</option>' +
+                                        '<option value="environment">Environment/Building</option>' +
                                         '<option value="product">Product</option>' +
-                                        '<option value="style">Huisstijl/sfeer</option>' +
+                                        '<option value="style">Brand Style/Mood</option>' +
                                         '</select>' +
-                                        '<button type="button" class="button button-small photo-ref-remove" data-idx="' + idx + '" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; Verwijder</button>' +
+                                        '<button type="button" class="button button-small photo-ref-remove" data-idx="' + idx + '" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; Remove</button>' +
                                         '<input type="hidden" name="photo_portfolio[' + idx + '][attachment_id]" value="' + attachment.id + '">' +
                                         '<input type="hidden" name="photo_portfolio[' + idx + '][url]" value="' + attachment.url + '">' +
                                         '<input type="hidden" name="photo_portfolio[' + idx + '][type]" class="photo-ref-type-hidden" value="logo">';
@@ -2894,7 +2834,7 @@ class Client
                                 var house = houseInput.value.trim();
                                 var postal = postalInput.value.trim();
                                 if (!house || !postal) {
-                                    alert('<?php echo esc_js(__('Vul huisnummer en postcode in.', 'ai-seo-client')); ?>');
+                                    alert('<?php echo esc_js(__('Enter house number and postal code.', 'ai-seo-client')); ?>');
                                     return;
                                 }
                                 var query = house + ' ' + postal + ', NL';
@@ -2904,7 +2844,7 @@ class Client
                                     .then(function(data) {
                                         geocodeBtn.disabled = false;
                                         if (!data || !data.success) {
-                                            alert(data && data.error ? data.error : '<?php echo esc_js(__('Adres kon niet worden opgezocht.', 'ai-seo-client')); ?>');
+                                            alert(data && data.error ? data.error : '<?php echo esc_js(__('Address could not be looked up.', 'ai-seo-client')); ?>');
                                             return;
                                         }
                                         var a = data.address || {};
@@ -2919,7 +2859,7 @@ class Client
                                     })
                                     .catch(function() {
                                         geocodeBtn.disabled = false;
-                                        alert('<?php echo esc_js(__('Adres opzoeken mislukt.', 'ai-seo-client')); ?>');
+                                        alert('<?php echo esc_js(__('Address lookup failed.', 'ai-seo-client')); ?>');
                                     });
                             });
                         })();
@@ -2927,8 +2867,7 @@ class Client
 
 
                     </form>
-                </div>
-            </div>
+
         </div>
         <?php
     }
@@ -3204,38 +3143,32 @@ class Client
 
         ?>
         <style>
-            /* Critical layout CSS */
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: <?php echo esc_attr($bgGradient); ?>; color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: <?php echo esc_attr($bgGradient); ?>; min-height: calc(100vh - 150px); }
-            .sseo-ai-connection-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 60px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); text-align: center; }
-            .sseo-ai-connection-card h2 { font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 20px 0; }
-            .sseo-ai-connection-card .highlight { background: <?php echo esc_attr($bgGradient); ?>; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-            .connection-details { text-align: left; margin-top: 40px; padding-top: 30px; border-top: 2px solid #f3f4f6; }
-            .detail-item { margin-bottom: 20px; }
-            .detail-item label { display: block; font-size: 13px; font-weight: 600; color: #6b7280;  margin-bottom: 6px; }
-            .detail-item .detail-value { font-size: 16px; color: #111827; font-family: 'Courier New', monospace; background: #f9fafb; padding: 12px 16px; border-radius: 6px; border: 1px solid #e5e7eb; }
-            .connection-form { text-align: left; margin-top: 30px; }
-            .connection-form .form-field { margin-bottom: 20px; }
-            .connection-form label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-            .connection-form input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 15px; }
-            .connection-form input:focus { border-color: <?php echo esc_attr($primaryColor); ?>; outline: none; box-shadow: 0 0 0 3px rgba(<?php echo esc_attr(implode(',', sscanf($primaryColor, '#%02x%02x%02x'))); ?>, 0.1); }
-            .sseo-ai-connection-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
-            .sseo-ai-connection-loader.active { display: flex; }
-            .sseo-ai-connection-loader .spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: <?php echo esc_attr($primaryColor); ?>; border-radius: 50%; animation: sseo-conn-spin 1s linear infinite; }
-            .sseo-ai-connection-loader p { margin-top: 20px; color: #374151; font-size: 16px; font-weight: 500; }
-            @keyframes sseo-conn-spin { to { transform: rotate(360deg); } }
-            /* White-label buttons inside the connection card */
-            .sseo-ai-connection-card .button-primary { background: <?php echo esc_attr($primaryColor); ?> !important; border-color: <?php echo esc_attr($primaryColor); ?> !important; color: #fff !important; }
-            .sseo-ai-connection-card .button-primary:hover { background: <?php echo esc_attr($secondaryColor); ?> !important; border-color: <?php echo esc_attr($secondaryColor); ?> !important; }
+            .sseo-ai-connection-card { background:var(--card); border-radius:14px; padding:48px; max-width:600px; margin:0 auto; box-shadow:var(--shadow-md); text-align:center; }
+            .sseo-ai-connection-card h2 { font-size:28px; font-weight:700; color:var(--text-h); margin:0 0 20px 0; }
+            .sseo-ai-connection-card .highlight { background:linear-gradient(135deg,var(--fyn-blue),var(--fyn-purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+            .connection-details { text-align:left; margin-top:32px; padding-top:24px; border-top:2px solid var(--divide); }
+            .detail-item { margin-bottom:18px; }
+            .detail-item label { display:block; font-size:12px; font-weight:700; color:var(--text-m); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+            .detail-item .detail-value { font-size:14px; color:var(--text-h); font-family:'Courier New',monospace; background:var(--well); padding:10px 14px; border-radius:9px; border:1px solid var(--card-border); }
+            .connection-form { text-align:left; margin-top:30px; }
+            .connection-form .form-field { margin-bottom:20px; }
+            .connection-form label { display:block; font-size:13px; font-weight:600; color:var(--text-h); margin-bottom:8px; }
+            .connection-form input { width:100%; padding:10px 14px; border:2px solid var(--card-border); border-radius:9px; font-size:14px; background:var(--card); color:var(--text-b); }
+            .connection-form input:focus { border-color:var(--fyn-purple); outline:none; box-shadow:0 0 0 3px rgba(143,57,172,0.12); }
+            .sseo-ai-connection-loader { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9999; align-items:center; justify-content:center; flex-direction:column; }
+            .sseo-ai-connection-loader.active { display:flex; }
+            .sseo-ai-connection-loader .spinner { width:50px; height:50px; border:4px solid var(--card-border); border-top-color:var(--fyn-purple); border-radius:50%; animation:sseo-conn-spin 1s linear infinite; }
+            .sseo-ai-connection-loader p { margin-top:20px; color:var(--text-h); font-size:16px; font-weight:500; }
+            @keyframes sseo-conn-spin { to { transform:rotate(360deg); } }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Connection', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Connection', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Connection', 'ai-seo-client'); ?></h1>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
+            <div>
                 <?php if ($licenseStatus === 'active'): ?>
                     <div class="sseo-ai-connection-card">
                         <div class="connection-status">
@@ -3290,15 +3223,15 @@ class Client
                         
                         <!-- Mobile App QR Connection -->
                         <div style="margin-top:30px;padding-top:30px;border-top:2px solid #f3f4f6;">
-                            <h3 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 8px 0;">📱 <?php esc_html_e('Verbind Mobile App', 'ai-seo-client'); ?></h3>
+                            <h3 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 8px 0;">📱 <?php esc_html_e('Connect Mobile App', 'ai-seo-client'); ?></h3>
                             <p style="font-size:14px;color:#6b7280;margin:0 0 16px 0;">
-                                <?php esc_html_e('Scan een QR-code met de Fyndable Mobile app om direct in te loggen. Er wordt automatisch een veilig Application Password aangemaakt.', 'ai-seo-client'); ?>
+                                <?php esc_html_e('Scan a QR code with the Fyndable Mobile app to log in instantly. A secure Application Password is created automatically.', 'ai-seo-client'); ?>
                             </p>
                             <button type="button" id="sseo-mobile-qr-btn" class="button button-primary" style="width:100%;">
-                                📱 <?php esc_html_e('Genereer QR-code voor Mobile App', 'ai-seo-client'); ?>
+                                📱 <?php esc_html_e('Generate QR Code for Mobile App', 'ai-seo-client'); ?>
                             </button>
                             <p style="margin-top:8px;font-size:12px;color:#9ca3af;text-align:center;">
-                                <?php esc_html_e('Of open de web-app direct op:', 'ai-seo-client'); ?>
+                                <?php esc_html_e('Or open the web app directly at:', 'ai-seo-client'); ?>
                                 <a href="<?php echo esc_url(home_url('/sseo-ai-mobile/')); ?>" target="_blank"><?php echo esc_html(home_url('/sseo-ai-mobile/')); ?></a>
                             </p>
                         </div>
@@ -3306,13 +3239,13 @@ class Client
                         <!-- QR Modal -->
                         <div id="sseo-qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100000;align-items:center;justify-content:center;">
                             <div style="background:#fff;border-radius:16px;padding:40px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                                <h3 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 8px 0;">📱 Mobile App Verbinden</h3>
-                                <p style="font-size:14px;color:#6b7280;margin:0 0 20px 0;">Scan deze QR-code met de Fyndable Mobile app</p>
+                                <h3 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 8px 0;">📱 Connect Mobile App</h3>
+                                <p style="font-size:14px;color:#6b7280;margin:0 0 20px 0;">Scan this QR code with the Fyndable Mobile app</p>
                                 <div id="sseo-qr-container" style="display:flex;justify-content:center;align-items:center;min-height:256px;margin:0 auto 20px;">
-                                    <div style="color:#9ca3af;">QR-code wordt gegenereerd…</div>
+                                    <div style="color:#9ca3af;">Generating QR code…</div>
                                 </div>
                                 <div id="sseo-qr-error" style="display:none;color:#ef4444;font-size:14px;margin-bottom:16px;"></div>
-                                <button type="button" id="sseo-qr-close" class="button button-secondary" style="width:100%;">Sluiten</button>
+                                <button type="button" id="sseo-qr-close" class="button button-secondary" style="width:100%;">Close</button>
                             </div>
                         </div>
 
@@ -3331,7 +3264,7 @@ class Client
 
                             btn.addEventListener('click', function() {
                                 modal.style.display = 'flex';
-                                container.innerHTML = '<div style="color:#9ca3af;">QR-code wordt gegenereerd…</div>';
+                                container.innerHTML = '<div style="color:#9ca3af;">Generating QR code…</div>';
                                 errorEl.style.display = 'none';
 
                                 fetch('<?php echo esc_url_raw(rest_url("sseo-ai/v1/mobile/generate-qr")); ?>', {
@@ -3344,7 +3277,7 @@ class Client
                                 .then(function(r) { return r.json(); })
                                 .then(function(data) {
                                     if (!data.success) {
-                                        errorEl.textContent = data.message || 'Er ging iets mis';
+                                        errorEl.textContent = data.message || 'Something went wrong';
                                         errorEl.style.display = 'block';
                                         container.innerHTML = '';
                                         return;
@@ -3356,7 +3289,7 @@ class Client
                                     if (typeof QRCode !== 'undefined') {
                                         QRCode.toCanvas(canvas, qrData, { width: 256, margin: 2 }, function(err) {
                                             if (err) {
-                                                container.innerHTML = '<div style="color:#ef4444;">QR generatie mislukt</div>';
+                                                container.innerHTML = '<div style="color:#ef4444;">QR generation failed</div>';
                                             }
                                         });
                                     } else {
@@ -3370,7 +3303,7 @@ class Client
                                     }
                                 })
                                 .catch(function(err) {
-                                    errorEl.textContent = 'Netwerk fout: ' + err.message;
+                                    errorEl.textContent = 'Network error: ' + err.message;
                                     errorEl.style.display = 'block';
                                     container.innerHTML = '';
                                 });
@@ -3411,7 +3344,7 @@ class Client
                             <?php wp_nonce_field('activate_license'); ?>
                             <input type="hidden" name="dashboard_url" id="dashboard_url" value="<?php echo esc_attr($dashboardUrl); ?>">
 
-                            <div class="form-field">
+                            <div class="fyn-settings-field">
                                 <label for="license_key"><?php esc_html_e('License Key', 'ai-seo-client'); ?></label>
                                 <input type="text" name="license_key" id="license_key"
                                        placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" required>
@@ -3572,12 +3505,14 @@ class Client
     private function renderLicenseRequiredNotice(): void
     {
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('License Required', 'ai-seo-client'); ?></h1>
-            <div class="notice notice-error">
-                <p><?php esc_html_e('This feature requires an active license. Please activate your license key to continue.', 'ai-seo-client'); ?></p>
-                <p><a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="button button-primary">
-                    <?php esc_html_e('Go to License Activation', 'ai-seo-client'); ?></a></p>
+        <div class="wrap fyn-animate-in" style="max-width:800px;margin:60px auto;padding:28px 32px;">
+            <div class="fyn-card" style="text-align:center;padding:48px;">
+                <span class="dashicons dashicons-lock" style="font-size:48px;width:48px;height:48px;color:var(--fyn-danger);margin-bottom:16px;"></span>
+                <h2 style="font-size:22px;font-weight:700;color:var(--text-h);margin:0 0 12px;"><?php esc_html_e('License Required', 'ai-seo-client'); ?></h2>
+                <p style="color:var(--text-m);margin:0 0 24px;"><?php esc_html_e('This feature requires an active license. Activate your license key to continue.', 'ai-seo-client'); ?></p>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-client')); ?>" class="fyn-btn fyn-btn-primary">
+                    <?php esc_html_e('Go to License Activation', 'ai-seo-client'); ?>
+                </a>
             </div>
         </div>
         <?php
@@ -3642,138 +3577,26 @@ class Client
             : (!empty($dashboardUrl) ? $dashboardUrl : admin_url('admin.php?page=ai-seo-client'));
         ?>
         <style>
-            .sseo-upgrade-wrap { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-upgrade-header { 
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); 
-                color: #fff; 
-                padding: 60px 40px; 
-                margin: -10px -20px 0 -20px;
-                text-align: center;
-            }
-            .sseo-upgrade-header h1 { 
-                font-size: 42px; 
-                font-weight: 800; 
-                color: #fff; 
-                margin: 0 0 20px 0;
-                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            }
-            .sseo-upgrade-header p { 
-                font-size: 20px; 
-                opacity: 0.95;
-                max-width: 600px;
-                margin: 0 auto;
-            }
-            .sseo-upgrade-content { 
-                padding: 40px; 
-                background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); 
-                min-height: calc(100vh - 300px);
-            }
-            .sseo-upgrade-card { 
-                background: #fff; 
-                border-radius: 16px; 
-                padding: 40px; 
-                box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-                max-width: 800px;
-                margin: 0 auto;
-                text-align: center;
-            }
-            .sseo-upgrade-card h2 {
-                font-size: 28px;
-                color: #1e293b;
-                margin: 0 0 30px 0;
-            }
-            .sseo-tier-badge {
-                display: inline-block;
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
-                color: #fff;
-                padding: 12px 30px;
-                border-radius: 50px;
-                font-size: 18px;
-                font-weight: 700;
-                margin-bottom: 30px;
-                box-shadow: 0 4px 6px rgba(55, 159, 211, 0.3);
-            }
-            .sseo-benefits-list {
-                text-align: left;
-                max-width: 500px;
-                margin: 0 auto 40px;
-                list-style: none;
-                padding: 0;
-            }
-            .sseo-benefits-list li {
-                padding: 15px 0;
-                border-bottom: 1px solid #f1f5f9;
-                font-size: 16px;
-                color: #475569;
-                display: flex;
-                align-items: center;
-            }
-            .sseo-benefits-list li:last-child {
-                border-bottom: none;
-            }
-            .sseo-benefits-list li:before {
-                content: "✓";
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 28px;
-                height: 28px;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: #fff;
-                border-radius: 50%;
-                margin-right: 15px;
-                font-size: 14px;
-                flex-shrink: 0;
-            }
-            .sseo-upgrade-cta {
-                display: inline-block;
-                background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-                color: #fff;
-                padding: 18px 50px;
-                border-radius: 50px;
-                font-size: 18px;
-                font-weight: 700;
-                text-decoration: none;
-                box-shadow: 0 10px 20px rgba(238, 90, 90, 0.3);
-                transition: all 0.2s ease;
-            }
-            .sseo-upgrade-cta:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 15px 30px rgba(238, 90, 90, 0.4);
-                color: #fff;
-            }
-            .sseo-current-tier {
-                margin-top: 30px;
-                padding: 20px;
-                background: #f8fafc;
-                border-radius: 12px;
-                font-size: 15px;
-                color: #64748b;
-            }
-            .sseo-current-tier strong {
-                color: #334155;
-            }
+            .fyn-upgrade-benefits { text-align:left; max-width:500px; margin:0 auto 32px; list-style:none; padding:0; }
+            .fyn-upgrade-benefits li { padding:14px 0; border-bottom:1px solid var(--divide); font-size:15px; color:var(--text-b); display:flex; align-items:center; }
+            .fyn-upgrade-benefits li:last-child { border-bottom:none; }
+            .fyn-upgrade-benefits li::before { content:"\2713"; display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; background:var(--fyn-success); color:#fff; border-radius:50%; margin-right:14px; font-size:13px; flex-shrink:0; }
         </style>
-        <div class="wrap sseo-upgrade-wrap">
-            <div class="sseo-upgrade-header">
-                <h1>🚀 <?php esc_html_e('Unlock More SEO Power', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('This feature is available with a higher tier. Upgrade to unlock advanced capabilities and grow your traffic faster.', 'ai-seo-client'); ?></p>
-            </div>
-            <div class="sseo-upgrade-content">
-                <div class="sseo-upgrade-card">
-                    <div class="sseo-tier-badge"><?php echo esc_html($nextTier); ?> <?php esc_html_e('Plan', 'ai-seo-client'); ?></div>
-                    <h2><?php esc_html_e('What you\'ll get with an upgrade:', 'ai-seo-client'); ?></h2>
-                    <ul class="sseo-benefits-list">
-                        <?php foreach ($benefits as $benefit): ?>
-                        <li><?php echo esc_html($benefit); ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <a href="<?php echo esc_url($upgradeUrl); ?>" class="sseo-upgrade-cta" target="_blank" rel="noopener noreferrer">
-                        <?php esc_html_e('Upgrade Now →', 'ai-seo-client'); ?>
-                    </a>
-                    <div class="sseo-current-tier">
-                        <?php printf(esc_html__('Your current plan: %s', 'ai-seo-client'), '<strong>' . esc_html(ucfirst($currentTier)) . '</strong>'); ?>
-                    </div>
+        <div class="wrap fyn-animate-in" style="max-width:900px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-card" style="text-align:center;padding:48px;">
+                <span class="fyn-badge" style="font-size:16px;padding:10px 28px;background:linear-gradient(135deg,var(--fyn-blue),var(--fyn-purple));color:#fff;border-radius:50px;margin-bottom:24px;display:inline-block;"><?php echo esc_html($nextTier); ?> <?php esc_html_e('Plan', 'ai-seo-client'); ?></span>
+                <h2 style="font-size:28px;font-weight:800;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Unlock More SEO Power', 'ai-seo-client'); ?></h2>
+                <p style="font-size:16px;color:var(--text-m);max-width:500px;margin:0 auto 32px;"><?php esc_html_e('This feature is available with a higher plan. Upgrade to unlock advanced capabilities.', 'ai-seo-client'); ?></p>
+                <ul class="fyn-upgrade-benefits">
+                    <?php foreach ($benefits as $benefit): ?>
+                    <li><?php echo esc_html($benefit); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <a href="<?php echo esc_url($upgradeUrl); ?>" class="fyn-btn fyn-btn-primary" style="font-size:16px;padding:14px 40px;" target="_blank" rel="noopener noreferrer">
+                    <?php esc_html_e('Upgrade Now', 'ai-seo-client'); ?> &rarr;
+                </a>
+                <div style="margin-top:24px;padding:16px;background:var(--well);border-radius:9px;font-size:14px;color:var(--text-m);">
+                    <?php printf(esc_html__('Your current plan: %s', 'ai-seo-client'), '<strong style="color:var(--text-h);">' . esc_html(ucfirst($currentTier)) . '</strong>'); ?>
                 </div>
             </div>
         </div>
@@ -3813,70 +3636,66 @@ class Client
         ];
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-header p { color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .bv-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; margin-bottom: 20px; }
-            .bv-stat-card { background: #f8fafc; border-radius: 8px; padding: 18px; text-align: center; border: 1px solid #e2e8f0; }
-            .bv-stat-value { font-size: 28px; font-weight: 700; color: #379fd3; }
-            .bv-stat-value.score { color: #16a34a; }
-            .bv-stat-value.positive { color: #16a34a; }
-            .bv-stat-value.negative { color: #dc2626; }
-            .bv-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
-            .bv-table { width: 100%; border-collapse: collapse; }
-            .bv-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
-            .bv-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-            .bv-table tr:hover { background: #f8fafc; }
-            .bv-badge-yes { background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-            .bv-badge-no { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-            .bv-badge-error { background: #fef3c7; color: #92400e; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-            .bv-sentiment-positive { color: #16a34a; font-weight: 600; }
-            .bv-sentiment-neutral { color: #64748b; font-weight: 600; }
-            .bv-sentiment-negative { color: #dc2626; font-weight: 600; }
-            .bv-platform-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-            .bv-platform-chatgpt { background: #e0e7ff; color: #3730a3; }
-            .bv-platform-perplexity { background: #fce7f3; color: #9d174d; }
-            .bv-platform-gemini { background: #dbeafe; color: #8f39ac; }
-            .bv-platform-claude { background: #fef3c7; color: #92400e; }
-            .bv-excerpt { max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
-            .bv-pagination { margin-top: 20px; }
-            .bv-pagination a, .bv-pagination span { display: inline-block; padding: 6px 12px; margin-right: 4px; border-radius: 4px; font-size: 13px; }
-            .bv-pagination a { background: #e2e8f0; color: #334155; text-decoration: none; }
-            .bv-pagination a:hover { background: #379fd3; color: #fff; }
-            .bv-pagination span.current { background: #379fd3; color: #fff; }
-            .bv-settings-form table { width: 100%; }
-            .bv-settings-form th { text-align: left; padding: 8px 10px; width: 200px; vertical-align: top; }
-            .bv-settings-form td { padding: 8px 10px; }
-            .bv-settings-form input[type=text], .bv-settings-form textarea { width: 100%; max-width: 500px; }
-            .bv-settings-form textarea { height: 80px; }
-            .bv-filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
-            .bv-filter-bar select { padding: 5px 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
-            .bv-period-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-            .bv-period-tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; text-decoration: none; background: #e2e8f0; color: #334155; }
-            .bv-period-tab.active { background: #379fd3; color: #fff; }
-            .bv-competitor-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-            .bv-competitor-name { min-width: 120px; font-size: 13px; font-weight: 500; }
-            .bv-competitor-bar-bg { flex: 1; background: #e2e8f0; border-radius: 4px; height: 20px; overflow: hidden; }
-            .bv-competitor-bar-fill { height: 100%; border-radius: 4px; background: #379fd3; transition: width 0.3s; }
-            .bv-competitor-count { min-width: 30px; text-align: right; font-size: 13px; font-weight: 600; }
-            .bv-scan-btn { background: #379fd3; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-            .bv-scan-btn:hover { background: #2a7ba8; }
-            .bv-scan-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-            .bv-empty { text-align: center; padding: 40px; color: #94a3b8; }
+            .bv-stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:15px; margin-bottom:20px; }
+            .bv-stat-card { background:var(--well); border-radius:10px; padding:18px; text-align:center; border:1px solid var(--card-border); }
+            .bv-stat-value { font-size:28px; font-weight:700; color:var(--fyn-blue); }
+            .bv-stat-value.score { color:var(--fyn-success); }
+            .bv-stat-value.positive { color:var(--fyn-success); }
+            .bv-stat-value.negative { color:var(--fyn-danger); }
+            .bv-stat-label { font-size:12px; color:var(--text-m); margin-top:4px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
+            .bv-table { width:100%; border-collapse:collapse; }
+            .bv-table th { background:var(--well); padding:10px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-m); }
+            .bv-table td { padding:10px; border-bottom:1px solid var(--divide); font-size:13px; color:var(--text-b); }
+            .bv-table tr:hover { background:var(--row-hover); }
+            .bv-badge-yes { background:var(--fyn-success-light); color:var(--fyn-success); padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+            .bv-badge-no { background:var(--fyn-danger-light); color:var(--fyn-danger); padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+            .bv-badge-error { background:var(--fyn-warning-light); color:var(--fyn-warning); padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+            .bv-sentiment-positive { color:var(--fyn-success); font-weight:600; }
+            .bv-sentiment-neutral { color:var(--text-m); font-weight:600; }
+            .bv-sentiment-negative { color:var(--fyn-danger); font-weight:600; }
+            .bv-platform-tag { display:inline-block; padding:3px 10px; border-radius:7px; font-size:11px; font-weight:600; }
+            .bv-platform-chatgpt { background:#e0e7ff; color:#3730a3; }
+            .bv-platform-perplexity { background:#fce7f3; color:#9d174d; }
+            .bv-platform-gemini { background:#dbeafe; color:#8f39ac; }
+            .bv-platform-claude { background:#fef3c7; color:#92400e; }
+            .bv-excerpt { max-width:350px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:help; }
+            .bv-pagination { margin-top:20px; }
+            .bv-pagination a, .bv-pagination span { display:inline-block; padding:6px 12px; margin-right:4px; border-radius:7px; font-size:13px; }
+            .bv-pagination a { background:var(--well); color:var(--text-b); text-decoration:none; }
+            .bv-pagination a:hover { background:var(--fyn-purple); color:#fff; }
+            .bv-pagination span.current { background:var(--fyn-purple); color:#fff; }
+            .bv-settings-form table { width:100%; }
+            .bv-settings-form th { text-align:left; padding:8px 10px; width:200px; vertical-align:top; font-size:13px; font-weight:600; color:var(--text-h); }
+            .bv-settings-form td { padding:8px 10px; }
+            .bv-settings-form input[type=text], .bv-settings-form textarea { width:100%; max-width:500px; border:1px solid var(--card-border); border-radius:9px; padding:8px 12px; background:var(--card); color:var(--text-b); }
+            .bv-settings-form textarea { height:80px; }
+            .bv-filter-bar { display:flex; gap:10px; align-items:center; margin-bottom:15px; flex-wrap:wrap; }
+            .bv-filter-bar select { padding:5px 10px; border-radius:7px; border:1px solid var(--card-border); background:var(--card); color:var(--text-b); }
+            .bv-period-tabs { display:flex; gap:5px; margin-bottom:15px; }
+            .bv-period-tab { padding:6px 16px; border-radius:9px; font-size:13px; text-decoration:none; background:var(--well); color:var(--text-b); font-weight:600; }
+            .bv-period-tab.active { background:var(--fyn-purple); color:#fff; }
+            .bv-competitor-bar { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+            .bv-competitor-name { min-width:120px; font-size:13px; font-weight:500; color:var(--text-h); }
+            .bv-competitor-bar-bg { flex:1; background:var(--well); border-radius:7px; height:20px; overflow:hidden; }
+            .bv-competitor-bar-fill { height:100%; border-radius:7px; background:var(--fyn-purple); transition:width .3s; }
+            .bv-competitor-count { min-width:30px; text-align:right; font-size:13px; font-weight:600; color:var(--text-h); }
+            .bv-scan-btn { background:var(--fyn-purple); color:#fff; border:none; padding:10px 24px; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; }
+            .bv-scan-btn:hover { opacity:.88; }
+            .bv-scan-btn:disabled { background:var(--text-m); cursor:not-allowed; }
+            .bv-empty { text-align:center; padding:40px; color:var(--text-m); }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Brand & AI Search Visibility', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Track how often and in what context your brand is mentioned by AI-powered search engines and chatbots.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Brand Visibility', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Brand & AI Search Visibility', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Track how often and in what context your brand is mentioned by AI search engines and chatbots.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            <div class="sseo-ai-content">
+            <div>
 
                 <!-- Settings Card -->
-                <div class="sseo-ai-dashboard-card">
+                <div class="fyn-card">
                     <h2><?php esc_html_e('Configuration', 'ai-seo-client'); ?></h2>
                     <form class="bv-settings-form" id="bv-settings-form">
                         <table>
@@ -3928,7 +3747,7 @@ class Client
                 </div>
 
                 <!-- What does this tracker do and how to get found -->
-                <div class="sseo-ai-dashboard-card">
+                <div class="fyn-card">
                     <h2><?php esc_html_e('What does AI Search Visibility do?', 'ai-seo-client'); ?></h2>
                     <p><?php esc_html_e('This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini, Claude) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries.', 'ai-seo-client'); ?></p>
 
@@ -3946,7 +3765,7 @@ class Client
 
                 <?php if ($stats['total_scans'] > 0): ?>
                 <!-- Stats Card -->
-                <div class="sseo-ai-dashboard-card">
+                <div class="fyn-card">
                     <div class="bv-period-tabs">
                         <?php foreach (['7d' => '7 days', '30d' => '30 days', '90d' => '90 days'] as $pkey => $plabel): ?>
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-llm-tracker&period=' . $pkey)); ?>" class="bv-period-tab <?php echo $period === $pkey ? 'active' : ''; ?>"><?php echo esc_html($plabel); ?></a>
@@ -3983,7 +3802,7 @@ class Client
 
                 <!-- Platform Breakdown -->
                 <?php if (!empty($stats['platform_stats'])): ?>
-                <div class="sseo-ai-dashboard-card">
+                <div class="fyn-card">
                     <h2><?php esc_html_e('Platform Breakdown', 'ai-seo-client'); ?></h2>
                     <table class="bv-table">
                         <thead>
@@ -4012,7 +3831,7 @@ class Client
 
                 <!-- Competitor Comparison -->
                 <?php if (!empty($stats['top_competitors'])): ?>
-                <div class="sseo-ai-dashboard-card">
+                <div class="fyn-card">
                     <h2><?php esc_html_e('Competitor Mentions', 'ai-seo-client'); ?></h2>
                     <?php
                     $maxComp = max($stats['top_competitors']);
@@ -4033,7 +3852,7 @@ class Client
                 <?php endif; ?>
 
                 <!-- Mentions Table -->
-                <div class="sseo-ai-dashboard-card">
+                <div class="fyn-card">
                     <h2><?php esc_html_e('Mention Details', 'ai-seo-client'); ?> (<?php echo number_format($total); ?>)</h2>
                     <?php if (empty($mentions)): ?>
                     <div class="bv-empty">

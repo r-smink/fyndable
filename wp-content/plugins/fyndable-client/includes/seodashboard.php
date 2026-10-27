@@ -338,55 +338,72 @@ class SeoDashboard
     public function renderPage(): void
     {
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Statistics', 'ai-seo-client'); ?></h1>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-            <div style="max-width:1100px;">
-                <p>
-                    <button type="button" class="button button-primary" id="seo-dash-scan">
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Statistics', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Statistics', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Overview of your SEO performance and areas for improvement.', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="seo-dash-scan">
+                        <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Analyze Site', 'ai-seo-client'); ?>
                     </button>
                     <span class="spinner" id="seo-dash-spinner" style="float:none;"></span>
-                </p>
+                </div>
+            </div>
 
-                <!-- Score + Summary Row -->
-                <div id="seo-dash-main" style="display:none;">
-                    <div style="display:grid; grid-template-columns:280px 1fr; gap:20px; margin-bottom:20px;">
-                        <!-- Score Circle -->
-                        <div class="postbox" style="padding:30px; text-align:center; margin:0;">
-                            <div id="seo-score-ring" style="position:relative;width:160px;height:160px;margin:0 auto 15px;">
-                                <svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg);">
-                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e0e0e0" stroke-width="3"></circle>
-                                    <circle id="seo-score-circle" cx="18" cy="18" r="15.9" fill="none" stroke="#2271b1" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" style="transition:stroke-dasharray 1s ease;"></circle>
-                                </svg>
-                                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:36px;font-weight:bold;" id="seo-score-num">—</div>
-                            </div>
-                            <div style="font-size:16px;font-weight:600;" id="seo-score-label"><?php esc_html_e('SEO Score', 'ai-seo-client'); ?></div>
-                            <div style="color:#666;font-size:13px;" id="seo-score-posts"></div>
+            <!-- Score + Breakdown row -->
+            <div id="seo-dash-main" style="display:none;">
+                <div style="display:grid; grid-template-columns:300px 1fr; gap:20px; margin-bottom:24px;">
+                    <!-- Score Ring card -->
+                    <div class="fyn-card" style="text-align:center;padding:30px 22px;">
+                        <div id="seo-score-ring" style="position:relative;width:160px;height:160px;margin:0 auto 15px;">
+                            <svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg);">
+                                <defs>
+                                    <linearGradient id="fyn-score-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#8F39AC"/>
+                                        <stop offset="100%" stop-color="#379FD3"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--sev-track,#e9e7f0)" stroke-width="3"></circle>
+                                <circle id="seo-score-circle" cx="18" cy="18" r="15.9" fill="none" stroke="url(#fyn-score-grad)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" style="transition:stroke-dasharray 1s ease;"></circle>
+                            </svg>
+                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:36px;font-weight:700;color:var(--text-h);" id="seo-score-num">&mdash;</div>
                         </div>
-
-                        <!-- Breakdown Bars -->
-                        <div class="postbox" style="padding:20px; margin:0;">
-                            <h2 style="margin-top:0;"><?php esc_html_e('SEO Breakdown', 'ai-seo-client'); ?></h2>
-                            <div id="seo-breakdown"></div>
-                        </div>
+                        <div style="font-size:16px;font-weight:600;color:var(--text-h);" id="seo-score-label"><?php esc_html_e('SEO Score', 'ai-seo-client'); ?></div>
+                        <div style="color:var(--text-m);font-size:13px;margin-top:4px;" id="seo-score-posts"></div>
                     </div>
 
-                    <!-- Issues + Quick Wins -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                        <div class="postbox" style="padding:20px; margin:0;">
-                            <h2 style="margin-top:0;"><?php esc_html_e('Issues Found', 'ai-seo-client'); ?></h2>
-                            <div id="seo-issues"></div>
+                    <!-- Breakdown Bars card -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-chart-bar"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('SEO Breakdown', 'ai-seo-client'); ?></h3>
                         </div>
-                        <div class="postbox" style="padding:20px; margin:0;">
-                            <h2 style="margin-top:0;"><?php esc_html_e('Quick Wins', 'ai-seo-client'); ?></h2>
-                            <p style="color:#666;font-size:13px;"><?php esc_html_e('Posts with good content but missing SEO meta — easy to fix!', 'ai-seo-client'); ?></p>
-                            <div id="seo-quickwins"></div>
+                        <div id="seo-breakdown"></div>
+                    </div>
+                </div>
+
+                <!-- Issues + Quick Wins -->
+                <div class="fyn-grid-2">
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-warning"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Issues Found', 'ai-seo-client'); ?></h3>
                         </div>
+                        <div id="seo-issues"></div>
+                    </div>
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Quick Wins', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <p style="color:var(--text-m);font-size:13px;margin:0 0 12px;"><?php esc_html_e('Posts with good content but missing SEO meta — easy to fix!', 'ai-seo-client'); ?></p>
+                        <div id="seo-quickwins"></div>
                     </div>
                 </div>
             </div>
@@ -394,22 +411,22 @@ class SeoDashboard
 
         <!-- Issue detail modal -->
         <div id="seo-issue-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100000;justify-content:center;align-items:center;">
-            <div style="background:#fff;border-radius:8px;width:90%;max-width:700px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
-                <div style="padding:18px 20px;border-bottom:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="margin:0;font-size:16px;" id="seo-issue-modal-title"></h3>
-                    <button type="button" id="seo-issue-modal-close" style="background:none;border:none;font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+            <div style="background:var(--card,#fff);border-radius:14px;width:90%;max-width:700px;max-height:80vh;display:flex;flex-direction:column;box-shadow:var(--card-shadow-lg);">
+                <div style="padding:18px 22px;border-bottom:1px solid var(--divide,#efeef4);display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h);" id="seo-issue-modal-title"></h3>
+                    <button type="button" id="seo-issue-modal-close" style="background:none;border:none;font-size:22px;cursor:pointer;line-height:1;color:var(--text-m);">&times;</button>
                 </div>
-                <div style="padding:20px;overflow-y:auto;flex:1;" id="seo-issue-modal-body"></div>
-                <div style="padding:15px 20px;border-top:1px solid #e0e0e0;text-align:right;color:#666;font-size:12px;" id="seo-issue-modal-footer"></div>
+                <div style="padding:20px 22px;overflow-y:auto;flex:1;color:var(--text-b);" id="seo-issue-modal-body"></div>
+                <div style="padding:15px 22px;border-top:1px solid var(--divide,#efeef4);text-align:right;color:var(--text-m);font-size:12px;" id="seo-issue-modal-footer"></div>
             </div>
         </div>
 
         <script>
         jQuery(document).ready(function($) {
-            function getScoreColor(score) {
-                if (score >= 80) return '#00a32a';
-                if (score >= 50) return '#dba617';
-                return '#d63638';
+            function getScoreClass(score) {
+                if (score >= 80) return 'success';
+                if (score >= 50) return 'warning';
+                return 'danger';
             }
 
             function getScoreLabel(score) {
@@ -419,53 +436,50 @@ class SeoDashboard
             }
 
             function renderDashboard(data) {
-                // Score
-                var color = getScoreColor(data.score);
-                $('#seo-score-num').text(data.score).css('color', color);
-                $('#seo-score-circle').attr('stroke', color).attr('stroke-dasharray', data.score + ', 100');
-                $('#seo-score-label').text(getScoreLabel(data.score));
+                var cls = getScoreClass(data.score);
+                $('#seo-score-num').text(data.score);
+                $('#seo-score-circle').attr('stroke-dasharray', data.score + ', 100');
+                var pillCls = 'fyn-badge fyn-badge--' + cls;
+                $('#seo-score-label').html('<span class="' + pillCls + '">' + getScoreLabel(data.score) + '</span>');
                 $('#seo-score-posts').text(data.total_posts + ' <?php echo esc_js(__('posts analyzed', 'ai-seo-client')); ?>');
 
-                // Breakdown bars
                 var bHtml = '';
                 data.breakdown.forEach(function(b) {
-                    var bColor = getScoreColor(b.pct);
-                    bHtml += '<div style="margin-bottom:12px;">' +
-                        '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
-                        '<span style="font-weight:500;">' + b.label + '</span>' +
-                        '<span style="color:#666;">' + b.done + '/' + b.total + ' (' + b.pct + '%)</span>' +
+                    var barCls = getScoreClass(b.pct);
+                    bHtml += '<div style="margin-bottom:14px;">' +
+                        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+                        '<span style="font-weight:600;font-size:13px;color:var(--text-b)">' + b.label + '</span>' +
+                        '<span style="font-size:12px;color:var(--text-m)">' + b.done + '/' + b.total + ' (' + b.pct + '%)</span>' +
                         '</div>' +
-                        '<div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">' +
-                        '<div style="background:' + bColor + ';height:100%;width:' + b.pct + '%;transition:width 0.5s;border-radius:4px;"></div>' +
+                        '<div class="fyn-progress">' +
+                        '<div class="fyn-progress-bar fyn-progress-bar--' + barCls + '" style="width:' + b.pct + '%"></div>' +
                         '</div></div>';
                 });
                 $('#seo-breakdown').html(bHtml);
 
-                // Issues
                 var iHtml = '';
                 if (data.issues.length === 0) {
-                    iHtml = '<p style="color:#00a32a;font-weight:600;"><?php echo esc_js(__('No issues found!', 'ai-seo-client')); ?></p>';
+                    iHtml = '<p><span class="fyn-badge fyn-badge--success"><?php echo esc_js(__('No issues found!', 'ai-seo-client')); ?></span></p>';
                 } else {
                     data.issues.forEach(function(issue, index) {
-                        var iColor = issue.type === 'critical' ? '#d63638' : (issue.type === 'warning' ? '#dba617' : '#2271b1');
-                        var icon = issue.type === 'critical' ? '●' : (issue.type === 'warning' ? '▲' : 'ℹ');
-                        iHtml += '<div class="seo-issue-row" data-index="' + index + '" style="padding:8px 12px;margin-bottom:6px;border-left:3px solid ' + iColor + ';background:#f9f9f9;border-radius:0 4px 4px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.15s;">' +
-                            '<span><span style="color:' + iColor + ';">' + icon + '</span> ' + issue.label + '</span>' +
-                            '<span style="font-size:12px;color:#666;"><?php echo esc_js(__('View', 'ai-seo-client')); ?> &rarr;</span>' +
+                        var sevColor = issue.type === 'critical' ? 'var(--fyn-danger)' : (issue.type === 'warning' ? 'var(--fyn-warning)' : 'var(--fyn-info)');
+                        var iconCls = issue.type === 'critical' ? 'dashicons-dismiss' : (issue.type === 'warning' ? 'dashicons-warning' : 'dashicons-info-outline');
+                        iHtml += '<div class="seo-issue-row" data-index="' + index + '" style="padding:10px 14px;margin-bottom:6px;border-left:3px solid ' + sevColor + ';background:var(--well);border-radius:0 9px 9px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background .15s;">' +
+                            '<span style="display:flex;align-items:center;gap:8px;"><span class="dashicons ' + iconCls + '" style="color:' + sevColor + ';font-size:16px;width:16px;height:16px;"></span><span style="font-size:13px;color:var(--text-b)">' + issue.label + '</span></span>' +
+                            '<span style="font-size:12px;color:var(--fyn-purple);font-weight:600;"><?php echo esc_js(__('View', 'ai-seo-client')); ?> &rarr;</span>' +
                             '</div>';
                     });
                 }
                 $('#seo-issues').html(iHtml);
 
-                // Quick wins
                 var qHtml = '';
                 if (data.quick_wins.length === 0) {
-                    qHtml = '<p style="color:#666;"><?php echo esc_js(__('No quick wins available.', 'ai-seo-client')); ?></p>';
+                    qHtml = '<p style="color:var(--text-m);"><?php echo esc_js(__('No quick wins available.', 'ai-seo-client')); ?></p>';
                 } else {
                     data.quick_wins.forEach(function(qw) {
-                        qHtml += '<div style="padding:6px 0;border-bottom:1px solid #eee;">' +
-                            '<a href="' + qw.edit_url + '" target="_blank" style="text-decoration:none;">' + $('<span>').text(qw.title).html() + '</a>' +
-                            '<div style="font-size:12px;color:#999;">' + qw.reason + '</div>' +
+                        qHtml += '<div style="padding:8px 0;border-bottom:1px solid var(--divide);">' +
+                            '<a href="' + qw.edit_url + '" target="_blank" style="text-decoration:none;color:var(--fyn-purple);font-weight:600;font-size:13px;">' + $('<span>').text(qw.title).html() + '</a>' +
+                            '<div style="font-size:12px;color:var(--text-s);margin-top:2px;">' + qw.reason + '</div>' +
                             '</div>';
                     });
                 }
@@ -536,9 +550,6 @@ class SeoDashboard
             });
         });
         </script>
-                </div>
-            </div>
-        </div>
         <?php
     }
 }

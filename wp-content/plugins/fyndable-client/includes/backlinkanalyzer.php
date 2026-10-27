@@ -70,226 +70,213 @@ class BacklinkAnalyzer
 
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-ai-dashboard-card h3 { color: #374151; font-size: 16px; font-weight: 600; margin: 0 0 10px; }
-            .sseo-ai-metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px; }
-            .sseo-ai-metric { text-align: center; }
-            .sseo-ai-metric-value { font-size: 36px; font-weight: 700; color: #8f39ac; margin: 0; }
-            .sseo-ai-metric-label { margin: 5px 0 0; color: #6b7280; font-size: 14px; }
-            .sseo-ai-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
-            .sseo-ai-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-            .sseo-ai-toxic-badge { display: inline-flex; align-items: center; gap: 8px; background: #fef3c7; color: #92400e; padding: 10px 14px; border-radius: 8px; margin: 15px 0; }
-            .sseo-ai-toxic-badge.high { background: #fee2e2; color: #991b1b; }
-            .sseo-ai-toxic-score { font-weight: 700; }
-            .sseo-ai-toxic-score[data-score="0"], .sseo-ai-toxic-score[data-score^="1"], .sseo-ai-toxic-score[data-score^="2"], .sseo-ai-toxic-score[data-score^="3"] { color: #16a34a; }
-            .sseo-ai-toxic-score[data-score^="4"], .sseo-ai-toxic-score[data-score^="5"], .sseo-ai-toxic-score[data-score^="6"] { color: #d97706; }
-            .sseo-ai-toxic-score[data-score^="7"], .sseo-ai-toxic-score[data-score^="8"], .sseo-ai-toxic-score[data-score^="9"], .sseo-ai-toxic-score[data-score="100"] { color: #dc2626; }
-            @media (max-width: 768px) {
-                .sseo-ai-metric-grid { grid-template-columns: repeat(2, 1fr); }
-                .sseo-ai-two-col { grid-template-columns: 1fr; }
-                .sseo-ai-content { padding: 20px; }
-            }
-            /* Dark theme overrides */
-            body.fyndable-dark .sseo-ai-metric-value { color: #c084fc; }
-            body.fyndable-dark .sseo-ai-metric-label { color: #d1d5db; }
-            body.fyndable-dark .sseo-ai-toxic-badge { background: #451a03; color: #fcd34d; }
-            body.fyndable-dark .sseo-ai-toxic-badge.high { background: #450a0a; color: #fca5a5; }
+            .ba-toxic-score { font-weight: 700; }
+            .ba-toxic-score[data-score="0"], .ba-toxic-score[data-score^="1"], .ba-toxic-score[data-score^="2"], .ba-toxic-score[data-score^="3"] { color: var(--fyn-success); }
+            .ba-toxic-score[data-score^="4"], .ba-toxic-score[data-score^="5"], .ba-toxic-score[data-score^="6"] { color: var(--fyn-warning); }
+            .ba-toxic-score[data-score^="7"], .ba-toxic-score[data-score^="8"], .ba-toxic-score[data-score^="9"], .ba-toxic-score[data-score="100"] { color: var(--fyn-danger); }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Backlink & Authority Analysis', 'ai-seo-client'); ?></h1>
-                <p><?php echo esc_html($domain); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Backlink Analysis', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Backlink & Authority Analysis', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php echo esc_html($domain); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoRefreshDomainMetrics()">
+                        <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Refresh Metrics', 'ai-seo-client'); ?>
+                    </button>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-advanced-backlinks&fyndable_shell=1')); ?>" class="fyn-btn fyn-btn-outline">
+                        <?php esc_html_e('Advanced Analysis', 'ai-seo-client'); ?>
+                    </a>
+                </div>
             </div>
-            <div class="sseo-ai-content">
 
-                <!-- Domain Authority Overview -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Domain Metrics', 'ai-seo-client'); ?></h2>
-                    <div class="sseo-ai-metric-grid">
-                        <div class="sseo-ai-metric">
-                            <h3 class="sseo-ai-metric-value"><?php echo esc_html($domainMetrics['domain_rating'] ?? 'N/A'); ?></h3>
-                            <p class="sseo-ai-metric-label"><?php esc_html_e('Domain Rating (DR)', 'ai-seo-client'); ?></p>
-                        </div>
-                        <div class="sseo-ai-metric">
-                            <h3 class="sseo-ai-metric-value"><?php echo esc_html(number_format($domainMetrics['referring_domains'] ?? 0)); ?></h3>
-                            <p class="sseo-ai-metric-label"><?php esc_html_e('Referring Domains', 'ai-seo-client'); ?></p>
-                        </div>
-                        <div class="sseo-ai-metric">
-                            <h3 class="sseo-ai-metric-value"><?php echo esc_html(number_format($domainMetrics['backlinks'] ?? 0)); ?></h3>
-                            <p class="sseo-ai-metric-label"><?php esc_html_e('Total Backlinks', 'ai-seo-client'); ?></p>
-                        </div>
-                        <div class="sseo-ai-metric">
-                            <h3 class="sseo-ai-metric-value"><?php echo esc_html(number_format($domainMetrics['organic_traffic'] ?? 0)); ?></h3>
-                            <p class="sseo-ai-metric-label"><?php esc_html_e('Est. Organic Traffic', 'ai-seo-client'); ?></p>
-                        </div>
+            <!-- Domain Metrics -->
+            <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($domainMetrics['domain_rating'] ?? 'N/A'); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Domain Rating (DR)', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($domainMetrics['referring_domains'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Referring Domains', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($domainMetrics['backlinks'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Total Backlinks', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($domainMetrics['organic_traffic'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Est. Organic Traffic', 'ai-seo-client'); ?></div>
+                </div>
+            </div>
+
+            <!-- Backlink Profile -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-links"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Backlink Profile', 'ai-seo-client'); ?></h3>
+                </div>
+                <div class="fyn-grid-2">
+                    <div>
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 10px;"><?php esc_html_e('Link Types', 'ai-seo-client'); ?></h4>
+                        <table class="fyn-table">
+                            <tbody>
+                                <tr>
+                                    <td><?php esc_html_e('Dofollow', 'ai-seo-client'); ?></td>
+                                    <td><strong><?php echo esc_html(number_format($backlinkProfile['dofollow'] ?? 0)); ?></strong></td>
+                                </tr>
+                                <tr>
+                                    <td><?php esc_html_e('Nofollow', 'ai-seo-client'); ?></td>
+                                    <td><?php echo esc_html(number_format($backlinkProfile['nofollow'] ?? 0)); ?></td>
+                                </tr>
+                                <tr>
+                                    <td><?php esc_html_e('Redirect', 'ai-seo-client'); ?></td>
+                                    <td><?php echo esc_html(number_format($backlinkProfile['redirect'] ?? 0)); ?></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="sseo-ai-actions">
-                        <button type="button" class="button button-primary" onclick="sseoRefreshDomainMetrics()">
-                            <?php esc_html_e('Refresh Metrics', 'ai-seo-client'); ?>
-                        </button>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-advanced-backlinks&fyndable_shell=1')); ?>" class="button">
-                            <?php esc_html_e('Advanced Analysis', 'ai-seo-client'); ?>
-                        </a>
+                    <div>
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 10px;"><?php esc_html_e('Top Anchor Texts', 'ai-seo-client'); ?></h4>
+                        <table class="fyn-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Count', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $anchors = $backlinkProfile['top_anchors'] ?? [];
+                                foreach (array_slice($anchors, 0, 5) as $anchor):
+                                ?>
+                                <tr>
+                                    <td><?php echo esc_html($anchor['text']); ?></td>
+                                    <td><?php echo esc_html($anchor['count']); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            
-                <!-- Backlink Profile -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Backlink Profile', 'ai-seo-client'); ?></h2>
-                    <div class="sseo-ai-two-col">
-                        <div>
-                            <h3><?php esc_html_e('Link Types', 'ai-seo-client'); ?></h3>
-                            <table class="wp-list-table widefat fixed striped">
-                                <tbody>
-                                    <tr>
-                                        <td><?php esc_html_e('Dofollow', 'ai-seo-client'); ?></td>
-                                        <td><strong><?php echo esc_html(number_format($backlinkProfile['dofollow'] ?? 0)); ?></strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php esc_html_e('Nofollow', 'ai-seo-client'); ?></td>
-                                        <td><?php echo esc_html(number_format($backlinkProfile['nofollow'] ?? 0)); ?></td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php esc_html_e('Redirect', 'ai-seo-client'); ?></td>
-                                        <td><?php echo esc_html(number_format($backlinkProfile['redirect'] ?? 0)); ?></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div>
-                            <h3><?php esc_html_e('Top Anchor Texts', 'ai-seo-client'); ?></h3>
-                            <table class="wp-list-table widefat fixed striped">
-                                <thead>
-                                    <tr>
-                                        <th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th>
-                                        <th><?php esc_html_e('Count', 'ai-seo-client'); ?></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $anchors = $backlinkProfile['top_anchors'] ?? [];
-                                    foreach (array_slice($anchors, 0, 5) as $anchor):
-                                    ?>
-                                    <tr>
-                                        <td><?php echo esc_html($anchor['text']); ?></td>
-                                        <td><?php echo esc_html($anchor['count']); ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            </div>
+
+            <!-- Toxic Links -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-warning"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Toxic Link Detection', 'ai-seo-client'); ?></h3>
                 </div>
-            
-                <!-- Toxic Links -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Toxic Link Detection', 'ai-seo-client'); ?></h2>
 
-                    <?php if (!empty($toxicLinks)): ?>
-                    <div class="sseo-ai-toxic-badge<?php echo count($toxicLinks) > 10 ? ' high' : ''; ?>">
-                        <strong><?php echo count($toxicLinks); ?></strong>
-                        <?php esc_html_e('potentially toxic backlinks detected', 'ai-seo-client'); ?>
-                    </div>
-
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Source Domain', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Toxicity Score', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Reason', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Action', 'ai-seo-client'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach (array_slice($toxicLinks, 0, 10) as $link): ?>
-                            <tr>
-                                <td><?php echo esc_html($link['domain']); ?></td>
-                                <td>
-                                    <span class="sseo-ai-toxic-score" data-score="<?php echo esc_attr($link['toxicity']); ?>">
-                                        <?php echo esc_html($link['toxicity']); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo esc_html($link['reason']); ?></td>
-                                <td>
-                                    <button type="button" class="button button-small"
-                                            onclick="sseoDisavowLink('<?php echo esc_js($link['url']); ?>')">
-                                        <?php esc_html_e('Disavow', 'ai-seo-client'); ?>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <?php else: ?>
-                    <p><?php esc_html_e('No toxic links detected. Great job!', 'ai-seo-client'); ?></p>
-                    <?php endif; ?>
-
-                    <div class="sseo-ai-actions">
-                        <button type="button" class="button" onclick="sseoCheckToxicLinks()">
-                            <?php esc_html_e('Run Toxic Link Check', 'ai-seo-client'); ?>
-                        </button>
-                    </div>
+                <?php if (!empty($toxicLinks)): ?>
+                <div class="fyn-badge fyn-badge--<?php echo count($toxicLinks) > 10 ? 'danger' : 'warning'; ?>" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;margin-bottom:14px;">
+                    <strong><?php echo count($toxicLinks); ?></strong>
+                    <?php esc_html_e('potentially toxic backlinks detected', 'ai-seo-client'); ?>
                 </div>
-            
-                <!-- Competitor Analysis -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Competitor Backlink Analysis', 'ai-seo-client'); ?></h2>
 
-                    <div style="margin: 15px 0;">
-                        <label>
-                            <strong><?php esc_html_e('Add Competitor Domain:', 'ai-seo-client'); ?></strong>
-                        </label><br>
-                        <input type="text" id="competitor-domain" class="regular-text"
+                <table class="fyn-table">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Source Domain', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Toxicity Score', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Reason', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Action', 'ai-seo-client'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach (array_slice($toxicLinks, 0, 10) as $link): ?>
+                        <tr>
+                            <td><?php echo esc_html($link['domain']); ?></td>
+                            <td>
+                                <span class="ba-toxic-score" data-score="<?php echo esc_attr($link['toxicity']); ?>">
+                                    <?php echo esc_html($link['toxicity']); ?>
+                                </span>
+                            </td>
+                            <td><?php echo esc_html($link['reason']); ?></td>
+                            <td>
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"
+                                        onclick="sseoDisavowLink('<?php echo esc_js($link['url']); ?>')">
+                                    <?php esc_html_e('Disavow', 'ai-seo-client'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php else: ?>
+                <p style="color:var(--text-m);"><?php esc_html_e('No toxic links detected. Great job!', 'ai-seo-client'); ?></p>
+                <?php endif; ?>
+
+                <div style="margin-top:16px;">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoCheckToxicLinks()">
+                        <span class="dashicons dashicons-search"></span>
+                        <?php esc_html_e('Run Toxic Link Check', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Competitor Analysis -->
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-groups"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Competitor Backlink Analysis', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;color:var(--text-h);">
+                        <?php esc_html_e('Add Competitor Domain:', 'ai-seo-client'); ?>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+                        <input type="text" id="competitor-domain" class="fyn-input" style="max-width:300px;"
                                placeholder="example.com">
-                        <button type="button" class="button" onclick="sseoAddCompetitor()">
+                        <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoAddCompetitor()">
                             <?php esc_html_e('Add', 'ai-seo-client'); ?>
                         </button>
-                        <p class="description">
-                            <?php echo esc_html(sprintf(__('Up to %d competitors. Used for link gap and broken-link prospecting.', 'ai-seo-client'), self::MAX_COMPETITORS)); ?>
-                        </p>
                     </div>
-
-                    <?php if (!empty($competitors)): ?>
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Competitor', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('DR', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Backlinks', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Ref. Domains', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($competitors as $compDomain): ?>
-                            <?php $compMetrics = $this->getDomainAuthority($compDomain); ?>
-                            <tr>
-                                <td><?php echo esc_html($compDomain); ?></td>
-                                <td><?php echo esc_html($compMetrics['domain_rating'] ?: 'N/A'); ?></td>
-                                <td><?php echo esc_html(number_format($compMetrics['backlinks'] ?? 0)); ?></td>
-                                <td><?php echo esc_html(number_format($compMetrics['referring_domains'] ?? 0)); ?></td>
-                                <td>
-                                    <button type="button" class="button button-small"
-                                            onclick="sseoFindLinkOpportunities('<?php echo esc_js($compDomain); ?>')">
-                                        <?php esc_html_e('Find Opportunities', 'ai-seo-client'); ?>
-                                    </button>
-                                    <button type="button" class="button button-small button-link-delete"
-                                            onclick="sseoRemoveCompetitor('<?php echo esc_js($compDomain); ?>')">
-                                        <?php esc_html_e('Remove', 'ai-seo-client'); ?>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <?php endif; ?>
+                    <p style="font-size:12px;color:var(--text-m);margin:6px 0 0;">
+                        <?php echo esc_html(sprintf(__('Up to %d competitors. Used for link gap and broken-link prospecting.', 'ai-seo-client'), self::MAX_COMPETITORS)); ?>
+                    </p>
                 </div>
+
+                <?php if (!empty($competitors)): ?>
+                <table class="fyn-table">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Competitor', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('DR', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Backlinks', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Ref. Domains', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($competitors as $compDomain): ?>
+                        <?php $compMetrics = $this->getDomainAuthority($compDomain); ?>
+                        <tr>
+                            <td><?php echo esc_html($compDomain); ?></td>
+                            <td><?php echo esc_html($compMetrics['domain_rating'] ?: 'N/A'); ?></td>
+                            <td><?php echo esc_html(number_format($compMetrics['backlinks'] ?? 0)); ?></td>
+                            <td><?php echo esc_html(number_format($compMetrics['referring_domains'] ?? 0)); ?></td>
+                            <td>
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"
+                                        onclick="sseoFindLinkOpportunities('<?php echo esc_js($compDomain); ?>')">
+                                    <?php esc_html_e('Find Opportunities', 'ai-seo-client'); ?>
+                                </button>
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;color:var(--fyn-danger);border-color:var(--fyn-danger);"
+                                        onclick="sseoRemoveCompetitor('<?php echo esc_js($compDomain); ?>')">
+                                    <?php esc_html_e('Remove', 'ai-seo-client'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
             </div>
         </div>
 

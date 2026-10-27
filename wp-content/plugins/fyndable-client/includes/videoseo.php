@@ -57,50 +57,50 @@ class VideoSEO
         $recentVideos = $this->getRecentVideos();
         
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Video SEO Optimizer', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Video SEO', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Video SEO Optimizer', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage video schema markup and transcripts for better search visibility.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
-                <!-- Video Statistics -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Video SEO Overview', 'ai-seo-client'); ?></h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #2271b1;">
-                            <?php echo esc_html($videoStats['total_videos']); ?>
-                        </div>
-                        <div><?php esc_html_e('Total Videos', 'ai-seo-client'); ?></div>
+
+            <!-- Video Statistics -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-video-alt3"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Video SEO Overview', 'ai-seo-client'); ?></h3>
+                </div>
+                <div class="fyn-stats-grid">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($videoStats['total_videos']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Total Videos', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #00a32a;">
-                            <?php echo esc_html($videoStats['with_schema']); ?>
-                        </div>
-                        <div><?php esc_html_e('With Schema', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html($videoStats['with_schema']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('With Schema', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #856404;">
-                            <?php echo esc_html($videoStats['with_transcript']); ?>
-                        </div>
-                        <div><?php esc_html_e('With Transcript', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-warning);"><?php echo esc_html($videoStats['with_transcript']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('With Transcript', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #d63638;">
-                            <?php echo esc_html($videoStats['needs_optimization']); ?>
-                        </div>
-                        <div><?php esc_html_e('Needs Optimization', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html($videoStats['needs_optimization']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Needs Optimization', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Recent Videos -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Recent Videos', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-playlist-video"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Recent Videos', 'ai-seo-client'); ?></h3>
+                </div>
+
                 <?php if (!empty($recentVideos)): ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Post', 'ai-seo-client'); ?></th>
@@ -126,16 +126,16 @@ class VideoSEO
                             </td>
                             <td>
                                 <?php if ($video['has_schema']): ?>
-                                <span style="color: #00a32a;">✓ Valid</span>
+                                <span class="fyn-badge fyn-badge--success"><?php esc_html_e('Valid', 'ai-seo-client'); ?></span>
                                 <?php else: ?>
-                                <span style="color: #d63638;">✗ Missing</span>
+                                <span class="fyn-badge fyn-badge--danger"><?php esc_html_e('Missing', 'ai-seo-client'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($video['has_transcript']): ?>
-                                <span style="color: #00a32a;">✓ Yes</span>
+                                <span class="fyn-badge fyn-badge--success"><?php esc_html_e('Yes', 'ai-seo-client'); ?></span>
                                 <?php else: ?>
-                                <span style="color: #d63638;">✗ No</span>
+                                <span class="fyn-badge fyn-badge--danger"><?php esc_html_e('No', 'ai-seo-client'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -144,7 +144,7 @@ class VideoSEO
                                 </strong>
                             </td>
                             <td>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"
                                         onclick="sseoOptimizeVideo(<?php echo $video['post_id']; ?>)">
                                     <?php esc_html_e('Optimize', 'ai-seo-client'); ?>
                                 </button>
@@ -154,9 +154,8 @@ class VideoSEO
                     </tbody>
                 </table>
                 <?php else: ?>
-                <p><?php esc_html_e('No videos found. Add videos to your posts to see them here.', 'ai-seo-client'); ?></p>
+                <p style="color:var(--text-m);"><?php esc_html_e('No videos found. Add videos to your posts to see them here.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
             </div>
         </div>
         

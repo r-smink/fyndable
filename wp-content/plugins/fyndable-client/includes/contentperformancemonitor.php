@@ -88,91 +88,78 @@ class ContentPerformanceMonitor
         $performanceData = $this->getPerformanceOverview();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Content Performance Monitor', 'ai-seo-client'); ?></h1>
-            
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Content Performance', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Content Performance Monitor', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Track traffic, conversions and ROI of your optimized content.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
             <!-- GA4 Connection Status -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Google Analytics 4 Integration', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-line"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Google Analytics 4 Integration', 'ai-seo-client'); ?></h3>
+                </div>
                 <?php if ($ga4Connected): ?>
-                <div class="notice notice-success inline">
-                    <p><strong><?php esc_html_e('✓ Connected to GA4', 'ai-seo-client'); ?></strong></p>
-                    <p><?php esc_html_e('Measurement ID:', 'ai-seo-client'); ?> <?php echo esc_html($ga4MeasurementId); ?></p>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <span class="fyn-badge fyn-badge--success">&#10003; GA4 verbonden</span>
+                    <span style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Measurement ID:', 'ai-seo-client'); ?> <?php echo esc_html($ga4MeasurementId); ?></span>
                 </div>
                 <?php else: ?>
-                <div class="notice notice-warning inline">
-                    <p><strong><?php esc_html_e('GA4 Not Connected', 'ai-seo-client'); ?></strong></p>
-                    <p><?php esc_html_e('Connect Google Analytics 4 to track content performance.', 'ai-seo-client'); ?></p>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <span class="fyn-badge fyn-badge--warning">GA4 niet verbonden</span>
+                    <span style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Connect Google Analytics 4 to track content performance.', 'ai-seo-client'); ?></span>
                 </div>
                 <?php endif; ?>
-                
-                <a href="<?php echo admin_url('admin.php?page=ai-seo-performance&tab=settings'); ?>" class="button">
+                <a href="<?php echo admin_url('admin.php?page=ai-seo-performance&tab=settings'); ?>" class="fyn-btn fyn-btn-outline">
                     <?php esc_html_e('Configure GA4', 'ai-seo-client'); ?>
                 </a>
             </div>
-            
+
             <!-- Performance Overview -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Performance Overview (Last 30 Days)', 'ai-seo-client'); ?></h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <h3 style="font-size: 36px; margin: 0; color: #2271b1;">
-                            <?php echo esc_html(number_format($performanceData['total_traffic'] ?? 0)); ?>
-                        </h3>
-                        <p style="margin: 5px 0 0; color: #666;">
-                            <?php esc_html_e('Total Traffic', 'ai-seo-client'); ?>
-                        </p>
-                        <small style="color: <?php echo ($performanceData['traffic_change'] ?? 0) >= 0 ? '#00a32a' : '#d63638'; ?>;">
-                            <?php 
-                            $change = $performanceData['traffic_change'] ?? 0;
-                            echo ($change >= 0 ? '+' : '') . number_format($change, 1) . '%';
-                            ?>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-performance"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Performance Overview (Last 30 Days)', 'ai-seo-client'); ?></h3>
+                </div>
+                <div class="fyn-stats-grid">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html(number_format($performanceData['total_traffic'] ?? 0)); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Total Traffic', 'ai-seo-client'); ?></div>
+                        <small style="color:<?php echo ($performanceData['traffic_change'] ?? 0) >= 0 ? 'var(--fyn-success)' : 'var(--fyn-danger)'; ?>;">
+                            <?php $change = $performanceData['traffic_change'] ?? 0; echo ($change >= 0 ? '+' : '') . number_format($change, 1) . '%'; ?>
                         </small>
                     </div>
-                    
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <h3 style="font-size: 36px; margin: 0; color: #2271b1;">
-                            <?php echo esc_html(number_format($performanceData['conversions'] ?? 0)); ?>
-                        </h3>
-                        <p style="margin: 5px 0 0; color: #666;">
-                            <?php esc_html_e('Conversions', 'ai-seo-client'); ?>
-                        </p>
-                        <small style="color: <?php echo ($performanceData['conversion_change'] ?? 0) >= 0 ? '#00a32a' : '#d63638'; ?>;">
-                            <?php 
-                            $change = $performanceData['conversion_change'] ?? 0;
-                            echo ($change >= 0 ? '+' : '') . number_format($change, 1) . '%';
-                            ?>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html(number_format($performanceData['conversions'] ?? 0)); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Conversions', 'ai-seo-client'); ?></div>
+                        <small style="color:<?php echo ($performanceData['conversion_change'] ?? 0) >= 0 ? 'var(--fyn-success)' : 'var(--fyn-danger)'; ?>;">
+                            <?php $change = $performanceData['conversion_change'] ?? 0; echo ($change >= 0 ? '+' : '') . number_format($change, 1) . '%'; ?>
                         </small>
                     </div>
-                    
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <h3 style="font-size: 36px; margin: 0; color: #2271b1;">
-                            $<?php echo esc_html(number_format($performanceData['estimated_roi'] ?? 0)); ?>
-                        </h3>
-                        <p style="margin: 5px 0 0; color: #666;">
-                            <?php esc_html_e('Estimated ROI', 'ai-seo-client'); ?>
-                        </p>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value">$<?php echo esc_html(number_format($performanceData['estimated_roi'] ?? 0)); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Estimated ROI', 'ai-seo-client'); ?></div>
                     </div>
-                    
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <h3 style="font-size: 36px; margin: 0; color: #2271b1;">
-                            <?php echo esc_html($performanceData['avg_time_to_rank'] ?? 'N/A'); ?>
-                        </h3>
-                        <p style="margin: 5px 0 0; color: #666;">
-                            <?php esc_html_e('Avg Time-to-Rank', 'ai-seo-client'); ?>
-                        </p>
-                        <small><?php esc_html_e('days', 'ai-seo-client'); ?></small>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($performanceData['avg_time_to_rank'] ?? 'N/A'); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Avg Time-to-Rank', 'ai-seo-client'); ?></div>
+                        <small style="color:var(--text-m);"><?php esc_html_e('days', 'ai-seo-client'); ?></small>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Top Performing Content -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Top Performing Content', 'ai-seo-client'); ?></h2>
-                
-                <table class="wp-list-table widefat fixed striped">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-star-filled"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Top Performing Content', 'ai-seo-client'); ?></h3>
+                </div>
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Content', 'ai-seo-client'); ?></th>
@@ -184,19 +171,19 @@ class ContentPerformanceMonitor
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
+                        <?php
                         $topContent = $this->getTopPerformingContent(10);
-                        if (empty($topContent)): 
+                        if (empty($topContent)):
                         ?>
                         <tr>
-                            <td colspan="6"><?php esc_html_e('No performance data available yet. Connect GA4 to start tracking.', 'ai-seo-client'); ?></td>
+                            <td colspan="6" style="color:var(--text-m);"><?php esc_html_e('No performance data available yet. Connect GA4 to start tracking.', 'ai-seo-client'); ?></td>
                         </tr>
                         <?php else: ?>
                         <?php foreach ($topContent as $content): ?>
                         <tr>
                             <td>
                                 <strong>
-                                    <a href="<?php echo get_edit_post_link($content['post_id']); ?>">
+                                    <a href="<?php echo get_edit_post_link($content['post_id']); ?>" style="color:var(--text-h);">
                                         <?php echo esc_html($content['title']); ?>
                                     </a>
                                 </strong>
@@ -206,15 +193,15 @@ class ContentPerformanceMonitor
                             <td>$<?php echo esc_html(number_format($content['roi'], 2)); ?></td>
                             <td>
                                 <?php if ($content['optimization_impact'] > 0): ?>
-                                <span style="color: #00a32a;">
+                                <span style="color:var(--fyn-success);font-weight:600;">
                                     +<?php echo esc_html(number_format($content['optimization_impact'], 1)); ?>%
                                 </span>
                                 <?php else: ?>
-                                <span style="color: #666;">—</span>
+                                <span style="color:var(--text-m);">—</span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"
                                         onclick="sseoViewPerformanceDetails(<?php echo $content['post_id']; ?>)">
                                     <?php esc_html_e('View Details', 'ai-seo-client'); ?>
                                 </button>
@@ -225,20 +212,21 @@ class ContentPerformanceMonitor
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Active A/B Tests -->
-            <div class="card">
-                <h2><?php esc_html_e('Active A/B Tests', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-randomize"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Active A/B Tests', 'ai-seo-client'); ?></h3>
+                </div>
                 <?php $activeTests = $this->getActiveABTests(); ?>
-                
                 <?php if (empty($activeTests)): ?>
-                <p><?php esc_html_e('No active A/B tests. Create a test to optimize your titles and meta descriptions.', 'ai-seo-client'); ?></p>
-                <button type="button" class="button button-primary" onclick="sseoCreateABTest()">
+                <p style="color:var(--text-m);margin-bottom:12px;"><?php esc_html_e('No active A/B tests. Create a test to optimize your titles and meta descriptions.', 'ai-seo-client'); ?></p>
+                <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoCreateABTest()">
                     <?php esc_html_e('Create A/B Test', 'ai-seo-client'); ?>
                 </button>
                 <?php else: ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Test Name', 'ai-seo-client'); ?></th>
@@ -255,16 +243,16 @@ class ContentPerformanceMonitor
                         <tr>
                             <td><strong><?php echo esc_html($test['name']); ?></strong></td>
                             <td>
-                                <a href="<?php echo get_edit_post_link($test['post_id']); ?>">
+                                <a href="<?php echo get_edit_post_link($test['post_id']); ?>" style="color:var(--text-h);">
                                     <?php echo esc_html(get_the_title($test['post_id'])); ?>
                                 </a>
                             </td>
                             <td><?php echo esc_html(number_format($test['variant_a_ctr'], 2)); ?>%</td>
                             <td><?php echo esc_html(number_format($test['variant_b_ctr'], 2)); ?>%</td>
                             <td>
-                                <?php 
+                                <?php
                                 if ($test['winner']) {
-                                    echo '<strong style="color: #00a32a;">' . esc_html($test['winner']) . '</strong>';
+                                    echo '<strong style="color:var(--fyn-success);">' . esc_html($test['winner']) . '</strong>';
                                 } else {
                                     echo '—';
                                 }
@@ -272,7 +260,7 @@ class ContentPerformanceMonitor
                             </td>
                             <td><?php echo esc_html(ucfirst($test['status'])); ?></td>
                             <td>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"
                                         onclick="sseoStopABTest(<?php echo $test['id']; ?>)">
                                     <?php esc_html_e('Stop Test', 'ai-seo-client'); ?>
                                 </button>

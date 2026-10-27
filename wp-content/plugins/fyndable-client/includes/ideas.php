@@ -726,109 +726,112 @@ PROMPT;
             : (!empty($dashboardUrl) ? $dashboardUrl : admin_url('admin.php?page=ai-seo-client'));
         ?>
 
-        <div class="wrap sseo-ai-modern" id="sseo-ideas-page">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Ideas', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" id="sseo-ideas-page" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Ideas', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Ideas', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Generate and manage content ideas for your website.', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-add-idea">
+                        <span class="dashicons dashicons-plus"></span>
+                        <?php esc_html_e('+ Add an idea', 'ai-seo-client'); ?>
+                    </button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="btn-generate-ideas">
+                        <span class="dashicons dashicons-lightbulb"></span>
+                        <?php esc_html_e('Generate ideas', 'ai-seo-client'); ?>
+                    </button>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <!-- Actions Bar -->
-                    <div class="ideas-actions-bar">
-                        <button type="button" class="sseo-btn-primary" id="btn-generate-ideas">
-                            <?php esc_html_e('Generate ideas', 'ai-seo-client'); ?>
-                        </button>
-                        <button type="button" class="sseo-btn-secondary" id="btn-add-idea">
-                            <?php esc_html_e('+ Add an idea', 'ai-seo-client'); ?>
-                        </button>
-                        
-                        <div class="credits-display">
-                            <span class="credits-label"><?php esc_html_e('Credits used / available:', 'ai-seo-client'); ?></span>
-                            <div class="credits-grid">
-                                <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['posts'])); ?></span>
-                                    <span class="credit-label"><?php esc_html_e('Posts', 'ai-seo-client'); ?></span>
-                                </div>
-                                <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['ideas'])); ?></span>
-                                    <span class="credit-label"><?php esc_html_e('Ideas', 'ai-seo-client'); ?></span>
-                                </div>
-                                <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['outlines'])); ?></span>
-                                    <span class="credit-label"><?php esc_html_e('Outlines', 'ai-seo-client'); ?></span>
-                                </div>
-                                <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['keywords'])); ?></span>
-                                    <span class="credit-label"><?php esc_html_e('Keywords', 'ai-seo-client'); ?></span>
-                                </div>
-                                <div class="credit-item">
-                                    <span class="credit-value"><?php echo esc_html($this->renderCreditValue($credits['images'])); ?></span>
-                                    <span class="credit-label"><?php esc_html_e('Images', 'ai-seo-client'); ?></span>
-                                </div>
-                            </div>
-                            <a href="<?php echo esc_url($upgradeUrl); ?>" class="upgrade-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Upgrade My Plan', 'ai-seo-client'); ?></a>
+
+            <!-- Credits card -->
+            <div class="fyn-card" style="margin-bottom:20px;padding:16px 20px;">
+                <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                    <span style="font-size:12px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em;"><?php esc_html_e('Credits used / available:', 'ai-seo-client'); ?></span>
+                    <div class="credits-grid" style="display:flex;gap:16px;flex-wrap:wrap;">
+                        <div style="text-align:center;">
+                            <div style="font-size:16px;font-weight:700;color:var(--text-h);"><?php echo esc_html($this->renderCreditValue($credits['posts'])); ?></div>
+                            <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Posts', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:16px;font-weight:700;color:var(--text-h);"><?php echo esc_html($this->renderCreditValue($credits['ideas'])); ?></div>
+                            <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Ideas', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:16px;font-weight:700;color:var(--text-h);"><?php echo esc_html($this->renderCreditValue($credits['outlines'])); ?></div>
+                            <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Outlines', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:16px;font-weight:700;color:var(--text-h);"><?php echo esc_html($this->renderCreditValue($credits['keywords'])); ?></div>
+                            <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Keywords', 'ai-seo-client'); ?></div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:16px;font-weight:700;color:var(--text-h);"><?php echo esc_html($this->renderCreditValue($credits['images'])); ?></div>
+                            <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Images', 'ai-seo-client'); ?></div>
                         </div>
                     </div>
+                    <div style="flex:1;"></div>
+                    <a href="<?php echo esc_url($upgradeUrl); ?>" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:6px 14px;" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Upgrade My Plan', 'ai-seo-client'); ?></a>
+                </div>
+            </div>
 
-                    <!-- Tabs -->
-                    <div class="ideas-tabs">
-                        <label class="tab-item">
-                            <input type="checkbox" id="select-all-ideas">
-                        </label>
-                        <button type="button" class="tab-btn active" data-tab="all">
-                            <?php esc_html_e('All ideas', 'ai-seo-client'); ?>
+            <!-- Main content card -->
+            <div class="fyn-card">
+                <!-- Tabs -->
+                <div class="fyn-tabs ideas-tabs" style="border-bottom:1px solid var(--divide);padding-bottom:0;">
+                    <label style="display:flex;align-items:center;padding:0 8px;">
+                        <input type="checkbox" id="select-all-ideas">
+                    </label>
+                    <button type="button" class="fyn-tab tab-btn active" data-tab="all">
+                        <?php esc_html_e('All ideas', 'ai-seo-client'); ?>
+                    </button>
+                    <button type="button" class="fyn-tab tab-btn" data-tab="scheduled">
+                        <?php esc_html_e('Scheduled posts', 'ai-seo-client'); ?>
+                        <?php if ($scheduledCount > 0): ?>
+                            <span class="fyn-badge fyn-badge--info" style="margin-left:6px;font-size:10px;padding:2px 7px;"><?php echo esc_html($scheduledCount); ?></span>
+                        <?php endif; ?>
+                    </button>
+                    <div style="flex:1;"></div>
+                    <button type="button" class="fyn-btn fyn-btn-danger" id="btn-delete-all" style="font-size:12px;padding:6px 12px;">
+                        <?php esc_html_e('Delete all ideas', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="ideas-filters" style="display:flex;align-items:center;gap:8px;padding:12px 0;flex-wrap:wrap;">
+                    <div style="display:flex;flex:1;max-width:280px;">
+                        <input type="text" id="filter-title" class="fyn-input" style="flex:1;border-radius:9px 0 0 9px;" placeholder="<?php esc_attr_e('Search by title', 'ai-seo-client'); ?>">
+                        <button type="button" class="fyn-btn fyn-btn-primary" id="btn-search-title" style="border-radius:0 9px 9px 0;padding:9px 14px;">
+                            <span class="dashicons dashicons-search"></span>
                         </button>
-                        <button type="button" class="tab-btn" data-tab="scheduled">
-                            <?php esc_html_e('Scheduled posts', 'ai-seo-client'); ?>
-                            <?php if ($scheduledCount > 0): ?>
-                                <span class="tab-badge"><?php echo esc_html($scheduledCount); ?></span>
-                            <?php endif; ?>
-                        </button>
-                        <button type="button" class="tab-btn danger" id="btn-delete-all">
-                            <?php esc_html_e('Delete all ideas', 'ai-seo-client'); ?>
-                        </button>
                     </div>
+                    <input type="text" id="filter-date-from" class="fyn-input" style="max-width:140px;padding:9px 10px;font-size:12px;" placeholder="<?php esc_attr_e('Created from', 'ai-seo-client'); ?>">
+                    <input type="text" id="filter-date-to" class="fyn-input" style="max-width:140px;padding:9px 10px;font-size:12px;" placeholder="<?php esc_attr_e('Created until', 'ai-seo-client'); ?>">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-clear-filters" style="padding:8px 12px;">&times;</button>
+                </div>
 
-                    <!-- Filters -->
-                    <div class="ideas-filters">
-                        <div class="filter-group">
-                            <input type="text" id="filter-title" placeholder="<?php esc_attr_e('Enter a title', 'ai-seo-client'); ?>">
-                            <button type="button" class="filter-btn" id="btn-search-title">
-                                <span class="dashicons dashicons-search"></span>
-                            </button>
-                        </div>
-                        <div class="filter-group date-group">
-                            <input type="text" id="filter-date-from" placeholder="<?php esc_attr_e('Created from', 'ai-seo-client'); ?>">
-                            <button type="button" class="filter-btn">
-                                <span class="dashicons dashicons-calendar-alt"></span>
-                            </button>
-                            <input type="text" id="filter-date-to" placeholder="<?php esc_attr_e('Created to', 'ai-seo-client'); ?>">
-                            <button type="button" class="filter-btn">
-                                <span class="dashicons dashicons-calendar-alt"></span>
-                            </button>
-                        </div>
-                        <button type="button" class="filter-clear" id="btn-clear-filters">&times;</button>
-                    </div>
+                <!-- Table Header -->
+                <div class="ideas-table-header" style="display:flex;gap:16px;padding:8px 0;border-bottom:2px solid var(--divide);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);">
+                    <span class="sortable" data-sort="id" style="cursor:pointer;">ID <span class="sort-icon">&#8597;</span></span>
+                    <span class="sortable" data-sort="date" style="cursor:pointer;"><?php esc_html_e('Date', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></span>
+                    <span class="sortable" data-sort="name" style="flex:1;cursor:pointer;"><?php esc_html_e('Name', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></span>
+                </div>
 
-                    <!-- Table Header -->
-                    <div class="ideas-table-header">
-                        <span class="sortable" data-sort="id">ID <span class="sort-icon">&#8597;</span></span>
-                        <span class="sortable" data-sort="date"><?php esc_html_e('Date', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></span>
-                        <span class="sortable" data-sort="name"><?php esc_html_e('Name', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></span>
+                <!-- Ideas List -->
+                <div id="ideas-list-container">
+                    <div class="ideas-empty" style="padding:40px 0;text-align:center;">
+                        <p style="font-size:14px;color:var(--text-m);"><?php esc_html_e('No ideas yet. Generate ideas or add your own!', 'ai-seo-client'); ?></p>
                     </div>
+                </div>
 
-                    <!-- Ideas List -->
-                    <div id="ideas-list-container">
-                        <div class="ideas-empty">
-                            <p><?php esc_html_e('No ideas yet. Generate ideas or add your own!', 'ai-seo-client'); ?></p>
-                        </div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="ideas-pagination" id="ideas-pagination" style="display: none;">
-                        <button type="button" class="page-btn" data-page="prev">&laquo;</button>
-                        <div id="page-numbers"></div>
-                        <button type="button" class="page-btn" data-page="next">&raquo;</button>
-                    </div>
+                <!-- Pagination -->
+                <div class="ideas-pagination" id="ideas-pagination" style="display:none;align-items:center;justify-content:center;gap:4px;padding:16px 0 0;border-top:1px solid var(--divide);">
+                    <button type="button" class="page-btn fyn-btn fyn-btn-outline" style="padding:6px 10px;font-size:13px;" data-page="prev">&laquo;</button>
+                    <div id="page-numbers" style="display:flex;gap:4px;"></div>
+                    <button type="button" class="page-btn fyn-btn fyn-btn-outline" style="padding:6px 10px;font-size:13px;" data-page="next">&raquo;</button>
                 </div>
             </div>
         </div>
@@ -836,38 +839,38 @@ PROMPT;
         <!-- Generate Ideas Modal -->
         <div class="sseo-modal" id="modal-generate-ideas" style="display: none;">
             <div class="sseo-modal-overlay"></div>
-            <div class="sseo-modal-content">
-                <div class="sseo-modal-header">
-                    <h3><?php esc_html_e('Generate Ideas', 'ai-seo-client'); ?></h3>
-                    <button type="button" class="modal-close">&times;</button>
+            <div class="sseo-modal-content" style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-l);max-width:480px;margin:auto;">
+                <div class="sseo-modal-header" style="padding:20px 24px 12px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Generate Ideas', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close" style="background:none;border:none;font-size:20px;color:var(--text-m);cursor:pointer;">&times;</button>
                 </div>
-                <div class="sseo-modal-body">
-                    <div class="form-group">
-                        <label><?php esc_html_e('Topic or keyword', 'ai-seo-client'); ?></label>
-                        <input type="text" id="generate-topic" class="sseo-input" placeholder="<?php esc_attr_e('Enter a topic to generate ideas for...', 'ai-seo-client'); ?>">
+                <div class="sseo-modal-body" style="padding:20px 24px;">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Topic or keyword', 'ai-seo-client'); ?></label>
+                        <input type="text" id="generate-topic" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('Enter a topic...', 'ai-seo-client'); ?>">
                     </div>
-                    <div class="form-group">
-                        <label><?php esc_html_e('Number of ideas', 'ai-seo-client'); ?></label>
-                        <select id="generate-count" class="sseo-select">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Number of ideas', 'ai-seo-client'); ?></label>
+                        <select id="generate-count" class="fyn-input" style="width:100%;padding:9px 10px;">
                             <option value="5">5</option>
                             <option value="10" selected>10</option>
                             <option value="15">15</option>
                             <option value="20">20</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label><?php esc_html_e('Language', 'ai-seo-client'); ?></label>
-                        <select id="generate-language" class="sseo-select">
-                            <option value="nl" selected>Dutch</option>
-                            <option value="en">English</option>
-                            <option value="de">German</option>
-                            <option value="fr">French</option>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Language', 'ai-seo-client'); ?></label>
+                        <select id="generate-language" class="fyn-input" style="width:100%;padding:9px 10px;">
+                            <option value="nl" selected>Nederlands</option>
+                            <option value="en">Engels</option>
+                            <option value="de">Duits</option>
+                            <option value="fr">Frans</option>
                         </select>
                     </div>
                 </div>
-                <div class="sseo-modal-footer">
-                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
-                    <button type="button" class="sseo-btn-primary" id="btn-confirm-generate">
+                <div class="sseo-modal-footer" style="padding:12px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="fyn-btn fyn-btn-outline modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="btn-confirm-generate">
                         <span class="spinner" style="display: none;"></span>
                         <?php esc_html_e('Generate', 'ai-seo-client'); ?>
                     </button>
@@ -878,30 +881,30 @@ PROMPT;
         <!-- Add Idea Modal -->
         <div class="sseo-modal" id="modal-add-idea" style="display: none;">
             <div class="sseo-modal-overlay"></div>
-            <div class="sseo-modal-content">
-                <div class="sseo-modal-header">
-                    <h3><?php esc_html_e('Add Idea', 'ai-seo-client'); ?></h3>
-                    <button type="button" class="modal-close">&times;</button>
+            <div class="sseo-modal-content" style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-l);max-width:480px;margin:auto;">
+                <div class="sseo-modal-header" style="padding:20px 24px 12px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Add Idea', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close" style="background:none;border:none;font-size:20px;color:var(--text-m);cursor:pointer;">&times;</button>
                 </div>
-                <div class="sseo-modal-body">
-                    <div class="form-group">
-                        <label><?php esc_html_e('Title', 'ai-seo-client'); ?> *</label>
-                        <input type="text" id="add-title" class="sseo-input" placeholder="<?php esc_attr_e('Enter post title...', 'ai-seo-client'); ?>">
+                <div class="sseo-modal-body" style="padding:20px 24px;">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Title', 'ai-seo-client'); ?> *</label>
+                        <input type="text" id="add-title" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('Enter post title...', 'ai-seo-client'); ?>">
                     </div>
-                    <div class="form-group">
-                        <label><?php esc_html_e('Description', 'ai-seo-client'); ?></label>
-                        <textarea id="add-description" class="sseo-textarea" rows="3" placeholder="<?php esc_attr_e('Brief description of the idea...', 'ai-seo-client'); ?>"></textarea>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Description', 'ai-seo-client'); ?></label>
+                        <textarea id="add-description" class="fyn-input" rows="3" style="width:100%;resize:vertical;" placeholder="<?php esc_attr_e('Short description of the idea...', 'ai-seo-client'); ?>"></textarea>
                     </div>
-                    <div class="form-group">
-                        <label><?php esc_html_e('Keywords', 'ai-seo-client'); ?></label>
-                        <input type="text" id="add-keywords" class="sseo-input" placeholder="<?php esc_attr_e('keyword1, keyword2, keyword3...', 'ai-seo-client'); ?>">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Keywords', 'ai-seo-client'); ?></label>
+                        <input type="text" id="add-keywords" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('keyword1, keyword2, keyword3...', 'ai-seo-client'); ?>">
                     </div>
                 </div>
-                <div class="sseo-modal-footer">
-                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
-                    <button type="button" class="sseo-btn-primary" id="btn-confirm-add">
+                <div class="sseo-modal-footer" style="padding:12px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="fyn-btn fyn-btn-outline modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="btn-confirm-add">
                         <span class="spinner" style="display: none;"></span>
-                        <?php esc_html_e('Add Idea', 'ai-seo-client'); ?>
+                        <?php esc_html_e('Add', 'ai-seo-client'); ?>
                     </button>
                 </div>
             </div>

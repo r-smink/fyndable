@@ -412,8 +412,23 @@ class RedirectionManager
         $search = sanitize_text_field($_GET['s'] ?? '');
         $redirects = $this->getAll($search ? ['search' => $search] : []);
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Redirect Manager', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Redirects', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Redirect Manager', 'ai-seo-client'); ?></h1>
+                </div>
+                <div class="fyn-page-header-actions" style="display:flex;gap:8px;align-items:center;">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center;">
+                        <?php wp_nonce_field('sseo_ai_redirect_import'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_redirect_import">
+                        <input type="file" name="csv_file" accept=".csv" style="font-size:12px;">
+                        <button type="submit" class="fyn-btn fyn-btn-outline" style="font-size:12px;"><?php esc_html_e('Import CSV', 'ai-seo-client'); ?></button>
+                    </form>
+                    <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=sseo_ai_redirect_export'), 'sseo_ai_redirect_export')); ?>" class="fyn-btn fyn-btn-outline" style="font-size:12px;"><?php esc_html_e('Export CSV', 'ai-seo-client'); ?></a>
+                </div>
+            </div>
 
             <?php if (isset($_GET['added'])): ?>
                 <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Redirect added.', 'ai-seo-client'); ?></p></div>
@@ -426,124 +441,119 @@ class RedirectionManager
             <?php endif; ?>
 
             <!-- Stats -->
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:20px 0;">
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#2271b1;"><?php echo esc_html($stats['total']); ?></div>
-                    <div><?php esc_html_e('Total Redirects', 'ai-seo-client'); ?></div>
+            <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($stats['total']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Total Redirects', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#00a32a;"><?php echo esc_html($stats['active']); ?></div>
-                    <div><?php esc_html_e('Active', 'ai-seo-client'); ?></div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html($stats['active']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Active', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#d63638;"><?php echo esc_html($stats['total_hits']); ?></div>
-                    <div><?php esc_html_e('Total Hits', 'ai-seo-client'); ?></div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($stats['total_hits']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Total Hits', 'ai-seo-client'); ?></div>
                 </div>
             </div>
 
             <!-- Add new redirect -->
-            <h2><?php esc_html_e('Add New Redirect', 'ai-seo-client'); ?></h2>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <?php wp_nonce_field('sseo_ai_redirect_add'); ?>
-                <input type="hidden" name="action" value="sseo_ai_redirect_add">
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="source_url"><?php esc_html_e('Source URL', 'ai-seo-client'); ?></label></th>
-                        <td><input type="text" name="source_url" id="source_url" class="regular-text" placeholder="/old-page or /category/old-post"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="target_url"><?php esc_html_e('Target URL', 'ai-seo-client'); ?></label></th>
-                        <td><input type="text" name="target_url" id="target_url" class="regular-text" placeholder="/new-page or https://example.com/page"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="redirect_type"><?php esc_html_e('Redirect Type', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <select name="redirect_type" id="redirect_type">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-randomize"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Add New Redirect', 'ai-seo-client'); ?></h3>
+                </div>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('sseo_ai_redirect_add'); ?>
+                    <input type="hidden" name="action" value="sseo_ai_redirect_add">
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Source URL', 'ai-seo-client'); ?></label>
+                            <input type="text" name="source_url" id="source_url" class="fyn-input" placeholder="/old-page" style="min-width:220px;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Target URL', 'ai-seo-client'); ?></label>
+                            <input type="text" name="target_url" id="target_url" class="fyn-input" placeholder="/new-page" style="min-width:220px;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Redirect Type', 'ai-seo-client'); ?></label>
+                            <select name="redirect_type" id="redirect_type" class="fyn-input">
                                 <option value="301">301 - Permanent</option>
                                 <option value="302">302 - Temporary</option>
                                 <option value="307">307 - Temporary (HTTP 1.1)</option>
-                                <option value="410">410 - Gone</option>
+                                <option value="410">410 - Removed</option>
                             </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Regex', 'ai-seo-client'); ?></th>
-                        <td><label><input type="checkbox" name="regex" value="1"> <?php esc_html_e('Use regular expression for source URL', 'ai-seo-client'); ?></label></td>
-                    </tr>
-                </table>
-                <?php submit_button(__('Add Redirect', 'ai-seo-client')); ?>
-            </form>
-
-            <!-- Import / Export -->
-            <h2><?php esc_html_e('Import / Export', 'ai-seo-client'); ?></h2>
-            <div style="display:flex;gap:20px;align-items:start;">
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" style="flex:1;">
-                    <?php wp_nonce_field('sseo_ai_redirect_import'); ?>
-                    <input type="hidden" name="action" value="sseo_ai_redirect_import">
-                    <input type="file" name="csv_file" accept=".csv">
-                    <?php submit_button(__('Import CSV', 'ai-seo-client'), 'secondary', 'submit', false); ?>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--text-b);"><input type="checkbox" name="regex" value="1"> <?php esc_html_e('Regex', 'ai-seo-client'); ?></label>
+                        </div>
+                        <button type="submit" class="fyn-btn fyn-btn-primary"><?php esc_html_e('Add Redirect', 'ai-seo-client'); ?></button>
+                    </div>
                 </form>
-                <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=sseo_ai_redirect_export'), 'sseo_ai_redirect_export')); ?>" class="button button-secondary"><?php esc_html_e('Export CSV', 'ai-seo-client'); ?></a>
             </div>
 
             <!-- Redirects list -->
-            <h2><?php esc_html_e('Existing Redirects', 'ai-seo-client'); ?></h2>
-            <form method="get" style="margin-bottom:15px;">
-                <input type="hidden" name="page" value="ai-seo-redirects">
-                <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Search redirects...', 'ai-seo-client'); ?>">
-                <button type="submit" class="button"><?php esc_html_e('Search', 'ai-seo-client'); ?></button>
-            </form>
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-list-view"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Existing Redirects', 'ai-seo-client'); ?></h3>
+                </div>
+                <form method="get" style="margin-bottom:14px;display:flex;gap:8px;">
+                    <input type="hidden" name="page" value="ai-seo-redirects">
+                    <input type="search" name="s" class="fyn-input" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Search redirects...', 'ai-seo-client'); ?>" style="min-width:220px;">
+                    <button type="submit" class="fyn-btn fyn-btn-outline"><?php esc_html_e('Search', 'ai-seo-client'); ?></button>
+                </form>
 
-            <?php if (empty($redirects)): ?>
-                <p><?php esc_html_e('No redirects found.', 'ai-seo-client'); ?></p>
-            <?php else: ?>
-                <table class="widefat striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Source URL', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Hits', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Last Accessed', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($redirects as $r): ?>
+                <?php if (empty($redirects)): ?>
+                    <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('No redirects found.', 'ai-seo-client'); ?></p>
+                <?php else: ?>
+                    <table class="fyn-table">
+                        <thead>
                             <tr>
-                                <td><code><?php echo esc_html($r['source_url']); ?></code><?php if ($r['regex']) echo ' <span class="dashicons dashicons-search" title="Regex"></span>'; ?></td>
-                                <td><code><?php echo esc_html($r['target_url']); ?></code></td>
-                                <td><?php echo esc_html($r['redirect_type']); ?></td>
-                                <td><?php echo esc_html(number_format($r['hits'])); ?></td>
-                                <td><?php echo $r['last_accessed'] ? esc_html($r['last_accessed']) : '&mdash;'; ?></td>
-                                <td>
-                                    <?php if ($r['enabled']): ?>
-                                        <span style="color:#00a32a;"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
-                                    <?php else: ?>
-                                        <span style="color:#999;"><?php esc_html_e('Disabled', 'ai-seo-client'); ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
-                                        <?php wp_nonce_field('sseo_ai_redirect_toggle_' . $r['id']); ?>
-                                        <input type="hidden" name="action" value="sseo_ai_redirect_toggle">
-                                        <input type="hidden" name="id" value="<?php echo esc_attr($r['id']); ?>">
-                                        <input type="hidden" name="enabled" value="<?php echo esc_attr($r['enabled']); ?>">
-                                        <button type="submit" class="button button-small"><?php echo $r['enabled'] ? __('Disable', 'ai-seo-client') : __('Enable', 'ai-seo-client'); ?></button>
-                                    </form>
-                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php esc_attr_e('Delete this redirect?', 'ai-seo-client'); ?>')">
-                                        <?php wp_nonce_field('sseo_ai_redirect_delete_' . $r['id']); ?>
-                                        <input type="hidden" name="action" value="sseo_ai_redirect_delete">
-                                        <input type="hidden" name="id" value="<?php echo esc_attr($r['id']); ?>">
-                                        <button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'ai-seo-client'); ?></button>
-                                    </form>
-                                </td>
+                                <th><?php esc_html_e('Source URL', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Hits', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Last Accessed', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($redirects as $r): ?>
+                                <tr>
+                                    <td><code style="font-size:12px;color:var(--fyn-purple);"><?php echo esc_html($r['source_url']); ?></code><?php if ($r['regex']) echo ' <span class="dashicons dashicons-search" title="Regex" style="font-size:14px;color:var(--text-m);"></span>'; ?></td>
+                                    <td><code style="font-size:12px;"><?php echo esc_html($r['target_url']); ?></code></td>
+                                    <td><span class="fyn-badge"><?php echo esc_html($r['redirect_type']); ?></span></td>
+                                    <td><?php echo esc_html(number_format($r['hits'])); ?></td>
+                                    <td><?php echo $r['last_accessed'] ? esc_html($r['last_accessed']) : '&mdash;'; ?></td>
+                                    <td>
+                                        <?php if ($r['enabled']): ?>
+                                            <span class="fyn-badge fyn-badge--success"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
+                                        <?php else: ?>
+                                            <span class="fyn-badge"><?php esc_html_e('Disabled', 'ai-seo-client'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="white-space:nowrap;">
+                                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+                                            <?php wp_nonce_field('sseo_ai_redirect_toggle_' . $r['id']); ?>
+                                            <input type="hidden" name="action" value="sseo_ai_redirect_toggle">
+                                            <input type="hidden" name="id" value="<?php echo esc_attr($r['id']); ?>">
+                                            <input type="hidden" name="enabled" value="<?php echo esc_attr($r['enabled']); ?>">
+                                            <button type="submit" class="fyn-btn fyn-btn-outline" style="padding:5px 10px;font-size:12px;"><?php echo $r['enabled'] ? esc_html__('Disable', 'ai-seo-client') : esc_html__('Enable', 'ai-seo-client'); ?></button>
+                                        </form>
+                                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php esc_attr_e('Delete this redirect?', 'ai-seo-client'); ?>')">
+                                            <?php wp_nonce_field('sseo_ai_redirect_delete_' . $r['id']); ?>
+                                            <input type="hidden" name="action" value="sseo_ai_redirect_delete">
+                                            <input type="hidden" name="id" value="<?php echo esc_attr($r['id']); ?>">
+                                            <button type="submit" class="fyn-btn fyn-btn-danger" style="padding:5px 10px;font-size:12px;"><?php esc_html_e('Delete', 'ai-seo-client'); ?></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
     }

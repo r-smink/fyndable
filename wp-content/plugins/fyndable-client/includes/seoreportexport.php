@@ -297,36 +297,42 @@ class SeoReportExport
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('SEO Report Export', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Export a full SEO audit report for your site. Use CSV for spreadsheet analysis or PDF for client presentations.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('SEO Report', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('SEO Report Export', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Export a full SEO audit report for your site. Use CSV for spreadsheet analysis or PDF for client presentations.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
 
-            <div style="max-width:600px; margin-top:20px;">
-                <div class="postbox" style="padding:25px;">
-                    <h2 style="margin-top:0;"><?php esc_html_e('Export Options', 'ai-seo-client'); ?></h2>
-                    <p style="color:#666;"><?php esc_html_e('The report includes all published pages with their SEO score, meta data, and identified issues.', 'ai-seo-client'); ?></p>
+            <div class="fyn-card" style="max-width:600px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-media-spreadsheet"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Export Options', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="color:var(--text-m);font-size:13px;"><?php esc_html_e('The report includes all published pages with their SEO score, meta data, and identified issues.', 'ai-seo-client'); ?></p>
 
-                    <div style="display:flex; gap:15px; margin-top:20px;">
-                        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                            <?php wp_nonce_field('aiseo_export_csv'); ?>
-                            <input type="hidden" name="action" value="aiseo_export_csv">
-                            <button type="submit" class="button button-primary" style="padding:8px 24px; height:auto;">
-                                <span style="font-size:18px; vertical-align:middle;">📊</span>
-                                <?php esc_html_e('Download CSV', 'ai-seo-client'); ?>
-                            </button>
-                            <p class="description" style="margin-top:5px;"><?php esc_html_e('Open in Excel, Google Sheets, etc.', 'ai-seo-client'); ?></p>
-                        </form>
+                <div style="display:flex;gap:15px;margin-top:20px;">
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                        <?php wp_nonce_field('aiseo_export_csv'); ?>
+                        <input type="hidden" name="action" value="aiseo_export_csv">
+                        <button type="submit" class="fyn-btn fyn-btn-primary" style="padding:8px 24px;height:auto;">
+                            <span class="dashicons dashicons-media-spreadsheet" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span>
+                            <?php esc_html_e('Download CSV', 'ai-seo-client'); ?>
+                        </button>
+                        <p style="font-size:12px;color:var(--text-m);margin-top:5px;"><?php esc_html_e('Open in Excel, Google Sheets, etc.', 'ai-seo-client'); ?></p>
+                    </form>
 
-                        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" target="_blank">
-                            <?php wp_nonce_field('aiseo_export_pdf'); ?>
-                            <input type="hidden" name="action" value="aiseo_export_pdf">
-                            <button type="submit" class="button" style="padding:8px 24px; height:auto;">
-                                <span style="font-size:18px; vertical-align:middle;">📄</span>
-                                <?php esc_html_e('Open PDF Report', 'ai-seo-client'); ?>
-                            </button>
-                            <p class="description" style="margin-top:5px;"><?php esc_html_e('Print or Save as PDF from browser.', 'ai-seo-client'); ?></p>
-                        </form>
-                    </div>
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" target="_blank">
+                        <?php wp_nonce_field('aiseo_export_pdf'); ?>
+                        <input type="hidden" name="action" value="aiseo_export_pdf">
+                        <button type="submit" class="fyn-btn fyn-btn-outline" style="padding:8px 24px;height:auto;">
+                            <span class="dashicons dashicons-media-default" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span>
+                            <?php esc_html_e('Open PDF Report', 'ai-seo-client'); ?>
+                        </button>
+                        <p style="font-size:12px;color:var(--text-m);margin-top:5px;"><?php esc_html_e('Print or Save as PDF from browser.', 'ai-seo-client'); ?></p>
+                    </form>
                 </div>
             </div>
         </div>

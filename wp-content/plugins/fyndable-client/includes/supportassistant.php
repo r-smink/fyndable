@@ -184,21 +184,21 @@ class SupportAssistant
             'suggestedQuestions' => $suggestedQuestions,
             'i18n' => [
                 'title' => $config['name'] ?? __('Fyndable Assistant', 'ai-seo-client'),
-                'placeholder' => __('Stel je vraag...', 'ai-seo-client'),
-                'send' => __('Verstuur', 'ai-seo-client'),
-                'sourceManual' => __('Uit handleiding', 'ai-seo-client'),
-                'sourceAi' => __('AI-assistent', 'ai-seo-client'),
-                'createTicket' => __('Maak support ticket', 'ai-seo-client'),
-                'createTicketDirect' => __('Maak direct een support ticket', 'ai-seo-client'),
-                'ticketSubject' => __('Onderwerp', 'ai-seo-client'),
-                'ticketMessage' => __('Bericht', 'ai-seo-client'),
-                'ticketSubmit' => __('Verstuur ticket', 'ai-seo-client'),
-                'ticketSuccess' => __('Ticket aangemaakt! Ticket #%d', 'ai-seo-client'),
-                'ticketError' => __('Kon ticket niet aanmaken. Probeer het later opnieuw.', 'ai-seo-client'),
-                'loading' => __('Bezig met denken...', 'ai-seo-client'),
-                'greeting' => __('Hoi! Ik kan je helpen met vragen over Fyndable. Waar kan ik je mee helpen?', 'ai-seo-client'),
-                'noAnswer' => __('Sorry, daar weet ik geen antwoord op. Wil je een support ticket aanmaken?', 'ai-seo-client'),
-                'viewTicket' => __('Bekijk ticket', 'ai-seo-client'),
+                'placeholder' => __('Ask your question...', 'ai-seo-client'),
+                'send' => __('Send', 'ai-seo-client'),
+                'sourceManual' => __('From manual', 'ai-seo-client'),
+                'sourceAi' => __('AI assistant', 'ai-seo-client'),
+                'createTicket' => __('Create support ticket', 'ai-seo-client'),
+                'createTicketDirect' => __('Create a support ticket directly', 'ai-seo-client'),
+                'ticketSubject' => __('Subject', 'ai-seo-client'),
+                'ticketMessage' => __('Message', 'ai-seo-client'),
+                'ticketSubmit' => __('Submit ticket', 'ai-seo-client'),
+                'ticketSuccess' => __('Ticket created! Ticket #%d', 'ai-seo-client'),
+                'ticketError' => __('Could not create ticket. Please try again later.', 'ai-seo-client'),
+                'loading' => __('Thinking...', 'ai-seo-client'),
+                'greeting' => __('Hi! I can help you with questions about Fyndable. How can I help you?', 'ai-seo-client'),
+                'noAnswer' => __('Sorry, I don\'t have an answer for that. Would you like to create a support ticket?', 'ai-seo-client'),
+                'viewTicket' => __('View ticket', 'ai-seo-client'),
                 'supportPageUrl' => esc_url(admin_url('admin.php?page=ai-seo-support')),
             ],
         ]);
@@ -348,7 +348,7 @@ class SupportAssistant
         // Step 3: no answer → suggest ticket
         $fallbackAnswer = $local['answer'] !== ''
             ? $local['answer']
-            : __('Sorry, daar weet ik geen antwoord op. Wil je een support ticket aanmaken?', 'ai-seo-client');
+            : __('Sorry, I don\'t have an answer for that. Would you like to create a support ticket?', 'ai-seo-client');
 
         return new \WP_REST_Response([
             'success' => true,

@@ -413,13 +413,23 @@ class SerpFeatureTracker
         ]);
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('SERP Feature Tracking', 'ai-seo-client'); ?></h1>
-            
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('SERP Feature Overview', 'ai-seo-client'); ?></h2>
-                
-                <table class="wp-list-table widefat fixed striped">
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('SERP Features', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('SERP Feature Tracking', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Optimization status of your posts for SERP features.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-star-filled"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('SERP Feature Overview', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Post', 'ai-seo-client'); ?></th>
@@ -429,7 +439,7 @@ class SerpFeatureTracker
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($posts as $post): 
+                        <?php foreach ($posts as $post):
                             $targetFeatures = get_post_meta($post->ID, '_sseo_ai_target_features', true) ?: [];
                             $checklist = $this->getSerpFeatureChecklist($post);
                             $achieved = count(array_filter($checklist, fn($item) => $item['achieved']));
@@ -438,12 +448,12 @@ class SerpFeatureTracker
                         ?>
                         <tr>
                             <td>
-                                <a href="<?php echo get_edit_post_link($post->ID); ?>">
+                                <a href="<?php echo get_edit_post_link($post->ID); ?>" style="color:var(--fyn-blue);font-weight:600;">
                                     <?php echo esc_html($post->post_title); ?>
                                 </a>
                             </td>
                             <td>
-                                <?php 
+                                <?php
                                 $featureLabels = [
                                     'featured_snippet' => __('Featured Snippet', 'ai-seo-client'),
                                     'paa' => __('PAA', 'ai-seo-client'),
@@ -451,27 +461,27 @@ class SerpFeatureTracker
                                     'image_pack' => __('Image Pack', 'ai-seo-client'),
                                     'video_pack' => __('Video Pack', 'ai-seo-client'),
                                 ];
-                                
+
                                 foreach ($targetFeatures as $feature) {
-                                    echo '<span class="badge" style="background: #2271b1; color: white; padding: 3px 8px; border-radius: 3px; margin-right: 5px; font-size: 11px;">';
+                                    echo '<span class="fyn-badge fyn-badge--info" style="margin-right:4px;">';
                                     echo esc_html($featureLabels[$feature] ?? $feature);
                                     echo '</span>';
                                 }
                                 ?>
                             </td>
                             <td>
-                                <strong style="color: <?php echo $score >= 70 ? '#00a32a' : ($score >= 40 ? '#dba617' : '#d63638'); ?>;">
+                                <strong style="color:<?php echo $score >= 70 ? 'var(--fyn-success)' : ($score >= 40 ? 'var(--fyn-warning)' : 'var(--fyn-danger)'); ?>;">
                                     <?php echo $score; ?>%
                                 </strong>
-                                (<?php echo $achieved; ?>/<?php echo $total; ?>)
+                                <span style="color:var(--text-m);font-size:12px;">(<?php echo $achieved; ?>/<?php echo $total; ?>)</span>
                             </td>
                             <td>
                                 <?php if ($score >= 70): ?>
-                                    <span style="color: #00a32a;">✓ <?php esc_html_e('Optimized', 'ai-seo-client'); ?></span>
+                                    <span class="fyn-badge fyn-badge--success"><?php esc_html_e('Optimized', 'ai-seo-client'); ?></span>
                                 <?php elseif ($score >= 40): ?>
-                                    <span style="color: #dba617;">⚠ <?php esc_html_e('Needs Work', 'ai-seo-client'); ?></span>
+                                    <span class="fyn-badge fyn-badge--warning"><?php esc_html_e('Needs Improvement', 'ai-seo-client'); ?></span>
                                 <?php else: ?>
-                                    <span style="color: #d63638;">✗ <?php esc_html_e('Not Optimized', 'ai-seo-client'); ?></span>
+                                    <span class="fyn-badge fyn-badge--danger"><?php esc_html_e('Not Optimized', 'ai-seo-client'); ?></span>
                                 <?php endif; ?>
                             </td>
                         </tr>

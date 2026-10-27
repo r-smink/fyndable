@@ -59,73 +59,76 @@ class CompetitorResearch
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: 0; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-ai-dashboard-card .button-primary { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; }
-            .sseo-ai-dashboard-card .nav-tab-wrapper { border-bottom: 1px solid #e2e8f0; }
-            .sseo-ai-dashboard-card .nav-tab { background: #f1f5f9; border: 1px solid #e2e8f0; border-bottom: none; }
-            .sseo-ai-dashboard-card .nav-tab-active { background: #fff; border-bottom: 1px solid #fff; }
-            .sseo-ai-dashboard-card .tab-content { padding: 20px; background: #fff; border: 1px solid #e2e8f0; margin-top: -1px; }
-            .sseo-ai-dashboard-card table.widefat { border: 1px solid #e2e8f0; }
-            .sseo-ai-dashboard-card table.widefat thead th { background: #f8fafc; color: #334155; }
+            .cr-tab-content { display: none; padding: 20px 0 0; }
+            .cr-tab-content.cr-active { display: block; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('AI-Powered Competitor Research', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Competitor Research', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Competitor Research', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('AI-powered analysis of competitors, keywords and content strategy.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
 
-            <div class="sseo-ai-content">
             <!-- Add Competitor -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h2>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="align-self: flex-start;">
-                        <label for="competitor-domain">
-                            <strong><?php esc_html_e('Competitor Domain:', 'ai-seo-client'); ?></strong>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-plus-alt"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+                    <div>
+                        <label for="competitor-domain" style="font-size:12px;font-weight:700;color:var(--text-m);">
+                            <?php esc_html_e('Competitor Domain', 'ai-seo-client'); ?>
                         </label><br>
-                        <input type="text" id="competitor-domain" class="regular-text"
-                               placeholder="competitor.com">
+                        <input type="text" id="competitor-domain" class="fyn-input" style="min-width:200px;"
+                               placeholder="concurrent.nl">
                     </div>
-                    <div style="align-self: flex-start;">
-                        <label for="competitor-sitemap">
-                            <strong><?php esc_html_e('Sitemap URL (optional):', 'ai-seo-client'); ?></strong>
+                    <div>
+                        <label for="competitor-sitemap" style="font-size:12px;font-weight:700;color:var(--text-m);">
+                            <?php esc_html_e('Sitemap URL (optional)', 'ai-seo-client'); ?>
                         </label><br>
-                        <input type="text" id="competitor-sitemap" class="regular-text"
-                               placeholder="https://competitor.com/sitemap_index.xml" style="width:300px;">
-                        <p class="description" style="margin-top:2px;font-size:11px;color:#666;">
+                        <input type="text" id="competitor-sitemap" class="fyn-input" style="min-width:300px;"
+                               placeholder="https://competitor.com/sitemap_index.xml">
+                        <p style="margin-top:2px;font-size:11px;color:var(--text-m);">
                             <?php esc_html_e('Leave empty to auto-detect. Use a sitemap index URL for a full-site check.', 'ai-seo-client'); ?>
                         </p>
                     </div>
-                    <div style="display:flex;align-items:center;gap:5px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding-top:18px;">
                         <input type="checkbox" id="competitor-fullsite" value="1">
-                        <label for="competitor-fullsite" style="white-space:nowrap;">
-                            <strong><?php esc_html_e('Full site', 'ai-seo-client'); ?></strong>
+                        <label for="competitor-fullsite" style="white-space:nowrap;font-size:13px;color:var(--text-b);">
+                            <?php esc_html_e('Full Site', 'ai-seo-client'); ?>
                         </label>
-                        <span style="font-size:11px;color:#666;" title="<?php esc_attr_e('Follow all sub-sitemaps in a sitemap index for a complete check', 'ai-seo-client'); ?>">ⓘ</span>
+                        <span style="font-size:11px;color:var(--text-m);cursor:help;" title="<?php esc_attr_e('Follow all sub-sitemaps in a sitemap index for a complete scan', 'ai-seo-client'); ?>">&#9432;</span>
                     </div>
-                    <button type="button" class="button button-primary" onclick="sseoAddCompetitorTracking()">
-                        <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
-                    </button>
+                    <div style="padding-top:18px;">
+                        <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoAddCompetitorTracking()">
+                            <span class="dashicons dashicons-plus-alt2"></span>
+                            <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
+
             <!-- Competitor Overview -->
             <?php if (!empty($competitors)): ?>
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Tracked Competitors', 'ai-seo-client'); ?></h2>
-                
-                <table class="wp-list-table widefat fixed striped">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-groups"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Tracked Competitors', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Competitor', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Keywords', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Content Strategy', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('AI Content %', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Last Updated', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('AI-content %', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Updated', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
                         </tr>
                     </thead>
@@ -133,36 +136,36 @@ class CompetitorResearch
                         <?php foreach ($competitors as $comp): ?>
                         <tr>
                             <td>
-                                <strong><?php echo esc_html($comp['domain']); ?></strong>
+                                <strong style="color:var(--text-h);"><?php echo esc_html($comp['domain']); ?></strong>
                             </td>
                             <td>
                                 <?php echo esc_html(number_format($comp['keyword_count'] ?? 0)); ?> keywords
                             </td>
                             <td>
-                                <?php 
-                                $strategy = $comp['content_strategy'] ?? 'Unknown';
+                                <?php
+                                $strategy = $comp['content_strategy'] ?? 'Onbekend';
                                 echo esc_html($strategy);
                                 ?>
                             </td>
                             <td>
-                                <span style="color: <?php echo ($comp['ai_content_percentage'] ?? 0) > 50 ? '#d63638' : '#00a32a'; ?>;">
+                                <span class="fyn-badge fyn-badge--<?php echo ($comp['ai_content_percentage'] ?? 0) > 50 ? 'danger' : 'success'; ?>">
                                     <?php echo esc_html(($comp['ai_content_percentage'] ?? 0)); ?>%
                                 </span>
                             </td>
-                            <td>
-                                <?php 
+                            <td style="color:var(--text-m);font-size:12px;">
+                                <?php
                                 $lastUpdated = $comp['last_updated'] ?? '';
-                                echo $lastUpdated ? esc_html(human_time_diff(strtotime($lastUpdated))) . ' ago' : 'Never';
+                                echo $lastUpdated ? esc_html(human_time_diff(strtotime($lastUpdated))) . ' ' . esc_html__('ago', 'ai-seo-client') : esc_html__('Never', 'ai-seo-client');
                                 ?>
                             </td>
                             <td>
-                                <button type="button" class="button button-small"
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;"
                                         onclick="sseoViewCompetitorDetails('<?php echo esc_js($comp['domain']); ?>')">
-                                    <?php esc_html_e('View Details', 'ai-seo-client'); ?>
+                                    <?php esc_html_e('Details', 'ai-seo-client'); ?>
                                 </button>
-                                <button type="button" class="button button-small"
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;"
                                         onclick="sseoRefreshCompetitor('<?php echo esc_js($comp['domain']); ?>', '<?php echo esc_js($comp['sitemap_url'] ?? ''); ?>', <?php echo !empty($comp['full_site']) ? 'true' : 'false'; ?>)">
-                                    <?php esc_html_e('Refresh', 'ai-seo-client'); ?>
+                                    <span class="dashicons dashicons-update" style="font-size:14px;width:14px;height:14px;"></span>
                                 </button>
                             </td>
                         </tr>
@@ -170,73 +173,76 @@ class CompetitorResearch
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Detailed Analysis Tabs -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Competitor Analysis', 'ai-seo-client'); ?></h2>
-                
-                <div id="competitor-tabs" style="margin-top: 15px;">
-                    <nav class="nav-tab-wrapper">
-                        <a href="#keyword-strategy" class="nav-tab nav-tab-active" onclick="sseoSwitchTab(event, 'keyword-strategy')">
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-bar"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Competitor Analysis', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <div id="competitor-tabs">
+                    <div class="fyn-tabs" style="margin-bottom:0;">
+                        <button type="button" class="fyn-tab cr-tab-btn active" onclick="sseoSwitchTab(event, 'keyword-strategy')">
                             <?php esc_html_e('Keyword Strategy', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#content-calendar" class="nav-tab" onclick="sseoSwitchTab(event, 'content-calendar')">
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'content-calendar')">
                             <?php esc_html_e('Content Calendar', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#win-loss" class="nav-tab" onclick="sseoSwitchTab(event, 'win-loss')">
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'win-loss')">
                             <?php esc_html_e('Win/Loss Analysis', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#backlink-strategy" class="nav-tab" onclick="sseoSwitchTab(event, 'backlink-strategy')">
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'backlink-strategy')">
                             <?php esc_html_e('Backlink Strategy', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#ad-copy" class="nav-tab" onclick="sseoSwitchTab(event, 'ad-copy')">
-                            <?php esc_html_e('Ad Copy Analysis', 'ai-seo-client'); ?>
-                        </a>
-                    </nav>
-                    
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'ad-copy')">
+                            <?php esc_html_e('Ad Copy', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
+
                     <!-- Keyword Strategy Tab -->
-                    <div id="keyword-strategy" class="tab-content" style="display: block;">
-                        <h3><?php esc_html_e('Competitor Keyword Strategy', 'ai-seo-client'); ?></h3>
+                    <div id="keyword-strategy" class="cr-tab-content cr-active">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Competitor Keyword Strategy', 'ai-seo-client'); ?></h4>
                         <div id="keyword-strategy-content">
-                            <p><?php esc_html_e('Select a competitor to view their keyword strategy.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their keyword strategy.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Content Calendar Tab -->
-                    <div id="content-calendar" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Content Publishing Calendar', 'ai-seo-client'); ?></h3>
+                    <div id="content-calendar" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Content Publishing Calendar', 'ai-seo-client'); ?></h4>
                         <div id="content-calendar-content">
-                            <p><?php esc_html_e('Select a competitor to view their content calendar.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their content calendar.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Win/Loss Tab -->
-                    <div id="win-loss" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Win/Loss Analysis', 'ai-seo-client'); ?></h3>
+                    <div id="win-loss" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Win/Loss Analysis', 'ai-seo-client'); ?></h4>
                         <div id="win-loss-content">
-                            <p><?php esc_html_e('Select a competitor to compare rankings.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to compare rankings.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Backlink Strategy Tab -->
-                    <div id="backlink-strategy" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Backlink Strategy', 'ai-seo-client'); ?></h3>
+                    <div id="backlink-strategy" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Backlink Strategy', 'ai-seo-client'); ?></h4>
                         <div id="backlink-strategy-content">
-                            <p><?php esc_html_e('Select a competitor to view their backlink strategy.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their backlink strategy.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Ad Copy Tab -->
-                    <div id="ad-copy" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Ad Copy Analysis', 'ai-seo-client'); ?></h3>
+                    <div id="ad-copy" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Ad Copy', 'ai-seo-client'); ?></h4>
                         <div id="ad-copy-content">
-                            <p><?php esc_html_e('Select a competitor to view their ad copy.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their ad copy.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
-            </div>
+
         </div>
         
         <script>
@@ -296,14 +302,12 @@ class CompetitorResearch
         
         function sseoSwitchTab(event, tabId) {
             event.preventDefault();
-            
-            // Hide all tabs
-            jQuery('.tab-content').hide();
-            jQuery('.nav-tab').removeClass('nav-tab-active');
-            
-            // Show selected tab
-            jQuery('#' + tabId).show();
-            jQuery(event.target).addClass('nav-tab-active');
+
+            jQuery('.cr-tab-content').removeClass('cr-active');
+            jQuery('.cr-tab-btn').removeClass('active');
+
+            jQuery('#' + tabId).addClass('cr-active');
+            jQuery(event.target).closest('.cr-tab-btn').addBack().filter('.cr-tab-btn').addClass('active');
         }
         
         function sseoLoadKeywordStrategy(domain) {
@@ -1136,7 +1140,7 @@ Respond in JSON format:
             <?php echo esc_html(sprintf(__('Keyword anchors: %s%%', 'ai-seo-client'), $strategy['anchor_strategy']['exact_match_percentage'] ?? 0)); ?>
         </p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
-            <table class="wp-list-table widefat striped">
+            <table class="fyn-table">
                 <thead><tr><th><?php esc_html_e('Link Type', 'ai-seo-client'); ?></th><th><?php esc_html_e('Links', 'ai-seo-client'); ?></th></tr></thead>
                 <tbody>
                 <?php foreach ($strategy['link_types'] as $type => $count): ?>
@@ -1144,7 +1148,7 @@ Respond in JSON format:
                 <?php endforeach; ?>
                 </tbody>
             </table>
-            <table class="wp-list-table widefat striped">
+            <table class="fyn-table">
                 <thead><tr><th><?php esc_html_e('Top Sources', 'ai-seo-client'); ?></th><th><?php esc_html_e('DR', 'ai-seo-client'); ?></th><th><?php esc_html_e('Links', 'ai-seo-client'); ?></th></tr></thead>
                 <tbody>
                 <?php foreach ($strategy['top_sources'] as $source): ?>
@@ -1152,7 +1156,7 @@ Respond in JSON format:
                 <?php endforeach; ?>
                 </tbody>
             </table>
-            <table class="wp-list-table widefat striped">
+            <table class="fyn-table">
                 <thead><tr><th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th><th><?php esc_html_e('Count', 'ai-seo-client'); ?></th></tr></thead>
                 <tbody>
                 <?php foreach (($strategy['anchor_strategy']['top_anchors'] ?? []) as $anchor => $count): ?>

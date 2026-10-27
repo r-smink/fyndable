@@ -285,31 +285,35 @@ class GeoContentScore
     {
         ?>
         <style>
-            .geo-wrap { max-width: 900px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .geo-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .geo-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
-            .geo-header h1 { margin: 0; font-size: 22px; }
-            .geo-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
-            .geo-score-big { font-size: 48px; font-weight: 800; text-align: center; }
+            .geo-score-big { font-size: 48px; font-weight: 800; text-align: center; color: var(--text-h); }
             .geo-grade { font-size: 20px; font-weight: 700; text-align: center; }
-            .geo-factor { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
-            .geo-factor-bar { width: 200px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+            .geo-factor { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--divide); }
+            .geo-factor-bar { width: 200px; height: 8px; background: var(--well); border-radius: 4px; overflow: hidden; }
             .geo-factor-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
-            .geo-suggestion { padding: 8px 12px; margin: 4px 0; border-radius: 6px; font-size: 13px; }
-            .geo-suggestion.high { background: #fee2e2; color: #dc2626; }
-            .geo-suggestion.medium { background: #fef3c7; color: #d97706; }
+            .geo-suggestion { padding: 8px 12px; margin: 4px 0; border-radius: 7px; font-size: 13px; }
+            .geo-suggestion.high { background: color-mix(in srgb, var(--fyn-danger) 12%, transparent); color: var(--fyn-danger); }
+            .geo-suggestion.medium { background: color-mix(in srgb, var(--fyn-warning) 12%, transparent); color: var(--fyn-warning); }
         </style>
-        <div class="wrap geo-wrap">
-            <div class="geo-card">
-                <div class="geo-header">
-                    <h1>🤖 <?php esc_html_e('GEO Content Score', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Score your content for citability by AI search engines (ChatGPT, Perplexity, Gemini).', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1000px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('GEO Content Score', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('GEO Content Score', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Score your content on citability by AI search engines (ChatGPT, Perplexity, Gemini).', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-bar"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Score Content', 'ai-seo-client'); ?></h3>
                 </div>
                 <div style="display:flex;gap:20px;align-items:start;flex-wrap:wrap;">
                     <div style="flex:1;min-width:300px;">
-                        <label style="font-weight:600;display:block;margin-bottom:6px;"><?php esc_html_e('Select Post to Score', 'ai-seo-client'); ?></label>
-                        <select id="geo-post-select" style="width:100%;">
-                            <option value=""><?php esc_html_e('— Choose a post —', 'ai-seo-client'); ?></option>
+                        <label style="font-weight:600;display:block;margin-bottom:6px;color:var(--text-h);font-size:13px;"><?php esc_html_e('Select post to score', 'ai-seo-client'); ?></label>
+                        <select id="geo-post-select" class="fyn-input" style="width:100%;">
+                            <option value=""><?php esc_html_e('— Select a post —', 'ai-seo-client'); ?></option>
                             <?php
                             $posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'draft'], 'posts_per_page' => 100]);
                             foreach ($posts as $p) {
@@ -317,12 +321,14 @@ class GeoContentScore
                             }
                             ?>
                         </select>
-                        <button class="button button-primary" id="geo-score-btn" style="margin-top:10px;"><?php esc_html_e('Score Content', 'ai-seo-client'); ?></button>
-                        <button class="button" id="geo-batch-btn" style="margin-top:10px;margin-left:8px;"><?php esc_html_e('Score All Posts', 'ai-seo-client'); ?></button>
+                        <div style="display:flex;gap:8px;margin-top:10px;">
+                            <button class="fyn-btn fyn-btn-primary" id="geo-score-btn"><?php esc_html_e('Score Content', 'ai-seo-client'); ?></button>
+                            <button class="fyn-btn fyn-btn-outline" id="geo-batch-btn"><?php esc_html_e('Score All Posts', 'ai-seo-client'); ?></button>
+                        </div>
                     </div>
                     <div id="geo-result" style="flex:2;min-width:300px;display:none;">
-                        <div class="geo-score-big" id="geo-score-num">—</div>
-                        <div class="geo-grade" id="geo-grade">—</div>
+                        <div class="geo-score-big" id="geo-score-num">&mdash;</div>
+                        <div class="geo-grade" id="geo-grade">&mdash;</div>
                         <div id="geo-factors" style="margin-top:20px;"></div>
                         <div id="geo-suggestions" style="margin-top:20px;"></div>
                     </div>
@@ -357,10 +363,10 @@ class GeoContentScore
                     method: 'POST',
                     data: { limit: 50 }
                 }).then(function(r) {
-                    var html = '<h3><?php echo esc_js(__("All Posts by GEO Score", "ai-seo-client")); ?></h3><table class="wp-list-table widefat striped"><thead><tr><th>Title</th><th>Score</th><th>Grade</th><th></th></tr></thead><tbody>';
+                    var html = '<h3 style="color:var(--text-h);font-size:15px;font-weight:700;margin:0 0 12px;"><?php echo esc_js(__("All Posts GEO Score", "ai-seo-client")); ?></h3><table class="fyn-table"><thead><tr><th><?php echo esc_js(__("Title", "ai-seo-client")); ?></th><th>Score</th><th>Grade</th><th></th></tr></thead><tbody>';
                     r.posts.forEach(function(p) {
-                        var color = p.score >= 70 ? '#16a34a' : (p.score >= 50 ? '#d97706' : '#dc2626');
-                        html += '<tr><td>' + p.title + '</td><td style="color:' + color + ';font-weight:700;">' + p.score + '</td><td>' + p.grade + '</td><td><a href="' + p.edit_url + '" class="button button-small">Edit</a></td></tr>';
+                        var color = p.score >= 70 ? 'var(--fyn-success)' : (p.score >= 50 ? 'var(--fyn-warning)' : 'var(--fyn-danger)');
+                        html += '<tr><td>' + p.title + '</td><td style="color:' + color + ';font-weight:700;">' + p.score + '</td><td>' + p.grade + '</td><td><a href="' + p.edit_url + '" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"><?php echo esc_js(__("Edit", "ai-seo-client")); ?></a></td></tr>';
                     });
                     html += '</tbody></table>';
                     $('#geo-result').html(html).show();
@@ -370,14 +376,14 @@ class GeoContentScore
             });
 
             function renderResult(r) {
-                var color = r.score >= 70 ? '#16a34a' : (r.score >= 50 ? '#d97706' : '#dc2626');
+                var color = r.score >= 70 ? 'var(--fyn-success)' : (r.score >= 50 ? 'var(--fyn-warning)' : 'var(--fyn-danger)');
                 $('#geo-score-num').text(r.score).css('color', color);
                 $('#geo-grade').text('Grade: ' + r.grade).css('color', color);
                 var fh = '';
                 Object.entries(r.factors).forEach(function(e) {
                     var f = e[1];
-                    var fc = f.score >= 70 ? '#16a34a' : (f.score >= 50 ? '#d97706' : '#dc2626');
-                    fh += '<div class="geo-factor"><div><strong>' + f.label + '</strong><div style="font-size:11px;color:#64748b;">' + (f.detail || '') + '</div></div><div style="display:flex;align-items:center;gap:10px;"><div class="geo-factor-bar"><div class="geo-factor-fill" style="width:' + f.score + '%;background:' + fc + ';"></div></div><span style="font-weight:700;width:40px;text-align:right;">' + f.score + '</span></div></div>';
+                    var fc = f.score >= 70 ? 'var(--fyn-success)' : (f.score >= 50 ? 'var(--fyn-warning)' : 'var(--fyn-danger)');
+                    fh += '<div class="geo-factor"><div><strong style="color:var(--text-h);">' + f.label + '</strong><div style="font-size:11px;color:var(--text-m);">' + (f.detail || '') + '</div></div><div style="display:flex;align-items:center;gap:10px;"><div class="geo-factor-bar"><div class="geo-factor-fill" style="width:' + f.score + '%;background:' + fc + ';"></div></div><span style="font-weight:700;width:40px;text-align:right;color:var(--text-h);">' + f.score + '</span></div></div>';
                 });
                 $('#geo-factors').html(fh);
                 var sh = '<h4><?php echo esc_js(__("Suggestions", "ai-seo-client")); ?></h4>';

@@ -646,201 +646,193 @@ class CreatedPosts
         $minWords = (int)($wordCountRange->min_words ?? 0);
         $maxWords = (int)($wordCountRange->max_words ?? 3000);
         ?>
-        <div class="wrap sseo-ai-modern" id="sseo-created-posts-page">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('SEO AI created posts', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" id="sseo-created-posts-page" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Created Posts', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Created Posts', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('SEO AI created posts', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-toggle-filters">
+                        <span class="dashicons dashicons-filter"></span>
+                        <?php esc_html_e('All filters', 'ai-seo-client'); ?>
+                    </button>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <!-- Top Filters -->
-                    <div class="posts-filters-top">
-                        <div class="filter-group search-group">
-                            <label><?php esc_html_e('Search:', 'ai-seo-client'); ?></label>
-                            <input type="text" id="filter-search" placeholder="<?php esc_attr_e('Post title keywords', 'ai-seo-client'); ?>">
+
+            <!-- Top Filters card -->
+            <div class="fyn-card" style="margin-bottom:16px;padding:16px 20px;">
+                <div class="posts-filters-top" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+                    <div class="filter-group search-group" style="flex:1;min-width:180px;max-width:280px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Search:', 'ai-seo-client'); ?></label>
+                        <input type="text" id="filter-search" class="fyn-input" placeholder="<?php esc_attr_e('Search post title', 'ai-seo-client'); ?>">
+                    </div>
+                    <div class="filter-group cluster-group" style="min-width:160px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Select cluster', 'ai-seo-client'); ?></label>
+                        <select id="filter-cluster" class="fyn-input" style="padding:9px 10px;">
+                            <option value=""><?php esc_html_e('All clusters', 'ai-seo-client'); ?></option>
+                            <?php foreach ($clusters as $cluster): ?>
+                                <option value="<?php echo esc_attr($cluster->id); ?>">
+                                    <?php echo esc_html($cluster->name); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="filter-group wordcount-group" style="flex:1;min-width:200px;max-width:320px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Content words range:', 'ai-seo-client'); ?> <span id="wordcount-display"><?php echo $minWords; ?> – <?php echo $maxWords; ?></span></label>
+                        <div class="wordcount-slider" style="display:flex;gap:8px;">
+                            <input type="range" id="filter-wordcount-min" min="0" max="5000" value="<?php echo $minWords; ?>" style="flex:1;">
+                            <input type="range" id="filter-wordcount-max" min="0" max="5000" value="<?php echo $maxWords; ?>" style="flex:1;">
                         </div>
-                        <div class="filter-group cluster-group">
-                            <label><?php esc_html_e('Select cluster', 'ai-seo-client'); ?></label>
-                            <select id="filter-cluster">
-                                <option value=""><?php esc_html_e('All clusters', 'ai-seo-client'); ?></option>
-                                <?php foreach ($clusters as $cluster): ?>
-                                    <option value="<?php echo esc_attr($cluster->id); ?>">
-                                        <?php echo esc_html($cluster->name); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date filters card -->
+            <div class="fyn-card" style="margin-bottom:16px;padding:14px 20px;">
+                <div class="posts-status-filters">
+                    <div class="filter-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em;"><?php esc_html_e('Published / scheduled', 'ai-seo-client'); ?></span>
+                        <div class="date-filters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                            <input type="text" id="filter-publish-from" class="fyn-input" style="max-width:130px;padding:7px 10px;font-size:12px;" placeholder="<?php esc_attr_e('Published from', 'ai-seo-client'); ?>">
+                            <input type="text" id="filter-publish-to" class="fyn-input" style="max-width:130px;padding:7px 10px;font-size:12px;" placeholder="<?php esc_attr_e('Published to', 'ai-seo-client'); ?>">
+                            <input type="text" id="filter-created-from" class="fyn-input" style="max-width:130px;padding:7px 10px;font-size:12px;" placeholder="<?php esc_attr_e('Created from', 'ai-seo-client'); ?>">
+                            <input type="text" id="filter-created-to" class="fyn-input" style="max-width:130px;padding:7px 10px;font-size:12px;" placeholder="<?php esc_attr_e('Created to', 'ai-seo-client'); ?>">
+                            <button type="button" class="fyn-btn fyn-btn-primary" id="btn-apply-filters" style="padding:8px 12px;">
+                                <span class="dashicons dashicons-search"></span>
+                            </button>
+                            <button type="button" class="fyn-btn fyn-btn-outline" id="btn-clear-filters" style="padding:8px 12px;">&times;</button>
                         </div>
-                        <div class="filter-group wordcount-group">
-                            <label><?php esc_html_e('Content words range:', 'ai-seo-client'); ?> <span id="wordcount-display"><?php echo $minWords; ?> - <?php echo $maxWords; ?></span></label>
-                            <div class="wordcount-slider">
-                                <input type="range" id="filter-wordcount-min" min="0" max="5000" value="<?php echo $minWords; ?>">
-                                <input type="range" id="filter-wordcount-max" min="0" max="5000" value="<?php echo $maxWords; ?>">
-                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content card -->
+            <div class="fyn-card">
+                <!-- Mass Status Filters -->
+                <div class="posts-mass-filters" style="padding-bottom:12px;border-bottom:1px solid var(--divide);">
+                    <div class="mass-filter-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-m);min-width:120px;"><?php esc_html_e('Mass edit status:', 'ai-seo-client'); ?></span>
+                        <div class="status-pills" style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button type="button" class="fyn-tab status-pill active" data-filter="edit_status" data-value="">
+                                <?php esc_html_e('All', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-all">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="edit_status" data-value="completed">
+                                <?php esc_html_e('Completed', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-completed">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="edit_status" data-value="pending">
+                                <?php esc_html_e('Pending', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-pending">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="edit_status" data-value="failed">
+                                <?php esc_html_e('Failed', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-failed">0</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Status Filters -->
-                    <div class="posts-status-filters">
-                        <div class="filter-row">
-                            <span class="filter-label"><?php esc_html_e('Published / scheduled', 'ai-seo-client'); ?></span>
-                            <div class="date-filters">
-                                <input type="text" id="filter-publish-from" placeholder="<?php esc_attr_e('Published from', 'ai-seo-client'); ?>">
-                                <button type="button" class="date-btn"><span class="dashicons dashicons-calendar-alt"></span></button>
-                                <input type="text" id="filter-publish-to" placeholder="<?php esc_attr_e('Published to', 'ai-seo-client'); ?>">
-                                <button type="button" class="date-btn"><span class="dashicons dashicons-calendar-alt"></span></button>
-                                <input type="text" id="filter-created-from" placeholder="<?php esc_attr_e('Created from', 'ai-seo-client'); ?>">
-                                <button type="button" class="date-btn"><span class="dashicons dashicons-calendar-alt"></span></button>
-                                <input type="text" id="filter-created-to" placeholder="<?php esc_attr_e('Created to', 'ai-seo-client'); ?>">
-                                <button type="button" class="date-btn"><span class="dashicons dashicons-calendar-alt"></span></button>
-                                <button type="button" class="filter-search-btn" id="btn-apply-filters">
-                                    <span class="dashicons dashicons-search"></span>
-                                </button>
-                                <button type="button" class="filter-clear-btn" id="btn-clear-filters">&times;</button>
-                            </div>
+                    <div class="mass-filter-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-m);min-width:120px;"><?php esc_html_e('Mass review status:', 'ai-seo-client'); ?></span>
+                        <div class="status-pills" style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button type="button" class="fyn-tab status-pill" data-filter="review_status" data-value="yes">
+                                <?php esc_html_e('Yes', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-review-yes">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="review_status" data-value="no">
+                                <?php esc_html_e('No', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-review-no">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="review_status" data-value="needs_attention">
+                                <?php esc_html_e('Needs attention', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-review-attention">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="review_status" data-value="reviewing">
+                                <?php esc_html_e('Reviewing', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-reviewing">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="review_status" data-value="failed">
+                                <?php esc_html_e('Failed', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-review-failed">0</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Mass Status Filters -->
-                    <div class="posts-mass-filters">
-                        <div class="mass-filter-row">
-                            <span class="filter-label"><?php esc_html_e('Mass edit status:', 'ai-seo-client'); ?></span>
-                            <div class="status-pills">
-                                <button type="button" class="status-pill active" data-filter="edit_status" data-value="">
-                                    <?php esc_html_e('All', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-all">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="edit_status" data-value="completed">
-                                    <?php esc_html_e('Completed', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-completed">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="edit_status" data-value="pending">
-                                    <?php esc_html_e('Pending', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-pending">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="edit_status" data-value="failed">
-                                    <?php esc_html_e('Failed', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-failed">0</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mass-filter-row">
-                            <span class="filter-label"><?php esc_html_e('Mass review status:', 'ai-seo-client'); ?></span>
-                            <div class="status-pills">
-                                <button type="button" class="status-pill" data-filter="review_status" data-value="yes">
-                                    <?php esc_html_e('Yes', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-review-yes">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="review_status" data-value="no">
-                                    <?php esc_html_e('No', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-review-no">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="review_status" data-value="needs_attention">
-                                    <?php esc_html_e('Requires attention', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-review-attention">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="review_status" data-value="reviewing">
-                                    <?php esc_html_e('Reviewing', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-reviewing">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="review_status" data-value="failed">
-                                    <?php esc_html_e('Failed', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-review-failed">0</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mass-filter-row">
-                            <span class="filter-label"><?php esc_html_e('Post language:', 'ai-seo-client'); ?></span>
-                            <div class="status-pills">
-                                <button type="button" class="status-pill" data-filter="language" data-value="all">
-                                    <?php esc_html_e('All', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-lang-all">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="language" data-value="nl">
-                                    <?php esc_html_e('NL', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-lang-nl">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="language" data-value="en">
-                                    <?php esc_html_e('EN', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-lang-en">0</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mass-filter-row">
-                            <span class="filter-label"><?php esc_html_e('Post status:', 'ai-seo-client'); ?></span>
-                            <div class="status-pills">
-                                <button type="button" class="status-pill" data-filter="post_status" data-value="publish">
-                                    <?php esc_html_e('Published', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-published">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="post_status" data-value="draft">
-                                    <?php esc_html_e('Drafts', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-drafts">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="post_status" data-value="future">
-                                    <?php esc_html_e('Future', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-future">0</span>
-                                </button>
-                                <button type="button" class="status-pill" data-filter="post_status" data-value="private">
-                                    <?php esc_html_e('Privé', 'ai-seo-client'); ?>
-                                    <span class="pill-count" id="count-private">0</span>
-                                </button>
-                            </div>
+                    <div class="mass-filter-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-m);min-width:120px;"><?php esc_html_e('Post language:', 'ai-seo-client'); ?></span>
+                        <div class="status-pills" style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button type="button" class="fyn-tab status-pill" data-filter="language" data-value="all">
+                                <?php esc_html_e('All', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-lang-all">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="language" data-value="nl">
+                                <?php esc_html_e('NL', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-lang-nl">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="language" data-value="en">
+                                <?php esc_html_e('EN', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-lang-en">0</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Results Summary -->
-                    <div class="posts-summary">
-                        <label class="select-all">
-                            <input type="checkbox" id="select-all-posts">
-                        </label>
-                        <span class="results-text"><?php esc_html_e('All posts:', 'ai-seo-client'); ?> <strong id="total-posts-count">0</strong></span>
-                        <button type="button" class="toggle-filters" id="btn-toggle-filters">
-                            <?php esc_html_e('All filters', 'ai-seo-client'); ?> 
-                            <span class="dashicons dashicons-arrow-down-alt2"></span>
-                        </button>
-                        
-                        <div class="per-page-selector">
-                            <label><?php esc_html_e('Posts per page', 'ai-seo-client'); ?></label>
-                            <select id="posts-per-page">
-                                <option value="10" selected>10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
+                    <div class="mass-filter-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-m);min-width:120px;"><?php esc_html_e('Post status:', 'ai-seo-client'); ?></span>
+                        <div class="status-pills" style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button type="button" class="fyn-tab status-pill" data-filter="post_status" data-value="publish">
+                                <?php esc_html_e('Published', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-published">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="post_status" data-value="draft">
+                                <?php esc_html_e('Drafts', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-drafts">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="post_status" data-value="future">
+                                <?php esc_html_e('Scheduled', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-future">0</span>
+                            </button>
+                            <button type="button" class="fyn-tab status-pill" data-filter="post_status" data-value="private">
+                                <?php esc_html_e('Private', 'ai-seo-client'); ?> <span class="fyn-tab-count pill-count" id="count-private">0</span>
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Posts Table -->
-                    <div class="posts-table-wrapper">
-                        <table class="posts-table" id="posts-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-checkbox"></th>
-                                    <th class="col-id sortable" data-sort="id">ID <span class="sort-icon">&#8597;</span></th>
-                                    <th class="col-date sortable" data-sort="date"><?php esc_html_e('Date', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></th>
-                                    <th class="col-image"><?php esc_html_e('Image', 'ai-seo-client'); ?></th>
-                                    <th class="col-title sortable" data-sort="title"><?php esc_html_e('Title', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></th>
-                                    <th class="col-visibility"><?php esc_html_e('Post visibility', 'ai-seo-client'); ?></th>
-                                    <th class="col-status"><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                                    <th class="col-edit-status"><?php esc_html_e('Mass Edit Status', 'ai-seo-client'); ?></th>
-                                    <th class="col-review"><?php esc_html_e('Review Results', 'ai-seo-client'); ?></th>
-                                    <th class="col-actions"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="posts-tbody">
-                                <!-- Posts will be loaded here -->
-                            </tbody>
-                        </table>
+                <!-- Results Summary -->
+                <div class="posts-summary" style="display:flex;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap;">
+                    <label class="select-all" style="display:flex;align-items:center;">
+                        <input type="checkbox" id="select-all-posts">
+                    </label>
+                    <span style="font-size:13px;color:var(--text-b);"><?php esc_html_e('All posts:', 'ai-seo-client'); ?> <strong id="total-posts-count">0</strong></span>
+                    <div style="flex:1;"></div>
+                    <div class="per-page-selector" style="display:flex;align-items:center;gap:6px;">
+                        <label style="font-size:12px;color:var(--text-m);"><?php esc_html_e('Posts per page', 'ai-seo-client'); ?></label>
+                        <select id="posts-per-page" class="fyn-input" style="padding:6px 10px;font-size:12px;width:auto;">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
                     </div>
+                </div>
 
-                    <!-- Pagination -->
-                    <div class="posts-pagination" id="posts-pagination">
-                        <button type="button" class="page-btn" data-page="prev">&laquo;</button>
-                        <div id="pagination-numbers"></div>
-                        <button type="button" class="page-btn" data-page="next">&raquo;</button>
-                    </div>
+                <!-- Posts Table -->
+                <div class="posts-table-wrapper">
+                    <table class="fyn-table posts-table" id="posts-table">
+                        <thead>
+                            <tr>
+                                <th class="col-checkbox" style="width:30px;"></th>
+                                <th class="col-id sortable" data-sort="id">ID <span class="sort-icon">&#8597;</span></th>
+                                <th class="col-date sortable" data-sort="date"><?php esc_html_e('Date', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></th>
+                                <th class="col-image"><?php esc_html_e('Image', 'ai-seo-client'); ?></th>
+                                <th class="col-title sortable" data-sort="title"><?php esc_html_e('Title', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span></th>
+                                <th class="col-visibility"><?php esc_html_e('Post visibility', 'ai-seo-client'); ?></th>
+                                <th class="col-status"><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                <th class="col-edit-status"><?php esc_html_e('Mass Edit Status', 'ai-seo-client'); ?></th>
+                                <th class="col-review"><?php esc_html_e('Review', 'ai-seo-client'); ?></th>
+                                <th class="col-actions"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="posts-tbody">
+                            <!-- Posts will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="posts-pagination" id="posts-pagination" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:16px 0 0;border-top:1px solid var(--divide);">
+                    <button type="button" class="page-btn fyn-btn fyn-btn-outline" style="padding:6px 10px;font-size:13px;" data-page="prev">&laquo;</button>
+                    <div id="pagination-numbers" style="display:flex;gap:4px;"></div>
+                    <button type="button" class="page-btn fyn-btn fyn-btn-outline" style="padding:6px 10px;font-size:13px;" data-page="next">&raquo;</button>
                 </div>
             </div>
         </div>
@@ -848,17 +840,17 @@ class CreatedPosts
         <!-- Bulk Actions Modal -->
         <div class="sseo-modal" id="modal-bulk-actions" style="display: none;">
             <div class="sseo-modal-overlay"></div>
-            <div class="sseo-modal-content">
-                <div class="sseo-modal-header">
-                    <h3><?php esc_html_e('Bulk Actions', 'ai-seo-client'); ?></h3>
-                    <button type="button" class="modal-close">&times;</button>
+            <div class="sseo-modal-content" style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-l);max-width:480px;margin:auto;">
+                <div class="sseo-modal-header" style="padding:20px 24px 12px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Bulk Actions', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close" style="background:none;border:none;font-size:20px;color:var(--text-m);cursor:pointer;">&times;</button>
                 </div>
-                <div class="sseo-modal-body">
-                    <p><?php esc_html_e('Selected posts:', 'ai-seo-client'); ?> <strong id="bulk-selected-count">0</strong></p>
-                    
-                    <div class="form-group">
-                        <label><?php esc_html_e('Change status to:', 'ai-seo-client'); ?></label>
-                        <select id="bulk-new-status" class="sseo-select">
+                <div class="sseo-modal-body" style="padding:20px 24px;">
+                    <p style="font-size:13px;color:var(--text-b);"><?php esc_html_e('Selected posts:', 'ai-seo-client'); ?> <strong id="bulk-selected-count">0</strong></p>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Change status to:', 'ai-seo-client'); ?></label>
+                        <select id="bulk-new-status" class="fyn-input" style="width:100%;padding:9px 10px;">
                             <option value=""><?php esc_html_e('-- No change --', 'ai-seo-client'); ?></option>
                             <option value="publish"><?php esc_html_e('Published', 'ai-seo-client'); ?></option>
                             <option value="draft"><?php esc_html_e('Draft', 'ai-seo-client'); ?></option>
@@ -867,10 +859,10 @@ class CreatedPosts
                             <option value="trash"><?php esc_html_e('Move to trash', 'ai-seo-client'); ?></option>
                         </select>
                     </div>
-                    
-                    <div class="form-group">
-                        <label><?php esc_html_e('Set review status to:', 'ai-seo-client'); ?></label>
-                        <select id="bulk-review-status" class="sseo-select">
+
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Set review status to:', 'ai-seo-client'); ?></label>
+                        <select id="bulk-review-status" class="fyn-input" style="width:100%;padding:9px 10px;">
                             <option value=""><?php esc_html_e('-- No change --', 'ai-seo-client'); ?></option>
                             <option value="yes"><?php esc_html_e('Yes', 'ai-seo-client'); ?></option>
                             <option value="no"><?php esc_html_e('No', 'ai-seo-client'); ?></option>
@@ -879,9 +871,9 @@ class CreatedPosts
                         </select>
                     </div>
                 </div>
-                <div class="sseo-modal-footer">
-                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
-                    <button type="button" class="sseo-btn-primary" id="btn-confirm-bulk">
+                <div class="sseo-modal-footer" style="padding:12px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="fyn-btn fyn-btn-outline modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="btn-confirm-bulk">
                         <span class="spinner" style="display: none;"></span>
                         <?php esc_html_e('Apply Changes', 'ai-seo-client'); ?>
                     </button>
@@ -892,18 +884,18 @@ class CreatedPosts
         <!-- Post Detail Modal -->
         <div class="sseo-modal" id="modal-post-detail" style="display: none;">
             <div class="sseo-modal-overlay"></div>
-            <div class="sseo-modal-content">
-                <div class="sseo-modal-header">
-                    <h3><?php esc_html_e('Post Details', 'ai-seo-client'); ?></h3>
-                    <button type="button" class="modal-close">&times;</button>
+            <div class="sseo-modal-content" style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-l);max-width:600px;margin:auto;">
+                <div class="sseo-modal-header" style="padding:20px 24px 12px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Post Details', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close" style="background:none;border:none;font-size:20px;color:var(--text-m);cursor:pointer;">&times;</button>
                 </div>
-                <div class="sseo-modal-body" id="post-detail-body">
-                    <p><?php esc_html_e('Loading...', 'ai-seo-client'); ?></p>
+                <div class="sseo-modal-body" id="post-detail-body" style="padding:20px 24px;">
+                    <p style="color:var(--text-m);"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></p>
                 </div>
-                <div class="sseo-modal-footer">
-                    <a href="#" class="sseo-btn-secondary" id="post-detail-view" target="_blank"><?php esc_html_e('View on site', 'ai-seo-client'); ?></a>
-                    <a href="#" class="sseo-btn-primary" id="post-detail-edit" target="_blank"><?php esc_html_e('Edit Post', 'ai-seo-client'); ?></a>
-                    <button type="button" class="sseo-btn-secondary modal-close"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>
+                <div class="sseo-modal-footer" style="padding:12px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+                    <a href="#" class="fyn-btn fyn-btn-outline" id="post-detail-view" target="_blank"><?php esc_html_e('View on site', 'ai-seo-client'); ?></a>
+                    <a href="#" class="fyn-btn fyn-btn-primary" id="post-detail-edit" target="_blank"><?php esc_html_e('Edit Post', 'ai-seo-client'); ?></a>
+                    <button type="button" class="fyn-btn fyn-btn-outline modal-close"><?php esc_html_e('Close', 'ai-seo-client'); ?></button>
                 </div>
             </div>
         </div>

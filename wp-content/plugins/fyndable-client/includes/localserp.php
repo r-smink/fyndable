@@ -178,9 +178,12 @@ class LocalSerp
         $center = $this->restGetCenter();
         $hasCoordinates = !empty($center['coordinates']['lat']) && !empty($center['coordinates']['lng']);
         ?>
-        <div id="local-serp-inner" class="sseo-ai-dashboard-card">
-            <h2><?php esc_html_e('Local SERP Scan', 'ai-seo-client'); ?></h2>
-            <p class="description">
+        <div id="local-serp-inner" class="fyn-card">
+            <div class="fyn-card-header">
+                <span class="dashicons dashicons-location-alt"></span>
+                <h3 class="fyn-card-title"><?php esc_html_e('Local SERP Scan', 'ai-seo-client'); ?></h3>
+            </div>
+            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;">
                 <?php esc_html_e('Scan the Google local pack around your business address for any keyword.', 'ai-seo-client'); ?>
             </p>
 
@@ -192,34 +195,35 @@ class LocalSerp
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;">
                 <div>
-                    <label><strong><?php esc_html_e('Keyword', 'ai-seo-client'); ?></strong></label><br>
-                    <input type="text" id="local-keyword" style="width:250px;" placeholder="e.g. tandarts Amsterdam">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Keyword', 'ai-seo-client'); ?></label><br>
+                    <input type="text" id="local-keyword" class="fyn-input" style="width:250px;" placeholder="bv. tandarts Amsterdam">
                 </div>
                 <div>
-                    <label><strong><?php esc_html_e('Radius (km)', 'ai-seo-client'); ?></strong></label><br>
-                    <select id="local-radius" style="width:100px;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Radius (km)', 'ai-seo-client'); ?></label><br>
+                    <select id="local-radius" class="fyn-input" style="width:100px;">
                         <?php foreach ([1, 2, 5, 10, 15, 25, 50, 100] as $km): ?>
                             <option value="<?php echo esc_attr($km); ?>" <?php selected($center['radius'], $km); ?>><?php echo esc_html($km); ?> km</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label><strong><?php esc_html_e('Grid', 'ai-seo-client'); ?></strong></label><br>
-                    <select id="local-grid" style="width:140px;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Grid', 'ai-seo-client'); ?></label><br>
+                    <select id="local-grid" class="fyn-input" style="width:140px;">
                         <option value="1" <?php selected($center['grid'], 1); ?>><?php esc_html_e('Single center', 'ai-seo-client'); ?></option>
                         <option value="3" <?php selected($center['grid'], 3); ?>>3x3</option>
                         <option value="5" <?php selected($center['grid'], 5); ?>>5x5</option>
                         <option value="7" <?php selected($center['grid'], 7); ?>>7x7</option>
                     </select>
                 </div>
-                <button type="button" class="button button-primary" id="local-scan" <?php disabled(!$hasCoordinates); ?>>
+                <button type="button" class="fyn-btn fyn-btn-primary" id="local-scan" <?php disabled(!$hasCoordinates); ?>>
+                    <span class="dashicons dashicons-search"></span>
                     <?php esc_html_e('Scan Local Pack', 'ai-seo-client'); ?>
                 </button>
                 <span class="spinner" id="local-spinner" style="float:none;"></span>
             </div>
 
-            <div id="local-result-summary" style="margin-bottom:15px;font-weight:600;"></div>
-            <table class="wp-list-table widefat fixed striped" id="local-results-table" style="display:none;">
+            <div id="local-result-summary" style="margin-bottom:15px;font-weight:600;color:var(--text-h);"></div>
+            <table class="fyn-table" id="local-results-table" style="display:none;">
                 <thead>
                     <tr>
                         <th style="width:50px;">#</th>

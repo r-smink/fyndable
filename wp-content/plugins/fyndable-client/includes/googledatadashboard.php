@@ -309,228 +309,180 @@ class GoogleDataDashboard
 
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .google-service-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
-            .google-service-badge.connected { background: #d1fae5; color: #065f46; }
-            .google-service-badge.disconnected { background: #fee2e2; color: #991b1b; }
-            .google-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
-            .google-stat-card { background: #f8fafc; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e2e8f0; }
-            .google-stat-value { font-size: 28px; font-weight: 700; color: #1e293b; }
-            .google-stat-label { font-size: 12px; color: #64748b; margin-top: 5px;  letter-spacing: 0.5px; }
-            .google-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
-            .google-tab { padding: 10px 20px; cursor: pointer; background: none; border: none; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 14px; }
-            .google-tab.active { color: #379fd3; border-bottom-color: #379fd3; }
             .google-panel { display: none; }
             .google-panel.active { display: block; }
-            .google-loading { text-align: center; padding: 40px; color: #64748b; }
+            .google-loading { text-align: center; padding: 40px; color: var(--text-m); }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Google Data Dashboard', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Unified data from Google Search Console and Analytics 4.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Google Data', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Google Data Dashboard', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Unified data from Google Search Console and Analytics 4.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
 
-            <div class="sseo-ai-content">
-                <div style="max-width: 1200px;">
+            <!-- Connection Status -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-links"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Google Services Status', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+                    <span class="fyn-badge fyn-badge--<?php echo $gscConnected ? 'success' : 'danger'; ?>">
+                        <?php echo $gscConnected ? '&#10003;' : '&#10007;'; ?> Search Console
+                    </span>
+                    <span class="fyn-badge fyn-badge--<?php echo $ga4Connected ? 'success' : 'danger'; ?>">
+                        <?php echo $ga4Connected ? '&#10003;' : '&#10007;'; ?> Analytics 4
+                    </span>
+                </div>
 
-                <!-- Connection Status -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Google Services Status', 'ai-seo-client'); ?></h2>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
-                        <span class="google-service-badge <?php echo $gscConnected ? 'connected' : 'disconnected'; ?>">
-                            <?php echo $gscConnected ? '✓' : '✗'; ?> Search Console
-                        </span>
-                        <span class="google-service-badge <?php echo $ga4Connected ? 'connected' : 'disconnected'; ?>">
-                            <?php echo $ga4Connected ? '✓' : '✗'; ?> Analytics 4
-                        </span>
-                        <!-- Google Ads badge hidden — temporarily disabled for later stage.
-                        <span class="google-service-badge <?php echo $adsConnected ? 'connected' : 'disconnected'; ?>">
-                            <?php echo $adsConnected ? '✓' : '✗'; ?> Google Ads
-                        </span>
-                        -->
-                    </div>
-
-                    <?php if (!$anyConnected): ?>
-                        <p><?php esc_html_e('Connect your Google account via AI SEO → Integrations to see data here.', 'ai-seo-client'); ?></p>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="button button-primary">
-                            <?php esc_html_e('Go to Integrations', 'ai-seo-client'); ?>
-                        </a>
-                    <?php else: ?>
-                        <!-- GA4 Property ID config -->
-                        <div style="margin-bottom: 15px; padding: 15px; background: #f0f6fc; border-radius: 8px;">
-                            <label><strong><?php esc_html_e('GA4 Property ID', 'ai-seo-client'); ?></strong></label><br>
-                            <input type="text" id="ga4-property-id" value="<?php echo esc_attr($ga4PropertyId); ?>" placeholder="123456789" style="width: 200px; margin-top: 5px;">
-                            <button type="button" class="button button-small" id="ga4-list-properties" style="margin-left: 10px;">
+                <?php if (!$anyConnected): ?>
+                    <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Connect your Google account via Integrations to see data here.', 'ai-seo-client'); ?></p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" class="fyn-btn fyn-btn-primary">
+                        <?php esc_html_e('Go to Integrations', 'ai-seo-client'); ?>
+                    </a>
+                <?php else: ?>
+                    <div class="fyn-well" style="margin-bottom:14px;padding:14px;background:var(--well);border-radius:9px;">
+                        <label style="font-size:13px;font-weight:700;color:var(--text-h);"><?php esc_html_e('GA4 Property ID', 'ai-seo-client'); ?></label><br>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                            <input type="text" id="ga4-property-id" class="fyn-input" value="<?php echo esc_attr($ga4PropertyId); ?>" placeholder="123456789" style="width:200px;">
+                            <button type="button" class="fyn-btn fyn-btn-outline" id="ga4-list-properties" style="font-size:12px;">
                                 <?php esc_html_e('List Available Properties', 'ai-seo-client'); ?>
                             </button>
-                            <select id="ga4-property-select" style="display:none; margin-left: 10px; max-width: 300px;"></select>
-                            <p class="description"><?php esc_html_e('Numeric property ID from GA4 (found in Admin → Property Settings).', 'ai-seo-client'); ?></p>
+                            <select id="ga4-property-select" class="fyn-input" style="display:none;max-width:300px;"></select>
                         </div>
+                        <p style="font-size:12px;color:var(--text-m);margin:6px 0 0;"><?php esc_html_e('Numeric property ID from GA4 (found in Admin → Property Settings).', 'ai-seo-client'); ?></p>
+                    </div>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="google-save-config">
+                        <?php esc_html_e('Save Configuration', 'ai-seo-client'); ?>
+                    </button>
+                <?php endif; ?>
+            </div>
 
-                        <!-- Google Ads config hidden — temporarily disabled for later stage.
-                        <div style="padding: 15px; background: #fef3c7; border-radius: 8px;">
-                            <label><strong><?php esc_html_e('Google Ads Customer ID', 'ai-seo-client'); ?></strong></label><br>
-                            <input type="text" id="ads-customer-id" value="<?php echo esc_attr($adsCustomerId); ?>" placeholder="123-456-7890" style="width: 200px; margin-top: 5px;">
-                            <button type="button" class="button button-small" id="ads-list-customers" style="margin-left: 10px;">
-                                <?php esc_html_e('List Available Accounts', 'ai-seo-client'); ?>
-                            </button>
-                            <select id="ads-customer-select" style="display:none; margin-left: 10px; max-width: 200px;"></select>
-                        </div>
-                        -->
-                        <button type="button" class="button button-primary" id="google-save-config" style="margin-top: 15px;">
-                            <?php esc_html_e('Save Configuration', 'ai-seo-client'); ?>
-                        </button>
-                    <?php endif; ?>
+            <?php if ($anyConnected): ?>
+            <!-- Tabs card -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-tabs" style="margin-bottom:16px;">
+                    <button class="fyn-tab google-tab active" data-tab="overview"><?php esc_html_e('Overview', 'ai-seo-client'); ?></button>
+                    <button class="fyn-tab google-tab" data-tab="ga4"><?php esc_html_e('Analytics 4', 'ai-seo-client'); ?></button>
                 </div>
 
-                <?php if ($anyConnected): ?>
-                <!-- Tabs -->
-                <div class="sseo-ai-dashboard-card">
-                    <div class="google-tabs">
-                        <button class="google-tab active" data-tab="overview"><?php esc_html_e('Overview', 'ai-seo-client'); ?></button>
-                        <button class="google-tab" data-tab="ga4"><?php esc_html_e('Analytics 4', 'ai-seo-client'); ?></button>
-                        <!-- Google Ads tab hidden — temporarily disabled for later stage.
-                        <button class="google-tab" data-tab="ads"><?php esc_html_e('Google Ads', 'ai-seo-client'); ?></button>
-                        -->
+                <!-- Overview Panel -->
+                <div class="google-panel active" id="panel-overview">
+                    <div class="fyn-stats-grid" id="overview-stats">
+                        <div class="google-loading"><?php esc_html_e('Loading overview data...', 'ai-seo-client'); ?></div>
                     </div>
-
-                    <!-- Overview Panel -->
-                    <div class="google-panel active" id="panel-overview">
-                        <div class="google-stat-grid" id="overview-stats">
-                            <div class="google-loading"><?php esc_html_e('Loading overview data...', 'ai-seo-client'); ?></div>
-                        </div>
-                    </div>
-
-                    <!-- GA4 Panel -->
-                    <div class="google-panel" id="panel-ga4">
-                        <?php if ($ga4Connected): ?>
-                            <h3><?php esc_html_e('Daily Traffic', 'ai-seo-client'); ?></h3>
-                            <div id="ga4-daily-chart" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
-
-                            <h3 style="margin-top: 30px;"><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h3>
-                            <div id="ga4-top-pages" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
-
-                            <h3 style="margin-top: 30px;"><?php esc_html_e('Traffic Sources', 'ai-seo-client'); ?></h3>
-                            <div id="ga4-sources" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
-                        <?php else: ?>
-                            <p style="color: #64748b; text-align: center; padding: 40px;">
-                                <?php esc_html_e('Google Analytics 4 is not configured. Set your GA4 Property ID above.', 'ai-seo-client'); ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Google Ads Panel hidden — temporarily disabled for later stage.
-                    <div class="google-panel" id="panel-ads">
-                        <?php if ($adsConnected): ?>
-                            <h3><?php esc_html_e('Campaign Performance', 'ai-seo-client'); ?></h3>
-                            <div id="ads-overview" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
-
-                            <h3 style="margin-top: 30px;"><?php esc_html_e('Daily Performance', 'ai-seo-client'); ?></h3>
-                            <div id="ads-daily" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
-
-                            <h3 style="margin-top: 30px;"><?php esc_html_e('Keyword Performance', 'ai-seo-client'); ?></h3>
-                            <div id="ads-keywords" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
-                        <?php else: ?>
-                            <p style="color: #64748b; text-align: center; padding: 40px;">
-                                <?php esc_html_e('Google Ads is not configured. Set your Customer ID above.', 'ai-seo-client'); ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    -->
                 </div>
 
-                <!-- Search Console -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Search Console', 'ai-seo-client'); ?></h2>
-                    <?php if ($gscConnected): ?>
-                        <div id="gsc-data-app">
-                            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
-                                <select id="gsc-data-period" class="regular-text">
-                                    <option value="7"><?php esc_html_e('Last 7 days', 'ai-seo-client'); ?></option>
-                                    <option value="28" selected><?php esc_html_e('Last 28 days', 'ai-seo-client'); ?></option>
-                                    <option value="90"><?php esc_html_e('Last 3 months', 'ai-seo-client'); ?></option>
-                                </select>
-                                <button type="button" class="button button-primary" id="gsc-data-refresh">
-                                    <?php esc_html_e('Load Data', 'ai-seo-client'); ?>
-                                </button>
-                                <span class="spinner" id="gsc-data-spinner" style="float:none; margin-top: 0;"></span>
-                            </div>
+                <!-- GA4 Panel -->
+                <div class="google-panel" id="panel-ga4">
+                    <?php if ($ga4Connected): ?>
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 12px;"><?php esc_html_e('Daily Traffic', 'ai-seo-client'); ?></h4>
+                        <div id="ga4-daily-chart" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
 
-                            <div id="gsc-data-error" class="notice notice-error" style="display:none;"><p></p></div>
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:24px 0 12px;"><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h4>
+                        <div id="ga4-top-pages" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
 
-                            <div class="google-stat-grid" id="gsc-data-totals" style="gap: 20px; margin-bottom: 35px;">
-                                <div class="google-stat-card">
-                                    <div class="google-stat-value" id="gsc-data-clicks">-</div>
-                                    <div class="google-stat-label"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div class="google-stat-card">
-                                    <div class="google-stat-value" id="gsc-data-impressions">-</div>
-                                    <div class="google-stat-label"><?php esc_html_e('Impressions', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div class="google-stat-card">
-                                    <div class="google-stat-value" id="gsc-data-ctr">-</div>
-                                    <div class="google-stat-label"><?php esc_html_e('Avg CTR', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div class="google-stat-card">
-                                    <div class="google-stat-value" id="gsc-data-position">-</div>
-                                    <div class="google-stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
-                                </div>
-                            </div>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
-                                <div class="postbox" style="padding: 20px;">
-                                    <h3><?php esc_html_e('Top Queries', 'ai-seo-client'); ?></h3>
-                                    <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
-                                        <thead>
-                                            <tr>
-                                                <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
-                                                <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
-                                                <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
-                                                <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
-                                                <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="gsc-data-queries-body">
-                                            <tr><td colspan="5"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div class="postbox" style="padding: 20px;">
-                                    <h3><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h3>
-                                    <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
-                                        <thead>
-                                            <tr>
-                                                <th><?php esc_html_e('Page', 'ai-seo-client'); ?></th>
-                                                <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
-                                                <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
-                                                <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
-                                                <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="gsc-data-pages-body">
-                                            <tr><td colspan="5"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:24px 0 12px;"><?php esc_html_e('Traffic Sources', 'ai-seo-client'); ?></h4>
+                        <div id="ga4-sources" class="google-loading"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
                     <?php else: ?>
-                        <p style="color: #64748b; text-align: center; padding: 40px;">
-                            <?php esc_html_e('Google Search Console is not connected. Connect your Google account via Integrations.', 'ai-seo-client'); ?>
+                        <p style="color:var(--text-m);text-align:center;padding:40px;">
+                            <?php esc_html_e('Google Analytics 4 is not configured. Set your GA4 Property ID above.', 'ai-seo-client'); ?>
                         </p>
                     <?php endif; ?>
                 </div>
-                <?php endif; ?>
-
-                </div>
             </div>
+
+            <!-- Search Console -->
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-google"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Search Console', 'ai-seo-client'); ?></h3>
+                </div>
+                <?php if ($gscConnected): ?>
+                    <div id="gsc-data-app">
+                        <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+                            <select id="gsc-data-period" class="fyn-input" style="width:auto;padding:8px 12px;">
+                                <option value="7"><?php esc_html_e('Last 7 days', 'ai-seo-client'); ?></option>
+                                <option value="28" selected><?php esc_html_e('Last 28 days', 'ai-seo-client'); ?></option>
+                                <option value="90"><?php esc_html_e('Last 3 months', 'ai-seo-client'); ?></option>
+                            </select>
+                            <button type="button" class="fyn-btn fyn-btn-primary" id="gsc-data-refresh">
+                                <?php esc_html_e('Load Data', 'ai-seo-client'); ?>
+                            </button>
+                            <span class="spinner" id="gsc-data-spinner" style="float:none;margin-top:0;"></span>
+                        </div>
+
+                        <div id="gsc-data-error" class="notice notice-error" style="display:none;"><p></p></div>
+
+                        <div class="fyn-stats-grid" id="gsc-data-totals" style="margin-bottom:24px;">
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="gsc-data-clicks">-</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="gsc-data-impressions">-</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Impressions', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="gsc-data-ctr">-</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Avg CTR', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="gsc-data-position">-</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
+                            </div>
+                        </div>
+
+                        <div class="fyn-grid-2">
+                            <div class="fyn-card" style="box-shadow:none;border:1px solid var(--card-border);">
+                                <div class="fyn-card-header"><h3 class="fyn-card-title"><?php esc_html_e('Top Queries', 'ai-seo-client'); ?></h3></div>
+                                <table class="fyn-table" style="font-size:13px;">
+                                    <thead>
+                                        <tr>
+                                            <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
+                                            <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
+                                            <th style="width:70px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
+                                            <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
+                                            <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gsc-data-queries-body">
+                                        <tr><td colspan="5" style="color:var(--text-m);"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="fyn-card" style="box-shadow:none;border:1px solid var(--card-border);">
+                                <div class="fyn-card-header"><h3 class="fyn-card-title"><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h3></div>
+                                <table class="fyn-table" style="font-size:13px;">
+                                    <thead>
+                                        <tr>
+                                            <th><?php esc_html_e('Page', 'ai-seo-client'); ?></th>
+                                            <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
+                                            <th style="width:70px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
+                                            <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
+                                            <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gsc-data-pages-body">
+                                        <tr><td colspan="5" style="color:var(--text-m);"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <p style="color:var(--text-m);text-align:center;padding:40px;">
+                        <?php esc_html_e('Google Search Console is not connected. Connect your Google account via Integrations.', 'ai-seo-client'); ?>
+                    </p>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
         </div>
 
         <script>
@@ -672,7 +624,7 @@ class GoogleDataDashboard
                         $('#ga4-daily-chart').html('<p style="color:#64748b;">No data available</p>');
                         return;
                     }
-                    var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Date</th><th>Sessions</th><th>Users</th><th>Page Views</th></tr></thead><tbody>';
+                    var html = '<table class="fyn-table"><thead><tr><th>Date</th><th>Sessions</th><th>Users</th><th>Page Views</th></tr></thead><tbody>';
                     data.daily.forEach(function(d) {
                         html += '<tr><td>' + d.date + '</td><td>' + formatNum(d.sessions) + '</td><td>' + formatNum(d.users) + '</td><td>' + formatNum(d.page_views) + '</td></tr>';
                     });
@@ -684,7 +636,7 @@ class GoogleDataDashboard
                 wp.apiFetch({ path: 'sseo-ai/v1/google/ga4/top-pages?days=30&limit=10' }).then(function(data) {
                     if (data.error) { $('#ga4-top-pages').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
                     if (!data.pages || !data.pages.length) { $('#ga4-top-pages').html('<p style="color:#64748b;">No data</p>'); return; }
-                    var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Page</th><th>Title</th><th>Views</th><th>Sessions</th><th>Avg Duration</th></tr></thead><tbody>';
+                    var html = '<table class="fyn-table"><thead><tr><th>Page</th><th>Title</th><th>Views</th><th>Sessions</th><th>Avg Duration</th></tr></thead><tbody>';
                     data.pages.forEach(function(p) {
                         html += '<tr><td><code>' + $('<span>').text(p.path).html() + '</code></td><td>' + $('<span>').text(p.title).html() + '</td><td>' + formatNum(p.page_views) + '</td><td>' + formatNum(p.sessions) + '</td><td>' + p.avg_duration + 's</td></tr>';
                     });
@@ -696,7 +648,7 @@ class GoogleDataDashboard
                 wp.apiFetch({ path: 'sseo-ai/v1/google/ga4/sources?days=30' }).then(function(data) {
                     if (data.error) { $('#ga4-sources').html('<p style="color:#d63638;">' + data.error + '</p>'); return; }
                     if (!data.sources || !data.sources.length) { $('#ga4-sources').html('<p style="color:#64748b;">No data</p>'); return; }
-                    var html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Channel</th><th>Sessions</th><th>Users</th></tr></thead><tbody>';
+                    var html = '<table class="fyn-table"><thead><tr><th>Channel</th><th>Sessions</th><th>Users</th></tr></thead><tbody>';
                     data.sources.forEach(function(s) {
                         html += '<tr><td><strong>' + $('<span>').text(s.channel).html() + '</strong></td><td>' + formatNum(s.sessions) + '</td><td>' + formatNum(s.users) + '</td></tr>';
                     });

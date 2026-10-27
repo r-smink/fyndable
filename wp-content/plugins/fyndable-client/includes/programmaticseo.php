@@ -294,29 +294,26 @@ PROMPT;
         $templates = $this->getTemplates();
         ?>
         <style>
-            .pseo-wrap { max-width: 1000px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .pseo-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .pseo-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
-            .pseo-header h1 { margin: 0; font-size: 22px; }
-            .pseo-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
             .pseo-field { margin-bottom: 15px; }
-            .pseo-field label { font-weight: 600; display: block; margin-bottom: 4px; }
+            .pseo-field label { font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-h); font-size: 13px; }
             .pseo-field input, .pseo-field textarea, .pseo-field select { width: 100%; }
-            .pseo-var { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
-            .pseo-tab { padding: 10px 20px; cursor: pointer; border: none; background: #f1f5f9; border-radius: 8px 8px 0 0; font-weight: 600; }
-            .pseo-tab.active { background: #fff; border: 1px solid #e2e8f0; border-bottom: none; }
+            .pseo-var { background: var(--fyn-accent-light); color: var(--fyn-blue); padding: 2px 8px; border-radius: 5px; font-family: monospace; font-size: 12px; }
         </style>
-        <div class="wrap pseo-wrap">
-            <div class="pseo-card">
-                <div class="pseo-header">
-                    <h1>⚡ <?php esc_html_e('Programmatic SEO', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Generate hundreds of unique SEO-optimized pages from templates and datasets.', 'ai-seo-client'); ?></p>
-                </div>
+        <div class="wrap fyn-animate-in" style="max-width:1100px;margin:0 auto;padding:28px 32px 48px;">
 
-                <div style="display:flex;gap:10px;margin-bottom:20px;">
-                    <button class="pseo-tab active" id="pseo-tab-template"><?php esc_html_e('Template', 'ai-seo-client'); ?></button>
-                    <button class="pseo-tab" id="pseo-tab-dataset"><?php esc_html_e('Dataset', 'ai-seo-client'); ?></button>
-                    <button class="pseo-tab" id="pseo-tab-generate"><?php esc_html_e('Generate', 'ai-seo-client'); ?></button>
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Programmatic SEO', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Programmatic SEO', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Generate hundreds of unique SEO-optimized pages from templates and datasets.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <div class="fyn-card">
+                <div class="fyn-tabs" style="margin-bottom:20px;">
+                    <button class="fyn-tab pseo-tab active" id="pseo-tab-template"><?php esc_html_e('Template', 'ai-seo-client'); ?></button>
+                    <button class="fyn-tab pseo-tab" id="pseo-tab-dataset"><?php esc_html_e('Dataset', 'ai-seo-client'); ?></button>
+                    <button class="fyn-tab pseo-tab" id="pseo-tab-generate"><?php esc_html_e('Generate', 'ai-seo-client'); ?></button>
                 </div>
 
                 <!-- Template Tab -->
@@ -369,8 +366,8 @@ PROMPT;
                             </select>
                         </div>
                     </div>
-                    <button class="button button-primary" id="pseo-save-tpl"><?php esc_html_e('Save Template', 'ai-seo-client'); ?></button>
-                    <select id="pseo-load-tpl" style="margin-left:10px;">
+                    <button class="fyn-btn fyn-btn-primary" id="pseo-save-tpl"><?php esc_html_e('Save Template', 'ai-seo-client'); ?></button>
+                    <select id="pseo-load-tpl" class="fyn-input" style="margin-left:10px;width:auto;display:inline-block;">
                         <option value=""><?php esc_html_e('— Load Template —', 'ai-seo-client'); ?></option>
                         <?php foreach ($templates as $tpl): ?>
                             <option value="<?php echo esc_attr($tpl['id']); ?>"><?php echo esc_html($tpl['name']); ?></option>
@@ -385,14 +382,14 @@ PROMPT;
                         <textarea id="pseo-dataset" rows="10" style="font-family:monospace;font-size:12px;" placeholder='[{"location":"Amsterdam","service":"plumber"},{"location":"Rotterdam","service":"plumber"}]'></textarea>
                     </div>
                     <p class="description"><?php esc_html_e('Each object becomes a unique page. Keys must match variables in your template (e.g. {location}).', 'ai-seo-client'); ?></p>
-                    <button class="button" id="pseo-preview-btn"><?php esc_html_e('Preview First Page', 'ai-seo-client'); ?></button>
+                    <button class="fyn-btn fyn-btn-outline" id="pseo-preview-btn"><?php esc_html_e('Preview First Page', 'ai-seo-client'); ?></button>
                     <div id="pseo-preview-result" style="margin-top:15px;"></div>
                 </div>
 
                 <!-- Generate Tab -->
                 <div id="pseo-panel-generate" style="display:none;">
                     <p><?php esc_html_e('Generate WordPress draft posts for all rows in your dataset using the selected template.', 'ai-seo-client'); ?></p>
-                    <button class="button button-primary button-large" id="pseo-generate-btn"><?php esc_html_e('Generate All Pages', 'ai-seo-client'); ?></button>
+                    <button class="fyn-btn fyn-btn-primary" id="pseo-generate-btn"><?php esc_html_e('Generate All Pages', 'ai-seo-client'); ?></button>
                     <div id="pseo-generate-result" style="margin-top:20px;"></div>
                 </div>
             </div>
@@ -401,7 +398,6 @@ PROMPT;
         jQuery(document).ready(function($) {
             var currentTemplate = null;
 
-            // Tab switching
             $('.pseo-tab').on('click', function() {
                 $('.pseo-tab').removeClass('active');
                 $(this).addClass('active');
@@ -469,11 +465,11 @@ PROMPT;
                     method: 'POST',
                     data: { template: buildTemplateObj(), row: rows[0] }
                 }).then(function(res) {
-                    var html = '<div style="background:#f8fafc;border-radius:8px;padding:15px;">';
-                    html += '<h4>' + res.title + '</h4>';
-                    html += '<p style="font-size:13px;color:#64748b;"><strong>Keyword:</strong> ' + res.keyword + '</p>';
-                    html += '<p style="font-size:13px;color:#64748b;"><strong>Meta:</strong> ' + res.meta_description + '</p>';
-                    html += '<div style="max-height:400px;overflow-y:auto;border:1px solid #e2e8f0;padding:10px;margin-top:10px;">' + res.content + '</div>';
+                    var html = '<div style="background:var(--well);border-radius:9px;padding:15px;">';
+                    html += '<h4 style="color:var(--text-h);margin:0 0 8px;">' + res.title + '</h4>';
+                    html += '<p style="font-size:13px;color:var(--text-m);"><strong>Keyword:</strong> ' + res.keyword + '</p>';
+                    html += '<p style="font-size:13px;color:var(--text-m);"><strong>Meta:</strong> ' + res.meta_description + '</p>';
+                    html += '<div style="max-height:400px;overflow-y:auto;border:1px solid var(--card-border);padding:10px;margin-top:10px;border-radius:7px;background:var(--card);color:var(--text-b);">' + res.content + '</div>';
                     html += '</div>';
                     $('#pseo-preview-result').html(html);
                 }).catch(function(err) {
@@ -499,14 +495,14 @@ PROMPT;
                     data: { template_id: currentTemplate, dataset: rows, create_drafts: true }
                 }).then(function(res) {
                     var success = 0, failed = 0;
-                    var html = '<table class="wp-list-table widefat striped"><thead><tr><th>Title</th><th>Status</th><th>Link</th></tr></thead><tbody>';
+                    var html = '<table class="fyn-table"><thead><tr><th>Titel</th><th>Status</th><th>Link</th></tr></thead><tbody>';
                     res.results.forEach(function(r) {
                         if (r.success) {
                             success++;
-                            html += '<tr><td>' + r.title + '</td><td style="color:#16a34a;">✓ Draft created</td><td>' + (r.edit_url ? '<a href="' + r.edit_url + '">Edit</a>' : '') + '</td></tr>';
+                            html += '<tr><td>' + r.title + '</td><td style="color:var(--fyn-success);font-weight:600;">&#10003; Draft created</td><td>' + (r.edit_url ? '<a href="' + r.edit_url + '" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;">Edit</a>' : '') + '</td></tr>';
                         } else {
                             failed++;
-                            html += '<tr><td>—</td><td style="color:#dc2626;">✗ ' + r.error + '</td><td></td></tr>';
+                            html += '<tr><td>&mdash;</td><td style="color:var(--fyn-danger);font-weight:600;">&#10007; ' + r.error + '</td><td></td></tr>';
                         }
                     });
                     html += '</tbody></table>';

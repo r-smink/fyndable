@@ -7,12 +7,12 @@ namespace SSEOAIClient;
  *
  * Replaces the WordPress admin chrome with a branded dashboard experience.
  * Existing admin pages are loaded inside an iframe within the shell.
- * An exit button (×) returns the user to the standard WordPress admin.
+ * An exit button returns the user to the standard WordPress admin.
  */
 class DashboardShell
 {
     private Client $client;
-    private array $menuItems = [];
+    private array $menuSections = [];
 
     public function __construct(Client $client)
     {
@@ -38,180 +38,124 @@ class DashboardShell
     }
 
     /**
-     * Build the sidebar menu items based on license tier.
+     * Build the grouped sidebar menu sections based on license tier.
      */
-    private function buildMenuItems(): void
+    private function buildMenuSections(): void
     {
         $isLicenseValid = $this->client->licenseValidator->isLicenseValid();
         $tier = $this->client->licenseValidator->getLicenseTier();
+        $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
+        $isPro = in_array($tier, $professionalTiers, true);
+        $isPaidPro = in_array($tier, ['professional', 'business', 'agency', 'dev'], true);
 
-        $this->menuItems = [
-            [
-                'slug' => 'ai-seo-client',
-                'label' => __('Connection', 'ai-seo-client'),
-                'icon' => '&#128279;',
-                'always' => true,
-            ],
-        ];
-
+        $unreadCount = 0;
         if ($isLicenseValid) {
-            // Workflow order: research first, then plan, then create, then
-            // measure, then optimise, then utilities.
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-dashboard',
-                'label' => __('Dashboard', 'ai-seo-client'),
-                'icon' => '&#128202;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-keywords',
-                'label' => __('Keywords', 'ai-seo-client'),
-                'icon' => '&#127919;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-ideas',
-                'label' => __('Ideas', 'ai-seo-client'),
-                'icon' => '&#128161;',
-            ];
-
-            $professionalTiers = ['professional', 'business', 'agency', 'trial', 'dev'];
-            $isPro = in_array($tier, $professionalTiers, true);
-
-            if ($isPro) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-topic-clusters',
-                    'label' => __('Topic Clusters', 'ai-seo-client'),
-                    'icon' => '&#127919;',
-                ];
+            try {
+                $unreadCount = $this->client->dashboardAPI->getUnreadSupportCount();
+            } catch (\Exception $e) {
+                $unreadCount = 0;
             }
-
-            if (in_array($tier, ['professional', 'business', 'agency', 'dev'], true)) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-automation',
-                    'label' => __('ApexFlow', 'ai-seo-client'),
-                    'icon' => '&#9889;',
-                ];
-            }
-
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-content-calendar',
-                'label' => __('Content Calendar', 'ai-seo-client'),
-                'icon' => '&#128197;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-created-posts',
-                'label' => __('Created Posts', 'ai-seo-client'),
-                'icon' => '&#9999;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-competitor-research',
-                'label' => __('Competitors', 'ai-seo-client'),
-                'icon' => '&#128269;',
-            ];
-
-            if ($isPro) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-backlinks',
-                    'label' => __('Backlinks', 'ai-seo-client'),
-                    'icon' => '&#128279;',
-                ];
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-advanced-backlinks',
-                    'label' => __('Adv. Backlinks', 'ai-seo-client'),
-                    'icon' => '&#129517;',
-                ];
-            }
-
-            if ($isPro) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-rank-tracker',
-                    'label' => __('Rank Tracker', 'ai-seo-client'),
-                    'icon' => '&#128200;',
-                ];
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-site-audit',
-                    'label' => __('Site Audit', 'ai-seo-client'),
-                    'icon' => '&#128269;',
-                ];
-            }
-
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-link-manager',
-                'label' => __('Link Manager', 'ai-seo-client'),
-                'icon' => '&#128279;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-bulk',
-                'label' => __('Bulk Optimizer', 'ai-seo-client'),
-                'icon' => '&#9989;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-sitemaps',
-                'label' => __('Sitemaps', 'ai-seo-client'),
-                'icon' => '&#128506;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-data-dashboard',
-                'label' => __('SEO Data', 'ai-seo-client'),
-                'icon' => '&#128200;',
-            ];
-
-            if ($isPro) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-google-data',
-                    'label' => __('Google Data', 'ai-seo-client'),
-                    'icon' => '&#128202;',
-                ];
-            }
-
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-llm-tracker',
-                'label' => __('LLM Tracker', 'ai-seo-client'),
-                'icon' => '&#129504;',
-            ];
-
-            if ($isPro) {
-                $this->menuItems[] = [
-                    'slug' => 'ai-seo-ab-testing',
-                    'label' => __('A/B Testing', 'ai-seo-client'),
-                    'icon' => '&#129514;',
-                ];
-            }
-
-            // Utility items at the bottom of the sidebar
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-ai-tools',
-                'label' => __('AI Tools', 'ai-seo-client'),
-                'icon' => '&#129302;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-integrations',
-                'label' => __('Integrations', 'ai-seo-client'),
-                'icon' => '&#128268;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-support',
-                'label' => __('Support', 'ai-seo-client'),
-                'icon' => '&#128172;',
-            ];
-            $this->menuItems[] = [
-                'slug' => 'ai-seo-feedback',
-                'label' => __('Feedback', 'ai-seo-client'),
-                'icon' => '&#128172;',
-            ];
         }
 
-        $this->menuItems[] = [
-            'slug' => 'ai-seo-settings',
-            'label' => __('Settings', 'ai-seo-client'),
-            'icon' => '&#9881;',
-            'always' => true,
+        // Section 1: Overzicht (always visible)
+        $overzicht = [
+            'label' => 'Overview',
+            'items' => [
+                ['slug' => 'ai-seo-dashboard', 'label' => __('Dashboard', 'ai-seo-client'), 'icon' => 'dashicons-chart-bar'],
+                ['slug' => 'ai-seo-client', 'label' => __('Connection', 'ai-seo-client'), 'icon' => 'dashicons-admin-links'],
+            ],
         ];
+        $this->menuSections[] = $overzicht;
+
+        if (!$isLicenseValid) {
+            return;
+        }
+
+        // Section 2: Content
+        $content = [
+            'label' => 'Content',
+            'items' => [
+                ['slug' => 'ai-seo-ideas', 'label' => __('Ideas', 'ai-seo-client'), 'icon' => 'dashicons-lightbulb'],
+                ['slug' => 'ai-seo-content-calendar', 'label' => __('Content Calendar', 'ai-seo-client'), 'icon' => 'dashicons-calendar-alt'],
+                ['slug' => 'ai-seo-created-posts', 'label' => __('Created Posts', 'ai-seo-client'), 'icon' => 'dashicons-edit-page'],
+                ['slug' => 'ai-seo-topic-clusters', 'label' => __('Topic Clusters', 'ai-seo-client'), 'icon' => 'dashicons-admin-site-alt3', 'pro' => true],
+            ],
+        ];
+        if ($isPaidPro && $this->client->apexFlow) {
+            $content['items'][] = ['slug' => 'ai-seo-automation', 'label' => 'ApexFlow', 'icon' => 'dashicons-controls-play'];
+        }
+        $content['items'][] = ['slug' => 'ai-seo-bulk', 'label' => __('Bulk Optimization', 'ai-seo-client'), 'icon' => 'dashicons-yes-alt'];
+        // Filter pro items if not professional tier
+        if (!$isPro) {
+            $content['items'] = array_values(array_filter($content['items'], function ($item) {
+                return empty($item['pro']);
+            }));
+        }
+        $this->menuSections[] = $content;
+
+        // Section 3: Zoekwoorden & ranking
+        $keywords = [
+            'label' => 'Keywords & Ranking',
+            'items' => [
+                ['slug' => 'ai-seo-keywords', 'label' => __('Keywords', 'ai-seo-client'), 'icon' => 'dashicons-search'],
+                ['slug' => 'ai-seo-rank-tracker', 'label' => __('Rank Tracker', 'ai-seo-client'), 'icon' => 'dashicons-chart-line', 'pro' => true],
+                ['slug' => 'ai-seo-competitor-research', 'label' => __('Competitors', 'ai-seo-client'), 'icon' => 'dashicons-groups'],
+                ['slug' => 'ai-seo-ab-testing', 'label' => __('A/B Testing', 'ai-seo-client'), 'icon' => 'dashicons-randomize', 'pro' => true],
+            ],
+        ];
+        if (!$isPro) {
+            $keywords['items'] = array_values(array_filter($keywords['items'], function ($item) {
+                return empty($item['pro']);
+            }));
+        }
+        $this->menuSections[] = $keywords;
+
+        // Section 4: Links & techniek
+        $links = [
+            'label' => 'Links & Technical',
+            'items' => [
+                ['slug' => 'ai-seo-link-manager', 'label' => __('Link Manager', 'ai-seo-client'), 'icon' => 'dashicons-admin-links'],
+            ],
+        ];
+        if ($isPro && $this->client->backlinkAnalyzer) {
+            $links['items'][] = ['slug' => 'ai-seo-backlinks', 'label' => __('Backlinks', 'ai-seo-client'), 'icon' => 'dashicons-admin-links'];
+            if ($this->client->advancedBacklinks) {
+                $links['items'][] = ['slug' => 'ai-seo-advanced-backlinks', 'label' => __('Adv. Backlinks', 'ai-seo-client'), 'icon' => 'dashicons-admin-links'];
+            }
+        }
+        if ($isPro) {
+            $links['items'][] = ['slug' => 'ai-seo-site-audit', 'label' => __('Site Audit', 'ai-seo-client'), 'icon' => 'dashicons-clipboard'];
+        }
+        $links['items'][] = ['slug' => 'ai-seo-sitemaps', 'label' => __('Sitemaps', 'ai-seo-client'), 'icon' => 'dashicons-networking'];
+        $this->menuSections[] = $links;
+
+        // Section 5: Data & inzichten
+        $data = [
+            'label' => 'Data & Insights',
+            'items' => [
+                ['slug' => 'ai-seo-data-dashboard', 'label' => __('SEO Data', 'ai-seo-client'), 'icon' => 'dashicons-chart-area'],
+            ],
+        ];
+        if ($isPro) {
+            $data['items'][] = ['slug' => 'ai-seo-google-data', 'label' => __('Google Data', 'ai-seo-client'), 'icon' => 'dashicons-google'];
+        }
+        $data['items'][] = ['slug' => 'ai-seo-llm-tracker', 'label' => __('LLM Tracker', 'ai-seo-client'), 'icon' => 'dashicons-visibility'];
+        $this->menuSections[] = $data;
+
+        // Section 6: Systeem
+        $systeem = [
+            'label' => 'System',
+            'items' => [
+                ['slug' => 'ai-seo-ai-tools', 'label' => __('AI Tools', 'ai-seo-client'), 'icon' => 'dashicons-superhero-alt'],
+                ['slug' => 'ai-seo-integrations', 'label' => __('Integrations', 'ai-seo-client'), 'icon' => 'dashicons-admin-plugins'],
+                ['slug' => 'ai-seo-support', 'label' => __('Support', 'ai-seo-client'), 'icon' => 'dashicons-sos', 'badge' => $unreadCount],
+            ],
+        ];
+        $this->menuSections[] = $systeem;
     }
 
     /**
      * Hide WordPress admin chrome when on dashboard pages.
-     * - On the shell page: hide ALL WP chrome (menu, bar, footer, notices)
-     * - In the iframe (fyndable_shell=1): hide WP chrome for clean content
      */
     public function hideWpChrome(): void
     {
@@ -231,7 +175,6 @@ class DashboardShell
         }
 
         if ($isShellPage) {
-            // Shell page: hide everything from WordPress, take over full viewport
             echo '<style>
                 #wpadminbar, #adminmenumain, #adminmenuwrap, #adminmenu,
                 #wpfooter, #screen-meta, #screen-meta-links,
@@ -261,13 +204,10 @@ class DashboardShell
             </style>';
         }
 
-        // For all dashboard pages (including iframe content): use JS to detect iframe
-        // and hide WP chrome even when fyndable_shell param is missing from URL
         if (!$isShellPage) {
             echo '<script>
             (function() {
                 if (window.self !== window.top) {
-                    // We are inside an iframe — hide all WP chrome
                     var style = document.createElement("style");
                     style.textContent = "\
                         #wpadminbar, #adminmenumain, #adminmenuwrap, #adminmenu,\
@@ -285,11 +225,11 @@ class DashboardShell
                         html.wp-toolbar {\
                             padding-top: 0 !important;\
                         }\
-                        .wrap, .wrap.sseo-ai-modern {\
+                        .wrap, .wrap.sseo-ai-modern, .wrap.fyn-animate-in {\
                             margin: 0 !important;\
                             padding: 0 !important;\
                         }\
-                        .sseo-ai-dashboard-card {\
+                        .fyn-card, .sseo-ai-dashboard-card {\
                             margin: 20px 0px !important;\
                         }\
                         html, body {\
@@ -301,17 +241,12 @@ class DashboardShell
                     ";
                     document.head.appendChild(style);
 
-                    // Intercept links to dashboard admin pages: append fyndable_shell=1
-                    // and the current theme flag so they stay inside the iframe shell
-                    // and keep the selected light/dark mode.
                     document.addEventListener("click", function(e) {
                         var link = e.target.closest("a");
                         if (!link || !link.href) return;
                         var url = link.href;
-                        // Only intercept links to admin.php with page=ai-seo- or page=fyndable-
                         if (url.indexOf("admin.php") === -1) return;
                         if (url.indexOf("page=ai-seo-") === -1 && url.indexOf("page=fyndable-") === -1) return;
-                        // Skip links with target=_blank
                         if (link.target === "_blank") return;
                         e.preventDefault();
                         var sep = url.indexOf("?") !== -1 ? "&" : "?";
@@ -326,14 +261,10 @@ class DashboardShell
                         window.location.href = url;
                     });
 
-                    // Also intercept form submissions that redirect to dashboard admin pages
-                    // (e.g. options.php redirects back to admin.php?page=ai-seo-*)
-                    // Handle this by modifying the _wp_http_referer to include fyndable_shell
                     document.addEventListener("DOMContentLoaded", function() {
                         document.querySelectorAll("form").forEach(function(form) {
                             var formAction = form.getAttribute("action") || "";
                             if (formAction.indexOf("options.php") !== -1) {
-                                // Update the _wp_http_referer to include fyndable_shell and theme
                                 var referrer = form.querySelector("input[name=_wp_http_referer]");
                                 if (referrer && referrer.value.indexOf("fyndable_shell") === -1) {
                                     var sep = referrer.value.indexOf("?") !== -1 ? "&" : "?";
@@ -347,7 +278,6 @@ class DashboardShell
             })();
             </script>';
 
-            // Also apply CSS immediately if fyndable_shell is set (no waiting for JS)
             if ($isIframePage) {
                 echo '<style>
                     #wpadminbar, #adminmenumain, #adminmenuwrap, #adminmenu,
@@ -367,11 +297,11 @@ class DashboardShell
                     html.wp-toolbar {
                         padding-top: 0 !important;
                     }
-                    .wrap, .wrap.sseo-ai-modern {
+                    .wrap, .wrap.sseo-ai-modern, .wrap.fyn-animate-in {
                         margin: 0 !important;
                         padding: 0 !important;
                     }
-                    .sseo-ai-dashboard-card {
+                    .fyn-card, .sseo-ai-dashboard-card {
                         margin: 20px 0px !important;
                     }
                     html, body {
@@ -386,39 +316,29 @@ class DashboardShell
     }
 
     /**
-     * Render the dashboard shell (within WordPress .wrap).
-     * WP chrome is hidden via hideWpChrome() CSS on admin_head.
+     * Render the dashboard shell.
      */
     public function render(): void
     {
-        $this->buildMenuItems();
+        $this->buildMenuSections();
 
-        // Determine which page to load in the iframe
         $currentPage = isset($_GET['fyndable_page']) ? sanitize_key($_GET['fyndable_page']) : 'ai-seo-dashboard';
-
-        // Never load the shell page inside the shell; that would create a
-        // shell-in-shell loop. Fall back to the dashboard content page.
         if (empty($currentPage) || $currentPage === 'fyndable-dashboard') {
             $currentPage = 'ai-seo-dashboard';
         }
 
         $licenseValid = $this->client->licenseValidator->isLicenseValid();
-
-        // If not licensed, force connection page
         if (!$licenseValid) {
             $currentPage = 'ai-seo-client';
         }
 
         $darkTheme = get_option('sseo_ai_client_dark_theme', '0') === '1';
 
-        // Build iframe URL
         $iframeUrl = admin_url('admin.php');
         $iframeUrl = add_query_arg('page', $currentPage, $iframeUrl);
         $iframeUrl = add_query_arg('fyndable_shell', '1', $iframeUrl);
         $iframeUrl = add_query_arg('fyndable_dark', $darkTheme ? '1' : '0', $iframeUrl);
 
-        // Pass through relevant query parameters (e.g. keyword, error messages)
-        // to the iframe so the loaded page can display them.
         $passThroughParams = ['keyword', 'error', 'activated', 'deactivated', 'validated'];
         foreach ($passThroughParams as $param) {
             if (isset($_GET[$param]) && $_GET[$param] !== '') {
@@ -428,351 +348,488 @@ class DashboardShell
 
         $exitUrl = admin_url('admin.php?page=' . $currentPage);
 
-        // Load white-label branding set by the SaaS dashboard
         $whiteLabel = get_option('sseo_ai_white_label', []);
         $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
         $companyLogo = !empty($whiteLabel['company_logo']) ? $whiteLabel['company_logo'] : '';
-        $brandName = $companyName . ' Smart SEO';
-        // Only apply custom colors when a company name is set; otherwise fall back to Fyndable defaults
         $hasCustomBrand = !empty($whiteLabel['company_name']);
-        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
-        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
+        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#8F39AC') : '#8F39AC';
+        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#379FD3') : '#379FD3';
         $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
-        $supportEmail = !empty($whiteLabel['support_email']) ? $whiteLabel['support_email'] : '';
-        $supportUrl = !empty($whiteLabel['support_url']) ? $whiteLabel['support_url'] : '';
 
-        if ($usePrimaryOnly) {
-            $topBarGradient = $primaryColor;
-            $activeGradient = $primaryColor;
-        } else {
-            $topBarGradient = "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
-            $activeGradient = "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+        $pluginUrl = dirname(plugin_dir_url(__FILE__));
+
+        $currentUser = wp_get_current_user();
+        $initials = '';
+        if ($currentUser->ID) {
+            $fn = $currentUser->first_name ?: '';
+            $ln = $currentUser->last_name ?: '';
+            if ($fn && $ln) {
+                $initials = mb_strtoupper(mb_substr($fn, 0, 1) . mb_substr($ln, 0, 1));
+            } else {
+                $initials = mb_strtoupper(mb_substr($currentUser->display_name, 0, 2));
+            }
         }
+
+        $tier = $this->client->licenseValidator->getLicenseTier();
+        $tierLabel = ucfirst($tier ?: 'Free');
         ?>
         <style>
-            .fyndable-shell-wrap {
+            /* ======= SHELL LAYOUT ======= */
+            .fyn-shell {
                 position: fixed;
                 top: 0; left: 0; right: 0; bottom: 0;
                 z-index: 999999;
-                background: #f0f2f5;
+                display: flex;
+                flex-direction: column;
                 font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+                background: var(--shell-page, #f4f5f8);
             }
 
-            /* Top bar with gradient */
-            .fyndable-topbar {
-                height: 56px;
-                background: <?php echo esc_attr($topBarGradient); ?>;
+            /* ======= TOP BAR ======= */
+            .fyn-topbar {
+                height: 58px;
+                background: linear-gradient(135deg, #2A1533 0%, #132A38 100%);
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                padding: 0 20px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                position: relative;
-                z-index: 100;
+                padding: 0 22px;
+                box-shadow: 0 1px 0 rgba(0,0,0,.2);
+                flex-shrink: 0;
+                z-index: 200;
+                gap: 16px;
+            }
+            .fyn-topbar-brand {
+                display: flex;
+                align-items: center;
+                gap: 0;
                 flex-shrink: 0;
             }
-            .fyndable-topbar-brand {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                color: #fff;
-            }
-            .fyndable-topbar-logo {
-                font-size: 20px;
-                font-weight: 700;
-                letter-spacing: -0.3px;
-            }
-            .fyndable-topbar-logo img {
-                max-height: 36px;
-                max-width: 180px;
+            .fyn-topbar-logo {
+                height: 26px;
                 display: block;
             }
-            .fyndable-topbar-logo span { font-weight: 400; opacity: 0.9; }
-            .fyndable-topbar-badge {
+            .fyn-topbar-logo-text {
+                font-size: 18px;
+                font-weight: 700;
+                color: #fff;
+                letter-spacing: -.3px;
+            }
+            .fyn-topbar-divider {
+                width: 1px;
+                height: 24px;
+                background: rgba(255,255,255,.2);
+                margin: 0 12px;
+                flex-shrink: 0;
+            }
+            .fyn-topbar-micro {
                 font-size: 10px;
                 font-weight: 600;
-                
-                letter-spacing: 0.5px;
-                padding: 3px 10px;
-                border-radius: 20px;
-                background: rgba(255,255,255,0.2);
-                color: #fff;
+                text-transform: uppercase;
+                letter-spacing: .05em;
+                color: rgba(255,255,255,.55);
             }
-            .fyndable-topbar-actions {
+            .fyn-topbar-search {
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                max-width: 460px;
+                flex: 1;
+                height: 36px;
+                background: rgba(255,255,255,.1);
+                border: 1px solid rgba(255,255,255,.12);
+                border-radius: 9px;
+                padding: 0 12px;
+                gap: 8px;
+                margin-left: 20px;
             }
-            .fyndable-exit-btn {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                background: rgba(255,255,255,0.15);
+            .fyn-topbar-search .dashicons {
+                color: rgba(255,255,255,.45);
+                font-size: 16px;
+                width: 16px;
+                height: 16px;
+            }
+            .fyn-topbar-search input {
+                background: transparent;
+                border: none;
                 color: #fff;
-                border: 1px solid rgba(255,255,255,0.3);
-                border-radius: 8px;
-                padding: 6px 14px;
                 font-size: 13px;
-                font-weight: 500;
-                text-decoration: none;
+                font-family: inherit;
+                flex: 1;
+                outline: none;
+                padding: 0;
+            }
+            .fyn-topbar-search input::placeholder { color: rgba(255,255,255,.4); }
+            .fyn-topbar-search-hint {
+                font-size: 10px;
+                font-weight: 600;
+                color: rgba(255,255,255,.35);
+                background: rgba(255,255,255,.1);
+                border-radius: 5px;
+                padding: 2px 7px;
+                letter-spacing: .5px;
+                flex-shrink: 0;
+            }
+            .fyn-topbar-spacer { flex: 1; }
+            .fyn-topbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .fyn-topbar-iconbtn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                background: rgba(255,255,255,.1);
+                border: 1px solid rgba(255,255,255,.12);
+                color: rgba(255,255,255,.85);
                 cursor: pointer;
-                transition: background 0.15s;
+                transition: background .15s;
+                position: relative;
+                text-decoration: none;
             }
-            .fyndable-exit-btn:hover {
-                background: rgba(255,255,255,0.25);
-                color: #fff;
+            .fyn-topbar-iconbtn:hover { background: rgba(255,255,255,.2); color: #fff; }
+            .fyn-topbar-iconbtn .dashicons { font-size: 17px; width: 17px; height: 17px; }
+            .fyn-topbar-dot {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: #ef4444;
             }
-            .fyndable-theme-toggle {
+            .fyn-topbar-theme {
                 display: inline-flex;
                 align-items: center;
                 gap: 7px;
-                min-height: 32px;
-                padding: 5px 10px;
-                border: 1px solid rgba(255,255,255,.3);
-                border-radius: 8px;
-                background: rgba(255,255,255,.15);
-                color: #fff;
+                height: 34px;
+                padding: 0 10px;
+                border-radius: 9px;
+                background: rgba(255,255,255,.1);
+                border: 1px solid rgba(255,255,255,.12);
+                color: rgba(255,255,255,.85);
                 cursor: pointer;
+                transition: background .15s;
+                font-size: 15px;
             }
-            .fyndable-theme-toggle:hover { background: rgba(255,255,255,.25); }
-            .fyndable-theme-toggle-icon { font-size: 17px; line-height: 1; }
-            .fyndable-theme-toggle-track {
+            .fyn-topbar-theme:hover { background: rgba(255,255,255,.2); }
+            .fyn-topbar-theme-track {
                 position: relative;
                 width: 30px;
                 height: 16px;
                 border-radius: 999px;
                 background: rgba(255,255,255,.35);
             }
-            .fyndable-theme-toggle-track::after {
+            .fyn-topbar-theme-track::after {
                 content: '';
                 position: absolute;
-                top: 2px;
-                left: 2px;
-                width: 12px;
-                height: 12px;
+                top: 2px; left: 2px;
+                width: 12px; height: 12px;
                 border-radius: 50%;
                 background: #fff;
                 transition: transform .2s ease;
             }
-            .fyndable-theme-toggle[aria-pressed="true"] .fyndable-theme-toggle-track::after { transform: translateX(14px); }
-            .fyndable-exit-x {
-                font-size: 18px;
-                line-height: 1;
-                font-weight: 300;
+            .fyn-topbar-theme[aria-pressed="true"] .fyn-topbar-theme-track::after {
+                transform: translateX(14px);
             }
+            .fyn-topbar-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #8F39AC, #379FD3);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: 700;
+                color: #fff;
+                letter-spacing: .5px;
+                flex-shrink: 0;
+            }
+            .fyn-topbar-exit {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                height: 34px;
+                padding: 0 14px;
+                border-radius: 9px;
+                background: rgba(255,255,255,.1);
+                border: 1px solid rgba(255,255,255,.12);
+                color: rgba(255,255,255,.85);
+                font-size: 13px;
+                font-weight: 500;
+                font-family: inherit;
+                cursor: pointer;
+                text-decoration: none;
+                transition: background .15s;
+            }
+            .fyn-topbar-exit:hover { background: rgba(255,255,255,.2); color: #fff; }
 
-            /* Main layout */
-            .fyndable-shell-body {
+            /* ======= BODY (sidebar + main) ======= */
+            .fyn-shell-body {
                 display: flex;
-                height: calc(100vh - 56px);
+                flex: 1;
+                min-height: 0;
             }
 
-            /* Sidebar */
-            .fyndable-sidebar {
-                width: 240px;
-                background: #fff;
-                border-right: 1px solid #e5e7eb;
+            /* ======= SIDEBAR ======= */
+            .fyn-sidebar {
+                width: 248px;
+                background: var(--shell-sidebar, #fff);
+                border-right: 1px solid var(--shell-sb-border, #e9eaef);
                 display: flex;
                 flex-direction: column;
                 overflow-y: auto;
                 flex-shrink: 0;
+                padding: 16px 14px 28px;
             }
-            .fyndable-sidebar-nav {
+            .fyn-sidebar-nav {
                 list-style: none;
-                padding: 12px 0;
+                margin: 0;
+                padding: 0;
                 flex: 1;
+            }
+            .fyn-nav-section {
+                font-size: 10.5px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .07em;
+                color: var(--nav-section, #9a95a8);
+                padding: 14px 10px 6px;
                 margin: 0;
             }
-            .fyndable-sidebar-nav li {
-                margin: 2px 8px;
+            .fyn-nav-section:first-child {
+                padding-top: 0;
             }
-            .fyndable-sidebar-nav a {
+            .fyn-nav-item {
+                margin: 1px 0;
+            }
+            .fyn-nav-item a {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                padding: 10px 14px;
+                gap: 11px;
+                padding: 9px 11px;
+                border-radius: 9px;
+                font-size: 13.5px;
+                font-weight: 600;
+                color: var(--nav-fg, #5a5568);
                 text-decoration: none;
-                color: #374151;
-                font-size: 13px;
-                font-weight: 500;
-                border-radius: 8px;
-                transition: all 0.15s;
+                transition: all .15s;
                 cursor: pointer;
             }
-            .fyndable-sidebar-nav a:hover {
-                background: #f3f4f6;
-                color: <?php echo esc_attr($primaryColor); ?>;
-            }
-            .fyndable-sidebar-nav a.active {
-                background: <?php echo esc_attr($activeGradient); ?>;
-                color: #fff;
-                font-weight: 600;
-                box-shadow: 0 2px 6px <?php echo esc_attr($primaryColor); ?>4d;
-            }
-            .fyndable-sidebar-nav .fyndable-nav-icon {
-                font-size: 16px;
-                width: 20px;
-                text-align: center;
+            .fyn-nav-item a .dashicons {
+                font-size: 17px;
+                width: 17px;
+                height: 17px;
                 flex-shrink: 0;
             }
-            .fyndable-sidebar-footer {
-                padding: 16px;
-                border-top: 1px solid #e5e7eb;
+            .fyn-nav-item a:hover {
+                background: var(--nav-hover, #f5f2fb);
+                color: var(--text-h, #1a1430);
+            }
+            .fyn-nav-item a.active {
+                background: linear-gradient(135deg, #8F39AC, #379FD3);
+                color: #fff;
+                box-shadow: 0 5px 14px rgba(143,57,172,.32);
+            }
+            .fyn-nav-badge {
+                margin-left: auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 6px;
+                border-radius: 999px;
+                background: #ef4444;
+                color: #fff;
                 font-size: 11px;
-                color: #9ca3af;
-                text-align: center;
+                font-weight: 700;
             }
-            .fyndable-sidebar-footer a {
-                color: #6b7280;
-                text-decoration: none;
+            .fyn-nav-item a.active .fyn-nav-badge {
+                background: rgba(255,255,255,.25);
             }
-            .fyndable-footer-brand {
-                margin-bottom: 6px;
-                font-size: 12px;
-                color: #6b7280;
-            }
-            .fyndable-footer-brand img {
-                max-height: 24px;
-                max-width: 160px;
-                display: block;
-                margin: 0 auto 4px;
-            }
-            .fyndable-footer-brand strong { color: #6b7280; }
-            .fyndable-footer-brand span { font-weight: 600; opacity: 0.8; }
-            .fyndable-footer-support { margin-top: 4px; }
 
-            /* Content area */
-            .fyndable-content {
+            /* Plan card below nav */
+            .fyn-plan-card {
+                margin-top: 16px;
+                padding: 14px;
+                border-radius: 11px;
+                background: linear-gradient(135deg, rgba(143,57,172,.08), rgba(55,159,211,.08));
+                border: 1px solid var(--card-border, #ececf1);
+            }
+            .fyn-plan-card-title {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                color: var(--text-m, #746e82);
+                margin-bottom: 6px;
+            }
+            .fyn-plan-card-tier {
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-h, #1a1430);
+                margin-bottom: 10px;
+            }
+            .fyn-plan-progress {
+                height: 6px;
+                background: var(--sev-track, #e9e7f0);
+                border-radius: 999px;
+                overflow: hidden;
+            }
+            .fyn-plan-progress-bar {
+                height: 100%;
+                border-radius: 999px;
+                background: linear-gradient(90deg, #8F39AC, #379FD3);
+                transition: width .3s ease;
+            }
+
+            /* ======= CONTENT (iframe) ======= */
+            .fyn-content {
                 flex: 1;
                 overflow: hidden;
                 position: relative;
+                background: var(--shell-page, #f4f5f8);
             }
-            .fyndable-content iframe {
+            .fyn-content iframe {
                 width: 100%;
                 height: 100%;
                 border: none;
                 display: block;
             }
-
-            /* Loading overlay */
-            .fyndable-loading {
+            .fyn-loading {
                 position: absolute;
                 top: 0; left: 0; right: 0; bottom: 0;
-                background: #f0f2f5;
+                background: var(--shell-page, #f4f5f8);
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 z-index: 50;
-                transition: opacity 0.3s;
+                transition: opacity .3s;
             }
-            .fyndable-loading.hidden {
+            .fyn-loading.hidden {
                 opacity: 0;
                 pointer-events: none;
             }
-            .fyndable-spinner {
+            .fyn-spinner {
                 width: 36px;
                 height: 36px;
-                border: 3px solid #e5e7eb;
-                border-top-color: <?php echo esc_attr($primaryColor); ?>;
+                border: 3px solid var(--divide, #efeef4);
+                border-top-color: #8F39AC;
                 border-radius: 50%;
-                animation: fyndable-spin 0.8s linear infinite;
+                animation: fyn-spin .8s linear infinite;
             }
-            @keyframes fyndable-spin {
+            @keyframes fyn-spin {
                 to { transform: rotate(360deg); }
             }
 
-            /* Mobile responsive */
-            @media (max-width: 768px) {
-                .fyndable-sidebar {
+            /* ======= RESPONSIVE ======= */
+            @media (max-width: 782px) {
+                .fyn-sidebar {
                     width: 60px;
+                    padding: 12px 6px;
                 }
-                .fyndable-sidebar-nav a {
-                    justify-content: center;
-                    padding: 12px;
-                }
-                .fyndable-sidebar-nav a span:not(.fyndable-nav-icon) {
+                .fyn-nav-item a span:not(.dashicons):not(.fyn-nav-badge) {
                     display: none;
                 }
-                .fyndable-sidebar-footer { display: none; }
-                .fyndable-topbar-badge { display: none; }
+                .fyn-nav-item a {
+                    justify-content: center;
+                    padding: 10px;
+                }
+                .fyn-nav-section { display: none; }
+                .fyn-nav-badge { display: none; }
+                .fyn-plan-card { display: none; }
+                .fyn-topbar-search { display: none; }
+                .fyn-topbar-micro { display: none; }
+                .fyn-topbar-divider { display: none; }
             }
         </style>
-        <div class="fyndable-shell-wrap">
-            <div class="fyndable-topbar">
-                <div class="fyndable-topbar-brand">
-                    <div class="fyndable-topbar-logo">
-                        <?php if ($companyLogo): ?>
-                            <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" title="<?php echo esc_attr($companyName); ?>">
-                        <?php else: ?>
-                            <?php echo esc_html($brandName); ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="fyndable-topbar-badge"><?php esc_html_e('Dashboard', 'ai-seo-client'); ?></div>
+        <div class="fyn-shell">
+            <!-- Top bar -->
+            <div class="fyn-topbar">
+                <div class="fyn-topbar-brand">
+                    <?php if ($companyLogo): ?>
+                        <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" class="fyn-topbar-logo">
+                    <?php else: ?>
+                        <img src="<?php echo esc_url($pluginUrl . '/assets/FYN-LOGO-DIA-LONG300ppi.png'); ?>" alt="Fyndable" class="fyn-topbar-logo">
+                    <?php endif; ?>
+                    <span class="fyn-topbar-divider"></span>
+                    <span class="fyn-topbar-micro">Client</span>
                 </div>
-                <div class="fyndable-topbar-actions">
-                    <button type="button" id="fyndable-theme-toggle" class="fyndable-theme-toggle" aria-pressed="<?php echo $darkTheme ? 'true' : 'false'; ?>" title="<?php esc_attr_e('Switch light/dark theme', 'ai-seo-client'); ?>">
-                        <span class="fyndable-theme-toggle-icon" aria-hidden="true">☀</span>
-                        <span class="fyndable-theme-toggle-track" aria-hidden="true"></span>
-                        <span class="fyndable-theme-toggle-icon" aria-hidden="true">☾</span>
+                <div class="fyn-topbar-search">
+                    <span class="dashicons dashicons-search"></span>
+                    <input type="text" placeholder="<?php esc_attr_e('Search...', 'ai-seo-client'); ?>" id="fyn-global-search">
+                    <span class="fyn-topbar-search-hint">&ctrlKey;K</span>
+                </div>
+                <span class="fyn-topbar-spacer"></span>
+                <div class="fyn-topbar-actions">
+                    <button type="button" id="fyn-theme-toggle" class="fyn-topbar-theme" aria-pressed="<?php echo $darkTheme ? 'true' : 'false'; ?>" title="<?php esc_attr_e('Toggle light/dark theme', 'ai-seo-client'); ?>">
+                        <span aria-hidden="true">&#9788;</span>
+                        <span class="fyn-topbar-theme-track" aria-hidden="true"></span>
+                        <span aria-hidden="true">&#9790;</span>
                     </button>
-                    <a href="<?php echo esc_url($exitUrl); ?>" class="fyndable-exit-btn" title="<?php esc_attr_e('Exit to WordPress', 'ai-seo-client'); ?>">
-                        <span class="fyndable-exit-x">&times;</span>
-                        <span><?php esc_html_e('Exit', 'ai-seo-client'); ?></span>
+                    <button type="button" class="fyn-topbar-iconbtn" title="<?php esc_attr_e('Notifications', 'ai-seo-client'); ?>">
+                        <span class="dashicons dashicons-bell"></span>
+                    </button>
+                    <button type="button" class="fyn-topbar-iconbtn" title="<?php esc_attr_e('Help', 'ai-seo-client'); ?>">
+                        <span class="dashicons dashicons-editor-help"></span>
+                    </button>
+                    <span class="fyn-topbar-divider"></span>
+                    <span class="fyn-topbar-avatar"><?php echo esc_html($initials); ?></span>
+                    <a href="<?php echo esc_url($exitUrl); ?>" class="fyn-topbar-exit" title="<?php esc_attr_e('Back to WordPress', 'ai-seo-client'); ?>">
+                        <?php esc_html_e('Exit', 'ai-seo-client'); ?>
                     </a>
                 </div>
             </div>
 
-            <div class="fyndable-shell-body">
-                <nav class="fyndable-sidebar">
-                    <ul class="fyndable-sidebar-nav">
-                        <?php foreach ($this->menuItems as $item): ?>
-                            <?php $isActive = $item['slug'] === $currentPage; ?>
-                            <li>
-                                <a href="#" data-slug="<?php echo esc_attr($item['slug']); ?>" class="<?php echo $isActive ? 'active' : ''; ?>">
-                                    <span class="fyndable-nav-icon"><?php echo $item['icon']; ?></span>
-                                    <span><?php echo esc_html($item['label']); ?></span>
-                                </a>
-                            </li>
+            <!-- Body: sidebar + content -->
+            <div class="fyn-shell-body">
+                <nav class="fyn-sidebar">
+                    <ul class="fyn-sidebar-nav">
+                        <?php foreach ($this->menuSections as $section): ?>
+                            <li class="fyn-nav-section"><?php echo esc_html($section['label']); ?></li>
+                            <?php foreach ($section['items'] as $item): ?>
+                                <?php $isActive = $item['slug'] === $currentPage; ?>
+                                <li class="fyn-nav-item">
+                                    <a href="#" data-slug="<?php echo esc_attr($item['slug']); ?>" class="<?php echo $isActive ? 'active' : ''; ?>">
+                                        <span class="dashicons <?php echo esc_attr($item['icon']); ?>"></span>
+                                        <span><?php echo $item['label']; ?></span>
+                                        <?php if (!empty($item['badge']) && $item['badge'] > 0): ?>
+                                            <span class="fyn-nav-badge"><?php echo (int)$item['badge']; ?></span>
+                                        <?php endif; ?>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
                         <?php endforeach; ?>
                     </ul>
-                    <div class="fyndable-sidebar-footer">
-                        <div class="fyndable-footer-brand">
-                            <?php if ($companyLogo): ?>
-                                <img src="<?php echo esc_url($companyLogo); ?>" alt="<?php echo esc_attr($companyName); ?>" title="<?php echo esc_attr($companyName); ?>">
-                            <?php else: ?>
-                                <?php echo esc_html($brandName); ?>
-                            <?php endif; ?>
+                    <div class="fyn-plan-card">
+                        <div class="fyn-plan-card-title"><?php esc_html_e('Current Plan', 'ai-seo-client'); ?></div>
+                        <div class="fyn-plan-card-tier"><?php echo esc_html($tierLabel); ?></div>
+                        <div class="fyn-plan-progress">
+                            <div class="fyn-plan-progress-bar" style="width:45%"></div>
                         </div>
-                        <?php if ($supportUrl || $supportEmail): ?>
-                            <div class="fyndable-footer-support">
-                                <?php if ($supportUrl): ?>
-                                    <a href="<?php echo esc_url($supportUrl); ?>" target="_blank"><?php esc_html_e('Support', 'ai-seo-client'); ?></a>
-                                <?php elseif ($supportEmail): ?>
-                                    <a href="mailto:<?php echo esc_attr($supportEmail); ?>"><?php esc_html_e('Support', 'ai-seo-client'); ?></a>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
                     </div>
                 </nav>
 
-                <div class="fyndable-content">
-                    <div class="fyndable-loading" id="fyndable-loading">
-                        <div class="fyndable-spinner"></div>
+                <div class="fyn-content">
+                    <div class="fyn-loading" id="fyn-loading">
+                        <div class="fyn-spinner"></div>
                     </div>
-                    <iframe id="fyndable-frame" src="<?php echo esc_url($iframeUrl); ?>"></iframe>
+                    <iframe id="fyn-frame" src="<?php echo esc_url($iframeUrl); ?>"></iframe>
                 </div>
             </div>
         </div>
         <script>
         (function() {
-            var iframe = document.getElementById('fyndable-frame');
-            var loading = document.getElementById('fyndable-loading');
-            var navLinks = document.querySelectorAll('.fyndable-sidebar-nav a');
-            var themeToggle = document.getElementById('fyndable-theme-toggle');
+            var iframe = document.getElementById('fyn-frame');
+            var loading = document.getElementById('fyn-loading');
+            var navLinks = document.querySelectorAll('.fyn-nav-item a');
+            var themeToggle = document.getElementById('fyn-theme-toggle');
             var storageKey = 'fyndableDarkTheme';
 
-            // Determine current theme: prefer localStorage so the shell and iframe stay
-            // in sync even if the async DB update has not completed yet.
             var storedDark = localStorage.getItem(storageKey);
             var isDark = storedDark !== null
                 ? storedDark === '1'
@@ -796,7 +853,6 @@ class DashboardShell
 
             applyTheme(isDark);
 
-            // Hide loading when iframe loads and ensure the loaded page follows the theme.
             iframe.addEventListener('load', function() {
                 loading.classList.add('hidden');
                 applyTheme(isDark);
@@ -824,29 +880,23 @@ class DashboardShell
                     '&fyndable_dark=' + (isDark ? '1' : '0');
             }
 
-            // Navigation switching
             navLinks.forEach(function(link) {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     var slug = link.getAttribute('data-slug');
                     if (!slug) return;
 
-                    // Update active state
                     navLinks.forEach(function(l) { l.classList.remove('active'); });
                     link.classList.add('active');
 
-                    // Show loading and update iframe
                     loading.classList.remove('hidden');
                     iframe.src = buildIframeUrl(slug);
 
-                    // Update URL hash for state persistence
                     window.location.hash = slug;
                 });
             });
 
-            // Restore state from hash on load
             var hash = window.location.hash.replace('#', '');
-            // Never restore the shell page itself inside the iframe.
             if (hash === 'fyndable-dashboard' || !hash) {
                 hash = 'ai-seo-dashboard';
             }

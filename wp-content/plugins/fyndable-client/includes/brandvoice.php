@@ -251,42 +251,46 @@ Return ONLY the JSON.";
         $settings = $this->getSettings();
         ?>
         <style>
-            .bv-wrap { max-width: 800px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .bv-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .bv-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
-            .bv-header h1 { margin: 0; font-size: 22px; }
-            .bv-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
             .bv-field { margin-bottom: 20px; }
-            .bv-field label { font-weight: 600; display: block; margin-bottom: 6px; }
+            .bv-field label { font-weight: 600; display: block; margin-bottom: 6px; color: var(--text-h); font-size: 13px; }
             .bv-field input, .bv-field textarea, .bv-field select { width: 100%; }
             .bv-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
             .bv-toggle input[type="checkbox"] { width: 20px; height: 20px; }
-            .bv-preview { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
-            .bv-saved { display: none; padding: 10px 15px; background: #dcfce7; border-radius: 8px; color: #166534; margin-bottom: 15px; }
+            .bv-preview { background: var(--well); border: 1px solid var(--card-border); border-radius: 9px; padding: 15px; font-family: monospace; font-size: 12px; white-space: pre-wrap; color: var(--text-b); }
+            .bv-saved { display: none; padding: 10px 15px; background: color-mix(in srgb, var(--fyn-success) 15%, transparent); border-radius: 9px; color: var(--fyn-success); margin-bottom: 15px; font-weight: 600; }
         </style>
-        <div class="wrap bv-wrap">
-            <div class="bv-card">
-                <div class="bv-header">
-                    <h1>🎙️ <?php esc_html_e('Brand Voice Engine', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Define your brand voice once — all AI-generated content will follow it automatically.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:900px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Brand Voice', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Brand Voice Engine', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Define your brand voice once — all AI-generated content will follow it automatically.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-microphone"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Brand Voice Settings', 'ai-seo-client'); ?></h3>
                 </div>
 
-                <div id="bv-saved-msg" class="bv-saved">✅ <?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></div>
+                <div id="bv-saved-msg" class="bv-saved"><?php esc_html_e('Settings saved!', 'ai-seo-client'); ?></div>
 
                 <div class="bv-toggle">
                     <input type="checkbox" id="bv-enabled" <?php checked($settings['enabled']); ?>>
-                    <label for="bv-enabled" style="font-weight:600;"><?php esc_html_e('Enable Brand Voice injection', 'ai-seo-client'); ?></label>
+                    <label for="bv-enabled" style="font-weight:600;color:var(--text-h);"><?php esc_html_e('Enable Brand Voice injection', 'ai-seo-client'); ?></label>
                 </div>
 
                 <div class="bv-field">
                     <label><?php esc_html_e('Brand Name', 'ai-seo-client'); ?></label>
-                    <input type="text" id="bv-brand-name" value="<?php echo esc_attr($settings['brand_name']); ?>" placeholder="e.g. Fyndable">
+                    <input type="text" class="fyn-input" id="bv-brand-name" value="<?php echo esc_attr($settings['brand_name']); ?>" placeholder="bv. Fyndable">
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                     <div class="bv-field">
                         <label><?php esc_html_e('Tone', 'ai-seo-client'); ?></label>
-                        <select id="bv-tone">
+                        <select id="bv-tone" class="fyn-input">
                             <option value="professional" <?php selected($settings['tone'], 'professional'); ?>><?php esc_html_e('Professional', 'ai-seo-client'); ?></option>
                             <option value="casual" <?php selected($settings['tone'], 'casual'); ?>><?php esc_html_e('Casual', 'ai-seo-client'); ?></option>
                             <option value="authoritative" <?php selected($settings['tone'], 'authoritative'); ?>><?php esc_html_e('Authoritative', 'ai-seo-client'); ?></option>
@@ -297,7 +301,7 @@ Return ONLY the JSON.";
                     </div>
                     <div class="bv-field">
                         <label><?php esc_html_e('Writing Style', 'ai-seo-client'); ?></label>
-                        <select id="bv-style">
+                        <select id="bv-style" class="fyn-input">
                             <option value="informative" <?php selected($settings['style'], 'informative'); ?>><?php esc_html_e('Informative', 'ai-seo-client'); ?></option>
                             <option value="storytelling" <?php selected($settings['style'], 'storytelling'); ?>><?php esc_html_e('Storytelling', 'ai-seo-client'); ?></option>
                             <option value="data-driven" <?php selected($settings['style'], 'data-driven'); ?>><?php esc_html_e('Data-driven', 'ai-seo-client'); ?></option>
@@ -309,35 +313,37 @@ Return ONLY the JSON.";
 
                 <div class="bv-field">
                     <label><?php esc_html_e('Target Audience', 'ai-seo-client'); ?></label>
-                    <input type="text" id="bv-audience" value="<?php echo esc_attr($settings['audience']); ?>" placeholder="e.g. Small business owners looking for SEO solutions">
+                    <input type="text" class="fyn-input" id="bv-audience" value="<?php echo esc_attr($settings['audience']); ?>" placeholder="bv. Kleine ondernemers op zoek naar SEO-oplossingen">
                 </div>
 
                 <div class="bv-field">
                     <label><?php esc_html_e('Voice Description', 'ai-seo-client'); ?></label>
-                    <textarea id="bv-voice-desc" rows="3" placeholder="e.g. We write with confidence but without jargon. We're approachable experts who make complex topics simple."><?php echo esc_textarea($settings['voice_description']); ?></textarea>
+                    <textarea id="bv-voice-desc" class="fyn-input" rows="3" placeholder="bv. We schrijven zelfverzekerd maar zonder jargon. Benaderbare experts die complexe onderwerpen eenvoudig maken."><?php echo esc_textarea($settings['voice_description']); ?></textarea>
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                     <div class="bv-field">
                         <label><?php esc_html_e('Preferred Terms (comma-separated)', 'ai-seo-client'); ?></label>
-                        <textarea id="bv-preferred" rows="3" placeholder="e.g. growth, ROI, data-driven, scalable"><?php echo esc_textarea($settings['preferred_terms']); ?></textarea>
+                        <textarea id="bv-preferred" class="fyn-input" rows="3" placeholder="bv. groei, ROI, datagedreven, schaalbaar"><?php echo esc_textarea($settings['preferred_terms']); ?></textarea>
                     </div>
                     <div class="bv-field">
                         <label><?php esc_html_e('Forbidden Terms (comma-separated)', 'ai-seo-client'); ?></label>
-                        <textarea id="bv-forbidden" rows="3" placeholder="e.g. cheap, hack, gimmick"><?php echo esc_textarea($settings['forbidden_terms']); ?></textarea>
+                        <textarea id="bv-forbidden" class="fyn-input" rows="3" placeholder="bv. goedkoop, hack, truc"><?php echo esc_textarea($settings['forbidden_terms']); ?></textarea>
                     </div>
                 </div>
 
                 <div class="bv-field">
                     <label><?php esc_html_e('Example of Good Writing', 'ai-seo-client'); ?></label>
-                    <textarea id="bv-example-good" rows="5" placeholder="Paste a paragraph that represents your ideal brand voice..."><?php echo esc_textarea($settings['example_good']); ?></textarea>
+                    <textarea id="bv-example-good" class="fyn-input" rows="5" placeholder="Plak een alinea die je ideale merkstem vertegenwoordigt..."><?php echo esc_textarea($settings['example_good']); ?></textarea>
                 </div>
 
-                <button class="button button-primary" id="bv-save"><?php esc_html_e('Save Brand Voice', 'ai-seo-client'); ?></button>
-                <button class="button" id="bv-preview-btn"><?php esc_html_e('Preview Prompt Snippet', 'ai-seo-client'); ?></button>
+                <div style="display:flex;gap:10px;">
+                    <button class="fyn-btn fyn-btn-primary" id="bv-save"><?php esc_html_e('Save Brand Voice', 'ai-seo-client'); ?></button>
+                    <button class="fyn-btn fyn-btn-outline" id="bv-preview-btn"><?php esc_html_e('Preview Prompt Snippet', 'ai-seo-client'); ?></button>
+                </div>
 
                 <div id="bv-preview-wrap" style="display:none;margin-top:20px;">
-                    <h3><?php esc_html_e('Prompt Snippet (injected into all AI content generation)', 'ai-seo-client'); ?></h3>
+                    <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Prompt Snippet (injected into all AI content generation)', 'ai-seo-client'); ?></h4>
                     <div class="bv-preview" id="bv-preview"></div>
                 </div>
             </div>

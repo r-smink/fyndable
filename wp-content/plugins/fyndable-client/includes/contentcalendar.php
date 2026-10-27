@@ -108,68 +108,70 @@ class ContentCalendar
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-two-columns { display: grid; grid-template-columns: 2.5fr 1fr; gap: 30px; }
-            .sseo-full-width-row { display: grid; grid-template-columns: 1fr; gap: 30px; }
-            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } .sseo-full-width-row { grid-template-columns: 1fr; } }
+            .fyn-calendar { width: 100%; border-collapse: collapse; }
+            .fyn-calendar th { background: var(--well); color: var(--text-m); padding: 10px; text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--divide); }
+            .fyn-calendar td { border: 1px solid var(--divide); padding: 8px; vertical-align: top; min-height: 86px; height: 86px; }
+            .fyn-calendar .day-number { font-weight: 700; font-size: 13px; color: var(--text-h); margin-bottom: 4px; }
+            .fyn-calendar .content-item { padding: 4px 8px; margin: 3px 0; border-radius: 7px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+            .fyn-calendar .content-item.draft { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+            .fyn-calendar .content-item.pending { background: var(--fyn-info-light); color: var(--fyn-info-text); }
+            .fyn-calendar .content-item.future, .fyn-calendar .content-item.scheduled { background: var(--fyn-accent-light); color: var(--fyn-accent-text); }
+            .fyn-calendar .content-item.publish { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+            .fyn-calendar .today { background: var(--row-hover); }
+            .fyn-calendar td.drag-over { background: var(--well); border: 2px dashed var(--fyn-purple); }
+            .fyn-calendar .content-item.draft, .fyn-calendar .content-item.future { cursor: grab; }
+            .fyn-calendar .content-item.draft:active, .fyn-calendar .content-item.future:active { cursor: grabbing; }
+            .fyn-calendar .content-item.dragging { opacity: 0.5; }
+            .fyn-cal-columns { display: grid; grid-template-columns: 2.5fr 1fr; gap: 20px; }
+            @media (max-width: 1024px) { .fyn-cal-columns { grid-template-columns: 1fr; } }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Content Calendar & Workflow', 'ai-seo-client'); ?></h1>
-            </div>
-            
-            <div class="sseo-ai-content">
-                <?php DashboardSorter::begin('ai-seo-content-calendar'); ?>
-                <!-- Calendar Navigation -->
-                <div class="sseo-ai-dashboard-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth - 1) . '&year=' . $currentYear); ?>" 
-                           class="button">
-                            ← <?php esc_html_e('Previous', 'ai-seo-client'); ?>
-                        </a>
-                        
-                        <h2 style="margin: 0;">
-                            <?php echo date('F Y', mktime(0, 0, 0, $currentMonth, 1, $currentYear)); ?>
-                        </h2>
-                        
-                        <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth + 1) . '&year=' . $currentYear); ?>" 
-                           class="button">
-                            <?php esc_html_e('Next', 'ai-seo-client'); ?> →
-                        </a>
-                    </div>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Content Calendar', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Content Calendar & Workflow', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Plan and manage your publishing schedule, discover content gaps.', 'ai-seo-client'); ?></p>
                 </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoOptimizeSchedule()">
+                        <span class="dashicons dashicons-admin-generic"></span>
+                        <?php esc_html_e('Optimize Schedule', 'ai-seo-client'); ?>
+                    </button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoScheduleContent()">
+                        <span class="dashicons dashicons-plus-alt2"></span>
+                        <?php esc_html_e('Schedule New Content', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+
+            <?php DashboardSorter::begin('ai-seo-content-calendar'); ?>
+
+            <!-- Month navigation -->
+            <div class="fyn-card" style="margin-bottom:20px;padding:14px 22px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth - 1) . '&year=' . $currentYear); ?>" class="fyn-btn fyn-btn-outline" style="padding:7px 14px;">
+                        &larr; <?php esc_html_e('Previous', 'ai-seo-client'); ?>
+                    </a>
+                    <span style="font-size:18px;font-weight:700;color:var(--text-h);">
+                        <?php echo date('F Y', mktime(0, 0, 0, $currentMonth, 1, $currentYear)); ?>
+                    </span>
+                    <a href="<?php echo admin_url('admin.php?page=ai-seo-content-calendar&month=' . ($currentMonth + 1) . '&year=' . $currentYear); ?>" class="fyn-btn fyn-btn-outline" style="padding:7px 14px;">
+                        <?php esc_html_e('Next', 'ai-seo-client'); ?> &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <div class="fyn-cal-columns">
+                <!-- Visual Calendar -->
+                <div class="fyn-card">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-calendar-alt"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Publishing Calendar', 'ai-seo-client'); ?></h3>
+                    </div>
                 
-                <div class="sseo-two-columns">
-                    <!-- Visual Calendar -->
-                    <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Publishing Calendar', 'ai-seo-client'); ?></h2>
-                
-                <style>
-                .sseo-calendar { width: 100%; border-collapse: collapse; }
-                .sseo-calendar th { background: #2271b1; color: white; padding: 10px; text-align: center; }
-                .sseo-calendar td { border: 1px solid #ddd; padding: 10px; vertical-align: top; height: 120px; }
-                .sseo-calendar .day-number { font-weight: bold; margin-bottom: 5px; }
-                .sseo-calendar .content-item { background: #f0f6fc; padding: 5px; margin: 3px 0; border-radius: 3px; font-size: 12px; cursor: pointer; }
-                .sseo-calendar .content-item.draft { background: #fff3cd; }
-                .sseo-calendar .content-item.pending { background: #cfe2ff; }
-                .sseo-calendar .content-item.future { background: #d1e7dd; }
-                .sseo-calendar .content-item.scheduled { background: #d1e7dd; }
-                .sseo-calendar .today { background: #f0f6fc; }
-                .sseo-calendar .content-gap { background: #f8d7da; }
-                .sseo-calendar td.drag-over { background: #e5e7eb; border: 2px dashed #2271b1; }
-                .sseo-calendar .content-item.draft,
-                .sseo-calendar .content-item.future { cursor: grab; }
-                .sseo-calendar .content-item.draft:active,
-                .sseo-calendar .content-item.future:active { cursor: grabbing; }
-                .sseo-calendar .content-item.dragging { opacity: 0.5; }
-                </style>
-                
-                <table class="sseo-calendar">
+                <table class="fyn-calendar">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Mon', 'ai-seo-client'); ?></th>
@@ -245,74 +247,67 @@ class ContentCalendar
                     </tbody>
                 </table>
                 
-                <div style="margin-top: 15px;">
-                    <button type="button" class="button button-primary" onclick="sseoScheduleContent()">
-                        <?php esc_html_e('Schedule New Content', 'ai-seo-client'); ?>
-                    </button>
-                    <button type="button" class="button" onclick="sseoOptimizeSchedule()">
-                        <?php esc_html_e('Optimize Publishing Schedule', 'ai-seo-client'); ?>
-                    </button>
-                </div>
                 </div>
                 
                 <!-- Right Column -->
-                <div>
+                <div style="display:flex;flex-direction:column;gap:20px;">
                     <!-- Content Gap Analysis -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Content Gap Calendar', 'ai-seo-client'); ?></h2>
-                
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-warning"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Content Gap Calendar', 'ai-seo-client'); ?></h3>
+                        </div>
                 <?php if (!empty($contentGaps)): ?>
-                <p><?php esc_html_e('Identified gaps in your content calendar:', 'ai-seo-client'); ?></p>
-                <ul>
+                    <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('Gaps in your content calendar:', 'ai-seo-client'); ?></p>
                     <?php foreach (array_slice($contentGaps, 0, 10) as $gap): ?>
-                    <li>
-                        <strong><?php echo esc_html(date('F j, Y', strtotime($gap))); ?></strong> -
-                        <?php esc_html_e('No content scheduled', 'ai-seo-client'); ?>
-                        <button type="button" class="button button-small" 
-                                onclick="sseoFillGap('<?php echo esc_js($gap); ?>')">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divide);">
+                        <span style="font-size:13px;font-weight:600;color:var(--text-b);"><?php echo esc_html(date('j F Y', strtotime($gap))); ?></span>
+                        <button type="button" class="fyn-btn fyn-btn-outline" style="padding:5px 12px;font-size:12px;" onclick="sseoFillGap('<?php echo esc_js($gap); ?>')">
                             <?php esc_html_e('Fill Gap', 'ai-seo-client'); ?>
                         </button>
-                    </li>
+                    </div>
                     <?php endforeach; ?>
-                </ul>
                 <?php else: ?>
-                <p style="color: #00a32a;">✓ <?php esc_html_e('No content gaps detected!', 'ai-seo-client'); ?></p>
+                    <p><span class="fyn-badge fyn-badge--success"><?php esc_html_e('No gaps found!', 'ai-seo-client'); ?></span></p>
                 <?php endif; ?>
                     </div>
-                    
+
                     <!-- Workflow Status -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Content Workflow Status', 'ai-seo-client'); ?></h2>
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-admin-post"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Workflow Status', 'ai-seo-client'); ?></h3>
+                        </div>
                 
                 <?php
                 $workflowStats = $this->getWorkflowStats();
                 ?>
                 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px;">
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold;"><?php echo esc_html($workflowStats['draft']); ?></div>
-                        <div><?php esc_html_e('Drafts', 'ai-seo-client'); ?></div>
+                <div class="fyn-stats-grid" style="margin-bottom:16px;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($workflowStats['draft']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Drafts', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #cfe2ff; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold;"><?php echo esc_html($workflowStats['pending']); ?></div>
-                        <div><?php esc_html_e('Pending Review', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($workflowStats['pending']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('In Review', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold;"><?php echo esc_html($workflowStats['scheduled']); ?></div>
-                        <div><?php esc_html_e('Scheduled', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($workflowStats['scheduled']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Scheduled', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1ecf1; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold;"><?php echo esc_html($workflowStats['published']); ?></div>
-                        <div><?php esc_html_e('Published (30d)', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($workflowStats['published']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Published (30d)', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
-                
-                <h3><?php esc_html_e('Pending Approvals', 'ai-seo-client'); ?></h3>
+
+                <h4 style="margin:16px 0 10px;font-size:14px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Pending Approval', 'ai-seo-client'); ?></h4>
                 <?php
                 $pendingApprovals = $this->getPendingApprovals();
                 if (!empty($pendingApprovals)):
                 ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Content', 'ai-seo-client'); ?></th>
@@ -326,19 +321,19 @@ class ContentCalendar
                         <?php foreach ($pendingApprovals as $approval): ?>
                         <tr>
                             <td>
-                                <a href="<?php echo get_edit_post_link($approval['post_id']); ?>">
+                                <a href="<?php echo get_edit_post_link($approval['post_id']); ?>" style="color:var(--fyn-purple);font-weight:600;">
                                     <?php echo esc_html($approval['title']); ?>
                                 </a>
                             </td>
                             <td><?php echo esc_html($approval['author']); ?></td>
                             <td><?php echo esc_html($approval['assigned_to']); ?></td>
-                            <td><?php echo esc_html(human_time_diff(strtotime($approval['submitted']))); ?> ago</td>
-                            <td>
-                                <button type="button" class="button button-small button-primary" 
+                            <td><?php echo esc_html(human_time_diff(strtotime($approval['submitted']))); ?> <?php esc_html_e('ago', 'ai-seo-client'); ?></td>
+                            <td style="display:flex;gap:6px;">
+                                <button type="button" class="fyn-btn fyn-btn-primary" style="padding:5px 12px;font-size:12px;"
                                         onclick="sseoApproveContent(<?php echo $approval['post_id']; ?>)">
                                     <?php esc_html_e('Approve', 'ai-seo-client'); ?>
                                 </button>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="padding:5px 12px;font-size:12px;"
                                         onclick="sseoRejectContent(<?php echo $approval['post_id']; ?>)">
                                     <?php esc_html_e('Reject', 'ai-seo-client'); ?>
                                 </button>
@@ -348,54 +343,56 @@ class ContentCalendar
                     </tbody>
                 </table>
                 <?php else: ?>
-                <p><?php esc_html_e('No pending approvals.', 'ai-seo-client'); ?></p>
+                <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('No pending approvals.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
                     </div>
                 </div>
             </div>
-            
-            <div class="sseo-full-width-row">
-                <!-- Keyword Opportunity Timeline -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Keyword Opportunity Timeline', 'ai-seo-client'); ?></h2>
-                    
-                    <?php if (!empty($keywordOpportunities)): ?>
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Opportunity Type', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Suggested Date', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($keywordOpportunities as $opp): ?>
-                            <tr>
-                                <td><strong><?php echo esc_html($opp['keyword']); ?></strong></td>
-                                <td><?php echo esc_html($opp['type']); ?></td>
-                                <td><?php echo esc_html(date('M j, Y', strtotime($opp['suggested_date']))); ?></td>
-                                <td>
-                                    <span style="color: <?php echo $opp['priority'] === 'high' ? '#d63638' : '#dba617'; ?>;">
-                                        <?php echo esc_html(ucfirst($opp['priority'])); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <button type="button" class="button button-small" 
-                                            onclick="sseoCreateFromOpportunity('<?php echo esc_js($opp['keyword']); ?>', '<?php echo esc_js($opp['suggested_date']); ?>')">
-                                        <?php esc_html_e('Create Content', 'ai-seo-client'); ?>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <?php else: ?>
-                    <p><?php esc_html_e('No keyword opportunities identified yet.', 'ai-seo-client'); ?></p>
-                    <?php endif; ?>
+
+            <!-- Keyword Opportunity Timeline -->
+            <div class="fyn-card" style="margin-top:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-trending-up"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Keyword Opportunity Timeline', 'ai-seo-client'); ?></h3>
                 </div>
+                    
+                <?php if (!empty($keywordOpportunities)): ?>
+                <table class="fyn-table">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Opportunity Type', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Suggested Date', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($keywordOpportunities as $opp): ?>
+                        <tr>
+                            <td><strong style="color:var(--text-h);"><?php echo esc_html($opp['keyword']); ?></strong></td>
+                            <td><?php echo esc_html($opp['type']); ?></td>
+                            <td><?php echo esc_html(date('j M Y', strtotime($opp['suggested_date']))); ?></td>
+                            <td>
+                                <span class="fyn-badge fyn-badge--<?php echo $opp['priority'] === 'high' ? 'danger' : 'warning'; ?>">
+                                    <?php echo esc_html(ucfirst($opp['priority'])); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="padding:5px 12px;font-size:12px;"
+                                        onclick="sseoCreateFromOpportunity('<?php echo esc_js($opp['keyword']); ?>', '<?php echo esc_js($opp['suggested_date']); ?>')">
+                                    <?php esc_html_e('Create Content', 'ai-seo-client'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php else: ?>
+                <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('No keyword opportunities found yet.', 'ai-seo-client'); ?></p>
+                <?php endif; ?>
             </div>
+
         <?php DashboardSorter::end('ai-seo-content-calendar'); ?>
         </div>
         

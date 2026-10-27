@@ -267,104 +267,102 @@ class LocalSEO
     {
         $options = $this->settings->all();
         ?>
-        <h3><?php esc_html_e('Local SEO Settings', 'ai-seo-client'); ?></h3>
-        <table class="form-table">
-            <tr>
-                <th><?php esc_html_e('Business Name', 'ai-seo-client'); ?></th>
-                <td><input type="text" name="aiseoclient[local_business_name]" value="<?php echo esc_attr($options['local_business_name'] ?? ''); ?>" class="regular-text"></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Business Type', 'ai-seo-client'); ?></th>
-                <td>
-                    <select name="aiseoclient[local_business_type]">
-                        <option value="LocalBusiness"><?php esc_html_e('Local Business', 'ai-seo-client'); ?></option>
-                        <option value="Restaurant"><?php esc_html_e('Restaurant', 'ai-seo-client'); ?></option>
-                        <option value="Store"><?php esc_html_e('Store', 'ai-seo-client'); ?></option>
-                        <option value="Dentist"><?php esc_html_e('Dentist', 'ai-seo-client'); ?></option>
-                        <option value="Doctor"><?php esc_html_e('Doctor', 'ai-seo-client'); ?></option>
-                        <option value="Plumber"><?php esc_html_e('Plumber', 'ai-seo-client'); ?></option>
-                        <option value="Electrician"><?php esc_html_e('Electrician', 'ai-seo-client'); ?></option>
-                        <option value="Lawyer"><?php esc_html_e('Lawyer', 'ai-seo-client'); ?></option>
-                        <option value="RealEstateAgent"><?php esc_html_e('Real Estate Agent', 'ai-seo-client'); ?></option>
-                        <option value="HairSalon"><?php esc_html_e('Hair Salon', 'ai-seo-client'); ?></option>
-                        <option value="AutoRepair"><?php esc_html_e('Auto Repair', 'ai-seo-client'); ?></option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Description', 'ai-seo-client'); ?></th>
-                <td><textarea name="aiseoclient[local_description]" rows="3" class="large-text"><?php echo esc_textarea($options['local_description'] ?? ''); ?></textarea></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Address', 'ai-seo-client'); ?></th>
-                <td>
-                    <p><input type="text" name="aiseoclient[local_street]" value="<?php echo esc_attr($options['local_street'] ?? ''); ?>" class="regular-text" placeholder="Street Address"></p>
-                    <p><input type="text" name="aiseoclient[local_city]" value="<?php echo esc_attr($options['local_city'] ?? ''); ?>" placeholder="City" style="width:200px;"></p>
-                    <p><input type="text" name="aiseoclient[local_state]" value="<?php echo esc_attr($options['local_state'] ?? ''); ?>" placeholder="State/Province" style="width:150px;"></p>
-                    <p><input type="text" name="aiseoclient[local_postal]" value="<?php echo esc_attr($options['local_postal'] ?? ''); ?>" placeholder="Postal Code" style="width:100px;"></p>
-                    <p><input type="text" name="aiseoclient[local_country]" value="<?php echo esc_attr($options['local_country'] ?? 'NL'); ?>" placeholder="Country" style="width:100px;"></p>
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Coordinates', 'ai-seo-client'); ?></th>
-                <td>
-                    Lat: <input type="text" name="aiseoclient[local_latitude]" value="<?php echo esc_attr($options['local_latitude'] ?? ''); ?>" style="width:100px;">
-                    Lng: <input type="text" name="aiseoclient[local_longitude]" value="<?php echo esc_attr($options['local_longitude'] ?? ''); ?>" style="width:100px;">
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Contact', 'ai-seo-client'); ?></th>
-                <td>
-                    <p>Phone: <input type="text" name="aiseoclient[local_phone]" value="<?php echo esc_attr($options['local_phone'] ?? ''); ?>"></p>
-                    <p>Email: <input type="email" name="aiseoclient[local_email]" value="<?php echo esc_attr($options['local_email'] ?? ''); ?>"></p>
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Opening Hours', 'ai-seo-client'); ?></th>
-                <td>
-                    <textarea name="aiseoclient[local_opening_hours]" rows="5" class="large-text" placeholder="Mo-Fr 09:00-17:00&#10;Sa 10:00-14:00"><?php echo esc_textarea($options['local_opening_hours'] ?? ''); ?></textarea>
-                    <p class="description"><?php esc_html_e('One per line. Format: Mo-Fr 09:00-17:00', 'ai-seo-client'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Business Image', 'ai-seo-client'); ?></th>
-                <td><input type="url" name="aiseoclient[local_image]" value="<?php echo esc_attr($options['local_image'] ?? ''); ?>" class="regular-text"></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Price Range', 'ai-seo-client'); ?></th>
-                <td>
-                    <select name="aiseoclient[local_price_range]">
-                        <option value="$">$ (Inexpensive)</option>
-                        <option value="$$">$$ (Moderate)</option>
-                        <option value="$$$">$$$ (Expensive)</option>
-                        <option value="$$$$">$$$$ (Very Expensive)</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Local SERP Radius', 'ai-seo-client'); ?></th>
-                <td>
-                    <select name="aiseoclient[local_search_radius]">
+        <div class="fyn-card" style="margin-bottom:20px;">
+            <div class="fyn-card-header">
+                <span class="dashicons dashicons-location"></span>
+                <h3 class="fyn-card-title"><?php esc_html_e('Local Business', 'ai-seo-client'); ?></h3>
+            </div>
+
+            <div style="display:grid;grid-template-columns:160px 1fr;gap:12px 20px;align-items:center;">
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Business Name', 'ai-seo-client'); ?></label>
+                <input type="text" name="aiseoclient[local_business_name]" value="<?php echo esc_attr($options['local_business_name'] ?? ''); ?>" class="fyn-input" style="width:100%;max-width:350px;">
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Business Type', 'ai-seo-client'); ?></label>
+                <select name="aiseoclient[local_business_type]" class="fyn-input" style="width:220px;">
+                    <option value="LocalBusiness"><?php esc_html_e('Local Business', 'ai-seo-client'); ?></option>
+                    <option value="Restaurant"><?php esc_html_e('Restaurant', 'ai-seo-client'); ?></option>
+                    <option value="Store"><?php esc_html_e('Store', 'ai-seo-client'); ?></option>
+                    <option value="Dentist"><?php esc_html_e('Dentist', 'ai-seo-client'); ?></option>
+                    <option value="Doctor"><?php esc_html_e('Doctor', 'ai-seo-client'); ?></option>
+                    <option value="Plumber"><?php esc_html_e('Plumber', 'ai-seo-client'); ?></option>
+                    <option value="Electrician"><?php esc_html_e('Electrician', 'ai-seo-client'); ?></option>
+                    <option value="Lawyer"><?php esc_html_e('Lawyer', 'ai-seo-client'); ?></option>
+                    <option value="RealEstateAgent"><?php esc_html_e('Real Estate Agent', 'ai-seo-client'); ?></option>
+                    <option value="HairSalon"><?php esc_html_e('Hair Salon', 'ai-seo-client'); ?></option>
+                    <option value="AutoRepair"><?php esc_html_e('Auto Repair', 'ai-seo-client'); ?></option>
+                </select>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);align-self:start;padding-top:6px;"><?php esc_html_e('Description', 'ai-seo-client'); ?></label>
+                <textarea name="aiseoclient[local_description]" rows="3" class="fyn-input" style="width:100%;max-width:450px;"><?php echo esc_textarea($options['local_description'] ?? ''); ?></textarea>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);align-self:start;padding-top:6px;"><?php esc_html_e('Address', 'ai-seo-client'); ?></label>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <input type="text" name="aiseoclient[local_street]" value="<?php echo esc_attr($options['local_street'] ?? ''); ?>" class="fyn-input" style="width:280px;" placeholder="<?php esc_attr_e('Street', 'ai-seo-client'); ?>">
+                    <input type="text" name="aiseoclient[local_city]" value="<?php echo esc_attr($options['local_city'] ?? ''); ?>" class="fyn-input" style="width:180px;" placeholder="<?php esc_attr_e('City', 'ai-seo-client'); ?>">
+                    <input type="text" name="aiseoclient[local_state]" value="<?php echo esc_attr($options['local_state'] ?? ''); ?>" class="fyn-input" style="width:140px;" placeholder="<?php esc_attr_e('State', 'ai-seo-client'); ?>">
+                    <input type="text" name="aiseoclient[local_postal]" value="<?php echo esc_attr($options['local_postal'] ?? ''); ?>" class="fyn-input" style="width:100px;" placeholder="<?php esc_attr_e('Postal Code', 'ai-seo-client'); ?>">
+                    <input type="text" name="aiseoclient[local_country]" value="<?php echo esc_attr($options['local_country'] ?? 'NL'); ?>" class="fyn-input" style="width:80px;" placeholder="<?php esc_attr_e('Country', 'ai-seo-client'); ?>">
+                </div>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Coordinates', 'ai-seo-client'); ?></label>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <span style="font-size:12px;color:var(--text-m);">Lat:</span>
+                    <input type="text" name="aiseoclient[local_latitude]" value="<?php echo esc_attr($options['local_latitude'] ?? ''); ?>" class="fyn-input" style="width:120px;">
+                    <span style="font-size:12px;color:var(--text-m);">Lng:</span>
+                    <input type="text" name="aiseoclient[local_longitude]" value="<?php echo esc_attr($options['local_longitude'] ?? ''); ?>" class="fyn-input" style="width:120px;">
+                </div>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);align-self:start;padding-top:6px;"><?php esc_html_e('Contact', 'ai-seo-client'); ?></label>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <div>
+                        <span style="font-size:12px;color:var(--text-m);display:block;margin-bottom:2px;"><?php esc_html_e('Phone', 'ai-seo-client'); ?></span>
+                        <input type="text" name="aiseoclient[local_phone]" value="<?php echo esc_attr($options['local_phone'] ?? ''); ?>" class="fyn-input" style="width:180px;">
+                    </div>
+                    <div>
+                        <span style="font-size:12px;color:var(--text-m);display:block;margin-bottom:2px;"><?php esc_html_e('Email', 'ai-seo-client'); ?></span>
+                        <input type="email" name="aiseoclient[local_email]" value="<?php echo esc_attr($options['local_email'] ?? ''); ?>" class="fyn-input" style="width:220px;">
+                    </div>
+                </div>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);align-self:start;padding-top:6px;"><?php esc_html_e('Opening Hours', 'ai-seo-client'); ?></label>
+                <div>
+                    <textarea name="aiseoclient[local_opening_hours]" rows="4" class="fyn-input" style="width:100%;max-width:350px;font-family:monospace;font-size:12px;" placeholder="Ma-Vr 09:00-17:00&#10;Za 10:00-14:00"><?php echo esc_textarea($options['local_opening_hours'] ?? ''); ?></textarea>
+                    <p style="font-size:12px;color:var(--text-m);margin:4px 0 0;"><?php esc_html_e('One per line. Format: Mo-Fr 09:00-17:00', 'ai-seo-client'); ?></p>
+                </div>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Business Image', 'ai-seo-client'); ?></label>
+                <input type="url" name="aiseoclient[local_image]" value="<?php echo esc_attr($options['local_image'] ?? ''); ?>" class="fyn-input" style="width:100%;max-width:400px;">
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Price Range', 'ai-seo-client'); ?></label>
+                <select name="aiseoclient[local_price_range]" class="fyn-input" style="width:200px;">
+                    <option value="$">$ (<?php esc_html_e('Inexpensive', 'ai-seo-client'); ?>)</option>
+                    <option value="$$">$$ (<?php esc_html_e('Moderate', 'ai-seo-client'); ?>)</option>
+                    <option value="$$$">$$$ (<?php esc_html_e('Expensive', 'ai-seo-client'); ?>)</option>
+                    <option value="$$$$">$$$$ (<?php esc_html_e('Very Expensive', 'ai-seo-client'); ?>)</option>
+                </select>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Local SERP Radius', 'ai-seo-client'); ?></label>
+                <div>
+                    <select name="aiseoclient[local_search_radius]" class="fyn-input" style="width:120px;">
                         <?php foreach ([1, 2, 5, 10, 15, 25, 50, 100] as $km): ?>
                             <option value="<?php echo esc_attr($km); ?>" <?php selected((int) ($options['local_search_radius'] ?? 10), $km); ?>><?php echo esc_html($km); ?> km</option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="description"><?php esc_html_e('Default radius for Local SERP scans around your business address.', 'ai-seo-client'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e('Local SERP Grid', 'ai-seo-client'); ?></th>
-                <td>
-                    <select name="aiseoclient[local_search_grid]">
+                    <span style="font-size:12px;color:var(--text-m);margin-left:6px;"><?php esc_html_e('Default radius for Local SERP scans around your business address.', 'ai-seo-client'); ?></span>
+                </div>
+
+                <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Local SERP Grid', 'ai-seo-client'); ?></label>
+                <div>
+                    <select name="aiseoclient[local_search_grid]" class="fyn-input" style="width:160px;">
                         <option value="1" <?php selected((int) ($options['local_search_grid'] ?? 1), 1); ?>><?php esc_html_e('Single center', 'ai-seo-client'); ?></option>
                         <option value="3" <?php selected((int) ($options['local_search_grid'] ?? 1), 3); ?>>3x3</option>
                         <option value="5" <?php selected((int) ($options['local_search_grid'] ?? 1), 5); ?>>5x5</option>
                         <option value="7" <?php selected((int) ($options['local_search_grid'] ?? 1), 7); ?>>7x7</option>
                     </select>
-                    <p class="description"><?php esc_html_e('Grid density for Local SERP scans (higher = more API calls).', 'ai-seo-client'); ?></p>
-                </td>
-            </tr>
-        </table>
+                    <span style="font-size:12px;color:var(--text-m);margin-left:6px;"><?php esc_html_e('Grid density for Local SERP scans (higher = more API calls).', 'ai-seo-client'); ?></span>
+                </div>
+            </div>
+        </div>
         <?php
     }
 

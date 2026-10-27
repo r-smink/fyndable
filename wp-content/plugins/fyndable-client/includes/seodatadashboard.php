@@ -308,130 +308,122 @@ class SEODataDashboard
         $dfConnected = $this->isDataForSEOConfigured();
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .seo-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-            .seo-stat-card { background: #f8fafc; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #e2e8f0; }
-            .seo-stat-value { font-size: 28px; font-weight: 700; color: #379fd3; }
-            .seo-stat-label { font-size: 13px; color: #64748b; margin-top: 5px; }
-            .seo-data-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
-            .seo-data-tab { padding: 10px 20px; cursor: pointer; background: none; border: none; font-weight: 500; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-            .seo-data-tab.active { color: #379fd3; border-bottom-color: #379fd3; }
             .seo-data-panel { display: none; }
             .seo-data-panel.active { display: block; }
-            .connection-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-            .connection-badge.connected { background: #d1fae5; color: #065f46; }
-            .connection-badge.disconnected { background: #fee2e2; color: #991b1b; }
-            .seo-search-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
-            .seo-search-field { display: flex; flex-direction: column; gap: 4px; }
-            .seo-search-field label { font-size: 12px; font-weight: 600; color: #475569; }
-            .seo-search-field input, .seo-search-field select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; min-width: 220px; }
-            .seo-search-bar button { padding: 9px 20px; background: #379fd3; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
-            .seo-search-bar button:hover { background: #2a7ba8; }
             .seo-data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .seo-data-table th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; color: #475569; }
-            .seo-data-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-            .seo-data-table tr:hover { background: #f8fafc; }
+            .seo-data-table th { background: var(--well); padding: 10px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-m); }
+            .seo-data-table td { padding: 8px 10px; border-bottom: 1px solid var(--divide); font-size: 13px; color: var(--text-b); }
+            .seo-data-table tr:hover { background: var(--row-hover); }
             .seo-data-section { margin-top: 25px; }
-            .seo-data-section h3 { color: #111827; font-size: 16px; margin-bottom: 8px; }
-            .seo-diff-pos { color: #16a34a; font-weight: 600; }
-            .seo-diff-neg { color: #dc2626; font-weight: 600; }
-            .seo-kw-tag { display: inline-block; background: #eef2ff; color: #3730a3; border-radius: 4px; padding: 2px 6px; font-size: 11px; margin: 1px; }
-            .seo-loading { color: #64748b; font-style: italic; }
+            .seo-data-section h3 { color: var(--text-h); font-size: 16px; margin-bottom: 8px; }
+            .seo-diff-pos { color: var(--fyn-success); font-weight: 600; }
+            .seo-diff-neg { color: var(--fyn-danger); font-weight: 600; }
+            .seo-kw-tag { display: inline-block; background: var(--fyn-accent-light); color: var(--fyn-purple); border-radius: 7px; padding: 2px 8px; font-size: 11px; margin: 1px; }
+            .seo-loading { color: var(--text-m); font-style: italic; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('SEO Data Dashboard', 'ai-seo-client'); ?></h1>
-                <div style="margin-top: 10px; display: flex; gap: 10px;">
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('SEO Data', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('SEO Data Dashboard', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc">
+                        <?php esc_html_e('Domain, keyword and SERP analysis with SE Ranking, Ahrefs and DataForSEO.', 'ai-seo-client'); ?>
+                    </p>
+                </div>
+                <div class="fyn-page-header-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
                     <?php if ($seConnected): ?>
-                    <span class="connection-badge connected">SE Ranking: Connected</span>
+                    <span class="fyn-badge fyn-badge--success">SE Ranking</span>
                     <?php else: ?>
-                    <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">SE Ranking: Not Connected</a>
+                    <a class="fyn-badge fyn-badge--danger" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration:none;">SE Ranking</a>
                     <?php endif; ?>
                     <?php if ($ahConnected): ?>
-                    <span class="connection-badge connected">Ahrefs: Connected</span>
+                    <span class="fyn-badge fyn-badge--success">Ahrefs</span>
                     <?php else: ?>
-                    <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">Ahrefs: Not Connected</a>
+                    <a class="fyn-badge fyn-badge--danger" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration:none;">Ahrefs</a>
                     <?php endif; ?>
                     <?php if ($dfConnected): ?>
-                    <span class="connection-badge connected">DataForSEO: Connected</span>
+                    <span class="fyn-badge fyn-badge--success">DataForSEO</span>
                     <?php else: ?>
-                    <a class="connection-badge disconnected" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration: none;">DataForSEO: Not Connected</a>
+                    <a class="fyn-badge fyn-badge--danger" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-integrations')); ?>" style="text-decoration:none;">DataForSEO</a>
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="sseo-ai-content">
-                <?php DashboardSorter::begin('ai-seo-google-data'); ?>
-                <?php $defaultSource = $this->defaultSource(); ?>
-                <div class="sseo-ai-dashboard-card">
-                    <div class="seo-search-bar">
-                        <div class="seo-search-field">
-                            <label for="seo-input-domain"><?php esc_html_e('Domain', 'ai-seo-client'); ?></label>
-                            <input type="text" id="seo-input-domain" placeholder="<?php echo esc_attr(parse_url(home_url(), PHP_URL_HOST)); ?>">
-                        </div>
-                        <div class="seo-search-field">
-                            <label for="seo-input-keyword"><?php esc_html_e('Keyword', 'ai-seo-client'); ?></label>
-                            <input type="text" id="seo-input-keyword" placeholder="<?php esc_attr_e('e.g. seo software', 'ai-seo-client'); ?>">
-                        </div>
-                        <div class="seo-search-field">
-                            <label for="seo-input-source"><?php esc_html_e('Database', 'ai-seo-client'); ?></label>
-                            <select id="seo-input-source">
-                                <?php
-                                $databases = [
-                                    'us' => 'United States', 'uk' => 'United Kingdom', 'nl' => 'Netherlands',
-                                    'de' => 'Germany', 'fr' => 'France', 'be' => 'Belgium', 'es' => 'Spain',
-                                    'it' => 'Italy', 'au' => 'Australia', 'ca' => 'Canada', 'br' => 'Brazil',
-                                ];
-                                foreach ($databases as $code => $name) {
-                                    printf(
-                                        '<option value="%s"%s>%s</option>',
-                                        esc_attr($code),
-                                        selected($code, $defaultSource, false),
-                                        esc_html($name)
-                                    );
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <button type="button" onclick="sseoRunAnalysis()"><?php esc_html_e('Analyze', 'ai-seo-client'); ?></button>
-                    </div>
 
-                    <div class="seo-data-tabs">
-                        <button type="button" class="seo-data-tab active" onclick="sseoSwitchTab(this, 'domain')"><?php esc_html_e('Domain Analysis', 'ai-seo-client'); ?></button>
-                        <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'keywords')"><?php esc_html_e('Keyword Research', 'ai-seo-client'); ?></button>
-                        <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'serp')"><?php esc_html_e('SERP', 'ai-seo-client'); ?></button>
-                        <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'competitors')"><?php esc_html_e('Competitors', 'ai-seo-client'); ?></button>
-                        <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'aisearch')"><?php esc_html_e('AI Search', 'ai-seo-client'); ?></button>
-                        <button type="button" class="seo-data-tab" onclick="sseoSwitchTab(this, 'overview')"><?php esc_html_e('Projects / Ahrefs', 'ai-seo-client'); ?></button>
-                    </div>
+            <?php DashboardSorter::begin('ai-seo-google-data'); ?>
+            <?php $defaultSource = $this->defaultSource(); ?>
 
-                    <div id="panel-domain" class="seo-data-panel active">
-                        <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load domain analysis.', 'ai-seo-client'); ?></p>
+            <!-- Main card -->
+            <div class="fyn-card">
+                <!-- Search bar -->
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <label for="seo-input-domain" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Domain', 'ai-seo-client'); ?></label>
+                        <input type="text" id="seo-input-domain" class="fyn-input" style="min-width:220px;" placeholder="<?php echo esc_attr(parse_url(home_url(), PHP_URL_HOST)); ?>">
                     </div>
-                    <div id="panel-keywords" class="seo-data-panel">
-                        <p class="seo-loading"><?php esc_html_e('Enter a keyword and click Analyze to load keyword research.', 'ai-seo-client'); ?></p>
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <label for="seo-input-keyword" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Keyword', 'ai-seo-client'); ?></label>
+                        <input type="text" id="seo-input-keyword" class="fyn-input" style="min-width:220px;" placeholder="<?php esc_attr_e('e.g. seo software', 'ai-seo-client'); ?>">
                     </div>
-                    <div id="panel-serp" class="seo-data-panel">
-                        <p class="seo-loading"><?php esc_html_e('Enter a keyword and click Analyze to fetch live SERP results.', 'ai-seo-client'); ?></p>
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <label for="seo-input-source" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Database', 'ai-seo-client'); ?></label>
+                        <select id="seo-input-source" class="fyn-input" style="min-width:180px;">
+                            <?php
+                            $databases = [
+                                'us' => 'United States', 'uk' => 'United Kingdom', 'nl' => 'Netherlands',
+                                'de' => 'Germany', 'fr' => 'France', 'be' => 'Belgium', 'es' => 'Spain',
+                                'it' => 'Italy', 'au' => 'Australia', 'ca' => 'Canada', 'br' => 'Brazil',
+                            ];
+                            foreach ($databases as $code => $name) {
+                                printf(
+                                    '<option value="%s"%s>%s</option>',
+                                    esc_attr($code),
+                                    selected($code, $defaultSource, false),
+                                    esc_html($name)
+                                );
+                            }
+                            ?>
+                        </select>
                     </div>
-                    <div id="panel-competitors" class="seo-data-panel">
-                        <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load competitors.', 'ai-seo-client'); ?></p>
-                    </div>
-                    <div id="panel-aisearch" class="seo-data-panel">
-                        <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load AI search visibility.', 'ai-seo-client'); ?></p>
-                    </div>
-                    <div id="panel-overview" class="seo-data-panel">
-                        <div id="panel-overview-summary"></div>
-                        <div id="panel-seranking" style="margin-top:20px;"></div>
-                        <div id="panel-ahrefs" style="margin-top:20px;"></div>
-                    </div>
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoRunAnalysis()">
+                        <span class="dashicons dashicons-chart-area"></span>
+                        <?php esc_html_e('Analyze', 'ai-seo-client'); ?>
+                    </button>
                 </div>
-                <?php DashboardSorter::end('ai-seo-google-data'); ?>
+
+                <!-- Tabs -->
+                <div class="fyn-tabs" style="margin-bottom:16px;">
+                    <button type="button" class="fyn-tab seo-data-tab active" onclick="sseoSwitchTab(this, 'domain')"><?php esc_html_e('Domain Analysis', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-tab seo-data-tab" onclick="sseoSwitchTab(this, 'keywords')"><?php esc_html_e('Keyword Research', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-tab seo-data-tab" onclick="sseoSwitchTab(this, 'serp')"><?php esc_html_e('SERP', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-tab seo-data-tab" onclick="sseoSwitchTab(this, 'competitors')"><?php esc_html_e('Competitors', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-tab seo-data-tab" onclick="sseoSwitchTab(this, 'aisearch')"><?php esc_html_e('AI Search', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-tab seo-data-tab" onclick="sseoSwitchTab(this, 'overview')"><?php esc_html_e('Projects / Ahrefs', 'ai-seo-client'); ?></button>
+                </div>
+
+                <div id="panel-domain" class="seo-data-panel active">
+                    <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load domain analysis.', 'ai-seo-client'); ?></p>
+                </div>
+                <div id="panel-keywords" class="seo-data-panel">
+                    <p class="seo-loading"><?php esc_html_e('Enter a keyword and click Analyze to load keyword research.', 'ai-seo-client'); ?></p>
+                </div>
+                <div id="panel-serp" class="seo-data-panel">
+                    <p class="seo-loading"><?php esc_html_e('Enter a keyword and click Analyze to fetch live SERP results.', 'ai-seo-client'); ?></p>
+                </div>
+                <div id="panel-competitors" class="seo-data-panel">
+                    <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load competitors.', 'ai-seo-client'); ?></p>
+                </div>
+                <div id="panel-aisearch" class="seo-data-panel">
+                    <p class="seo-loading"><?php esc_html_e('Enter a domain and click Analyze to load AI search visibility.', 'ai-seo-client'); ?></p>
+                </div>
+                <div id="panel-overview" class="seo-data-panel">
+                    <div id="panel-overview-summary"></div>
+                    <div id="panel-seranking" style="margin-top:20px;"></div>
+                    <div id="panel-ahrefs" style="margin-top:20px;"></div>
+                </div>
             </div>
+            <?php DashboardSorter::end('ai-seo-google-data'); ?>
         </div>
 
         <script>

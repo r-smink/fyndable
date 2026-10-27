@@ -943,127 +943,129 @@ PROMPT;
         $trackedCount = $wpdb->get_var("SELECT COUNT(*) FROM {$keywordsTable} WHERE status = 'active'") ?: 0;
         $rankedCount = $wpdb->get_var("SELECT COUNT(*) FROM {$keywordsTable} WHERE rank IS NOT NULL AND rank > 0") ?: 0;
         ?>
-        <div class="wrap sseo-ai-modern" id="sseo-keywords-page">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Keywords', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" id="sseo-keywords-page" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Keywords', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Keywords', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage and track your keywords, discover new opportunities.', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-refresh-keywords">
+                        <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Refresh', 'ai-seo-client'); ?>
+                    </button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="btn-generate-keyword-ideas">
+                        <span class="dashicons dashicons-lightbulb"></span>
+                        <?php esc_html_e('Generate keyword-based ideas', 'ai-seo-client'); ?>
+                    </button>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <!-- Actions Bar -->
-                    <div class="keywords-actions-bar">
-                        <div class="keyword-input-group">
-                            <input type="text" id="keyword-input" placeholder="<?php esc_attr_e('Enter a keyword', 'ai-seo-client'); ?>">
-                            <button type="button" class="search-btn" id="btn-search-keyword">
-                                <span class="dashicons dashicons-search"></span>
-                            </button>
-                        </div>
-                        <button type="button" class="sseo-btn-primary" id="btn-generate-keyword-ideas">
-                            <?php esc_html_e('Generate keyword-based ideas', 'ai-seo-client'); ?>
-                        </button>
-                        <button type="button" class="sseo-btn-secondary" id="btn-clusters">
-                            <?php esc_html_e('Clusters', 'ai-seo-client'); ?>
-                        </button>
-                        <button type="button" class="sseo-btn-secondary" id="btn-keywords-explorer">
-                            <?php esc_html_e('Keywords explorer', 'ai-seo-client'); ?>
-                        </button>
-                        <button type="button" class="sseo-btn-secondary" id="btn-generate-keywords">
-                            <span class="dashicons dashicons-plus"></span>
-                            <?php esc_html_e('Generate keywords', 'ai-seo-client'); ?>
-                        </button>
-                        <button type="button" class="sseo-btn-icon" id="btn-refresh-keywords" title="<?php esc_attr_e('Refresh', 'ai-seo-client'); ?>">
-                            <span class="dashicons dashicons-update"></span>
-                        </button>
-                        <button type="button" class="sseo-btn-icon danger" id="btn-delete-keywords" title="<?php esc_attr_e('Delete selected', 'ai-seo-client'); ?>">
-                            <span class="dashicons dashicons-trash"></span>
+
+            <!-- Toolbar card -->
+            <div class="fyn-card" style="margin-bottom:20px;padding:16px 20px;">
+                <div class="keywords-actions-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div class="keyword-input-group" style="display:flex;flex:1;max-width:320px;">
+                        <input type="text" id="keyword-input" class="fyn-input" style="flex:1;border-radius:9px 0 0 9px;" placeholder="<?php esc_attr_e('Enter a keyword', 'ai-seo-client'); ?>">
+                        <button type="button" class="fyn-btn fyn-btn-primary" id="btn-search-keyword" style="border-radius:0 9px 9px 0;padding:9px 14px;">
+                            <span class="dashicons dashicons-search"></span>
                         </button>
                     </div>
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-clusters"><?php esc_html_e('Clusters', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-keywords-explorer"><?php esc_html_e('Keywords explorer', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="btn-generate-keywords">
+                        <span class="dashicons dashicons-plus"></span>
+                    </button>
+                    <button type="button" class="fyn-btn fyn-btn-danger" id="btn-delete-keywords" title="<?php esc_attr_e('Delete selected', 'ai-seo-client'); ?>">
+                        <span class="dashicons dashicons-trash"></span>
+                    </button>
+                </div>
+            </div>
 
-                    <!-- Filter Tabs -->
-                    <div class="keywords-tabs">
-                        <button type="button" class="tab-btn active" data-filter="all">
-                            <?php esc_html_e('All', 'ai-seo-client'); ?> <span class="tab-count" id="count-all"><?php echo esc_html($totalKeywords); ?></span>
-                        </button>
-                        <button type="button" class="tab-btn" data-filter="tracked">
-                            <?php esc_html_e('Tracked keywords', 'ai-seo-client'); ?> <span class="tab-count" id="count-tracked"><?php echo esc_html($trackedCount); ?></span>
-                        </button>
-                        <button type="button" class="tab-btn" data-filter="ranked">
-                            <?php esc_html_e('All ranked keywords', 'ai-seo-client'); ?> <span class="tab-count" id="count-ranked"><?php echo esc_html($rankedCount); ?></span>
-                        </button>
-                        <button type="button" class="tab-btn" data-filter="position_changes">
-                            <?php esc_html_e('Position changes', 'ai-seo-client'); ?> <span class="tab-count" id="count-changes">0</span>
-                        </button>
-                        <button type="button" class="tab-btn" data-filter="new_ranked">
-                            <?php esc_html_e('New ranked keywords', 'ai-seo-client'); ?> <span class="tab-count" id="count-new">0</span>
-                        </button>
+            <!-- Main content card -->
+            <div class="fyn-card">
+                <!-- Filter Tabs -->
+                <div class="fyn-tabs keywords-tabs">
+                    <button type="button" class="fyn-tab tab-btn active" data-filter="all">
+                        <?php esc_html_e('All', 'ai-seo-client'); ?> <span class="fyn-tab-count tab-count" id="count-all"><?php echo esc_html($totalKeywords); ?></span>
+                    </button>
+                    <button type="button" class="fyn-tab tab-btn" data-filter="tracked">
+                        <?php esc_html_e('Tracked keywords', 'ai-seo-client'); ?> <span class="fyn-tab-count tab-count" id="count-tracked"><?php echo esc_html($trackedCount); ?></span>
+                    </button>
+                    <button type="button" class="fyn-tab tab-btn" data-filter="ranked">
+                        <?php esc_html_e('All ranked keywords', 'ai-seo-client'); ?> <span class="fyn-tab-count tab-count" id="count-ranked"><?php echo esc_html($rankedCount); ?></span>
+                    </button>
+                    <button type="button" class="fyn-tab tab-btn" data-filter="position_changes">
+                        <?php esc_html_e('Position changes', 'ai-seo-client'); ?> <span class="fyn-tab-count tab-count" id="count-changes">0</span>
+                    </button>
+                    <button type="button" class="fyn-tab tab-btn" data-filter="new_ranked">
+                        <?php esc_html_e('New ranked keywords', 'ai-seo-client'); ?> <span class="fyn-tab-count tab-count" id="count-new">0</span>
+                    </button>
+                </div>
+
+                <!-- Table Header -->
+                <div class="keywords-table-container">
+                    <div class="keywords-table-header" style="display:flex;align-items:center;gap:12px;padding:10px 0;">
+                        <label class="select-all" style="display:flex;align-items:center;gap:6px;">
+                            <input type="checkbox" id="select-all-keywords">
+                            <span style="font-size:12px;color:var(--text-m);"><?php esc_html_e('Selected:', 'ai-seo-client'); ?> <span id="selected-count">0</span></span>
+                        </label>
+                        <select id="filter-cluster" class="fyn-input" style="max-width:200px;padding:6px 10px;font-size:12px;">
+                            <option value=""><?php esc_html_e('All clusters', 'ai-seo-client'); ?></option>
+                            <?php foreach ($clusters as $cluster): ?>
+                                <option value="<?php echo esc_attr($cluster->id); ?>">
+                                    <?php echo esc_html($cluster->name); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
-                    <!-- Table Header -->
-                    <div class="keywords-table-container">
-                        <div class="keywords-table-header">
-                            <label class="select-all">
-                                <input type="checkbox" id="select-all-keywords">
-                                <span><?php esc_html_e('Selected:', 'ai-seo-client'); ?> <span id="selected-count">0</span></span>
-                            </label>
-                        </div>
+                    <!-- Keywords Table -->
+                    <table class="fyn-table keywords-table" id="keywords-table">
+                        <thead>
+                            <tr>
+                                <th class="col-checkbox" style="width:30px;"></th>
+                                <th class="col-actions"><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                                <th class="col-keyword sortable" data-sort="keyword">
+                                    <?php esc_html_e('Keywords', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
+                                </th>
+                                <th class="col-cluster"><?php esc_html_e('All clusters', 'ai-seo-client'); ?></th>
+                                <th class="col-volume sortable" data-sort="search_volume">
+                                    <?php esc_html_e('Search volume', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
+                                </th>
+                                <th class="col-difficulty sortable" data-sort="difficulty">
+                                    <?php esc_html_e('Difficulty', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
+                                </th>
+                                <th class="col-cpc sortable" data-sort="cpc">
+                                    <?php esc_html_e('CPC', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
+                                </th>
+                                <th class="col-rank sortable" data-sort="rank">
+                                    <?php esc_html_e('Rank', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
+                                </th>
+                                <th class="col-intent"><?php esc_html_e('All Search Intent', 'ai-seo-client'); ?></th>
+                                <th class="col-created sortable" data-sort="created_at">
+                                    <?php esc_html_e('Created', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
+                                </th>
+                                <th class="col-link"><?php esc_html_e('Link', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywords-tbody">
+                            <!-- Keywords loaded here -->
+                        </tbody>
+                    </table>
+                </div>
 
-                        <div class="keywords-filters-bar">
-                            <select id="filter-cluster" class="sseo-select">
-                                <option value=""><?php esc_html_e('All clusters', 'ai-seo-client'); ?></option>
-                                <?php foreach ($clusters as $cluster): ?>
-                                    <option value="<?php echo esc_attr($cluster->id); ?>">
-                                        <?php echo esc_html($cluster->name); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- Keywords Table -->
-                        <table class="keywords-table" id="keywords-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-checkbox"></th>
-                                    <th class="col-actions"><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                                    <th class="col-keyword sortable" data-sort="keyword">
-                                        <?php esc_html_e('Keywords', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
-                                    </th>
-                                    <th class="col-cluster"><?php esc_html_e('All clusters', 'ai-seo-client'); ?></th>
-                                    <th class="col-volume sortable" data-sort="search_volume">
-                                        <?php esc_html_e('Search volume', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
-                                    </th>
-                                    <th class="col-difficulty sortable" data-sort="difficulty">
-                                        <?php esc_html_e('Difficulty', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
-                                    </th>
-                                    <th class="col-cpc sortable" data-sort="cpc">
-                                        <?php esc_html_e('CPC', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
-                                    </th>
-                                    <th class="col-rank sortable" data-sort="rank">
-                                        <?php esc_html_e('Rank', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
-                                    </th>
-                                    <th class="col-serp"><?php esc_html_e('SERP Competitors', 'ai-seo-client'); ?></th>
-                                    <th class="col-intent"><?php esc_html_e('All Search Intent', 'ai-seo-client'); ?></th>
-                                    <th class="col-created sortable" data-sort="created_at">
-                                        <?php esc_html_e('Created', 'ai-seo-client'); ?> <span class="sort-icon">&#8597;</span>
-                                    </th>
-                                    <th class="col-country"><?php esc_html_e('Country Language', 'ai-seo-client'); ?></th>
-                                    <th class="col-link"><?php esc_html_e('Link', 'ai-seo-client'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody id="keywords-tbody">
-                                <!-- Keywords loaded here -->
-                            </tbody>
-                        </table>
+                <!-- Pagination -->
+                <div class="keywords-pagination" id="keywords-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:16px 0 0;border-top:1px solid var(--divide);">
+                    <div class="pagination-info" style="font-size:13px;color:var(--text-m);">
+                        <?php esc_html_e('Showing', 'ai-seo-client'); ?> <span id="showing-start">0</span>–<span id="showing-end">0</span> <?php esc_html_e('of', 'ai-seo-client'); ?> <span id="showing-total">0</span>
                     </div>
-
-                    <!-- Pagination -->
-                    <div class="keywords-pagination" id="keywords-pagination">
-                        <div class="pagination-info">
-                            <?php esc_html_e('Showing', 'ai-seo-client'); ?> <span id="showing-start">0</span>-<span id="showing-end">0</span> <?php esc_html_e('of', 'ai-seo-client'); ?> <span id="showing-total">0</span>
-                        </div>
-                        <div class="pagination-buttons">
-                            <button type="button" class="page-btn" data-page="prev">&laquo;</button>
-                            <div id="pagination-numbers"></div>
-                            <button type="button" class="page-btn" data-page="next">&raquo;</button>
-                        </div>
+                    <div class="pagination-buttons" style="display:flex;align-items:center;gap:4px;">
+                        <button type="button" class="page-btn fyn-btn fyn-btn-outline" style="padding:6px 10px;font-size:13px;" data-page="prev">&laquo;</button>
+                        <div id="pagination-numbers" style="display:flex;gap:4px;"></div>
+                        <button type="button" class="page-btn fyn-btn fyn-btn-outline" style="padding:6px 10px;font-size:13px;" data-page="next">&raquo;</button>
                     </div>
                 </div>
             </div>
@@ -1454,7 +1456,7 @@ PROMPT;
                         return;
                     }
 
-                    let html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th><?php echo esc_js(__('Keyword', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Relevance Score', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Action', 'ai-seo-client')); ?></th></tr></thead><tbody>';
+                    let html = '<table class="fyn-table"><thead><tr><th><?php echo esc_js(__('Keyword', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Relevance Score', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Action', 'ai-seo-client')); ?></th></tr></thead><tbody>';
                     keys.forEach(function(kw) {
                         html += '<tr><td>' + escapeHtml(kw) + '</td><td>' + (related[kw] || 0) + '</td><td><button type="button" class="button button-small btn-add-explored-keyword" data-keyword="' + escapeHtml(kw) + '"><?php echo esc_js(__('Add keyword', 'ai-seo-client')); ?></button></td></tr>';
                     });

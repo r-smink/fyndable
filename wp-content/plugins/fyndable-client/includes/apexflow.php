@@ -1669,423 +1669,411 @@ Keywords:
         unset($entry);
         ?>
         <style>
-            .sseo-apexflow-page .sseo-ai-dashboard-card { border: 1px solid #e1e6ee; border-radius: 10px; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
             .sseo-apexflow-page .form-table { border-collapse: separate; border-spacing: 0 12px; }
-            .sseo-apexflow-page .form-table th { padding: 10px 20px 10px 0; color: #344054; font-size: 14px; font-weight: 600; vertical-align: top; }
+            .sseo-apexflow-page .form-table th { padding: 10px 20px 10px 0; color: var(--text); font-size: 14px; font-weight: 600; vertical-align: top; }
             .sseo-apexflow-page .form-table td { padding: 4px 0; }
             .sseo-apexflow-page input[type="text"],
             .sseo-apexflow-page input[type="number"],
             .sseo-apexflow-page input[type="time"],
             .sseo-apexflow-page select,
             .sseo-apexflow-page textarea {
-                min-height: 42px;
-                padding: 9px 13px;
-                border: 1px solid #d7dde7;
-                border-radius: 6px;
-                background: #fff;
-                color: #344054;
-                box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-                transition: border-color .15s, box-shadow .15s;
+                min-height: 42px; padding: 9px 13px;
+                border: 1px solid var(--border); border-radius: var(--radius-sm);
+                background: var(--card); color: var(--text);
+                box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s;
             }
             .sseo-apexflow-page textarea { min-height: 86px; }
             .sseo-apexflow-page input:focus,
             .sseo-apexflow-page select:focus,
             .sseo-apexflow-page textarea:focus {
-                border-color: #379fd3;
-                box-shadow: 0 0 0 3px rgba(55, 159, 211, .14);
-                outline: 0;
+                border-color: var(--accent); box-shadow: 0 0 0 3px rgba(55,159,211,.14); outline: 0;
             }
-            .sseo-apexflow-page .button {
-                min-height: 38px;
-                padding: 4px 16px;
-                border-color: #d7dde7;
-                border-radius: 6px;
-                color: #344054;
-                font-weight: 600;
-                box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-            }
-            .sseo-apexflow-page .button-primary {
-                border-color: #379fd3;
-                background: #379fd3;
-                color: #fff;
-            }
-            .sseo-apexflow-page .button-primary:hover,
-            .sseo-apexflow-page .button-primary:focus { border-color: #278dc0; background: #278dc0; color: #fff; }
             .sseo-apexflow-toggle { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; }
             .sseo-apexflow-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
             .sseo-apexflow-toggle-track {
-                position: relative;
-                width: 46px;
-                height: 24px;
-                flex: 0 0 46px;
-                border-radius: 999px;
-                background: #cbd5e1;
-                transition: background .2s, box-shadow .2s;
+                position: relative; width: 46px; height: 24px; flex: 0 0 46px;
+                border-radius: 999px; background: var(--muted); transition: background .2s, box-shadow .2s;
             }
             .sseo-apexflow-toggle-track::after {
-                content: "";
-                position: absolute;
-                top: 3px;
-                left: 3px;
-                width: 18px;
-                height: 18px;
-                border-radius: 50%;
-                background: #fff;
-                box-shadow: 0 1px 3px rgba(15, 23, 42, .3);
-                transition: transform .2s;
+                content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+                border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(15,23,42,.3); transition: transform .2s;
             }
-            .sseo-apexflow-toggle input:checked + .sseo-apexflow-toggle-track { background: #379fd3; }
+            .sseo-apexflow-toggle input:checked + .sseo-apexflow-toggle-track { background: var(--accent); }
             .sseo-apexflow-toggle input:checked + .sseo-apexflow-toggle-track::after { transform: translateX(22px); }
-            .sseo-apexflow-toggle input:focus-visible + .sseo-apexflow-toggle-track { box-shadow: 0 0 0 3px rgba(55, 159, 211, .25); }
-            .sseo-apexflow-toggle-text { color: #475467; font-weight: 500; }
-            .sseo-apexflow-log { max-height: 240px; overflow-y: auto; border: 1px solid #e1e6ee; border-radius: 8px; padding: 10px 14px; background: #fafbfc; }
-            .sseo-apexflow-log ul { margin: 0; }
+            .sseo-apexflow-toggle input:focus-visible + .sseo-apexflow-toggle-track { box-shadow: 0 0 0 3px rgba(55,159,211,.25); }
+            .sseo-apexflow-toggle-text { color: var(--text-secondary); font-weight: 500; }
+            .sseo-apexflow-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+            .sseo-apexflow-actions form { margin: 0; }
             @media (max-width: 782px) {
                 .sseo-apexflow-page .form-table th { padding-bottom: 2px; }
                 .sseo-apexflow-page .regular-text,
                 .sseo-apexflow-page .large-text { width: 100%; }
             }
         </style>
-        <div class="wrap sseo-ai-modern sseo-apexflow-page">
-            <div class="sseo-ai-header">
-                <h1>&#9889; <?php esc_html_e('ApexFlow — Content Autopilot', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Scans your site, researches keywords in your region and automatically plans and writes posts — every week, hands-free.', 'ai-seo-client'); ?></p>
+        <div class="fyn-animate-in sseo-apexflow-page">
+            <div class="fyn-page-header">
+                <span class="fyn-breadcrumb">Automatisering &rsaquo; ApexFlow</span>
+                <h1><?php esc_html_e('ApexFlow — Content Autopilot', 'ai-seo-client'); ?></h1>
+                <p style="color:var(--text-secondary);margin:4px 0 0;"><?php esc_html_e('Scans your site, researches keywords in your region and automatically plans and writes posts — every week, hands-free.', 'ai-seo-client'); ?></p>
             </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card" style="max-width: 1000px;">
-                    <?php if (isset($_GET['saved'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Settings saved.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
-                    <?php if (isset($_GET['ran'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('ApexFlow run started. Check the log below.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
-                    <?php if (isset($_GET['scanned'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Site profile re-scanned.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
-                    <?php if (isset($_GET['rejected'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword rejected and added to excluded topics.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
-                    <?php if (isset($_GET['cleared'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Planned posts cleared and pending generation cancelled.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
-                    <?php if (isset($_GET['pool_cleared'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword pool cleared. It rebuilds automatically on the next run or preview.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
-                    <?php if (isset($_GET['pool_refreshed'])): ?>
-                        <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword pool refreshed.', 'ai-seo-client'); ?></p></div>
-                    <?php endif; ?>
 
-                    <h2><?php esc_html_e('Status', 'ai-seo-client'); ?></h2>
-                    <p>
-                        <strong><?php esc_html_e('ApexFlow:', 'ai-seo-client'); ?></strong>
-                        <?php echo $settings['enabled'] ? '&#9889; ' . esc_html__('Active', 'ai-seo-client') : esc_html__('Off', 'ai-seo-client'); ?><br>
-                        <strong><?php esc_html_e('Posts this month:', 'ai-seo-client'); ?></strong> <?php echo esc_html($monthly['count']); ?> / <?php echo esc_html($limit === PHP_INT_MAX ? 'unlimited' : $limit); ?><br>
-                        <strong><?php esc_html_e('In generation queue:', 'ai-seo-client'); ?></strong> <?php echo esc_html($queuedCount); ?><br>
-                        <strong><?php esc_html_e('Keyword pool:', 'ai-seo-client'); ?></strong> <?php echo esc_html(count($poolItems)); ?> <?php esc_html_e('candidates', 'ai-seo-client'); ?><br>
-                        <strong><?php esc_html_e('Last run:', 'ai-seo-client'); ?></strong> <?php echo esc_html(get_option(self::LAST_RUN_KEY, 'never')); ?><br>
-                        <strong><?php esc_html_e('Next scheduled run:', 'ai-seo-client'); ?></strong> <?php echo esc_html(wp_next_scheduled(self::CRON_HOOK) ? date('Y-m-d H:i:s', wp_next_scheduled(self::CRON_HOOK)) : 'not scheduled'); ?>
-                    </p>
-                    <p class="description">
-                        <?php esc_html_e('Note: already scheduled posts will still publish when ApexFlow is turned off.', 'ai-seo-client'); ?>
-                    </p>
+            <?php if (isset($_GET['saved'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Settings saved.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['ran'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('ApexFlow run started. Check the log below.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['scanned'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Site profile re-scanned.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['rejected'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword rejected and added to excluded topics.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['cleared'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Planned posts cleared and pending generation cancelled.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['pool_cleared'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword pool cleared. It rebuilds automatically on the next run or preview.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['pool_refreshed'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Keyword pool refreshed.', 'ai-seo-client'); ?></p></div>
+            <?php endif; ?>
 
-                    <hr style="margin: 30px 0;">
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Status', 'ai-seo-client'); ?></h2></div>
+                <div class="fyn-stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+                    <div class="fyn-stat-tile">
+                        <span class="fyn-stat-label">ApexFlow</span>
+                        <span class="fyn-stat-value"><?php echo $settings['enabled'] ? '<span class="fyn-badge fyn-badge--success">' . esc_html__('Active', 'ai-seo-client') . '</span>' : '<span class="fyn-badge">' . esc_html__('Off', 'ai-seo-client') . '</span>'; ?></span>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <span class="fyn-stat-label"><?php esc_html_e('Posts This Month', 'ai-seo-client'); ?></span>
+                        <span class="fyn-stat-value"><?php echo esc_html($monthly['count']); ?> / <?php echo esc_html($limit === PHP_INT_MAX ? '&infin;' : $limit); ?></span>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <span class="fyn-stat-label"><?php esc_html_e('In Queue', 'ai-seo-client'); ?></span>
+                        <span class="fyn-stat-value"><?php echo esc_html($queuedCount); ?></span>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <span class="fyn-stat-label"><?php esc_html_e('Keyword pool', 'ai-seo-client'); ?></span>
+                        <span class="fyn-stat-value"><?php echo esc_html(count($poolItems)); ?></span>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <span class="fyn-stat-label"><?php esc_html_e('Last Run', 'ai-seo-client'); ?></span>
+                        <span class="fyn-stat-value" style="font-size:13px;"><?php echo esc_html(get_option(self::LAST_RUN_KEY, 'never')); ?></span>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <span class="fyn-stat-label"><?php esc_html_e('Next Run', 'ai-seo-client'); ?></span>
+                        <span class="fyn-stat-value" style="font-size:13px;"><?php echo esc_html(wp_next_scheduled(self::CRON_HOOK) ? date('Y-m-d H:i:s', wp_next_scheduled(self::CRON_HOOK)) : 'not scheduled'); ?></span>
+                    </div>
+                </div>
+                <p style="color:var(--text-secondary);font-size:13px;margin-top:12px;">
+                    <?php esc_html_e('Note: already scheduled posts will still publish when ApexFlow is turned off.', 'ai-seo-client'); ?>
+                </p>
+            </div>
 
-                    <h2><?php esc_html_e('Detected site profile', 'ai-seo-client'); ?></h2>
-                    <p class="description">
-                        <?php esc_html_e('ApexFlow scans your site to determine the niche. Adjust the detected values if needed.', 'ai-seo-client'); ?>
-                    </p>
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Settings & Site Profile', 'ai-seo-client'); ?></h2></div>
+                <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">
+                    <?php esc_html_e('ApexFlow scans your site to determine the niche. Adjust the detected values if needed.', 'ai-seo-client'); ?>
+                </p>
 
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('sseo_ai_apexflow_save'); ?>
+                    <input type="hidden" name="action" value="sseo_ai_apexflow_save">
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="enabled"><?php esc_html_e('Enable ApexFlow', 'ai-seo-client'); ?></label></th>
+                            <td>
+                                <label class="sseo-apexflow-toggle" for="enabled">
+                                    <input type="checkbox" name="enabled" id="enabled" value="1" <?php checked($settings['enabled']); ?>>
+                                    <span class="sseo-apexflow-toggle-track" aria-hidden="true"></span>
+                                    <span class="sseo-apexflow-toggle-text"><?php esc_html_e('Automatically research, plan and write content every week', 'ai-seo-client'); ?></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="profile_industry"><?php esc_html_e('Industry / niche', 'ai-seo-client'); ?></label></th>
+                            <td><input type="text" name="profile_industry" id="profile_industry" class="regular-text" value="<?php echo esc_attr($profile['industry'] ?? ''); ?>"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="profile_audience"><?php esc_html_e('Target audience', 'ai-seo-client'); ?></label></th>
+                            <td><input type="text" name="profile_audience" id="profile_audience" class="regular-text" value="<?php echo esc_attr($profile['audience'] ?? ''); ?>"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="profile_topics"><?php esc_html_e('Core topics (comma-separated)', 'ai-seo-client'); ?></label></th>
+                            <td><input type="text" name="profile_topics" id="profile_topics" class="large-text" value="<?php echo esc_attr(implode(', ', (array) ($profile['topics'] ?? []))); ?>"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="business_context"><?php esc_html_e('Business context', 'ai-seo-client'); ?></label></th>
+                            <td>
+                                <textarea name="business_context" id="business_context" rows="4" class="large-text" placeholder="<?php esc_attr_e('Describe your services, products, expertise, target market, differentiators and topics ApexFlow should avoid.', 'ai-seo-client'); ?>"><?php echo esc_textarea($settings['business_context']); ?></textarea>
+                                <p class="description"><?php esc_html_e('Used to validate keywords and to guide titles, full article content and featured images.', 'ai-seo-client'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="seed_keywords"><?php esc_html_e('Own keywords (optional)', 'ai-seo-client'); ?></label></th>
+                            <td>
+                                <textarea name="seed_keywords" id="seed_keywords" rows="4" class="large-text" placeholder="one keyword per line"><?php echo esc_textarea(implode("\n", (array) $settings['seed_keywords'])); ?></textarea>
+                                <p class="description"><?php esc_html_e('Prioritized above automatically discovered keywords.', 'ai-seo-client'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="excluded_topics"><?php esc_html_e('Excluded topics/keywords', 'ai-seo-client'); ?></label></th>
+                            <td>
+                                <textarea name="excluded_topics" id="excluded_topics" rows="3" class="large-text" placeholder="one per line"><?php echo esc_textarea(implode("\n", (array) $settings['excluded_topics'])); ?></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Language & region', 'ai-seo-client'); ?></th>
+                            <td>
+                                <select name="language" id="language">
+                                    <option value="nl" <?php selected($settings['language'], 'nl'); ?>>Nederlands</option>
+                                    <option value="en" <?php selected($settings['language'], 'en'); ?>>English</option>
+                                    <option value="de" <?php selected($settings['language'], 'de'); ?>>Deutsch</option>
+                                    <option value="fr" <?php selected($settings['language'], 'fr'); ?>>Français</option>
+                                    <option value="es" <?php selected($settings['language'], 'es'); ?>>Español</option>
+                                    <option value="it" <?php selected($settings['language'], 'it'); ?>>Italiano</option>
+                                    <option value="pt" <?php selected($settings['language'], 'pt'); ?>>Português</option>
+                                    <option value="pl" <?php selected($settings['language'], 'pl'); ?>>Polski</option>
+                                </select>
+                                <select name="country" id="country">
+                                    <?php foreach (['nl' => 'Nederland', 'be' => 'België', 'de' => 'Duitsland', 'fr' => 'Frankrijk', 'gb' => 'United Kingdom', 'us' => 'United States', 'es' => 'Spanje', 'it' => 'Italië', 'ca' => 'Canada', 'au' => 'Australië'] as $code => $label): ?>
+                                        <option value="<?php echo esc_attr($code); ?>" <?php selected($settings['country'], $code); ?>><?php echo esc_html($label); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if ($hasLocal): ?>
+                                    <p class="description"><?php esc_html_e('Local business configured — local pack scans are included in keyword research.', 'ai-seo-client'); ?></p>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="posts_per_week"><?php esc_html_e('Posts per week', 'ai-seo-client'); ?></label></th>
+                            <td>
+                                <input type="number" name="posts_per_week" id="posts_per_week" value="<?php echo esc_attr($settings['posts_per_week']); ?>" min="1" max="7" step="1">
+                                <p class="description">
+                                    <?php printf(esc_html__('Your license allows up to %s auto-posts per month (max %s/week).', 'ai-seo-client'), esc_html($limit === PHP_INT_MAX ? 'unlimited' : $limit), esc_html(min(7, $weeklyCap))); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Publish on', 'ai-seo-client'); ?></th>
+                            <td>
+                                <?php
+                                $dayNames = [1 => __('Mon', 'ai-seo-client'), 2 => __('Tue', 'ai-seo-client'), 3 => __('Wed', 'ai-seo-client'), 4 => __('Thu', 'ai-seo-client'), 5 => __('Fri', 'ai-seo-client'), 6 => __('Sat', 'ai-seo-client'), 7 => __('Sun', 'ai-seo-client')];
+                                foreach ($dayNames as $num => $name):
+                                ?>
+                                    <label style="margin-right:12px;"><input type="checkbox" name="publish_days[]" value="<?php echo esc_attr($num); ?>" <?php checked(in_array($num, (array) $settings['publish_days'], true)); ?>> <?php echo esc_html($name); ?></label>
+                                <?php endforeach; ?>
+                                <input type="time" name="publish_time" value="<?php echo esc_attr($settings['publish_time']); ?>" style="margin-left:15px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Publish mode', 'ai-seo-client'); ?></th>
+                            <td>
+                                <label style="margin-right:15px;"><input type="radio" name="publish_mode" value="schedule" <?php checked($settings['publish_mode'], 'schedule'); ?>> <?php esc_html_e('Auto-publish on the planned date', 'ai-seo-client'); ?></label>
+                                <label><input type="radio" name="publish_mode" value="draft" <?php checked($settings['publish_mode'], 'draft'); ?>> <?php esc_html_e('Create drafts for review first', 'ai-seo-client'); ?></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="lookahead_weeks"><?php esc_html_e('Plan ahead (weeks)', 'ai-seo-client'); ?></label></th>
+                            <td><input type="number" name="lookahead_weeks" id="lookahead_weeks" value="<?php echo esc_attr($settings['lookahead_weeks']); ?>" min="1" max="8" step="1"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Post settings', 'ai-seo-client'); ?></th>
+                            <td>
+                                <?php
+                                $postTypes = get_post_types(['public' => true], 'objects');
+                                unset($postTypes['attachment']);
+                                ?>
+                                <select name="post_type">
+                                    <?php foreach ($postTypes as $pt): ?>
+                                        <option value="<?php echo esc_attr($pt->name); ?>" <?php selected($settings['post_type'], $pt->name); ?>><?php echo esc_html($pt->labels->singular_name); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php
+                                wp_dropdown_categories([
+                                    'name' => 'category_id',
+                                    'show_option_none' => __('No category', 'ai-seo-client'),
+                                    'option_none_value' => '0',
+                                    'hide_empty' => false,
+                                    'selected' => (int) $settings['category_id'],
+                                ]);
+                                wp_dropdown_users([
+                                    'name' => 'author_id',
+                                    'show_option_none' => __('Default author', 'ai-seo-client'),
+                                    'option_none_value' => '0',
+                                    'selected' => (int) $settings['author_id'],
+                                ]);
+                                ?>
+                                <input type="number" name="word_count" value="<?php echo esc_attr($settings['word_count']); ?>" min="300" max="5000" step="100" style="width:90px;" title="<?php esc_attr_e('Word count', 'ai-seo-client'); ?>">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Options', 'ai-seo-client'); ?></th>
+                            <td>
+                                <label style="display:block;margin-bottom:6px;"><input type="checkbox" name="featured_image" value="1" <?php checked($settings['featured_image']); ?>> <?php esc_html_e('Generate AI featured images', 'ai-seo-client'); ?></label>
+                                <label style="display:block;"><input type="checkbox" name="notify_email" value="1" <?php checked($settings['notify_email']); ?>> <?php esc_html_e('Email me a weekly summary of scheduled posts', 'ai-seo-client'); ?></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Tone of voice', 'ai-seo-client'); ?></th>
+                            <td>
+                                <label><input type="checkbox" name="bv_enabled" value="1" <?php checked(!empty($bv['enabled'])); ?>> <?php esc_html_e('Apply brand voice to generated content', 'ai-seo-client'); ?></label><br>
+                                <select name="bv_tone" style="margin-top:8px;">
+                                    <?php foreach (['professional' => 'Professional', 'casual' => 'Casual', 'authoritative' => 'Authoritative', 'friendly' => 'Friendly', 'technical' => 'Technical', 'conversational' => 'Conversational'] as $tone => $label): ?>
+                                        <option value="<?php echo esc_attr($tone); ?>" <?php selected($bv['tone'] ?? 'professional', $tone); ?>><?php echo esc_html($label); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <input type="text" name="bv_audience" class="regular-text" style="margin-left:8px;" placeholder="<?php esc_attr_e('Audience (optional)', 'ai-seo-client'); ?>" value="<?php echo esc_attr($bv['audience'] ?? ''); ?>"><br>
+                                <textarea name="bv_voice_description" rows="2" class="large-text" style="margin-top:8px;" placeholder="<?php esc_attr_e('Voice guidelines (optional)', 'ai-seo-client'); ?>"><?php echo esc_textarea($bv['voice_description'] ?? ''); ?></textarea>
+                                <p class="description"><a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-brand-voice')); ?>"><?php esc_html_e('Full Brand Voice settings', 'ai-seo-client'); ?> &rarr;</a></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <button type="submit" class="fyn-btn fyn-btn--primary"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+                </form>
+            </div>
+
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Actions', 'ai-seo-client'); ?></h2></div>
+                <div class="sseo-apexflow-actions">
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('sseo_ai_apexflow_save'); ?>
-                        <input type="hidden" name="action" value="sseo_ai_apexflow_save">
-                        <table class="form-table">
+                        <?php wp_nonce_field('sseo_ai_apexflow_rescan'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_apexflow_rescan">
+                        <button type="submit" class="fyn-btn"><?php esc_html_e('Re-scan Site Profile', 'ai-seo-client'); ?></button>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('sseo_ai_apexflow_preview'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_apexflow_preview">
+                        <button type="submit" class="fyn-btn"><?php esc_html_e('Calendar Preview', 'ai-seo-client'); ?></button>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('sseo_ai_apexflow_run_now'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_apexflow_run_now">
+                        <button type="submit" class="fyn-btn fyn-btn--primary"><?php esc_html_e('Run ApexFlow Now', 'ai-seo-client'); ?></button>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('This removes all planned posts and cancels pending generation. Already generated posts are kept. Continue?', 'ai-seo-client')); ?>');">
+                        <?php wp_nonce_field('sseo_ai_apexflow_clear_plan'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_apexflow_clear_plan">
+                        <button type="submit" class="fyn-btn"><?php esc_html_e('Clear Planned Posts', 'ai-seo-client'); ?></button>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('sseo_ai_apexflow_clear_pool'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_apexflow_clear_pool">
+                        <button type="submit" class="fyn-btn"><?php esc_html_e('Clear Keyword Pool', 'ai-seo-client'); ?></button>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('sseo_ai_apexflow_refresh_pool'); ?>
+                        <input type="hidden" name="action" value="sseo_ai_apexflow_refresh_pool">
+                        <button type="submit" class="fyn-btn"><?php esc_html_e('Refresh Pool Now', 'ai-seo-client'); ?></button>
+                    </form>
+                </div>
+                <p style="color:var(--text-secondary);font-size:13px;margin-top:12px;"><?php esc_html_e('Refresh Pool Now rebuilds the keyword pool immediately (uses SERP/AI credits); Clear Keyword Pool rebuilds lazily on the next run.', 'ai-seo-client'); ?></p>
+            </div>
+
+            <?php if (is_array($preview) && !empty($preview)): ?>
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Calendar Preview (not yet scheduled)', 'ai-seo-client'); ?></h2></div>
+                <table class="fyn-table">
+                    <thead><tr>
+                        <th><?php esc_html_e('Date', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Volume', 'ai-seo-client'); ?></th>
+                    </tr></thead>
+                    <tbody>
+                        <?php foreach ($preview as $entry): ?>
                             <tr>
-                                <th scope="row"><label for="enabled"><?php esc_html_e('Enable ApexFlow', 'ai-seo-client'); ?></label></th>
+                                <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($entry['date']))); ?></td>
+                                <td><?php echo esc_html($entry['title']); ?></td>
+                                <td><?php echo esc_html($entry['keyword']); ?><?php echo !empty($entry['local_intent']) ? ' &#128205;' : ''; ?></td>
+                                <td><?php echo esc_html($entry['volume'] ?: '—'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
+
+            <?php
+            $upcoming = array_filter($plan, fn($e) => in_array($e['status'] ?? '', ['planned', 'queued', 'done'], true));
+            if (!empty($upcoming)):
+            ?>
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Planned Posts', 'ai-seo-client'); ?></h2></div>
+                <table class="fyn-table">
+                    <thead><tr>
+                        <th><?php esc_html_e('Date', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                    </tr></thead>
+                    <tbody>
+                        <?php foreach (array_slice($upcoming, 0, 30) as $entry): ?>
+                            <tr>
+                                <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($entry['date']))); ?></td>
                                 <td>
-                                    <label class="sseo-apexflow-toggle" for="enabled">
-                                        <input type="checkbox" name="enabled" id="enabled" value="1" <?php checked($settings['enabled']); ?>>
-                                        <span class="sseo-apexflow-toggle-track" aria-hidden="true"></span>
-                                        <span class="sseo-apexflow-toggle-text"><?php esc_html_e('Automatically research, plan and write content every week', 'ai-seo-client'); ?></span>
-                                    </label>
+                                    <?php if (!empty($entry['post_id'])): ?>
+                                        <a href="<?php echo esc_url(get_edit_post_link($entry['post_id'], '')); ?>"><?php echo esc_html($entry['title']); ?></a>
+                                    <?php else: ?>
+                                        <?php echo esc_html($entry['title']); ?>
+                                    <?php endif; ?>
                                 </td>
+                                <td><?php echo esc_html($entry['keyword']); ?></td>
+                                <td><span class="fyn-badge"><?php echo esc_html($entry['status']); ?></span></td>
                             </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($poolItems)): ?>
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Keyword pool', 'ai-seo-client'); ?></h2></div>
+                <table class="fyn-table">
+                    <thead><tr>
+                        <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Volume', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Difficulty', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Score', 'ai-seo-client'); ?></th>
+                        <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody>
+                        <?php foreach (array_slice($poolItems, 0, 25) as $item): ?>
                             <tr>
-                                <th scope="row"><label for="profile_industry"><?php esc_html_e('Industry / niche', 'ai-seo-client'); ?></label></th>
-                                <td><input type="text" name="profile_industry" id="profile_industry" class="regular-text" value="<?php echo esc_attr($profile['industry'] ?? ''); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="profile_audience"><?php esc_html_e('Target audience', 'ai-seo-client'); ?></label></th>
-                                <td><input type="text" name="profile_audience" id="profile_audience" class="regular-text" value="<?php echo esc_attr($profile['audience'] ?? ''); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="profile_topics"><?php esc_html_e('Core topics (comma-separated)', 'ai-seo-client'); ?></label></th>
-                                <td><input type="text" name="profile_topics" id="profile_topics" class="large-text" value="<?php echo esc_attr(implode(', ', (array) ($profile['topics'] ?? []))); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="business_context"><?php esc_html_e('Business context', 'ai-seo-client'); ?></label></th>
+                                <td><?php echo esc_html($item['keyword']); ?><?php echo !empty($item['local_intent']) ? ' &#128205;' : ''; ?></td>
+                                <td><?php echo esc_html($item['volume'] ?: '—'); ?></td>
+                                <td><?php echo esc_html(round($item['difficulty'] ?? 0)); ?></td>
+                                <td><?php echo esc_html($item['score'] ?? 0); ?></td>
+                                <td><span class="fyn-badge"><?php echo esc_html($item['status'] ?? 'new'); ?></span></td>
                                 <td>
-                                    <textarea name="business_context" id="business_context" rows="4" class="large-text" placeholder="<?php esc_attr_e('Describe your services, products, expertise, target market, differentiators and topics ApexFlow should avoid.', 'ai-seo-client'); ?>"><?php echo esc_textarea($settings['business_context']); ?></textarea>
-                                    <p class="description"><?php esc_html_e('Used to validate keywords and to guide titles, full article content and featured images.', 'ai-seo-client'); ?></p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="seed_keywords"><?php esc_html_e('Own keywords (optional)', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <textarea name="seed_keywords" id="seed_keywords" rows="4" class="large-text" placeholder="one keyword per line"><?php echo esc_textarea(implode("\n", (array) $settings['seed_keywords'])); ?></textarea>
-                                    <p class="description"><?php esc_html_e('Prioritized above automatically discovered keywords.', 'ai-seo-client'); ?></p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="excluded_topics"><?php esc_html_e('Excluded topics/keywords', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <textarea name="excluded_topics" id="excluded_topics" rows="3" class="large-text" placeholder="one per line"><?php echo esc_textarea(implode("\n", (array) $settings['excluded_topics'])); ?></textarea>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><?php esc_html_e('Language & region', 'ai-seo-client'); ?></th>
-                                <td>
-                                    <select name="language" id="language">
-                                        <option value="nl" <?php selected($settings['language'], 'nl'); ?>>Nederlands</option>
-                                        <option value="en" <?php selected($settings['language'], 'en'); ?>>English</option>
-                                        <option value="de" <?php selected($settings['language'], 'de'); ?>>Deutsch</option>
-                                        <option value="fr" <?php selected($settings['language'], 'fr'); ?>>Français</option>
-                                        <option value="es" <?php selected($settings['language'], 'es'); ?>>Español</option>
-                                        <option value="it" <?php selected($settings['language'], 'it'); ?>>Italiano</option>
-                                        <option value="pt" <?php selected($settings['language'], 'pt'); ?>>Português</option>
-                                        <option value="pl" <?php selected($settings['language'], 'pl'); ?>>Polski</option>
-                                    </select>
-                                    <select name="country" id="country">
-                                        <?php foreach (['nl' => 'Nederland', 'be' => 'België', 'de' => 'Duitsland', 'fr' => 'Frankrijk', 'gb' => 'United Kingdom', 'us' => 'United States', 'es' => 'Spanje', 'it' => 'Italië', 'ca' => 'Canada', 'au' => 'Australië'] as $code => $label): ?>
-                                            <option value="<?php echo esc_attr($code); ?>" <?php selected($settings['country'], $code); ?>><?php echo esc_html($label); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <?php if ($hasLocal): ?>
-                                        <p class="description">&#9989; <?php esc_html_e('Local business configured — local pack scans are included in keyword research.', 'ai-seo-client'); ?></p>
+                                    <?php if (($item['status'] ?? 'new') === 'new'): ?>
+                                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+                                            <?php wp_nonce_field('sseo_ai_apexflow_reject'); ?>
+                                            <input type="hidden" name="action" value="sseo_ai_apexflow_reject">
+                                            <input type="hidden" name="keyword" value="<?php echo esc_attr($item['keyword']); ?>">
+                                            <button type="submit" class="fyn-btn" style="padding:4px 10px;font-size:12px;"><?php esc_html_e('Reject', 'ai-seo-client'); ?></button>
+                                        </form>
                                     <?php endif; ?>
                                 </td>
                             </tr>
-                            <tr>
-                                <th scope="row"><label for="posts_per_week"><?php esc_html_e('Posts per week', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <input type="number" name="posts_per_week" id="posts_per_week" value="<?php echo esc_attr($settings['posts_per_week']); ?>" min="1" max="7" step="1">
-                                    <p class="description">
-                                        <?php printf(esc_html__('Your license allows up to %s auto-posts per month (max %s/week).', 'ai-seo-client'), esc_html($limit === PHP_INT_MAX ? 'unlimited' : $limit), esc_html(min(7, $weeklyCap))); ?>
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><?php esc_html_e('Publish on', 'ai-seo-client'); ?></th>
-                                <td>
-                                    <?php
-                                    $dayNames = [1 => __('Mon', 'ai-seo-client'), 2 => __('Tue', 'ai-seo-client'), 3 => __('Wed', 'ai-seo-client'), 4 => __('Thu', 'ai-seo-client'), 5 => __('Fri', 'ai-seo-client'), 6 => __('Sat', 'ai-seo-client'), 7 => __('Sun', 'ai-seo-client')];
-                                    foreach ($dayNames as $num => $name):
-                                    ?>
-                                        <label style="margin-right:12px;"><input type="checkbox" name="publish_days[]" value="<?php echo esc_attr($num); ?>" <?php checked(in_array($num, (array) $settings['publish_days'], true)); ?>> <?php echo esc_html($name); ?></label>
-                                    <?php endforeach; ?>
-                                    <input type="time" name="publish_time" value="<?php echo esc_attr($settings['publish_time']); ?>" style="margin-left:15px;">
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><?php esc_html_e('Publish mode', 'ai-seo-client'); ?></th>
-                                <td>
-                                    <label style="margin-right:15px;"><input type="radio" name="publish_mode" value="schedule" <?php checked($settings['publish_mode'], 'schedule'); ?>> <?php esc_html_e('Auto-publish on the planned date', 'ai-seo-client'); ?></label>
-                                    <label><input type="radio" name="publish_mode" value="draft" <?php checked($settings['publish_mode'], 'draft'); ?>> <?php esc_html_e('Create drafts for review first', 'ai-seo-client'); ?></label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="lookahead_weeks"><?php esc_html_e('Plan ahead (weeks)', 'ai-seo-client'); ?></label></th>
-                                <td><input type="number" name="lookahead_weeks" id="lookahead_weeks" value="<?php echo esc_attr($settings['lookahead_weeks']); ?>" min="1" max="8" step="1"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><?php esc_html_e('Post settings', 'ai-seo-client'); ?></th>
-                                <td>
-                                    <?php
-                                    $postTypes = get_post_types(['public' => true], 'objects');
-                                    unset($postTypes['attachment']);
-                                    ?>
-                                    <select name="post_type">
-                                        <?php foreach ($postTypes as $pt): ?>
-                                            <option value="<?php echo esc_attr($pt->name); ?>" <?php selected($settings['post_type'], $pt->name); ?>><?php echo esc_html($pt->labels->singular_name); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <?php
-                                    wp_dropdown_categories([
-                                        'name' => 'category_id',
-                                        'show_option_none' => __('No category', 'ai-seo-client'),
-                                        'option_none_value' => '0',
-                                        'hide_empty' => false,
-                                        'selected' => (int) $settings['category_id'],
-                                    ]);
-                                    wp_dropdown_users([
-                                        'name' => 'author_id',
-                                        'show_option_none' => __('Default author', 'ai-seo-client'),
-                                        'option_none_value' => '0',
-                                        'selected' => (int) $settings['author_id'],
-                                    ]);
-                                    ?>
-                                    <input type="number" name="word_count" value="<?php echo esc_attr($settings['word_count']); ?>" min="300" max="5000" step="100" style="width:90px;" title="<?php esc_attr_e('Word count', 'ai-seo-client'); ?>">
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><?php esc_html_e('Options', 'ai-seo-client'); ?></th>
-                                <td>
-                                    <label style="display:block;margin-bottom:6px;"><input type="checkbox" name="featured_image" value="1" <?php checked($settings['featured_image']); ?>> <?php esc_html_e('Generate AI featured images', 'ai-seo-client'); ?></label>
-                                    <label style="display:block;"><input type="checkbox" name="notify_email" value="1" <?php checked($settings['notify_email']); ?>> <?php esc_html_e('Email me a weekly summary of scheduled posts', 'ai-seo-client'); ?></label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><?php esc_html_e('Tone of voice', 'ai-seo-client'); ?></th>
-                                <td>
-                                    <label><input type="checkbox" name="bv_enabled" value="1" <?php checked(!empty($bv['enabled'])); ?>> <?php esc_html_e('Apply brand voice to generated content', 'ai-seo-client'); ?></label><br>
-                                    <select name="bv_tone" style="margin-top:8px;">
-                                        <?php foreach (['professional' => 'Professional', 'casual' => 'Casual', 'authoritative' => 'Authoritative', 'friendly' => 'Friendly', 'technical' => 'Technical', 'conversational' => 'Conversational'] as $tone => $label): ?>
-                                            <option value="<?php echo esc_attr($tone); ?>" <?php selected($bv['tone'] ?? 'professional', $tone); ?>><?php echo esc_html($label); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <input type="text" name="bv_audience" class="regular-text" style="margin-left:8px;" placeholder="<?php esc_attr_e('Audience (optional)', 'ai-seo-client'); ?>" value="<?php echo esc_attr($bv['audience'] ?? ''); ?>"><br>
-                                    <textarea name="bv_voice_description" rows="2" class="large-text" style="margin-top:8px;" placeholder="<?php esc_attr_e('Voice guidelines (optional)', 'ai-seo-client'); ?>"><?php echo esc_textarea($bv['voice_description'] ?? ''); ?></textarea>
-                                    <p class="description"><a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-brand-voice')); ?>"><?php esc_html_e('Full Brand Voice settings', 'ai-seo-client'); ?> &rarr;</a></p>
-                                </td>
-                            </tr>
-                        </table>
-                        <?php submit_button(__('Save Settings', 'ai-seo-client')); ?>
-                    </form>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
 
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                            <?php wp_nonce_field('sseo_ai_apexflow_rescan'); ?>
-                            <input type="hidden" name="action" value="sseo_ai_apexflow_rescan">
-                            <?php submit_button(__('Rescan Site Profile', 'ai-seo-client'), 'secondary', 'submit', false); ?>
-                        </form>
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                            <?php wp_nonce_field('sseo_ai_apexflow_preview'); ?>
-                            <input type="hidden" name="action" value="sseo_ai_apexflow_preview">
-                            <?php submit_button(__('Preview Calendar', 'ai-seo-client'), 'secondary', 'submit', false); ?>
-                        </form>
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                            <?php wp_nonce_field('sseo_ai_apexflow_run_now'); ?>
-                            <input type="hidden" name="action" value="sseo_ai_apexflow_run_now">
-                            <?php submit_button(__('Run ApexFlow Now', 'ai-seo-client'), 'secondary', 'submit', false); ?>
-                        </form>
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('This removes all planned posts and cancels pending generation. Already generated posts are kept. Continue?', 'ai-seo-client')); ?>');">
-                            <?php wp_nonce_field('sseo_ai_apexflow_clear_plan'); ?>
-                            <input type="hidden" name="action" value="sseo_ai_apexflow_clear_plan">
-                            <?php submit_button(__('Clear Planned Posts', 'ai-seo-client'), 'secondary', 'submit', false); ?>
-                        </form>
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                            <?php wp_nonce_field('sseo_ai_apexflow_clear_pool'); ?>
-                            <input type="hidden" name="action" value="sseo_ai_apexflow_clear_pool">
-                            <?php submit_button(__('Clear Keyword Pool', 'ai-seo-client'), 'secondary', 'submit', false); ?>
-                        </form>
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                            <?php wp_nonce_field('sseo_ai_apexflow_refresh_pool'); ?>
-                            <input type="hidden" name="action" value="sseo_ai_apexflow_refresh_pool">
-                            <?php submit_button(__('Refresh Pool Now', 'ai-seo-client'), 'secondary', 'submit', false); ?>
-                        </form>
-                    </div>
-                    <p class="description"><?php esc_html_e('Refresh Pool Now rebuilds the keyword pool immediately (uses SERP/AI credits); Clear Keyword Pool rebuilds lazily on the next run.', 'ai-seo-client'); ?></p>
-
-                    <?php if (is_array($preview) && !empty($preview)): ?>
-                        <hr style="margin: 30px 0;">
-                        <h2><?php esc_html_e('Calendar preview (not scheduled yet)', 'ai-seo-client'); ?></h2>
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead><tr>
-                                <th><?php esc_html_e('Date', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Volume', 'ai-seo-client'); ?></th>
-                            </tr></thead>
-                            <tbody>
-                                <?php foreach ($preview as $entry): ?>
-                                    <tr>
-                                        <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($entry['date']))); ?></td>
-                                        <td><?php echo esc_html($entry['title']); ?></td>
-                                        <td><?php echo esc_html($entry['keyword']); ?><?php echo !empty($entry['local_intent']) ? ' &#128205;' : ''; ?></td>
-                                        <td><?php echo esc_html($entry['volume'] ?: '—'); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-
-                    <?php
-                    $upcoming = array_filter($plan, fn($e) => in_array($e['status'] ?? '', ['planned', 'queued', 'done'], true));
-                    if (!empty($upcoming)):
-                    ?>
-                        <hr style="margin: 30px 0;">
-                        <h2><?php esc_html_e('Planned posts', 'ai-seo-client'); ?></h2>
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead><tr>
-                                <th><?php esc_html_e('Date', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                            </tr></thead>
-                            <tbody>
-                                <?php foreach (array_slice($upcoming, 0, 30) as $entry): ?>
-                                    <tr>
-                                        <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($entry['date']))); ?></td>
-                                        <td>
-                                            <?php if (!empty($entry['post_id'])): ?>
-                                                <a href="<?php echo esc_url(get_edit_post_link($entry['post_id'], '')); ?>"><?php echo esc_html($entry['title']); ?></a>
-                                            <?php else: ?>
-                                                <?php echo esc_html($entry['title']); ?>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?php echo esc_html($entry['keyword']); ?></td>
-                                        <td><?php echo esc_html($entry['status']); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-
-                    <?php if (!empty($poolItems)): ?>
-                        <hr style="margin: 30px 0;">
-                        <h2><?php esc_html_e('Keyword pool', 'ai-seo-client'); ?></h2>
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead><tr>
-                                <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Volume', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Difficulty', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Score', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                                <th></th>
-                            </tr></thead>
-                            <tbody>
-                                <?php foreach (array_slice($poolItems, 0, 25) as $item): ?>
-                                    <tr>
-                                        <td><?php echo esc_html($item['keyword']); ?><?php echo !empty($item['local_intent']) ? ' &#128205;' : ''; ?></td>
-                                        <td><?php echo esc_html($item['volume'] ?: '—'); ?></td>
-                                        <td><?php echo esc_html(round($item['difficulty'] ?? 0)); ?></td>
-                                        <td><?php echo esc_html($item['score'] ?? 0); ?></td>
-                                        <td><?php echo esc_html($item['status'] ?? 'new'); ?></td>
-                                        <td>
-                                            <?php if (($item['status'] ?? 'new') === 'new'): ?>
-                                                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
-                                                    <?php wp_nonce_field('sseo_ai_apexflow_reject'); ?>
-                                                    <input type="hidden" name="action" value="sseo_ai_apexflow_reject">
-                                                    <input type="hidden" name="keyword" value="<?php echo esc_attr($item['keyword']); ?>">
-                                                    <button type="submit" class="button button-small"><?php esc_html_e('Reject', 'ai-seo-client'); ?></button>
-                                                </form>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-
-                    <hr style="margin: 30px 0;">
-                    <h2><?php esc_html_e('Activity log', 'ai-seo-client'); ?> <span class="description" style="font-weight:400;">(<?php esc_html_e('last 50 entries', 'ai-seo-client'); ?>)</span></h2>
-                    <div class="sseo-apexflow-log">
-                        <ul style="font-size: 12px; color: #555;">
-                            <?php foreach (array_reverse($logs) as $log): ?>
-                                <li><?php echo esc_html($log['time'] ?? ''); ?> — <?php echo esc_html($log['message'] ?? ''); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
+            <div class="fyn-card" style="max-width:1000px;">
+                <div class="fyn-card-header"><h2><?php esc_html_e('Activity Log', 'ai-seo-client'); ?> <span style="font-weight:400;color:var(--text-secondary);font-size:13px;">(<?php esc_html_e('last 50', 'ai-seo-client'); ?>)</span></h2></div>
+                <div class="fyn-well" style="max-height:240px;overflow-y:auto;">
+                    <ul style="margin:0;font-size:12px;color:var(--text-secondary);list-style:none;padding:0;">
+                        <?php foreach (array_reverse($logs) as $log): ?>
+                            <li style="padding:3px 0;border-bottom:1px solid var(--border);"><?php echo esc_html($log['time'] ?? ''); ?> — <?php echo esc_html($log['message'] ?? ''); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
             </div>
         </div>

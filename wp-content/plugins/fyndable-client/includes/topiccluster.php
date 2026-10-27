@@ -1221,7 +1221,7 @@ PROMPT;
         if (!$data || !isset($data['pillar_page'])) {
             return new \WP_Error(
                 'parse_error',
-                __('De gegenereerde topic cluster kon niet worden geparseerd. De AI retourneerde geen geldige JSON. Probeer het opnieuw of verklein de depth instelling.', 'ai-seo-client')
+                __('The generated topic cluster could not be parsed. The AI did not return valid JSON. Try again or reduce the depth setting.', 'ai-seo-client')
                     . ' Response: ' . substr($rawText, 0, 500)
             );
         }
@@ -1625,242 +1625,254 @@ PROMPT;
     {
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .tc-status-success { color: #16a34a; }
-            .tc-status-error { color: #dc2626; }
+            .tc-status-success { color: var(--fyn-success, #16a34a); }
+            .tc-status-error { color: var(--fyn-danger, #dc2626); }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Topic Clusters & Topical Authority', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Build topical authority with pillar-cluster content maps. Plan comprehensive content strategies that establish you as the go-to resource on any topic.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Topic Clusters', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Topic Clusters & Topical Authority', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Build topical authority with pillar-cluster content maps. Plan comprehensive content strategies.', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="tc-audit">
+                        <span class="dashicons dashicons-clipboard"></span>
+                        <?php esc_html_e('Audit Existing Content', 'ai-seo-client'); ?>
+                    </button>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
-                <div style="max-width:1400px;">
-                    <?php DashboardSorter::begin('ai-seo-topic-clusters'); ?>
-                    <!-- Generator -->
-                    <div class="postbox" style="padding:20px;" data-card-id="tc-generator">
-                    <h2 style="margin-top:0;"><?php esc_html_e('Generate Topic Cluster', 'ai-seo-client'); ?></h2>
-                    <div style="display:flex;gap:10px;align-items:end;">
-                        <div style="flex:1;">
-                            <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Core Topic', 'ai-seo-client'); ?></label>
-                            <input type="text" id="tc-topic" class="large-text" placeholder="<?php esc_attr_e('e.g. WordPress SEO, email marketing, project management', 'ai-seo-client'); ?>">
-                        </div>
-                        <div>
-                            <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Language', 'ai-seo-client'); ?></label>
-                            <select id="tc-language" style="width:140px;">
-                                <option value="nl">Nederlands</option>
-                                <option value="en" selected>English</option>
-                                <option value="de">Deutsch</option>
-                                <option value="fr">Français</option>
-                                <option value="es">Español</option>
-                                <option value="it">Italiano</option>
-                                <option value="pt">Português</option>
-                                <option value="pl">Polski</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Depth', 'ai-seo-client'); ?></label>
-                            <select id="tc-depth">
-                                <option value="standard"><?php esc_html_e('Standard (10-15 clusters)', 'ai-seo-client'); ?></option>
-                                <option value="deep"><?php esc_html_e('Deep (20-30 clusters)', 'ai-seo-client'); ?></option>
-                            </select>
-                        </div>
-                        <button type="button" class="button button-primary" id="tc-generate" style="height:30px;"><?php esc_html_e('Generate Map', 'ai-seo-client'); ?></button>
-                        <span id="tc-generate-spinner" class="spinner" style="float:none;margin:0 5px;"></span>
-                        <span id="tc-generate-status" style="margin-left:8px;font-weight:600;"></span>
-                        <button type="button" class="button" id="tc-audit" style="height:30px;"><?php esc_html_e('Audit Existing Content', 'ai-seo-client'); ?></button>
+
+            <?php DashboardSorter::begin('ai-seo-topic-clusters'); ?>
+
+            <!-- Generator card -->
+            <div class="fyn-card" style="margin-bottom:20px;" data-card-id="tc-generator">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-site-alt3"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Generate Topic Cluster', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:200px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Core Topic', 'ai-seo-client'); ?></label>
+                        <input type="text" id="tc-topic" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('e.g. WordPress SEO, email marketing, project management', 'ai-seo-client'); ?>">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Language', 'ai-seo-client'); ?></label>
+                        <select id="tc-language" class="fyn-input" style="width:140px;padding:9px 10px;">
+                            <option value="nl">Nederlands</option>
+                            <option value="en" selected>English</option>
+                            <option value="de">Deutsch</option>
+                            <option value="fr">Français</option>
+                            <option value="es">Español</option>
+                            <option value="it">Italiano</option>
+                            <option value="pt">Português</option>
+                            <option value="pl">Polski</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Depth', 'ai-seo-client'); ?></label>
+                        <select id="tc-depth" class="fyn-input" style="padding:9px 10px;">
+                            <option value="standard"><?php esc_html_e('Standard (10-15 clusters)', 'ai-seo-client'); ?></option>
+                            <option value="deep"><?php esc_html_e('Deep (20-30 clusters)', 'ai-seo-client'); ?></option>
+                        </select>
+                    </div>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="tc-generate"><?php esc_html_e('Generate Map', 'ai-seo-client'); ?></button>
+                    <span id="tc-generate-spinner" class="spinner" style="float:none;margin:0 5px;"></span>
+                    <span id="tc-generate-status" style="margin-left:4px;font-weight:600;font-size:13px;"></span>
+                </div>
+            </div>
+
+            <!-- Audit Results -->
+            <div id="tc-audit-result" style="display:none;margin-top:20px;"></div>
+
+            <!-- Inline Error Message -->
+            <div id="tc-error-msg" style="display:none;margin-top:16px;padding:14px 20px;background:var(--fyn-danger-light,#fee2e2);border:1px solid var(--fyn-danger,#dc2626);border-radius:10px;color:#991b1b;">
+                <strong>&#9888; <?php esc_html_e('Error', 'ai-seo-client'); ?>:</strong>
+                <span id="tc-error-text"></span>
+                <button type="button" class="fyn-btn fyn-btn-outline" style="float:right;padding:4px 10px;font-size:12px;" onclick="jQuery('#tc-error-msg').slideUp();">&times;</button>
+            </div>
+
+            <!-- Cluster Map -->
+            <div id="tc-result" style="display:none;margin-top:20px;">
+                <!-- Overview -->
+                <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="tc-total-pages">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="tc-clusters">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Clusters', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="tc-months">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Estimated Months', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="tc-authority">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Authority Potential', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
 
-                <!-- Audit Results -->
-                <div id="tc-audit-result" style="display:none;margin-top:20px;"></div>
-
-                <!-- Inline Error Message -->
-                <div id="tc-error-msg" style="display:none;margin-top:20px;padding:15px 20px;background:#fee2e2;border:1px solid #dc2626;border-radius:8px;color:#991b1b;">
-                    <strong>&#9888; <?php esc_html_e('Fout', 'ai-seo-client'); ?>:</strong>
-                    <span id="tc-error-text"></span>
-                    <button type="button" class="button button-small" style="float:right;" onclick="jQuery('#tc-error-msg').slideUp();">&times;</button>
+                <!-- Priority Legend -->
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-flag"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Priority Legend', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--text-b);">
+                        <span style="display:flex;align-items:center;gap:6px;"><span class="fyn-badge fyn-badge--success" style="width:12px;height:12px;min-width:12px;padding:0;border-radius:50%;"></span> <?php esc_html_e('High — high search volume or strong strategic value', 'ai-seo-client'); ?></span>
+                        <span style="display:flex;align-items:center;gap:6px;"><span class="fyn-badge fyn-badge--warning" style="width:12px;height:12px;min-width:12px;padding:0;border-radius:50%;"></span> <?php esc_html_e('Medium — moderate priority', 'ai-seo-client'); ?></span>
+                        <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:var(--text-m);display:inline-block;"></span> <?php esc_html_e('Low — lower priority / nice to have', 'ai-seo-client'); ?></span>
+                    </div>
                 </div>
 
-                <!-- Cluster Map -->
-                <div id="tc-result" style="display:none;margin-top:20px;">
-                    <!-- Overview -->
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="tc-total-pages" style="font-size:28px;font-weight:bold;color:#379fd3;">0</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="tc-clusters" style="font-size:28px;font-weight:bold;color:#059669;">0</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Clusters', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="tc-months" style="font-size:28px;font-weight:bold;color:#7c3aed;">0</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Est. Months', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="tc-authority" style="font-size:28px;font-weight:bold;color:#d97706;">0</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Authority Potential', 'ai-seo-client'); ?></div>
+                <!-- Pillar Page -->
+                <div id="tc-pillar" class="fyn-card" style="border-left:4px solid var(--fyn-blue,#379fd3);margin-bottom:20px;"></div>
+
+                <!-- Cluster Grid -->
+                <div id="tc-cluster-grid" style="margin-bottom:20px;"></div>
+
+                <!-- Linking Strategy -->
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-admin-links"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Internal Linking Strategy', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <ul id="tc-linking" style="list-style:none;padding:0;margin:0;"></ul>
+                </div>
+
+                <!-- Content Calendar -->
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-calendar-alt"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Content Calendar', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <div id="tc-calendar" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;"></div>
+                </div>
+
+                <!-- Review & Bulk Generate Section -->
+                <div class="fyn-card" style="margin-bottom:20px;border:2px solid var(--fyn-success,#16a34a);background:var(--fyn-success-light,#d1fae5);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+                        <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h);display:flex;align-items:center;gap:8px;">
+                            <span class="dashicons dashicons-clipboard"></span>
+                            <?php esc_html_e('Review & Generate Content', 'ai-seo-client'); ?>
+                        </h3>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <button type="button" class="fyn-btn fyn-btn-outline" id="tc-toggle-review">
+                                <?php esc_html_e('View All Pages', 'ai-seo-client'); ?>
+                            </button>
+                            <button type="button" class="fyn-btn fyn-btn-primary" id="tc-save"><?php esc_html_e('Save Cluster Map', 'ai-seo-client'); ?></button>
+                            <span style="display:inline-flex;align-items:center;gap:5px;">
+                                <label style="font-size:12px;color:var(--text-m);"><?php esc_html_e('Start:', 'ai-seo-client'); ?></label>
+                                <input type="date" id="tc-schedule-start" class="fyn-input" style="width:140px;padding:6px 8px;font-size:12px;" />
+                                <label style="font-size:12px;color:var(--text-m);margin-left:4px;"><?php esc_html_e('Interval (days):', 'ai-seo-client'); ?></label>
+                                <input type="number" id="tc-schedule-gap" value="3" min="1" max="14" class="fyn-input" style="width:60px;padding:6px 8px;font-size:12px;" />
+                            </span>
+                            <button type="button" class="fyn-btn fyn-btn-outline" id="tc-sync-calendar"><?php esc_html_e('Sync to Calendar', 'ai-seo-client'); ?></button>
                         </div>
                     </div>
+                    <p style="margin:0;color:var(--text-m);font-size:13px;">
+                        <?php esc_html_e('View all pages, select which ones to generate, and create content drafts in bulk.', 'ai-seo-client'); ?>
+                    </p>
+                </div>
 
-                    <!-- Priority Legend -->
-                    <div class="postbox" style="padding:15px;margin-bottom:20px;">
-                        <h3 style="margin:0 0 10px 0;font-size:16px;"><?php esc_html_e('Priority Legend', 'ai-seo-client'); ?></h3>
-                        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:13px;">
-                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#16a34a;"></span> <?php esc_html_e('High — high search volume or strong strategic value', 'ai-seo-client'); ?></span>
-                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#d97706;"></span> <?php esc_html_e('Medium — moderate priority', 'ai-seo-client'); ?></span>
-                            <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#6b7280;"></span> <?php esc_html_e('Low — lower priority / nice to have', 'ai-seo-client'); ?></span>
-                        </div>
-                    </div>
-
-                    <!-- Pillar Page -->
-                    <div id="tc-pillar" class="postbox" style="padding:20px;border-left:4px solid #379fd3;"></div>
-
-                    <!-- Cluster Grid -->
-                    <div id="tc-cluster-grid" style="margin-top:20px;"></div>
-
-                    <!-- Linking Strategy -->
-                    <div class="postbox" style="padding:15px;margin-top:20px;">
-                        <h3 style="margin-top:0;"><?php esc_html_e('Internal Linking Strategy', 'ai-seo-client'); ?></h3>
-                        <ul id="tc-linking" style="list-style:none;padding:0;"></ul>
-                    </div>
-
-                    <!-- Content Calendar -->
-                    <div class="postbox" style="padding:15px;margin-top:20px;">
-                        <h3 style="margin-top:0;"><?php esc_html_e('Content Calendar', 'ai-seo-client'); ?></h3>
-                        <div id="tc-calendar" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;"></div>
-                    </div>
-
-                    <!-- Review & Bulk Generate Section -->
-                    <div class="postbox" style="padding:20px;margin-top:20px;background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);border:2px solid #16a34a;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                            <h3 style="margin:0;color:#166534;">📋 <?php esc_html_e('Review & Generate Content', 'ai-seo-client'); ?></h3>
-                            <div>
-                                <button type="button" class="button" id="tc-toggle-review" style="margin-right:10px;">
-                                    <?php esc_html_e('Review All Pages', 'ai-seo-client'); ?>
+                <!-- Pages Review Table (Hidden by default) -->
+                <div id="tc-review-section" style="display:none;margin-top:20px;">
+                    <div class="fyn-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                            <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h);display:flex;align-items:center;gap:8px;">
+                                <span class="dashicons dashicons-media-text"></span>
+                                <?php esc_html_e('All Pages in Cluster', 'ai-seo-client'); ?>
+                            </h3>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <label style="font-size:12px;white-space:nowrap;color:var(--text-m);"><?php esc_html_e('Start Date', 'ai-seo-client'); ?></label>
+                                    <input type="date" id="tc-schedule-start" class="fyn-input" style="font-size:12px;padding:6px 8px;">
+                                    <label style="font-size:12px;white-space:nowrap;color:var(--text-m);"><?php esc_html_e('Interval (days)', 'ai-seo-client'); ?></label>
+                                    <input type="number" id="tc-schedule-gap" value="3" min="1" class="fyn-input" style="width:60px;font-size:12px;padding:6px 8px;">
+                                </div>
+                                <button type="button" class="fyn-btn fyn-btn-outline" id="tc-select-all" style="padding:6px 12px;font-size:12px;"><?php esc_html_e('Select All', 'ai-seo-client'); ?></button>
+                                <button type="button" class="fyn-btn fyn-btn-outline" id="tc-deselect-all" style="padding:6px 12px;font-size:12px;"><?php esc_html_e('Deselect All', 'ai-seo-client'); ?></button>
+                                <button type="button" class="fyn-btn fyn-btn-primary" id="tc-bulk-generate" style="padding:6px 14px;font-size:12px;">
+                                    <?php esc_html_e('Generate Selected', 'ai-seo-client'); ?> (<span id="tc-selected-count">0</span>)
                                 </button>
-                                <button type="button" class="button button-primary" id="tc-save"><?php esc_html_e('Save This Cluster Map', 'ai-seo-client'); ?></button>
-                                <span style="margin-left:10px;display:inline-flex;align-items:center;gap:5px;">
-                                    <label style="font-size:12px;color:#166534;"><?php esc_html_e('Start:', 'ai-seo-client'); ?></label>
-                                    <input type="date" id="tc-schedule-start" style="width:140px;" />
-                                    <label style="font-size:12px;color:#166534;margin-left:5px;"><?php esc_html_e('Gap (days):', 'ai-seo-client'); ?></label>
-                                    <input type="number" id="tc-schedule-gap" value="3" min="1" max="14" style="width:60px;" />
-                                </span>
-                                <button type="button" class="button" id="tc-sync-calendar" style="margin-left:5px;"><?php esc_html_e('Sync to Content Calendar', 'ai-seo-client'); ?></button>
+                                <button type="button" class="fyn-btn fyn-btn-primary" id="tc-generate-all" style="padding:6px 14px;font-size:12px;">
+                                    <?php esc_html_e('Generate All', 'ai-seo-client'); ?>
+                                </button>
                             </div>
                         </div>
-                        <p style="margin:0;color:#166534;font-size:13px;">
-                            <?php esc_html_e('Review all pages, select which to generate, and create content drafts in bulk.', 'ai-seo-client'); ?>
-                        </p>
-                    </div>
 
-                    <!-- Pages Review Table (Hidden by default) -->
-                    <div id="tc-review-section" style="display:none;margin-top:20px;">
-                        <div class="postbox" style="padding:20px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-                                <h3 style="margin:0;">📄 <?php esc_html_e('All Pages in Cluster', 'ai-seo-client'); ?></h3>
-                                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                                    <div style="display:flex;gap:8px;align-items:center;">
-                                        <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Start date', 'ai-seo-client'); ?></label>
-                                        <input type="date" id="tc-schedule-start" class="small-text" style="font-size:12px;">
-                                        <label style="font-size:12px;white-space:nowrap;"><?php esc_html_e('Gap (days)', 'ai-seo-client'); ?></label>
-                                        <input type="number" id="tc-schedule-gap" value="3" min="1" class="small-text" style="width:60px;font-size:12px;">
-                                    </div>
-                                    <button type="button" class="button" id="tc-select-all"><?php esc_html_e('Select All', 'ai-seo-client'); ?></button>
-                                    <button type="button" class="button" id="tc-deselect-all"><?php esc_html_e('Deselect All', 'ai-seo-client'); ?></button>
-                                    <button type="button" class="button button-primary" id="tc-bulk-generate" style="background:#16a34a;border-color:#16a34a;">
-                                        <?php esc_html_e('Generate Selected', 'ai-seo-client'); ?> (<span id="tc-selected-count">0</span>)
-                                    </button>
-                                    <button type="button" class="button button-primary" id="tc-generate-all" style="background:#0d6efd;border-color:#0d6efd;margin-left:5px;">
-                                        <?php esc_html_e('Generate All', 'ai-seo-client'); ?>
-                                    </button>
-                                </div>
+                        <!-- Stats -->
+                        <div class="fyn-stats-grid" style="margin-bottom:16px;">
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="tc-review-total">0</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
                             </div>
-                            
-                            <!-- Stats -->
-                            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
-                                <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
-                                    <div id="tc-review-total" style="font-size:24px;font-weight:bold;color:#379fd3;">0</div>
-                                    <div style="font-size:12px;color:#64748b;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
-                                    <div id="tc-review-selected" style="font-size:24px;font-weight:bold;color:#16a34a;">0</div>
-                                    <div style="font-size:12px;color:#64748b;"><?php esc_html_e('Selected', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
-                                    <div id="tc-review-words" style="font-size:24px;font-weight:bold;color:#7c3aed;">0</div>
-                                    <div style="font-size:12px;color:#64748b;"><?php esc_html_e('Total Words', 'ai-seo-client'); ?></div>
-                                </div>
-                                <div style="padding:15px;background:#f8fafc;border-radius:8px;text-align:center;">
-                                    <div id="tc-review-est-cost" style="font-size:24px;font-weight:bold;color:#d97706;">$0</div>
-                                    <div style="font-size:12px;color:#64748b;"><?php esc_html_e('Est. API Cost', 'ai-seo-client'); ?></div>
-                                </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="tc-review-selected">0</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Selected', 'ai-seo-client'); ?></div>
                             </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="tc-review-words">0</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Total Words', 'ai-seo-client'); ?></div>
+                            </div>
+                            <div class="fyn-stat-tile">
+                                <div class="fyn-stat-value" id="tc-review-est-cost">$0</div>
+                                <div class="fyn-stat-label"><?php esc_html_e('Estimated API Cost', 'ai-seo-client'); ?></div>
+                            </div>
+                        </div>
 
-                            <!-- Pages Table -->
-                            <div style="max-height:600px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
-                                <table class="wp-list-table widefat striped" style="margin:0;border:none;" id="tc-pages-table">
-                                    <thead style="position:sticky;top:0;background:#f8fafc;z-index:10;">
-                                        <tr>
-                                            <th style="width:40px;text-align:center;"><input type="checkbox" id="tc-select-all-checkbox"></th>
-                                            <th><?php esc_html_e('Page Title', 'ai-seo-client'); ?></th>
-                                            <th style="width:150px;"><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
-                                            <th style="width:180px;"><?php esc_html_e('Target Keyword', 'ai-seo-client'); ?></th>
-                                            <th style="width:100px;"><?php esc_html_e('Words', 'ai-seo-client'); ?></th>
-                                            <th style="width:100px;"><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
-                                            <th style="width:120px;"><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                                            <th style="width:50px;text-align:center;"><?php esc_html_e('Delete', 'ai-seo-client'); ?></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tc-pages-tbody">
-                                        <!-- Populated by JS -->
+                        <!-- Pages Table -->
+                        <div style="max-height:600px;overflow-y:auto;border:1px solid var(--divide);border-radius:10px;">
+                            <table class="fyn-table" style="margin:0;border:none;" id="tc-pages-table">
+                                <thead style="position:sticky;top:0;background:var(--well);z-index:10;">
+                                    <tr>
+                                        <th style="width:40px;text-align:center;"><input type="checkbox" id="tc-select-all-checkbox"></th>
+                                        <th><?php esc_html_e('Page Title', 'ai-seo-client'); ?></th>
+                                        <th style="width:150px;"><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
+                                        <th style="width:180px;"><?php esc_html_e('Target Keyword', 'ai-seo-client'); ?></th>
+                                        <th style="width:100px;"><?php esc_html_e('Words', 'ai-seo-client'); ?></th>
+                                        <th style="width:100px;"><?php esc_html_e('Priority', 'ai-seo-client'); ?></th>
+                                        <th style="width:120px;"><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                        <th style="width:50px;text-align:center;"><?php esc_html_e('Delete', 'ai-seo-client'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tc-pages-tbody">
+                                    <!-- Populated by JS -->
                                     </tbody>
                                 </table>
                             </div>
 
-                            <!-- Bulk Progress -->
-                            <div id="tc-bulk-progress" style="display:none;margin-top:20px;padding:20px;background:#f0fdf4;border-radius:8px;">
-                                <h4 style="margin:0 0 15px 0;color:#166534;">⏳ <?php esc_html_e('Generating Content in Background...', 'ai-seo-client'); ?></h4>
-                                <p style="margin:0 0 10px 0;font-size:13px;color:#166534;"><?php esc_html_e('Content is generated via WP-Cron. You can close this page — check back later or view your drafts/scheduled posts.', 'ai-seo-client'); ?></p>
-                                <div style="margin:0 0 15px 0;padding:15px;background:rgba(22,163,74,0.08);border-radius:8px;border:1px solid #16a34a;">
-                                    <p style="margin:0 0 10px 0;font-size:14px;color:#166534;font-style:italic;">
-                                        🏝️ <?php esc_html_e('Sit back and relax or book your next vacation to Bora Bora', 'ai-seo-client'); ?>
-                                    </p>
-                                    <a href="https://www.booking.com/searchresults.nl.html?ss=Bora+Bora%2C+Frans-Polynesi%C3%AB&efdco=1&label=gen173nr-10CAEoggI46AdIM1gEaKkBiAEBmAEzuAEXyAEM2AED6AEB-AEBiAIBqAIBuALu2PvTBsACAdICJGQ0ZmUxYWQ4LWFjNGYtNGYwOS05ODYzLWYyYjAxYmRkZDM4ONgCAeACAQ&aid=304142&lang=nl&sb=1&src_elem=sb&src=index&dest_id=3978&dest_type=region&ac_position=0&ac_click_type=b&ac_langcode=nl&ac_suggestion_list_length=5&search_selected=true&search_pageview_id=a33848f7b86208f0&ac_meta=GhBhMzM4NDhmN2I4NjIwOGYwIAAoATICbmw6CWJvcmEgYm9yYQ%3D%3D&group_adults=2&no_rooms=1&group_children=0"
-                                       target="_blank" rel="noopener noreferrer"
-                                       class="button button-primary"
-                                       style="background:#16a34a;border-color:#16a34a;text-decoration:none;">
-                                        <?php esc_html_e('Book your Bora Bora trip', 'ai-seo-client'); ?> →
-                                    </a>
-                                </div>
-                                <div style="background:#e2e8f0;border-radius:10px;height:24px;overflow:hidden;margin-bottom:10px;">
-                                    <div id="tc-progress-bar" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;width:0%;transition:width 0.3s ease;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;">0%</div>
-                                </div>
-                                <div id="tc-progress-text" style="font-size:13px;color:#64748b;"><?php esc_html_e('Preparing...', 'ai-seo-client'); ?></div>
-                                <div id="tc-progress-log" style="margin-top:15px;max-height:200px;overflow-y:auto;font-family:monospace;font-size:11px;background:#fff;padding:10px;border-radius:4px;border:1px solid #e2e8f0;"></div>
+                        <!-- Bulk Progress -->
+                        <div id="tc-bulk-progress" style="display:none;margin-top:16px;padding:20px;background:var(--fyn-success-light,#d1fae5);border-radius:10px;">
+                            <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Content is being generated in the background...', 'ai-seo-client'); ?></h4>
+                            <p style="margin:0 0 10px 0;font-size:13px;color:var(--text-m);"><?php esc_html_e('Content is generated via WP-Cron. You can close this page — come back later or check your drafts.', 'ai-seo-client'); ?></p>
+                            <div class="fyn-progress" style="margin-bottom:10px;">
+                                <div id="tc-progress-bar" class="fyn-progress-bar fyn-progress-bar--success" style="width:0%;transition:width 0.3s ease;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;">0%</div>
                             </div>
-
-                            <!-- Results -->
-                            <div id="tc-bulk-results" style="display:none;margin-top:20px;"></div>
+                            <div id="tc-progress-text" style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Preparing...', 'ai-seo-client'); ?></div>
+                            <div id="tc-progress-log" style="margin-top:12px;max-height:200px;overflow-y:auto;font-family:monospace;font-size:11px;background:var(--well);padding:10px;border-radius:8px;border:1px solid var(--divide);"></div>
                         </div>
-                    </div>
-                </div>
 
-                    <!-- Saved Clusters -->
-                    <div class="postbox" style="padding:15px;margin-top:30px;">
-                        <h3 style="margin-top:0;"><?php esc_html_e('Saved Cluster Maps', 'ai-seo-client'); ?></h3>
-                        <div id="tc-saved-list"></div>
+                        <!-- Results -->
+                        <div id="tc-bulk-results" style="display:none;margin-top:16px;"></div>
                     </div>
-                    <?php DashboardSorter::end('ai-seo-topic-clusters'); ?>
                 </div>
             </div>
+
+            <!-- Saved Clusters -->
+            <div class="fyn-card" style="margin-top:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-portfolio"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Saved Cluster Maps', 'ai-seo-client'); ?></h3>
+                </div>
+                <div id="tc-saved-list"></div>
+            </div>
+
+            <?php DashboardSorter::end('ai-seo-topic-clusters'); ?>
         </div>
 
         <script>
@@ -1874,15 +1886,15 @@ PROMPT;
                         $('#tc-saved-list').html('<p style="color:#999;"><?php echo esc_js(__('No saved clusters yet.', 'ai-seo-client')); ?></p>');
                         return;
                     }
-                    var html = '<table class="wp-list-table widefat striped" style="font-size:13px;"><thead><tr><th>Topic</th><th>Pages</th><th>Clusters</th><th>Date</th><th style="width:120px;"></th></tr></thead><tbody>';
+                    var html = '<table class="fyn-table" style="font-size:13px;"><thead><tr><th>Onderwerp</th><th>Pagina\'s</th><th>Clusters</th><th>Datum</th><th style="width:140px;"></th></tr></thead><tbody>';
                     list.forEach(function(c) {
-                        html += '<tr><td><strong>' + (c.topic || '—') + '</strong></td>' +
+                        html += '<tr><td><strong style="color:var(--text-h);">' + (c.topic || '—') + '</strong></td>' +
                             '<td>' + (c.total_pages || '—') + '</td>' +
                             '<td>' + ((c.clusters||[]).length) + '</td>' +
                             '<td>' + (c.saved_at || c.generated_at || '—') + '</td>' +
-                            '<td>' +
-                            '<button class="button button-small tc-view-saved" data-id="' + c.id + '" style="margin-right:5px;">View</button>' +
-                            '<button class="button button-small tc-delete-saved" data-id="' + c.id + '">Delete</button>' +
+                            '<td style="display:flex;gap:6px;">' +
+                            '<button class="fyn-btn fyn-btn-outline tc-view-saved" style="padding:5px 10px;font-size:12px;" data-id="' + c.id + '">View</button>' +
+                            '<button class="fyn-btn fyn-btn-danger tc-delete-saved" style="padding:5px 10px;font-size:12px;" data-id="' + c.id + '">Delete</button>' +
                             '</td></tr>';
                     });
                     html += '</tbody></table>';
@@ -2069,7 +2081,7 @@ PROMPT;
                         '</div>';
 
                     if (data.existing_content.length) {
-                        html += '<table class="wp-list-table widefat striped" style="font-size:12px;"><thead><tr><th>Title</th><th>Words</th><th>Score</th><th>Keyphrase</th></tr></thead><tbody>';
+                        html += '<table class="fyn-table" style="font-size:12px;"><thead><tr><th>Title</th><th>Words</th><th>Score</th><th>Keyphrase</th></tr></thead><tbody>';
                         data.existing_content.forEach(function(p) {
                             html += '<tr><td><a href="' + (p.edit_url||'#') + '">' + p.title + '</a></td>' +
                                 '<td>' + p.word_count + '</td>' +

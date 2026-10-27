@@ -2,11 +2,15 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../FYNAI"
 		}
 	],
 	"settings": {},
 	"workbenchMode": "windsurf-agent-window",
 	"agentSourceFolders": [
-		"file:///c%3A/WorkSpace/FynnPass"
+		"file:///c%3A/WorkSpace/Fyndable",
+		"file:///c%3A/WorkSpace/FYNAI"
 	]
 }

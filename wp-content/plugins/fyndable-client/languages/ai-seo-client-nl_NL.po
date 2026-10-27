@@ -16,735 +16,2520 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 # Menu items
-msgid "SSEO AI"
-msgstr "SSEO AI"
 
-msgid "Statistics"
-msgstr "Statistieken"
+msgid "\"%1$s\" dropped %2$d positions for \"%3$s\""
+msgstr ""
 
-msgid "Content Calendar"
-msgstr "Contentkalender"
+msgid "\"%s\" dropped %d positions"
+msgstr ""
 
-msgid "Topic Cluster"
-msgstr "Onderwerpcluster"
+msgid "## Additional resources&#10;- [About](https://example.com/about): ..."
+msgstr ""
 
-msgid "AI Tools"
-msgstr "AI Hulpmiddelen"
+msgid "%.0f%% of LSI keywords used in content"
+msgstr ""
 
-msgid "Site Audit"
-msgstr "Site Audit"
+msgid "%.1f%% (%d occurrences)"
+msgstr ""
 
-msgid "Integrations"
-msgstr "Integraties"
+msgid "%d H1 headings. Use exactly one."
+msgstr ""
 
-msgid "Settings"
-msgstr "Instellingen"
+msgid "%d definitional phrases"
+msgstr ""
 
-msgid "Connection"
-msgstr "Verbinding"
+msgid "%d headings, %d lists, %d tables"
+msgstr ""
 
-# Connection page
-msgid "You are connected"
-msgstr "Je bent verbonden"
+msgid "%d internal links."
+msgstr ""
 
-msgid "to the"
-msgstr "met de"
+msgid "%d keywords deleted"
+msgstr ""
 
-msgid "SEO AI Service"
-msgstr "Fyndable Smart SEO"
+msgid "%d numeric data points"
+msgstr ""
 
-msgid "Your connection e-mail:"
-msgstr "Jouw verbindings e-mail:"
+msgid "%d of %d checked sentences appear in other posts on your site."
+msgstr ""
 
-msgid "Your connection API Key:"
-msgstr "Jouw verbindings API sleutel:"
+msgid "%d of %d checked sentences found in other posts."
+msgstr ""
 
-msgid "License Key:"
-msgstr "Licentiesleutel:"
+msgid "%d of %d images have alt text."
+msgstr ""
 
-msgid "License Tier:"
-msgstr "Licentie niveau:"
+msgid "%d paragraph(s) exceed 150 words. Break them up."
+msgstr ""
 
-msgid "Dashboard URL:"
-msgstr "Dashboard URL:"
+msgid "%d posts have no internal links"
+msgstr ""
 
-msgid "Disconnect"
-msgstr "Verbinding verbreken"
+msgid "%d posts have thin content (<300 words)"
+msgstr ""
 
-msgid "Connect to SEO AI Service"
-msgstr "Verbind met Fyndable Smart SEO"
+msgid "%d posts missing Open Graph tags"
+msgstr ""
 
-msgid "Enter your license details to activate the plugin"
-msgstr "Voer je licentiegegevens in om de plugin te activeren"
+msgid "%d posts missing SEO title"
+msgstr ""
 
-msgid "Dashboard URL"
-msgstr "Dashboard URL"
+msgid "%d posts missing focus keyphrase"
+msgstr ""
 
-msgid "License Key"
-msgstr "Licentiesleutel"
+msgid "%d posts missing meta description"
+msgstr ""
 
-msgid "Connect"
-msgstr "Verbinden"
+msgid "%d questions found"
+msgstr ""
 
-msgid "Activate License"
-msgstr "Activeer Licentie"
+msgid "%d quotable sentences"
+msgstr ""
 
-# Content Calendar page
-msgid "Plan Your Content Strategy"
-msgstr "Plan je contentstrategie"
+msgid "%d redirects imported."
+msgstr ""
 
-msgid "Organize and schedule your content with AI-powered suggestions"
-msgstr "Organiseer en plan je content met AI-aangedreven suggesties"
+msgid "%d words"
+msgstr ""
 
-msgid "Editorial Calendar"
-msgstr "Redactionele kalender"
+msgid "%d words. %s"
+msgstr ""
 
-msgid "Visual calendar view of your content pipeline"
-msgstr "Visuele kalenderweergave van je contentpijplijn"
+msgid "%d%% of sentences are over 20 words."
+msgstr ""
 
-msgid "Content Ideas"
-msgstr "Content ideeën"
+msgid "%d%% of sentences are over 20 words. Aim for under 25%%."
+msgstr ""
 
-msgid "AI-generated topic suggestions based on trends"
-msgstr "AI-gegenereerde onderwerpssuggesties op basis van trends"
+msgid "%d%% of sentences use transition words."
+msgstr ""
 
-msgid "Publishing Schedule"
-msgstr "Publicatieschema"
+msgid "%d%% of sentences use transitions. Aim for 30%%+."
+msgstr ""
 
-msgid "Optimize posting times for maximum engagement"
-msgstr "Optimaliseer posttijden voor maximale betrokkenheid"
+msgid "%d%% of the links are dofollow."
+msgstr "%d%% van de links is dofollow."
 
-msgid "Deadline Reminders"
-msgstr "Deadline herinneringen"
+msgid "%d%% unique words"
+msgstr ""
 
-msgid "Never miss a publication deadline"
-msgstr "Mis nooit een publicatiedeadline"
+msgid "%s Alert"
+msgstr ""
 
-# Topic Cluster page
-msgid "Build Topic Authority"
-msgstr "Bouw onderwerpautoriteit"
+msgid "%s ApexFlow: %d posts scheduled"
+msgstr ""
 
-msgid "Create interconnected content clusters to dominate search rankings"
-msgstr "Creëer onderling verbonden contentclusters om zoekresultaten te domineren"
+msgid "%s SEO Report"
+msgstr ""
 
-msgid "Pillar Pages"
-msgstr "Pillar pagina's"
+msgid "(Set in SEO tab)"
+msgstr ""
 
-msgid "Create comprehensive pillar content for core topics"
-msgstr "Creëer uitgebreide pillar content voor kernonderwerpen"
+msgid "(main entry point)"
+msgstr ""
 
-msgid "Cluster Content"
-msgstr "Cluster content"
+msgid "+ Add Language"
+msgstr ""
 
-msgid "Generate supporting articles linked to pillars"
-msgstr "Genereer ondersteunende artikelen gekoppeld aan pillars"
+msgid "+ Add Reference"
+msgstr ""
 
-msgid "Internal Linking"
-msgstr "Interne linking"
+msgid "+ Add Rule"
+msgstr ""
 
-msgid "AI-suggested internal link opportunities"
-msgstr "AI-gesuggereerde interne linkmogelijkheden"
+msgid "+ Add an idea"
+msgstr ""
 
-msgid "Cluster Performance"
-msgstr "Cluster prestaties"
+msgid "-- No change --"
+msgstr ""
 
-msgid "Track rankings and traffic for each cluster"
-msgstr "Volg rankings en verkeer voor elk cluster"
+msgid "3D Render"
+msgstr ""
 
-# AI Tools page
-msgid "Available AI Tools"
-msgstr "Beschikbare AI hulpmiddelen"
+msgid "3x3 grid (Business)"
+msgstr ""
 
-msgid "Content Writer"
-msgstr "Content schrijver"
+msgid "5x5 grid (Agency)"
+msgstr ""
 
-msgid "AI-powered content generation for blog posts and articles"
-msgstr "AI-aangedreven contentgeneratie voor blogposts en artikelen"
+msgid "7x7 grid (Agency)"
+msgstr ""
 
-msgid "Content Rewriter"
-msgstr "Content herschrijver"
+msgid "A new version of Fyndable is available. See the update notice above."
+msgstr ""
 
-msgid "Rewrite and optimize existing content"
-msgstr "Herschrijf en optimaliseer bestaande content"
-
-msgid "Image Generator"
-msgstr "Afbeelding generator"
-
-msgid "Generate featured images and graphics"
-msgstr "Genereer uitgelichte afbeeldingen en graphics"
-
-msgid "Image Alt Generator"
-msgstr "Afbeelding Alt generator"
-
-msgid "Auto-generate SEO-friendly alt text for images"
-msgstr "Genereer automatisch SEO-vriendelijke alt-tekst voor afbeeldingen"
-
-msgid "FAQ Generator"
-msgstr "FAQ generator"
-
-msgid "Generate FAQ schema from content"
-msgstr "Genereer FAQ schema uit content"
-
-msgid "Video SEO"
-msgstr "Video SEO"
-
-msgid "Video transcript generation and optimization"
-msgstr "Video transcript generatie en optimalisatie"
-
-msgid "Content Repurposer"
-msgstr "Content hergebruiker"
-
-msgid "Repurpose content for different formats"
-msgstr "Hergebruik content voor verschillende formaten"
-
-msgid "Content Optimizer"
-msgstr "Content optimaliseerder"
-
-msgid "AI-powered content optimization suggestions"
-msgstr "AI-aangedreven content optimalisatiesuggesties"
-
-# Site Audit page
-msgid "Comprehensive SEO Analysis"
-msgstr "Uitgebreide SEO analyse"
-
-msgid "Identify and fix technical SEO issues across your entire site"
-msgstr "Identificeer en los technische SEO problemen op je hele site op"
-
-msgid "Technical SEO"
-msgstr "Technische SEO"
-
-msgid "Crawl errors, broken links, redirect chains"
-msgstr "Crawl fouten, gebroken links, redirect ketens"
-
-msgid "Page Speed"
-msgstr "Paginasnelheid"
-
-msgid "Core Web Vitals and performance metrics"
-msgstr "Core Web Vitals en prestatiemetingen"
-
-msgid "Mobile Usability"
-msgstr "Mobiele bruikbaarheid"
-
-msgid "Mobile-friendly testing and optimization"
-msgstr "Mobiel-vriendelijk testen en optimalisatie"
-
-msgid "Site Structure"
-msgstr "Site structuur"
-
-msgid "URL structure, sitemap, and navigation analysis"
-msgstr "URL structuur, sitemap en navigatie analyse"
-
-msgid "Security Check"
-msgstr "Beveiligingscheck"
-
-msgid "HTTPS, mixed content, and security headers"
-msgstr "HTTPS, gemengde content en beveiligingsheaders"
-
-msgid "Schema Markup"
-msgstr "Schema Markup"
-
-msgid "Structured data validation and suggestions"
-msgstr "Gestructureerde data validatie en suggesties"
-
-# Integrations page
-msgid "Connect Your Tools"
-msgstr "Verbind je tools"
-
-msgid "Integrate with popular SEO and marketing platforms"
-msgstr "Integreer met populaire SEO en marketing platforms"
-
-msgid "Google Analytics"
-msgstr "Google Analytics"
-
-msgid "Track traffic and conversion data"
-msgstr "Volg verkeer en conversiedata"
-
-msgid "Google Search Console"
-msgstr "Google Search Console"
-
-msgid "Monitor search performance and indexing"
-msgstr "Monitor zoekprestaties en indexering"
-
-msgid "SEMrush"
-msgstr "SEMrush"
-
-msgid "Keyword research and competitor analysis"
-msgstr "Zoekwoordonderzoek en concurrentieanalyse"
-
-msgid "Ahrefs"
-msgstr "Ahrefs"
-
-msgid "Backlink monitoring and site explorer"
-msgstr "Backlink monitoring en site verkenner"
-
-msgid "Email Marketing"
-msgstr "E-mail marketing"
-
-msgid "Mailchimp, ConvertKit, ActiveCampaign"
-msgstr "Mailchimp, ConvertKit, ActiveCampaign"
-
-msgid "Social Media"
-msgstr "Social media"
-
-msgid "Auto-share content to social platforms"
-msgstr "Deel content automatisch op social media platforms"
-
-# Settings page
-msgid "Plugin Settings"
-msgstr "Plugin instellingen"
-
-msgid "Settings saved successfully!"
-msgstr "Instellingen succesvol opgeslagen!"
-
-msgid "Brand Settings"
-msgstr "Merk instellingen"
-
-msgid "Brand Name"
-msgstr "Merknaam"
-
-msgid "Your company or brand name"
-msgstr "Jouw bedrijfs- of merknaam"
-
-msgid "Brand Voice & Tone"
-msgstr "Merkstem & toon"
-
-msgid "Describe your brand's voice (e.g., professional, friendly, authoritative)"
-msgstr "Beschrijf de stem van je merk (bijv. professioneel, vriendelijk, gezaghebbend)"
-
-msgid "Target Audience"
-msgstr "Doelgroep"
-
-msgid "Describe your target audience"
-msgstr "Beschrijf je doelgroep"
-
-msgid "Locations"
-msgstr "Locaties"
-
-msgid "Target locations (comma-separated)"
-msgstr "Doellocaties (komma gescheiden)"
-
-msgid "AI Prompt Settings"
-msgstr "AI Prompt instellingen"
-
-msgid "Custom instructions for AI content generation"
-msgstr "Aangepaste instructies voor AI contentgeneratie"
-
-msgid "Save Settings"
-msgstr "Instellingen opslaan"
-
-# Dashboard
-msgid "Dashboard loading..."
-msgstr "Dashboard laden..."
-
-# Error messages
-msgid "Security check failed. Please try again."
-msgstr "Beveiligingscontrole mislukt. Probeer het opnieuw."
-
-msgid "Insufficient permissions. You must be an administrator to activate licenses."
-msgstr "Onvoldoende rechten. Je moet een beheerder zijn om licenties te activeren."
-
-msgid "Missing license key or dashboard URL"
-msgstr "Ontbrekende licentiesleutel of dashboard URL"
-
-msgid "Invalid response from dashboard - no tenant key"
-msgstr "Ongeldig antwoord van dashboard - geen tenant sleutel"
-
-msgid "You do not have permission to access this page."
-msgstr "Je hebt geen toestemming om deze pagina te bekijken."
-
-# Missing menu labels from fyndabledashboard.php
-msgid "Dashboard"
-msgstr "Dashboard"
-
-msgid "Ideas"
-msgstr "Ideeën"
-
-msgid "Created Posts"
-msgstr "Aangemaakte berichten"
-
-msgid "Keywords"
-msgstr "Zoekwoorden"
-
-msgid "Link Manager"
-msgstr "Linkbeheer"
-
-msgid "Competitors"
-msgstr "Concurrenten"
-
-msgid "Sitemaps"
-msgstr "Sitemaps"
-
-msgid "Bulk Optimizer"
-msgstr "Bulkoptimalisatie"
-
-msgid "SEO Data"
-msgstr "SEO-data"
-
-msgid "LLM Tracker"
-msgstr "LLM-tracker"
+msgid "A post already targets the keyword \"%s\": \"%s\" (ID: %d). Consider updating that post instead of creating a new one, or set skip_cannibalism_check to true."
+msgstr ""
 
 msgid "A/B Testing"
 msgstr "A/B-testen"
 
-msgid "Google Data"
-msgstr "Google-data"
+msgid "A/B test creation coming soon"
+msgstr ""
 
-msgid "Rank Tracker"
-msgstr "Ranktracker"
+msgid "AI Agent"
+msgstr ""
 
-msgid "Topic Clusters"
-msgstr "Onderwerpgroepen"
+msgid "AI Alt Text Generator"
+msgstr ""
 
-msgid "Support"
-msgstr "Ondersteuning"
+msgid "AI Alt Text Suggestion"
+msgstr ""
 
-# Post meta box groups and panels
-msgid "Content & Keywords"
-msgstr "Content & zoekwoorden"
+msgid "AI Bulk SEO Optimizer"
+msgstr ""
 
-msgid "Technical SEO"
-msgstr "Technische SEO"
-
-msgid "Social & Schema"
-msgstr "Social & schema"
-
-msgid "AI Tools"
-msgstr "AI-hulpmiddelen"
-
-msgid "Advanced"
-msgstr "Geavanceerd"
-
-msgid "SEO Score"
-msgstr "SEO-score"
-
-msgid "Smart Tags"
-msgstr "Slimme tags"
-
-msgid "Internal Links"
-msgstr "Interne links"
-
-msgid "E-E-A-T"
-msgstr "E-E-A-T"
-
-msgid "Performance"
-msgstr "Prestaties"
-
-msgid "Workflow"
-msgstr "Workflow"
-
-msgid "Canonical URL"
-msgstr "Canonical URL"
-
-msgid "Hreflang"
-msgstr "Hreflang"
-
-msgid "International"
-msgstr "Internationaal"
-
-msgid "SERP Features"
-msgstr "SERP-functies"
-
-msgid "Position Trends"
-msgstr "Positietrends"
-
-msgid "SEO Revisions"
-msgstr "SEO-revisies"
-
-msgid "Social Preview"
-msgstr "Social preview"
-
-msgid "Social Sharing"
-msgstr "Social sharing"
-
-msgid "Schema"
-msgstr "Schema"
-
-msgid "FAQ Schema"
-msgstr "FAQ-schema"
-
-msgid "Video SEO"
-msgstr "Video-SEO"
-
-msgid "Local SEO"
-msgstr "Lokale SEO"
-
-msgid "WooCommerce"
-msgstr "WooCommerce"
+msgid "AI Citability Assessment"
+msgstr ""
 
 msgid "AI Content"
 msgstr "AI-content"
 
+msgid "AI Content Generator"
+msgstr ""
+
+msgid "AI Content Repurposing"
+msgstr ""
+
+msgid "AI Content Writer"
+msgstr ""
+
+msgid "AI Content Writer is not available on your current plan. Upgrade to Business or higher to use this feature."
+msgstr ""
+
+msgid "AI Generate"
+msgstr ""
+
+msgid "AI Generate FAQs"
+msgstr ""
+
+msgid "AI Generate Full Description"
+msgstr ""
+
+msgid "AI Generate OG Tags"
+msgstr ""
+
+msgid "AI Generate PAA Questions"
+msgstr ""
+
+msgid "AI Generate SEO Meta"
+msgstr ""
+
+msgid "AI Generate Short Description"
+msgstr ""
+
+msgid "AI Generate Snippet"
+msgstr ""
+
+msgid "AI Generate Transcript"
+msgstr ""
+
+msgid "AI Generation"
+msgstr ""
+
 msgid "AI Image"
 msgstr "AI-afbeelding"
+
+msgid "AI Image Generator"
+msgstr "AI Afbeeldingsgenerator"
+
+msgid "AI Image Overview"
+msgstr ""
+
+msgid "AI Images"
+msgstr ""
+
+msgid "AI Improvement Suggestions"
+msgstr ""
+
+msgid "AI Keyword Search Volume"
+msgstr ""
+
+msgid "AI Optimization"
+msgstr ""
+
+msgid "AI Optimization Tracker"
+msgstr "AI Optimalisatietracker"
+
+msgid "AI Pattern Detection"
+msgstr ""
+
+msgid "AI Platforms to Track"
+msgstr ""
+
+msgid "AI Product Content"
+msgstr ""
+
+msgid "AI Prompt Settings"
+msgstr "AI Prompt instellingen"
+
+msgid "AI Provider"
+msgstr ""
+
+msgid "AI Recommendations"
+msgstr "AI-aanbevelingen"
 
 msgid "AI Repurpose"
 msgstr "AI-hergebruik"
 
-msgid "Originality"
-msgstr "Originaliteit"
+msgid "AI Response"
+msgstr ""
 
-msgid "Alt Text"
-msgstr "Alt-tekst"
+msgid "AI Response Checker"
+msgstr ""
 
-msgid "Every 2 minutes (Fyndable Queue)"
-msgstr "Elke 2 minuten (Fyndable-wachtrij)"
+msgid "AI SEO Agent"
+msgstr "AI SEO Agent"
 
-# Client page titles / post meta box
-msgid "Competitor Research"
-msgstr "Concurrentieonderzoek"
+msgid "AI SEO Schema Markup"
+msgstr ""
 
-msgid "Link Genius"
-msgstr "Linkgenie"
+msgid "AI SEO Score & Optimization"
+msgstr ""
 
-msgid "Redirect Manager"
-msgstr "Redirectbeheer"
+msgid "AI SEO: Canonical URL"
+msgstr ""
 
-msgid "SEO Data Dashboard"
-msgstr "SEO-datadashboard"
+msgid "AI SEO: Hreflang / Language Alternatives"
+msgstr ""
+
+msgid "AI SEO: Originality Check"
+msgstr ""
+
+msgid "AI SEO: Product Optimization"
+msgstr ""
+
+msgid "AI SEO: Social Media Preview"
+msgstr ""
+
+msgid "AI Search"
+msgstr ""
 
 msgid "AI Search Visibility"
 msgstr "AI-zichtbaarheid"
 
-msgid "Automation"
-msgstr "Automatisering"
+msgid "AI Smart Tags"
+msgstr ""
 
-msgid "Search Console"
-msgstr "Search Console"
+msgid "AI Suggest Improvements"
+msgstr ""
 
-msgid "Post Optimization"
-msgstr "Postoptimalisatie"
+msgid "AI Suggest Missing Terms"
+msgstr ""
 
-msgid "No SEO options available."
-msgstr "Geen SEO-opties beschikbaar."
+msgid "AI Suggested"
+msgstr ""
 
-msgid "AI is generating... Please wait."
-msgstr "AI is aan het genereren... Even geduld."
+msgid "AI Suggestions for Missing Terms"
+msgstr ""
+
+msgid "AI Tools"
+msgstr "AI-hulpmiddelen"
+
+msgid "AI assistant"
+msgstr ""
+
+msgid "AI features are not available"
+msgstr ""
+
+msgid "AI features not available"
+msgstr ""
+
+msgid "AI features require an active license"
+msgstr ""
+
+msgid "AI generation failed"
+msgstr ""
 
 msgid "AI is generating"
 msgstr "AI is aan het genereren"
 
-# License / activation
-msgid "License activated successfully!"
-msgstr "Licentie succesvol geactiveerd!"
+msgid "AI is generating... Please wait."
+msgstr "AI is aan het genereren... Even geduld."
 
-msgid "License deactivated."
-msgstr "Licentie gedeactiveerd."
+msgid "AI request timed out. Try async cluster generation for large maps."
+msgstr ""
 
-msgid "Activation Error:"
-msgstr "Activeerfout:"
+msgid "AI returned empty or incomplete content for this post"
+msgstr ""
 
-msgid "Your license has expired. Please renew to continue using AI SEO features."
-msgstr "Je licentie is verlopen. Vernieuw om AI SEO-functies te blijven gebruiken."
+msgid "AI returned malformed JSON response"
+msgstr ""
 
-msgid "Your license has been revoked. Please contact support."
-msgstr "Je licentie is ingetrokken. Neem contact op met support."
+msgid "AI-content %"
+msgstr ""
+
+msgid "AI-generated topic suggestions based on trends"
+msgstr "AI-gegenereerde onderwerpssuggesties op basis van trends"
+
+msgid "AI-powered analysis of competitors, keywords and content strategy."
+msgstr ""
+
+msgid "AI-powered content generation for blog posts and articles"
+msgstr "AI-aangedreven contentgeneratie voor blogposts en artikelen"
+
+msgid "AI-powered content optimization suggestions"
+msgstr "AI-aangedreven content optimalisatiesuggesties"
+
+msgid "AI-powered tools for content, images and optimization."
+msgstr ""
+
+msgid "AI-ranked opportunities to add internal links."
+msgstr ""
+
+msgid "AI-suggested internal link opportunities"
+msgstr "AI-gesuggereerde interne linkmogelijkheden"
+
+msgid "AI-suggested tags based on your content:"
+msgstr ""
+
+msgid "AIza..."
+msgstr "AIza..."
+
+msgid "API Token"
+msgstr ""
+
+msgid "API Usage Status"
+msgstr "API-gebruiksstatus"
+
+msgid "API rate limit reached (%d/%d calls). Limit resets in %d minutes."
+msgstr ""
+
+msgid "API request failed"
+msgstr ""
+
+msgid "Abstract"
+msgstr ""
+
+msgid "Access Token"
+msgstr ""
+
+msgid "Ack"
+msgstr ""
+
+msgid "Acknowledge this alert? It will be moved to acknowledged status."
+msgstr ""
+
+msgid "Acknowledged"
+msgstr "Bevestigd"
+
+msgid "Action"
+msgstr "Actie"
+
+msgid "Actions"
+msgstr "Acties"
+
+msgid "Activate License"
+msgstr "Activeer Licentie"
 
 msgid "Activate Your License"
 msgstr "Activeer je licentie"
 
-msgid "Enter your license key to activate AI SEO features on this site."
-msgstr "Voer je licentiesleutel in om AI SEO-functies op deze site te activeren."
+msgid "Activation Error:"
+msgstr "Activeerfout:"
 
-msgid "SaaS Dashboard URL"
-msgstr "SaaS Dashboard URL"
+msgid "Active"
+msgstr "Actief"
 
-msgid "The URL where your AI SEO SaaS Dashboard is hosted"
-msgstr "De URL waar je AI SEO SaaS-dashboard wordt gehost"
+msgid "Active & Past Tests"
+msgstr "Actieve & afgelopen testen"
 
-msgid "Bulk generate meta titles and descriptions"
-msgstr "Genereer meta-titels en -omschrijvingen in bulk"
+msgid "Active A/B Tests"
+msgstr "Actieve A/B-testen"
+
+msgid "Active background tasks:\n\n"
+msgstr ""
+
+msgid "Active voice"
+msgstr ""
+
+msgid "Activity Log"
+msgstr ""
+
+msgid "Ad Copy"
+msgstr ""
+
+msgid "Add"
+msgstr "Toevoegen"
+
+msgid "Add & Analyze"
+msgstr ""
+
+msgid "Add / Edit Template"
+msgstr ""
+
+msgid "Add Competitor"
+msgstr "Concurrent toevoegen"
+
+msgid "Add Competitor Domain:"
+msgstr ""
+
+msgid "Add Credential"
+msgstr ""
+
+msgid "Add Custom Webhook"
+msgstr ""
+
+msgid "Add FAQ Item"
+msgstr ""
+
+msgid "Add Geo-Specific Keyword"
+msgstr ""
+
+msgid "Add Idea"
+msgstr ""
+
+msgid "Add Keyword"
+msgstr "Zoekwoord toevoegen"
+
+msgid "Add Keyword to Track"
+msgstr ""
+
+msgid "Add Link"
+msgstr ""
+
+msgid "Add New Redirect"
+msgstr ""
+
+msgid "Add Question"
+msgstr ""
+
+msgid "Add Redirect"
+msgstr ""
+
+msgid "Add Reply"
+msgstr ""
+
+msgid "Add Rule"
+msgstr ""
+
+msgid "Add a compelling meta description (150-160 characters) to improve CTR from search results."
+msgstr ""
+
+msgid "Add a concise 40-60 word answer at the beginning of your content"
+msgstr ""
+
+msgid "Add appropriate schema markup for rich snippets"
+msgstr ""
+
+msgid "Add competitor domains in the main Backlink Analysis page to see targets."
+msgstr "Voeg concurrent-domeinen toe op de Backlinkanalyse-pagina om doelen te zien."
+
+msgid "Add custom webhook URLs for specific events:"
+msgstr ""
+
+msgid "Add keyphrase to first paragraph."
+msgstr ""
+
+msgid "Add keyphrase to title."
+msgstr ""
+
+msgid "Add keyword"
+msgstr ""
+
+msgid "Add more internal links"
+msgstr ""
+
+msgid "Add more internal links to related content on your site to improve topical authority."
+msgstr ""
+
+msgid "Add nofollow"
+msgstr ""
+
+msgid "Add questions and answers that might appear in PAA:"
+msgstr ""
+
+msgid "Add relevant, optimized images with proper alt text"
+msgstr ""
+
+msgid "Add structured data (FAQ, Organization, Product) so AI engines can understand your brand and offerings."
+msgstr ""
+
+msgid "Add this link to your disavow file?"
+msgstr ""
+
+msgid "Add to ideas"
+msgstr ""
+
+msgid "Added"
+msgstr ""
+
+msgid "Adding..."
+msgstr ""
+
+msgid "Additional Settings"
+msgstr ""
+
+msgid "Additional instructions that will be included in all AI prompts"
+msgstr ""
+
+msgid "Address"
+msgstr "Adres"
+
+msgid "Address could not be looked up."
+msgstr ""
+
+msgid "Address lookup failed."
+msgstr ""
+
+msgid "Adv. Backlinks"
+msgstr ""
+
+msgid "Advanced"
+msgstr "Geavanceerd"
+
+msgid "Advanced Analysis"
+msgstr ""
+
+msgid "Advanced Backlink Analysis"
+msgstr "Geavanceerde backlinkanalyse"
+
+msgid "Advanced Backlinks"
+msgstr ""
+
+msgid "Advanced Settings"
+msgstr "Geavanceerde instellingen"
+
+msgid "Advice:"
+msgstr ""
+
+msgid "Aggregate Rating"
+msgstr ""
+
+msgid "Ahrefs"
+msgstr "Ahrefs"
+
+msgid "Ahrefs (current site)"
+msgstr ""
+
+msgid "Ahrefs API Key"
+msgstr ""
+
+msgid "Ahrefs API error"
+msgstr ""
+
+msgid "Ahrefs API key not configured."
+msgstr ""
+
+msgid "Ahrefs Domain Overview"
+msgstr ""
+
+msgid "Alert not found"
+msgstr ""
+
+msgid "All"
+msgstr "Alle"
+
+msgid "All Events"
+msgstr ""
+
+msgid "All Pages"
+msgstr ""
+
+msgid "All Pages in Cluster"
+msgstr ""
+
+msgid "All Platforms"
+msgstr ""
+
+msgid "All Results"
+msgstr ""
+
+msgid "All Search Intent"
+msgstr ""
+
+msgid "All Severities"
+msgstr ""
+
+msgid "All clusters"
+msgstr ""
+
+msgid "All data shown while demo mode is active is fictitious and clearly labelled."
+msgstr ""
+
+msgid "All filters"
+msgstr ""
+
+msgid "All ideas"
+msgstr ""
+
+msgid "All ideas deleted"
+msgstr ""
+
+msgid "All posts:"
+msgstr ""
+
+msgid "All published posts"
+msgstr ""
+
+msgid "All ranked keywords"
+msgstr ""
+
+msgid "Allow paths (one per line)"
+msgstr ""
+
+msgid "Already Reviewed"
+msgstr ""
+
+msgid "Alt Text"
+msgstr "Alt-tekst"
+
+msgid "Always hide"
+msgstr ""
+
+msgid "Always show"
+msgstr ""
+
+msgid "Analysis Results"
+msgstr ""
+
+msgid "Analysis failed"
+msgstr ""
+
+msgid "Analytics 4"
+msgstr ""
+
+msgid "Analyze"
+msgstr "Analyseren"
+
+msgid "Analyze SERP"
+msgstr ""
+
+msgid "Analyze Site"
+msgstr ""
+
+msgid "Analyze and optimize your publishing schedule?"
+msgstr ""
+
+msgid "Analyze the competitive landscape for any keyword. See what top-ranking pages cover, identify gaps, and find winning patterns."
+msgstr ""
+
+msgid "Analyze top competitors"
+msgstr ""
+
+msgid "Analyzed links: %d"
+msgstr "Geanalyseerde links: %d"
+
+msgid "Analyzing content and generating AI suggestions..."
+msgstr ""
+
+msgid "Analyzing gaps..."
+msgstr ""
+
+msgid "Analyzing keyword and generating article... This may take 1-2 minutes."
+msgstr ""
+
+msgid "Analyzing..."
+msgstr "Analyseren..."
+
+msgid "Anchor Text"
+msgstr "Ankertekst"
+
+msgid "Anchor Text Analysis"
+msgstr "Ankertekst-analyse"
+
+msgid "Anchor Text Distribution"
+msgstr "Ankertekst-verdeling"
+
+msgid "Anchor Text Variants"
+msgstr ""
+
+msgid "Answer"
+msgstr ""
+
+msgid "Answer at least 3-5 related questions in your content"
+msgstr ""
+
+msgid "Answer question-based, long-tail queries in your content (e.g., “What is the best {category}?”)."
+msgstr ""
+
+msgid "Answer:"
+msgstr ""
+
+msgid "Anthropic API key is invalid. Check the key in SaaS Settings."
+msgstr ""
+
+msgid "Anthropic rate limit reached. Wait briefly or upgrade your Anthropic plan."
+msgstr ""
+
+msgid "ApexFlow"
+msgstr ""
+
+msgid "ApexFlow requires a Professional or higher license."
+msgstr ""
+
+msgid "ApexFlow run started. Check the log below."
+msgstr ""
+
+msgid "ApexFlow scans your site to determine the niche. Adjust the detected values if needed."
+msgstr ""
+
+msgid "ApexFlow scheduled %d new posts:\n\n%s\n\nManage: %s"
+msgstr ""
+
+msgid "ApexFlow — Content Autopilot"
+msgstr ""
+
+msgid "Appearance"
+msgstr "Uiterlijk"
+
+msgid "Append to existing content instead of replacing"
+msgstr ""
+
+msgid "Applies a dark Fyndable theme to the plugin admin pages."
+msgstr ""
+
+msgid "Apply AI Suggestion"
+msgstr ""
+
+msgid "Apply Changes"
+msgstr ""
+
+msgid "Apply brand voice to generated content"
+msgstr ""
+
+msgid "Approve"
+msgstr ""
+
+msgid "Approve & Publish"
+msgstr ""
+
+msgid "Approve and publish this content?"
+msgstr ""
+
+msgid "Approved"
+msgstr ""
+
+msgid "Approver:"
+msgstr ""
+
+msgid "Are you sure you want to disconnect your Google account? This will remove access to Search Console and Analytics 4."
+msgstr ""
+
+msgid "Areas of Expertise"
+msgstr ""
+
+msgid "Article"
+msgstr ""
+
+msgid "Article Settings"
+msgstr ""
+
+msgid "Article generated successfully!"
+msgstr ""
+
+msgid "Article generation failed: %s"
+msgstr ""
+
+msgid "Ask your question..."
+msgstr ""
+
+msgid "Assigned To"
+msgstr ""
+
+msgid "Assigned To:"
+msgstr ""
+
+msgid "Attachment is not an image"
+msgstr ""
+
+msgid "Audience (optional)"
+msgstr ""
+
+msgid "Audit Existing Content"
+msgstr ""
+
+msgid "Audit failed"
+msgstr ""
+
+msgid "Auditing..."
+msgstr ""
+
+msgid "Author"
+msgstr "Auteur"
+
+msgid "Author Expertise"
+msgstr ""
+
+msgid "Author Sitemap:"
+msgstr ""
+
+msgid "Author, dates, sources, research"
+msgstr ""
+
+msgid "Authoritative"
+msgstr "Autoritair"
+
+msgid "Authoritativeness"
+msgstr ""
+
+msgid "Authoritativeness:"
+msgstr ""
+
+msgid "Authority Potential"
+msgstr ""
+
+msgid "Auto Export"
+msgstr ""
+
+msgid "Auto Repair"
+msgstr ""
+
+msgid "Auto-Fix"
+msgstr ""
+
+msgid "Auto-detect"
+msgstr ""
+
+msgid "Auto-extract FAQs from content"
+msgstr ""
+
+msgid "Auto-generate SEO-friendly alt text for images"
+msgstr "Genereer automatisch SEO-vriendelijke alt-tekst voor afbeeldingen"
+
+msgid "Auto-insert FAQs into post content"
+msgstr ""
+
+msgid "Auto-link rule added."
+msgstr ""
+
+msgid "Auto-publish on the planned date"
+msgstr ""
+
+msgid "Auto-share content to social platforms"
+msgstr "Deel content automatisch op social media platforms"
+
+msgid "Auto-update content on severe drops"
+msgstr ""
+
+msgid "Auto-update threshold:"
+msgstr ""
+
+msgid "Autofill Address"
+msgstr ""
+
+msgid "Automatic Indexing"
+msgstr ""
+
+msgid "Automatically add internal links to this orphan page?"
+msgstr ""
+
+msgid "Automatically add internal links to your content based on custom rules and AI-powered suggestions."
+msgstr ""
+
+msgid "Automatically detect and extract FAQ patterns from your content"
+msgstr ""
+
+msgid "Automatically export reports to Google Drive"
+msgstr ""
+
+msgid "Automatically generate featured and social images with AI."
+msgstr ""
+
+msgid "Automatically insert internal links on post content"
+msgstr ""
+
+msgid "Automatically ping Google and Bing when sitemap is updated."
+msgstr ""
+
+msgid "Automatically research, plan and write content every week"
+msgstr ""
+
+msgid "Automatically trash AI posts without traffic. Uses an internal counter (bots and logged-in users excluded)."
+msgstr ""
+
+msgid "Automation"
+msgstr "Automatisering"
+
+msgid "Available AI Tools"
+msgstr "Beschikbare AI hulpmiddelen"
 
 msgid "Available in post editor sidebar"
 msgstr "Beschikbaar in de zijbalk van de berichteditor"
 
-# XML Sitemaps
-msgid "XML Sitemaps"
-msgstr "XML-sitemaps"
+msgid "Available variables: %title%, %separator%, %sitename%"
+msgstr "Beschikbare variabelen: %title%, %separator%, %sitename%"
 
-msgid "Sitemap Status"
-msgstr "Sitemap-status"
+msgid "Average SEO Score"
+msgstr ""
 
-msgid "Loading sitemap status..."
-msgstr "Sitemap-status laden..."
+msgid "Average: %.1f words/sentence."
+msgstr ""
 
-msgid "Run Full Sitemap Health Check"
-msgstr "Volledige sitemap-gezondheidscheck uitvoeren"
+msgid "Average: %.1f words/sentence. Aim for under 20."
+msgstr ""
 
-msgid "Sitemap Index Found"
-msgstr "Sitemap-index gevonden"
+msgid "Average: %.1f words/sentence. Try to shorten some."
+msgstr ""
 
-msgid "XML Sitemap Found"
-msgstr "XML-sitemap gevonden"
+msgid "Avg CTR"
+msgstr ""
 
-msgid "Sitemap size:"
-msgstr "Sitemap-grootte:"
+msgid "Avg FAQs per Post"
+msgstr ""
 
-msgid "No Sitemap Found"
-msgstr "Geen sitemap gevonden"
+msgid "Avg Headings"
+msgstr ""
 
-msgid "Neither sitemap.xml nor sitemap_index.xml could be found."
-msgstr "sitemap.xml en sitemap_index.xml zijn niet gevonden."
+msgid "Avg Internal Links"
+msgstr ""
 
-msgid "Open Sitemap Settings"
-msgstr "Open sitemap-instellingen"
+msgid "Avg Position"
+msgstr ""
 
-msgid "Error loading sitemap status"
-msgstr "Fout bij laden sitemap-status"
+msgid "Avg Time-to-Rank"
+msgstr ""
 
-msgid "Unknown error"
-msgstr "Onbekende fout"
+msgid "Avg Word Count"
+msgstr ""
 
-msgid "Running sitemap health check..."
-msgstr "Sitemap-gezondheidscheck wordt uitgevoerd..."
+msgid "Avg. Position"
+msgstr ""
 
-msgid "Sitemap Health Check Results"
-msgstr "Resultaten sitemap-gezondheidscheck"
+msgid "Back"
+msgstr "Terug"
 
-msgid "Sitemap URL:"
-msgstr "Sitemap-URL:"
+msgid "Back to WordPress"
+msgstr ""
 
-msgid "Total URLs"
-msgstr "Totaal aantal URL's"
+msgid "Back to tickets"
+msgstr ""
 
-msgid "Valid URLs"
-msgstr "Geldige URL's"
+msgid "Backlink & Authority Analysis"
+msgstr "Backlink- & autoriteitsanalyse"
 
-msgid "Invalid URLs"
-msgstr "Ongeldige URL's"
+msgid "Backlink Analysis"
+msgstr ""
 
-msgid "Issues Found"
-msgstr "Problemen gevonden"
+msgid "Backlink Profile"
+msgstr ""
 
-msgid "No issues found! Your sitemap is healthy."
-msgstr "Geen problemen gevonden! Je sitemap is gezond."
+msgid "Backlink Strategy"
+msgstr ""
 
-# Client / Dashboard / Connection
-msgid "License is active!"
-msgstr "Licentie is actief!"
+msgid "Backlink monitoring and site explorer"
+msgstr "Backlink monitoring en site verkenner"
 
-msgid "Your license key: %s"
-msgstr "Jouw licentiesleutel: %s"
+msgid "Backlinks"
+msgstr "Backlinks"
 
-msgid "Tenant Key: %s"
-msgstr "Tenant-sleutel: %s"
+msgid "Base Keyword:"
+msgstr ""
 
-msgid "Limit resets in %d minutes"
-msgstr "Limiet wordt over %d minuten hersteld"
+msgid "Baseline set successfully!"
+msgstr ""
 
-msgid "Your current plan: %s"
-msgstr "Jouw huidige plan: %s"
+msgid "Basic SEO Configuration"
+msgstr "Basis SEO-configuratie"
 
-# Alerts
+msgid "Best"
+msgstr ""
+
+msgid "Bio Completeness"
+msgstr ""
+
+msgid "Blog"
+msgstr ""
+
+msgid "Blog ID (optional)"
+msgstr ""
+
+msgid "Blog Posting"
+msgstr ""
+
+msgid "Brand"
+msgstr ""
+
+msgid "Brand & AI Search Visibility"
+msgstr ""
+
+msgid "Brand Information"
+msgstr "Merkinformatie"
+
+msgid "Brand Mentioned"
+msgstr ""
+
+msgid "Brand Mentions"
+msgstr ""
+
+msgid "Brand Name"
+msgstr "Merknaam"
+
+msgid "Brand Settings"
+msgstr "Merk instellingen"
+
+msgid "Brand Style References"
+msgstr ""
+
+msgid "Brand Style/Mood"
+msgstr ""
+
+msgid "Brand Visibility"
+msgstr ""
+
+msgid "Brand Voice"
+msgstr "Merkstem"
+
+msgid "Brand Voice & Tone"
+msgstr "Merkstem & toon"
+
+msgid "Brand Voice Engine"
+msgstr ""
+
+msgid "Brand Voice Settings"
+msgstr ""
+
+msgid "Branded"
+msgstr "Merk"
+
+msgid "Branded anchors: %s%%"
+msgstr "Merkankers: %s%%"
+
+msgid "Branding"
+msgstr "Branding"
+
+msgid "Breadcrumb"
+msgstr ""
+
+msgid "Breadcrumbs (auto)"
+msgstr ""
+
+msgid "Brief description of your website or business..."
+msgstr "Korte beschrijving van je website of bedrijf..."
+
+msgid "Broken Backlink Opportunities"
+msgstr "Broken backlink-kansen"
+
+msgid "Broken Target"
+msgstr ""
+
+msgid "Broken links, competitor targets & anchor risk analysis"
+msgstr ""
+
+msgid "Bug"
+msgstr ""
+
+msgid "Build Topic Authority"
+msgstr "Bouw onderwerpautoriteit"
+
+msgid "Build internal links and earn external citations from trusted sources to increase your topical authority."
+msgstr ""
+
+msgid "Build topical authority with pillar-cluster content maps. Plan comprehensive content strategies."
+msgstr ""
+
+msgid "Bulk Actions"
+msgstr "Bulk acties"
+
+msgid "Bulk Image Generation"
+msgstr ""
+
+msgid "Bulk Optimization"
+msgstr ""
+
+msgid "Bulk Optimizer"
+msgstr "Bulkoptimalisatie"
+
+msgid "Bulk generate meta titles and descriptions"
+msgstr "Genereer meta-titels en -omschrijvingen in bulk"
+
+msgid "Bulk generation completed!"
+msgstr ""
+
+msgid "Business"
+msgstr ""
+
+msgid "Business Image"
+msgstr ""
+
+msgid "Business Name"
+msgstr ""
+
+msgid "Business Type"
+msgstr ""
+
+msgid "Business URL"
+msgstr ""
+
+msgid "Business context"
+msgstr ""
+
+msgid "CPC"
+msgstr ""
+
+msgid "CTR"
+msgstr "CTR"
+
+msgid "Calendar Preview"
+msgstr ""
+
+msgid "Calendar Preview (not yet scheduled)"
+msgstr ""
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Cancelled"
+msgstr "Geannuleerd"
+
+msgid "Cannibalization"
+msgstr ""
+
+msgid "Cannibalization Dashboard"
+msgstr ""
+
+msgid "Cannot delete default or missing template."
+msgstr ""
+
+msgid "Cannot write article — Content Writer not available or no keyword specified."
+msgstr ""
+
+msgid "Canonical URL"
+msgstr "Canonical URL"
+
+msgid "Case Sensitive"
+msgstr ""
+
+msgid "Casual"
+msgstr "Informeel"
+
+msgid "Category"
+msgstr "Categorie"
+
+msgid "Category / Industry"
+msgstr ""
+
+msgid "Change"
+msgstr "Wijziging"
+
+msgid "Change status to:"
+msgstr ""
+
+msgid "ChatGPT Mentions"
+msgstr ""
+
+msgid "Chatbot setting saved."
+msgstr ""
+
+msgid "Check"
+msgstr ""
+
+msgid "Check AI Response"
+msgstr ""
+
+msgid "Check All Now"
+msgstr ""
+
+msgid "Check Originality"
+msgstr ""
+
+msgid "Check for Updates"
+msgstr ""
+
+msgid "Check queue status"
+msgstr ""
+
+msgid "Check your SEO Dashboard for site health overview"
+msgstr "Bekijk je SEO-dashboard voor een overzicht van je sitegezondheid"
+
+msgid "Choose which post types and taxonomies are included in your sitemap."
+msgstr ""
+
+msgid "Cities, regions or countries. Suggestions appear automatically while typing."
+msgstr ""
+
+msgid "City"
+msgstr "Stad"
+
+msgid "Claude Mentions"
+msgstr ""
+
+msgid "Clear Keyword Pool"
+msgstr "Keyword-pool legen"
+
+msgid "Clear Planned Posts"
+msgstr "Geplande posts wissen"
+
+msgid "Clear custom canonical"
+msgstr ""
+
+msgid "Click \"Generate LSI Keywords\" to get suggestions based on your focus keyphrase."
+msgstr ""
+
+msgid "Click \"Generate Link Opportunities\" to find internal linking opportunities."
+msgstr ""
+
+msgid "Click \"Generate Smart Tags\" to analyze your content and suggest relevant tags."
+msgstr ""
+
+msgid "Click \"Load Data\" to fetch."
+msgstr ""
+
+msgid "Click \"Validate License\" to refresh Image API credentials from dashboard"
+msgstr ""
+
+msgid "Clicks"
+msgstr "Klikken"
+
+msgid "Close"
+msgstr "Sluiten"
+
+msgid "Closed"
+msgstr "Gesloten"
+
+msgid "Cluster"
+msgstr ""
+
+msgid "Cluster Content"
+msgstr "Cluster content"
+
+msgid "Cluster ID is required"
+msgstr ""
+
+msgid "Cluster Performance"
+msgstr "Cluster prestaties"
+
+msgid "Cluster data required"
+msgstr ""
+
+msgid "Cluster map generation queued. Poll /clusters/map-queue/{queue_id} for status."
+msgstr ""
+
+msgid "Cluster map queue cancelled"
+msgstr ""
+
+msgid "Cluster map queue not found"
+msgstr ""
+
+msgid "Cluster map ready"
+msgstr ""
+
+msgid "Cluster saved!"
+msgstr ""
+
+msgid "Clusters"
+msgstr ""
+
+msgid "Collection ID"
+msgstr ""
+
+msgid "Comma-separated list of post/page IDs to exclude from the sitemap."
+msgstr ""
+
+msgid "Comma-separated list of related keywords"
+msgstr ""
+
+msgid "Commercial"
+msgstr ""
+
+msgid "Common Keywords"
+msgstr ""
+
+msgid "Company Branding"
+msgstr "Bedrijfsbranding"
+
+msgid "Company Branding: Configured"
+msgstr "Bedrijfsbranding: Ingesteld"
+
+msgid "Company Logo (optional)"
+msgstr "Bedrijfslogo (optioneel)"
+
+msgid "Company Name"
+msgstr "Bedrijfsnaam"
+
+msgid "Compare"
+msgstr ""
+
+msgid "Compare Your Content"
+msgstr ""
+
+msgid "Compare with domain (optional)"
+msgstr ""
+
+msgid "Comparing..."
+msgstr ""
+
+msgid "Competition"
+msgstr ""
+
+msgid "Competitor"
+msgstr "Concurrent"
+
+msgid "Competitor \"%s\" is mentioned frequently. Create comparison content that highlights your unique value proposition."
+msgstr ""
+
+msgid "Competitor Analysis"
+msgstr ""
+
+msgid "Competitor Backlink Analysis"
+msgstr ""
+
+msgid "Competitor Backlink Targets"
+msgstr "Concurrent-backlink doelen"
+
+msgid "Competitor Domain"
+msgstr ""
+
+msgid "Competitor Domain:"
+msgstr "Concurrent-domein:"
+
+msgid "Competitor Keyword Strategy"
+msgstr ""
+
+msgid "Competitor Mentions"
+msgstr ""
+
+msgid "Competitor Profiles"
+msgstr ""
+
+msgid "Competitor Research"
+msgstr "Concurrentieonderzoek"
+
+msgid "Competitors"
+msgstr "Concurrenten"
+
+msgid "Competitors (one per line)"
+msgstr ""
+
+msgid "Competitors Linked"
+msgstr "Gelinkte concurrenten"
+
+msgid "Completed"
+msgstr "Voltooid"
+
+msgid "Compliment"
+msgstr ""
+
+msgid "Comprehensive Content"
+msgstr ""
+
+msgid "Comprehensive SEO Analysis"
+msgstr "Uitgebreide SEO analyse"
+
+msgid "Conclusion"
+msgstr ""
+
+msgid "Configuration"
+msgstr ""
+
+msgid "Configuration Summary"
+msgstr "Configuratiesamenvatting"
+
+msgid "Configuration saved!"
+msgstr ""
+
+msgid "Configure GA4"
+msgstr ""
+
+msgid "Configure geographic targeting for local SEO"
+msgstr ""
+
+msgid "Configure how AI-generated content should sound for your brand."
+msgstr "Stel in hoe door AI gegenereerde content moet klinken voor je merk."
+
+msgid "Configure how search engines crawl your site."
+msgstr ""
+
+msgid "Configure target countries above to start tracking rankings."
+msgstr ""
+
+msgid "Configure the built-in social share buttons"
+msgstr ""
+
+msgid "Configure which user roles can access AI SEO features:"
+msgstr ""
+
+msgid "Connect"
+msgstr "Verbinden"
+
+msgid "Connect Google Analytics 4 to track content performance."
+msgstr ""
+
+msgid "Connect Google Search Console for search performance data"
+msgstr "Verbind Google Search Console voor zoekprestatiedata"
+
+msgid "Connect Google services for enhanced SEO insights. You can always do this later."
+msgstr "Verbind Google-diensten voor extra SEO-inzichten. Je kunt dit later altijd doen."
+
+msgid "Connect Mobile App"
+msgstr ""
+
+msgid "Connect Your License"
+msgstr "Verbind je licentie"
+
+msgid "Connect Your Tools"
+msgstr "Verbind je tools"
+
+msgid "Connect external services and configure notifications."
+msgstr ""
+
+msgid "Connect to"
+msgstr ""
+
+msgid "Connect to SEO AI Service"
+msgstr "Verbind met Fyndable Smart SEO"
+
+msgid "Connect with Google"
+msgstr ""
+
+msgid "Connect your Google account once to access Search Console and Google Analytics 4 data. A single login grants access to all services."
+msgstr ""
+
+msgid "Connect your Google account via Integrations to see data here."
+msgstr ""
+
+msgid "Connected"
+msgstr "Verbonden"
+
+msgid "Connected to Google"
+msgstr ""
+
+msgid "Connected, but the indexing scope is missing. Reconnect via the Google Services card above."
+msgstr ""
+
+msgid "Connecting your license, please wait..."
+msgstr ""
+
+msgid "Connection"
+msgstr "Verbinding"
+
+msgid "Consider expanding your content to at least 500 words. Currently at %d words."
+msgstr ""
+
+msgid "Contact"
+msgstr ""
+
+msgid "Content"
+msgstr "Content"
+
+msgid "Content & Keywords"
+msgstr "Content & zoekwoorden"
+
+msgid "Content Approval Required"
+msgstr ""
+
+msgid "Content Brief"
+msgstr "Content Brief"
+
+msgid "Content Brief Generator"
+msgstr ""
+
+msgid "Content Calendar"
+msgstr "Contentkalender"
+
+msgid "Content Calendar & Workflow"
+msgstr ""
+
+msgid "Content Decay"
+msgstr ""
+
 msgid "Content Decay Alert:"
 msgstr "Contentverval alert:"
 
-msgid "\"%1$s\" dropped %2$d positions for \"%3$s\""
-msgstr "\"%1$s\" is %2$d posities gezakt voor \"%3$s\""
+msgid "Content Decay Detection"
+msgstr ""
 
-msgid "Fix now"
-msgstr "Nu oplossen"
-
-msgid "View All Decay Alerts"
-msgstr "Bekijk alle vervalwaarschuwingen"
+msgid "Content Decay Fix"
+msgstr ""
 
 msgid "Content Decay Warning:"
 msgstr "Contentverval waarschuwing:"
 
-msgid "%d post is losing rankings"
-msgid_plural "%d posts are losing rankings"
-msgstr[0] "%d bericht verliest rankings"
-msgstr[1] "%d berichten verliezen rankings"
+msgid "Content Depth"
+msgstr ""
 
-msgid "\"%s\" dropped %d positions"
-msgstr "\"%s\" is %d posities gezakt"
+msgid "Content Gap Calendar"
+msgstr ""
 
-msgid "Position trend (last 30 days)"
-msgstr "Positietrend (laatste 30 dagen)"
+msgid "Content Gaps & Opportunities"
+msgstr ""
 
-msgid "No trend data available yet. Track keywords to see position trends."
-msgstr "Nog geen trenddata beschikbaar. Volg zoekwoorden om positietrends te zien."
+msgid "Content Generation Complete!"
+msgstr ""
 
-# Demo
+msgid "Content Ideas"
+msgstr "Content ideeën"
+
+msgid "Content Language"
+msgstr ""
+
+msgid "Content Length"
+msgstr ""
+
+msgid "Content Optimizer"
+msgstr "Content optimaliseerder"
+
+msgid "Content Outline"
+msgstr ""
+
+msgid "Content Performance"
+msgstr ""
+
+msgid "Content Performance Monitor"
+msgstr "Content Prestatiemonitor"
+
+msgid "Content Published"
+msgstr ""
+
+msgid "Content Publishing Calendar"
+msgstr ""
+
+msgid "Content Repurposer"
+msgstr "Content hergebruiker"
+
+msgid "Content Rewriter"
+msgstr "Content herschrijver"
+
+msgid "Content Score"
+msgstr "Contentscore"
+
+msgid "Content Scoring"
+msgstr ""
+
+msgid "Content Sections (one per line)"
+msgstr ""
+
+msgid "Content Strategy"
+msgstr ""
+
+msgid "Content Structure"
+msgstr ""
+
+msgid "Content Template (HTML outline with variables)"
+msgstr ""
+
+msgid "Content Types"
+msgstr "Contenttypen"
+
+msgid "Content Types & Features"
+msgstr "Contenttypen & functies"
+
+msgid "Content Types: Selected"
+msgstr "Contenttypen: Geselecteerd"
+
+msgid "Content Workflow"
+msgstr ""
+
+msgid "Content Writer"
+msgstr "Content schrijver"
+
+msgid "Content appears unique within your site."
+msgstr ""
+
+msgid "Content approved!"
+msgstr ""
+
+msgid "Content decay alerts"
+msgstr ""
+
+msgid "Content inserted into the editor."
+msgstr ""
+
+msgid "Content is being generated in the background..."
+msgstr ""
+
+msgid "Content is generated via WP-Cron. You can close this page — come back later or check your drafts."
+msgstr ""
+
+msgid "Content must be at least 50 words for originality analysis"
+msgstr ""
+
+msgid "Content override (empty = original)"
+msgstr ""
+
+msgid "Content override for variant B"
+msgstr ""
+
+msgid "Content readability is already good!"
+msgstr ""
+
+msgid "Content ready for review: %s"
+msgstr ""
+
+msgid "Content rejected"
+msgstr ""
+
+msgid "Content required"
+msgstr ""
+
+msgid "Content should be 1500+ words for knowledge panel consideration"
+msgstr ""
+
+msgid "Content title..."
+msgstr ""
+
+msgid "Content words range:"
+msgstr ""
+
+msgid "Context / Instructions for AI:"
+msgstr ""
+
+msgid "Continue"
+msgstr "Doorgaan"
+
+msgid "Conversation not found"
+msgstr ""
+
+msgid "Conversational"
+msgstr "Gesprekstijl"
+
+msgid "Conversions"
+msgstr "Conversies"
+
+msgid "Converted"
+msgstr ""
+
+msgid "Coordinates"
+msgstr ""
+
+msgid "Coordinates (Lat, Lng)"
+msgstr ""
+
+msgid "Copied!"
+msgstr ""
+
+msgid "Copy"
+msgstr "Kopiëren"
+
+msgid "Copy or open these links to share your content organically."
+msgstr ""
+
+msgid "Copy this content to the product description field."
+msgstr ""
+
+msgid "Core Topic"
+msgstr ""
+
+msgid "Core Web Vitals and performance metrics"
+msgstr "Core Web Vitals en prestatiemetingen"
+
+msgid "Core topics (comma-separated)"
+msgstr ""
+
+msgid "Could not check for updates. Please verify your license and dashboard connection."
+msgstr ""
+
+msgid "Could not connect to AI service."
+msgstr ""
+
+msgid "Could not connect to API service."
+msgstr ""
+
+msgid "Could not connect to license server."
+msgstr ""
+
+msgid "Could not create support ticket."
+msgstr ""
+
+msgid "Could not create ticket. Please try again later."
+msgstr ""
+
+msgid "Could not determine post URL."
+msgstr ""
+
+msgid "Could not fetch place predictions."
+msgstr ""
+
+msgid "Could not find the editor. Please insert manually from the preview."
+msgstr ""
+
+msgid "Could not forward ticket."
+msgstr ""
+
+msgid "Could not geocode address."
+msgstr ""
+
+msgid "Could not load ticket."
+msgstr ""
+
+msgid "Could not mark ticket as read."
+msgstr ""
+
+msgid "Could not parse AI response"
+msgstr ""
+
+msgid "Could not parse fact-check response"
+msgstr ""
+
+msgid "Could not reach OpenAI. Verify the network connection and API key."
+msgstr ""
+
+msgid "Could not reach OpenRouter. Verify the network connection and API key."
+msgstr ""
+
+msgid "Could not read file"
+msgstr ""
+
+msgid "Could not retrieve feedback."
+msgstr ""
+
+msgid "Could not retrieve support ticket."
+msgstr ""
+
+msgid "Could not retrieve support tickets."
+msgstr ""
+
+msgid "Could not retrieve tenant status."
+msgstr ""
+
+msgid "Could not retrieve usage status."
+msgstr ""
+
+msgid "Could not send reply."
+msgstr ""
+
+msgid "Could not submit feedback."
+msgstr ""
+
+msgid "Could not upload screenshot."
+msgstr ""
+
+msgid "Count"
+msgstr "Aantal"
+
+msgid "Country"
+msgstr "Land"
+
+msgid "Country-Specific Content Recommendations"
+msgstr ""
+
+msgid "Course"
+msgstr ""
+
+msgid "Coverage"
+msgstr ""
+
+msgid "Coverage:"
+msgstr ""
+
+msgid "Covered"
+msgstr ""
+
+msgid "Crawl Budget Analysis"
+msgstr ""
+
+msgid "Crawl Budget Wasters"
+msgstr ""
+
+msgid "Crawl errors, broken links, redirect chains"
+msgstr "Crawl fouten, gebroken links, redirect ketens"
+
+msgid "Crawl-delay (seconds)"
+msgstr ""
+
+msgid "Crawlability"
+msgstr ""
+
+msgid "Crawlable:"
+msgstr ""
+
+msgid "Create A/B Test"
+msgstr ""
+
+msgid "Create Content"
+msgstr ""
+
+msgid "Create New Test"
+msgstr "Nieuwe test aanmaken"
+
+msgid "Create Test"
+msgstr "Test aanmaken"
+
+msgid "Create Ticket"
+msgstr ""
+
+msgid "Create WordPress draft automatically"
+msgstr ""
+
+msgid "Create a support ticket directly"
+msgstr ""
+
+msgid "Create a topic cluster from these keywords"
+msgstr ""
+
+msgid "Create comprehensive pillar content for core topics"
+msgstr "Creëer uitgebreide pillar content voor kernonderwerpen"
+
+msgid "Create draft"
+msgstr ""
+
+msgid "Create drafts for review first"
+msgstr ""
+
+msgid "Create interconnected content clusters to dominate search rankings"
+msgstr "Creëer onderling verbonden contentclusters om zoekresultaten te domineren"
+
+msgid "Create or assign a post targeting this keyword — currently nothing is optimized for it."
+msgstr ""
+
+msgid "Create outline"
+msgstr ""
+
+msgid "Create support ticket"
+msgstr ""
+
+msgid "Created"
+msgstr "Aangemaakt"
+
+msgid "Created %s"
+msgstr ""
+
+msgid "Created Draft"
+msgstr ""
+
+msgid "Created Posts"
+msgstr "Aangemaakte berichten"
+
+msgid "Created from"
+msgstr ""
+
+msgid "Created to"
+msgstr ""
+
+msgid "Created until"
+msgstr ""
+
+msgid "Credential Title"
+msgstr ""
+
+msgid "Credentials"
+msgstr ""
+
+msgid "Credits used / available:"
+msgstr ""
+
+msgid "Critical"
+msgstr "Kritiek"
+
+msgid "Critical issues"
+msgstr "Kritieke problemen"
+
+msgid "Currency"
+msgstr ""
+
+msgid "Currency for prices mentioned in this content"
+msgstr ""
+
+msgid "Current AI API usage and limits"
+msgstr ""
+
+msgid "Current Alt Text"
+msgstr ""
+
+msgid "Current Plan"
+msgstr ""
+
+msgid "Current page: %s (sent automatically)"
+msgstr ""
+
+msgid "Custom Auto-Link Rules"
+msgstr ""
+
+msgid "Custom Canonical URL"
+msgstr ""
+
+msgid "Custom JSON-LD (optional)"
+msgstr ""
+
+msgid "Custom Outline (optional)"
+msgstr ""
+
+msgid "Custom Prompt Instructions"
+msgstr ""
+
+msgid "Custom Sitemap URL"
+msgstr ""
+
+msgid "Custom Webhooks"
+msgstr ""
+
+msgid "Custom instructions for AI content generation"
+msgstr "Aangepaste instructies voor AI contentgeneratie"
+
+msgid "Custom robots.txt"
+msgstr ""
+
+msgid "Custom sections"
+msgstr ""
+
+msgid "Customer ID"
+msgstr ""
+
+msgid "Customize the appearance of the Fyndable backend."
+msgstr ""
+
+msgid "DA"
+msgstr ""
+
+msgid "DR"
+msgstr "DR"
+
+msgid "Daily"
+msgstr "Dagelijks"
+
+msgid "Daily Direct Index quota reached."
+msgstr ""
+
+msgid "Daily SEO Report - %s"
+msgstr ""
+
+msgid "Daily Traffic"
+msgstr "Dagelijks verkeer"
+
+msgid "Daily summary report"
+msgstr ""
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Dashboard URL"
+msgstr "Dashboard URL"
+
+msgid "Dashboard URL:"
+msgstr "Dashboard URL:"
+
+msgid "Dashboard loading..."
+msgstr "Dashboard laden..."
+
+msgid "Dashboard not configured"
+msgstr ""
+
+msgid "Data synced to Notion!"
+msgstr ""
+
+msgid "Data-driven"
+msgstr ""
+
+msgid "DataForSEO (via Portal)"
+msgstr ""
+
+msgid "DataForSEO API Credentials"
+msgstr ""
+
+msgid "DataForSEO Backlinks"
+msgstr ""
+
+msgid "DataForSEO credentials are configured in the Portal/SaaS Dashboard settings. Backlink data is fetched automatically through the Portal proxy — no client-side API key required."
+msgstr ""
+
+msgid "DataForSEO credentials are invalid. Check the API key in SaaS Settings."
+msgstr ""
+
+msgid "DataForSEO request failed"
+msgstr ""
+
+msgid "DataForSEO runs through the Portal proxy. Ahrefs, SE Ranking and Semrush use your own API keys configured below."
+msgstr ""
+
+msgid "Database"
+msgstr ""
+
+msgid "Database ID"
+msgstr ""
+
+msgid "Database ID where SEO data will be synced"
+msgstr ""
+
+msgid "Dataset"
+msgstr ""
+
+msgid "Dataset (JSON array of objects)"
+msgstr ""
+
+msgid "Dataset required"
+msgstr ""
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Days threshold"
+msgstr ""
+
+msgid "Deactivate License"
+msgstr ""
+
+msgid "Deadline Reminders"
+msgstr "Deadline herinneringen"
+
+msgid "Decay Alerts"
+msgstr ""
+
+msgid "Decide which post should rank for this keyword. Strengthen internal links to it and differentiate the other posts\' titles and focus."
+msgstr ""
+
+msgid "Declining posts:"
+msgstr ""
+
+msgid "Deep (20-30 clusters)"
+msgstr ""
+
+msgid "Deep Gap Analysis"
+msgstr ""
+
+msgid "Deepseek API key is invalid. Check the key in SaaS Settings."
+msgstr ""
+
+msgid "Deepseek rate limit reached. Wait briefly or upgrade your Deepseek plan."
+msgstr ""
+
+msgid "Default"
+msgstr "Standaard"
+
+msgid "Default (All)"
+msgstr ""
+
+msgid "Default Channel"
+msgstr ""
+
+msgid "Default Currency"
+msgstr ""
+
+msgid "Default Local SERP Grid"
+msgstr ""
+
+msgid "Default Local SERP Radius (km)"
+msgstr ""
+
+msgid "Default Word Count"
+msgstr ""
+
+msgid "Default author"
+msgstr ""
+
+msgid "Default number of words for AI-generated content (used when no specific count is set)"
+msgstr ""
+
+msgid "Default radius for Local SERP scans around your business address."
+msgstr ""
+
+msgid "Default: site tagline"
+msgstr ""
+
+msgid "Define keywords that should automatically be linked to specific URLs. These rules are applied before AI suggestions."
+msgstr ""
+
+msgid "Define who your content is intended for"
+msgstr ""
+
+msgid "Define your brand voice once — all AI-generated content will follow it automatically."
+msgstr ""
+
+msgid "Definitional Content"
+msgstr ""
+
+msgid "Delete"
+msgstr "Verwijderen"
+
+msgid "Delete all ideas"
+msgstr ""
+
+msgid "Delete all ideas? This cannot be undone."
+msgstr ""
+
+msgid "Delete selected"
+msgstr ""
+
+msgid "Delete selected keywords?"
+msgstr ""
+
+msgid "Delete this cluster"
+msgstr ""
+
+msgid "Delete this idea?"
+msgstr ""
+
+msgid "Delete this keyword?"
+msgstr ""
+
+msgid "Delete this redirect?"
+msgstr ""
+
+msgid "Delete this rule?"
+msgstr ""
+
+msgid "Delete this template?"
+msgstr ""
+
+msgid "Delete this topic"
+msgstr ""
+
+msgid "Delete this topic from the cluster?"
+msgstr ""
+
+msgid "Deleted %d posts"
+msgstr ""
+
+msgid "Demo Data"
+msgstr "Demodata"
+
 msgid "Demo Mode"
 msgstr "Demo-modus"
 
 msgid "Demo mode is active — all data is fictitious"
 msgstr "Demo-modus is actief — alle data is fictief"
 
-msgid "Demo Data"
-msgstr "Demodata"
+msgid "Dentist"
+msgstr ""
 
-# Direct Index
-msgid "Submit this URL to Google Indexing API"
-msgstr "Dien deze URL in bij de Google Indexing API"
+msgid "Depth"
+msgstr ""
 
-msgid "Index Now"
-msgstr "Nu indexeren"
+msgid "Describe the demographics, interests and characteristics of your target audience"
+msgstr ""
 
-msgid "Connected"
-msgstr "Verbonden"
+msgid "Describe what the image should show. Leave empty to auto-generate from content."
+msgstr ""
 
-msgid "Not connected / missing indexing scope"
-msgstr "Niet verbonden / ontbrekende indexeringsscoop"
+msgid "Describe your brand's voice (e.g., professional, friendly, authoritative)"
+msgstr "Beschrijf de stem van je merk (bijv. professioneel, vriendelijk, gezaghebbend)"
 
-msgid "Quota remaining today: %d / %d"
-msgstr "Resterende quota vandaag: %d / %d"
+msgid "Describe your services, products, expertise, target market, differentiators and topics ApexFlow should avoid."
+msgstr ""
 
-msgid "Index Now is available after publishing."
-msgstr "Nu indexeren is beschikbaar na publiceren."
+msgid "Describe your target audience"
+msgstr "Beschrijf je doelgroep"
 
-# Integrations / Site Audit
-msgid "Critical issues"
-msgstr "Kritieke problemen"
+msgid "Describe your target audience (e.g., small business owners, developers, parents...)"
+msgstr "Beschrijf je doelgroep (bijv. kleine ondernemers, ontwikkelaars, ouders...)"
 
-msgid "Opportunities & action items"
-msgstr "Kansen & actiepunten"
+msgid "Description"
+msgstr "Beschrijving"
 
-msgid "Missing SEO titles:"
-msgstr "Ontbrekende SEO-titels:"
+msgid "Deselect All"
+msgstr "Alles deselecteren"
 
-msgid "posts"
-msgstr "berichten"
+msgid "Details"
+msgstr "Details"
 
-# Onboarding wizard
-msgid "Welcome to Fyndable"
-msgstr "Welkom bij Fyndable"
+msgid "Detected"
+msgstr ""
 
-msgid "Unauthorized"
-msgstr "Niet geautoriseerd"
+msgid "Detects posts and pages competing for the same keyword — a shared focus keyphrase, or multiple titles matching a tracked keyword. Merge, differentiate or redirect to fix."
+msgstr ""
 
-msgid "Free tier is not available. Please activate a license key."
-msgstr "Gratis versie is niet beschikbaar. Activeer een licentiesleutel."
+msgid "Difficult"
+msgstr ""
 
-msgid "Please enter a valid license key and dashboard URL."
-msgstr "Voer een geldige licentiesleutel en dashboard-URL in."
+msgid "Difficult to read"
+msgstr ""
 
-msgid "Invalid response from dashboard. No tenant key received."
-msgstr "Ongeldig antwoord van dashboard. Geen tenant-sleutel ontvangen."
+msgid "Difficulty"
+msgstr "Moeilijkheid"
 
-msgid "Branding"
-msgstr "Branding"
+msgid "Direct GA4 tracking snippet (gtag.js). Only use this if you do NOT track GA4 via the GTM container above, otherwise you will count visitors twice."
+msgstr ""
 
-msgid "Tone of Voice"
-msgstr "Tone of Voice"
+msgid "Direct Index"
+msgstr ""
 
-msgid "SEO Setup"
-msgstr "SEO Setup"
+msgid "Directories"
+msgstr "Bedrijvengidsen"
 
-msgid "Content Types"
-msgstr "Contenttypen"
+msgid "Directory"
+msgstr "Bedrijvengids"
 
-msgid "Review"
-msgstr "Review"
+msgid "Disable"
+msgstr "Uitschakelen"
 
-msgid "Welcome to %s"
-msgstr "Welkom bij %s"
+msgid "Disable only for development environments with self-signed certificates. Disabling on production is a security risk."
+msgstr ""
 
-msgid "Let's get your site SEO-ready in 4 quick steps."
-msgstr "Zet je site SEO-klaar in 4 snelle stappen."
+msgid "Disabled"
+msgstr "Uitgeschakeld"
 
-msgid "Connect Your License"
-msgstr "Verbind je licentie"
+msgid "Disadvantage. You lack topical authority here. Consider building a content cluster first before targeting this keyword directly."
+msgstr ""
+
+msgid "Disallow paths (one per line)"
+msgstr ""
+
+msgid "Disavow"
+msgstr ""
+
+msgid "Discard"
+msgstr ""
+
+msgid "Disconnect"
+msgstr "Verbinding verbreken"
+
+msgid "Disconnected from Google."
+msgstr ""
+
+msgid "Distance"
+msgstr ""
+
+msgid "Doctor"
+msgstr ""
+
+msgid "Dofollow"
+msgstr ""
+
+msgid "Dofollow: %s%%"
+msgstr "Dofollow: %s%%"
+
+msgid "Domain"
+msgstr "Domein"
+
+msgid "Domain Analysis"
+msgstr ""
+
+msgid "Domain Rating"
+msgstr "Domein Rating"
+
+msgid "Domain Rating (DR)"
+msgstr ""
+
+msgid "Domain property: sc-domain:example.com"
+msgstr ""
+
+msgid "Domain, keyword and SERP analysis with SE Ranking, Ahrefs and DataForSEO."
+msgstr ""
+
+msgid "Dominant Format"
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+msgid "Done!"
+msgstr ""
+
+msgid "Download CSV"
+msgstr ""
+
+msgid "Draft"
+msgstr "Concept"
+
+msgid "Drafts"
+msgstr ""
+
+msgid "Drop threshold:"
+msgstr ""
+
+msgid "Due Date:"
+msgstr ""
+
+msgid "Duration (ISO 8601)"
+msgstr ""
+
+msgid "E-E-A-T"
+msgstr "E-E-A-T"
+
+msgid "E-E-A-T Expertise Profile"
+msgstr ""
+
+msgid "E-E-A-T Score"
+msgstr ""
+
+msgid "E-E-A-T Signals"
+msgstr ""
+
+msgid "E-E-A-T Validator"
+msgstr "E-E-A-T Validator"
+
+msgid "EN"
+msgstr ""
+
+msgid "Each object becomes a unique page. Keys must match variables in your template (e.g. {location})."
+msgstr ""
+
+msgid "Easy"
+msgstr ""
+
+msgid "Edit"
+msgstr "Bewerken"
+
+msgid "Edit Draft"
+msgstr ""
+
+msgid "Edit FAQs"
+msgstr ""
+
+msgid "Edit Keyword"
+msgstr ""
+
+msgid "Edit Post"
+msgstr ""
+
+msgid "Edit Profile"
+msgstr ""
+
+msgid "Edit Status"
+msgstr ""
+
+msgid "Edit draft"
+msgstr ""
+
+msgid "Editorial"
+msgstr "Redactioneel"
+
+msgid "Editorial Calendar"
+msgstr "Redactionele kalender"
+
+msgid "Education"
+msgstr "Onderwijs"
+
+msgid "Educational"
+msgstr "Educatief"
+
+msgid "Electrician"
+msgstr ""
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Email Marketing"
+msgstr "E-mail marketing"
+
+msgid "Email Notifications"
+msgstr ""
+
+msgid "Email Reports"
+msgstr ""
+
+msgid "Email address to receive SEO reports"
+msgstr ""
+
+msgid "Email me a weekly summary of scheduled posts"
+msgstr ""
+
+msgid "Email notifications"
+msgstr ""
+
+msgid "Embed relevant video content for video pack eligibility"
+msgstr ""
+
+msgid "Empty = original"
+msgstr ""
+
+msgid "Empty response from SE Ranking API."
+msgstr ""
+
+msgid "Enable"
+msgstr "Inschakelen"
+
+msgid "Enable ApexFlow"
+msgstr ""
+
+msgid "Enable Auto-Linking"
+msgstr ""
+
+msgid "Enable Brand Voice injection"
+msgstr ""
+
+msgid "Enable Schema Markup"
+msgstr "Schema Markup inschakelen"
+
+msgid "Enable Shopify publishing"
+msgstr ""
+
+msgid "Enable Webflow publishing"
+msgstr ""
+
+msgid "Enable XML Sitemap"
+msgstr "XML-sitemap inschakelen"
+
+msgid "Enable auto-cleanup"
+msgstr ""
+
+msgid "Enable dark theme"
+msgstr ""
+
+msgid "Enable demo mode"
+msgstr ""
+
+msgid "Enable llms.txt"
+msgstr ""
+
+msgid "Enable monitoring"
+msgstr ""
+
+msgid "Enable robots.txt editor"
+msgstr "robots.txt-editor inschakelen"
+
+msgid "Enhance your product schema markup for better rich snippet display in Google."
+msgstr ""
+
+msgid "Enter a competitor domain to analyze for this keyword."
+msgstr ""
+
+msgid "Enter a domain and click Analyze to load AI search visibility."
+msgstr ""
+
+msgid "Enter a domain and click Analyze to load competitors."
+msgstr ""
+
+msgid "Enter a domain and click Analyze to load domain analysis."
+msgstr ""
+
+msgid "Enter a keyword"
+msgstr ""
+
+msgid "Enter a keyword and click Analyze to fetch live SERP results."
+msgstr ""
+
+msgid "Enter a keyword and click Analyze to generate the topic model."
+msgstr ""
+
+msgid "Enter a keyword and click Analyze to load keyword research."
+msgstr ""
+
+msgid "Enter a keyword in the search field first"
+msgstr ""
+
+msgid "Enter a keyword to see related keywords, search volume, and difficulty."
+msgstr ""
+
+msgid "Enter a topic to generate keywords..."
+msgstr ""
+
+msgid "Enter a topic..."
+msgstr ""
+
+msgid "Enter answer"
+msgstr ""
+
+msgid "Enter house number (and optionally adjust the postal code below) and click Lookup to auto-fill street, city, country and coordinates."
+msgstr ""
+
+msgid "Enter house number and postal code."
+msgstr ""
+
+msgid "Enter keyword"
+msgstr ""
+
+msgid "Enter keyword to explore..."
+msgstr ""
+
+msgid "Enter keyword to generate ideas for..."
+msgstr ""
+
+msgid "Enter keyword to track..."
+msgstr ""
+
+msgid "Enter keyword..."
+msgstr ""
+
+msgid "Enter post title..."
+msgstr ""
+
+msgid "Enter question"
+msgstr ""
+
+msgid "Enter target keyword..."
+msgstr ""
+
+msgid "Enter the content optimized for featured snippet (40-60 words)"
+msgstr ""
+
+msgid "Enter the main topic or keyword..."
+msgstr ""
+
+msgid "Enter your license details to activate the plugin"
+msgstr "Voer je licentiegegevens in om de plugin te activeren"
+
+msgid "Enter your license key to activate AI SEO features on this site."
+msgstr "Voer je licentiesleutel in om AI SEO-functies op deze site te activeren."
 
 msgid "Enter your license key to unlock all features, or skip to use the free tier."
 msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen, of sla over om de gratis versie te gebruiken."
@@ -752,240 +2537,1394 @@ msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen, of sla over
 msgid "Enter your license key to unlock all features."
 msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen."
 
-msgid "Skip this step to use the free tier with limited features."
-msgstr "Sla deze stap over om de gratis versie met beperkte functies te gebruiken."
+msgid "Enter your main keyword..."
+msgstr ""
 
-msgid "Skip for now"
-msgstr "Sla over voor nu"
+msgid "Enter your target keyword..."
+msgstr ""
 
-msgid "Continue"
-msgstr "Doorgaan"
+msgid "Entities & Topics"
+msgstr ""
 
-msgid "Company Branding"
-msgstr "Bedrijfsbranding"
+msgid "Entity Coverage"
+msgstr ""
 
-msgid "Tell us about your company to personalize your SEO experience."
-msgstr "Vertel ons over je bedrijf om je SEO-ervaring te personaliseren."
+msgid "Environment/Building"
+msgstr ""
 
-msgid "Company Name"
-msgstr "Bedrijfsnaam"
+msgid "Error"
+msgstr "Fout"
 
-msgid "Your Company Name"
-msgstr "Jouw bedrijfsnaam"
+msgid "Error analyzing competitor"
+msgstr ""
 
-msgid "Leave empty if already set by your license provider."
-msgstr "Laat leeg als deze al door je licentieprovider is ingesteld."
+msgid "Error creating queue"
+msgstr ""
 
-msgid "Company Logo (optional)"
-msgstr "Bedrijfslogo (optioneel)"
+msgid "Error generating opportunities"
+msgstr ""
 
-msgid "Upload your company logo for branded reports and dashboards."
-msgstr "Upload je bedrijfslogo voor gepersonaliseerde rapporten en dashboards."
+msgid "Error generating opportunities. Please try again."
+msgstr ""
 
-msgid "Website Description"
-msgstr "Websitebeschrijving"
+msgid "Error loading data."
+msgstr ""
 
-msgid "Brief description of your website or business..."
-msgstr "Korte beschrijving van je website of bedrijf..."
+msgid "Error loading sitemap status"
+msgstr "Fout bij laden sitemap-status"
 
-msgid "Industry/Category"
-msgstr "Industrie/Categorie"
+msgid "Error running audit"
+msgstr ""
 
-msgid "Select your industry..."
-msgstr "Selecteer je industrie..."
+msgid "Error storing tokens:"
+msgstr ""
 
-msgid "Technology"
-msgstr "Technologie"
+msgid "Error:"
+msgstr ""
 
-msgid "Healthcare"
-msgstr "Gezondheidszorg"
+msgid "Errors"
+msgstr ""
 
-msgid "Finance"
-msgstr "Financiën"
+msgid "Est. Organic Traffic"
+msgstr ""
 
-msgid "Retail/E-commerce"
-msgstr "Detailhandel/E-commerce"
+msgid "Est. Traffic"
+msgstr ""
 
-msgid "Education"
-msgstr "Onderwijs"
+msgid "Est. Traffic Loss"
+msgstr ""
 
-msgid "Travel/Hospitality"
-msgstr "Reizen/Horeca"
+msgid "Estimated API Cost"
+msgstr ""
 
-msgid "Real Estate"
-msgstr "Vastgoed"
+msgid "Estimated Months"
+msgstr ""
 
-msgid "Other"
-msgstr "Anders"
+msgid "Estimated ROI"
+msgstr ""
 
-msgid "Back"
-msgstr "Terug"
+msgid "Event"
+msgstr ""
 
-msgid "Configure how AI-generated content should sound for your brand."
-msgstr "Stel in hoe door AI gegenereerde content moet klinken voor je merk."
+msgid "Every 2 minutes (Fyndable Queue)"
+msgstr "Elke 2 minuten (Fyndable-wachtrij)"
 
-msgid "Brand Voice"
-msgstr "Merkstem"
+msgid "Exact Match"
+msgstr "Exacte match"
 
-msgid "Professional"
-msgstr "Professioneel"
+msgid "Exact property as registered in Google Search Console."
+msgstr ""
 
-msgid "Casual"
-msgstr "Informeel"
+msgid "Example of Good Writing"
+msgstr ""
 
-msgid "Friendly"
-msgstr "Vriendelijk"
+msgid "Example: PT10M30S (10 minutes 30 seconds)"
+msgstr ""
 
-msgid "Authoritative"
-msgstr "Autoritair"
+msgid "Excerpt"
+msgstr ""
 
-msgid "Humorous"
-msgstr "Humoristisch"
+msgid "Excluded IDs"
+msgstr ""
 
-msgid "Technical"
-msgstr "Technisch"
+msgid "Excluded topics/keywords"
+msgstr ""
 
-msgid "Target Audience"
-msgstr "Doelgroep"
+msgid "Existing Redirects"
+msgstr ""
 
-msgid "Describe your target audience (e.g., small business owners, developers, parents...)"
-msgstr "Beschrijf je doelgroep (bijv. kleine ondernemers, ontwikkelaars, ouders...)"
+msgid "Exit"
+msgstr ""
 
-msgid "Writing Style"
-msgstr "Schrijfstijl"
+msgid "Expensive"
+msgstr ""
 
-msgid "Conversational"
-msgstr "Gesprekstijl"
+msgid "Experience"
+msgstr ""
 
-msgid "Formal"
-msgstr "Formeel"
+msgid "Experience:"
+msgstr ""
 
-msgid "Persuasive"
-msgstr "Overtuigend"
+msgid "Expertise"
+msgstr ""
 
-msgid "Educational"
-msgstr "Educatief"
+msgid "Expertise:"
+msgstr ""
 
-msgid "Key Brand Values/Phrases (optional)"
-msgstr "Belangrijke merkwaarden/zinnen (optioneel)"
+msgid "Explore"
+msgstr ""
 
-msgid "Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)"
-msgstr "Belangrijke woorden of waarden voor AI-content (bijv. innovatie, klantgericht, duurzaamheid...)"
+msgid "Exploring..."
+msgstr ""
 
-msgid "These will help AI content align with your brand messaging."
-msgstr "Dit helpt AI-content af te stemmen op je merkboodschap."
+msgid "Export CSV"
+msgstr "Exporteer CSV"
 
-msgid "Basic SEO Configuration"
-msgstr "Basis SEO-configuratie"
+msgid "Export Now"
+msgstr ""
 
-msgid "Set up your default title and meta description templates."
-msgstr "Stel je standaard titel- en metabeschrijvingsjablonen in."
+msgid "Export Options"
+msgstr ""
 
-msgid "Title Template"
-msgstr "Titelsjabloon"
+msgid "Export a full SEO audit report for your site. Use CSV for spreadsheet analysis or PDF for client presentations."
+msgstr ""
 
-msgid "Available variables: %title%, %separator%, %sitename%"
-msgstr "Beschikbare variabelen: %title%, %separator%, %sitename%"
+msgid "Extended Sitemaps"
+msgstr ""
 
-msgid "Title Separator"
-msgstr "Titelscheidingsteken"
+msgid "External Integrations"
+msgstr "Externe Integraties"
+
+msgid "Extract FAQs from Content"
+msgstr ""
+
+msgid "FAQ"
+msgstr ""
+
+msgid "FAQ Count"
+msgstr ""
+
+msgid "FAQ Coverage"
+msgstr ""
+
+msgid "FAQ Format Alignment"
+msgstr ""
+
+msgid "FAQ Generator"
+msgstr "FAQ generator"
+
+msgid "FAQ Page"
+msgstr ""
+
+msgid "FAQ Schema"
+msgstr "FAQ-schema"
+
+msgid "FAQ Schema Generator"
+msgstr ""
+
+msgid "FAQ Schema Overview"
+msgstr ""
+
+msgid "FAQ Schema Preview"
+msgstr ""
+
+msgid "Facebook Post"
+msgstr ""
 
 msgid "Facebook URL (optional)"
 msgstr "Facebook URL (optioneel)"
 
-msgid "https://facebook.com/yourpage"
-msgstr "https://facebook.com/jouw-pagina"
+msgid "Fact check: questionable"
+msgstr ""
 
-msgid "Twitter/X URL (optional)"
-msgstr "Twitter/X URL (optioneel)"
+msgid "Fact check: supported"
+msgstr ""
 
-msgid "https://twitter.com/yourhandle"
-msgstr "https://twitter.com/jouwhandle"
+msgid "Fact check: uncertain"
+msgstr ""
 
-msgid "Content Types & Features"
-msgstr "Contenttypen & functies"
+msgid "Fact check: unknown"
+msgstr ""
 
-msgid "Select which content types should have SEO features enabled."
-msgstr "Selecteer welke contenttypen SEO-functies moeten krijgen."
+msgid "Factual Density (stats, numbers)"
+msgstr ""
 
-msgid "Enable XML Sitemap"
-msgstr "XML-sitemap inschakelen"
+msgid "Failed"
+msgstr "Mislukt"
 
-msgid "Enable robots.txt editor"
-msgstr "robots.txt-editor inschakelen"
+msgid "Failed to add idea"
+msgstr ""
 
-msgid "Enable Schema Markup"
-msgstr "Schema Markup inschakelen"
+msgid "Failed to add keyword"
+msgstr ""
 
-msgid "Google Integrations (Optional)"
-msgstr "Google-integraties (optioneel)"
+msgid "Failed to apply changes"
+msgstr ""
 
-msgid "Connect Google services for enhanced SEO insights. You can always do this later."
-msgstr "Verbind Google-diensten voor extra SEO-inzichten. Je kunt dit later altijd doen."
+msgid "Failed to create draft"
+msgstr ""
 
-msgid "Google PageSpeed API Key (optional)"
-msgstr "Google PageSpeed API-sleutel (optioneel)"
+msgid "Failed to create tenant."
+msgstr ""
 
-msgid "AIza..."
-msgstr "AIza..."
+msgid "Failed to delete"
+msgstr ""
+
+msgid "Failed to delete idea"
+msgstr ""
+
+msgid "Failed to delete keyword"
+msgstr ""
+
+msgid "Failed to disconnect"
+msgstr ""
+
+msgid "Failed to explore keyword."
+msgstr ""
+
+msgid "Failed to generate any content sections"
+msgstr ""
+
+msgid "Failed to generate cluster: %s"
+msgstr ""
+
+msgid "Failed to generate content"
+msgstr ""
+
+msgid "Failed to generate content."
+msgstr ""
+
+msgid "Failed to generate ideas"
+msgstr ""
+
+msgid "Failed to generate image"
+msgstr ""
+
+msgid "Failed to generate keywords"
+msgstr ""
+
+msgid "Failed to generate topic model"
+msgstr ""
+
+msgid "Failed to get Google status"
+msgstr ""
+
+msgid "Failed to get ideas"
+msgstr ""
+
+msgid "Failed to get suggestions"
+msgstr ""
+
+msgid "Failed to list customers"
+msgstr ""
+
+msgid "Failed to list properties"
+msgstr ""
+
+msgid "Failed to load details"
+msgstr ""
+
+msgid "Failed to load keywords. Please refresh the page."
+msgstr ""
+
+msgid "Failed to parse AI originality analysis"
+msgstr ""
+
+msgid "Failed to parse AI response"
+msgstr ""
+
+msgid "Failed to parse competitor analysis"
+msgstr ""
+
+msgid "Failed to parse gap analysis"
+msgstr ""
+
+msgid "Failed to queue cluster map"
+msgstr ""
+
+msgid "Failed to queue content: %s"
+msgstr ""
+
+msgid "Failed to refresh"
+msgstr ""
+
+msgid "Failed to restore revision"
+msgstr ""
+
+msgid "Failed to save:"
+msgstr ""
+
+msgid "Failed to schedule"
+msgstr ""
+
+msgid "Failed to update idea"
+msgstr ""
+
+msgid "Failed to update keyword"
+msgstr ""
+
+msgid "Fairly difficult"
+msgstr ""
+
+msgid "Fairly easy"
+msgstr ""
+
+msgid "Falls back to OG Description"
+msgstr ""
+
+msgid "Falls back to OG Image"
+msgstr ""
+
+msgid "Falls back to OG Title"
+msgstr ""
+
+msgid "Feature request"
+msgstr ""
+
+msgid "Featured Image:"
+msgstr ""
+
+msgid "Featured Images"
+msgstr ""
+
+msgid "Featured Snippet"
+msgstr ""
+
+msgid "Featured Snippet Content"
+msgstr ""
+
+msgid "Featured Snippet Content:"
+msgstr ""
+
+msgid "Featured Snippet Optimization"
+msgstr ""
+
+msgid "Featured image generated!"
+msgstr ""
+
+msgid "Featured image regenerated!"
+msgstr ""
+
+msgid "Featured snippet generated!"
+msgstr ""
+
+msgid "Feedback"
+msgstr "Feedback"
+
+msgid "Fetch YouTube Captions"
+msgstr ""
+
+msgid "Fetching live SERP results, this can take up to a minute…"
+msgstr ""
+
+msgid "Few transition words"
+msgstr ""
+
+msgid "File upload failed"
+msgstr ""
+
+msgid "Fill Gap"
+msgstr ""
+
+msgid "Filter"
+msgstr "Filteren"
+
+msgid "Finance"
+msgstr "Financiën"
+
+msgid "Find Broken Links"
+msgstr ""
+
+msgid "Find Opportunities"
+msgstr ""
+
+msgid "Find broken backlinks pointing to your competitors that you can reclaim."
+msgstr "Vind broken backlinks naar je concurrenten die je kunt claimen."
+
+msgid "Fix"
+msgstr ""
+
+msgid "Fix now"
+msgstr "Nu oplossen"
+
+msgid "Fixed"
+msgstr ""
+
+msgid "Flesch score: %d (%s)"
+msgstr ""
+
+msgid "Flesch score: %d. Aim for 60+ for general audiences."
+msgstr ""
+
+msgid "Flesch score: %d. Close to ideal, simplify a few sections."
+msgstr ""
+
+msgid "Flesch score: %d. Easy to read for most audiences."
+msgstr ""
+
+msgid "Flesch score: %d. Try shorter sentences and simpler words."
+msgstr ""
+
+msgid "Focus Keyphrase"
+msgstr "Focus zoekterm"
+
+msgid "Focus Keyphrase:"
+msgstr ""
+
+msgid "Focus Keyphrases"
+msgstr ""
+
+msgid "Focus keyphrase"
+msgstr ""
+
+msgid "Folder ID from Google Drive URL"
+msgstr ""
+
+msgid "Follow all sub-sitemaps in a sitemap index for a complete scan"
+msgstr ""
+
+msgid "Follow global setting"
+msgstr ""
+
+msgid "Forbidden Terms (comma-separated)"
+msgstr ""
+
+msgid "Form Submit"
+msgstr "Formulier verzenden"
+
+msgid "Formal"
+msgstr "Formeel"
+
+msgid "Forum"
+msgstr "Forum"
+
+msgid "Forums"
+msgstr "Forums"
+
+msgid "Found"
+msgstr ""
+
+msgid "Found %d common AI phrases. Minor concern."
+msgstr ""
+
+msgid "Found %d common AI-generated phrases: %s. Consider rewriting for a more natural tone."
+msgstr ""
+
+msgid "Free tier is not available. Please activate a license key."
+msgstr "Gratis versie is niet beschikbaar. Activeer een licentiesleutel."
+
+msgid "Frequently Asked Questions"
+msgstr ""
+
+msgid "Fri"
+msgstr ""
+
+msgid "Friendly"
+msgstr "Vriendelijk"
+
+msgid "From Page"
+msgstr ""
+
+msgid "From manual"
+msgstr ""
+
+msgid "Full Address"
+msgstr ""
+
+msgid "Full Brand Voice settings"
+msgstr ""
+
+msgid "Full Health Check"
+msgstr ""
+
+msgid "Full Site"
+msgstr ""
+
+msgid "Full technical analysis of your website."
+msgstr ""
+
+msgid "Full version"
+msgstr ""
+
+msgid "Fyndable Assistant"
+msgstr ""
+
+msgid "Fyndable SEO Data"
+msgstr ""
+
+msgid "Fyndable SEO — Post #%d: %s"
+msgstr ""
+
+msgid "Fyndable is up to date."
+msgstr ""
+
+msgid "GA4 API error"
+msgstr ""
+
+msgid "GA4 Connected"
+msgstr ""
+
+msgid "GA4 Measurement ID"
+msgstr ""
+
+msgid "GA4 Property ID"
+msgstr "GA4 Property ID"
+
+msgid "GA4 gtag snippet active"
+msgstr ""
+
+msgid "GEO Content Score"
+msgstr "GEO Contentscore"
+
+msgid "GEO Score"
+msgstr ""
+
+msgid "GSC API error"
+msgstr ""
+
+msgid "GTIN / EAN / UPC"
+msgstr ""
+
+msgid "GTM Container ID"
+msgstr ""
+
+msgid "GTM snippet active"
+msgstr ""
+
+msgid "Gap"
+msgstr ""
+
+msgid "Gaps in your content calendar:"
+msgstr ""
+
+msgid "Gemini Mentions"
+msgstr ""
+
+msgid "General"
+msgstr "Algemeen"
+
+msgid "General Settings"
+msgstr ""
+
+msgid "Generate"
+msgstr "Genereren"
+
+msgid "Generate AI Alt Text"
+msgstr ""
+
+msgid "Generate AI featured image?"
+msgstr ""
+
+msgid "Generate AI featured images"
+msgstr ""
+
+msgid "Generate AI transcript from video? This may take a few minutes."
+msgstr ""
+
+msgid "Generate All"
+msgstr ""
+
+msgid "Generate All Pages"
+msgstr ""
+
+msgid "Generate Article"
+msgstr ""
+
+msgid "Generate Brief"
+msgstr ""
+
+msgid "Generate Content"
+msgstr ""
+
+msgid "Generate FAQ schema from content"
+msgstr "Genereer FAQ schema uit content"
+
+msgid "Generate FAQ section by default"
+msgstr ""
+
+msgid "Generate FAQs using AI? This will add new FAQ items."
+msgstr ""
+
+msgid "Generate Ideas"
+msgstr ""
+
+msgid "Generate Keywords"
+msgstr ""
+
+msgid "Generate LSI Keywords"
+msgstr ""
+
+msgid "Generate Link Opportunities"
+msgstr ""
+
+msgid "Generate Map"
+msgstr ""
+
+msgid "Generate New Brief"
+msgstr ""
+
+msgid "Generate Outreach"
+msgstr ""
+
+msgid "Generate PAA questions using AI?"
+msgstr ""
+
+msgid "Generate QR Code for Mobile App"
+msgstr ""
+
+msgid "Generate Selected"
+msgstr ""
+
+msgid "Generate Smart Tags"
+msgstr ""
+
+msgid "Generate Social Images"
+msgstr ""
+
+msgid "Generate Topic Cluster"
+msgstr ""
+
+msgid "Generate WordPress draft posts for all rows in your dataset using the selected template."
+msgstr ""
+
+msgid "Generate all content in background"
+msgstr ""
+
+msgid "Generate an SEO title that includes your focus keyphrase near the beginning."
+msgstr ""
+
+msgid "Generate and manage content ideas for your website."
+msgstr ""
+
+msgid "Generate content for"
+msgstr ""
+
+msgid "Generate content for this post/page using AI. Enter context and desired word count below."
+msgstr ""
+
+msgid "Generate data-driven content briefs by analyzing top-ranking pages."
+msgstr ""
+
+msgid "Generate featured images and graphics"
+msgstr "Genereer uitgelichte afbeeldingen en graphics"
+
+msgid "Generate featured snippet using AI?"
+msgstr ""
+
+msgid "Generate for %s posts?"
+msgstr ""
+
+msgid "Generate for Missing"
+msgstr ""
+
+msgid "Generate for Selected"
+msgstr ""
+
+msgid "Generate full SEO-optimized articles with AI. Optionally uses Content Brief data for data-driven writing."
+msgstr ""
+
+msgid "Generate hundreds of unique SEO-optimized pages from templates and datasets."
+msgstr ""
+
+msgid "Generate ideas"
+msgstr ""
+
+msgid "Generate keyword-based ideas"
+msgstr ""
+
+msgid "Generate social media images?"
+msgstr ""
+
+msgid "Generate supporting articles linked to pillars"
+msgstr "Genereer ondersteunende artikelen gekoppeld aan pillars"
+
+msgid "Generate:"
+msgstr ""
+
+msgid "Generated"
+msgstr ""
+
+msgid "Generated Content"
+msgstr ""
+
+msgid "Generated Date"
+msgstr ""
+
+msgid "Generated Preview"
+msgstr ""
+
+msgid "Generated SEO Meta"
+msgstr ""
+
+msgid "Generated by AI SEO Client v%s on %s"
+msgstr ""
+
+msgid "Generated content could not be stored in the post"
+msgstr ""
+
+msgid "Generates blog post ideas for the keyword using AI and saves them to the Ideas page."
+msgstr ""
+
+msgid "Generating suggestions..."
+msgstr ""
+
+msgid "Generating..."
+msgstr "Genereren..."
+
+msgid "Generating... (this may take a minute)"
+msgstr ""
+
+msgid "Generation Progress"
+msgstr ""
+
+msgid "Generic"
+msgstr "Generiek"
+
+msgid "Geo-Specific Keywords"
+msgstr ""
+
+msgid "Geo-specific keywords generated!"
+msgstr ""
+
+msgid "Get AI Recommendations"
+msgstr ""
+
+msgid "Get Search Volume"
+msgstr ""
 
 msgid "Get a free API key from <a href=\"%s\" target=\"_blank\">Google Cloud Console</a>. Free tier: 25 requests/day."
-msgstr "Haal een gratis API-sleutel op via de <a href=\"%s\" target=\"_blank\">Google Cloud Console</a>. Gratis versie: 25 verzoeken/dag."
+msgstr ""
 
-msgid "You can connect GSC later from the Integrations page after setup."
-msgstr "Je kunt GSC later verbinden via de Integraties-pagina na de setup."
+msgid "Get a free API key from <a href=\\"%s\\" target=\\"_blank\\">Google Cloud Console</a>. Free tier: 25 requests/day."
+msgstr "Haal een gratis API-sleutel op via de <a href=\\"%s\\" target=\\"_blank\\">Google Cloud Console</a>. Gratis versie: 25 verzoeken/dag."
 
-msgid "Setup Complete!"
-msgstr "Setup voltooid!"
+msgid "Get your API key from Ahrefs APIv3 dashboard."
+msgstr ""
 
-msgid "You're all set. Here's a summary of your configuration:"
-msgstr "Je bent helemaal klaar. Hier is een samenvatting van je configuratie:"
+msgid "Get your API key from Notion integrations"
+msgstr ""
 
-msgid "Configuration Summary"
-msgstr "Configuratiesamenvatting"
+msgid "Get your API key from SE Ranking > API."
+msgstr ""
 
-msgid "License: Connected"
-msgstr "Licentie: Verbonden"
-
-msgid "Company Branding: Configured"
-msgstr "Bedrijfsbranding: Ingesteld"
-
-msgid "Tone of Voice: Set"
-msgstr "Tone of Voice: Ingesteld"
-
-msgid "SEO Settings: Configured"
-msgstr "SEO-instellingen: Ingesteld"
-
-msgid "Content Types: Selected"
-msgstr "Contenttypen: Geselecteerd"
-
-msgid "Integrations: Optional (can be done later)"
-msgstr "Integraties: Optioneel (kan later)"
-
-msgid "Quick Start Tips"
-msgstr "Snelle starttips"
-
-msgid "Check your SEO Dashboard for site health overview"
-msgstr "Bekijk je SEO-dashboard voor een overzicht van je sitegezondheid"
-
-msgid "Use the Content Writer to generate SEO-optimized articles"
-msgstr "Gebruik de Content Writer om SEO-geoptimaliseerde artikelen te genereren"
-
-msgid "Connect Google Search Console for search performance data"
-msgstr "Verbind Google Search Console voor zoekprestatiedata"
-
-msgid "Review your SEO settings in Settings > Fyndable"
-msgstr "Bekijk je SEO-instellingen in Instellingen > Fyndable"
+msgid "Get your webhook URL from Slack App settings"
+msgstr ""
 
 msgid "Go to Dashboard"
 msgstr "Naar dashboard"
 
-msgid "XXXX-XXXX-XXXX-XXXX-XXXX"
-msgstr "XXXX-XXXX-XXXX-XXXX-XXXX"
+msgid "Go to Integrations"
+msgstr "Naar Integraties"
 
-# ApexFlow reset / pool actions
-msgid "Planned posts cleared and pending generation cancelled."
-msgstr "Geplande posts gewist en openstaande generatie geannuleerd."
+msgid "Go to License Activation"
+msgstr ""
+
+msgid "Goal"
+msgstr ""
+
+msgid "Good content but %s — easy to fix with AI"
+msgstr ""
+
+msgid "Good length."
+msgstr ""
+
+msgid "Good readability"
+msgstr ""
+
+msgid "Good sentence length"
+msgstr ""
+
+msgid "Good use of transitions"
+msgstr ""
+
+msgid "Good variety in sentence structure and length."
+msgstr ""
+
+msgid "Good vocabulary diversity (%.0f%%)."
+msgstr ""
+
+msgid "Google Ads"
+msgstr ""
+
+msgid "Google Ads API error"
+msgstr ""
+
+msgid "Google Ads Connected"
+msgstr ""
+
+msgid "Google Ads is not connected. Please connect via AI SEO → Integrations and set your Customer ID."
+msgstr ""
+
+msgid "Google Analytics"
+msgstr "Google Analytics"
+
+msgid "Google Analytics 4"
+msgstr ""
+
+msgid "Google Analytics 4 Integration"
+msgstr ""
+
+msgid "Google Analytics 4 Tracking"
+msgstr ""
+
+msgid "Google Analytics 4 is not configured. Set your GA4 Property ID above."
+msgstr ""
+
+msgid "Google Analytics 4 is not connected. Please connect via AI SEO → Integrations and set your GA4 Property ID."
+msgstr ""
+
+msgid "Google Data"
+msgstr "Google-data"
+
+msgid "Google Data Dashboard"
+msgstr "Google Data Dashboard"
+
+msgid "Google Drive Export"
+msgstr ""
+
+msgid "Google Drive Folder ID"
+msgstr ""
+
+msgid "Google Indexing API returned HTTP %d."
+msgstr ""
+
+msgid "Google Indexing API scope granted"
+msgstr ""
+
+msgid "Google Integrations (Optional)"
+msgstr "Google-integraties (optioneel)"
+
+msgid "Google OAuth is not yet configured. Please contact %s."
+msgstr ""
+
+msgid "Google PageSpeed API Key (optional)"
+msgstr "Google PageSpeed API-sleutel (optioneel)"
+
+msgid "Google SERP Preview"
+msgstr ""
+
+msgid "Google Search Console"
+msgstr "Google Search Console"
+
+msgid "Google Search Console authentication expired. Please reconnect."
+msgstr ""
+
+msgid "Google Search Console is not connected."
+msgstr ""
+
+msgid "Google Search Console is not connected. Connect your Google account via Integrations."
+msgstr ""
+
+msgid "Google Search Console is not connected. Please connect via AI SEO → Integrations."
+msgstr ""
+
+msgid "Google Services (Search Console & Analytics 4)"
+msgstr ""
+
+msgid "Google Services Status"
+msgstr "Google-services status"
+
+msgid "Google Tag Manager"
+msgstr ""
+
+msgid "Google account not connected or missing indexing scope."
+msgstr ""
+
+msgid "Google authentication expired. Please reconnect."
+msgstr ""
+
+msgid "Google configuration saved."
+msgstr ""
+
+msgid "Google connection failed:"
+msgstr ""
+
+msgid "Google services disconnected."
+msgstr ""
+
+msgid "Great"
+msgstr ""
+
+msgid "Great! Your content is well-optimized."
+msgstr ""
+
+msgid "Grid"
+msgstr ""
+
+msgid "Grid density for Local SERP scans (higher = more API calls)."
+msgstr ""
+
+msgid "Guest Post"
+msgstr "Gastblog"
+
+msgid "Guest posts"
+msgstr "Gastblogs"
+
+msgid "H1 Heading"
+msgstr ""
+
+msgid "H2: Eerste sectie\nH2: Tweede sectie\nH3: Subsectie\n..."
+msgstr ""
+
+msgid "HTTPS, mixed content, and security headers"
+msgstr "HTTPS, gemengde content en beveiligingsheaders"
+
+msgid "Hair Salon"
+msgstr ""
+
+msgid "Heading Coverage"
+msgstr ""
+
+msgid "Headings"
+msgstr ""
+
+msgid "Health Check Results"
+msgstr ""
+
+msgid "Healthcare"
+msgstr "Gezondheidszorg"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Here are keyword ideas for \\"%s\\":\n\n"
+msgstr ""
+
+msgid "Hi! I can help you with questions about Fyndable. How can I help you?"
+msgstr ""
+
+msgid "Hi! I'm your AI SEO Agent. I can help you with:\n• Generate topic clusters\n• Write SEO articles\n• Research keywords\n• Run site audits\n\nWhat would you like to do?"
+msgstr ""
+
+msgid "High"
+msgstr "Hoog"
+
+msgid "High competition. Many authoritative domains ranking. Requires strong content and backlinks."
+msgstr ""
+
+msgid "High priority: high search volume or strong strategic value"
+msgstr ""
+
+msgid "High — high search volume or strong strategic value"
+msgstr ""
+
+msgid "High-Quality Images"
+msgstr ""
+
+msgid "High-value domains linking to your competitors but not to you."
+msgstr "Waardevolle domeinen die naar concurrenten linken, maar niet naar jou."
+
+msgid "Higher coverage correlates with top rankings"
+msgstr ""
+
+msgid "History"
+msgstr ""
+
+msgid "Hits"
+msgstr ""
+
+msgid "Home"
+msgstr "Home"
+
+msgid "House number"
+msgstr ""
+
+msgid "How To"
+msgstr ""
+
+msgid "How thoroughly the top results cover each subtopic"
+msgstr ""
+
+msgid "How to get found in AI search / LLM answers"
+msgstr ""
+
+msgid "How-to / Tutorial"
+msgstr ""
+
+msgid "Hreflang"
+msgstr "Hreflang"
+
+msgid "Humorous"
+msgstr "Humoristisch"
+
+msgid "I can create a topic cluster map for you. What topic should I build the cluster around? For example: \"Create a cluster about WordPress SEO\"."
+msgstr ""
+
+msgid "I can research keywords for you. What topic or industry should I research? For example: \"Research keywords for a fitness blog\"."
+msgstr ""
+
+msgid "I can run a site audit for you. This will check your site for missing meta tags, thin content, missing alt texts, and internal linking issues. Shall I proceed?"
+msgstr ""
+
+msgid "I can write an SEO-optimized article for you. What keyword should I target? For example: \"Write an article about email marketing tips\"."
+msgstr ""
+
+msgid "I researched \"%s\" but couldn\'t parse the results. Please try the Keywords module directly."
+msgstr ""
+
+msgid "I've created a topic cluster map for \\"%s\\". Here's the overview:\n\n• Pillar page: %s\n• %d cluster hubs with supporting pages\n• %d total pages to create\n• Estimated timeline: %d months\n• Authority potential: %d/100\n\nWhat would you like to do next?"
+msgstr ""
+
+msgid "I\'ll write an article targeting \"%s\". This will use a Content Brief for SERP-driven writing. Shall I proceed?"
+msgstr ""
+
+msgid "Idea added successfully"
+msgstr ""
+
+msgid "Idea deleted successfully"
+msgstr ""
+
+msgid "Idea not found"
+msgstr ""
+
+msgid "Idea updated successfully"
+msgstr ""
+
+msgid "Ideas"
+msgstr "Ideeën"
+
+msgid "Ideation"
+msgstr ""
+
+msgid "Identify and fix technical SEO issues across your entire site"
+msgstr "Identificeer en los technische SEO problemen op je hele site op"
+
+msgid "Illustration"
+msgstr ""
+
+msgid "Image"
+msgstr "Afbeelding"
+
+msgid "Image API not configured in dashboard"
+msgstr ""
+
+msgid "Image Alt Generator"
+msgstr "Afbeelding Alt generator"
+
+msgid "Image Context / Prompt:"
+msgstr ""
+
+msgid "Image Generator"
+msgstr "Afbeelding generator"
+
+msgid "Image Pack"
+msgstr ""
+
+msgid "Image Sitemap:"
+msgstr ""
+
+msgid "Image Style"
+msgstr ""
+
+msgid "Image Style:"
+msgstr ""
+
+msgid "Image Type"
+msgstr ""
+
+msgid "Image file not found"
+msgstr ""
+
+msgid "Images"
+msgstr "Afbeeldingen"
+
+msgid "Images Generated"
+msgstr ""
+
+msgid "Images with Alt Text"
+msgstr ""
+
+msgid "Impact"
+msgstr ""
+
+msgid "Import"
+msgstr "Importeren"
+
+msgid "Import CSV"
+msgstr ""
+
+msgid "Import SEO Data"
+msgstr ""
+
+msgid "Import SEO titles, descriptions, focus keywords, canonical URLs, and social meta from Yoast, Rank Math, or AIOSEO into Fyndable."
+msgstr ""
+
+msgid "Imported %d keywords, skipped %d duplicates"
+msgstr ""
+
+msgid "Impr."
+msgstr ""
+
+msgid "Impressions"
+msgstr "Vertoningen"
+
+msgid "In Progress"
+msgstr ""
+
+msgid "In Queue"
+msgstr ""
+
+msgid "In Review"
+msgstr ""
+
+msgid "Include FAQ section"
+msgstr ""
+
+msgid "Include excerpts"
+msgstr ""
+
+msgid "Include formatted lists or tables for better snippet chances"
+msgstr ""
+
+msgid "Include pages"
+msgstr ""
+
+msgid "Index Now"
+msgstr "Nu indexeren"
+
+msgid "Index Now is available after publishing."
+msgstr "Nu indexeren is beschikbaar na publiceren."
+
+msgid "Industry / niche"
+msgstr ""
+
+msgid "Industry/Category"
+msgstr "Industrie/Categorie"
+
+msgid "Inexpensive"
+msgstr ""
+
+msgid "Info"
+msgstr "Info"
+
+msgid "Informational"
+msgstr ""
+
+msgid "Informative"
+msgstr ""
+
+msgid "Insert Link"
+msgstr ""
+
+msgid "Insert into Editor"
+msgstr ""
+
+msgid "Instagram Caption"
+msgstr ""
+
+msgid "Installed"
+msgstr "Geïnstalleerd"
+
+msgid "Insufficient SE Ranking API credits."
+msgstr ""
+
+msgid "Insufficient permissions"
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Insufficient permissions. You must be an administrator to activate licenses."
+msgstr "Onvoldoende rechten. Je moet een beheerder zijn om licenties te activeren."
+
+msgid "Integrate with popular SEO and marketing platforms"
+msgstr "Integreer met populaire SEO en marketing platforms"
+
+msgid "Integrations"
+msgstr "Integraties"
+
+msgid "Integrations: Optional (can be done later)"
+msgstr "Integraties: Optioneel (kan later)"
+
+msgid "Internal Duplicate Content"
+msgstr ""
+
+msgid "Internal Link Opportunities"
+msgstr ""
+
+msgid "Internal Link Suggestions"
+msgstr ""
+
+msgid "Internal Linking"
+msgstr "Interne linking"
+
+msgid "Internal Linking Overview"
+msgstr ""
+
+msgid "Internal Linking Strategy"
+msgstr ""
+
+msgid "Internal Links"
+msgstr "Interne links"
+
+msgid "Internal Uniqueness"
+msgstr ""
+
+msgid "Internal links updated for %d posts"
+msgstr ""
+
+msgid "International"
+msgstr "Internationaal"
+
+msgid "International Keyword Research"
+msgstr ""
+
+msgid "International Link Building Suggestions"
+msgstr ""
+
+msgid "International SEO"
+msgstr "International SEO"
+
+msgid "International SEO Management"
+msgstr ""
+
+msgid "Interval (days)"
+msgstr ""
+
+msgid "Interval (days):"
+msgstr ""
+
+msgid "Introduction"
+msgstr ""
+
+msgid "Invalid URL."
+msgstr ""
+
+msgid "Invalid URLs"
+msgstr "Ongeldige URL's"
+
+msgid "Invalid domain"
+msgstr "Ongeldig domein"
+
+msgid "Invalid format specified"
+msgstr ""
+
+msgid "Invalid license key."
+msgstr ""
+
+msgid "Invalid link data: no URL available."
+msgstr ""
+
+msgid "Invalid link data: no anchor text."
+msgstr ""
+
+msgid "Invalid refresh response"
+msgstr ""
+
+msgid "Invalid response from SERP service"
+msgstr ""
+
+msgid "Invalid response from dashboard - no tenant key"
+msgstr "Ongeldig antwoord van dashboard - geen tenant sleutel"
+
+msgid "Invalid response from dashboard. No tenant key received."
+msgstr "Ongeldig antwoord van dashboard. Geen tenant-sleutel ontvangen."
+
+msgid "Invalid review status"
+msgstr ""
+
+msgid "Invalid status"
+msgstr ""
+
+msgid "Invalid token response"
+msgstr ""
+
+msgid "Invalid:"
+msgstr ""
+
+msgid "Issue"
+msgstr ""
+
+msgid "Issue Details"
+msgstr ""
+
+msgid "Issues"
+msgstr ""
+
+msgid "Issues Found"
+msgstr "Problemen gevonden"
+
+msgid "Issuing Organization"
+msgstr ""
+
+msgid "Keep one primary post for this phrase: merge content or 301-redirect the others, or give each post a unique focus keyphrase."
+msgstr ""
+
+msgid "Key Brand Values/Phrases (optional)"
+msgstr "Belangrijke merkwaarden/zinnen (optioneel)"
+
+msgid "Key Points / TL;DR"
+msgstr ""
+
+msgid "Key phrases or values to include in AI content (e.g., innovation, customer-first, sustainability...)"
+msgstr "Belangrijke woorden of waarden voor AI-content (bijv. innovatie, klantgericht, duurzaamheid...)"
+
+msgid "Keyphrase Density"
+msgstr ""
+
+msgid "Keyphrase appears in first paragraph."
+msgstr ""
+
+msgid "Keyphrase found in title."
+msgstr ""
+
+msgid "Keyphrase in Intro"
+msgstr ""
+
+msgid "Keyphrase in Title"
+msgstr ""
+
+msgid "Keyword"
+msgstr "Zoekwoord"
+
+msgid "Keyword Clusters"
+msgstr ""
+
+msgid "Keyword Gap"
+msgstr ""
+
+msgid "Keyword Gap: keywords you rank for but"
+msgstr ""
+
+msgid "Keyword Opportunity Timeline"
+msgstr ""
+
+msgid "Keyword Rank Tracker"
+msgstr ""
+
+msgid "Keyword Research"
+msgstr ""
+
+msgid "Keyword Strategy"
+msgstr ""
+
+msgid "Keyword Template"
+msgstr ""
+
+msgid "Keyword Usage"
+msgstr ""
+
+msgid "Keyword Variation"
+msgstr ""
+
+msgid "Keyword added"
+msgstr ""
+
+msgid "Keyword added successfully"
+msgstr ""
+
+msgid "Keyword already exists"
+msgstr ""
+
+msgid "Keyword anchors: %s%%"
+msgstr "Keyword-ankers: %s%%"
+
+msgid "Keyword and content are required"
+msgstr ""
+
+msgid "Keyword and heading are required"
+msgstr ""
+
+msgid "Keyword and valid coordinates/radius are required"
+msgstr ""
+
+msgid "Keyword data refreshed"
+msgstr ""
+
+msgid "Keyword deleted"
+msgstr ""
+
+msgid "Keyword is already being tracked"
+msgstr ""
+
+msgid "Keyword is required"
+msgstr ""
+
+msgid "Keyword not found"
+msgstr ""
+
+msgid "Keyword pool"
+msgstr ""
 
 msgid "Keyword pool cleared. It rebuilds automatically on the next run or preview."
 msgstr "Keyword-pool geleegd. Deze wordt automatisch opnieuw opgebouwd bij de volgende run of preview."
@@ -993,14 +3932,1877 @@ msgstr "Keyword-pool geleegd. Deze wordt automatisch opnieuw opgebouwd bij de vo
 msgid "Keyword pool refreshed."
 msgstr "Keyword-pool ververst."
 
-msgid "This removes all planned posts and cancels pending generation. Already generated posts are kept. Continue?"
-msgstr "Dit verwijdert alle geplande posts en annuleert openstaande generatie. Al gegenereerde posts blijven behouden. Doorgaan?"
+msgid "Keyword rank changes"
+msgstr ""
 
-msgid "Clear Planned Posts"
-msgstr "Geplande posts wissen"
+msgid "Keyword rank drops"
+msgstr ""
 
-msgid "Clear Keyword Pool"
-msgstr "Keyword-pool legen"
+msgid "Keyword rejected and added to excluded topics."
+msgstr ""
+
+msgid "Keyword research and competitor analysis"
+msgstr "Zoekwoordonderzoek en concurrentieanalyse"
+
+msgid "Keyword research failed: %s"
+msgstr ""
+
+msgid "Keyword updated"
+msgstr ""
+
+msgid "Keywords"
+msgstr "Zoekwoorden"
+
+msgid "Keywords (one per line)"
+msgstr ""
+
+msgid "Keywords Explorer"
+msgstr ""
+
+msgid "Keywords explorer"
+msgstr ""
+
+msgid "Keywords losing ground"
+msgstr ""
+
+msgid "Keywords moving up"
+msgstr ""
+
+msgid "Knowledge Panel"
+msgstr ""
+
+msgid "LLM Tracker"
+msgstr "LLM-tracker"
+
+msgid "LSI / Semantic Keywords"
+msgstr ""
+
+msgid "LSI Keywords"
+msgstr ""
+
+msgid "LSI Keywords & Synonyms"
+msgstr ""
+
+msgid "Language"
+msgstr "Taal"
+
+msgid "Language & region"
+msgstr ""
+
+msgid "Last 28 days"
+msgstr ""
+
+msgid "Last 3 months"
+msgstr ""
+
+msgid "Last 7 days"
+msgstr ""
+
+msgid "Last Accessed"
+msgstr ""
+
+msgid "Last Checked"
+msgstr ""
+
+msgid "Last Modified"
+msgstr ""
+
+msgid "Last Run"
+msgstr ""
+
+msgid "Last Updated"
+msgstr ""
+
+msgid "Last audit:"
+msgstr ""
+
+msgid "Last checked: %s"
+msgstr ""
+
+msgid "Last optimized:"
+msgstr ""
+
+msgid "Last run: %1$s — %2$s post(s) trashed."
+msgstr ""
+
+msgid "Last scan:"
+msgstr ""
+
+msgid "Lawyer"
+msgstr ""
+
+msgid "Learn more"
+msgstr ""
+
+msgid "Leave a Review"
+msgstr ""
+
+msgid "Leave all checked to allow all public post types."
+msgstr ""
+
+msgid "Leave empty for AI-generated title"
+msgstr ""
+
+msgid "Leave empty if already set by your license provider."
+msgstr "Laat leeg als deze al door je licentieprovider is ingesteld."
+
+msgid "Leave empty to auto-detect. Use a sitemap index URL for a full-site check."
+msgstr ""
+
+msgid "Leave empty to auto-generate from keyword analysis."
+msgstr ""
+
+msgid "Leave empty to use featured image"
+msgstr ""
+
+msgid "Leave empty to use generated rules below"
+msgstr ""
+
+msgid "Leave empty to use the Fyndable generated sitemap. Fill in your own sitemap URL if you use an external sitemap for health checks."
+msgstr ""
+
+msgid "Leave empty to use the default permalink. Set a custom URL to point search engines to a different page (e.g. for duplicate content)."
+msgstr ""
+
+msgid "Let's get your site SEO-ready in 4 quick steps."
+msgstr "Zet je site SEO-klaar in 4 snelle stappen."
+
+msgid "Let\'s get your site SEO-ready in 4 quick steps."
+msgstr ""
+
+msgid "License Activation"
+msgstr ""
+
+msgid "License Key"
+msgstr "Licentiesleutel"
+
+msgid "License Key:"
+msgstr "Licentiesleutel:"
+
+msgid "License Required"
+msgstr ""
+
+msgid "License Tier:"
+msgstr "Licentie niveau:"
+
+msgid "License Type:"
+msgstr ""
+
+msgid "License activated successfully!"
+msgstr "Licentie succesvol geactiveerd!"
+
+msgid "License activation failed."
+msgstr ""
+
+msgid "License deactivated."
+msgstr "Licentie gedeactiveerd."
+
+msgid "License is active!"
+msgstr "Licentie is actief!"
+
+msgid "License validated successfully! Image API credentials refreshed."
+msgstr ""
+
+msgid "License validation failed."
+msgstr ""
+
+msgid "License: Connected"
+msgstr "Licentie: Verbonden"
+
+msgid "Limit resets in %d minutes"
+msgstr "Limiet wordt over %d minuten hersteld"
+
+msgid "Link"
+msgstr "Link"
+
+msgid "Link Attributes"
+msgstr ""
+
+msgid "Link Genius"
+msgstr "Linkgenie"
+
+msgid "Link Manager"
+msgstr "Linkbeheer"
+
+msgid "Link Opportunities"
+msgstr ""
+
+msgid "Link Type"
+msgstr "Linktype"
+
+msgid "Link Types"
+msgstr ""
+
+msgid "Link added successfully!"
+msgstr ""
+
+msgid "Link added to disavow file"
+msgstr ""
+
+msgid "Link inserted!"
+msgstr ""
+
+msgid "Link/Button Click"
+msgstr "Link/knop-klik"
+
+msgid "LinkedIn Post"
+msgstr ""
+
+msgid "LinkedIn:"
+msgstr ""
+
+msgid "Links"
+msgstr "Links"
+
+msgid "Links added successfully!"
+msgstr ""
+
+msgid "List"
+msgstr ""
+
+msgid "List Available Accounts"
+msgstr ""
+
+msgid "List Available Properties"
+msgstr "Toon beschikbare properties"
+
+msgid "List your areas of expertise (one per line)"
+msgstr ""
+
+msgid "Lists or Tables"
+msgstr ""
+
+msgid "Load Data"
+msgstr "Laad data"
+
+msgid "Loading AI suggestions..."
+msgstr ""
+
+msgid "Loading overview data..."
+msgstr "Overzichtsdata laden..."
+
+msgid "Loading related keywords..."
+msgstr ""
+
+msgid "Loading sitemap status..."
+msgstr "Sitemap-status laden..."
+
+msgid "Loading templates..."
+msgstr ""
+
+msgid "Loading..."
+msgstr "Laden..."
+
+msgid "Loading…"
+msgstr ""
+
+msgid "Local Business"
+msgstr "Lokaal bedrijf"
+
+msgid "Local SEO"
+msgstr "Lokale SEO"
+
+msgid "Local SERP"
+msgstr ""
+
+msgid "Local SERP Grid"
+msgstr ""
+
+msgid "Local SERP Radius"
+msgstr ""
+
+msgid "Local SERP Scan"
+msgstr ""
+
+msgid "Local SERP scans require a Professional or higher license."
+msgstr ""
+
+msgid "Local business configured — local pack scans are included in keyword research."
+msgstr ""
+
+msgid "Local scan failed."
+msgstr ""
+
+msgid "Location Name"
+msgstr ""
+
+msgid "Location Settings"
+msgstr "Locatie-instellingen"
+
+msgid "Location autocomplete is provided centrally via the Fyndable SaaS platform. Ask the administrator to set a Google Places API key in the SaaS dashboard."
+msgstr ""
+
+msgid "Locations"
+msgstr "Locaties"
+
+msgid "Logo"
+msgstr ""
+
+msgid "Long paragraphs"
+msgstr ""
+
+msgid "Lookup Address"
+msgstr ""
+
+msgid "Low"
+msgstr "Laag"
+
+msgid "Low Originality"
+msgstr ""
+
+msgid "Low competition. Few major brands ranking. Good opportunity for quick wins."
+msgstr ""
+
+msgid "Low effort — publish quality content and you should rank within weeks."
+msgstr ""
+
+msgid "Low priority: lower search volume / nice to have"
+msgstr ""
+
+msgid "Low vocabulary diversity (%.0f%%). Consider using more varied language."
+msgstr ""
+
+msgid "Low — lower priority / nice to have"
+msgstr ""
+
+msgid "Lower coverage correlates with top rankings"
+msgstr ""
+
+msgid "MPN"
+msgstr ""
+
+msgid "Mailchimp, ConvertKit, ActiveCampaign"
+msgstr "Mailchimp, ConvertKit, ActiveCampaign"
+
+msgid "Main Sitemap:"
+msgstr ""
+
+msgid "Major improvements needed."
+msgstr ""
+
+msgid "Make sure the DataForSEO API key is configured in the Portal settings."
+msgstr ""
+
+msgid "Make.com Webhook URL"
+msgstr ""
+
+msgid "Manage and check your XML sitemaps."
+msgstr ""
+
+msgid "Manage and generate FAQ schema markup for your posts."
+msgstr ""
+
+msgid "Manage and track your keywords, discover new opportunities."
+msgstr ""
+
+msgid "Manage brand, content and advanced settings."
+msgstr ""
+
+msgid "Manage internal links, find orphan pages and discover link opportunities."
+msgstr ""
+
+msgid "Manage reusable AI prompt templates for content generation."
+msgstr ""
+
+msgid "Manage target markets, track rankings per country and find international keyword variations."
+msgstr ""
+
+msgid "Manage video schema markup and transcripts for better search visibility."
+msgstr ""
+
+msgid "Managed centrally via the Fyndable Portal."
+msgstr ""
+
+msgid "Manufacturer Part Number"
+msgstr ""
+
+msgid "Map this page to its translations in other languages. If you use WPML, Polylang, or TranslatePress, this is detected automatically."
+msgstr ""
+
+msgid "Mass Edit Status"
+msgstr ""
+
+msgid "Mass edit status:"
+msgstr ""
+
+msgid "Mass review status:"
+msgstr ""
+
+msgid "Match"
+msgstr ""
+
+msgid "Max Links Per Post"
+msgstr ""
+
+msgid "Max characters per item:"
+msgstr ""
+
+msgid "Max items"
+msgstr ""
+
+msgid "Max views before cleanup"
+msgstr ""
+
+msgid "Maximum number of posts to include."
+msgstr ""
+
+msgid "Maybe Later"
+msgstr ""
+
+msgid "Measurement ID:"
+msgstr ""
+
+msgid "Medium"
+msgstr "Gemiddeld"
+
+msgid "Medium effort — create comprehensive content with good internal linking. Expect results in 1-3 months."
+msgstr ""
+
+msgid "Medium priority: moderate priority for your content plan"
+msgstr ""
+
+msgid "Medium — moderate priority"
+msgstr ""
+
+msgid "Mention Details"
+msgstr ""
+
+msgid "Mentioned"
+msgstr ""
+
+msgid "Message"
+msgstr "Bericht"
+
+msgid "Message or approved action required"
+msgstr ""
+
+msgid "Meta Description"
+msgstr "Meta beschrijving"
+
+msgid "Meta Description Template"
+msgstr ""
+
+msgid "Meta Description:"
+msgstr ""
+
+msgid "Meta Descriptions"
+msgstr ""
+
+msgid "Meta description (empty = original)"
+msgstr ""
+
+msgid "Meta saved to post!"
+msgstr ""
+
+msgid "Metric"
+msgstr ""
+
+msgid "Migrate SEO data from another plugin to Fyndable."
+msgstr ""
+
+msgid "Migrate from another SEO plugin"
+msgstr ""
+
+msgid "Minimalist"
+msgstr ""
+
+msgid "Missing"
+msgstr ""
+
+msgid "Missing Description"
+msgstr ""
+
+msgid "Missing Keyphrase"
+msgstr ""
+
+msgid "Missing OG Tags"
+msgstr ""
+
+msgid "Missing OG tags"
+msgstr ""
+
+msgid "Missing SEO title"
+msgstr ""
+
+msgid "Missing SEO titles:"
+msgstr "Ontbrekende SEO-titels:"
+
+msgid "Missing Schema"
+msgstr ""
+
+msgid "Missing Signals"
+msgstr ""
+
+msgid "Missing Title"
+msgstr ""
+
+msgid "Missing focus keyphrase"
+msgstr ""
+
+msgid "Missing focus keyphrases:"
+msgstr ""
+
+msgid "Missing license key or dashboard URL"
+msgstr "Ontbrekende licentiesleutel of dashboard URL"
+
+msgid "Missing meta description"
+msgstr ""
+
+msgid "Missing meta descriptions:"
+msgstr ""
+
+msgid "Missing post ID."
+msgstr ""
+
+msgid "Missing refresh token"
+msgstr ""
+
+msgid "Mobile Usability"
+msgstr "Mobiele bruikbaarheid"
+
+msgid "Mobile-friendly testing and optimization"
+msgstr "Mobiel-vriendelijk testen en optimalisatie"
+
+msgid "Moderate"
+msgstr ""
+
+msgid "Moderate advantage. Your existing content provides a foundation. Build on it with targeted content."
+msgstr ""
+
+msgid "Moderate competition. Mix of authoritative and niche sites. Winnable with quality content."
+msgstr ""
+
+msgid "Mon"
+msgstr ""
+
+msgid "Monitor ranking changes and auto-update content when positions drop."
+msgstr ""
+
+msgid "Monitor search performance and indexing"
+msgstr "Monitor zoekprestaties en indexering"
+
+msgid "Monthly"
+msgstr "Maandelijks"
+
+msgid "Monthly SEO Report - %s"
+msgstr ""
+
+msgid "Most recognizable link type: %1$s (%2$d%% of analyzed links)."
+msgstr "Meest herkenbare linktype: %1$s (%2$d%% van de geanalyseerde links)."
+
+msgid "Move Down"
+msgstr ""
+
+msgid "Move Up"
+msgstr ""
+
+msgid "Move to trash"
+msgstr ""
+
+msgid "Multi-CMS Publish"
+msgstr ""
+
+msgid "Multi-CMS Publisher"
+msgstr "Multi-CMS Publisher"
+
+msgid "Multi-CMS Publishing"
+msgstr ""
+
+msgid "Multi-Country Rank Tracking"
+msgstr ""
+
+msgid "Multiple posts match this tracked keyword"
+msgstr ""
+
+msgid "NL"
+msgstr ""
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "Navigational"
+msgstr ""
+
+msgid "Needs Improvement"
+msgstr "Verbetering nodig"
+
+msgid "Needs Optimization"
+msgstr ""
+
+msgid "Needs Work"
+msgstr ""
+
+msgid "Needs attention"
+msgstr ""
+
+msgid "Negative"
+msgstr ""
+
+msgid "Negative sentiment is outweighing positive. Address common complaints and publish case studies or testimonials."
+msgstr ""
+
+msgid "Neither sitemap.xml nor sitemap_index.xml could be found."
+msgstr "sitemap.xml en sitemap_index.xml zijn niet gevonden."
+
+msgid "Neutral position. No significant advantage or disadvantage. Success depends on content quality."
+msgstr ""
+
+msgid "Never"
+msgstr ""
+
+msgid "Never miss a publication deadline"
+msgstr "Mis nooit een publicatiedeadline"
+
+msgid "New Content Assignment"
+msgstr ""
+
+msgid "New Conversation"
+msgstr ""
+
+msgid "New content published"
+msgstr ""
+
+msgid "New ranked keywords"
+msgstr ""
+
+msgid "News Article"
+msgstr ""
+
+msgid "News Sitemap:"
+msgstr ""
+
+msgid "Newsletter Summary"
+msgstr ""
+
+msgid "Next"
+msgstr "Volgende"
+
+msgid "Next Run"
+msgstr ""
+
+msgid "No"
+msgstr "Nee"
+
+msgid "No Desc."
+msgstr ""
+
+msgid "No FAQ posts found. Add FAQs to your posts to see them here."
+msgstr ""
+
+msgid "No Issues"
+msgstr ""
+
+msgid "No KW"
+msgstr ""
+
+msgid "No OG"
+msgstr ""
+
+msgid "No SEO data found from this plugin."
+msgstr ""
+
+msgid "No SEO options available."
+msgstr "Geen SEO-opties beschikbaar."
+
+msgid "No SEO revisions yet."
+msgstr ""
+
+msgid "No SERP location found for source \"%s\"."
+msgstr ""
+
+msgid "No Sitemap Found"
+msgstr "Geen sitemap gevonden"
+
+msgid "No Title"
+msgstr ""
+
+msgid "No accounts found."
+msgstr ""
+
+msgid "No active A/B tests. Create a test to optimize your titles and meta descriptions."
+msgstr ""
+
+msgid "No active background tasks. Here's what I can help with:\n• Generate a topic cluster\n• Write an article\n• Research keywords\n• Run a site audit"
+msgstr ""
+
+msgid "No anchor text data available yet."
+msgstr ""
+
+msgid "No approval required"
+msgstr ""
+
+msgid "No authors found."
+msgstr ""
+
+msgid "No backlink data available for this competitor."
+msgstr "Geen backlinkdata beschikbaar voor deze concurrent."
+
+msgid "No backlink data available for this competitor. Check your backlink provider under Integrations."
+msgstr "Geen backlinkdata beschikbaar voor deze concurrent. Controleer je backlinkprovider onder Integraties."
+
+msgid "No backlink data source is available."
+msgstr "Er is geen bron voor backlinkdata beschikbaar."
+
+msgid "No broken backlink opportunities found yet. Enter a competitor domain above."
+msgstr "Nog geen broken backlink-kansen gevonden. Voer hierboven een concurrent-domein in."
+
+msgid "No cannibalization found — every keyword has a single clear target."
+msgstr ""
+
+msgid "No category"
+msgstr ""
+
+msgid "No cluster"
+msgstr ""
+
+msgid "No cluster found to generate content for. Please create a cluster first."
+msgstr ""
+
+msgid "No clusters found. Generate clusters from the Topic Clusters page."
+msgstr ""
+
+msgid "No common AI-generated phrases detected."
+msgstr ""
+
+msgid "No compatible SEO plugins detected. Install Yoast, Rank Math, or AIOSEO first, then return here to import."
+msgstr ""
+
+msgid "No content decay detected! Your content is performing well."
+msgstr ""
+
+msgid "No content found to analyze"
+msgstr ""
+
+msgid "No content to check"
+msgstr ""
+
+msgid "No custom rules yet. Add one above to automatically link specific keywords."
+msgstr ""
+
+msgid "No data available."
+msgstr "Geen gegevens beschikbaar."
+
+msgid "No data to update"
+msgstr ""
+
+msgid "No fact check available for this post"
+msgstr ""
+
+msgid "No featured image"
+msgstr ""
+
+msgid "No focus keyphrase set"
+msgstr ""
+
+msgid "No gaps found!"
+msgstr ""
+
+msgid "No history data yet"
+msgstr ""
+
+msgid "No ideas found"
+msgstr ""
+
+msgid "No ideas yet. Generate ideas or add your own!"
+msgstr ""
+
+msgid "No image set"
+msgstr ""
+
+msgid "No integrations configured. Please add API keys in the Integrations page."
+msgstr ""
+
+msgid "No issues found!"
+msgstr ""
+
+msgid "No issues found! Your sitemap is healthy."
+msgstr "Geen problemen gevonden! Je sitemap is gezond."
+
+msgid "No keyword opportunities found yet."
+msgstr ""
+
+msgid "No keywords found"
+msgstr ""
+
+msgid "No keywords selected"
+msgstr ""
+
+msgid "No keywords tracked yet. Add one above!"
+msgstr ""
+
+msgid "No language alternatives set. Click \"Add Language\" to start."
+msgstr ""
+
+msgid "No link building suggestions available yet."
+msgstr ""
+
+msgid "No link suggestions available."
+msgstr ""
+
+msgid "No local results found."
+msgstr ""
+
+msgid "No major E-E-A-T issues detected. Keep adding first-hand experience, citations, and author credentials."
+msgstr ""
+
+msgid "No matching internal pages found."
+msgstr ""
+
+msgid "No missing terms!"
+msgstr ""
+
+msgid "No orphan pages detected!"
+msgstr ""
+
+msgid "No orphan pages found."
+msgstr ""
+
+msgid "No pages found in the cluster to generate."
+msgstr ""
+
+msgid "No pages to generate. Generate a cluster map first."
+msgstr ""
+
+msgid "No pending approvals."
+msgstr ""
+
+msgid "No performance data available yet. Connect GA4 to start tracking."
+msgstr ""
+
+msgid "No post targets this tracked keyword"
+msgstr ""
+
+msgid "No posts found"
+msgstr ""
+
+msgid "No posts with issues found"
+msgstr ""
+
+msgid "No properties found."
+msgstr ""
+
+msgid "No published pages found."
+msgstr ""
+
+msgid "No quick wins available."
+msgstr ""
+
+msgid "No redirects found."
+msgstr ""
+
+msgid "No related keywords found."
+msgstr ""
+
+msgid "No replies yet."
+msgstr ""
+
+msgid "No response from dashboard"
+msgstr ""
+
+msgid "No saved clusters yet."
+msgstr ""
+
+msgid "No scan data yet. Configure your brand settings above and run a scan to see results."
+msgstr ""
+
+msgid "No screenshot uploaded."
+msgstr ""
+
+msgid "No specific items recorded."
+msgstr ""
+
+msgid "No strong rank correlation yet"
+msgstr ""
+
+msgid "No suggestions needed - your content looks great!"
+msgstr ""
+
+msgid "No toxic links detected. Great job!"
+msgstr ""
+
+msgid "No trend data available yet. Track keywords to see position trends."
+msgstr "Nog geen trenddata beschikbaar. Volg zoekwoorden om positietrends te zien."
+
+msgid "No videos found. Add videos to your posts to see them here."
+msgstr ""
+
+msgid "Nofollow"
+msgstr ""
+
+msgid "None detected."
+msgstr ""
+
+msgid "Not Found"
+msgstr ""
+
+msgid "Not Mentioned"
+msgstr ""
+
+msgid "Not Optimized"
+msgstr "Niet geoptimaliseerd"
+
+msgid "Not active"
+msgstr ""
+
+msgid "Not checked yet"
+msgstr ""
+
+msgid "Not connected / missing indexing scope"
+msgstr "Niet verbonden / ontbrekende indexeringsscoop"
+
+msgid "Not connected to Google Search Console."
+msgstr ""
+
+msgid "Not connected. Connect your Google account in the Google Services card above."
+msgstr ""
+
+msgid "Not found in this scan."
+msgstr ""
+
+msgid "Not generated"
+msgstr ""
+
+msgid "Note: Administrators have all permissions. Permissions can be customized with a roles plugin."
+msgstr ""
+
+msgid "Note: Instagram does not support direct web sharing links. Use the mobile app to share."
+msgstr ""
+
+msgid "Note: already scheduled posts will still publish when ApexFlow is turned off."
+msgstr ""
+
+msgid "Notes"
+msgstr "Notities"
+
+msgid "Notifications"
+msgstr ""
+
+msgid "Notion API Key"
+msgstr ""
+
+msgid "Notion Integration"
+msgstr ""
+
+msgid "Number of FAQs:"
+msgstr ""
+
+msgid "Number of ideas"
+msgstr ""
+
+msgid "Number of keywords"
+msgstr ""
+
+msgid "Numeric property ID from GA4 (Admin → Property Settings)."
+msgstr ""
+
+msgid "Numeric property ID from GA4 (found in Admin → Property Settings)."
+msgstr ""
+
+msgid "OG Description"
+msgstr ""
+
+msgid "OG Image URL"
+msgstr ""
+
+msgid "OG Title"
+msgstr ""
+
+msgid "Off"
+msgstr "Uit"
+
+msgid "On"
+msgstr "Aan"
+
+msgid "Once Weekly"
+msgstr ""
+
+msgid "One H1 heading found."
+msgstr ""
+
+msgid "One per line. Format: Mo-Fr 09:00-17:00"
+msgstr ""
+
+msgid "Only pending queues can be cancelled"
+msgstr ""
+
+msgid "Only posts without featured images"
+msgstr ""
+
+msgid "Only published posts can be submitted for indexing."
+msgstr ""
+
+msgid "Only the first 200 pages (by title) are shown."
+msgstr ""
+
+msgid "Open"
+msgstr "Open"
+
+msgid "Open Graph (1200x630):"
+msgstr ""
+
+msgid "Open Graph Images (1200x630)"
+msgstr ""
+
+msgid "Open Graph Tags"
+msgstr ""
+
+msgid "Open PDF Report"
+msgstr ""
+
+msgid "Open Sitemap Settings"
+msgstr "Open sitemap-instellingen"
+
+msgid "Open in Excel, Google Sheets, etc."
+msgstr ""
+
+msgid "Open in new tab"
+msgstr ""
+
+msgid "Open the Topic Clusters page to see the full map."
+msgstr ""
+
+msgid "Open the full report in the Fyndable dashboard for more details."
+msgstr ""
+
+msgid "OpenAI quota exceeded. Add credits at platform.openai.com/billing."
+msgstr ""
+
+msgid "OpenAI rate limit reached. Slow down or upgrade your OpenAI plan."
+msgstr ""
+
+msgid "OpenAI rejected the API key. Add a valid key in SaaS Settings → API Credentials."
+msgstr ""
+
+msgid "OpenRouter credits are exhausted. Top up your account at openrouter.ai."
+msgstr ""
+
+msgid "OpenRouter rate limit reached. Wait a moment or upgrade your OpenRouter plan."
+msgstr ""
+
+msgid "OpenRouter rejected the API key. Add a valid key in SaaS Settings → AI Models."
+msgstr ""
+
+msgid "OpenRouter returned an error. Check the provider status at status.openrouter.ai."
+msgstr ""
+
+msgid "Opening Hours"
+msgstr ""
+
+msgid "Opinion / Thought Leadership"
+msgstr ""
+
+msgid "Opportunities & action items"
+msgstr "Kansen & actiepunten"
+
+msgid "Opportunity"
+msgstr ""
+
+msgid "Opportunity Score"
+msgstr ""
+
+msgid "Opportunity Type"
+msgstr ""
+
+msgid "Optimization Impact"
+msgstr ""
+
+msgid "Optimization Impact:"
+msgstr ""
+
+msgid "Optimization Score"
+msgstr ""
+
+msgid "Optimization status of your posts for SERP features."
+msgstr ""
+
+msgid "Optimize"
+msgstr "Optimaliseren"
+
+msgid "Optimize Schedule"
+msgstr ""
+
+msgid "Optimize posting times for maximum engagement"
+msgstr "Optimaliseer posttijden voor maximale betrokkenheid"
+
+msgid "Optimize title and meta description"
+msgstr ""
+
+msgid "Optimized"
+msgstr "Geoptimaliseerd"
+
+msgid "Optional markdown appended after the post list."
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Or open the web app directly at:"
+msgstr ""
+
+msgid "Organic Competitors for"
+msgstr ""
+
+msgid "Organic Traffic"
+msgstr ""
+
+msgid "Organization"
+msgstr ""
+
+msgid "Organize and schedule your content with AI-powered suggestions"
+msgstr "Organiseer en plan je content met AI-aangedreven suggesties"
+
+msgid "Original"
+msgstr ""
+
+msgid "Originality"
+msgstr "Originaliteit"
+
+msgid "Orphan Pages"
+msgstr ""
+
+msgid "Other"
+msgstr "Anders"
+
+msgid "Outlines"
+msgstr ""
+
+msgid "Output language for AI-generated content such as LSI keywords. Defaults to the WordPress site language when not set."
+msgstr ""
+
+msgid "Outreach Email Template"
+msgstr ""
+
+msgid "Overall Assessment"
+msgstr ""
+
+msgid "Overall E-E-A-T Score"
+msgstr ""
+
+msgid "Override the global \"Show social share buttons\" setting for this page."
+msgstr ""
+
+msgid "Override with custom JSON-LD schema"
+msgstr ""
+
+msgid "Overused"
+msgstr ""
+
+msgid "Overview"
+msgstr "Overzicht"
+
+msgid "Overview of your SEO performance and areas for improvement."
+msgstr ""
+
+msgid "Overwrite existing Fyndable SEO data"
+msgstr ""
+
+msgid "Own keywords (optional)"
+msgstr ""
+
+msgid "PAA"
+msgstr ""
+
+msgid "PAA Questions Covered"
+msgstr ""
+
+msgid "PAA questions generated!"
+msgstr ""
+
+msgid "Page"
+msgstr "Pagina"
+
+msgid "Page Speed"
+msgstr "Paginasnelheid"
+
+msgid "Page Title"
+msgstr ""
+
+msgid "Page View"
+msgstr "Paginaweergave"
+
+msgid "Page not found"
+msgstr ""
+
+msgid "Page: %s"
+msgstr ""
+
+msgid "PageSpeed API error"
+msgstr ""
+
+msgid "Pages"
+msgstr "Pagina's"
+
+msgid "Pages array is required"
+msgstr ""
+
+msgid "Pages to optimize"
+msgstr ""
+
+msgid "Pages with Issues"
+msgstr ""
+
+msgid "Pages with no internal links pointing to them."
+msgstr ""
+
+msgid "Pages with no internal links pointing to them. Consider adding links from other posts."
+msgstr ""
+
+msgid "Paragraph"
+msgstr ""
+
+msgid "Partial Internal Overlap"
+msgstr ""
+
+msgid "Partial Match"
+msgstr ""
+
+msgid "Partially Original"
+msgstr ""
+
+msgid "Passive voice overuse"
+msgstr ""
+
+msgid "Paste or write your content here..."
+msgstr ""
+
+msgid "Paste your article content here to get a score..."
+msgstr ""
+
+msgid "Paste your content below to score it against this brief\'s recommendations."
+msgstr ""
+
+msgid "Paste your content here..."
+msgstr ""
+
+msgid "Paste your content to see how it stacks up against the competition."
+msgstr ""
+
+msgid "Pending"
+msgstr "In afwachting"
+
+msgid "Pending Approval"
+msgstr ""
+
+msgid "People Also Ask (PAA)"
+msgstr ""
+
+msgid "People Also Ask (PAA) Questions"
+msgstr ""
+
+msgid "Percentage"
+msgstr ""
+
+msgid "Performance"
+msgstr "Prestaties"
+
+msgid "Performance Metrics"
+msgstr ""
+
+msgid "Performance Monitor"
+msgstr ""
+
+msgid "Performance Overview (Last 30 Days)"
+msgstr ""
+
+msgid "Performance data from Google Search Console. Connect via Settings to enable."
+msgstr ""
+
+msgid "Permission denied."
+msgstr ""
+
+msgid "Person"
+msgstr ""
+
+msgid "Personal Website:"
+msgstr ""
+
+msgid "Persuasive"
+msgstr "Overtuigend"
+
+msgid "Phone"
+msgstr ""
+
+msgid "Photorealistic"
+msgstr ""
+
+msgid "Pillar Pages"
+msgstr "Pillar pagina's"
+
+msgid "Ping Search Engines"
+msgstr ""
+
+msgid "Placeholders are filled from the configuration above. {location} uses the city from Settings → Local Business. Empty values fall back to a generic term."
+msgstr ""
+
+msgid "Plan"
+msgstr ""
+
+msgid "Plan Your Content Strategy"
+msgstr "Plan je contentstrategie"
+
+msgid "Plan ahead (weeks)"
+msgstr ""
+
+msgid "Plan and manage your publishing schedule, discover content gaps."
+msgstr ""
+
+msgid "Planned Posts"
+msgstr ""
+
+msgid "Planned posts cleared and pending generation cancelled."
+msgstr "Geplande posts gewist en openstaande generatie geannuleerd."
+
+msgid "Platform"
+msgstr ""
+
+msgid "Platform Breakdown"
+msgstr ""
+
+msgid "Platform Configuration"
+msgstr ""
+
+msgid "Please enter a competitor domain"
+msgstr ""
+
+msgid "Please enter a domain."
+msgstr ""
+
+msgid "Please enter a focus keyphrase first"
+msgstr ""
+
+msgid "Please enter a keyword"
+msgstr ""
+
+msgid "Please enter a keyword to explore"
+msgstr ""
+
+msgid "Please enter a keyword."
+msgstr ""
+
+msgid "Please enter a title"
+msgstr ""
+
+msgid "Please enter a topic"
+msgstr ""
+
+msgid "Please enter a topic or keyword."
+msgstr ""
+
+msgid "Please enter a valid domain, e.g. competitor.com"
+msgstr "Voer een geldig domein in, bijv. concurrent.nl"
+
+msgid "Please enter a valid license key and dashboard URL."
+msgstr "Voer een geldige licentiesleutel en dashboard-URL in."
+
+msgid "Please select a date"
+msgstr ""
+
+msgid "Please select at least one page to generate."
+msgstr ""
+
+msgid "Please select keywords first"
+msgstr ""
+
+msgid "Please select posts first"
+msgstr ""
+
+msgid "Please set a focus keyphrase in the SEO Score tab first to generate LSI keywords."
+msgstr ""
+
+msgid "Plugin Settings"
+msgstr "Plugin instellingen"
+
+msgid "Plumber"
+msgstr ""
+
+msgid "Polling error"
+msgstr ""
+
+msgid "Poor"
+msgstr "Slecht"
+
+msgid "Popup blocked. Please allow popups for this site to connect Google."
+msgstr ""
+
+msgid "Pos"
+msgstr ""
+
+msgid "Position"
+msgstr "Positie"
+
+msgid "Position Change"
+msgstr ""
+
+msgid "Position History:"
+msgstr ""
+
+msgid "Position Trends"
+msgstr "Positietrends"
+
+msgid "Position changes"
+msgstr ""
+
+msgid "Position trend (last 30 days)"
+msgstr "Positietrend (laatste 30 dagen)"
+
+msgid "Positive"
+msgstr ""
+
+msgid "Post"
+msgstr "Bericht"
+
+msgid "Post Auto-Cleaner"
+msgstr "Post Auto-Opschoner"
+
+msgid "Post Details"
+msgstr ""
+
+msgid "Post ID required"
+msgstr ""
+
+msgid "Post IDs required"
+msgstr ""
+
+msgid "Post Optimization"
+msgstr "Postoptimalisatie"
+
+msgid "Post Type"
+msgstr ""
+
+msgid "Post Types"
+msgstr ""
+
+msgid "Post Types in Sitemap"
+msgstr ""
+
+msgid "Post language:"
+msgstr ""
+
+msgid "Post marked for regeneration"
+msgstr ""
+
+msgid "Post not found"
+msgstr ""
+
+msgid "Post not found."
+msgstr ""
+
+msgid "Post settings"
+msgstr ""
+
+msgid "Post status:"
+msgstr ""
+
+msgid "Post type not allowed."
+msgstr ""
+
+msgid "Post types"
+msgstr ""
+
+msgid "Post updated"
+msgstr ""
+
+msgid "Post visibility"
+msgstr ""
+
+msgid "Post, test name, and at least 2 variants required."
+msgstr ""
+
+msgid "Postal Code"
+msgstr "Postcode"
+
+msgid "Posts"
+msgstr "Berichten"
+
+msgid "Posts Overview"
+msgstr ""
+
+msgid "Posts This Month"
+msgstr ""
+
+msgid "Posts Without Featured"
+msgstr ""
+
+msgid "Posts by %s"
+msgstr ""
+
+msgid "Posts older than this many days are eligible for cleanup. Default: 60."
+msgstr ""
+
+msgid "Posts per page"
+msgstr ""
+
+msgid "Posts per week"
+msgstr ""
+
+msgid "Posts with FAQs"
+msgstr ""
+
+msgid "Posts with Issues"
+msgstr ""
+
+msgid "Posts with Links"
+msgstr ""
+
+msgid "Posts with good content but missing SEO meta — easy to fix!"
+msgstr ""
+
+msgid "Posts with this many views or fewer are eligible. Set to 0 to only clean posts with zero views. Default: 0."
+msgstr ""
+
+msgid "Preferred Backlink Provider"
+msgstr ""
+
+msgid "Preferred Terms (comma-separated)"
+msgstr ""
+
+msgid "Preparing..."
+msgstr ""
+
+msgid "Present Signals"
+msgstr ""
+
+msgid "Preview"
+msgstr "Voorbeeld"
+
+msgid "Preview First Page"
+msgstr ""
+
+msgid "Preview Prompt Snippet"
+msgstr ""
+
+msgid "Preview Schema"
+msgstr ""
+
+msgid "Preview Schema JSON"
+msgstr ""
+
+msgid "Previous"
+msgstr "Vorige"
+
+msgid "Price Range"
+msgstr ""
+
+msgid "Primary country this content targets"
+msgstr ""
+
+msgid "Print / Save as PDF"
+msgstr ""
+
+msgid "Print or Save as PDF from browser."
+msgstr ""
+
+msgid "Prioritized above automatically discovered keywords."
+msgstr ""
+
+msgid "Priority"
+msgstr "Prioriteit"
+
+msgid "Priority Legend"
+msgstr ""
+
+msgid "Priority Score"
+msgstr ""
+
+msgid "Private"
+msgstr ""
+
+msgid "Process now"
+msgstr ""
+
+msgid "Processing cluster map..."
+msgstr ""
+
+msgid "Processing failed"
+msgstr ""
+
+msgid "Processing..."
+msgstr "Verwerken..."
+
+msgid "Product"
+msgstr ""
+
+msgid "Product Names (one per line)"
+msgstr ""
+
+msgid "Product Schema Data"
+msgstr ""
+
+msgid "Product not found"
+msgstr ""
+
+msgid "Professional"
+msgstr "Professioneel"
+
+msgid "Programmatic SEO"
+msgstr "Programmatische SEO"
+
+msgid "Projects / Ahrefs"
+msgstr ""
+
+msgid "Prompt"
+msgstr ""
+
+msgid "Prompt Snippet (injected into all AI content generation)"
+msgstr ""
+
+msgid "Prompt Template Library"
+msgstr "Prompt Template Bibliotheek"
+
+msgid "Prompt Templates"
+msgstr ""
+
+msgid "Prompt Word Count:"
+msgstr ""
+
+msgid "Prompt is required"
+msgstr ""
+
+msgid "Property ID set — verify connection on Google Data Dashboard"
+msgstr ""
+
+msgid "Provider"
+msgstr ""
+
+msgid "Publish"
+msgstr "Publiceren"
+
+msgid "Publish AI-generated content to Webflow, Shopify, and other CMS platforms."
+msgstr ""
+
+msgid "Publish FAQ, comparison, and “best of” pages to train AI models on your context and authority."
+msgstr ""
+
+msgid "Publish a Post"
+msgstr ""
+
+msgid "Publish date"
+msgstr "Publicatiedatum"
+
+msgid "Publish mode"
+msgstr ""
+
+msgid "Publish on"
+msgstr ""
+
+msgid "Published"
+msgstr "Gepubliceerd"
+
+msgid "Published (30d)"
+msgstr ""
+
+msgid "Published / scheduled"
+msgstr ""
+
+msgid "Published Posts"
+msgstr ""
+
+msgid "Published from"
+msgstr ""
+
+msgid "Published to"
+msgstr ""
+
+msgid "Publishing Calendar"
+msgstr ""
+
+msgid "Publishing Schedule"
+msgstr "Publicatieschema"
+
+msgid "Query"
+msgstr ""
+
+msgid "Question"
+msgstr ""
+
+msgid "Question Keywords"
+msgstr ""
+
+msgid "Question is required."
+msgstr ""
+
+msgid "Question:"
+msgstr ""
+
+msgid "Questions to Answer"
+msgstr ""
+
+msgid "Questions to Answer (FAQ)"
+msgstr ""
+
+msgid "Queue ID missing"
+msgstr ""
+
+msgid "Queue active — generating in background..."
+msgstr ""
+
+msgid "Queue all cluster pages for background generation with scheduling."
+msgstr ""
+
+msgid "Queue cancelled"
+msgstr ""
+
+msgid "Queue completed"
+msgstr ""
+
+msgid "Queue created with"
+msgstr ""
+
+msgid "Queue created. Content will be generated in the background."
+msgstr ""
+
+msgid "Queue not found"
+msgstr ""
+
+msgid "Queue status is \"%s\" — only pending/processing queues can be processed."
+msgstr ""
+
+msgid "Queued"
+msgstr "In wachtrij"
+
+msgid "Queueing..."
+msgstr ""
+
+msgid "Quick Start Tips"
+msgstr "Snelle starttips"
+
+msgid "Quick Wins"
+msgstr ""
+
+msgid "Quota"
+msgstr ""
+
+msgid "Quota remaining today: %d / %d"
+msgstr "Resterende quota vandaag: %d / %d"
+
+msgid "Quotable Passages (15-50 words)"
+msgstr ""
+
+msgid "ROI"
+msgstr "ROI"
+
+msgid "RSS Sitemap:"
+msgstr ""
+
+msgid "Radius (km)"
+msgstr ""
+
+msgid "Rank"
+msgstr "Positie"
+
+msgid "Rank Change"
+msgstr ""
+
+msgid "Rank Tracker"
+msgstr "Ranktracker"
+
+msgid "Rate Limit"
+msgstr ""
+
+msgid "Rate limit resets in %d minutes"
+msgstr ""
+
+msgid "Rating"
+msgstr ""
+
+msgid "Re-analyze Content"
+msgstr ""
+
+msgid "Re-check"
+msgstr ""
+
+msgid "Re-scan Site Profile"
+msgstr ""
+
+msgid "Readability"
+msgstr "Leesbaarheid"
+
+msgid "Real Estate"
+msgstr "Vastgoed"
+
+msgid "Real Estate Agent"
+msgstr ""
+
+msgid "Real-time NLP content scoring. Enter a keyword to generate a topic model, then optimize your content."
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "Reason for rejection:"
+msgstr ""
+
+msgid "Recent Changes"
+msgstr ""
+
+msgid "Recent Posts with FAQs"
+msgstr ""
+
+msgid "Recent Submissions"
+msgstr ""
+
+msgid "Recent Videos"
+msgstr ""
+
+msgid "Recent posts (last 30 days)"
+msgstr ""
+
+msgid "Recipe"
+msgstr ""
+
+msgid "Recommendation"
+msgstr ""
+
+msgid "Recommendations"
+msgstr ""
+
+msgid "Recommended Headings"
+msgstr ""
+
+msgid "Recommended: 1200×630px. Leave empty to use featured image."
+msgstr ""
+
+msgid "Recommended: 150-160 characters. Current: %d"
+msgstr ""
+
+msgid "Recommended: 50-60 characters. Current: %d"
+msgstr ""
+
+msgid "Redirect"
+msgstr "Redirect"
+
+msgid "Redirect Manager"
+msgstr "Redirectbeheer"
+
+msgid "Redirect Type"
+msgstr "Redirect type"
+
+msgid "Redirect added."
+msgstr ""
+
+msgid "Redirect deleted."
+msgstr ""
+
+msgid "Redirects"
+msgstr "Redirects"
+
+msgid "Ref. Domains"
+msgstr ""
+
+msgid "Reference Images"
+msgstr ""
+
+msgid "References"
+msgstr ""
+
+msgid "Referring Domains"
+msgstr ""
+
+msgid "Refresh"
+msgstr "Vernieuwen"
+
+msgid "Refresh Metrics"
+msgstr ""
 
 msgid "Refresh Pool Now"
 msgstr "Pool nu verversen"
@@ -1008,12 +5810,44 @@ msgstr "Pool nu verversen"
 msgid "Refresh Pool Now rebuilds the keyword pool immediately (uses SERP/AI credits); Clear Keyword Pool rebuilds lazily on the next run."
 msgstr "'Pool nu verversen' bouwt de keyword-pool direct opnieuw op (verbruikt SERP/AI-credits); 'Keyword-pool legen' bouwt pas opnieuw op bij de volgende run."
 
-msgid "last 50 entries"
-msgstr "laatste 50 regels"
+msgid "Refresh Suggestions"
+msgstr ""
 
-#, php-format
-msgid "Up to %d competitors. Used for link gap and broken-link prospecting."
-msgstr "Maximaal %d concurrenten. Gebruikt voor de link gap en broken-link prospecting."
+msgid "Refresh competitor data? This may take a few minutes."
+msgstr ""
+
+msgid "Refresh data"
+msgstr ""
+
+msgid "Refresh failed"
+msgstr ""
+
+msgid "Regenerate"
+msgstr ""
+
+msgid "Regenerate AI featured image?"
+msgstr ""
+
+msgid "Regex"
+msgstr ""
+
+msgid "Reject"
+msgstr ""
+
+msgid "Rejected"
+msgstr ""
+
+msgid "Related Keywords"
+msgstr ""
+
+msgid "Relevance"
+msgstr ""
+
+msgid "Relevance Score"
+msgstr ""
+
+msgid "Remaining"
+msgstr ""
 
 msgid "Remove"
 msgstr "Verwijderen"
@@ -1021,116 +5855,2396 @@ msgstr "Verwijderen"
 msgid "Remove this competitor?"
 msgstr "Deze concurrent verwijderen?"
 
-#, php-format
-msgid "high spam score (%d)"
-msgstr "hoge spamscore (%d)"
+msgid "Remove this keyword?"
+msgstr ""
 
-msgid "spam-related anchor text"
-msgstr "spamgerelateerde ankertekst"
+msgid "Reorder"
+msgstr ""
 
-msgid "very low authority domain"
-msgstr "domein met zeer lage autoriteit"
+msgid "Replies"
+msgstr "Antwoorden"
 
-msgid "Invalid domain"
-msgstr "Ongeldig domein"
+msgid "Reply sent."
+msgstr ""
 
-msgid "Please enter a valid domain, e.g. competitor.com"
-msgstr "Voer een geldig domein in, bijv. concurrent.nl"
+msgid "Report Email"
+msgstr ""
 
-msgid "This is your own domain."
-msgstr "Dit is je eigen domein."
+msgid "Report Frequency"
+msgstr ""
 
-msgid "This competitor is already added."
-msgstr "Deze concurrent is al toegevoegd."
+msgid "Report exported to Google Drive!"
+msgstr ""
 
-#, php-format
-msgid "You can track up to %d competitors."
-msgstr "Je kunt maximaal %d concurrenten volgen."
+msgid "Repurpose content for different formats"
+msgstr "Hergebruik content voor verschillende formaten"
 
-msgid "No backlink data source is available."
-msgstr "Er is geen bron voor backlinkdata beschikbaar."
+msgid "Repurpose this content for different formats:"
+msgstr ""
 
-msgid "Competitors Linked"
-msgstr "Gelinkte concurrenten"
+msgid "Request failed. Please try again."
+msgstr ""
 
-msgid "Guest Post"
-msgstr "Gastblog"
+msgid "Required for Local SERP radius scans"
+msgstr ""
 
-msgid "Directory"
-msgstr "Bedrijvengids"
+msgid "Rescan"
+msgstr ""
 
-msgid "Forum"
-msgstr "Forum"
+msgid "Research Variations"
+msgstr ""
+
+msgid "Restaurant"
+msgstr ""
+
+msgid "Restore"
+msgstr ""
+
+msgid "Restore this SEO revision? Current SEO data will be overwritten."
+msgstr ""
+
+msgid "Retail/E-commerce"
+msgstr "Detailhandel/E-commerce"
+
+msgid "Retry now"
+msgstr ""
+
+msgid "Review"
+msgstr "Review"
+
+msgid "Review & Generate Content"
+msgstr ""
+
+msgid "Review Status"
+msgstr ""
+
+msgid "Review your SEO settings in Settings > Fyndable"
+msgstr "Bekijk je SEO-instellingen in Instellingen > Fyndable"
+
+msgid "Review your title tag and meta description for better CTR."
+msgstr ""
+
+msgid "Reviewing"
+msgstr ""
+
+msgid "Revision Needed"
+msgstr ""
+
+msgid "Revision restored. Reload the page to see changes."
+msgstr ""
+
+msgid "Rewrite and optimize existing content"
+msgstr "Herschrijf en optimaliseer bestaande content"
+
+msgid "Risk Level"
+msgstr "Risiconiveau"
+
+msgid "Robots.txt"
+msgstr "Robots.txt"
+
+msgid "Robots.txt Editor"
+msgstr ""
+
+msgid "Role-Based Permissions"
+msgstr ""
+
+msgid "Rule deleted."
+msgstr ""
+
+msgid "Rules Generator"
+msgstr ""
+
+msgid "Run ApexFlow Now"
+msgstr ""
+
+msgid "Run Full Audit"
+msgstr ""
+
+msgid "Run Full Sitemap Health Check"
+msgstr "Volledige sitemap-gezondheidscheck uitvoeren"
+
+msgid "Run Full Technical Audit"
+msgstr ""
+
+msgid "Run Scan Now"
+msgstr ""
+
+msgid "Run Toxic Link Check"
+msgstr ""
+
+msgid "Run a full technical SEO audit? This may take several minutes."
+msgstr ""
+
+msgid "Run an audit to analyze performance."
+msgstr ""
+
+msgid "Run an audit to analyze the crawl budget."
+msgstr ""
+
+msgid "Run an audit to check URL structure."
+msgstr ""
+
+msgid "Run an audit to check crawlability."
+msgstr ""
+
+msgid "Run an audit to check robots.txt."
+msgstr ""
+
+msgid "Run an audit to check the sitemap."
+msgstr ""
+
+msgid "Run an audit to see your scores"
+msgstr ""
+
+msgid "Run the Fyndable setup wizard again to review or change your onboarding settings."
+msgstr ""
+
+msgid "Running Audit..."
+msgstr ""
+
+msgid "Running sitemap health check..."
+msgstr "Sitemap-gezondheidscheck wordt uitgevoerd..."
+
+msgid "SE Ranking"
+msgstr ""
+
+msgid "SE Ranking API Key"
+msgstr ""
+
+msgid "SE Ranking API error"
+msgstr ""
+
+msgid "SE Ranking API error (HTTP %d)."
+msgstr ""
+
+msgid "SE Ranking API key is invalid or lacks Data API access."
+msgstr ""
+
+msgid "SE Ranking API key not configured."
+msgstr ""
+
+msgid "SE Ranking Projects"
+msgstr ""
+
+msgid "SEMrush"
+msgstr "SEMrush"
+
+msgid "SEO"
+msgstr ""
+
+msgid "SEO AI Service"
+msgstr "Fyndable Smart SEO"
+
+msgid "SEO AI created posts"
+msgstr ""
+
+msgid "SEO Audit Report"
+msgstr ""
+
+msgid "SEO Breakdown"
+msgstr ""
+
+msgid "SEO Data"
+msgstr "SEO-data"
+
+msgid "SEO Data Dashboard"
+msgstr "SEO-datadashboard"
+
+msgid "SEO Importer"
+msgstr "SEO Importeur"
+
+msgid "SEO Position Trends"
+msgstr ""
+
+msgid "SEO Report"
+msgstr ""
+
+msgid "SEO Report Export"
+msgstr "SEO Rapport Export"
+
+msgid "SEO Revisions"
+msgstr "SEO-revisies"
+
+msgid "SEO Score"
+msgstr "SEO-score"
+
+msgid "SEO Settings: Configured"
+msgstr "SEO-instellingen: Ingesteld"
+
+msgid "SEO Setup"
+msgstr "SEO Setup"
+
+msgid "SEO Title"
+msgstr ""
+
+msgid "SEO Titles"
+msgstr ""
+
+msgid "SEO score changes"
+msgstr ""
+
+msgid "SERP"
+msgstr "SERP"
+
+msgid "SERP Analysis"
+msgstr ""
+
+msgid "SERP Change Monitor"
+msgstr "SERP Wijzigingsmonitor"
+
+msgid "SERP Competitor Analysis"
+msgstr "SERP Concurrentenanalyse"
+
+msgid "SERP Feature Checklist"
+msgstr ""
+
+msgid "SERP Feature Optimization"
+msgstr ""
+
+msgid "SERP Feature Overview"
+msgstr ""
+
+msgid "SERP Feature Tracking"
+msgstr ""
+
+msgid "SERP Features"
+msgstr "SERP-functies"
+
+msgid "SERP Monitor"
+msgstr ""
+
+msgid "SERP Overview"
+msgstr ""
+
+msgid "SERP Results"
+msgstr ""
+
+msgid "SERP task timed out. Please try again."
+msgstr ""
+
+msgid "SSEO AI"
+msgstr "SSEO AI"
+
+msgid "SaaS Dashboard URL"
+msgstr "SaaS Dashboard URL"
+
+msgid "SaaS Dashboard plugin is not properly loaded."
+msgstr ""
+
+msgid "SaaS dashboard not configured."
+msgstr ""
+
+msgid "Same focus keyphrase on multiple posts"
+msgstr ""
+
+msgid "Sat"
+msgstr ""
+
+msgid "Save Brand Voice"
+msgstr ""
+
+msgid "Save Changes"
+msgstr "Wijzigingen opslaan"
+
+msgid "Save Cluster Map"
+msgstr ""
+
+msgid "Save Configuration"
+msgstr "Configuratie opslaan"
+
+msgid "Save Settings"
+msgstr "Instellingen opslaan"
+
+msgid "Save Target Markets"
+msgstr ""
+
+msgid "Save Template"
+msgstr ""
+
+msgid "Save your brand settings above to receive personalized recommendations."
+msgstr ""
+
+msgid "Saved Cluster Maps"
+msgstr ""
+
+msgid "Saved!"
+msgstr ""
+
+msgid "Saving..."
+msgstr "Opslaan..."
+
+msgid "Scan Local Pack"
+msgstr ""
+
+msgid "Scan Site"
+msgstr ""
+
+msgid "Scan a QR code with the Fyndable Mobile app to log in instantly. A secure Application Password is created automatically."
+msgstr ""
+
+msgid "Scan complete!"
+msgstr ""
+
+msgid "Scan completed with issues."
+msgstr ""
+
+msgid "Scan failed."
+msgstr ""
+
+msgid "Scan failed:"
+msgstr ""
+
+msgid "Scan for Orphan Pages"
+msgstr ""
+
+msgid "Scan the Google local pack around your business address for any keyword."
+msgstr ""
+
+msgid "Scan your site for missing SEO data and bulk-generate meta titles, descriptions and Open Graph tags with AI."
+msgstr ""
+
+msgid "Scanning..."
+msgstr "Scannen..."
+
+msgid "Scans your site, researches keywords in your region and automatically plans and writes posts — every week, hands-free."
+msgstr ""
+
+msgid "Schedule"
+msgstr ""
+
+msgid "Schedule New Content"
+msgstr ""
+
+msgid "Schedule Post"
+msgstr ""
+
+msgid "Scheduled"
+msgstr "Gepland"
+
+msgid "Scheduled posts"
+msgstr ""
+
+msgid "Schema"
+msgstr "Schema"
+
+msgid "Schema Markup"
+msgstr "Schema Markup"
+
+msgid "Schema Preview:"
+msgstr ""
+
+msgid "Schema Status"
+msgstr ""
+
+msgid "Schema Type"
+msgstr ""
+
+msgid "Score"
+msgstr "Score"
+
+msgid "Score All Posts"
+msgstr ""
+
+msgid "Score Content"
+msgstr ""
+
+msgid "Score your content on citability by AI search engines (ChatGPT, Perplexity, Gemini)."
+msgstr ""
+
+msgid "Scoring..."
+msgstr ""
+
+msgid "Screenshot"
+msgstr ""
+
+msgid "Screenshots"
+msgstr ""
+
+msgid "Search"
+msgstr "Zoeken"
+
+msgid "Search Console"
+msgstr "Search Console"
+
+msgid "Search Console Dashboard"
+msgstr ""
+
+msgid "Search Intent"
+msgstr ""
+
+msgid "Search Queries (placeholders: {category}, {brand}, {product}, {location}, {competitor})"
+msgstr ""
+
+msgid "Search Volume"
+msgstr "Zoekvolume"
+
+msgid "Search by title"
+msgstr ""
+
+msgid "Search post title"
+msgstr ""
+
+msgid "Search redirects..."
+msgstr ""
+
+msgid "Search volume"
+msgstr ""
+
+msgid "Search volume data for how people prompt AI models."
+msgstr ""
+
+msgid "Search..."
+msgstr "Zoeken..."
+
+msgid "Search:"
+msgstr ""
+
+msgid "Search: %s"
+msgstr ""
+
+msgid "Secondary Keyphrases"
+msgstr ""
+
+msgid "Section"
+msgstr ""
+
+msgid "Security Check"
+msgstr "Beveiligingscheck"
+
+msgid "Security and connection options"
+msgstr ""
+
+msgid "Security check failed"
+msgstr ""
+
+msgid "Security check failed."
+msgstr ""
+
+msgid "Security check failed. Please refresh the page and try again."
+msgstr ""
+
+msgid "Security check failed. Please try again."
+msgstr "Beveiligingscontrole mislukt. Probeer het opnieuw."
+
+msgid "See what AI models say about your brand or keyword."
+msgstr ""
+
+msgid "See what content is now ranking higher and identify gaps."
+msgstr ""
+
+msgid "Select All"
+msgstr "Alles selecteren"
+
+msgid "Select Image"
+msgstr ""
+
+msgid "Select Reference Image"
+msgstr ""
+
+msgid "Select a competitor to compare rankings."
+msgstr ""
+
+msgid "Select a competitor to view their ad copy."
+msgstr ""
+
+msgid "Select a competitor to view their backlink strategy."
+msgstr ""
+
+msgid "Select a competitor to view their content calendar."
+msgstr ""
+
+msgid "Select a competitor to view their keyword strategy."
+msgstr ""
+
+msgid "Select a post and platform to publish externally."
+msgstr ""
+
+msgid "Select a post..."
+msgstr "Selecteer een bericht..."
+
+msgid "Select at least one field to generate"
+msgstr ""
+
+msgid "Select cluster"
+msgstr ""
+
+msgid "Select fields to generate"
+msgstr ""
+
+msgid "Select post to score"
+msgstr ""
+
+msgid "Select posts first"
+msgstr ""
+
+msgid "Select tone..."
+msgstr ""
+
+msgid "Select which SERP features you want to optimize for:"
+msgstr ""
+
+msgid "Select which content types should have SEO features enabled."
+msgstr "Selecteer welke contenttypen SEO-functies moeten krijgen."
+
+msgid "Select which pages appear in /llms.txt (as link) and /llms-full.txt (full text). Leave all unchecked to include all published pages."
+msgstr ""
+
+msgid "Select which post types to include in the sitemap."
+msgstr ""
+
+msgid "Select which taxonomies to include as separate sitemaps."
+msgstr ""
+
+msgid "Select your industry..."
+msgstr "Selecteer je industrie..."
+
+msgid "Selected"
+msgstr ""
+
+msgid "Selected posts:"
+msgstr ""
+
+msgid "Selected:"
+msgstr ""
+
+msgid "Semrush"
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Send Reply"
+msgstr ""
+
+msgid "Send Test Report"
+msgstr ""
+
+msgid "Send us your feedback or view previous submissions."
+msgstr ""
+
+msgid "Sentence Variety"
+msgstr ""
+
+msgid "Sentences have very similar length, which can indicate AI-generated or templated text. Add variety."
+msgstr ""
+
+msgid "Sentences slightly long"
+msgstr ""
+
+msgid "Sentences too long"
+msgstr ""
+
+msgid "Sentiment"
+msgstr ""
+
+msgid "SerpApi API key is invalid. Check the key in SaaS Settings."
+msgstr ""
+
+msgid "SerpApi rate limit reached. Upgrade your SerpApi plan."
+msgstr ""
+
+msgid "Serve %s with full body text"
+msgstr ""
+
+msgid "Serve /llms.txt"
+msgstr ""
+
+msgid "Server &amp; CDN Performance"
+msgstr ""
+
+msgid "Serves a markdown overview at %1$s and a full-content version at %2$s for large language models (ChatGPT, Claude, Gemini, Perplexity)."
+msgstr ""
+
+msgid "Set Current as Baseline"
+msgstr ""
+
+msgid "Set current metrics as baseline for future comparisons?"
+msgstr ""
+
+msgid "Set property ID to enable GA4 data"
+msgstr ""
+
+msgid "Set review status to:"
+msgstr ""
+
+msgid "Set up your default title and meta description templates."
+msgstr "Stel je standaard titel- en metabeschrijvingsjablonen in."
+
+msgid "Set your brand details for AI-generated content"
+msgstr ""
+
+msgid "Set your business coordinates first in Settings → Local Business."
+msgstr ""
+
+msgid "Set your business coordinates in Settings → Local Business to use local SERP scans."
+msgstr ""
+
+msgid "Settings"
+msgstr "Instellingen"
+
+msgid "Settings & Site Profile"
+msgstr ""
+
+msgid "Settings saved successfully!"
+msgstr "Instellingen succesvol opgeslagen!"
+
+msgid "Settings saved!"
+msgstr ""
+
+msgid "Settings saved."
+msgstr ""
+
+msgid "Setup Complete!"
+msgstr "Setup voltooid!"
+
+msgid "Setup Wizard"
+msgstr "Installatiewizard"
+
+msgid "Severity"
+msgstr ""
+
+msgid "Share buttons on this page"
+msgstr ""
+
+msgid "Share on Social Media"
+msgstr ""
+
+msgid "Share this article:"
+msgstr ""
+
+msgid "Share your feedback here..."
+msgstr ""
+
+msgid "Shop Domain"
+msgstr ""
+
+msgid "Shopify Blog ID is required to publish articles"
+msgstr ""
+
+msgid "Shopify domain and access token required"
+msgstr ""
+
+msgid "Shopify not enabled"
+msgstr ""
+
+msgid "Short"
+msgstr ""
+
+msgid "Short description of the idea..."
+msgstr ""
+
+msgid "Short summary after each post link"
+msgstr ""
+
+msgid "Show All"
+msgstr ""
+
+msgid "Show keywords"
+msgstr ""
+
+msgid "Show social share buttons"
+msgstr ""
+
+msgid "Show the chatbot widget in the bottom right of the dashboard and on post edit pages."
+msgstr ""
+
+msgid "Showing"
+msgstr "Tonen"
+
+msgid "Showing 20 of %d orphan pages."
+msgstr ""
+
+msgid "Showing up to 50 affected posts/pages:"
+msgstr ""
+
+msgid "Significant effort — need pillar content, cluster strategy, and backlinks. Expect 3-6 months."
+msgstr ""
+
+msgid "Similar Keywords"
+msgstr ""
+
+msgid "Single center"
+msgstr ""
+
+msgid "Single center (Professional)"
+msgstr ""
+
+msgid "Site Audit"
+msgstr "Site Audit"
+
+msgid "Site E-E-A-T Score"
+msgstr ""
+
+msgid "Site ID"
+msgstr ""
+
+msgid "Site Structure"
+msgstr "Site structuur"
+
+msgid "Site URL"
+msgstr ""
+
+msgid "Site description"
+msgstr ""
+
+msgid "Site profile re-scanned."
+msgstr ""
+
+msgid "Sitemap"
+msgstr "Sitemap"
+
+msgid "Sitemap Health"
+msgstr ""
+
+msgid "Sitemap Health Check Results"
+msgstr "Resultaten sitemap-gezondheidscheck"
+
+msgid "Sitemap Index Found"
+msgstr "Sitemap-index gevonden"
+
+msgid "Sitemap Index:"
+msgstr ""
+
+msgid "Sitemap Issues"
+msgstr ""
+
+msgid "Sitemap Settings"
+msgstr ""
+
+msgid "Sitemap Status"
+msgstr "Sitemap-status"
+
+msgid "Sitemap URL (optional)"
+msgstr ""
+
+msgid "Sitemap URL:"
+msgstr "Sitemap-URL:"
+
+msgid "Sitemap check failed. Please try again."
+msgstr ""
+
+msgid "Sitemap size:"
+msgstr "Sitemap-grootte:"
+
+msgid "Sitemaps"
+msgstr "Sitemaps"
+
+msgid "Sites Tracked"
+msgstr ""
+
+msgid "Skip for now"
+msgstr "Sla over voor nu"
+
+msgid "Skip setup"
+msgstr ""
+
+msgid "Skip this step to use the free tier with limited features."
+msgstr "Sla deze stap over om de gratis versie met beperkte functies te gebruiken."
+
+msgid "Slack Integration"
+msgstr ""
+
+msgid "Slack Webhook URL"
+msgstr ""
+
+msgid "Smart Internal Linking"
+msgstr "Slimme Interne Links"
+
+msgid "Smart Tags"
+msgstr "Slimme tags"
+
+msgid "Snippet Type:"
+msgstr ""
 
 msgid "Social"
 msgstr "Social"
 
-msgid "Editorial"
-msgstr "Redactioneel"
+msgid "Social & Schema"
+msgstr "Social & schema"
+
+msgid "Social & Sharing"
+msgstr "Social & Delen"
+
+msgid "Social Images"
+msgstr ""
+
+msgid "Social Media"
+msgstr "Social media"
+
+msgid "Social Media Images:"
+msgstr ""
+
+msgid "Social Preview"
+msgstr "Social preview"
+
+msgid "Social Profiles"
+msgstr ""
+
+msgid "Social Sharing"
+msgstr "Social sharing"
+
+msgid "Social images generated!"
+msgstr ""
+
+msgid "Software Application"
+msgstr ""
+
+msgid "Some long sentences"
+msgstr ""
+
+msgid "Sorry, I don\'t have an answer for that. Would you like to create a support ticket?"
+msgstr ""
+
+msgid "Source Domain"
+msgstr ""
+
+msgid "Source URL"
+msgstr "Bron-URL"
 
 msgid "Source URL required"
 msgstr "Bron-URL is verplicht"
 
-msgid "Unable to generate recommendations at this time."
-msgstr "Er kunnen op dit moment geen aanbevelingen worden gegenereerd."
+msgid "Stability AI authentication failed. Check your Stability API key."
+msgstr ""
 
-msgid "Guest posts"
-msgstr "Gastblogs"
+msgid "Stability AI rate limit reached. Wait briefly or upgrade your plan."
+msgstr ""
 
-msgid "Directories"
-msgstr "Bedrijvengidsen"
+msgid "Standard"
+msgstr ""
 
-msgid "Forums"
-msgstr "Forums"
+msgid "Standard (10-15 clusters)"
+msgstr ""
 
-msgid "No backlink data available for this competitor."
-msgstr "Geen backlinkdata beschikbaar voor deze concurrent."
+msgid "Start Bulk Generation"
+msgstr ""
 
-#, php-format
-msgid "Most recognizable link type: %1$s (%2$d%% of analyzed links)."
-msgstr "Meest herkenbare linktype: %1$s (%2$d%% van de geanalyseerde links)."
+msgid "Start Date"
+msgstr ""
 
-#, php-format
-msgid "%d%% of the links are dofollow."
-msgstr "%d%% van de links is dofollow."
+msgid "Start Outreach"
+msgstr "Start outreach"
 
-#, php-format
+msgid "Start Wizard"
+msgstr ""
+
+msgid "Start bulk image generation? This may take several minutes."
+msgstr ""
+
+msgid "Start by entering your brand name and category in the configuration above. This is the foundation for tracking."
+msgstr ""
+
+msgid "Start:"
+msgstr ""
+
+msgid "State"
+msgstr "Provincie"
+
+msgid "Statistics"
+msgstr "Statistieken"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status check failed"
+msgstr ""
+
+msgid "Status:"
+msgstr ""
+
+msgid "Stop Test"
+msgstr ""
+
+msgid "Stop this A/B test and apply the winning variant?"
+msgstr ""
+
+msgid "Store"
+msgstr ""
+
+msgid "Storytelling"
+msgstr ""
+
+msgid "Street"
+msgstr "Straat"
+
+msgid "Strong advantage! Your existing topical authority gives you a significant edge. Prioritize this keyword."
+msgstr ""
+
 msgid "Strongest sources: %s."
 msgstr "Sterkste bronnen: %s."
 
-msgid "No backlink data available for this competitor. Check your backlink provider under Integrations."
-msgstr "Geen backlinkdata beschikbaar voor deze concurrent. Controleer je backlinkprovider onder Integraties."
+msgid "Structured Data (Schema)"
+msgstr ""
 
-#, php-format
-msgid "Analyzed links: %d"
-msgstr "Geanalyseerde links: %d"
+msgid "Structured data validation and suggestions"
+msgstr "Gestructureerde data validatie en suggesties"
 
-#, php-format
-msgid "Dofollow: %s%%"
-msgstr "Dofollow: %s%%"
+msgid "Subject"
+msgstr "Onderwerp"
 
-#, php-format
-msgid "Branded anchors: %s%%"
-msgstr "Merkankers: %s%%"
+msgid "Subject and message are required."
+msgstr ""
 
-#, php-format
-msgid "Keyword anchors: %s%%"
-msgstr "Keyword-ankers: %s%%"
+msgid "Submit Feedback"
+msgstr ""
 
-msgid "Link Type"
-msgstr "Linktype"
+msgid "Submit Ticket"
+msgstr ""
 
-msgid "Links"
-msgstr "Links"
+msgid "Submit new/scheduled posts to Google automatically on publish"
+msgstr ""
+
+msgid "Submit this URL to Google Indexing API"
+msgstr "Dien deze URL in bij de Google Indexing API"
+
+msgid "Submit ticket"
+msgstr ""
+
+msgid "Submitted"
+msgstr ""
+
+msgid "Submitted successfully."
+msgstr ""
+
+msgid "Submitting to background queue..."
+msgstr ""
+
+msgid "Successfully connected to Google!"
+msgstr ""
+
+msgid "Suggested Anchor"
+msgstr ""
+
+msgid "Suggested Date"
+msgstr ""
+
+msgid "Suggested Internal Links:"
+msgstr ""
+
+msgid "Suggested Keywords:"
+msgstr ""
+
+msgid "Suggested Sources"
+msgstr ""
+
+msgid "Suggested:"
+msgstr ""
+
+msgid "Suggestions"
+msgstr ""
+
+msgid "Summary"
+msgstr "Samenvatting"
+
+msgid "Sun"
+msgstr ""
+
+msgid "Support"
+msgstr "Ondersteuning"
+
+msgid "Support Chatbot"
+msgstr ""
+
+msgid "Sync to Calendar"
+msgstr ""
+
+msgid "Sync to Content Calendar"
+msgstr ""
+
+msgid "Sync to Notion"
+msgstr ""
+
+msgid "Syncing..."
+msgstr ""
+
+msgid "Table"
+msgstr ""
+
+msgid "Target Audience"
+msgstr "Doelgroep"
+
+msgid "Target Countries"
+msgstr ""
+
+msgid "Target Country"
+msgstr ""
+
+msgid "Target Domain"
+msgstr "Doeldomein"
+
+msgid "Target Features"
+msgstr ""
+
+msgid "Target Keyword"
+msgstr ""
+
+msgid "Target Language"
+msgstr ""
+
+msgid "Target Languages"
+msgstr ""
+
+msgid "Target Locations"
+msgstr ""
+
+msgid "Target Markets"
+msgstr ""
+
+msgid "Target Posts"
+msgstr ""
+
+msgid "Target SERP Features"
+msgstr ""
+
+msgid "Target URL"
+msgstr "Doel-URL"
+
+msgid "Target Word Count"
+msgstr ""
+
+msgid "Target Words"
+msgstr ""
+
+msgid "Target audience"
+msgstr ""
+
+msgid "Target keyword..."
+msgstr ""
+
+msgid "Target length of the generated image prompt"
+msgstr ""
+
+msgid "Target locations (comma-separated)"
+msgstr "Doellocaties (komma gescheiden)"
+
+msgid "Taxonomies in Sitemap"
+msgstr ""
+
+msgid "Technical"
+msgstr "Technisch"
+
+msgid "Technical Audit"
+msgstr ""
+
+msgid "Technical SEO"
+msgstr "Technische SEO"
+
+msgid "Technical SEO Audit"
+msgstr ""
+
+msgid "Technical health"
+msgstr ""
+
+msgid "Technology"
+msgstr "Technologie"
+
+msgid "Tell us about your company to personalize your SEO experience."
+msgstr "Vertel ons over je bedrijf om je SEO-ervaring te personaliseren."
+
+msgid "Template"
+msgstr ""
+
+msgid "Template Name"
+msgstr ""
+
+msgid "Template and row required"
+msgstr ""
+
+msgid "Template not found"
+msgstr ""
+
+msgid "Tenant Key: %s"
+msgstr "Tenant-sleutel: %s"
+
+msgid "Test Name"
+msgstr "Testnaam"
+
+msgid "Test Slack Connection"
+msgstr ""
+
+msgid "Test message from %s"
+msgstr ""
+
+msgid "Test message sent to Slack!"
+msgstr ""
+
+msgid "Test page variants and track conversions."
+msgstr "Test paginavarianten en volg conversies."
+
+msgid "Test report sent!"
+msgstr ""
+
+msgid "Thank you for your feedback! Your feedback has been submitted successfully."
+msgstr ""
+
+msgid "The AI uses these images to recognize and apply logos, colors, mood and persons in generated images."
+msgstr ""
+
+msgid "The URL where your AI SEO SaaS Dashboard is hosted"
+msgstr "De URL waar je AI SEO SaaS-dashboard wordt gehost"
+
+msgid "The dashboard redirected to a different host. Check the dashboard URL."
+msgstr ""
+
+msgid "The following significant ranking changes were detected:\n\n"
+msgstr ""
+
+msgid "The generated topic cluster could not be parsed. The AI did not return valid JSON. Try again or reduce the depth setting."
+msgstr ""
+
+msgid "The plugin automatically generates the following sitemap types:"
+msgstr ""
+
+msgid "The report includes all published pages with their SEO score, meta data, and identified issues."
+msgstr ""
+
+msgid "The tone for AI-generated content"
+msgstr ""
+
+msgid "These will help AI content align with your brand messaging."
+msgstr "Dit helpt AI-content af te stemmen op je merkboodschap."
+
+msgid "Thin content"
+msgstr ""
+
+msgid "Thin content:"
+msgstr ""
+
+msgid "Thinking..."
+msgstr ""
+
+msgid "This competitor is already added."
+msgstr "Deze concurrent is al toegevoegd."
+
+msgid "This feature is available with a higher plan. Upgrade to unlock advanced capabilities."
+msgstr ""
+
+msgid "This feature requires an active license. Activate your license key to continue."
+msgstr ""
+
+msgid "This feature scans the responses of AI-powered search engines and chatbots (ChatGPT, Perplexity, Gemini, Claude) for mentions of your brand and products. It tracks whether your brand is mentioned, how often, in what position, and with what sentiment, using your configured queries."
+msgstr ""
+
+msgid "This is a location/branch page"
+msgstr ""
+
+msgid "This is an AI self-assessment, not external fact verification."
+msgstr ""
+
+msgid "This is your own domain."
+msgstr "Dit is je eigen domein."
+
+msgid "This license has been revoked."
+msgstr ""
+
+msgid "This license has expired."
+msgstr ""
+
+msgid "This license is already activated on another site."
+msgstr ""
+
+msgid "This post only has %d internal links. Add more to improve authority flow."
+msgstr ""
+
+msgid "This removes all planned posts and cancels pending generation. Already generated posts are kept. Continue?"
+msgstr "Dit verwijdert alle geplande posts en annuleert openstaande generatie. Al gegenereerde posts blijven behouden. Doorgaan?"
+
+msgid "This should be a concise, direct answer to the search query."
+msgstr ""
+
+msgid "This ticket is closed. Create a new ticket if you need further assistance."
+msgstr ""
+
+msgid "This will fetch fresh data from the API. Continue?"
+msgstr ""
+
+msgid "Thu"
+msgstr ""
+
+msgid "Ticket created successfully."
+msgstr ""
+
+msgid "Ticket created! Ticket #%d"
+msgstr ""
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Time on Page (30s)"
+msgstr "Tijd op pagina (30s)"
+
+msgid "Timeout on attempt %d/%d. Will retry automatically."
+msgstr ""
+
+msgid "Timeout waiting for cluster map"
+msgstr ""
+
+msgid "Title"
+msgstr "Titel"
+
+msgid "Title (optional)"
+msgstr ""
+
+msgid "Title / URL"
+msgstr ""
+
+msgid "Title Separator"
+msgstr "Titelscheidingsteken"
+
+msgid "Title Template"
+msgstr "Titelsjabloon"
+
+msgid "Title and keyword are required"
+msgstr ""
+
+msgid "Title is required"
+msgstr ""
+
+msgid "To Page"
+msgstr ""
+
+msgid "Toggle light/dark theme"
+msgstr ""
+
+msgid "Token exchange failed"
+msgstr ""
+
+msgid "Tone"
+msgstr ""
+
+msgid "Tone of Voice"
+msgstr "Tone of Voice"
+
+msgid "Tone of Voice: Set"
+msgstr "Tone of Voice: Ingesteld"
+
+msgid "Tone of voice"
+msgstr ""
+
+msgid "Tone:"
+msgstr ""
+
+msgid "Too many long sentences"
+msgstr ""
+
+msgid "Top 1-5"
+msgstr ""
+
+msgid "Top Anchor Texts"
+msgstr "Top ankerteksten"
+
+msgid "Top Issues:"
+msgstr ""
+
+msgid "Top Keywords"
+msgstr ""
+
+msgid "Top Pages"
+msgstr "Toppagina's"
+
+msgid "Top Performing Content"
+msgstr ""
+
+msgid "Top Queries"
+msgstr ""
 
 msgid "Top Sources"
 msgstr "Topbronnen"
 
-msgid "DR"
-msgstr "DR"
+msgid "Top performing content"
+msgstr ""
 
-msgid "Anchor Text"
-msgstr "Ankertekst"
+msgid "Topic"
+msgstr ""
 
-msgid "Count"
-msgstr "Aantal"
+msgid "Topic / Focus Keyword:"
+msgstr ""
+
+msgid "Topic Cluster"
+msgstr "Onderwerpcluster"
+
+msgid "Topic Clusters"
+msgstr "Onderwerpgroepen"
+
+msgid "Topic Clusters & Topical Authority"
+msgstr ""
+
+msgid "Topic Clusters feature is not available on your current plan. Upgrade to Professional or higher to use this feature."
+msgstr ""
+
+msgid "Topic Heatmap"
+msgstr ""
+
+msgid "Topic Model Terms"
+msgstr ""
+
+msgid "Topic is required"
+msgstr ""
+
+msgid "Topic or keyword"
+msgstr ""
+
+msgid "Total AI Mentions"
+msgstr ""
+
+msgid "Total Backlinks"
+msgstr ""
+
+msgid "Total FAQ Items"
+msgstr ""
+
+msgid "Total Hits"
+msgstr ""
+
+msgid "Total Keywords"
+msgstr ""
+
+msgid "Total Pages"
+msgstr ""
+
+msgid "Total Pages:"
+msgstr ""
+
+msgid "Total Posts"
+msgstr ""
+
+msgid "Total Posts Analyzed"
+msgstr ""
+
+msgid "Total Redirects"
+msgstr ""
+
+msgid "Total Scans"
+msgstr ""
+
+msgid "Total Traffic"
+msgstr ""
+
+msgid "Total URLs"
+msgstr "Totaal aantal URL's"
+
+msgid "Total Videos"
+msgstr ""
+
+msgid "Total Words"
+msgstr ""
+
+msgid "Total:"
+msgstr ""
+
+msgid "Toxic Link Detection"
+msgstr ""
+
+msgid "Toxic backlinks detected"
+msgstr ""
+
+msgid "Toxicity Score"
+msgstr ""
+
+msgid "Track"
+msgstr ""
+
+msgid "Track Competitor"
+msgstr ""
+
+msgid "Track Keyword Across Countries:"
+msgstr ""
+
+msgid "Track how often and in what context your brand is mentioned by AI search engines and chatbots."
+msgstr ""
+
+msgid "Track how often your domain and brand are mentioned in AI responses (ChatGPT, Claude, Gemini, Perplexity)."
+msgstr ""
+
+msgid "Track rankings and traffic for each cluster"
+msgstr "Volg rankings en verkeer voor elk cluster"
+
+msgid "Track traffic and conversion data"
+msgstr "Volg verkeer en conversiedata"
+
+msgid "Track traffic, conversions and ROI of your optimized content."
+msgstr ""
+
+msgid "Track your keyword positions in Google search results. Positions are checked daily."
+msgstr ""
+
+msgid "Tracked Competitors"
+msgstr ""
+
+msgid "Tracked Keywords"
+msgstr ""
+
+msgid "Tracked keywords"
+msgstr ""
+
+msgid "Traffic"
+msgstr "Verkeer"
+
+msgid "Traffic %"
+msgstr ""
+
+msgid "Traffic (30 days)"
+msgstr ""
+
+msgid "Traffic Impact"
+msgstr ""
+
+msgid "Traffic Sources"
+msgstr "Verkeersbronnen"
+
+msgid "Traffic Value"
+msgstr ""
+
+msgid "Transactional"
+msgstr ""
+
+msgid "Transcript"
+msgstr ""
+
+msgid "Transcript generated!"
+msgstr ""
+
+msgid "Travel/Hospitality"
+msgstr "Reizen/Horeca"
+
+msgid "Trigger Make.com scenarios"
+msgstr ""
+
+msgid "Trigger Zaps when SEO events occur"
+msgstr ""
+
+msgid "Trust Signals Detected"
+msgstr ""
+
+msgid "Trustworthiness"
+msgstr ""
+
+msgid "Trustworthiness:"
+msgstr ""
+
+msgid "Try to add more content."
+msgstr ""
+
+msgid "Tue"
+msgstr ""
+
+msgid "Twitter Card (1200x600):"
+msgstr ""
+
+msgid "Twitter Card Images (1200x600)"
+msgstr ""
+
+msgid "Twitter Description"
+msgstr ""
+
+msgid "Twitter Image URL"
+msgstr ""
+
+msgid "Twitter Thread"
+msgstr ""
+
+msgid "Twitter Title"
+msgstr ""
+
+msgid "Twitter/X Post"
+msgstr ""
+
+msgid "Twitter/X URL (optional)"
+msgstr "Twitter/X URL (optioneel)"
+
+msgid "Twitter/X:"
+msgstr ""
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Type a place name and select from suggestions..."
+msgstr ""
+
+msgid "Type your reply here..."
+msgstr ""
+
+msgid "Type your request... (e.g. \"Create a cluster about WordPress SEO\")"
+msgstr ""
+
+msgid "U"
+msgstr ""
+
+msgid "URL"
+msgstr "URL"
+
+msgid "URL Structure"
+msgstr ""
+
+msgid "URL is not indexable content (plugin/file URL)."
+msgstr ""
+
+msgid "URL property: https://example.com/"
+msgstr ""
+
+msgid "URL structure, sitemap, and navigation analysis"
+msgstr "URL structuur, sitemap en navigatie analyse"
+
+msgid "Unable to determine post URL."
+msgstr ""
+
+msgid "Unable to generate recommendations at this time."
+msgstr "Er kunnen op dit moment geen aanbevelingen worden gegenereerd."
+
+msgid "Unable to get Google access token."
+msgstr ""
+
+msgid "Unable to get access token."
+msgstr ""
+
+msgid "Unable to get access token. Please reconnect Google Search Console."
+msgstr ""
+
+msgid "Unable to get access token. Please reconnect your Google account."
+msgstr ""
+
+msgid "Unassigned"
+msgstr ""
+
+msgid "Unauthorized"
+msgstr "Niet geautoriseerd"
+
+msgid "Unified data from Google Search Console and Analytics 4."
+msgstr "Gecombineerde data van Google Search Console en Analytics 4."
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Unknown action: %s"
+msgstr ""
+
+msgid "Unknown error"
+msgstr "Onbekende fout"
+
+msgid "Unknown platform"
+msgstr ""
+
+msgid "Unknown plugin source."
+msgstr ""
+
+msgid "Unknown post"
+msgstr ""
+
+msgid "Unlimited API calls"
+msgstr ""
+
+msgid "Unlock More SEO Power"
+msgstr ""
+
+msgid "Unnamed cluster"
+msgstr ""
+
+msgid "Up to %d competitors. Used for link gap and broken-link prospecting."
+msgstr "Maximaal %d concurrenten. Gebruikt voor de link gap en broken-link prospecting."
+
+msgid "Update content with fresh information"
+msgstr ""
+
+msgid "Updated"
+msgstr "Bijgewerkt"
+
+msgid "Updated %d posts"
+msgstr ""
+
+msgid "Updated review status for %d posts"
+msgstr ""
+
+msgid "Upgrade My Plan"
+msgstr ""
+
+msgid "Upgrade Now"
+msgstr ""
+
+msgid "Upload Date"
+msgstr ""
+
+msgid "Upload Image"
+msgstr ""
+
+msgid "Upload reference images that will be used as style references when generating images."
+msgstr ""
+
+msgid "Upload your company logo for branded reports and dashboards."
+msgstr "Upload je bedrijfslogo voor gepersonaliseerde rapporten en dashboards."
+
+msgid "Usage limit exceeded"
+msgstr ""
+
+msgid "Use This"
+msgstr ""
+
+msgid "Use placeholders like {keyword}, {heading}, {tone}, {word_count}, {context}, {title}, {intent}, {questions}, {serp_titles}."
+msgstr ""
+
+msgid "Use suggestion"
+msgstr ""
+
+msgid "Use the Content Writer to generate SEO-optimized articles"
+msgstr "Gebruik de Content Writer om SEO-geoptimaliseerde artikelen te genereren"
+
+msgid "Use the exact brand and product names from the configuration consistently across your site."
+msgstr ""
+
+msgid "Used"
+msgstr ""
+
+msgid "Used for LocalBusiness schema and Local SERP scans"
+msgstr ""
+
+msgid "Used to validate keywords and to guide titles, full article content and featured images."
+msgstr ""
+
+msgid "Used today: %d / %d — Remaining: %d"
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "User-agent"
+msgstr ""
+
+msgid "Valid"
+msgstr ""
+
+msgid "Valid URLs"
+msgstr "Geldige URL's"
+
+msgid "Valid:"
+msgstr ""
+
+msgid "Validate License"
+msgstr ""
+
+msgid "Validate your content against Google\'s Experience, Expertise, Authoritativeness and Trustworthiness guidelines."
+msgstr ""
+
+msgid "Value"
+msgstr "Waarde"
+
+msgid "Variant A (Control)"
+msgstr "Variant A (Controle)"
+
+msgid "Variant A CTR"
+msgstr ""
+
+msgid "Variant B"
+msgstr "Variant B"
+
+msgid "Variant B CTR"
+msgstr ""
+
+msgid "Veelgestelde vragen"
+msgstr ""
+
+msgid "Verify SSL certificates for API calls"
+msgstr ""
+
+msgid "Very Expensive"
+msgstr ""
+
+msgid "Very challenging — requires comprehensive authority building, link outreach, and 6+ months of consistent effort."
+msgstr ""
+
+msgid "Very difficult"
+msgstr ""
+
+msgid "Very difficult to read"
+msgstr ""
+
+msgid "Very easy"
+msgstr ""
+
+msgid "Video Content"
+msgstr ""
+
+msgid "Video Pack"
+msgstr ""
+
+msgid "Video SEO"
+msgstr "Video-SEO"
+
+msgid "Video SEO Optimizer"
+msgstr ""
+
+msgid "Video SEO Overview"
+msgstr ""
+
+msgid "Video Schema Preview"
+msgstr ""
+
+msgid "Video Schema Validation"
+msgstr ""
+
+msgid "Video Sitemap:"
+msgstr ""
+
+msgid "Video Transcript"
+msgstr ""
+
+msgid "Video Type"
+msgstr ""
+
+msgid "Video URL"
+msgstr ""
+
+msgid "Video transcript generation and optimization"
+msgstr "Video transcript generatie en optimalisatie"
+
+msgid "Video transcription and optimization"
+msgstr ""
+
+msgid "View"
+msgstr "Bekijken"
+
+msgid "View All Decay Alerts"
+msgstr "Bekijk alle vervalwaarschuwingen"
+
+msgid "View All Pages"
+msgstr ""
+
+msgid "View Dashboard"
+msgstr ""
+
+msgid "View Details"
+msgstr ""
+
+msgid "View Drafts"
+msgstr ""
+
+msgid "View SERP"
+msgstr ""
+
+msgid "View Scheduled Posts"
+msgstr ""
+
+msgid "View Sitemap"
+msgstr ""
+
+msgid "View Suggestions"
+msgstr ""
+
+msgid "View all pages, select which ones to generate, and create content drafts in bulk."
+msgstr ""
+
+msgid "View and create tickets for support."
+msgstr ""
+
+msgid "View chart"
+msgstr ""
+
+msgid "View details"
+msgstr ""
+
+msgid "View details: %s"
+msgstr ""
+
+msgid "View full cluster map"
+msgstr ""
+
+msgid "View on site"
+msgstr ""
+
+msgid "View report"
+msgstr ""
+
+msgid "View scheduled posts"
+msgstr ""
+
+msgid "View ticket"
+msgstr ""
+
+msgid "Visibility %"
+msgstr ""
+
+msgid "Visibility Overview"
+msgstr ""
+
+msgid "Visibility Score"
+msgstr ""
+
+msgid "Visibility is low. Increase mentions by building topic authority pages and FAQs around your category."
+msgstr ""
+
+msgid "Visual calendar view of your content pipeline"
+msgstr "Visuele kalenderweergave van je contentpijplijn"
+
+msgid "Vocabulary Richness"
+msgstr ""
+
+msgid "Vocabulary Uniqueness"
+msgstr ""
+
+msgid "Voice Description"
+msgstr ""
+
+msgid "Voice guidelines (optional)"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Wasted:"
+msgstr ""
+
+msgid "We\'ll check daily and alert you when content starts losing rankings."
+msgstr ""
+
+msgid "WebSite (SearchAction)"
+msgstr ""
+
+msgid "Webflow API token, site ID, and collection ID required"
+msgstr ""
+
+msgid "Webflow not enabled"
+msgstr ""
+
+msgid "Webhook Name"
+msgstr ""
+
+msgid "Webhook URL"
+msgstr ""
+
+msgid "Website Description"
+msgstr "Websitebeschrijving"
+
+msgid "Wed"
+msgstr ""
+
+msgid "Weekly"
+msgstr "Wekelijks"
+
+msgid "Weekly SEO Report - %s"
+msgstr ""
+
+msgid "Welcome to %s"
+msgstr "Welkom bij %s"
+
+msgid "Welcome to Fyndable"
+msgstr "Welkom bij Fyndable"
+
+msgid "What does AI Search Visibility do?"
+msgstr ""
+
+msgid "When enabled, a daily check trashes AI-generated posts that meet the criteria below."
+msgstr ""
+
+msgid "When enabled, share buttons for Facebook, X, LinkedIn and WhatsApp are added to posts and pages."
+msgstr ""
+
+msgid "When enabled, the Content Writer will include an FAQ section in generated articles by default. This can be overridden per article in the Content Writer."
+msgstr ""
+
+msgid "When enabled, the plugin uses dummy data and bypasses license verification."
+msgstr ""
+
+msgid "Win/Loss Analysis"
+msgstr ""
+
+msgid "Winner"
+msgstr ""
+
+msgid "Winning Patterns"
+msgstr ""
+
+msgid "With Schema"
+msgstr ""
+
+msgid "With Transcript"
+msgstr ""
+
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+msgid "Word Count"
+msgstr "Woordaantal"
+
+msgid "Word Count:"
+msgstr ""
+
+msgid "Word count"
+msgstr "Woordaantal"
+
+msgid "Words"
+msgstr ""
+
+msgid "Workflow"
+msgstr "Workflow"
+
+msgid "Workflow Status"
+msgstr ""
+
+msgid "Workflow Status:"
+msgstr ""
+
+msgid "Write another article"
+msgstr ""
+
+msgid "Writing Style"
+msgstr "Schrijfstijl"
+
+msgid "XML Sitemap Found"
+msgstr "XML-sitemap gevonden"
+
+msgid "XML Sitemap Health"
+msgstr ""
+
+msgid "XML Sitemaps"
+msgstr "XML-sitemaps"
+
+msgid "XXXX-XXXX-XXXX-XXXX-XXXX"
+msgstr "XXXX-XXXX-XXXX-XXXX-XXXX"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "Yes, run the audit"
+msgstr ""
+
+msgid "Yes, write the article"
+msgstr ""
+
+msgid "You"
+msgstr ""
+
+msgid "You are connected"
+msgstr "Je bent verbonden"
+
+msgid "You can connect GSC later from the Integrations page after setup."
+msgstr "Je kunt GSC later verbinden via de Integraties-pagina na de setup."
+
+msgid "You can select multiple files. Hold Ctrl/Cmd to select more than one."
+msgstr ""
+
+msgid "You can select multiple files. Hold Ctrl/Cmd to select more."
+msgstr ""
+
+msgid "You can track up to %d competitors."
+msgstr "Je kunt maximaal %d concurrenten volgen."
+
+msgid "You do not have permission to access this page."
+msgstr "Je hebt geen toestemming om deze pagina te bekijken."
+
+msgid "You do not have permission to check for updates."
+msgstr ""
+
+msgid "You do not have permission to view this post."
+msgstr ""
+
+msgid "You have been assigned to: %s"
+msgstr ""
+
+msgid "You have no support tickets yet."
+msgstr ""
+
+msgid "You have not submitted any feedback yet."
+msgstr ""
+
+msgid "You have reached your monthly API call limit. Please upgrade your plan."
+msgstr ""
+
+msgid "You have reached your monthly cost limit. Please upgrade your plan."
+msgstr ""
+
+msgid "You need administrator permissions to validate the license."
+msgstr ""
+
+msgid "You're all set. Here's a summary of your configuration:"
+msgstr "Je bent helemaal klaar. Hier is een samenvatting van je configuratie:"
+
+msgid "YouTube captions fetched!"
+msgstr ""
+
+msgid "YouTube, Vimeo, or self-hosted video URL"
+msgstr ""
+
+msgid "You\'ve been using %s for a while now. If it\'s helping your SEO, would you mind leaving a review?"
+msgstr ""
+
+msgid "Your Company Name"
+msgstr "Jouw bedrijfsnaam"
+
+msgid "Your Feedback"
+msgstr ""
+
+msgid "Your GTM container ID. The snippet will be added to wp_head and after the opening body tag."
+msgstr ""
+
+msgid "Your Google Ads customer ID (10 digits with dashes)."
+msgstr ""
+
+msgid "Your Tickets"
+msgstr ""
+
+msgid "Your brand is usually mentioned later. Create comparison and “best of” content to appear earlier in AI-generated answers."
+msgstr ""
+
+msgid "Your business position"
+msgstr ""
+
+msgid "Your business seen in"
+msgstr ""
+
+msgid "Your company or brand name"
+msgstr "Jouw bedrijfs- of merknaam"
+
+msgid "Your connection API Key:"
+msgstr "Jouw verbindings API sleutel:"
+
+msgid "Your connection e-mail:"
+msgstr "Jouw verbindings e-mail:"
+
+msgid "Your content may be outdated. Consider adding new insights, statistics, or recent developments."
+msgstr ""
+
+msgid "Your content needs some improvements."
+msgstr ""
+
+msgid "Your conversational SEO assistant — research, plan, write and publish in one chat."
+msgstr ""
+
+msgid "Your current plan: %s"
+msgstr "Jouw huidige plan: %s"
+
+msgid "Your license allows up to %s auto-posts per month (max %s/week)."
+msgstr ""
+
+msgid "Your license has been revoked. Please contact support."
+msgstr "Je licentie is ingetrokken. Neem contact op met support."
+
+msgid "Your license has expired. Please renew to continue using AI SEO features."
+msgstr "Je licentie is verlopen. Vernieuw om AI SEO-functies te blijven gebruiken."
+
+msgid "Your license key: %s"
+msgstr "Jouw licentiesleutel: %s"
+
+msgid "Your monthly AI usage limit has been reached. Please upgrade your plan or contact support."
+msgstr ""
+
+msgid "Zapier / Make.com Integration"
+msgstr ""
+
+msgid "Zapier Webhook URL"
+msgstr ""
+
+msgid "[%s] SERP Position Changes Detected"
+msgstr ""
+
+msgid "\\"%1$s\\" dropped %2$d positions for \\"%3$s\\""
+msgstr "\\"%1$s\\" is %2$d posities gezakt voor \\"%3$s\\""
+
+msgid "\\"%s\\" dropped %d positions"
+msgstr "\\"%s\\" is %d posities gezakt"
+
+msgid "ago"
+msgstr ""
+
+msgid "and"
+msgstr "en"
+
+msgid "best seo plugin&#10;wordpress seo&#10;ai seo tools"
+msgstr ""
+
+msgid "cURL extension not available"
+msgstr ""
+
+msgid "completed"
+msgstr ""
+
+msgid "days"
+msgstr ""
+
+msgid "does not"
+msgstr ""
+
+msgid "done"
+msgstr ""
+
+msgid "e.g. 0123456789012"
+msgstr ""
+
+msgid "e.g. Acme Corp"
+msgstr ""
+
+msgid "e.g. Focus on pricing questions, target audience is beginners..."
+msgstr ""
+
+msgid "e.g. Headline Test March 2026"
+msgstr ""
+
+msgid "e.g. New catchy headline"
+msgstr ""
+
+msgid "e.g. New meta description"
+msgstr ""
+
+msgid "e.g. Nike, Samsung"
+msgstr ""
+
+msgid "e.g. SEO tools, CRM software"
+msgstr ""
+
+msgid "e.g. What is the best SEO plugin for WordPress?"
+msgstr ""
+
+msgid "e.g. WordPress SEO"
+msgstr ""
+
+msgid "e.g. WordPress SEO, email marketing, project management"
+msgstr ""
+
+msgid "e.g. Write a friendly introduction about..., Include benefits section, Target audience is small business owners..."
+msgstr ""
+
+msgid "e.g. best seo plugin"
+msgstr ""
+
+msgid "e.g. competitor.com"
+msgstr ""
+
+msgid "e.g. seo software"
+msgstr ""
+
+msgid "e.g., running shoes"
+msgstr ""
+
+msgid "failed"
+msgstr ""
+
+msgid "grid points"
+msgstr ""
+
+msgid "high spam score (%d)"
+msgstr "hoge spamscore (%d)"
+
+msgid "https://example.com/wordpress-seo-guide"
+msgstr ""
+
+msgid "https://facebook.com/yourpage"
+msgstr "https://facebook.com/jouw-pagina"
+
+msgid "https://twitter.com/yourhandle"
+msgstr "https://twitter.com/jouwhandle"
+
+msgid "ideas for this keyword"
+msgstr ""
+
+msgid "ideas generated and saved to the Ideas page."
+msgstr ""
+
+msgid "items"
+msgstr "items"
+
+msgid "keyword 1, keyword 2, keyword 3"
+msgstr ""
+
+msgid "keyword1, keyword2, keyword3..."
+msgstr ""
+
+msgid "keywords array is required"
+msgstr ""
+
+msgid "keywords checked"
+msgstr ""
+
+msgid "keywords generated"
+msgstr ""
+
+msgid "last 50"
+msgstr ""
+
+msgid "last 50 entries"
+msgstr "laatste 50 regels"
+
+msgid "llms.txt Generator"
+msgstr ""
+
+msgid "missing description"
+msgstr ""
+
+msgid "missing title"
+msgstr ""
+
+msgid "of"
+msgstr "van"
+
+msgid "pages"
+msgstr ""
+
+msgid "pages in the background? You can close this page — content will be generated and scheduled automatically."
+msgstr ""
+
+msgid "positions"
+msgstr ""
+
+msgid "post_id required"
+msgstr ""
+
+msgid "posts"
+msgstr "berichten"
+
+msgid "posts analyzed"
+msgstr ""
+
+msgid "potentially toxic backlinks detected"
+msgstr ""
+
+msgid "processed"
+msgstr ""
+
+msgid "provider"
+msgstr ""
+
+msgid "provider and prompt are required"
+msgstr ""
+
+msgid "queries processed."
+msgstr ""
+
+msgid "remaining"
+msgstr ""
+
+msgid "set cluster"
+msgstr ""
+
+msgid "show competitors"
+msgstr ""
+
+msgid "spam-related anchor text"
+msgstr "spamgerelateerde ankertekst"
+
+msgid "support"
+msgstr ""
+
+msgid "target"
+msgstr ""
+
+msgid "to the"
+msgstr "met de"
+
+msgid "total affected"
+msgstr ""
+
+msgid "very low authority domain"
+msgstr "domein met zeer lage autoriteit"
+
+msgid "~%d%% passive voice detected. Aim for under 10%%."
+msgstr ""
+
+msgid "~%d%% passive voice. Good."
+msgstr ""
+
+msgid "—"
+msgstr ""
+
+msgid "— Load Template —"
+msgstr ""
+
+msgid "— Select a post —"
+msgstr ""
+
+msgid "— Select —"
+msgstr ""
+
+msgid "↩️ Redirect Manager"
+msgstr ""
+
+msgid "⚙️ Settings"
+msgstr ""
+
+msgid "⚠️ Content Decay Detected"
+msgstr ""
+
+msgid "⚡ ApexFlow"
+msgstr ""
+
+msgid "✅ Article written and saved as draft!\n\n• Title: %s\n• Word count: %d\n• Keyword: %s\n\nYou can edit it now or publish it directly."
+msgstr ""
+
+msgid "✅ Bulk Optimizer"
+msgstr ""
+
+msgid "✅ Queued %d pages for background generation!\n\n• Start date: %s\n• Gap between posts: %d days\n• Queue ID: #%d\n\nContent will be generated via WP-Cron. You can close this page — I'll check the status when you return."
+msgstr ""
+
+msgid "✨ Link Genius"
+msgstr ""
+
+msgid "🎯 Keywords"
+msgstr ""
+
+msgid "🎯 Topic Clusters"
+msgstr ""
+
+msgid "👁️ AI Search Visibility"
+msgstr ""
+
+msgid "💡 Ideas"
+msgstr ""
+
+msgid "💬 Feedback"
+msgstr ""
+
+msgid "💬 Support"
+msgstr ""
+
+msgid "📅 Content Calendar"
+msgstr ""
+
+msgid "📈 Google Data"
+msgstr ""
+
+msgid "📈 Rank Tracker"
+msgstr ""
+
+msgid "📈 SEO Data"
+msgstr ""
+
+msgid "📊 Dashboard"
+msgstr ""
+
+msgid "📊 Search Console"
+msgstr ""
+
+msgid "📝 Created Posts"
+msgstr ""
+
+msgid "📝 Prompt Templates"
+msgstr ""
+
+msgid "📥 Import"
+msgstr ""
+
+msgid "🔌 Integrations"
+msgstr ""
+
+msgid "🔍 Competitor Research"
+msgstr ""
+
+msgid "🔍 Site Audit"
+msgstr ""
+
+msgid "🔗 Backlinks"
+msgstr ""
+
+msgid "🔗 Connection"
+msgstr ""
+
+msgid "🔗 Link Manager"
+msgstr ""
+
+msgid "🗺️ Sitemaps"
+msgstr ""
+
+msgid "🤖 AI Optimization"
+msgstr ""
+
+msgid "🤖 AI Tools"
+msgstr ""
+
+msgid "🧪 A/B Testing"
+msgstr ""

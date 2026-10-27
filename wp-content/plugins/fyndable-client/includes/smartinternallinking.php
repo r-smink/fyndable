@@ -62,65 +62,57 @@ class SmartInternalLinking
         $linkStats = $this->getLinkingStats();
         
         ?>
-        <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: 0; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
-            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Smart Internal Linking', 'ai-seo-client'); ?></h1>
-            </div>
-            
-            <div class="sseo-ai-content">
-                <!-- Linking Statistics -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Internal Linking Overview', 'ai-seo-client'); ?></h2>
-            
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #2271b1; line-height: 1.2;">
-                        <?php echo esc_html(number_format($linkStats['total_pages'])); ?>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 8px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #d63638; line-height: 1.2;">
-                        <?php echo esc_html(number_format($linkStats['orphan_pages'])); ?>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 8px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #00a32a; line-height: 1.2;">
-                        <?php echo esc_html(number_format($linkStats['avg_internal_links'])); ?>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Avg Internal Links', 'ai-seo-client'); ?></div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 8px;">
-                    <div style="font-size: 36px; font-weight: bold; color: #856404; line-height: 1.2;">
-                        <?php echo esc_html(number_format($linkStats['opportunities'])); ?>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 14px; color: #555;"><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></div>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Internal Linking', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Smart Internal Linking', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage internal links, find orphan pages and discover link opportunities.', 'ai-seo-client'); ?></p>
                 </div>
             </div>
+
+            <!-- Linking Statistics -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-links"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Internal Linking Overview', 'ai-seo-client'); ?></h3>
                 </div>
-                
-                <!-- Orphan Pages Detection -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></h2>
-            <p><?php esc_html_e('Pages with no internal links pointing to them.', 'ai-seo-client'); ?></p>
-            
-            <button type="button" class="button button-primary" onclick="sseoDetectOrphans()" style="margin-bottom: 15px;">
-                <?php esc_html_e('Scan for Orphan Pages', 'ai-seo-client'); ?>
-            </button>
-                
+                <div class="fyn-stats-grid">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html(number_format($linkStats['total_pages'])); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Total Pages', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html(number_format($linkStats['orphan_pages'])); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html(number_format($linkStats['avg_internal_links'])); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Avg Internal Links', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-warning);"><?php echo esc_html(number_format($linkStats['opportunities'])); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orphan Pages Detection -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-warning"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('Pages with no internal links pointing to them.', 'ai-seo-client'); ?></p>
+                <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoDetectOrphans()" style="margin-bottom:15px;">
+                    <span class="dashicons dashicons-search"></span>
+                    <?php esc_html_e('Scan for Orphan Pages', 'ai-seo-client'); ?>
+                </button>
+
                 <?php if (!empty($orphanPages)): ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Page', 'ai-seo-client'); ?></th>
@@ -146,11 +138,11 @@ class SmartInternalLinking
                             </td>
                             <td><?php echo esc_html($page['suggested_sources']); ?></td>
                             <td>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline"
                                         onclick="sseoFixOrphan(<?php echo $page['id']; ?>)">
                                     <?php esc_html_e('Auto-Fix', 'ai-seo-client'); ?>
                                 </button>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline"
                                         onclick="sseoViewSuggestions(<?php echo $page['id']; ?>)">
                                     <?php esc_html_e('View Suggestions', 'ai-seo-client'); ?>
                                 </button>
@@ -160,22 +152,25 @@ class SmartInternalLinking
                     </tbody>
                 </table>
                 <?php else: ?>
-                <p style="color: #00a32a;">✓ <?php esc_html_e('No orphan pages detected!', 'ai-seo-client'); ?></p>
+                <p style="color:var(--fyn-success);">&#10003; <?php esc_html_e('No orphan pages detected!', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
             </div>
-            
+
             <!-- Link Opportunities -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('AI-ranked opportunities to add internal links. Click "Generate" to create suggestions.', 'ai-seo-client'); ?></p>
-                
-                <button type="button" class="button button-primary" onclick="sseoGenerateOpportunities()" style="margin-bottom: 15px;">
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-randomize"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Link Opportunities', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('AI-ranked opportunities to add internal links.', 'ai-seo-client'); ?></p>
+                <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoGenerateOpportunities()" style="margin-bottom:15px;">
+                    <span class="dashicons dashicons-update"></span>
                     <?php esc_html_e('Generate Link Opportunities', 'ai-seo-client'); ?>
                 </button>
-                
+
                 <div id="link-opportunities-container">
                     <?php if (!empty($linkOpportunities)): ?>
-                    <table class="wp-list-table widefat fixed striped">
+                    <table class="fyn-table">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('From Page', 'ai-seo-client'); ?></th>
@@ -203,7 +198,7 @@ class SmartInternalLinking
                                     </span>
                                 </td>
                                 <td>
-                                    <button type="button" class="button button-small" 
+                                    <button type="button" class="fyn-btn fyn-btn-outline"
                                             onclick="sseoAddLink(<?php echo $opp['from_id']; ?>, <?php echo $opp['to_id']; ?>, '<?php echo esc_js($opp['anchor_text']); ?>')">
                                         <?php esc_html_e('Add Link', 'ai-seo-client'); ?>
                                     </button>
@@ -213,12 +208,10 @@ class SmartInternalLinking
                         </tbody>
                     </table>
                     <?php else: ?>
-                    <p><?php esc_html_e('Click "Generate Link Opportunities" to find internal linking opportunities.', 'ai-seo-client'); ?></p>
+                    <p style="color:var(--text-m);"><?php esc_html_e('Click "Generate Link Opportunities" to find internal linking opportunities.', 'ai-seo-client'); ?></p>
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
-        </div>
         </div>
         
         <script>

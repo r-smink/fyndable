@@ -97,6 +97,469 @@ body[class*="aiseo"] #wpfooter {
 }
 
 /* ================================================
+   1b. FYNDABLE SHELL THEME TOKENS
+   ================================================ */
+body.fyndable-ui {
+    --fyn-purple: #8F39AC;
+    --fyn-blue: #379FD3;
+    --fyn-ink: #333333;
+    --fyn-mist: #E6E7E8;
+    --fyn-purple-tint: #F4E9F8;
+    --fyn-blue-tint: #E6F3FB;
+    --fyn-gradient: linear-gradient(135deg, #8F39AC 0%, #379FD3 100%);
+    --fyn-gradient-flat: linear-gradient(90deg, #8F39AC, #379FD3);
+    --fyn-success: #10b981;
+    --fyn-success-light: #d1fae5;
+    --fyn-success-text: #047857;
+    --fyn-warning: #f59e0b;
+    --fyn-warning-light: #fef3c7;
+    --fyn-warning-text: #92700a;
+    --fyn-danger: #ef4444;
+    --fyn-danger-light: #fee2e2;
+    --fyn-danger-text: #b91c1c;
+    --fyn-info: #3b82f6;
+    --fyn-info-light: #dbeafe;
+    --fyn-info-text: #1d4ed8;
+    --fyn-accent: #a855f7;
+    --fyn-accent-light: #f3e8ff;
+    --fyn-accent-text: #9333ea;
+
+    /* Light theme (default) */
+    --shell-page: #f4f5f8;
+    --shell-sidebar: #ffffff;
+    --shell-sb-border: #e9eaef;
+    --nav-fg: #5a5568;
+    --nav-section: #9a95a8;
+    --nav-hover: #f5f2fb;
+    --card: #ffffff;
+    --card-border: #ececf1;
+    --card-shadow: 0 1px 3px rgba(20,14,30,.07), 0 1px 2px rgba(20,14,30,.04);
+    --card-shadow-lg: 0 10px 24px -8px rgba(20,14,30,.14);
+    --text-h: #1a1430;
+    --text-b: #413b52;
+    --text-m: #746e82;
+    --text-s: #a39dae;
+    --well: #f7f6fa;
+    --well-border: #edecf2;
+    --row-hover: #faf7fe;
+    --divide: #efeef4;
+    --input-bg: #ffffff;
+    --input-border: #dcdae4;
+    --sev-track: #e9e7f0;
+}
+
+/* Dark theme overrides */
+body.fyndable-ui.fyndable-dark {
+    --shell-page: #120c1c;
+    --shell-sidebar: #19122a;
+    --shell-sb-border: rgba(255,255,255,.06);
+    --nav-fg: #b4adc6;
+    --nav-section: #726a86;
+    --nav-hover: rgba(143,57,172,.16);
+    --card: #1d1630;
+    --card-border: rgba(255,255,255,.07);
+    --card-shadow: 0 1px 3px rgba(0,0,0,.45);
+    --card-shadow-lg: 0 14px 30px -10px rgba(0,0,0,.6);
+    --text-h: #f4f1fa;
+    --text-b: #cdc6dd;
+    --text-m: #958da7;
+    --text-s: #6f6784;
+    --well: rgba(23,17,36,.25);
+    --well-border: rgba(255,255,255,.07);
+    --row-hover: rgba(143,57,172,.12);
+    --divide: rgba(255,255,255,.06);
+    --input-bg: #211a35;
+    --input-border: rgba(255,255,255,.1);
+    --sev-track: rgba(255,255,255,.1);
+}
+
+/* ================================================
+   1c. FYNDABLE SHELL COMPONENT STYLES
+   ================================================ */
+
+/* --- Page header (inside main, per screen) --- */
+.fyn-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 24px;
+}
+.fyn-page-header-left {}
+.fyn-page-header .fyn-breadcrumb {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-m);
+    margin-bottom: 4px;
+}
+.fyn-page-header .fyn-breadcrumb .fyn-crumb {
+    color: var(--fyn-purple);
+}
+.fyn-page-header h1 {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    color: var(--text-h);
+    margin: 0 0 4px;
+    line-height: 1.2;
+}
+.fyn-page-header .fyn-page-desc {
+    font-size: 14px;
+    color: var(--text-m);
+    max-width: 640px;
+    margin: 0;
+    line-height: 1.5;
+}
+.fyn-page-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+/* --- Cards --- */
+.fyn-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    padding: 22px 26px;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.fyn-card:hover {
+    box-shadow: var(--card-shadow-lg);
+}
+.fyn-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--divide);
+}
+.fyn-card-header .dashicons {
+    color: var(--fyn-purple);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+.fyn-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-h);
+    margin: 0;
+}
+
+/* --- Compact stat tiles (4-up grid) --- */
+.fyn-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (max-width: 1200px) {
+    .fyn-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+    .fyn-stats-grid { grid-template-columns: 1fr; }
+}
+.fyn-stat-tile {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 13px;
+    box-shadow: var(--card-shadow);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+}
+.fyn-stat-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--fyn-gradient-flat);
+}
+.fyn-stat-tile-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.fyn-stat-tile-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-m);
+}
+.fyn-stat-tile-top .dashicons {
+    color: var(--fyn-purple);
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+.fyn-stat-tile-value {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text-h);
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+.fyn-stat-tile-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-m);
+}
+
+/* --- Delta pills (semantic) --- */
+.fyn-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.fyn-delta--success { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+.fyn-delta--warning { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+.fyn-delta--danger  { background: var(--fyn-danger-light);  color: var(--fyn-danger-text); }
+.fyn-delta--info    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+.fyn-delta--accent  { background: var(--fyn-accent-light);  color: var(--fyn-accent-text); }
+
+/* --- Tables --- */
+.fyn-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.fyn-table thead th {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-m);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--divide);
+}
+.fyn-table tbody td {
+    font-size: 13px;
+    color: var(--text-b);
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--divide);
+    vertical-align: middle;
+}
+.fyn-table tbody tr:hover {
+    background: var(--row-hover);
+}
+.fyn-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Buttons --- */
+.fyn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+    transition: all .2s ease;
+    text-decoration: none;
+    border: none;
+    line-height: 1.4;
+}
+.fyn-btn:hover {
+    transform: translateY(-2px);
+}
+.fyn-btn-primary {
+    background: var(--fyn-gradient);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(143,57,172,.2);
+}
+.fyn-btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(143,57,172,.3);
+    color: #fff;
+}
+.fyn-btn-outline {
+    background: transparent;
+    color: var(--text-b);
+    border: 1px solid var(--card-border);
+}
+.fyn-btn-outline:hover {
+    border-color: var(--fyn-purple);
+    color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyn-btn-danger {
+    background: transparent;
+    color: var(--fyn-danger);
+    border: 1px solid var(--fyn-danger-light);
+}
+.fyn-btn-danger:hover {
+    background: var(--fyn-danger-light);
+}
+.fyn-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* --- Badges / pills --- */
+.fyn-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.fyn-badge--success { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+.fyn-badge--warning { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+.fyn-badge--danger  { background: var(--fyn-danger-light);  color: var(--fyn-danger-text); }
+.fyn-badge--info    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+.fyn-badge--accent  { background: var(--fyn-accent-light);  color: var(--fyn-accent-text); }
+.fyn-badge--muted   { background: var(--well);              color: var(--text-m); }
+
+/* --- Progress bar (gradient fill) --- */
+.fyn-progress {
+    height: 8px;
+    background: var(--sev-track);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.fyn-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--fyn-gradient-flat);
+    transition: width .3s ease;
+}
+.fyn-progress-bar--success { background: var(--fyn-success); }
+.fyn-progress-bar--warning { background: var(--fyn-warning); }
+.fyn-progress-bar--danger  { background: var(--fyn-danger); }
+
+/* --- Tabs (underlined, e.g. Zoekwoorden) --- */
+.fyn-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--divide);
+    margin-bottom: 20px;
+}
+.fyn-tab {
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-m);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all .2s ease;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.fyn-tab:hover {
+    color: var(--fyn-purple);
+}
+.fyn-tab.active {
+    color: var(--fyn-purple);
+    border-bottom-color: var(--fyn-purple);
+}
+.fyn-tab .fyn-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--well);
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+    color: var(--text-m);
+}
+.fyn-tab.active .fyn-tab-count {
+    background: var(--fyn-accent-light);
+    color: var(--fyn-accent-text);
+}
+
+/* --- Well (inset surface) --- */
+.fyn-well {
+    background: var(--well);
+    border: 1px solid var(--well-border);
+    border-radius: 9px;
+    padding: 14px 16px;
+}
+
+/* --- Inputs --- */
+.fyn-input {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 9px;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    color: var(--text-b);
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: border-color .2s ease, box-shadow .2s ease;
+    outline: none;
+}
+.fyn-input:focus {
+    border-color: var(--fyn-purple);
+    box-shadow: 0 0 0 3px rgba(143,57,172,.12);
+}
+
+/* --- Icon chip (48px gradient) --- */
+.fyn-icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--fyn-gradient);
+    color: #fff;
+    flex-shrink: 0;
+}
+.fyn-icon-chip .dashicons {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+/* --- Content fade-in animation --- */
+@keyframes fyn-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fyn-animate-in {
+    animation: fyn-fade-in .3s ease both;
+}
+
+/* --- Two-column layout --- */
+.fyn-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.fyn-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.fyn-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+@media (max-width: 1200px) {
+    .fyn-grid-3, .fyn-grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+    .fyn-grid-2, .fyn-grid-3, .fyn-grid-4 { grid-template-columns: 1fr; }
+}
+
+/* ================================================
    2. MODERN LAYOUT
    ================================================ */
 .wrap.sseo-ai-modern {

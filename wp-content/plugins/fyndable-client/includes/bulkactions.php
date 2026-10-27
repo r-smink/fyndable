@@ -344,113 +344,113 @@ Return ONLY the JSON.";
     public function renderPage(): void
     {
         ?>
-        <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('AI Bulk SEO Optimizer', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Bulk Optimizer', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('AI Bulk SEO Optimizer', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Scan your site for missing SEO data and bulk-generate meta titles, descriptions and Open Graph tags with AI.', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="bulk-scan">
+                        <span class="dashicons dashicons-search"></span>
+                        <?php esc_html_e('Scan Site', 'ai-seo-client'); ?>
+                    </button>
+                </div>
             </div>
 
-            <div class="sseo-ai-content">
-                <!-- Summary Cards -->
-                <div class="sseo-ai-dashboard-card" id="bulk-summary-card" style="display:none;">
-                    <h2><?php esc_html_e('SEO Overview', 'ai-seo-client'); ?></h2>
-                    <p style="color:#666; margin-top:0;"><?php esc_html_e('Scan your site for missing SEO data and bulk-generate meta titles, descriptions, and Open Graph tags using AI.', 'ai-seo-client'); ?></p>
-                    <div id="bulk-summary">
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:15px;">
-                            <div style="padding:20px; text-align:center; background:#f0f6fc; border-radius:8px;">
-                                <div style="font-size:36px; font-weight:bold; color:#2271b1; line-height:1.2;" id="bulk-total">0</div>
-                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Total Posts', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div style="padding:20px; text-align:center; background:#f8d7da; border-radius:8px;">
-                                <div style="font-size:36px; font-weight:bold; color:#d63638; line-height:1.2;" id="bulk-no-title">0</div>
-                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing Title', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div style="padding:20px; text-align:center; background:#f8d7da; border-radius:8px;">
-                                <div style="font-size:36px; font-weight:bold; color:#d63638; line-height:1.2;" id="bulk-no-desc">0</div>
-                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing Description', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div style="padding:20px; text-align:center; background:#fff3cd; border-radius:8px;">
-                                <div style="font-size:36px; font-weight:bold; color:#856404; line-height:1.2;" id="bulk-no-og">0</div>
-                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing OG Tags', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div style="padding:20px; text-align:center; background:#fff3cd; border-radius:8px;">
-                                <div style="font-size:36px; font-weight:bold; color:#856404; line-height:1.2;" id="bulk-no-kw">0</div>
-                                <div style="margin-top:10px; font-size:14px; color:#555;"><?php esc_html_e('Missing Keyphrase', 'ai-seo-client'); ?></div>
-                            </div>
-                        </div>
+            <!-- Summary stat tiles -->
+            <div id="bulk-summary-card" style="display:none;margin-bottom:20px;">
+                <div class="fyn-stats-grid" id="bulk-summary">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="bulk-total">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Total Posts', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-danger);" id="bulk-no-title">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Missing Title', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-danger);" id="bulk-no-desc">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Missing Description', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-warning);" id="bulk-no-og">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Missing OG Tags', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-warning);" id="bulk-no-kw">0</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Missing Keyphrase', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Controls -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Bulk Actions', 'ai-seo-client'); ?></h2>
-                    <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                        <button type="button" class="button button-primary" id="bulk-scan">
-                            <?php esc_html_e('Scan Site', 'ai-seo-client'); ?>
-                        </button>
+            <!-- Controls card -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-yes-alt"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Bulk Actions', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <select id="bulk-filter" class="fyn-input" style="display:none;padding:8px 10px;max-width:220px;">
+                        <option value="all"><?php esc_html_e('Show All', 'ai-seo-client'); ?></option>
+                        <option value="missing_title"><?php esc_html_e('Missing Title', 'ai-seo-client'); ?></option>
+                        <option value="missing_description"><?php esc_html_e('Missing Description', 'ai-seo-client'); ?></option>
+                        <option value="missing_og"><?php esc_html_e('Missing OG Tags', 'ai-seo-client'); ?></option>
+                        <option value="missing_keyphrase"><?php esc_html_e('Missing Keyphrase', 'ai-seo-client'); ?></option>
+                    </select>
 
-                        <select id="bulk-filter" style="display:none;">
-                            <option value="all"><?php esc_html_e('Show All', 'ai-seo-client'); ?></option>
-                            <option value="missing_title"><?php esc_html_e('Missing Title', 'ai-seo-client'); ?></option>
-                            <option value="missing_description"><?php esc_html_e('Missing Description', 'ai-seo-client'); ?></option>
-                            <option value="missing_og"><?php esc_html_e('Missing OG Tags', 'ai-seo-client'); ?></option>
-                            <option value="missing_keyphrase"><?php esc_html_e('Missing Keyphrase', 'ai-seo-client'); ?></option>
-                        </select>
+                    <label style="display:none;font-size:13px;font-weight:700;color:var(--text-h);" id="bulk-fields-label">
+                        <?php esc_html_e('Generate:', 'ai-seo-client'); ?>
+                    </label>
+                    <label style="display:none;font-size:13px;color:var(--text-b);" class="bulk-field-cb"><input type="checkbox" value="seo_title" checked> <?php esc_html_e('SEO Title', 'ai-seo-client'); ?></label>
+                    <label style="display:none;font-size:13px;color:var(--text-b);" class="bulk-field-cb"><input type="checkbox" value="seo_description" checked> <?php esc_html_e('Meta Description', 'ai-seo-client'); ?></label>
+                    <label style="display:none;font-size:13px;color:var(--text-b);" class="bulk-field-cb"><input type="checkbox" value="og_title"> <?php esc_html_e('OG Title', 'ai-seo-client'); ?></label>
+                    <label style="display:none;font-size:13px;color:var(--text-b);" class="bulk-field-cb"><input type="checkbox" value="og_description"> <?php esc_html_e('OG Description', 'ai-seo-client'); ?></label>
+                    <label style="display:none;font-size:13px;color:var(--text-b);" class="bulk-field-cb"><input type="checkbox" value="focus_keyphrase"> <?php esc_html_e('Focus keyphrase', 'ai-seo-client'); ?></label>
 
-                        <label style="display:none;" id="bulk-fields-label">
-                            <strong><?php esc_html_e('Generate:', 'ai-seo-client'); ?></strong>
-                        </label>
-                        <label style="display:none;" class="bulk-field-cb"><input type="checkbox" value="seo_title" checked> <?php esc_html_e('SEO Title', 'ai-seo-client'); ?></label>
-                        <label style="display:none;" class="bulk-field-cb"><input type="checkbox" value="seo_description" checked> <?php esc_html_e('Meta Description', 'ai-seo-client'); ?></label>
-                        <label style="display:none;" class="bulk-field-cb"><input type="checkbox" value="og_title"> <?php esc_html_e('OG Title', 'ai-seo-client'); ?></label>
-                        <label style="display:none;" class="bulk-field-cb"><input type="checkbox" value="og_description"> <?php esc_html_e('OG Description', 'ai-seo-client'); ?></label>
-                        <label style="display:none;" class="bulk-field-cb"><input type="checkbox" value="focus_keyphrase"> <?php esc_html_e('Focus Keyphrase', 'ai-seo-client'); ?></label>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="bulk-generate-selected" style="display:none;">
+                        <?php esc_html_e('Generate for Selected', 'ai-seo-client'); ?>
+                    </button>
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="bulk-generate-all" style="display:none;">
+                        <?php esc_html_e('Generate for Missing', 'ai-seo-client'); ?>
+                    </button>
 
-                        <button type="button" class="button button-primary" id="bulk-generate-selected" style="display:none;">
-                            <?php esc_html_e('Generate for Selected', 'ai-seo-client'); ?>
-                        </button>
-                        <button type="button" class="button" id="bulk-generate-all" style="display:none;">
-                            <?php esc_html_e('Generate for All Missing', 'ai-seo-client'); ?>
-                        </button>
-
-                        <span class="spinner" id="bulk-spinner" style="float:none;"></span>
-                    </div>
-
-                    <!-- Progress bar -->
-                    <div id="bulk-progress" style="display:none; margin-top:15px;">
-                        <div style="background:#e0e0e0; border-radius:4px; height:24px; overflow:hidden;">
-                            <div id="bulk-progress-bar" style="background:linear-gradient(90deg, #379fd3, #8f39ac); height:100%; width:0%; transition:width 0.3s; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:600;"></div>
-                        </div>
-                        <p id="bulk-progress-text" style="color:#666; margin-top:5px;"></p>
-                    </div>
+                    <span class="spinner" id="bulk-spinner" style="float:none;"></span>
                 </div>
 
-                <!-- Results Table -->
-                <div class="sseo-ai-dashboard-card" id="bulk-results" style="display:none;">
-                    <h2><?php esc_html_e('Posts Overview', 'ai-seo-client'); ?></h2>
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr>
-                                <th style="width:30px;"><input type="checkbox" id="bulk-select-all"></th>
-                                <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
-                                <th style="width:80px;"><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
-                                <th style="width:70px;"><?php esc_html_e('Words', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('SEO Title', 'ai-seo-client'); ?></th>
-                                <th><?php esc_html_e('Meta Description', 'ai-seo-client'); ?></th>
-                                <th style="width:100px;"><?php esc_html_e('Issues', 'ai-seo-client'); ?></th>
-                                <th style="width:100px;"><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody id="bulk-table-body"></tbody>
-                    </table>
+                <!-- Progress bar -->
+                <div id="bulk-progress" style="display:none;margin-top:16px;">
+                    <div class="fyn-progress" style="height:24px;">
+                        <div class="fyn-progress-bar" id="bulk-progress-bar" style="width:0%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;transition:width .3s;"></div>
+                    </div>
+                    <p id="bulk-progress-text" style="color:var(--text-m);margin-top:6px;font-size:13px;"></p>
                 </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="fyn-card" id="bulk-results" style="display:none;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-editor-table"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Posts Overview', 'ai-seo-client'); ?></h3>
+                </div>
+                <table class="fyn-table">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;"><input type="checkbox" id="bulk-select-all"></th>
+                            <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
+                            <th style="width:80px;"><?php esc_html_e('Type', 'ai-seo-client'); ?></th>
+                            <th style="width:70px;"><?php esc_html_e('Words', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('SEO Title', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Meta Description', 'ai-seo-client'); ?></th>
+                            <th style="width:100px;"><?php esc_html_e('Issues', 'ai-seo-client'); ?></th>
+                            <th style="width:100px;"><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bulk-table-body"></tbody>
+                </table>
             </div>
         </div>
 
@@ -465,12 +465,12 @@ Return ONLY the JSON.";
                     var issueHtml = p.issues.map(function(i) {
                         var labels = {
                             missing_title: '<?php echo esc_js(__('No Title', 'ai-seo-client')); ?>',
-                            missing_description: '<?php echo esc_js(__('No Desc', 'ai-seo-client')); ?>',
+                            missing_description: '<?php echo esc_js(__('No Desc.', 'ai-seo-client')); ?>',
                             missing_og: '<?php echo esc_js(__('No OG', 'ai-seo-client')); ?>',
                             missing_keyphrase: '<?php echo esc_js(__('No KW', 'ai-seo-client')); ?>',
                             short_content: '<?php echo esc_js(__('Short', 'ai-seo-client')); ?>'
                         };
-                        return '<span style="background:#fce4e4;color:#d63638;padding:1px 6px;border-radius:3px;font-size:11px;margin:1px;">' + (labels[i]||i) + '</span>';
+                        return '<span class="fyn-badge fyn-badge--danger" style="font-size:10px;padding:2px 6px;">' + (labels[i]||i) + '</span>';
                     }).join(' ');
 
                     tbody.append(
@@ -481,8 +481,8 @@ Return ONLY the JSON.";
                         '<td>' + p.word_count + '</td>' +
                         '<td class="seo-title-cell">' + (p.seo_title ? $('<span>').text(p.seo_title).html() : '<em style="color:#999;">&mdash;</em>') + '</td>' +
                         '<td class="seo-desc-cell">' + (p.seo_description ? '<span style="font-size:12px;">' + $('<span>').text(p.seo_description).html() + '</span>' : '<em style="color:#999;">&mdash;</em>') + '</td>' +
-                        '<td>' + (issueHtml || '<span style="color:#00a32a;">&check;</span>') + '</td>' +
-                        '<td><button class="button button-small bulk-gen-single" data-id="' + p.id + '"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button></td>' +
+                        '<td>' + (issueHtml || '<span style="color:var(--fyn-success);">&check;</span>') + '</td>' +
+                        '<td><button class="fyn-btn fyn-btn-outline bulk-gen-single" style="padding:5px 10px;font-size:12px;" data-id="' + p.id + '"><?php echo esc_js(__('Generate', 'ai-seo-client')); ?></button></td>' +
                         '</tr>'
                     );
                 });

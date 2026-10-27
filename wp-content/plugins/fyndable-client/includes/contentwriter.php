@@ -796,85 +796,92 @@ Requirements:
         $tones = ['professional', 'casual', 'academic', 'conversational', 'authoritative', 'friendly', 'technical'];
         $defaultWordCount = (int) $this->settings->get('default_word_count', 1500);
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('AI Content Writer', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Generate full SEO-optimized articles with AI. Optionally uses Content Brief data for data-driven writing.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-            <div style="max-width: 900px;">
-                <div class="postbox" style="padding: 20px;">
-                    <h2><?php esc_html_e('Article Settings', 'ai-seo-client'); ?></h2>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th><label for="writer-keyword"><?php esc_html_e('Target Keyword', 'ai-seo-client'); ?></label></th>
-                            <td><input type="text" id="writer-keyword" class="regular-text" style="width:100%;" placeholder="<?php esc_attr_e('Enter your main keyword...', 'ai-seo-client'); ?>"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="writer-title"><?php esc_html_e('Title (optional)', 'ai-seo-client'); ?></label></th>
-                            <td><input type="text" id="writer-title" class="regular-text" style="width:100%;" placeholder="<?php esc_attr_e('Leave empty for AI-generated title', 'ai-seo-client'); ?>"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="writer-tone"><?php esc_html_e('Tone', 'ai-seo-client'); ?></label></th>
-                            <td>
-                                <select id="writer-tone">
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Content Writer', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('AI Content Writer', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Generate full SEO-optimized articles with AI. Optionally uses Content Brief data for data-driven writing.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <div style="max-width:900px;">
+                <!-- Article Settings card -->
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-edit-large"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Article Settings', 'ai-seo-client'); ?></h3>
+                    </div>
+
+                    <div style="display:grid;gap:16px;">
+                        <div>
+                            <label for="writer-keyword" style="display:block;font-size:12px;font-weight:700;color:var(--text-m);margin-bottom:4px;"><?php esc_html_e('Target Keyword', 'ai-seo-client'); ?></label>
+                            <input type="text" id="writer-keyword" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('Enter your target keyword...', 'ai-seo-client'); ?>">
+                        </div>
+                        <div>
+                            <label for="writer-title" style="display:block;font-size:12px;font-weight:700;color:var(--text-m);margin-bottom:4px;"><?php esc_html_e('Title (optional)', 'ai-seo-client'); ?></label>
+                            <input type="text" id="writer-title" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('Leave empty for AI-generated title', 'ai-seo-client'); ?>">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                            <div>
+                                <label for="writer-tone" style="display:block;font-size:12px;font-weight:700;color:var(--text-m);margin-bottom:4px;"><?php esc_html_e('Tone', 'ai-seo-client'); ?></label>
+                                <select id="writer-tone" class="fyn-input" style="width:100%;">
                                     <?php foreach ($tones as $t): ?>
                                     <option value="<?php echo esc_attr($t); ?>"><?php echo esc_html(ucfirst($t)); ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="writer-words"><?php esc_html_e('Target Word Count', 'ai-seo-client'); ?></label></th>
-                            <td>
-                                <input type="range" id="writer-words" min="500" max="5000" step="100" value="<?php echo esc_attr($defaultWordCount); ?>" style="width:300px;">
-                                <span id="writer-words-display"><?php echo esc_html($defaultWordCount); ?></span> <?php esc_html_e('words', 'ai-seo-client'); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="writer-outline"><?php esc_html_e('Custom Outline (optional)', 'ai-seo-client'); ?></label></th>
-                            <td>
-                                <textarea id="writer-outline" rows="5" class="large-text" placeholder="<?php esc_attr_e("H2: First section\nH2: Second section\nH3: Subsection\n...", 'ai-seo-client'); ?>"></textarea>
-                                <p class="description"><?php esc_html_e('Leave empty to auto-generate from keyword analysis.', 'ai-seo-client'); ?></p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label><?php esc_html_e('Options', 'ai-seo-client'); ?></label></th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" id="writer-create-draft" checked>
-                                    <?php esc_html_e('Create WordPress draft automatically', 'ai-seo-client'); ?>
-                                </label>
-                                <br>
-                                <label>
-                                    <input type="checkbox" id="writer-include-faq" <?php echo $this->settings->get('default_include_faq', true) ? 'checked' : ''; ?>>
-                                    <?php esc_html_e('Include FAQ section', 'ai-seo-client'); ?>
-                                </label>
-                            </td>
-                        </tr>
-                    </table>
+                            </div>
+                            <div>
+                                <label for="writer-words" style="display:block;font-size:12px;font-weight:700;color:var(--text-m);margin-bottom:4px;"><?php esc_html_e('Target Word Count', 'ai-seo-client'); ?></label>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <input type="range" id="writer-words" min="500" max="5000" step="100" value="<?php echo esc_attr($defaultWordCount); ?>" style="flex:1;accent-color:var(--fyn-purple);">
+                                    <span id="writer-words-display" style="font-weight:700;color:var(--text-h);min-width:40px;"><?php echo esc_html($defaultWordCount); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="writer-outline" style="display:block;font-size:12px;font-weight:700;color:var(--text-m);margin-bottom:4px;"><?php esc_html_e('Custom Outline (optional)', 'ai-seo-client'); ?></label>
+                            <textarea id="writer-outline" rows="5" class="fyn-input" style="width:100%;resize:vertical;" placeholder="<?php esc_attr_e("H2: Eerste sectie\nH2: Tweede sectie\nH3: Subsectie\n...", 'ai-seo-client'); ?>"></textarea>
+                            <p style="font-size:12px;color:var(--text-m);margin:4px 0 0;"><?php esc_html_e('Leave empty to auto-generate from keyword analysis.', 'ai-seo-client'); ?></p>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-b);cursor:pointer;">
+                                <input type="checkbox" id="writer-create-draft" checked>
+                                <?php esc_html_e('Create WordPress draft automatically', 'ai-seo-client'); ?>
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-b);cursor:pointer;">
+                                <input type="checkbox" id="writer-include-faq" <?php echo $this->settings->get('default_include_faq', true) ? 'checked' : ''; ?>>
+                                <?php esc_html_e('Include FAQ section', 'ai-seo-client'); ?>
+                            </label>
+                        </div>
+                    </div>
 
-                    <p>
-                        <button type="button" class="button button-primary button-hero" id="writer-generate">
+                    <div style="margin-top:20px;display:flex;align-items:center;gap:12px;">
+                        <button type="button" class="fyn-btn fyn-btn-primary" id="writer-generate" style="font-size:15px;padding:12px 28px;">
+                            <span class="dashicons dashicons-welcome-write-blog" style="margin-right:4px;"></span>
                             <?php esc_html_e('Generate Article', 'ai-seo-client'); ?>
                         </button>
                         <span class="spinner" id="writer-spinner" style="float:none;"></span>
-                    </p>
-                    <p id="writer-status" style="display:none; color: #666;"></p>
+                    </div>
+                    <p id="writer-status" style="display:none;color:var(--text-m);font-size:13px;margin-top:10px;"></p>
                 </div>
 
-                <div id="writer-result" style="display:none; margin-top: 20px;">
-                    <div class="postbox" style="padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h2 id="writer-result-title" style="margin:0;"></h2>
-                            <div>
-                                <span id="writer-result-words" style="background: #e0e7ff; padding: 4px 12px; border-radius: 12px; font-size: 13px;"></span>
-                                <a id="writer-edit-link" href="#" class="button" target="_blank" style="margin-left:10px;"><?php esc_html_e('Edit Draft', 'ai-seo-client'); ?></a>
+                <!-- Result card -->
+                <div id="writer-result" style="display:none;">
+                    <div class="fyn-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                            <h3 id="writer-result-title" class="fyn-card-title" style="margin:0;"></h3>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span id="writer-result-words" class="fyn-badge fyn-badge--info"></span>
+                                <a id="writer-edit-link" href="#" class="fyn-btn fyn-btn-outline" target="_blank"><?php esc_html_e('Edit Draft', 'ai-seo-client'); ?></a>
                             </div>
                         </div>
-                        <div id="writer-result-content" style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; padding: 20px; background: #fff; line-height: 1.7;"></div>
-                        <p style="margin-top: 10px;">
-                            <strong><?php esc_html_e('Meta Description:', 'ai-seo-client'); ?></strong>
-                            <span id="writer-result-meta" style="color: #666;"></span>
+                        <div id="writer-result-content" style="max-height:600px;overflow-y:auto;border:1px solid var(--card-border);border-radius:9px;padding:20px;background:var(--well);line-height:1.7;color:var(--text-b);"></div>
+                        <p style="margin-top:12px;font-size:13px;">
+                            <strong style="color:var(--text-h);"><?php esc_html_e('Meta Description:', 'ai-seo-client'); ?></strong>
+                            <span id="writer-result-meta" style="color:var(--text-m);"></span>
                         </p>
                     </div>
                 </div>

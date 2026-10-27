@@ -800,51 +800,50 @@ Return as JSON array.";
     {
         ?>
         <style>
-            .agent-wrap { max-width: 900px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .agent-chat { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-            .agent-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; }
-            .agent-header h1 { margin: 0; font-size: 22px; }
-            .agent-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
+            .agent-wrap { max-width: 900px; margin: 0 auto; }
+            .agent-chat { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); overflow: hidden; }
             .agent-messages { max-height: 500px; overflow-y: auto; padding: 20px 30px; }
             .agent-msg { margin-bottom: 20px; }
             .agent-msg-user { text-align: right; }
-            .agent-msg-user .agent-bubble { background: #379fd3; color: #fff; margin-left: 60px; }
-            .agent-msg-assistant .agent-bubble { background: #f1f5f9; color: #1e293b; margin-right: 60px; }
+            .agent-msg-user .agent-bubble { background: var(--fyn-blue); color: #fff; margin-left: 60px; }
+            .agent-msg-assistant .agent-bubble { background: var(--well); color: var(--text-b); margin-right: 60px; }
             .agent-bubble { display: inline-block; padding: 12px 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; text-align: left; white-space: pre-wrap; max-width: 100%; }
             .agent-actions { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
-            .agent-action-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #379fd3; background: #fff; color: #379fd3; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
-            .agent-action-btn:hover { background: #379fd3; color: #fff; }
-            .agent-action-btn.approve { border-color: #16a34a; color: #16a34a; }
-            .agent-action-btn.approve:hover { background: #16a34a; color: #fff; }
-            .agent-input-area { border-top: 1px solid #e2e8f0; padding: 20px 30px; display: flex; gap: 10px; }
-            .agent-input { flex: 1; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; resize: none; min-height: 44px; max-height: 120px; }
-            .agent-send { padding: 12px 24px; background: #379fd3; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
-            .agent-send:hover { background: #2a7ba8; }
-            .agent-send:disabled { opacity: 0.5; cursor: not-allowed; }
-            .agent-typing { display: inline-block; padding: 12px 18px; background: #f1f5f9; border-radius: 12px; font-size: 14px; color: #64748b; }
+            .agent-action-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--fyn-blue); background: var(--card); color: var(--fyn-blue); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+            .agent-action-btn:hover { background: var(--fyn-blue); color: #fff; }
+            .agent-action-btn.approve { border-color: var(--fyn-success); color: var(--fyn-success); }
+            .agent-action-btn.approve:hover { background: var(--fyn-success); color: #fff; }
+            .agent-input-area { border-top: 1px solid var(--divide); padding: 20px 30px; display: flex; gap: 10px; }
+            .agent-typing { display: inline-block; padding: 12px 18px; background: var(--well); border-radius: 12px; font-size: 14px; color: var(--text-m); }
             .agent-sidebar { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-            .agent-sidebar button { font-size: 12px; }
         </style>
-        <div class="wrap agent-wrap">
-            <div class="agent-chat">
-                <div class="agent-header">
-                    <h1>🤖 <?php esc_html_e('AI SEO Agent', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Your conversational SEO assistant — research, plan, write, and publish in one chat.', 'ai-seo-client'); ?></p>
-                </div>
-                <div class="agent-messages" id="agent-messages">
-                    <div class="agent-msg agent-msg-assistant">
-                        <div class="agent-bubble"><?php esc_html_e("Hi! I'm your AI SEO Agent. I can help you with:\n• Generate topic clusters\n• Write SEO articles\n• Research keywords\n• Run site audits\n\nWhat would you like to do?", 'ai-seo-client'); ?></div>
-                    </div>
-                </div>
-                <div class="agent-input-area">
-                    <textarea class="agent-input" id="agent-input" placeholder="<?php esc_attr_e('Type your request... (e.g. "Create a cluster about WordPress SEO")', 'ai-seo-client'); ?>" rows="1"></textarea>
-                    <button class="agent-send" id="agent-send"><?php esc_html_e('Send', 'ai-seo-client'); ?></button>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('AI SEO Agent', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('AI SEO Agent', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Your conversational SEO assistant — research, plan, write and publish in one chat.', 'ai-seo-client'); ?></p>
                 </div>
             </div>
-            <div class="agent-sidebar">
-                <button class="button button-small" id="agent-new"><?php esc_html_e('New Conversation', 'ai-seo-client'); ?></button>
-                <button class="button button-small" id="agent-history"><?php esc_html_e('History', 'ai-seo-client'); ?></button>
-                <button class="button button-small" id="agent-settings"><?php esc_html_e('Settings', 'ai-seo-client'); ?></button>
+
+            <div class="agent-wrap">
+                <div class="agent-chat">
+                    <div class="agent-messages" id="agent-messages">
+                        <div class="agent-msg agent-msg-assistant">
+                            <div class="agent-bubble"><?php esc_html_e("Hi! I'm your AI SEO Agent. I can help you with:\n• Generate topic clusters\n• Write SEO articles\n• Research keywords\n• Run site audits\n\nWhat would you like to do?", 'ai-seo-client'); ?></div>
+                        </div>
+                    </div>
+                    <div class="agent-input-area">
+                        <textarea class="fyn-input" id="agent-input" placeholder="<?php esc_attr_e('Type your request... (e.g. "Create a cluster about WordPress SEO")', 'ai-seo-client'); ?>" rows="1" style="flex:1;resize:none;min-height:44px;max-height:120px;"></textarea>
+                        <button class="fyn-btn fyn-btn-primary" id="agent-send"><?php esc_html_e('Send', 'ai-seo-client'); ?></button>
+                    </div>
+                </div>
+                <div class="agent-sidebar">
+                    <button class="fyn-btn fyn-btn-outline" id="agent-new" style="font-size:12px;"><?php esc_html_e('New Conversation', 'ai-seo-client'); ?></button>
+                    <button class="fyn-btn fyn-btn-outline" id="agent-history" style="font-size:12px;"><?php esc_html_e('History', 'ai-seo-client'); ?></button>
+                    <button class="fyn-btn fyn-btn-outline" id="agent-settings" style="font-size:12px;"><?php esc_html_e('Settings', 'ai-seo-client'); ?></button>
+                </div>
             </div>
         </div>
         <script>

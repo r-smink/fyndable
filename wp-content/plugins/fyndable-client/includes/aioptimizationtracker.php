@@ -240,108 +240,91 @@ class AiOptimizationTracker
         $metrics = $hasError ? [] : $this->extractTargetMetrics($targetMetrics);
 
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('AI Optimization Tracker', 'ai-seo-client'); ?></h1>
-            <p class="description">
-                <?php esc_html_e('Track how often your domain and brand are mentioned in AI responses (ChatGPT, Claude, Gemini, Perplexity) and monitor your AI search visibility.', 'ai-seo-client'); ?>
-            </p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('AI Optimization', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('AI Optimization Tracker', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Track how often your domain and brand are mentioned in AI responses (ChatGPT, Claude, Gemini, Perplexity).', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
 
             <?php if ($hasError): ?>
-                <div class="notice notice-error">
+                <div class="notice notice-error" style="margin-bottom:16px;">
                     <p><?php echo esc_html($targetMetrics->get_error_message()); ?></p>
                     <p><?php esc_html_e('Make sure the DataForSEO API key is configured in the Portal settings.', 'ai-seo-client'); ?></p>
                 </div>
             <?php endif; ?>
 
             <!-- Overview Cards -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; margin-bottom: 30px;">
-                <div class="card" style="padding: 20px; text-align: center;">
-                    <h2 style="font-size: 36px; margin: 0; color: #2271b1;">
-                        <?php echo esc_html(number_format($metrics['total_mentions'] ?? 0)); ?>
-                    </h2>
-                    <p style="color: #666; margin: 5px 0 0;">
-                        <?php esc_html_e('Total AI Mentions', 'ai-seo-client'); ?>
-                    </p>
+            <div class="fyn-stats-grid" style="margin-bottom:24px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['total_mentions'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Total AI Mentions', 'ai-seo-client'); ?></div>
                 </div>
-                <div class="card" style="padding: 20px; text-align: center;">
-                    <h2 style="font-size: 36px; margin: 0; color: #2271b1;">
-                        <?php echo esc_html(number_format($metrics['chatgpt_mentions'] ?? 0)); ?>
-                    </h2>
-                    <p style="color: #666; margin: 5px 0 0;">
-                        <?php esc_html_e('ChatGPT Mentions', 'ai-seo-client'); ?>
-                    </p>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['chatgpt_mentions'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('ChatGPT Mentions', 'ai-seo-client'); ?></div>
                 </div>
-                <div class="card" style="padding: 20px; text-align: center;">
-                    <h2 style="font-size: 36px; margin: 0; color: #2271b1;">
-                        <?php echo esc_html(number_format($metrics['claude_mentions'] ?? 0)); ?>
-                    </h2>
-                    <p style="color: #666; margin: 5px 0 0;">
-                        <?php esc_html_e('Claude Mentions', 'ai-seo-client'); ?>
-                    </p>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['claude_mentions'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Claude Mentions', 'ai-seo-client'); ?></div>
                 </div>
-                <div class="card" style="padding: 20px; text-align: center;">
-                    <h2 style="font-size: 36px; margin: 0; color: #2271b1;">
-                        <?php echo esc_html(number_format($metrics['gemini_mentions'] ?? 0)); ?>
-                    </h2>
-                    <p style="color: #666; margin: 5px 0 0;">
-                        <?php esc_html_e('Gemini Mentions', 'ai-seo-client'); ?>
-                    </p>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['gemini_mentions'] ?? 0)); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Gemini Mentions', 'ai-seo-client'); ?></div>
                 </div>
             </div>
 
             <!-- LLM Response Checker -->
-            <div class="card" style="padding: 20px; margin-bottom: 20px;">
-                <h2><?php esc_html_e('AI Response Checker', 'ai-seo-client'); ?></h2>
-                <p class="description"><?php esc_html_e('See what AI models say about your brand or keyword.', 'ai-seo-client'); ?></p>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="aiopt_provider"><?php esc_html_e('AI Provider', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <select id="aiopt_provider">
-                                <option value="chatgpt">ChatGPT</option>
-                                <option value="claude">Claude</option>
-                                <option value="gemini">Gemini</option>
-                                <option value="perplexity">Perplexity</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="aiopt_prompt"><?php esc_html_e('Prompt', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <textarea id="aiopt_prompt" rows="3" class="large-text" placeholder="<?php esc_attr_e('e.g. What is the best SEO plugin for WordPress?', 'ai-seo-client'); ?>"></textarea>
-                        </td>
-                    </tr>
-                </table>
-                <p>
-                    <button type="button" class="button button-primary" id="aiopt_check_btn">
-                        <?php esc_html_e('Check AI Response', 'ai-seo-client'); ?>
-                    </button>
-                </p>
-                <div id="aiopt_response_container" style="margin-top: 15px; display: none;">
-                    <h3><?php esc_html_e('AI Response', 'ai-seo-client'); ?></h3>
-                    <div id="aiopt_response_output" style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></div>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-comments"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('AI Response Checker', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin-bottom:16px;"><?php esc_html_e('See what AI models say about your brand or keyword.', 'ai-seo-client'); ?></p>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <label for="aiopt_provider" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('AI Provider', 'ai-seo-client'); ?></label>
+                        <select id="aiopt_provider" class="fyn-input" style="width:auto;">
+                            <option value="chatgpt">ChatGPT</option>
+                            <option value="claude">Claude</option>
+                            <option value="gemini">Gemini</option>
+                            <option value="perplexity">Perplexity</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:280px;">
+                        <label for="aiopt_prompt" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Prompt', 'ai-seo-client'); ?></label>
+                        <textarea id="aiopt_prompt" rows="3" class="fyn-input" style="resize:vertical;" placeholder="<?php esc_attr_e('e.g. What is the best SEO plugin for WordPress?', 'ai-seo-client'); ?>"></textarea>
+                    </div>
+                </div>
+                <button type="button" class="fyn-btn fyn-btn-primary" id="aiopt_check_btn">
+                    <span class="dashicons dashicons-search" style="font-size:16px;line-height:inherit;"></span>
+                    <?php esc_html_e('Check AI Response', 'ai-seo-client'); ?>
+                </button>
+                <div id="aiopt_response_container" style="margin-top:16px;display:none;">
+                    <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('AI Response', 'ai-seo-client'); ?></h4>
+                    <div id="aiopt_response_output" style="background:var(--well);padding:16px;border:1px solid var(--card-border);border-radius:9px;white-space:pre-wrap;max-height:400px;overflow-y:auto;font-size:13px;color:var(--text-b);"></div>
                 </div>
             </div>
 
             <!-- AI Keyword Data -->
-            <div class="card" style="padding: 20px; margin-bottom: 20px;">
-                <h2><?php esc_html_e('AI Keyword Search Volume', 'ai-seo-client'); ?></h2>
-                <p class="description"><?php esc_html_e('Search volume data for how people prompt AI models.', 'ai-seo-client'); ?></p>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="aiopt_keywords"><?php esc_html_e('Keywords (one per line)', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <textarea id="aiopt_keywords" rows="4" class="large-text" placeholder="<?php esc_attr_e('best seo plugin&#10;wordpress seo&#10;ai seo tools', 'ai-seo-client'); ?>"></textarea>
-                        </td>
-                    </tr>
-                </table>
-                <p>
-                    <button type="button" class="button button-primary" id="aiopt_kw_btn">
-                        <?php esc_html_e('Get Search Volume', 'ai-seo-client'); ?>
-                    </button>
-                </p>
-                <div id="aiopt_kw_container" style="margin-top: 15px; display: none;">
-                    <table class="widefat striped" id="aiopt_kw_table">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-bar"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('AI Keyword Search Volume', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin-bottom:16px;"><?php esc_html_e('Search volume data for how people prompt AI models.', 'ai-seo-client'); ?></p>
+                <div style="margin-bottom:16px;">
+                    <label for="aiopt_keywords" style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Keywords (one per line)', 'ai-seo-client'); ?></label>
+                    <textarea id="aiopt_keywords" rows="4" class="fyn-input" style="width:100%;resize:vertical;" placeholder="<?php esc_attr_e('best seo plugin&#10;wordpress seo&#10;ai seo tools', 'ai-seo-client'); ?>"></textarea>
+                </div>
+                <button type="button" class="fyn-btn fyn-btn-primary" id="aiopt_kw_btn">
+                    <?php esc_html_e('Get Search Volume', 'ai-seo-client'); ?>
+                </button>
+                <div id="aiopt_kw_container" style="margin-top:16px;display:none;">
+                    <table class="fyn-table" id="aiopt_kw_table">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
