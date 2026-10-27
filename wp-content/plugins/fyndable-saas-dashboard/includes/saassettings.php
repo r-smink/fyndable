@@ -718,7 +718,12 @@ class SaaSSettings
         $isOpenRouter = get_option('sseo_ai_saas_ai_provider', 'openrouter') === 'openrouter';
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('SSEO AI SaaS Settings', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Settings', 'sseo-ai-saas'),
+            __('SaaS Settings', 'sseo-ai-saas'),
+            __('API credentials, SERP providers, image generation, integrations and SMTP.', 'sseo-ai-saas')
+        ); ?>
 
             <style>
                 .sseo-ai-tab-panel { display: none; }
@@ -1131,6 +1136,7 @@ class SaaSSettings
                 }
             });
             </script>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -1153,7 +1159,12 @@ class SaaSSettings
         ];
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Checkout', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Checkout', 'sseo-ai-saas'),
+            __('Checkout', 'sseo-ai-saas'),
+            __('Self-serve plans, trial settings, payment provider and VAT.', 'sseo-ai-saas')
+        ); ?>
 
             <!-- Stats Cards (moved from Billing page) -->
             <div class="sseo-ai-stats-grid">
@@ -1422,7 +1433,7 @@ class SaaSSettings
 
                 <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
                     <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Stripe Webhook URL', 'sseo-ai-saas'); ?></h4>
-                    <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
+                    <code style="display: block; padding: 10px; background: var(--well, #fff); border: 1px solid var(--well-border, #edecf2); border-radius: 6px; word-break: break-all; font-size: 12px;">
                         <?php echo esc_url($webhookUrls['stripe']); ?>
                     </code>
                     <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
@@ -1433,7 +1444,7 @@ class SaaSSettings
 
                 <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
                     <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Mollie Webhook URL', 'sseo-ai-saas'); ?></h4>
-                    <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
+                    <code style="display: block; padding: 10px; background: var(--well, #fff); border: 1px solid var(--well-border, #edecf2); border-radius: 6px; word-break: break-all; font-size: 12px;">
                         <?php echo esc_url($webhookUrls['mollie']); ?>
                     </code>
                     <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
@@ -1467,6 +1478,7 @@ class SaaSSettings
                     </div>
                 </div>
             </div>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -1489,7 +1501,12 @@ class SaaSSettings
         $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'cost';
         ?>
         <div class="wrap sseo-ai-license-admin sseo-ai-cost-wrap">
-            <h1><?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Cost Dashboard', 'sseo-ai-saas'),
+            __('Cost Dashboard', 'sseo-ai-saas'),
+            __('What the platform spends per AI model, provider and tier.', 'sseo-ai-saas')
+        ); ?>
             <?php $this->renderCostDashboardTabs($tab); ?>
             <div class="sseo-ai-cost-content">
                 <?php
@@ -1502,6 +1519,7 @@ class SaaSSettings
                 }
                 ?>
             </div>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -1966,11 +1984,13 @@ class SaaSSettings
         $liveCount = count($allModels) - count(\SSEOAISaaS\ProviderRouter::getAvailableModels());
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('AI Models', 'sseo-ai-saas'); ?></h1>
-            <p class="description" style="margin: 0 20px; color: #fff; font-size: 14px;">
-                <?php esc_html_e('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas'); ?>
-            </p>
-            <p class="description" style="margin: 0 20px; color: #fff; font-size: 14px;">
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('AI Models', 'sseo-ai-saas'),
+            __('AI Models', 'sseo-ai-saas'),
+            __('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas')
+        ); ?>
+            <p class="description">
                 <?php
                 printf(
                     /* translators: 1: total model count, 2: live-fetched count */
@@ -1979,7 +1999,7 @@ class SaaSSettings
                     max(0, $liveCount)
                 );
                 ?>
-                <a style="color: #fff; text-decoration: underline;" href="<?php echo esc_url(wp_nonce_url(add_query_arg('refresh_models', '1', admin_url('admin.php?page=sseo-ai-ai-models')), 'sseo_ai_refresh_models')); ?>">
+                <a style="color: var(--fyn-purple); text-decoration: underline;" href="<?php echo esc_url(wp_nonce_url(add_query_arg('refresh_models', '1', admin_url('admin.php?page=sseo-ai-ai-models')), 'sseo_ai_refresh_models')); ?>">
                     <?php esc_html_e('Refresh model list', 'sseo-ai-saas'); ?>
                 </a>
             </p>
@@ -2031,6 +2051,7 @@ class SaaSSettings
 
                 <?php submit_button(__('Save AI Models', 'sseo-ai-saas')); ?>
             </form>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -2204,7 +2225,12 @@ class SaaSSettings
         }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Client Versions', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Client Versions', 'sseo-ai-saas'),
+            __('Client Versions', 'sseo-ai-saas'),
+            __('Published client-plugin builds and what the update server serves.', 'sseo-ai-saas')
+        ); ?>
             <?php settings_errors('sseo_ai_client_versions'); ?>
 
             <form method="post" enctype="multipart/form-data">
@@ -2324,6 +2350,7 @@ class SaaSSettings
                     </table>
                 <?php endif; ?>
             </div>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }

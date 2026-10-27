@@ -642,13 +642,13 @@ msgid "All Severities"
 msgstr "Alle niveaus"
 
 msgid "All clusters"
-msgstr ""
+msgstr "Alle clusters"
 
 msgid "All data shown while demo mode is active is fictitious and clearly labelled."
 msgstr ""
 
 msgid "All filters"
-msgstr ""
+msgstr "Alle filters"
 
 msgid "All ideas"
 msgstr ""
@@ -1659,7 +1659,7 @@ msgid "Content title..."
 msgstr ""
 
 msgid "Content words range:"
-msgstr ""
+msgstr "Aantal woorden:"
 
 msgid "Context / Instructions for AI:"
 msgstr ""
@@ -1881,10 +1881,10 @@ msgid "Created Posts"
 msgstr "Aangemaakte berichten"
 
 msgid "Created from"
-msgstr ""
+msgstr "Aangemaakt vanaf"
 
 msgid "Created to"
-msgstr ""
+msgstr "Aangemaakt tot"
 
 msgid "Created until"
 msgstr ""
@@ -4320,13 +4320,13 @@ msgid "Map this page to its translations in other languages. If you use WPML, Po
 msgstr ""
 
 msgid "Mass Edit Status"
-msgstr ""
+msgstr "Bulkbewerkingsstatus"
 
 msgid "Mass edit status:"
-msgstr ""
+msgstr "Bulkbewerkingsstatus:"
 
 msgid "Mass review status:"
-msgstr ""
+msgstr "Reviewstatus:"
 
 msgid "Match"
 msgstr ""
@@ -4533,7 +4533,7 @@ msgid "Needs Work"
 msgstr ""
 
 msgid "Needs attention"
-msgstr ""
+msgstr "Aandacht nodig"
 
 msgid "Negative"
 msgstr ""
@@ -4773,7 +4773,7 @@ msgid "No post targets this tracked keyword"
 msgstr ""
 
 msgid "No posts found"
-msgstr ""
+msgstr "Geen berichten gevonden"
 
 msgid "No posts with issues found"
 msgstr ""
@@ -5376,7 +5376,7 @@ msgid "Post Types in Sitemap"
 msgstr "Berichttypen in sitemap"
 
 msgid "Post language:"
-msgstr ""
+msgstr "Berichttaal:"
 
 msgid "Post marked for regeneration"
 msgstr ""
@@ -5391,7 +5391,7 @@ msgid "Post settings"
 msgstr "Berichtinstellingen"
 
 msgid "Post status:"
-msgstr ""
+msgstr "Berichtstatus:"
 
 msgid "Post type not allowed."
 msgstr ""
@@ -5403,7 +5403,7 @@ msgid "Post updated"
 msgstr ""
 
 msgid "Post visibility"
-msgstr ""
+msgstr "Zichtbaarheid"
 
 msgid "Post, test name, and at least 2 variants required."
 msgstr ""
@@ -5430,7 +5430,7 @@ msgid "Posts older than this many days are eligible for cleanup. Default: 60."
 msgstr ""
 
 msgid "Posts per page"
-msgstr ""
+msgstr "Berichten per pagina"
 
 msgid "Posts per week"
 msgstr "Berichten per week"
@@ -5592,16 +5592,16 @@ msgid "Published (30d)"
 msgstr ""
 
 msgid "Published / scheduled"
-msgstr ""
+msgstr "Gepubliceerd / ingepland"
 
 msgid "Published Posts"
 msgstr ""
 
 msgid "Published from"
-msgstr ""
+msgstr "Gepubliceerd vanaf"
 
 msgid "Published to"
-msgstr ""
+msgstr "Gepubliceerd tot"
 
 msgid "Publishing Calendar"
 msgstr ""
@@ -5925,7 +5925,7 @@ msgid "Review your title tag and meta description for better CTR."
 msgstr ""
 
 msgid "Reviewing"
-msgstr ""
+msgstr "In review"
 
 msgid "Revision Needed"
 msgstr ""
@@ -6036,7 +6036,7 @@ msgid "SEO AI Service"
 msgstr "Fyndable Smart SEO"
 
 msgid "SEO AI created posts"
-msgstr ""
+msgstr "Door AI aangemaakte berichten"
 
 msgid "SEO Audit Report"
 msgstr ""
@@ -6282,7 +6282,7 @@ msgid "Search by title"
 msgstr ""
 
 msgid "Search post title"
-msgstr ""
+msgstr "Zoek op titel"
 
 msgid "Search redirects..."
 msgstr ""
@@ -6297,7 +6297,7 @@ msgid "Search..."
 msgstr "Zoeken..."
 
 msgid "Search:"
-msgstr ""
+msgstr "Zoeken:"
 
 msgid "Search: %s"
 msgstr ""
@@ -6366,7 +6366,7 @@ msgid "Select at least one field to generate"
 msgstr ""
 
 msgid "Select cluster"
-msgstr ""
+msgstr "Selecteer cluster"
 
 msgid "Select fields to generate"
 msgstr ""

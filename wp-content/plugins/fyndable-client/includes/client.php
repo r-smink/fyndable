@@ -670,11 +670,11 @@ class Client
         $this->postMetaBox = new PostMetaBox();
 
         // Define groups
-        $this->postMetaBox->addGroup('content', __('Content & Keywords', 'ai-seo-client'), '&#9998;');
-        $this->postMetaBox->addGroup('technical', __('Technical SEO', 'ai-seo-client'), '&#9881;');
-        $this->postMetaBox->addGroup('social', __('Social & Schema', 'ai-seo-client'), '&#128241;');
-        $this->postMetaBox->addGroup('ai', __('AI Tools', 'ai-seo-client'), '&#129302;');
-        $this->postMetaBox->addGroup('advanced', __('Advanced', 'ai-seo-client'), '&#9881;');
+        $this->postMetaBox->addGroup('content', __('Content & Keywords', 'ai-seo-client'), 'dashicons-edit', '#379FD3');
+        $this->postMetaBox->addGroup('technical', __('Technical SEO', 'ai-seo-client'), 'dashicons-admin-settings', '#8F39AC');
+        $this->postMetaBox->addGroup('social', __('Social & Schema', 'ai-seo-client'), 'dashicons-share', '#A855F7');
+        $this->postMetaBox->addGroup('ai', __('AI Tools', 'ai-seo-client'), 'dashicons-superhero-alt', '#10B981');
+        $this->postMetaBox->addGroup('advanced', __('Advanced', 'ai-seo-client'), 'dashicons-admin-tools', '#3B82F6');
 
         // Content & Keywords group
         $this->postMetaBox->addPanel('content', 'truSEO', __('SEO Score', 'ai-seo-client'), [$this->truSEO, 'renderMetaBox']);

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/colors.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/typography.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/assets/dashicons/css/dashicons.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/base.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Outfit',system-ui,sans-serif;background:#eef0f4}
+a{color:var(--fyn-purple);text-decoration:none}
+a:hover{color:var(--fyn-blue)}
+.fyn-root{
+  --card:#ffffff; --card-border:#e4e3ea; --panel:#ffffff; --page:#eef0f4;
+  --text-h:#1a1430; --text-b:#413b52; --text-m:#746e82; --text-s:#a39dae;
+  --well:#f7f6fa; --well-border:#edecf2; --divide:#eceaf1;
+  --input-bg:#ffffff; --input-border:#d8d6e0; --input-focus:#8F39AC;
+  --sev-track:#e9e7f0; --tab-bar:#faf9fc; --sect-head:#f7f9fc;
+  --serp-bg:#f8f8fb; --serp-title:#1a0dab; --serp-url:#0f7a37;
+}
+.fyn-root.fyn-dark{
+  --card:#1d1630; --card-border:rgba(255,255,255,.08); --panel:#19122a; --page:#120c1c;
+  --text-h:#f4f1fa; --text-b:#cdc6dd; --text-m:#958da7; --text-s:#6f6784;
+  --well:#211a35; --well-border:rgba(255,255,255,.07); --divide:rgba(255,255,255,.07);
+  --input-bg:#211a35; --input-border:rgba(255,255,255,.12); --input-focus:#b56fd0;
+  --sev-track:rgba(255,255,255,.1); --tab-bar:#1a1329; --sect-head:#1c1530;
+  --serp-bg:#17112a; --serp-title:#8ab4f8; --serp-url:#6ee7a8;
+}
+@keyframes fynFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fyn-inp{width:100%;height:46px;padding:0 15px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s ease}
+.fyn-inp:focus{border-color:var(--input-focus)}
+.fyn-ta{width:100%;min-height:96px;padding:12px 15px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:14px;line-height:1.5;outline:none;resize:vertical;transition:border-color .2s ease}
+.fyn-ta:focus{border-color:var(--input-focus)}
+.fyn-inp::placeholder,.fyn-ta::placeholder{color:var(--text-s)}
+</style>
+</helmet>
+<div class="fyn-root {{themeClass}}" style="min-height:100vh;background:var(--page);padding:26px 20px;display:flex;justify-content:center">
+  <div style="width:100%;max-width:1040px">
+
+    <div style="background:var(--panel);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 10px 30px -12px rgba(20,14,30,.18);overflow:hidden">
+      <!-- brand header band -->
+      <div style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:linear-gradient(135deg,#2A1533 0%,#132A38 100%)">
+        <img src="uploads/FYN-LOGO-DIA-LONG300ppi.png" alt="Fyndable Smart SEO" style="height:22px;width:auto;display:block" />
+        <div style="flex:1"></div>
+        <button type="button" onClick="{{toggleTheme}}" title="Wissel thema" style="display:flex;align-items:center;gap:5px;height:30px;padding:3px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);border-radius:999px;cursor:pointer">
+          <span style="{{sunStyle}}">☀</span><span style="{{moonStyle}}">☾</span>
+        </button>
+        <span style="padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:12px;font-weight:700;letter-spacing:.02em">Postoptimalisatie</span>
+      </div>
+
+      <!-- accordion sections -->
+      <sc-for list="{{sections}}" as="sec" hint-placeholder-count="4">
+        <div style="border-bottom:1px solid var(--divide)">
+          <button type="button" onClick="{{sec.toggle}}" style="width:100%;display:flex;align-items:center;gap:12px;padding:15px 22px;background:{{sec.headBg}};border:none;border-left:3px solid {{sec.accent}};cursor:pointer;text-align:left">
+            <span class="dashicons {{sec.iconCls}}" style="font-size:18px;width:18px;height:18px;color:{{sec.accent}};flex:none"></span>
+            <span style="flex:1;font-size:15px;font-weight:700;color:var(--text-h)">{{sec.title}}</span>
+            <span style="min-width:24px;height:22px;padding:0 8px;border-radius:999px;background:var(--sev-track);color:var(--text-m);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">{{sec.count}}</span>
+            <span class="dashicons {{sec.chevron}}" style="font-size:18px;width:18px;height:18px;color:var(--text-s);flex:none"></span>
+          </button>
+
+          <sc-if value="{{sec.open}}" hint-placeholder-val="">
+          <div style="animation:fynFade .25s ease">
+
+            <!-- CONTENT & KEYWORDS -> tab bar -->
+            <sc-if value="{{sec.isContent}}" hint-placeholder-val="{{true}}">
+            <div style="display:flex;gap:2px;padding:0 14px;background:var(--tab-bar);border-bottom:1px solid var(--divide);overflow-x:auto">
+              <sc-for list="{{tabs}}" as="t" hint-placeholder-count="7"><button type="button" onClick="{{t.go}}" style="{{t.style}}">{{t.label}}</button></sc-for>
+            </div>
+            <div style="padding:26px 24px">
+
+              <!-- SEO SCORE TAB -->
+              <sc-if value="{{isScore}}" hint-placeholder-val="{{true}}">
+              <div style="animation:fynFade .25s ease">
+                <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px">
+                  <div style="width:84px;height:84px;border-radius:50%;background:{{score.ringBg}};display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 18px {{score.ringGlow}}"><span style="font-size:34px;font-weight:700;color:#fff;line-height:1">{{score.value}}</span></div>
+                  <div><h2 style="margin:0;font-size:19px;font-weight:700;color:var(--text-h)">SEO-score</h2><p style="margin:5px 0 0;font-size:14px;color:var(--text-m)">{{score.verdict}}</p></div>
+                </div>
+
+                <sc-for list="{{fields}}" as="f" hint-placeholder-count="4">
+                  <div style="margin-bottom:22px">
+                    <label style="display:block;font-size:13px;font-weight:700;color:var(--text-b);margin-bottom:9px">{{f.label}}</label>
+                    <sc-if value="{{f.filled}}" hint-placeholder-val="">
+                      <sc-if value="{{f.isArea}}" hint-placeholder-val=""><div class="fyn-ta" style="min-height:auto">{{f.value}}</div></sc-if>
+                      <sc-if value="{{f.isLine}}" hint-placeholder-val=""><div class="fyn-inp" style="display:flex;align-items:center">{{f.value}}</div></sc-if>
+                    </sc-if>
+                    <sc-if value="{{f.empty}}" hint-placeholder-val="">
+                      <input class="fyn-inp" placeholder="{{f.placeholder}}" />
+                    </sc-if>
+                    <sc-if value="{{f.hint}}" hint-placeholder-val=""><div style="font-size:12px;color:{{f.hintCol}};margin-top:7px">{{f.hint}}</div></sc-if>
+                  </div>
+                </sc-for>
+
+                <!-- SERP preview -->
+                <label style="display:block;font-size:13px;font-weight:700;color:var(--text-b);margin-bottom:9px">Google SERP-preview</label>
+                <div style="background:var(--serp-bg);border:1px solid var(--well-border);border-radius:10px;padding:18px 20px;margin-bottom:26px">
+                  <div style="font-size:19px;line-height:1.3;color:var(--serp-title);font-weight:500;margin-bottom:4px">{{serp.title}}</div>
+                  <div style="font-size:13px;color:var(--serp-url);margin-bottom:5px">{{serp.url}}</div>
+                  <div style="font-size:13.5px;color:var(--text-m);line-height:1.5">{{serp.desc}}</div>
+                </div>
+
+                <!-- analysis results -->
+                <label style="display:block;font-size:13px;font-weight:700;color:var(--text-b);margin-bottom:11px">Analyseresultaten</label>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+                  <sc-for list="{{analysis}}" as="a" hint-placeholder-count="8">
+                    <div style="display:flex;align-items:flex-start;gap:11px;padding:12px 15px;border-radius:9px;background:{{a.bg}};border:1px solid {{a.border}};border-left:3px solid {{a.accent}}">
+                      <span class="dashicons {{a.icon}}" style="font-size:16px;width:16px;height:16px;color:{{a.accent}};flex:none;margin-top:1px"></span>
+                      <div style="font-size:13.5px;line-height:1.45;color:var(--text-b)"><strong style="color:var(--text-h);font-weight:700">{{a.label}}:</strong> {{a.text}}</div>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <div style="display:flex;gap:11px;flex-wrap:wrap">
+                  <button type="button" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)" style-hover="transform:translateY(-2px);box-shadow:0 7px 20px rgba(143,57,172,.45)"><span class="dashicons dashicons-update" style="font-size:16px;width:16px;height:16px"></span>Content opnieuw analyseren</button>
+                  <button type="button" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:var(--fyn-purple);color:var(--fyn-purple)"><span class="dashicons dashicons-superhero-alt" style="font-size:16px;width:16px;height:16px"></span>AI-verbeteringen voorstellen</button>
+                </div>
+              </div>
+              </sc-if>
+
+              <!-- GENERIC TAB PANELS -->
+              <sc-if value="{{isTabList}}" hint-placeholder-val="">
+              <div style="animation:fynFade .25s ease">
+                <sc-if value="{{tabPanel.intro}}" hint-placeholder-val=""><p style="margin:0 0 18px;font-size:13.5px;color:var(--text-m);line-height:1.55">{{tabPanel.intro}}</p></sc-if>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{tabPanel.rows}}" as="r" hint-placeholder-count="5">
+                    <div style="display:flex;align-items:center;gap:13px;padding:14px 16px;border-radius:10px;background:var(--well);border:1px solid var(--well-border)">
+                      <div style="width:36px;height:36px;border-radius:9px;background:var(--card);border:1px solid var(--card-border);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons {{r.icon}}" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span></div>
+                      <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.label}}</div><div style="font-size:12px;color:var(--text-m);margin-top:2px">{{r.detail}}</div></div>
+                      <span style="{{r.badgeStyle}}">{{r.badge}}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              </sc-if>
+
+            </div>
+            </sc-if>
+
+            <!-- GENERIC SECTION FIELD BODY (tech / social / ai) -->
+            <sc-if value="{{sec.isFields}}" hint-placeholder-val="">
+            <div style="padding:24px">
+              <sc-for list="{{sec.fields}}" as="f" hint-placeholder-count="4">
+                <div style="margin-bottom:20px">
+                  <label style="display:block;font-size:13px;font-weight:700;color:var(--text-b);margin-bottom:9px">{{f.label}}</label>
+                  <sc-if value="{{f.isToggleRow}}" hint-placeholder-val="">
+                    <div style="display:flex;align-items:center;gap:11px"><div style="{{f.track}}"><div style="{{f.knob}}"></div></div><span style="font-size:13px;color:var(--text-m)">{{f.value}}</span></div>
+                  </sc-if>
+                  <sc-if value="{{f.isSelectRow}}" hint-placeholder-val="">
+                    <div class="fyn-inp" style="display:flex;align-items:center;justify-content:space-between">{{f.value}}<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div>
+                  </sc-if>
+                  <sc-if value="{{f.isFieldRow}}" hint-placeholder-val="">
+                    <sc-if value="{{f.filled}}" hint-placeholder-val=""><div class="fyn-inp" style="display:flex;align-items:center">{{f.value}}</div></sc-if>
+                    <sc-if value="{{f.empty}}" hint-placeholder-val=""><input class="fyn-inp" placeholder="{{f.placeholder}}" /></sc-if>
+                  </sc-if>
+                  <sc-if value="{{f.isActionRow}}" hint-placeholder-val="">
+                    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;border-radius:10px;background:var(--well);border:1px solid var(--well-border)"><div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#8F39AC,#379FD3);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons {{f.icon}}" style="font-size:18px;width:18px;height:18px;color:#fff"></span></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{f.value}}</div><div style="font-size:12px;color:var(--text-m);margin-top:2px">{{f.placeholder}}</div></div><button type="button" style="height:34px;padding:0 15px;border-radius:8px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex:none">Genereer</button></div>
+                  </sc-if>
+                  <sc-if value="{{f.hint}}" hint-placeholder-val=""><div style="font-size:12px;color:var(--text-s);margin-top:7px">{{f.hint}}</div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+          </div>
+          </sc-if>
+        </div>
+      </sc-for>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1040,&quot;height&quot;:1100}}">
+class Component extends DCLogic {
+  state = { theme:'light', open:'content', tab:'score' };
+
+  b(bg,fg){ return {display:'inline-block',padding:'3px 11px',borderRadius:'999px',background:bg,color:fg,fontSize:'11.5px',fontWeight:700}; }
+
+  renderVals(){
+    const { theme, open, tab } = this.state;
+    const S = { ok:['var(--fyn-success-light)','rgba(16,185,129,.25)','#10b981'], warn:['var(--fyn-warning-light)','rgba(245,158,11,.3)','#f59e0b'], danger:['var(--fyn-danger-light)','rgba(239,68,68,.3)','#ef4444'] };
+    const badge=(bg,fg)=>this.b(bg,fg);
+    const ok=badge('var(--fyn-success-light)','#047857'), warn=badge('var(--fyn-warning-light)','#92700a'), info=badge('var(--fyn-info-light)','#1d4ed8'), neutral=badge('var(--sev-track)','var(--text-m)'), purple=badge('var(--fyn-purple-tint)','#8F39AC');
+
+    // tabs
+    const tabDefs=[['score','SEO-score'],['keywords','Zoekwoorden'],['tags','Slimme tags'],['links','Interne links'],['eeat','E-E-A-T'],['perf','Prestaties'],['workflow','Workflow']];
+    const tabs=tabDefs.map(([id,label])=>({label,go:()=>this.setState({tab:id}),
+      style:{padding:'13px 15px',border:'none',background:'transparent',fontFamily:'Outfit,sans-serif',fontSize:'13px',fontWeight:600,whiteSpace:'nowrap',cursor:'pointer',color:id===tab?'var(--fyn-purple)':'var(--text-m)',borderBottom:id===tab?'2px solid var(--fyn-purple)':'2px solid transparent',marginBottom:'-1px'}}));
+
+    // score
+    const scoreVal=50;
+    const band = scoreVal>=80?['linear-gradient(135deg,#10b981,#34d399)','rgba(16,185,129,.4)','Je content is in topvorm.']:scoreVal>=50?['linear-gradient(135deg,#f59e0b,#fbbf24)','rgba(245,158,11,.4)','Je content heeft nog wat verbeteringen nodig.']:['linear-gradient(135deg,#ef4444,#f87171)','rgba(239,68,68,.4)','Je content heeft flink wat werk nodig.'];
+    const score={ value:scoreVal, ringBg:band[0], ringGlow:band[1], verdict:band[2] };
+
+    // fields (SEO score tab)
+    const mkField=(label,value,placeholder,area,hint,hintTone)=>({label,value:value||'',placeholder:placeholder||'',filled:!!value,empty:!value,isArea:!!area,isLine:!area,hint:hint||'',hintCol:hintTone==='warn'?'#b45309':hintTone==='danger'?'#b91c1c':'var(--text-s)'});
+    const fields=[
+      mkField('Focus-zoekterm','SEO en GEO in Nederland','Voer je belangrijkste zoekterm in',false,'',''),
+      mkField('Secundaire zoektermen','','zoekwoord 1, zoekwoord 2, zoekwoord 3',false,'Komma-gescheiden lijst van gerelateerde zoekwoorden',''),
+      mkField('SEO-titel','SEO, GEO en AI in Nederland: zo word je gevonden én geciteerd door LLM\u2019s - Fyndable Smart SEO','',false,'Aanbevolen: 50–60 tekens. Huidig: 94','warn'),
+      mkField('Meta-beschrijving','Zoekgedrag in Nederland verschuift naar AI. Ontdek hoe je met SEO en GEO gevonden wordt én geciteerd door ChatGPT, Perplexity en Google AI Overviews.','',true,'Aanbevolen: 150–160 tekens. Huidig: 150',''),
+    ];
+    const serp={ title:'SEO, GEO en AI in Nederland: zo word je gevonden én geciteerd door LLM\u2019s - Fyndable Smart SEO', url:'https://fyndable.ai/?p=1206', desc:'Zoekgedrag in Nederland verschuift naar AI. Ontdek hoe je met SEO en GEO gevonden wordt én geciteerd door ChatGPT, Perplexity en Google AI Overviews.' };
+
+    const an=(label,text,tone)=>({label,text,bg:S[tone][0],border:S[tone][1],accent:S[tone][2],icon:tone==='ok'?'dashicons-yes-alt':tone==='warn'?'dashicons-warning':'dashicons-dismiss'});
+    const analysis=[
+      an('Content-lengte','1483 woorden. Goede lengte.','ok'),
+      an('Zoekterm in titel','Zoekterm gevonden in de titel.','ok'),
+      an('Zoekterm-dichtheid','0,1% (1 keer). Streef naar 0,5–2,5%.','warn'),
+      an('Zoekterm in intro','Zoekterm komt voor in de eerste alinea.','ok'),
+      an('Interne links','2 interne links.','ok'),
+      an('Afbeeldingen met alt-tekst','0 van 0 afbeeldingen hebben alt-tekst.','ok'),
+      an('H1-kop','0 H1-koppen. Gebruik er precies één.','danger'),
+      an('Leesbaarheid','Flesch-score 52 (niveau 10e–12e klas).','ok'),
+    ];
+
+    // other tab panels
+    const row=(icon,label,detail,badgeStyle,badge)=>({icon,label,detail,badgeStyle,badge});
+    const tabPanels={
+      keywords:{ intro:'Dichtheid en spreiding van je focus- en secundaire zoektermen door de content.', rows:[
+        row('dashicons-search','SEO en GEO in Nederland','Focus-zoekterm · 1 keer · 0,1% dichtheid',warn,'Te laag'),
+        row('dashicons-editor-bold','In titel & H2','Komt voor in de SEO-titel, niet in een H2',warn,'Deels'),
+        row('dashicons-admin-comments','In eerste alinea','Zoekterm aanwezig in de intro',ok,'Goed'),
+        row('dashicons-tag','Secundaire zoektermen','Nog geen secundaire zoektermen ingesteld',neutral,'Leeg'),
+      ]},
+      tags:{ intro:'AI-gegenereerde slimme tags en interne-content-signalen voor dit bericht.', rows:[
+        row('dashicons-tag','SEO','Voorgesteld op basis van content',purple,'AI'),
+        row('dashicons-tag','GEO','Voorgesteld op basis van content',purple,'AI'),
+        row('dashicons-tag','AI Overviews','Voorgesteld op basis van content',purple,'AI'),
+        row('dashicons-tag','LLM-citaties','Voorgesteld op basis van content',purple,'AI'),
+      ]},
+      links:{ intro:'AI-gerangschikte interne-linkkansen voor dit bericht.', rows:[
+        row('dashicons-admin-links','AEO en GEO: wat is het verschil','Relevantie 92% · anchor "GEO"',ok,'Sterk'),
+        row('dashicons-admin-links','Schema markup gids voor WordPress','Relevantie 74% · anchor "schema"',info,'Medium'),
+        row('dashicons-admin-links','Interne links automatiseren met AI','Relevantie 68% · anchor "interne links"',info,'Medium'),
+        row('dashicons-warning','Deze pagina is een orphan','Slechts 2 inkomende interne links',warn,'Let op'),
+      ]},
+      eeat:{ intro:'E-E-A-T-signalen: ervaring, expertise, autoriteit en betrouwbaarheid.', rows:[
+        row('dashicons-admin-users','Auteur-bio aanwezig','Gekoppeld aan auteurspagina met bio',ok,'Goed'),
+        row('dashicons-calendar-alt','Publicatie- en wijzigdatum','Beide datums zichtbaar',ok,'Goed'),
+        row('dashicons-awards','Bronvermelding','Geen externe bronnen geciteerd',warn,'Ontbreekt'),
+        row('dashicons-shield','Over/Contact-link','Vindbaar vanaf dit bericht',ok,'Goed'),
+      ]},
+      perf:{ intro:'Prestaties uit Google Search Console — laatste 28 dagen.', rows:[
+        row('dashicons-chart-line','Klikken','412 klikken',ok,'+9%'),
+        row('dashicons-visibility','Vertoningen','9.240 vertoningen',ok,'+14%'),
+        row('dashicons-chart-pie','Gem. CTR','4,5%',info,'+0,3%'),
+        row('dashicons-awards','Gem. positie','8,4',ok,'+1,2'),
+      ]},
+      workflow:{ intro:'Review- en publicatiestatus van dit bericht.', rows:[
+        row('dashicons-edit','Status','Concept — klaar voor review',info,'Concept'),
+        row('dashicons-yes-alt','AI-optimalisatie','Voltooid op 27 okt 2026',ok,'Klaar'),
+        row('dashicons-visibility','Review','Wacht op goedkeuring redacteur',warn,'In review'),
+        row('dashicons-admin-users','Toegewezen aan','Lisa Bakker',neutral,'Redacteur'),
+      ]},
+    };
+
+    // accordion sections
+    const toggleTrack=(on)=>({width:'42px',height:'23px',borderRadius:'999px',background:on?'var(--fyn-purple)':'var(--sev-track)',position:'relative',cursor:'pointer',flex:'none'});
+    const toggleKnob=(on)=>({position:'absolute',top:'2px',[on?'right':'left']:'2px',width:'19px',height:'19px',borderRadius:'50%',background:'#fff'});
+    const tRow=(label,value,on,hint)=>({label,value,isToggleRow:true,track:toggleTrack(on),knob:toggleKnob(on),hint:hint||''});
+    const sRow=(label,value,hint)=>({label,value,isSelectRow:true,hint:hint||''});
+    const fRow=(label,value,placeholder,hint)=>({label,value:value||'',placeholder:placeholder||'',isFieldRow:true,filled:!!value,empty:!value,hint:hint||''});
+    const aRow=(label,icon,value,placeholder)=>({label,icon,value,placeholder,isActionRow:true,hint:''});
+
+    const techFields=[
+      sRow('Canonieke URL','Standaard (deze URL)','Overschrijf alleen bij dubbele content'),
+      tRow('Index','Toestaan dat zoekmachines deze pagina indexeren',true),
+      tRow('Follow','Links op deze pagina volgen',true),
+      sRow('Schematype','Artikel',''),
+      fRow('Breadcrumb-titel','','Laat leeg om de berichttitel te gebruiken'),
+    ];
+    const socialFields=[
+      fRow('Open Graph-titel','SEO, GEO en AI in Nederland','Titel zoals getoond bij delen op social media'),
+      fRow('Open Graph-beschrijving','','Laat leeg om de meta-beschrijving te gebruiken'),
+      aRow('Open Graph-afbeelding','dashicons-format-image','Social-afbeelding genereren','1200×630 · met AI op basis van je content'),
+      sRow('Twitter-kaarttype','Grote afbeelding',''),
+      tRow('FAQ-schema toevoegen','Genereer FAQ-markup uit je koppen',false),
+    ];
+    const aiFields=[
+      aRow('AI Content Writer','dashicons-edit-page','Volledig artikel schrijven','Genereer een SEO-geoptimaliseerd concept'),
+      aRow('Content Optimizer','dashicons-chart-line','Deze content optimaliseren','Verbeter op basis van SERP-analyse'),
+      aRow('Alt-tekst generator','dashicons-format-image','Alt-tekst voor afbeeldingen','Genereer alt-tekst voor alle afbeeldingen'),
+    ];
+
+    const secDefs=[
+      {id:'content', title:'Content & zoekwoorden', icon:'dashicons-edit', accent:'#379FD3', count:7, kind:'content'},
+      {id:'tech', title:'Technische SEO', icon:'dashicons-admin-settings', accent:'#8F39AC', count:5, kind:'fields', fields:techFields},
+      {id:'social', title:'Social & schema', icon:'dashicons-share', accent:'#a855f7', count:7, kind:'fields', fields:socialFields},
+      {id:'ai', title:'AI-hulpmiddelen', icon:'dashicons-superhero-alt', accent:'#10b981', count:3, kind:'fields', fields:aiFields},
+    ];
+    const sections=secDefs.map(s=>{
+      const isOpen=s.id===open;
+      return { title:s.title, iconCls:s.icon, accent:s.accent, count:s.count, open:isOpen,
+        headBg:isOpen?'var(--sect-head)':'var(--card)', chevron:isOpen?'dashicons-arrow-up-alt2':'dashicons-arrow-down-alt2',
+        toggle:()=>this.setState({open:isOpen?'':s.id}),
+        isContent:s.kind==='content', isFields:s.kind==='fields', fields:s.fields||[] };
+    });
+
+    const toggleOn={display:'flex',alignItems:'center',justifyContent:'center',width:'25px',height:'25px',borderRadius:'50%',fontSize:'13px'};
+    return {
+      themeClass: theme==='dark'?'fyn-dark':'',
+      toggleTheme:()=>this.setState({theme:theme==='dark'?'light':'dark'}),
+      sunStyle:{...toggleOn,background:theme==='light'?'rgba(255,255,255,.9)':'transparent',color:theme==='light'?'#8F39AC':'rgba(255,255,255,.6)'},
+      moonStyle:{...toggleOn,background:theme==='dark'?'rgba(255,255,255,.18)':'transparent',color:theme==='dark'?'#fff':'rgba(255,255,255,.6)'},
+      sections, tabs,
+      isScore: tab==='score', isTabList: tab!=='score',
+      score, fields, serp, analysis,
+      tabPanel: tabPanels[tab]||tabPanels.keywords,
+    };
+  }
+}
+</script>
+</body>
+</html>

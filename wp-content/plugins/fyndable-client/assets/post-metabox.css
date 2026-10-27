@@ -1,0 +1,1156 @@
+@font-face {
+    font-family: 'Outfit';
+    src: url('fonts/outfit/Outfit-Variable.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ================================================================
+   Fyndable Smart SEO — post/page editor meta box
+
+   Uses the same design tokens as assets/client-admin.css so the
+   editor panel and the plugin admin screens stay consistent. The
+   token sets are scoped to body.fyndable-seo-editor (emitted by
+   PostMetaBox::addAdminBodyClass) because client-admin.css is not
+   loaded on post.php / post-new.php / attachment.php.
+   ================================================================ */
+
+/* ---------------- 1. Tokens — light (default) ---------------- */
+body.fyndable-seo-editor {
+    --fyn-purple: #8F39AC;
+    --fyn-blue: #379FD3;
+    --fyn-ink: #333333;
+    --fyn-mist: #E6E7E8;
+    --fyn-purple-tint: #F4E9F8;
+    --fyn-blue-tint: #E6F3FB;
+    --fyn-gradient: linear-gradient(135deg, #8F39AC 0%, #379FD3 100%);
+    --fyn-gradient-flat: linear-gradient(90deg, #8F39AC, #379FD3);
+    --fyn-success: #10b981;
+    --fyn-success-light: #d1fae5;
+    --fyn-success-text: #047857;
+    --fyn-warning: #f59e0b;
+    --fyn-warning-light: #fef3c7;
+    --fyn-warning-text: #92700a;
+    --fyn-danger: #ef4444;
+    --fyn-danger-light: #fee2e2;
+    --fyn-danger-text: #b91c1c;
+    --fyn-info: #3b82f6;
+    --fyn-info-light: #dbeafe;
+    --fyn-info-text: #1d4ed8;
+    --fyn-accent: #a855f7;
+    --fyn-accent-light: #f3e8ff;
+    --fyn-accent-text: #9333ea;
+
+    --card: #ffffff;
+    --card-border: #e2e1ea;
+    --card-shadow: 0 2px 8px rgba(20,14,30,.08), 0 1px 3px rgba(20,14,30,.06);
+    --card-shadow-lg: 0 10px 24px -8px rgba(20,14,30,.18);
+    --text-h: #1a1430;
+    --text-b: #413b52;
+    --text-m: #746e82;
+    --text-s: #a39dae;
+    --well: #f7f6fa;
+    --well-border: #edecf2;
+    --row-hover: #faf7fe;
+    --divide: #efeef4;
+    --input-bg: #ffffff;
+    --input-border: #dcdae4;
+    --sev-track: #e9e7f0;
+
+    /* Editor-panel specific */
+    --panel: #ffffff;
+    --tab-bar: #faf9fc;
+    --sect-head: #f7f9fc;
+    --serp-bg: #f8f8fb;
+    --serp-title: #1a0dab;
+    --serp-url: #0f7a37;
+    --input-focus: #8F39AC;
+}
+
+/* ---------------- 2. Tokens — dark ---------------- */
+body.fyndable-seo-editor.fyndable-dark {
+    --card: #1d1630;
+    --card-border: rgba(255,255,255,.07);
+    --card-shadow: 0 1px 3px rgba(0,0,0,.45);
+    --card-shadow-lg: 0 14px 30px -10px rgba(0,0,0,.6);
+    --text-h: #f4f1fa;
+    --text-b: #cdc6dd;
+    --text-m: #958da7;
+    --text-s: #6f6784;
+    --well: rgba(23,17,36,.25);
+    --well-border: rgba(255,255,255,.07);
+    --row-hover: rgba(143,57,172,.12);
+    --divide: rgba(255,255,255,.06);
+    --input-bg: #211a35;
+    --input-border: rgba(255,255,255,.1);
+    --sev-track: rgba(255,255,255,.1);
+
+    --panel: #19122a;
+    --tab-bar: #1a1329;
+    --sect-head: #1c1530;
+    --serp-bg: #17112a;
+    --serp-title: #8ab4f8;
+    --serp-url: #6ee7a8;
+    --input-focus: #b56fd0;
+}
+
+/* ---------------- 3. Host meta box ---------------- */
+#fyndable_seo_meta .postbox-header,
+#fyndable_seo_meta_attachment .postbox-header {
+    display: none;
+}
+#fyndable_seo_meta .inside,
+#fyndable_seo_meta_attachment .inside {
+    padding: 0;
+    margin: 0;
+}
+#fyndable_seo_meta,
+#fyndable_seo_meta_attachment {
+    background: var(--panel, #fff);
+    border: 1px solid var(--card-border, #e2e1ea);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px -12px rgba(20,14,30,.18);
+    overflow: hidden;
+}
+body.fyndable-seo-editor.fyndable-dark #fyndable_seo_meta,
+body.fyndable-seo-editor.fyndable-dark #fyndable_seo_meta_attachment {
+    box-shadow: 0 14px 34px -14px rgba(0,0,0,.65);
+}
+
+.fyndable-seo-container {
+    max-width: 1040px;
+    background: var(--panel);
+    color: var(--text-b);
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.fyndable-seo-container *,
+.fyndable-seo-container *::before,
+.fyndable-seo-container *::after {
+    box-sizing: border-box;
+}
+
+@keyframes fynSeoFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ---------------- 4. Brand header band ---------------- */
+.fyndable-seo-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 56px;
+    padding: 0 22px;
+    background: linear-gradient(135deg, #2A1533 0%, #132A38 100%);
+    color: #fff;
+}
+.fyndable-seo-logo {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    color: #fff;
+}
+.fyndable-seo-logo img {
+    display: block;
+    height: 22px;
+    width: auto;
+}
+.fyndable-seo-header-spacer {
+    flex: 1;
+}
+.fyndable-seo-themetoggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 30px;
+    padding: 3px;
+    background: rgba(0,0,0,.22);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px;
+    cursor: pointer;
+    flex: none;
+}
+.fyndable-seo-themetoggle span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    font-size: 13px;
+    line-height: 1;
+    background: transparent;
+    color: rgba(255,255,255,.6);
+    transition: all .2s ease;
+}
+.fyndable-seo-themetoggle .fyn-sun {
+    background: rgba(255,255,255,.9);
+    color: #8F39AC;
+}
+.fyndable-seo-themetoggle .fyn-moon {
+    background: transparent;
+    color: rgba(255,255,255,.6);
+}
+body.fyndable-seo-editor.fyndable-dark .fyndable-seo-themetoggle .fyn-sun {
+    background: transparent;
+    color: rgba(255,255,255,.6);
+}
+body.fyndable-seo-editor.fyndable-dark .fyndable-seo-themetoggle .fyn-moon {
+    background: rgba(255,255,255,.18);
+    color: #fff;
+}
+.fyndable-seo-badge {
+    flex: none;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+/* ---------------- 5. Accordion sections ---------------- */
+.fyndable-seo-group {
+    border-bottom: 1px solid var(--divide);
+}
+.fyndable-seo-group:last-child {
+    border-bottom: none;
+}
+.fyndable-seo-group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+    padding: 15px 22px;
+    background: var(--card);
+    border: none;
+    border-left: 3px solid var(--fyn-sect-accent, var(--fyn-purple));
+    border-radius: 0;
+    box-shadow: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background .2s ease;
+}
+.fyndable-seo-group-header:hover {
+    background: var(--sect-head);
+}
+.fyndable-seo-group-header:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--fyn-purple-tint);
+}
+.fyndable-seo-group.open > .fyndable-seo-group-header {
+    background: var(--sect-head);
+}
+.fyndable-seo-group-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 18px;
+    color: var(--fyn-sect-accent, var(--fyn-purple));
+}
+.fyndable-seo-group-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-h);
+}
+.fyndable-seo-group-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--sev-track);
+    color: var(--text-m);
+    font-size: 12px;
+    font-weight: 700;
+}
+.fyndable-seo-chevron {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 18px;
+    color: var(--text-s);
+    transition: transform .2s ease;
+}
+.fyndable-seo-group.open > .fyndable-seo-group-header .fyndable-seo-chevron {
+    transform: rotate(180deg);
+}
+.fyndable-seo-group-body {
+    background: var(--panel);
+    animation: fynSeoFade .25s ease;
+}
+
+/* ---------------- 6. Tab bar ---------------- */
+.fyndable-seo-subtab-nav {
+    display: flex;
+    gap: 2px;
+    margin: 0;
+    padding: 0 14px;
+    list-style: none;
+    background: var(--tab-bar);
+    border-bottom: 1px solid var(--divide);
+    overflow-x: auto;
+}
+.fyndable-seo-subtab-nav li {
+    list-style: none;
+    margin: 0;
+    flex: none;
+}
+.fyndable-seo-subtab-nav li a {
+    display: block;
+    padding: 13px 15px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-m);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: none;
+    transition: all .2s ease;
+}
+.fyndable-seo-subtab-nav li a:hover,
+.fyndable-seo-subtab-nav li a:focus {
+    color: var(--fyn-purple);
+    box-shadow: none;
+    outline: none;
+}
+.fyndable-seo-subtab-nav li.active a {
+    color: var(--fyn-purple);
+    border-bottom-color: var(--fyn-purple);
+}
+.fyndable-seo-subtab-panel {
+    padding: 26px 24px;
+    animation: fynSeoFade .25s ease;
+}
+/* Single-panel groups (tech / social / ai) get the same body padding */
+.fyndable-seo-group-fields {
+    padding: 24px;
+    animation: fynSeoFade .25s ease;
+}
+
+/* ---------------- 7. Form controls ---------------- */
+.fyndable-seo-container .fyn-lbl {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-b);
+    margin: 0 0 9px;
+}
+.fyndable-seo-container .fyn-field {
+    margin-bottom: 22px;
+}
+.fyndable-seo-container .fyn-field:last-child {
+    margin-bottom: 0;
+}
+.fyndable-seo-container .fyn-inp,
+.fyndable-seo-container input.fyn-inp {
+    display: block;
+    width: 100%;
+    height: 46px;
+    padding: 0 15px;
+    border-radius: 9px;
+    border: 2px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-b);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 42px;
+    box-shadow: none;
+    outline: none;
+    transition: border-color .2s ease;
+}
+.fyndable-seo-container .fyn-ta,
+.fyndable-seo-container textarea.fyn-ta {
+    display: block;
+    width: 100%;
+    min-height: 96px;
+    padding: 12px 15px;
+    border-radius: 9px;
+    border: 2px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-b);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: none;
+    outline: none;
+    resize: vertical;
+    transition: border-color .2s ease;
+}
+.fyndable-seo-container .fyn-inp:focus,
+.fyndable-seo-container .fyn-ta:focus {
+    border-color: var(--input-focus);
+    box-shadow: none;
+    outline: none;
+}
+.fyndable-seo-container .fyn-inp::placeholder,
+.fyndable-seo-container .fyn-ta::placeholder {
+    color: var(--text-s);
+}
+.fyndable-seo-container .fyn-hint {
+    font-size: 12px;
+    color: var(--text-s);
+    margin-top: 7px;
+}
+.fyndable-seo-container .fyn-hint--warn {
+    color: var(--fyn-warning-text);
+}
+.fyndable-seo-container .fyn-hint--danger {
+    color: var(--fyn-danger-text);
+}
+
+/* ---------------- 8. Score disc ---------------- */
+.fyn-score-head {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+.fyn-score-disc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+}
+.fyn-score-disc--good {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    box-shadow: 0 6px 18px rgba(16,185,129,.4);
+}
+.fyn-score-disc--ok {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    box-shadow: 0 6px 18px rgba(245,158,11,.4);
+}
+.fyn-score-disc--bad {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    box-shadow: 0 6px 18px rgba(239,68,68,.4);
+}
+.fyn-score-head h2 {
+    margin: 0;
+    padding: 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-h);
+}
+.fyn-score-head p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: var(--text-m);
+}
+
+/* ---------------- 9. SERP preview ---------------- */
+.fyn-serp {
+    background: var(--serp-bg);
+    border: 1px solid var(--well-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 26px;
+}
+.fyn-serp-title {
+    font-size: 19px;
+    line-height: 1.3;
+    font-weight: 500;
+    color: var(--serp-title);
+    margin-bottom: 4px;
+}
+.fyn-serp-url {
+    font-size: 13px;
+    color: var(--serp-url);
+    margin-bottom: 5px;
+    word-break: break-all;
+}
+.fyn-serp-desc {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-m);
+}
+
+/* ---------------- 10. Severity rows (analysis results) ---------------- */
+.fyn-sev-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 24px;
+    padding: 0;
+    list-style: none;
+}
+.fyn-sev {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin: 0;
+    padding: 12px 15px;
+    border-radius: 9px;
+    list-style: none;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--text-b);
+}
+.fyn-sev strong {
+    color: var(--text-h);
+    font-weight: 700;
+}
+.fyn-sev .dashicons {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+    margin-top: 1px;
+}
+.fyn-sev--ok {
+    background: var(--fyn-success-light);
+    border: 1px solid rgba(16,185,129,.25);
+    border-left: 3px solid var(--fyn-success);
+}
+.fyn-sev--ok .dashicons { color: var(--fyn-success); }
+.fyn-sev--warn {
+    background: var(--fyn-warning-light);
+    border: 1px solid rgba(245,158,11,.3);
+    border-left: 3px solid var(--fyn-warning);
+}
+.fyn-sev--warn .dashicons { color: var(--fyn-warning); }
+.fyn-sev--danger {
+    background: var(--fyn-danger-light);
+    border: 1px solid rgba(239,68,68,.3);
+    border-left: 3px solid var(--fyn-danger);
+}
+.fyn-sev--danger .dashicons { color: var(--fyn-danger); }
+body.fyndable-seo-editor.fyndable-dark .fyn-sev--ok {
+    background: rgba(16,185,129,.12);
+}
+body.fyndable-seo-editor.fyndable-dark .fyn-sev--warn {
+    background: rgba(245,158,11,.12);
+}
+body.fyndable-seo-editor.fyndable-dark .fyn-sev--danger {
+    background: rgba(239,68,68,.12);
+}
+
+/* ---------------- 11. Row list (other tabs) ---------------- */
+.fyn-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+.fyn-row {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--well);
+    border: 1px solid var(--well-border);
+}
+.fyn-row-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+}
+.fyn-row-chip .dashicons {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
+    line-height: 17px;
+    color: var(--fyn-purple);
+}
+.fyn-row-main {
+    flex: 1;
+    min-width: 0;
+}
+.fyn-row-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-h);
+}
+.fyn-row-detail {
+    font-size: 12px;
+    color: var(--text-m);
+    margin-top: 2px;
+}
+.fyn-row-intro {
+    margin: 0 0 18px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-m);
+}
+
+/* Action row (gradient chip + Generate button) */
+.fyn-actionrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 15px 16px;
+    border-radius: 10px;
+    background: var(--well);
+    border: 1px solid var(--well-border);
+}
+.fyn-actionrow-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--fyn-gradient);
+}
+.fyn-actionrow-chip .dashicons {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 18px;
+    color: #fff;
+}
+
+/* ---------------- 12. Badges ---------------- */
+.fyndable-seo-container .fyn-badge {
+    display: inline-block;
+    flex: none;
+    padding: 3px 11px;
+    border-radius: 999px;
+    background: var(--sev-track);
+    color: var(--text-m);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+.fyndable-seo-container .fyn-badge--ok      { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+.fyndable-seo-container .fyn-badge--warn    { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+.fyndable-seo-container .fyn-badge--danger  { background: var(--fyn-danger-light);  color: var(--fyn-danger-text); }
+.fyndable-seo-container .fyn-badge--info    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+.fyndable-seo-container .fyn-badge--purple  { background: var(--fyn-purple-tint);   color: var(--fyn-purple); }
+
+/* ---------------- 13. Toggle switch ---------------- */
+.fyn-switch-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+.fyn-switch-row > span {
+    font-size: 13px;
+    color: var(--text-m);
+}
+.fyn-switch {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 23px;
+    border-radius: 999px;
+    background: var(--sev-track);
+    cursor: pointer;
+    transition: background .2s ease;
+}
+.fyn-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left .2s ease;
+}
+.fyn-switch.on {
+    background: var(--fyn-purple);
+}
+.fyn-switch.on::after {
+    left: 21px;
+}
+
+/* ---------------- 14. Buttons ---------------- */
+.fyn-btnbar {
+    display: flex;
+    gap: 11px;
+    flex-wrap: wrap;
+}
+.fyndable-seo-container .fyn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 9px;
+    border: none;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+.fyndable-seo-container .fyn-btn .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+}
+.fyndable-seo-container .fyn-btn--primary {
+    background: var(--fyn-gradient);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(143,57,172,.35);
+}
+.fyndable-seo-container .fyn-btn--primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(143,57,172,.45);
+    color: #fff;
+}
+.fyndable-seo-container .fyn-btn--outline {
+    background: var(--card);
+    border: 2px solid var(--input-border);
+    color: var(--text-b);
+}
+.fyndable-seo-container .fyn-btn--outline:hover:not(:disabled) {
+    border-color: var(--fyn-purple);
+    color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyndable-seo-container .fyn-btn--sm {
+    height: 34px;
+    padding: 0 15px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    background: var(--fyn-purple-tint);
+    color: var(--fyn-purple);
+    box-shadow: none;
+}
+.fyndable-seo-container .fyn-btn--sm:hover:not(:disabled) {
+    background: var(--fyn-purple);
+    color: #fff;
+    transform: none;
+}
+.fyndable-seo-container .fyn-btn:disabled {
+    opacity: .55;
+    cursor: default;
+    transform: none;
+}
+
+/* ---------------- 14b. SEO-score panel ---------------- */
+.aiseo-truseo-metabox {
+    padding: 0;
+}
+.fyn-suggestions {
+    margin: 18px 0 0;
+    padding: 16px 18px;
+    border-radius: 10px;
+    background: var(--fyn-blue-tint);
+    border: 1px solid var(--well-border);
+    border-left: 3px solid var(--fyn-blue);
+}
+body.fyndable-seo-editor.fyndable-dark .fyn-suggestions {
+    background: rgba(55,159,211,.12);
+}
+.fyn-suggestions h4 {
+    margin: 0 0 9px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-h);
+}
+.fyn-suggestions ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+}
+.fyn-suggestions li {
+    margin: 5px 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-b);
+}
+.fyn-suggestions-wait,
+.fyn-suggestions-ok {
+    margin: 18px 0 0;
+    font-size: 13.5px;
+}
+.fyn-suggestions-wait {
+    color: var(--text-m);
+}
+.fyn-suggestions-ok {
+    color: var(--fyn-success-text);
+    font-weight: 600;
+}
+
+/* ================================================================
+   15. Legacy markup bridge
+
+   The ~30 panels inside the accordion are rendered by their own
+   feature classes (canonical URL, schema, FAQ, Open Graph, AI
+   tools, …) using WordPress-native markup. These rules move that
+   markup onto the tokens above so every tab matches the design
+   without rewriting each renderer.
+   ================================================================ */
+.fyndable-seo-subtab-panel,
+.fyndable-seo-group-fields {
+    font-size: 13.5px;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel h2,
+.fyndable-seo-group-fields h2 {
+    margin: 0 0 14px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-h);
+}
+.fyndable-seo-subtab-panel h3,
+.fyndable-seo-group-fields h3 {
+    margin: 0 0 12px;
+    padding: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-h);
+}
+.fyndable-seo-subtab-panel h4,
+.fyndable-seo-group-fields h4 {
+    margin: 20px 0 9px;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel h4:first-child,
+.fyndable-seo-group-fields h4:first-child {
+    margin-top: 0;
+}
+.fyndable-seo-subtab-panel p,
+.fyndable-seo-group-fields p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel small,
+.fyndable-seo-subtab-panel .description,
+.fyndable-seo-group-fields small,
+.fyndable-seo-group-fields .description {
+    display: block;
+    margin-top: 7px;
+    font-size: 12px;
+    font-style: normal;
+    color: var(--text-s);
+}
+.fyndable-seo-subtab-panel a,
+.fyndable-seo-group-fields a {
+    color: var(--fyn-purple);
+}
+.fyndable-seo-subtab-panel a:hover,
+.fyndable-seo-group-fields a:hover {
+    color: var(--fyn-blue);
+}
+.fyndable-seo-subtab-panel label,
+.fyndable-seo-group-fields label {
+    font-size: 13px;
+    color: var(--text-b);
+}
+
+/* Native form controls */
+.fyndable-seo-subtab-panel input[type="text"],
+.fyndable-seo-subtab-panel input[type="url"],
+.fyndable-seo-subtab-panel input[type="email"],
+.fyndable-seo-subtab-panel input[type="number"],
+.fyndable-seo-subtab-panel input[type="search"],
+.fyndable-seo-subtab-panel input[type="date"],
+.fyndable-seo-subtab-panel select,
+.fyndable-seo-subtab-panel textarea,
+.fyndable-seo-group-fields input[type="text"],
+.fyndable-seo-group-fields input[type="url"],
+.fyndable-seo-group-fields input[type="email"],
+.fyndable-seo-group-fields input[type="number"],
+.fyndable-seo-group-fields input[type="search"],
+.fyndable-seo-group-fields input[type="date"],
+.fyndable-seo-group-fields select,
+.fyndable-seo-group-fields textarea {
+    border-radius: 9px;
+    border: 2px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-b);
+    font-family: inherit;
+    font-size: 14px;
+    box-shadow: none;
+    transition: border-color .2s ease;
+}
+.fyndable-seo-subtab-panel input[type="text"],
+.fyndable-seo-subtab-panel input[type="url"],
+.fyndable-seo-subtab-panel input[type="email"],
+.fyndable-seo-subtab-panel input[type="number"],
+.fyndable-seo-subtab-panel input[type="search"],
+.fyndable-seo-subtab-panel input[type="date"],
+.fyndable-seo-subtab-panel select,
+.fyndable-seo-group-fields input[type="text"],
+.fyndable-seo-group-fields input[type="url"],
+.fyndable-seo-group-fields input[type="email"],
+.fyndable-seo-group-fields input[type="number"],
+.fyndable-seo-group-fields input[type="search"],
+.fyndable-seo-group-fields input[type="date"],
+.fyndable-seo-group-fields select {
+    height: 46px;
+    min-height: 46px;
+    padding: 0 15px;
+    line-height: 42px;
+}
+.fyndable-seo-subtab-panel textarea,
+.fyndable-seo-group-fields textarea {
+    padding: 12px 15px;
+    line-height: 1.5;
+}
+.fyndable-seo-subtab-panel input:focus,
+.fyndable-seo-subtab-panel select:focus,
+.fyndable-seo-subtab-panel textarea:focus,
+.fyndable-seo-group-fields input:focus,
+.fyndable-seo-group-fields select:focus,
+.fyndable-seo-group-fields textarea:focus {
+    border-color: var(--input-focus);
+    box-shadow: none;
+    outline: none;
+}
+.fyndable-seo-subtab-panel input[type="checkbox"],
+.fyndable-seo-subtab-panel input[type="radio"],
+.fyndable-seo-group-fields input[type="checkbox"],
+.fyndable-seo-group-fields input[type="radio"] {
+    height: auto;
+    min-height: 0;
+    border-width: 1px;
+    border-color: var(--input-border);
+    background: var(--input-bg);
+}
+.fyndable-seo-subtab-panel input[type="checkbox"]:checked::before,
+.fyndable-seo-group-fields input[type="checkbox"]:checked::before {
+    color: var(--fyn-purple);
+}
+
+/* Native buttons */
+.fyndable-seo-subtab-panel .button,
+.fyndable-seo-subtab-panel .button-secondary,
+.fyndable-seo-group-fields .button,
+.fyndable-seo-group-fields .button-secondary {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 9px;
+    border: 2px solid var(--input-border);
+    background: var(--card);
+    color: var(--text-b);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 36px;
+    box-shadow: none;
+    transition: all .2s ease;
+}
+.fyndable-seo-subtab-panel .button:hover,
+.fyndable-seo-group-fields .button:hover {
+    border-color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+    color: var(--fyn-purple);
+}
+.fyndable-seo-subtab-panel .button-primary,
+.fyndable-seo-group-fields .button-primary {
+    border: none;
+    background: var(--fyn-gradient);
+    color: #fff;
+    line-height: 40px;
+    box-shadow: 0 4px 14px rgba(143,57,172,.3);
+    text-shadow: none;
+}
+.fyndable-seo-subtab-panel .button-primary:hover,
+.fyndable-seo-group-fields .button-primary:hover {
+    background: var(--fyn-gradient);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(143,57,172,.4);
+}
+.fyndable-seo-subtab-panel .button:disabled,
+.fyndable-seo-subtab-panel .button[disabled],
+.fyndable-seo-group-fields .button:disabled,
+.fyndable-seo-group-fields .button[disabled] {
+    opacity: .55;
+    transform: none;
+}
+
+/* form-table */
+.fyndable-seo-subtab-panel .form-table,
+.fyndable-seo-group-fields .form-table {
+    margin: 0;
+    border-radius: 0;
+    overflow: visible;
+}
+.fyndable-seo-subtab-panel .form-table th,
+.fyndable-seo-group-fields .form-table th {
+    padding: 14px 18px 14px 0;
+    width: 220px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel .form-table td,
+.fyndable-seo-group-fields .form-table td {
+    padding: 12px 0;
+    font-size: 13.5px;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel .form-table tr,
+.fyndable-seo-group-fields .form-table tr {
+    border-bottom: 1px solid var(--divide);
+}
+.fyndable-seo-subtab-panel .form-table tr:last-child,
+.fyndable-seo-group-fields .form-table tr:last-child {
+    border-bottom: none;
+}
+
+/* Data tables */
+.fyndable-seo-subtab-panel table.wp-list-table,
+.fyndable-seo-subtab-panel table.widefat,
+.fyndable-seo-group-fields table.wp-list-table,
+.fyndable-seo-group-fields table.widefat {
+    border: 1px solid var(--card-border);
+    border-radius: 11px;
+    overflow: hidden;
+    background: var(--card);
+    box-shadow: none;
+}
+.fyndable-seo-subtab-panel table.widefat th,
+.fyndable-seo-group-fields table.widefat th {
+    background: transparent;
+    border-bottom: 2px solid var(--divide);
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-m);
+}
+.fyndable-seo-subtab-panel table.widefat td,
+.fyndable-seo-group-fields table.widefat td {
+    background: transparent;
+    border-bottom: 1px solid var(--divide);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel table.widefat tbody tr:last-child td,
+.fyndable-seo-group-fields table.widefat tbody tr:last-child td {
+    border-bottom: none;
+}
+.fyndable-seo-subtab-panel table.widefat.striped tbody tr:nth-child(odd),
+.fyndable-seo-group-fields table.widefat.striped tbody tr:nth-child(odd) {
+    background: transparent;
+}
+.fyndable-seo-subtab-panel table.widefat tbody tr:hover,
+.fyndable-seo-group-fields table.widefat tbody tr:hover {
+    background: var(--row-hover);
+}
+
+/* Notices + code */
+.fyndable-seo-subtab-panel .notice,
+.fyndable-seo-group-fields .notice {
+    margin: 0 0 16px;
+    border-radius: 10px;
+    border-left-width: 3px;
+    background: var(--well);
+    border-top: 1px solid var(--well-border);
+    border-right: 1px solid var(--well-border);
+    border-bottom: 1px solid var(--well-border);
+    box-shadow: none;
+    color: var(--text-b);
+}
+.fyndable-seo-subtab-panel code,
+.fyndable-seo-subtab-panel pre,
+.fyndable-seo-group-fields code,
+.fyndable-seo-group-fields pre {
+    background: var(--well);
+    border: 1px solid var(--well-border);
+    border-radius: 7px;
+    color: var(--text-b);
+    font-size: 12.5px;
+}
+.fyndable-seo-subtab-panel hr,
+.fyndable-seo-group-fields hr {
+    border: none;
+    border-top: 1px solid var(--divide);
+    margin: 20px 0;
+}
+
+/* ---------------- 16. Fact-check banner ---------------- */
+.fyndable-seo-container .sseo-fact-check-badge {
+    margin: 0;
+    padding: 14px 22px;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--divide);
+    border-left: 3px solid var(--fyn-fact-accent, var(--fyn-warning));
+    background: var(--well);
+}
+.fyndable-seo-container .sseo-fact-check-badge ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+    font-size: 13px;
+    color: var(--text-b);
+}
+.fyndable-seo-container .sseo-fact-check-badge p {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: var(--text-s);
+}
+
+/* ---------------- 17. Responsive ---------------- */
+@media screen and (max-width: 782px) {
+    .fyndable-seo-header {
+        height: auto;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .fyndable-seo-group-header {
+        padding: 13px 16px;
+    }
+    .fyndable-seo-subtab-panel {
+        padding: 20px 16px;
+    }
+    .fyndable-seo-group-fields {
+        padding: 20px 16px;
+    }
+    .fyn-score-head {
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+    .fyn-score-disc {
+        width: 68px;
+        height: 68px;
+        font-size: 27px;
+    }
+    .fyndable-seo-subtab-panel .form-table th,
+    .fyndable-seo-group-fields .form-table th {
+        width: auto;
+        padding-bottom: 6px;
+    }
+}

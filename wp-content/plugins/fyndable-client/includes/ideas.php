@@ -913,31 +913,31 @@ PROMPT;
         <!-- Schedule Modal -->
         <div class="sseo-modal" id="modal-schedule" style="display: none;">
             <div class="sseo-modal-overlay"></div>
-            <div class="sseo-modal-content">
-                <div class="sseo-modal-header">
-                    <h3><?php esc_html_e('Schedule Post', 'ai-seo-client'); ?></h3>
-                    <button type="button" class="modal-close">&times;</button>
+            <div class="sseo-modal-content" style="background:var(--card);border-radius:14px;box-shadow:var(--shadow-l);max-width:480px;margin:auto;">
+                <div class="sseo-modal-header" style="padding:20px 24px 12px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Schedule Post', 'ai-seo-client'); ?></h3>
+                    <button type="button" class="modal-close" style="background:none;border:none;font-size:20px;color:var(--text-m);cursor:pointer;">&times;</button>
                 </div>
-                <div class="sseo-modal-body">
+                <div class="sseo-modal-body" style="padding:20px 24px;">
                     <input type="hidden" id="schedule-idea-id">
-                    <div class="form-group">
-                        <label><?php esc_html_e('Publish date', 'ai-seo-client'); ?></label>
-                        <input type="datetime-local" id="schedule-date" class="sseo-input">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Publish date', 'ai-seo-client'); ?></label>
+                        <input type="datetime-local" id="schedule-date" class="fyn-input" style="width:100%;">
                     </div>
-                    <div class="form-group">
-                        <label><?php esc_html_e('Word count', 'ai-seo-client'); ?></label>
-                        <select id="schedule-word-count" class="sseo-select">
-                            <option value="800">800 words</option>
-                            <option value="1200" selected>1,200 words</option>
-                            <option value="1500">1,500 words</option>
-                            <option value="2000">2,000 words</option>
-                            <option value="2500">2,500 words</option>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Word count', 'ai-seo-client'); ?></label>
+                        <select id="schedule-word-count" class="fyn-input" style="width:100%;padding:9px 10px;">
+                            <option value="800">800 <?php esc_html_e('words', 'ai-seo-client'); ?></option>
+                            <option value="1200" selected>1.200 <?php esc_html_e('words', 'ai-seo-client'); ?></option>
+                            <option value="1500">1.500 <?php esc_html_e('words', 'ai-seo-client'); ?></option>
+                            <option value="2000">2.000 <?php esc_html_e('words', 'ai-seo-client'); ?></option>
+                            <option value="2500">2.500 <?php esc_html_e('words', 'ai-seo-client'); ?></option>
                         </select>
                     </div>
                 </div>
-                <div class="sseo-modal-footer">
-                    <button type="button" class="sseo-btn-secondary modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
-                    <button type="button" class="sseo-btn-primary" id="btn-confirm-schedule">
+                <div class="sseo-modal-footer" style="padding:12px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="fyn-btn fyn-btn-outline modal-cancel"><?php esc_html_e('Cancel', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="btn-confirm-schedule">
                         <span class="spinner" style="display: none;"></span>
                         <?php esc_html_e('Schedule', 'ai-seo-client'); ?>
                     </button>

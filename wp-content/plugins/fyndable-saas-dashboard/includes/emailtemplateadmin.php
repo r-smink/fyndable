@@ -192,7 +192,12 @@ class EmailTemplateAdmin
         $footerText = get_option('sseo_ai_saas_email_brand_footer_text', '');
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Global Email Brand', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Email Templates', 'sseo-ai-saas'),
+            __('Global Email Brand', 'sseo-ai-saas'),
+            __('Logo, colours and footer applied to every outgoing email.', 'sseo-ai-saas')
+        ); ?>
             <p><a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates')); ?>">← <?php esc_html_e('Back to templates', 'sseo-ai-saas'); ?></a></p>
 
             <?php if ($saved): ?>
@@ -341,7 +346,12 @@ class EmailTemplateAdmin
         $templates = $this->repository->getAllTemplates();
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Email Templates', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Email Templates', 'sseo-ai-saas'),
+            __('Email Templates', 'sseo-ai-saas'),
+            __('Transactional emails, their trigger and whether they are active.', 'sseo-ai-saas')
+        ); ?>
             <div class="sseo-ai-card">
                 <p class="description" style="margin:0 0 15px;"><?php esc_html_e('Edit the content, colours and logo for every email the SaaS plugin sends.', 'sseo-ai-saas'); ?></p>
                 <p>
@@ -689,7 +699,12 @@ class EmailTemplateAdmin
         $custom = $this->repository->getCustomLayouts();
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Email Layouts', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Email Templates', 'sseo-ai-saas'),
+            __('Email Layouts', 'sseo-ai-saas'),
+            __('Reusable block layouts the templates are rendered into.', 'sseo-ai-saas')
+        ); ?>
             <p><?php esc_html_e('Custom layouts can be added, edited or removed. Built-in layouts cannot be deleted.', 'sseo-ai-saas'); ?></p>
             <p>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-email-templates&action=edit_layout')); ?>" class="button">

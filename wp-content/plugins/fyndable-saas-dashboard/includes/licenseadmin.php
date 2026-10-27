@@ -159,18 +159,17 @@ class LicenseAdmin
 
         $gradient = sprintf('linear-gradient(135deg, %s 0%%, %s 100%%)', $primary, $secondary);
 
+        // White-label colours drive the brand accents only; the page surface
+        // and headings stay on the shell tokens (see license-admin.css 1b).
         $css = ':root {
             --sseo-primary: ' . $primary . ';
             --sseo-blue: ' . $primary . ';
         }
-        body[class*="sseo-ai"] {
-            background: ' . $gradient . ' !important;
-        }
-        .wrap.sseo-ai-license-admin {
-            background: ' . $gradient . ' !important;
-        }
-        .wrap.sseo-ai-license-admin > h1 {
-            background: ' . $gradient . ' !important;
+        body.fyndable-ui {
+            --fyn-purple: ' . $secondary . ';
+            --fyn-blue: ' . $primary . ';
+            --fyn-gradient: ' . $gradient . ';
+            --fyn-gradient-flat: linear-gradient(90deg, ' . $secondary . ', ' . $primary . ');
         }
         .sseo-ai-upgrade-cta {
             background: ' . $gradient . ' !important;
@@ -193,141 +192,277 @@ class LicenseAdmin
         return $labels[$status] ?? ucfirst($status);
     }
 
+    /**
+     * Map a licence tier to its Fyndable tier-badge modifier.
+     */
+    private function tierBadgeClass(string $tier): string
+    {
+        $known = ['trial', 'starter', 'professional', 'business', 'agency', 'free', 'lifetime'];
+        $tier = strtolower($tier);
+
+        return in_array($tier, $known, true) ? 'fyn-tier--' . $tier : 'fyn-tier--free';
+    }
+
+    /**
+     * Map a licence status to its semantic badge modifier.
+     */
+    private function statusBadgeClass(string $status): string
+    {
+        switch (strtolower($status)) {
+            case 'active':
+                return 'fyn-badge--info';
+            case 'connected':
+                return 'fyn-badge--success';
+            case 'revoked':
+                return 'fyn-badge--danger';
+            case 'expired':
+                return 'fyn-badge--muted';
+            default:
+                return 'fyn-badge--muted';
+        }
+    }
+
+    /**
+     * Map a licence status to the dot colour used in the breakdown cards.
+     */
+    private function statusDotClass(string $status): string
+    {
+        switch (strtolower($status)) {
+            case 'active':
+                return 'fyn-dot--info';
+            case 'connected':
+                return 'fyn-dot--success';
+            case 'revoked':
+                return 'fyn-dot--danger';
+            default:
+                return 'fyn-dot--muted';
+        }
+    }
+
+    /**
+     * Map a tier to the dot colour used in the breakdown cards.
+     */
+    private function tierDotClass(string $tier): string
+    {
+        switch (strtolower($tier)) {
+            case 'trial':
+            case 'starter':
+                return 'fyn-dot--info';
+            case 'professional':
+                return 'fyn-dot--accent';
+            case 'business':
+                return '';
+            case 'agency':
+                return 'fyn-dot--success';
+            case 'lifetime':
+                return 'fyn-dot--warning';
+            default:
+                return 'fyn-dot--muted';
+        }
+    }
+
+    /**
+     * Map a platform to the dot colour used in the breakdown cards.
+     */
+    private function platformDotClass(string $platform): string
+    {
+        switch (strtolower($platform)) {
+            case 'wordpress':
+                return '';
+            case 'shopify':
+                return 'fyn-dot--success';
+            case 'webflow':
+                return 'fyn-dot--info';
+            default:
+                return 'fyn-dot--muted';
+        }
+    }
+
     public function renderLicenseDashboard(): void
     {
         $stats = $this->licenseGenerator->getLicenseStats();
         $recentLicenses = $this->licenseGenerator->getLicenses(['status' => 'active'], 10, 0);
         $recentTenants = $this->tenants->getTenants([], 10, 0);
+
+        // The three breakdown cards: per status, per tier, per platform.
+        $breakdowns = [
+            [
+                'title' => __('By status', 'sseo-ai-saas'),
+                'icon' => 'dashicons-chart-pie',
+                'rows' => array_map(function (array $row): array {
+                    return [
+                        'label' => $this->licenseStatusLabel($row['status']),
+                        'count' => (int)$row['count'],
+                        'dot' => $this->statusDotClass((string)$row['status']),
+                    ];
+                }, $stats['by_status']),
+            ],
+            [
+                'title' => __('By tier', 'sseo-ai-saas'),
+                'icon' => 'dashicons-star-filled',
+                'rows' => array_map(function (array $row): array {
+                    return [
+                        'label' => ucfirst((string)$row['tier']),
+                        'count' => (int)$row['count'],
+                        'dot' => $this->tierDotClass((string)$row['tier']),
+                    ];
+                }, $stats['by_tier']),
+            ],
+            [
+                'title' => __('By platform', 'sseo-ai-saas'),
+                'icon' => 'dashicons-admin-site',
+                'rows' => array_map(function (array $row): array {
+                    return [
+                        'label' => ucfirst((string)$row['platform']),
+                        'count' => (int)$row['count'],
+                        'dot' => $this->platformDotClass((string)$row['platform']),
+                    ];
+                }, $stats['by_platform']),
+            ],
+        ];
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('License Management Dashboard', 'sseo-ai-saas'); ?></h1>
-            
-            <!-- Stats Cards -->
-            <div class="sseo-ai-stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value"><?php echo number_format($stats['total']); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Total Licenses', 'sseo-ai-saas'); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value"><?php echo number_format($stats['created_today']); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Created Today', 'sseo-ai-saas'); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value"><?php echo number_format($stats['created_this_month']); ?></div>
-                    <div class="stat-label"><?php esc_html_e('This Month', 'sseo-ai-saas'); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value"><?php echo number_format(count($recentTenants)); ?></div>
-                    <div class="stat-label"><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></div>
-                </div>
-            </div>
-            
-            <!-- Quick Actions -->
-            <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Quick Actions', 'sseo-ai-saas'); ?></h2>
-                <div class="quick-actions">
-                    <a href="<?php echo admin_url('admin.php?page=sseo-ai-generate-licenses'); ?>" class="button button-primary button-hero">
-                        <?php esc_html_e('Generate License Keys', 'sseo-ai-saas'); ?>
-                    </a>
-                    <a href="<?php echo admin_url('admin.php?page=sseo-ai-view-licenses'); ?>" class="button button-secondary button-hero">
-                        <?php esc_html_e('View All Licenses', 'sseo-ai-saas'); ?>
-                    </a>
-                    <a href="<?php echo admin_url('admin.php?page=sseo-ai-tenants'); ?>" class="button button-secondary button-hero">
-                        <?php esc_html_e('Manage Tenants', 'sseo-ai-saas'); ?>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Stats by Type / Platform -->
-            <div class="sseo-ai-grid-2">
-                <div class="sseo-ai-card">
-                    <h3><?php esc_html_e('Licenses by Status', 'sseo-ai-saas'); ?></h3>
-                    <table class="wp-list-table widefat striped">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Count', 'sseo-ai-saas'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($stats['by_status'] as $row): ?>
-                            <tr>
-                                <td><?php echo esc_html($this->licenseStatusLabel($row['status'])); ?></td>
-                                <td><?php echo number_format($row['count']); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="sseo-ai-card">
-                    <h3><?php esc_html_e('Licenses by Type', 'sseo-ai-saas'); ?></h3>
-                    <table class="wp-list-table widefat striped">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Count', 'sseo-ai-saas'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($stats['by_type'] as $row): ?>
-                            <tr>
-                                <td><?php echo esc_html(ucfirst($row['license_type'])); ?></td>
-                                <td><?php echo number_format($row['count']); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="sseo-ai-card">
-                    <h3><?php esc_html_e('Licenses by Platform', 'sseo-ai-saas'); ?></h3>
-                    <table class="wp-list-table widefat striped">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Platform', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Count', 'sseo-ai-saas'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($stats['by_platform'] as $row): ?>
-                            <tr>
-                                <td><?php echo esc_html(ucfirst($row['platform'])); ?></td>
-                                <td><?php echo number_format($row['count']); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Recent Licenses -->
-            <div class="sseo-ai-card">
-                <h3><?php esc_html_e('Recent Licenses', 'sseo-ai-saas'); ?></h3>
-                <table class="wp-list-table widefat striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Assigned To', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recentLicenses as $license): ?>
-                        <tr>
-                            <td><code><?php echo esc_html(substr($license['license_key'], 0, 20) . '...'); ?></code></td>
-                            <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
-                            <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
-                            <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
-                            <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
-                            <td><?php echo esc_html(human_time_diff(strtotime($license['created_at']), current_time('timestamp')) . ' ago'); ?></td>
-                        </tr>
+            <div class="fyn-main">
+                <div class="fyn-main-inner fyn-animate-in">
+
+                    <div class="fyn-page-header">
+                        <div class="fyn-page-header-left">
+                            <div class="fyn-breadcrumb">
+                                <?php esc_html_e('Provider', 'sseo-ai-saas'); ?>
+                                <span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle"></span>
+                                <span class="fyn-crumb"><?php esc_html_e('Dashboard', 'sseo-ai-saas'); ?></span>
+                            </div>
+                            <h1><?php esc_html_e('License Dashboard', 'sseo-ai-saas'); ?></h1>
+                            <p class="fyn-page-desc"><?php esc_html_e('All issued licenses, their status and the latest activations at a glance.', 'sseo-ai-saas'); ?></p>
+                        </div>
+                        <div class="fyn-page-header-actions">
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-licenses')); ?>" class="fyn-btn fyn-btn-outline">
+                                <span class="dashicons dashicons-update"></span>
+                                <?php esc_html_e('Refresh', 'sseo-ai-saas'); ?>
+                            </a>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-generate-licenses')); ?>" class="fyn-btn fyn-btn-primary">
+                                <span class="dashicons dashicons-admin-network"></span>
+                                <?php esc_html_e('Generate Keys', 'sseo-ai-saas'); ?>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="fyn-stats-grid">
+                        <div class="fyn-stat-tile">
+                            <div class="fyn-stat-tile-top">
+                                <span class="fyn-stat-tile-label"><?php esc_html_e('Total Licenses', 'sseo-ai-saas'); ?></span>
+                                <span class="dashicons dashicons-admin-network"></span>
+                            </div>
+                            <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n($stats['total'])); ?></div>
+                            <div class="fyn-stat-tile-footer"><?php esc_html_e('Across all tiers', 'sseo-ai-saas'); ?></div>
+                        </div>
+                        <div class="fyn-stat-tile">
+                            <div class="fyn-stat-tile-top">
+                                <span class="fyn-stat-tile-label"><?php esc_html_e('Created Today', 'sseo-ai-saas'); ?></span>
+                                <span class="dashicons dashicons-calendar-alt"></span>
+                            </div>
+                            <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n($stats['created_today'])); ?></div>
+                            <div class="fyn-stat-tile-footer"><?php esc_html_e('New keys today', 'sseo-ai-saas'); ?></div>
+                        </div>
+                        <div class="fyn-stat-tile">
+                            <div class="fyn-stat-tile-top">
+                                <span class="fyn-stat-tile-label"><?php esc_html_e('This Month', 'sseo-ai-saas'); ?></span>
+                                <span class="dashicons dashicons-chart-bar"></span>
+                            </div>
+                            <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n($stats['created_this_month'])); ?></div>
+                            <div class="fyn-stat-tile-footer"><?php esc_html_e('New keys this month', 'sseo-ai-saas'); ?></div>
+                        </div>
+                        <div class="fyn-stat-tile">
+                            <div class="fyn-stat-tile-top">
+                                <span class="fyn-stat-tile-label"><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></span>
+                                <span class="dashicons dashicons-admin-multisite"></span>
+                            </div>
+                            <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n(count($recentTenants))); ?></div>
+                            <div class="fyn-stat-tile-footer"><?php esc_html_e('Connected customer sites', 'sseo-ai-saas'); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="fyn-grid-3" style="margin-bottom:20px">
+                        <?php foreach ($breakdowns as $breakdown): ?>
+                            <div class="fyn-card">
+                                <div class="fyn-card-header">
+                                    <span class="dashicons <?php echo esc_attr($breakdown['icon']); ?>"></span>
+                                    <h3 class="fyn-card-title"><?php echo esc_html($breakdown['title']); ?></h3>
+                                </div>
+                                <div class="fyn-breakdown">
+                                    <?php if (empty($breakdown['rows'])): ?>
+                                        <div class="fyn-help"><?php esc_html_e('No data yet.', 'sseo-ai-saas'); ?></div>
+                                    <?php else: ?>
+                                        <?php foreach ($breakdown['rows'] as $row): ?>
+                                            <div class="fyn-breakdown-row">
+                                                <span class="fyn-dot <?php echo esc_attr($row['dot']); ?>"></span>
+                                                <span class="fyn-breakdown-label"><?php echo esc_html($row['label']); ?></span>
+                                                <span class="fyn-breakdown-count"><?php echo esc_html(number_format_i18n($row['count'])); ?></span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
+                    </div>
+
+                    <div class="fyn-card fyn-card--flush">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-admin-network"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Recent Licenses', 'sseo-ai-saas'); ?></h3>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-view-licenses')); ?>" class="fyn-card-link">
+                                <?php esc_html_e('All licenses', 'sseo-ai-saas'); ?> &rarr;
+                            </a>
+                        </div>
+                        <div class="fyn-table-scroll">
+                            <table class="fyn-table">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
+                                        <th><?php esc_html_e('Type', 'sseo-ai-saas'); ?></th>
+                                        <th><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
+                                        <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                                        <th><?php esc_html_e('Assigned To', 'sseo-ai-saas'); ?></th>
+                                        <th class="fyn-td-num"><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($recentLicenses)): ?>
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="fyn-empty">
+                                                    <span class="dashicons dashicons-admin-network"></span>
+                                                    <div class="fyn-empty-title"><?php esc_html_e('No licenses yet', 'sseo-ai-saas'); ?></div>
+                                                    <div><?php esc_html_e('Generate your first license key to get started.', 'sseo-ai-saas'); ?></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($recentLicenses as $license): ?>
+                                            <tr>
+                                                <td><code class="fyn-mono"><?php echo esc_html(substr($license['license_key'], 0, 20) . '...'); ?></code></td>
+                                                <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
+                                                <td><span class="fyn-tier <?php echo esc_attr($this->tierBadgeClass((string)$license['tier'])); ?>"><?php echo esc_html(ucfirst($license['tier'])); ?></span></td>
+                                                <td><span class="fyn-badge <?php echo esc_attr($this->statusBadgeClass((string)$license['status'])); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
+                                                <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
+                                                <td class="fyn-td-num" style="color:var(--text-m)">
+                                                    <?php
+                                                    printf(
+                                                        /* translators: %s: human-readable time difference, e.g. "2 hours". */
+                                                        esc_html__('%s ago', 'sseo-ai-saas'),
+                                                        esc_html(human_time_diff(strtotime($license['created_at']), current_time('timestamp')))
+                                                    );
+                                                    ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
         <?php
@@ -368,8 +503,26 @@ class LicenseAdmin
         }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Generate License Keys', 'sseo-ai-saas'); ?></h1>
-            
+        <div class="fyn-main"><div class="fyn-main-inner fyn-animate-in">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">
+                        <?php esc_html_e('Provider', 'sseo-ai-saas'); ?>
+                        <span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle"></span>
+                        <span class="fyn-crumb"><?php esc_html_e('Generate Keys', 'sseo-ai-saas'); ?></span>
+                    </div>
+                    <h1><?php esc_html_e('Generate License Keys', 'sseo-ai-saas'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Issue one key or a batch. Changing the tier fills in that tier\'s default limits.', 'sseo-ai-saas'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-view-licenses')); ?>" class="fyn-btn fyn-btn-outline">
+                        <span class="dashicons dashicons-list-view"></span>
+                        <?php esc_html_e('All Licenses', 'sseo-ai-saas'); ?>
+                    </a>
+                </div>
+            </div>
+
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
             <?php endif; ?>
@@ -418,6 +571,7 @@ class LicenseAdmin
                 </div>
             <?php endif; ?>
             
+            <div class="fyn-grid-main-side">
             <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Generate New License Keys', 'sseo-ai-saas'); ?></h2>
                 <form method="post">
@@ -556,10 +710,45 @@ class LicenseAdmin
                 });
                 </script>
             </div>
+
+            <?php
+            // Side reference card: tier name, spec and price. Values come from
+            // the same helpers the form's tier defaults use.
+            $tierRef = [
+                'starter' => __('1 site · Core SEO', 'sseo-ai-saas'),
+                'professional' => __('5 sites · AI content + rank tracking', 'sseo-ai-saas'),
+                'business' => __('15 sites · Local SERP + 5x5 grid', 'sseo-ai-saas'),
+                'agency' => __('50 sites · White-label + sub-licenses', 'sseo-ai-saas'),
+            ];
+            ?>
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-star-filled"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Tiers', 'sseo-ai-saas'); ?></h3>
+                </div>
+                <?php foreach ($tierRef as $tierKey => $tierSpec): ?>
+                    <div style="padding:12px 0;border-bottom:1px solid var(--divide)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px">
+                            <span class="fyn-tier <?php echo esc_attr($this->tierBadgeClass($tierKey)); ?>"><?php echo esc_html(ucfirst($tierKey)); ?></span>
+                            <span style="font-size:13.5px;font-weight:700;color:var(--text-h)">
+                                &euro;<?php echo esc_html(number_format(SaaSSettings::tierPrice($tierKey), 0, ',', '.')); ?>
+                                <span style="font-size:11.5px;font-weight:600;color:var(--text-m)">/<?php esc_html_e('mo', 'sseo-ai-saas'); ?></span>
+                            </span>
+                        </div>
+                        <div class="fyn-help"><?php echo esc_html($tierSpec); ?></div>
+                    </div>
+                <?php endforeach; ?>
+                <div class="fyn-help" style="margin-top:14px">
+                    <?php esc_html_e('DEV is internal only and is never sold.', 'sseo-ai-saas'); ?>
+                </div>
+            </div>
+            </div>
+
+        </div></div>
         </div>
         <?php
     }
-    
+
     /**
      * Render all licenses page
      */
@@ -593,13 +782,40 @@ class LicenseAdmin
         $totalPages = ceil($total / $perPage);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('All License Keys', 'sseo-ai-saas'); ?></h1>
-            
+        <div class="fyn-main"><div class="fyn-main-inner fyn-animate-in">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">
+                        <?php esc_html_e('Provider', 'sseo-ai-saas'); ?>
+                        <span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle"></span>
+                        <span class="fyn-crumb"><?php esc_html_e('All Licenses', 'sseo-ai-saas'); ?></span>
+                    </div>
+                    <h1><?php esc_html_e('All License Keys', 'sseo-ai-saas'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Search, filter and manage every issued license key.', 'sseo-ai-saas'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses')); ?>" class="fyn-btn fyn-btn-outline">
+                        <span class="dashicons dashicons-download"></span>
+                        <?php esc_html_e('Export CSV', 'sseo-ai-saas'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-generate-licenses')); ?>" class="fyn-btn fyn-btn-primary">
+                        <span class="dashicons dashicons-admin-network"></span>
+                        <?php esc_html_e('Generate Keys', 'sseo-ai-saas'); ?>
+                    </a>
+                </div>
+            </div>
+
             <!-- Filters -->
             <div class="tablenav top">
-                <form method="get" class="alignleft actions">
+                <form method="get" class="fyn-filterbar">
                     <input type="hidden" name="page" value="sseo-ai-view-licenses">
-                    
+
+                    <span class="fyn-search">
+                        <span class="dashicons dashicons-search"></span>
+                        <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="<?php esc_attr_e('Search by key or email...', 'sseo-ai-saas'); ?>">
+                    </span>
+
                     <select name="status">
                         <option value=""><?php esc_html_e('All Statuses', 'sseo-ai-saas'); ?></option>
                         <option value="active" <?php selected($filters['status'], 'active'); ?>><?php esc_html_e('Active', 'sseo-ai-saas'); ?></option>
@@ -637,19 +853,13 @@ class LicenseAdmin
                         <option value="unknown" <?php selected($filters['platform'], 'unknown'); ?>><?php esc_html_e('Unknown', 'sseo-ai-saas'); ?></option>
                     </select>
                     
-                    <input type="text" name="search" value="<?php echo esc_attr($filters['search']); ?>" placeholder="Search...">
-                    
                     <?php submit_button(__('Filter', 'sseo-ai-saas'), '', '', false); ?>
                 </form>
-                
-                <div class="alignright">
-                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=export'), 'export_licenses'); ?>" class="button button-export">
-                        <?php esc_html_e('Export CSV', 'sseo-ai-saas'); ?>
-                    </a>
-                </div>
             </div>
-            
+
             <!-- Licenses Table -->
+            <div class="fyn-card fyn-card--flush">
+            <div class="fyn-table-scroll">
             <table class="wp-list-table widefat striped">
                 <thead>
                     <tr>
@@ -662,30 +872,40 @@ class LicenseAdmin
                         <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Expires', 'sseo-ai-saas'); ?></th>
                         <th><?php esc_html_e('Renews', 'sseo-ai-saas'); ?></th>
-                        <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                        <th class="fyn-td-actions"><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php if (empty($licenses)): ?>
+                    <tr>
+                        <td colspan="10">
+                            <div class="fyn-empty">
+                                <span class="dashicons dashicons-search"></span>
+                                <div class="fyn-empty-title"><?php esc_html_e('No licenses match these filters', 'sseo-ai-saas'); ?></div>
+                                <div><?php esc_html_e('Clear a filter or generate a new key.', 'sseo-ai-saas'); ?></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                     <?php foreach ($licenses as $license): ?>
                     <tr>
                         <td><code class="license-key"><?php echo esc_html($license['license_key']); ?></code></td>
                         <td><?php echo esc_html(ucfirst($license['license_type'])); ?></td>
-                        <td><?php echo esc_html(ucfirst($license['tier'])); ?></td>
+                        <td><span class="fyn-tier <?php echo esc_attr($this->tierBadgeClass((string)$license['tier'])); ?>"><?php echo esc_html(ucfirst($license['tier'])); ?></span></td>
                         <td><span class="badge badge-<?php echo esc_attr($license['status']); ?>"><?php echo esc_html($this->licenseStatusLabel($license['status'])); ?></span></td>
                         <td><span class="badge badge-platform-<?php echo esc_attr($license['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($license['platform'] ?? 'Unknown')); ?></span></td>
                         <td><?php echo esc_html($license['assigned_to'] ?: '-'); ?></td>
                         <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($license['created_at']))); ?></td>
                         <td><?php echo $license['expires_at'] ? esc_html(date_i18n(get_option('date_format'), strtotime($license['expires_at']))) : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
                         <td><?php echo !empty($license['tenant_expires_at']) ? esc_html(date_i18n(get_option('date_format'), strtotime($license['tenant_expires_at']))) : '<em>&mdash;</em>'; ?></td>
-                        <td>
+                        <td class="fyn-td-actions">
                             <?php if (in_array($license['status'], ['active', 'used'], true)): ?>
-                                <a href="<?php echo admin_url('admin.php?page=sseo-ai-license-features&license=' . urlencode($license['license_key'])); ?>" 
-                                   class="button button-small" 
-                                   style="margin-right:5px;background:#f0f9ff;border-color:#0ea5e9;color:#0369a1;">
-                                    <?php esc_html_e('Manage Features', 'sseo-ai-saas'); ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-license-features&license=' . urlencode($license['license_key']))); ?>"
+                                   class="fyn-btn fyn-btn-outline fyn-btn-sm" style="margin-right:5px">
+                                    <?php esc_html_e('Features', 'sseo-ai-saas'); ?>
                                 </a>
-                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action'); ?>" 
-                                   class="button button-small" 
+                                <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=sseo-ai-view-licenses&action=revoke&license=' . urlencode($license['license_key'])), 'license_action')); ?>"
+                                   class="fyn-btn fyn-btn-danger fyn-btn-sm"
                                    onclick="return confirm('<?php esc_attr_e('Are you sure you want to revoke this license? This will also suspend the associated tenant.', 'sseo-ai-saas'); ?>')">
                                     <?php esc_html_e('Revoke', 'sseo-ai-saas'); ?>
                                 </a>
@@ -695,29 +915,41 @@ class LicenseAdmin
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            
+            </div>
+
             <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
-            <div class="tablenav bottom">
-                <div class="tablenav-pages">
-                    <span class="displaying-num">
-                        <?php printf(esc_html__('%s items', 'sseo-ai-saas'), number_format($total)); ?>
-                    </span>
-                    <span class="pagination-links">
-                        <?php
-                        echo paginate_links([
-                            'base' => add_query_arg('paged', '%#%'),
-                            'format' => '',
-                            'prev_text' => '&laquo;',
-                            'next_text' => '&raquo;',
-                            'total' => $totalPages,
-                            'current' => $page,
-                        ]);
-                        ?>
-                    </span>
-                </div>
+            <div class="fyn-pager">
+                <span class="fyn-pager-info">
+                    <?php
+                    $from = $offset + 1;
+                    $to = min($offset + $perPage, $total);
+                    printf(
+                        /* translators: 1: first row number, 2: last row number, 3: total rows. */
+                        esc_html__('%1$s&ndash;%2$s of %3$s', 'sseo-ai-saas'),
+                        esc_html(number_format_i18n($from)),
+                        esc_html(number_format_i18n($to)),
+                        esc_html(number_format_i18n($total))
+                    );
+                    ?>
+                </span>
+                <span class="fyn-pager-nav">
+                    <?php
+                    echo paginate_links([
+                        'base' => add_query_arg('paged', '%#%'),
+                        'format' => '',
+                        'prev_text' => '&lsaquo;',
+                        'next_text' => '&rsaquo;',
+                        'total' => $totalPages,
+                        'current' => $page,
+                    ]);
+                    ?>
+                </span>
             </div>
             <?php endif; ?>
+            </div>
+
+        </div></div>
         </div>
         <?php
     }
@@ -767,13 +999,36 @@ class LicenseAdmin
         $totalPages = ceil($total / $perPage);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Tenant Management', 'sseo-ai-saas'); ?></h1>
-            
+        <div class="fyn-main"><div class="fyn-main-inner fyn-animate-in">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">
+                        <?php esc_html_e('Provider', 'sseo-ai-saas'); ?>
+                        <span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle"></span>
+                        <span class="fyn-crumb"><?php esc_html_e('Tenants', 'sseo-ai-saas'); ?></span>
+                    </div>
+                    <h1><?php esc_html_e('Tenant Management', 'sseo-ai-saas'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Every connected customer site, its tier, platform and activity.', 'sseo-ai-saas'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-usage-reports')); ?>" class="fyn-btn fyn-btn-outline">
+                        <span class="dashicons dashicons-chart-area"></span>
+                        <?php esc_html_e('Usage Reports', 'sseo-ai-saas'); ?>
+                    </a>
+                </div>
+            </div>
+
             <!-- Filters -->
             <div class="tablenav top">
-                <form method="get" class="alignleft actions" style="margin-bottom:10px;">
+                <form method="get" class="fyn-filterbar">
                     <input type="hidden" name="page" value="sseo-ai-tenants">
-                    
+
+                    <span class="fyn-search">
+                        <span class="dashicons dashicons-search"></span>
+                        <input type="text" name="search" value="<?php echo esc_attr($filters['search'] ?? ''); ?>" placeholder="<?php esc_attr_e('Search tenants...', 'sseo-ai-saas'); ?>">
+                    </span>
+
                     <select name="status">
                         <option value=""><?php esc_html_e('All Statuses', 'sseo-ai-saas'); ?></option>
                         <option value="active" <?php selected($filters['status'] ?? '', 'active'); ?>><?php esc_html_e('Active', 'sseo-ai-saas'); ?></option>
@@ -799,14 +1054,17 @@ class LicenseAdmin
                         <option value="webflow" <?php selected($filters['platform'] ?? '', 'webflow'); ?>><?php esc_html_e('Webflow', 'sseo-ai-saas'); ?></option>
                     </select>
                     
-                    <input type="text" name="search" value="<?php echo esc_attr($filters['search'] ?? ''); ?>" placeholder="Search...">
-                    
                     <?php submit_button(__('Filter', 'sseo-ai-saas'), '', '', false); ?>
                 </form>
             </div>
 
-            <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Active Tenants', 'sseo-ai-saas'); ?></h2>
+            <div class="fyn-card fyn-card--flush">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-multisite"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Tenants', 'sseo-ai-saas'); ?></h3>
+                    <span class="fyn-card-link" style="color:var(--text-m)"><?php echo esc_html(number_format_i18n($total)); ?></span>
+                </div>
+                <div class="fyn-table-scroll">
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
@@ -818,35 +1076,46 @@ class LicenseAdmin
                             <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Created', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Last Active', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                            <th class="fyn-td-actions"><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
+                        <?php if (empty($tenants)): ?>
+                        <tr>
+                            <td colspan="9">
+                                <div class="fyn-empty">
+                                    <span class="dashicons dashicons-admin-multisite"></span>
+                                    <div class="fyn-empty-title"><?php esc_html_e('No tenants found', 'sseo-ai-saas'); ?></div>
+                                    <div><?php esc_html_e('Tenants appear here once a license is activated on a site.', 'sseo-ai-saas'); ?></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
                         <?php foreach ($tenants as $tenant): ?>
                         <tr>
                             <td><code><?php echo esc_html(substr($tenant['tenant_key'], 0, 20) . '...'); ?></code></td>
-                            <td><?php echo esc_html($tenant['name']); ?></td>
+                            <td style="font-weight:600;color:var(--text-h)"><?php echo esc_html($tenant['name']); ?></td>
                             <td><?php echo esc_html($tenant['domain'] ?: '-'); ?></td>
-                            <td><?php echo esc_html(ucfirst($tenant['platform'] ?? 'Unknown')); ?></td>
-                            <td><?php echo esc_html(ucfirst($tenant['tier'])); ?></td>
+                            <td><span class="badge badge-platform-<?php echo esc_attr($tenant['platform'] ?? 'unknown'); ?>"><?php echo esc_html(ucfirst($tenant['platform'] ?? 'Unknown')); ?></span></td>
+                            <td><span class="fyn-tier <?php echo esc_attr($this->tierBadgeClass((string)$tenant['tier'])); ?>"><?php echo esc_html(ucfirst($tenant['tier'])); ?></span></td>
                             <td><span class="badge badge-<?php echo esc_attr($tenant['status']); ?>"><?php echo esc_html(ucfirst($tenant['status'])); ?></span></td>
                             <td><?php echo esc_html(human_time_diff(strtotime($tenant['created_at']), current_time('timestamp')) . ' ago'); ?></td>
                             <td><?php echo $tenant['last_active'] ? esc_html(human_time_diff(strtotime($tenant['last_active']), current_time('timestamp')) . ' ago') : '<em>' . esc_html__('Never', 'sseo-ai-saas') . '</em>'; ?></td>
-                            <td>
-                                <form method="post" style="display:flex;gap:4px;align-items:center;"
+                            <td class="fyn-td-actions">
+                                <form method="post" style="display:flex;gap:6px;align-items:center;justify-content:flex-end"
                                       onsubmit="return confirm('<?php esc_attr_e('Are you sure you want to delete this tenant? This permanently removes its settings, usage data and support tickets. Invoices are kept.', 'sseo-ai-saas'); ?>')">
                                     <?php wp_nonce_field('delete_tenant_' . $tenant['tenant_key']); ?>
                                     <input type="hidden" name="tenant_action" value="delete">
                                     <input type="hidden" name="tenant_key" value="<?php echo esc_attr($tenant['tenant_key']); ?>">
                                     <?php if (!empty($tenant['license_key'])): ?>
-                                    <select name="license_action" style="max-width:150px;">
+                                    <select name="license_action" style="max-width:160px">
                                         <option value="keep"><?php esc_html_e('Keep license', 'sseo-ai-saas'); ?></option>
                                         <option value="free"><?php esc_html_e('Free license (reusable)', 'sseo-ai-saas'); ?></option>
                                         <option value="revoke"><?php esc_html_e('Revoke license', 'sseo-ai-saas'); ?></option>
                                         <option value="delete"><?php esc_html_e('Delete license', 'sseo-ai-saas'); ?></option>
                                     </select>
                                     <?php endif; ?>
-                                    <button type="submit" class="button button-small" style="color:#b32d2e;border-color:#b32d2e;">
+                                    <button type="submit" class="fyn-btn fyn-btn-danger fyn-btn-sm">
                                         <?php esc_html_e('Delete', 'sseo-ai-saas'); ?>
                                     </button>
                                 </form>
@@ -855,15 +1124,24 @@ class LicenseAdmin
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-            </div>
-            
-            <?php if ($totalPages > 1): ?>
-            <div class="tablenav bottom">
-                <div class="tablenav-pages">
-                    <span class="displaying-num">
-                        <?php printf(esc_html__('%s items', 'sseo-ai-saas'), number_format($total)); ?>
+                </div>
+
+                <?php if ($totalPages > 1): ?>
+                <div class="fyn-pager">
+                    <span class="fyn-pager-info">
+                        <?php
+                        $from = $offset + 1;
+                        $to = min($offset + $perPage, $total);
+                        printf(
+                            /* translators: 1: first row number, 2: last row number, 3: total rows. */
+                            esc_html__('%1$s&ndash;%2$s of %3$s', 'sseo-ai-saas'),
+                            esc_html(number_format_i18n($from)),
+                            esc_html(number_format_i18n($to)),
+                            esc_html(number_format_i18n($total))
+                        );
+                        ?>
                     </span>
-                    <span class="pagination-links">
+                    <span class="fyn-pager-nav">
                         <?php
                         $base = add_query_arg([
                             'page' => 'sseo-ai-tenants',
@@ -875,16 +1153,18 @@ class LicenseAdmin
                         echo paginate_links([
                             'base' => $base . '&paged=%#%',
                             'format' => '',
-                            'prev_text' => '&laquo;',
-                            'next_text' => '&raquo;',
+                            'prev_text' => '&lsaquo;',
+                            'next_text' => '&rsaquo;',
                             'total' => $totalPages,
                             'current' => $page,
                         ]);
                         ?>
                     </span>
                 </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
+
+        </div></div>
         </div>
         <?php
     }
@@ -897,10 +1177,32 @@ class LicenseAdmin
         $tenants = $this->tenants->getTenants(['status' => 'active'], 100, 0);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Usage Reports', 'sseo-ai-saas'); ?></h1>
-            
+        <div class="fyn-main"><div class="fyn-main-inner fyn-animate-in">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">
+                        <?php esc_html_e('Provider', 'sseo-ai-saas'); ?>
+                        <span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle"></span>
+                        <span class="fyn-crumb"><?php esc_html_e('Usage Reports', 'sseo-ai-saas'); ?></span>
+                    </div>
+                    <h1><?php esc_html_e('Usage &amp; Reports', 'sseo-ai-saas'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('API consumption, estimated cost and onboarding status per active tenant.', 'sseo-ai-saas'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-usage-reports')); ?>" class="fyn-btn fyn-btn-outline">
+                        <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Refresh', 'sseo-ai-saas'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-costs')); ?>" class="fyn-btn fyn-btn-primary">
+                        <span class="dashicons dashicons-money-alt"></span>
+                        <?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?>
+                    </a>
+                </div>
+            </div>
+
             <div class="sseo-ai-grid-3">
-                <?php foreach ($tenants as $tenant): 
+                <?php foreach ($tenants as $tenant):
                     $usage = $this->tenants->getTenantUsage($tenant['tenant_key']);
                     $limits = $this->tenants->checkTenantLimits($tenant['tenant_key']);
                     $onboardingCompleted = (bool) $this->tenants->getTenantSetting($tenant['tenant_key'], 'onboarding_completed', false);
@@ -923,14 +1225,25 @@ class LicenseAdmin
                         <?php endif; ?>
                     </p>
                     
-                    <div class="usage-stats">
-                        <div class="usage-stat">
-                            <span class="usage-label"><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></span>
-                            <span class="usage-value <?php echo !empty($apiCallsCheck['exceeded']) ? 'exceeded' : ''; ?>">
-                                <?php echo number_format($usage['api_calls'] ?? 0); ?> / <?php echo number_format($apiCallsCheck['limit'] ?? 0); ?>
-                            </span>
+                    <?php
+                    // Colour-grade the limit bar by percentage used.
+                    $apiCalls = (int)($usage['api_calls'] ?? 0);
+                    $apiLimit = (int)($apiCallsCheck['limit'] ?? 0);
+                    $apiPct = $apiLimit > 0 ? min(100, (int)round($apiCalls / $apiLimit * 100)) : 0;
+                    $apiBar = $apiPct >= 90 ? 'fyn-progress-bar--danger' : ($apiPct >= 70 ? 'fyn-progress-bar--warning' : '');
+                    ?>
+                    <div class="fyn-usage" style="margin:14px 0 16px">
+                        <div class="fyn-usage-meta">
+                            <span><?php esc_html_e('API Calls', 'sseo-ai-saas'); ?></span>
+                            <span style="font-weight:700;color:var(--text-h)"><?php echo esc_html(number_format_i18n($apiCalls)); ?> / <?php echo esc_html(number_format_i18n($apiLimit)); ?></span>
                         </div>
-                        
+                        <div class="fyn-progress">
+                            <div class="fyn-progress-bar <?php echo esc_attr($apiBar); ?>" style="width:<?php echo (int)$apiPct; ?>%"></div>
+                        </div>
+                    </div>
+
+                    <div class="usage-stats">
+
                         <div class="usage-stat">
                             <span class="usage-label"><?php esc_html_e('Est. Cost', 'sseo-ai-saas'); ?></span>
                             <span class="usage-value">
@@ -946,10 +1259,24 @@ class LicenseAdmin
                         </div>
                     </div>
                     
-                    <p class="tenant-tier"><?php echo esc_html(ucfirst($tenant['tier'])); ?> Tier</p>
+                    <p class="tenant-tier">
+                        <span class="fyn-tier <?php echo esc_attr($this->tierBadgeClass((string)$tenant['tier'])); ?>"><?php echo esc_html(ucfirst($tenant['tier'])); ?></span>
+                    </p>
                 </div>
                 <?php endforeach; ?>
+
+                <?php if (empty($tenants)): ?>
+                    <div class="fyn-card" style="grid-column:1/-1">
+                        <div class="fyn-empty">
+                            <span class="dashicons dashicons-chart-area"></span>
+                            <div class="fyn-empty-title"><?php esc_html_e('No active tenants', 'sseo-ai-saas'); ?></div>
+                            <div><?php esc_html_e('Usage appears here once a customer site is connected.', 'sseo-ai-saas'); ?></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
+
+        </div></div>
         </div>
         <?php
     }
@@ -1184,7 +1511,7 @@ class LicenseAdmin
                 max-width: 1200px;
             }
             .sseo-ai-admin h1 {
-                color: #fff;
+                color: var(--text-h, #1a1430);
                 font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 margin: 0 20px 20px;
                 padding: 20px 0 10px;
@@ -1195,26 +1522,27 @@ class LicenseAdmin
                 margin: 0 20px;
             }
             .sseo-ai-license-assign {
-                background: #fff;
-                border: 1px solid #c3c4c7;
-                border-radius: 4px;
-                padding: 20px;
+                background: var(--card, #fff);
+                border: 1px solid var(--card-border, #c3c4c7);
+                border-radius: 14px;
+                padding: 22px 26px;
             }
             .sseo-ai-license-assign h2 {
                 margin-top: 0;
                 margin-bottom: 10px;
             }
             .sseo-ai-admin .feature-category {
-                margin-bottom: 30px;
-                background: #fff;
-                border: 1px solid #c3c4c7;
-                border-radius: 4px;
-                padding: 15px;
+                margin-bottom: 20px;
+                background: var(--card, #fff);
+                border: 1px solid var(--card-border, #c3c4c7);
+                border-radius: 14px;
+                padding: 22px 26px;
             }
             .sseo-ai-admin .sseo-ai-notice {
-                padding: 12px 15px;
-                border-left: 4px solid #2271b1;
-                background: #f0f6fc;
+                padding: 12px 16px;
+                border-left: 4px solid var(--fyn-info, #2271b1);
+                background: var(--well, #f0f6fc);
+                border-radius: 11px;
             }
             .sseo-ai-admin .sseo-ai-notice.info {
                 border-left-color: #2271b1;
@@ -1308,9 +1636,80 @@ class LicenseAdmin
         }
 
         $agencyTenants = $this->tenants->getTenants(['tier' => 'agency'], 100, 0);
+
+        // Summary tiles, derived from the rows already loaded below.
+        $agencyCount = count($agencyTenants);
+        $agencyActive = 0;
+        $quotaTotal = 0;
+        $quotaUsed = 0;
+        foreach ($agencyTenants as $t) {
+            if (($t['status'] ?? '') === 'active') {
+                $agencyActive++;
+            }
+            $acct = $this->tenants->getAgencyAccountByTenant((int)$t['id']);
+            if ($acct) {
+                $quotaTotal += (int)$acct['max_sub_licenses'];
+            }
+            $quotaUsed += $this->licenseGenerator->countLicensesByAgency((int)$t['id']);
+        }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Agency Accounts', 'sseo-ai-saas'); ?></h1>
+        <div class="fyn-main"><div class="fyn-main-inner fyn-animate-in">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">
+                        <?php esc_html_e('Provider', 'sseo-ai-saas'); ?>
+                        <span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle"></span>
+                        <span class="fyn-crumb"><?php esc_html_e('Agency Accounts', 'sseo-ai-saas'); ?></span>
+                    </div>
+                    <h1><?php esc_html_e('Agency Accounts', 'sseo-ai-saas'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Reseller partners, their sub-license quota and custom pricing plans.', 'sseo-ai-saas'); ?></p>
+                </div>
+            </div>
+
+            <div class="fyn-stats-grid">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-tile-top">
+                        <span class="fyn-stat-tile-label"><?php esc_html_e('Agencies', 'sseo-ai-saas'); ?></span>
+                        <span class="dashicons dashicons-groups"></span>
+                    </div>
+                    <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n($agencyCount)); ?></div>
+                    <div class="fyn-stat-tile-footer"><?php esc_html_e('Reseller partners', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-tile-top">
+                        <span class="fyn-stat-tile-label"><?php esc_html_e('Active', 'sseo-ai-saas'); ?></span>
+                        <span class="dashicons dashicons-yes-alt"></span>
+                    </div>
+                    <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n($agencyActive)); ?></div>
+                    <div class="fyn-stat-tile-footer"><?php esc_html_e('Currently active', 'sseo-ai-saas'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-tile-top">
+                        <span class="fyn-stat-tile-label"><?php esc_html_e('Sub-licenses Used', 'sseo-ai-saas'); ?></span>
+                        <span class="dashicons dashicons-admin-network"></span>
+                    </div>
+                    <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n($quotaUsed)); ?></div>
+                    <div class="fyn-stat-tile-footer">
+                        <?php
+                        printf(
+                            /* translators: %s: total sub-license quota across agencies. */
+                            esc_html__('of %s quota', 'sseo-ai-saas'),
+                            esc_html(number_format_i18n($quotaTotal))
+                        );
+                        ?>
+                    </div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-tile-top">
+                        <span class="fyn-stat-tile-label"><?php esc_html_e('Available', 'sseo-ai-saas'); ?></span>
+                        <span class="dashicons dashicons-plus-alt2"></span>
+                    </div>
+                    <div class="fyn-stat-tile-value"><?php echo esc_html(number_format_i18n(max($quotaTotal - $quotaUsed, 0))); ?></div>
+                    <div class="fyn-stat-tile-footer"><?php esc_html_e('Unused sub-licenses', 'sseo-ai-saas'); ?></div>
+                </div>
+            </div>
 
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
@@ -1360,8 +1759,7 @@ class LicenseAdmin
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e('Agency Name', 'sseo-ai-saas'); ?></th>
-                            <th><?php esc_html_e('Email', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Agency', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('License Key', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
                             <th><?php esc_html_e('Sub-Licenses', 'sseo-ai-saas'); ?></th>
@@ -1370,20 +1768,49 @@ class LicenseAdmin
                     </thead>
                     <tbody>
                         <?php if (empty($agencyTenants)): ?>
-                            <tr><td colspan="6"><?php esc_html_e('No agency tenants yet.', 'sseo-ai-saas'); ?></td></tr>
+                            <tr>
+                                <td colspan="5">
+                                    <div class="fyn-empty">
+                                        <span class="dashicons dashicons-groups"></span>
+                                        <div class="fyn-empty-title"><?php esc_html_e('No agency tenants yet', 'sseo-ai-saas'); ?></div>
+                                        <div><?php esc_html_e('Create an agency account with the form above.', 'sseo-ai-saas'); ?></div>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php else: ?>
                             <?php foreach ($agencyTenants as $t):
                                 $account = $this->tenants->getAgencyAccountByTenant((int)$t['id']);
                                 $licenseCount = $this->licenseGenerator->countLicensesByAgency((int)$t['id']);
                                 $maxSubs = $account ? (int)$account['max_sub_licenses'] : '-';
                             ?>
+                                <?php
+                                $quotaMax = $account ? (int)$account['max_sub_licenses'] : 0;
+                                $quotaPct = $quotaMax > 0 ? min(100, (int)round($licenseCount / $quotaMax * 100)) : 0;
+                                $quotaBar = $quotaPct >= 90 ? 'fyn-progress-bar--danger' : ($quotaPct >= 70 ? 'fyn-progress-bar--warning' : '');
+                                ?>
                                 <tr>
-                                    <td><?php echo esc_html($t['name']); ?></td>
-                                    <td><?php echo esc_html($t['email']); ?></td>
+                                    <td>
+                                        <span class="fyn-cell">
+                                            <span class="fyn-icon-chip fyn-icon-chip--sm"><span class="dashicons dashicons-businessperson"></span></span>
+                                            <span>
+                                                <span class="fyn-cell-title"><?php echo esc_html($t['name']); ?></span><br>
+                                                <span class="fyn-cell-sub"><?php echo esc_html($t['email']); ?></span>
+                                            </span>
+                                        </span>
+                                    </td>
                                     <td><code><?php echo esc_html($t['license_key'] ?: '-'); ?></code></td>
                                     <td><span class="badge badge-<?php echo esc_attr($t['status']); ?>"><?php echo esc_html(ucfirst($t['status'])); ?></span></td>
-                                    <td><?php echo esc_html($licenseCount . ' / ' . $maxSubs); ?></td>
-                                    <td><?php echo esc_html($t['created_at']); ?></td>
+                                    <td>
+                                        <div class="fyn-usage">
+                                            <div class="fyn-usage-meta">
+                                                <span><?php echo esc_html($licenseCount . ' / ' . ($quotaMax > 0 ? $quotaMax : '-')); ?></span>
+                                            </div>
+                                            <div class="fyn-progress fyn-progress--thin">
+                                                <div class="fyn-progress-bar <?php echo esc_attr($quotaBar); ?>" style="width:<?php echo (int)$quotaPct; ?>%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($t['created_at']))); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -1392,6 +1819,8 @@ class LicenseAdmin
             </div>
 
             <?php $this->renderCustomPlansSection(); ?>
+
+        </div></div>
         </div>
         <?php
     }

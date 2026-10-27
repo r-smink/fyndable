@@ -76,33 +76,27 @@ class AgencyPortal
         $primary = sanitize_hex_color($wl['primary_color'] ?? '') ?: '#379fd3';
         $secondary = sanitize_hex_color($wl['secondary_color'] ?? '') ?: '#8f39ac';
 
+        // White-label colours drive the brand accents only. The page surface
+        // and headings come from the shell tokens, so the agency portal reads
+        // the same as the provider console in both themes.
+        $gradient = 'linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%)';
+
         $css = ':root {
             --sseo-primary: ' . $primary . ';
             --sseo-blue: ' . $primary . ';
         }
-        body[class*="sseo-ai"] {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
-        }
-        .wrap.sseo-ai-license-admin {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
-        }
-        .wrap.sseo-ai-license-admin h1 {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
-            color: #fff !important;
-            margin: 0 20px !important;
-            padding: 24px 30px !important;
-            border-radius: 12px !important;
-        }
-        .fyndable-agency-content > h1 + *,
-        .wrap.sseo-ai-license-admin > h1 + * {
-            margin-top: 0 !important;
+        body.fyndable-ui {
+            --fyn-purple: ' . $secondary . ';
+            --fyn-blue: ' . $primary . ';
+            --fyn-gradient: ' . $gradient . ';
+            --fyn-gradient-flat: linear-gradient(90deg, ' . $secondary . ', ' . $primary . ');
         }
         .sseo-ai-license-admin .button-primary,
         .sseo-ai-license-admin .button-primary:hover,
         .sseo-ai-upgrade-cta,
         .tenant-login-btn,
         .tenant-login-btn:hover {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
+            background: ' . $gradient . ' !important;
         }';
 
         wp_add_inline_style('sseo-ai-license-admin', $css);
@@ -254,7 +248,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Agency Dashboard', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Dashboard', 'sseo-ai-saas'),
+                __('Agency Dashboard', 'sseo-ai-saas'),
+                __('Your resold licenses, client sites and revenue in one overview.', 'sseo-ai-saas')
+            ); ?>
 
             <?php if ($planPaymentDone): ?>
                 <div class="notice notice-success"><p><?php esc_html_e('Payment received. Your subscription is being activated — it will be ready within a few moments.', 'sseo-ai-saas'); ?></p></div>
@@ -558,7 +557,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Generate Sub-License', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Generate Licenses', 'sseo-ai-saas'),
+                __('Generate Licenses', 'sseo-ai-saas'),
+                __('Issue a license from your own quota and assign it to a client.', 'sseo-ai-saas')
+            ); ?>
 
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
@@ -716,7 +720,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('All Sub-Licenses', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('All Licenses', 'sseo-ai-saas'),
+                __('All Licenses', 'sseo-ai-saas'),
+                __('Every license you issued, its tier and current status.', 'sseo-ai-saas')
+            ); ?>
             <div class="sseo-ai-card">
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -768,7 +777,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Sub-Tenants', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Tenants', 'sseo-ai-saas'),
+                __('Tenants', 'sseo-ai-saas'),
+                __('The client sites running on your licenses.', 'sseo-ai-saas')
+            ); ?>
             <div class="sseo-ai-card">
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -862,12 +876,20 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php echo esc_html($tenant['name']); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Tenants', 'sseo-ai-saas'),
+                $tenant['name'],
+                __('Usage, licenses and support history for this client site.', 'sseo-ai-saas'),
+                [[
+                    'label' => __('Login as Tenant', 'sseo-ai-saas'),
+                    'url' => $this->getTenantLoginUrl($tenantId),
+                    'icon' => 'dashicons-external',
+                    'primary' => true,
+                ]]
+            ); ?>
             <p>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-tenants')); ?>">&larr; <?php esc_html_e('Back to Tenants', 'sseo-ai-saas'); ?></a>
-                <a href="<?php echo esc_url($this->getTenantLoginUrl($tenantId)); ?>" class="tenant-login-btn" target="_blank" style="margin-left:15px;">
-                    <?php esc_html_e('Login as Tenant', 'sseo-ai-saas'); ?>
-                </a>
             </p>
 
             <div class="sseo-ai-stats-grid">
@@ -1030,7 +1052,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Support', 'sseo-ai-saas'),
+                __('Support Tickets', 'sseo-ai-saas'),
+                __('Your tickets with Fyndable support.', 'sseo-ai-saas')
+            ); ?>
 
             <div class="sseo-ai-card">
                 <form method="get" style="margin-bottom: 15px;">
@@ -1223,7 +1250,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Usage & Costs', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Usage & Costs', 'sseo-ai-saas'),
+                __('Usage &amp; Costs', 'sseo-ai-saas'),
+                __('API consumption and cost per client site.', 'sseo-ai-saas')
+            ); ?>
 
             <div class="sseo-ai-card" style="margin-bottom: 20px;">
                 <form method="get" class="sseo-ai-inline-form" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -1378,7 +1410,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('White-Label Settings', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('White-Label', 'sseo-ai-saas'),
+                __('White-Label', 'sseo-ai-saas'),
+                __('Your brand name, logo and colours on the client plugin.', 'sseo-ai-saas')
+            ); ?>
 
             <?php if ($message === 'saved'): ?>
                 <div class="notice notice-success"><p><?php esc_html_e('White-label settings saved.', 'sseo-ai-saas'); ?></p></div>
@@ -1744,7 +1781,12 @@ class AgencyPortal
         }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('My Account', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('My Account', 'sseo-ai-saas'),
+                __('My Account', 'sseo-ai-saas'),
+                __('Company details and the team members on your agency account.', 'sseo-ai-saas')
+            ); ?>
             <?php if ($message): ?>
                 <div class="notice notice-success"><p><?php echo esc_html($message); ?></p></div>
             <?php endif; ?>
@@ -1831,7 +1873,12 @@ class AgencyPortal
         $viewInvoiceId = isset($_GET['view']) ? (int) $_GET['view'] : 0;
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Invoices', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Invoices', 'sseo-ai-saas'),
+                __('Invoices', 'sseo-ai-saas'),
+                __('Your invoices from Fyndable.', 'sseo-ai-saas')
+            ); ?>
             <div class="sseo-ai-card">
                 <?php if (empty($invoices)): ?>
                     <p><?php esc_html_e('No invoices found.', 'sseo-ai-saas'); ?></p>
@@ -1936,7 +1983,12 @@ class AgencyPortal
         $success = isset($_GET['success']) ? sanitize_text_field($_GET['success']) : '';
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Extra Licenses', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Extra Licenses', 'sseo-ai-saas'),
+                __('Extra Licenses', 'sseo-ai-saas'),
+                __('Buy additional licenses to grow your quota.', 'sseo-ai-saas')
+            ); ?>
             <p class="description" style="margin: 0 20px; color: #fff;">
                 <?php
                 printf(
@@ -2092,7 +2144,12 @@ class AgencyPortal
         $activateAmount = $customPlan->monthlyAmount($plan, $activateCount);
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Your Plan & Licenses', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Extra Licenses', 'sseo-ai-saas'),
+                __('Your Plan &amp; Licenses', 'sseo-ai-saas'),
+                __('Your custom plan, its pricing tiers and how to add licenses.', 'sseo-ai-saas')
+            ); ?>
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
             <?php endif; ?>

@@ -175,7 +175,9 @@ class Dashboard
 
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
-        add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
+        // Shell: WP-chrome hiding, the fyndable-ui/fyndable-dark body class and
+        // the light/dark theme toggle handler.
+        $this->dashboardShell->register();
         add_action('admin_head', function (): void {
             echo '<style>
             #toplevel_page_sseo-ai-shell .wp-menu-image img {

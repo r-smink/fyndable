@@ -146,7 +146,12 @@ class RevenueDashboard
     {
         ?>
         <div class="wrap fyndable-revenue-wrap">
-            <h1>💰 Revenue Dashboard</h1>
+            <?php ShellUi::pageHeader(
+                __('Provider', 'sseo-ai-saas'),
+                __('Revenue', 'sseo-ai-saas'),
+                __('Revenue', 'sseo-ai-saas'),
+                __('MRR, ARR, new customers and churn, broken down per tier.', 'sseo-ai-saas')
+            ); ?>
             <?php $this->renderContent(); ?>
         </div>
         <?php

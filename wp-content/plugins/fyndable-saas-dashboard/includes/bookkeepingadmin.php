@@ -66,7 +66,12 @@ class BookkeepingAdmin
         $base = admin_url('admin.php?page=sseo-ai-billing');
         ?>
         <div class="wrap sseo-ai-license-admin sseo-ai-bookkeeping-wrap">
-            <h1><?php esc_html_e('Bookkeeping', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Bookkeeping', 'sseo-ai-saas'),
+            __('Bookkeeping', 'sseo-ai-saas'),
+            __('Invoices, revenue and VAT for the financial administration.', 'sseo-ai-saas')
+        ); ?>
 
             <h2 class="nav-tab-wrapper sseo-ai-settings-tabs">
                 <?php foreach ($tabs as $key => $label): ?>

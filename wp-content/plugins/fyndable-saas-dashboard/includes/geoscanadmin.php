@@ -116,7 +116,12 @@ class GeoScanAdmin
         $saasShell = isset($_GET['saas_shell']) ? '&saas_shell=1' : '';
         ?>
         <div class="wrap sseo-ai-license-admin sseo-geo-admin">
-            <h1><?php esc_html_e('GEO Readiness Scan', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('GEO Scans', 'sseo-ai-saas'),
+            __('GEO Readiness Scan', 'sseo-ai-saas'),
+            __('How visible a site is to AI assistants, per keyword and per model.', 'sseo-ai-saas')
+        ); ?>
 
             <?php if (!empty($_GET['key_regenerated'])) : ?>
                 <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Nieuwe website-scan key gegenereerd. Vergeet niet de key op fyndable.ai bij te werken.', 'sseo-ai-saas'); ?></p></div>

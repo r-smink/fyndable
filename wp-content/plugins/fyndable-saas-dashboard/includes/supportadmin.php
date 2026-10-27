@@ -114,7 +114,12 @@ class SupportAdmin
 
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Support', 'sseo-ai-saas'),
+            __('Support Tickets', 'sseo-ai-saas'),
+            __('Incoming customer tickets, their priority and how long they have been open.', 'sseo-ai-saas')
+        ); ?>
 
             <div class="sseo-ai-card">
                 <form method="get" style="margin-bottom: 0;">

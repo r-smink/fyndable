@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/colors.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/typography.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/assets/dashicons/css/dashicons.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/base.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Outfit',system-ui,sans-serif;background:#0a0710}
+a{color:var(--fyn-purple);text-decoration:none}
+a:hover{color:var(--fyn-blue)}
+.fyn-root{
+  --shell-page:#f4f5f8; --shell-sidebar:#ffffff; --shell-sb-border:#e9eaef;
+  --nav-fg:#5a5568; --nav-section:#9a95a8; --nav-hover:#f5f2fb;
+  --card:#ffffff; --card-border:#ececf1; --card-shadow:0 1px 3px rgba(20,14,30,.07),0 1px 2px rgba(20,14,30,.04);
+  --card-shadow-lg:0 10px 24px -8px rgba(20,14,30,.14);
+  --text-h:#1a1430; --text-b:#413b52; --text-m:#746e82; --text-s:#a39dae;
+  --well:#f7f6fa; --well-border:#edecf2; --row-hover:#faf7fe; --divide:#efeef4;
+  --input-bg:#ffffff; --input-border:#dcdae4;
+  --sev-track:#e9e7f0;
+}
+.fyn-root.fyn-dark{
+  --shell-page:#120c1c; --shell-sidebar:#19122a; --shell-sb-border:rgba(255,255,255,.06);
+  --nav-fg:#b4adc6; --nav-section:#726a86; --nav-hover:rgba(143,57,172,.16);
+  --card:#1d1630; --card-border:rgba(255,255,255,.07); --card-shadow:0 1px 3px rgba(0,0,0,.45);
+  --card-shadow-lg:0 14px 30px -10px rgba(0,0,0,.6);
+  --text-h:#f4f1fa; --text-b:#cdc6dd; --text-m:#958da7; --text-s:#6f6784;
+  --well:#17112440; --well-border:rgba(255,255,255,.07); --row-hover:rgba(143,57,172,.12); --divide:rgba(255,255,255,.06);
+  --input-bg:#211a35; --input-border:rgba(255,255,255,.1);
+  --sev-track:rgba(255,255,255,.1);
+}
+@keyframes fynFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fyn-scroll::-webkit-scrollbar{width:9px}
+.fyn-scroll::-webkit-scrollbar-thumb{background:rgba(143,57,172,.35);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+.fyn-scroll::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+<div class="fyn-root {{themeClass}}" style="min-height:100vh;background:var(--shell-page);color:var(--text-b);display:flex;flex-direction:column">
+
+  <header style="flex:none;display:flex;align-items:center;gap:20px;height:58px;padding:0 22px;background:linear-gradient(135deg,#2A1533 0%,#132A38 100%);color:#fff;position:relative;z-index:10;box-shadow:0 1px 0 rgba(0,0,0,.2)">
+    <div style="display:flex;align-items:center;gap:12px;min-width:210px">
+      <img src="uploads/FYN-LOGO-DIA-LONG300ppi.png" alt="Fyndable" style="height:24px;width:auto;display:block" />
+      <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.05em;text-transform:uppercase;border-left:1px solid rgba(255,255,255,.2);padding-left:12px">{{portalLabel}}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding:3px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);border-radius:9px">
+      <button type="button" onClick="{{setProvider}}" style="{{provTab}}">Provider</button>
+      <button type="button" onClick="{{setAgency}}" style="{{agTab}}">Agency</button>
+    </div>
+    <div style="flex:1;max-width:420px;display:flex;align-items:center;gap:9px;height:36px;padding:0 13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:9px">
+      <span class="dashicons dashicons-search" style="font-size:16px;width:16px;height:16px;color:rgba(255,255,255,.6)"></span>
+      <input placeholder="Zoek licenties, tenants, instellingen…" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:13px" />
+      <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 6px">⌘K</span>
+    </div>
+    <div style="flex:1"></div>
+    <button type="button" onClick="{{toggleTheme}}" title="Wissel thema" style="display:flex;align-items:center;gap:6px;height:34px;padding:3px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);border-radius:999px;cursor:pointer">
+      <span style="{{sunStyle}}">☀</span><span style="{{moonStyle}}">☾</span>
+    </button>
+    <button type="button" title="Meldingen" style="position:relative;width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(255,255,255,.2)"><span class="dashicons dashicons-bell" style="font-size:16px;width:16px;height:16px"></span><span style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid #20122a"></span></button>
+    <div style="width:1px;height:26px;background:rgba(255,255,255,.16)"></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8F39AC,#379FD3);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#fff">FY</div>
+      <div style="display:flex;flex-direction:column;line-height:1.15"><span style="font-size:12.5px;font-weight:600;color:#fff">{{accountName}}</span><span style="font-size:10.5px;color:rgba(255,255,255,.55)">{{accountRole}}</span></div>
+    </div>
+  </header>
+
+  <div style="flex:1;display:flex;min-height:0">
+    <nav class="fyn-scroll" style="flex:none;width:252px;background:var(--shell-sidebar);border-right:1px solid var(--shell-sb-border);padding:16px 14px 28px;overflow-y:auto">
+      <sc-for list="{{nav}}" as="grp" hint-placeholder-count="6">
+        <div style="padding:14px 10px 6px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--nav-section)">{{grp.label}}</div>
+        <sc-for list="{{grp.items}}" as="it" hint-placeholder-count="4">
+          <button type="button" onClick="{{it.go}}" style="{{it.style}}" style-hover="{{it.hover}}">
+            <span class="{{it.iconCls}}" style="font-size:17px;width:17px;height:17px;flex:none"></span>
+            <span style="flex:1;text-align:left">{{it.label}}</span>
+            <sc-if value="{{it.badge}}" hint-placeholder-val=""><span style="{{it.badgeStyle}}">{{it.badge}}</span></sc-if>
+          </button>
+        </sc-for>
+      </sc-for>
+      <div style="margin-top:22px;padding:14px;border-radius:12px;background:linear-gradient(135deg,rgba(143,57,172,.12),rgba(55,159,211,.12));border:1px solid var(--card-border)">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text-h)"><span class="dashicons dashicons-cloud" style="font-size:15px;width:15px;height:15px;color:var(--fyn-purple)"></span>{{planTitle}}</div>
+        <div style="font-size:11.5px;color:var(--text-m);margin-top:5px;line-height:1.45">{{planSub}}</div>
+        <div style="height:6px;border-radius:999px;background:var(--sev-track);margin-top:9px;overflow:hidden"><div style="height:100%;width:{{planPct}};background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div>
+      </div>
+    </nav>
+
+    <main class="fyn-scroll" style="flex:1;min-width:0;overflow-y:auto;padding:28px 32px 48px">
+      <div style="max-width:1460px;margin:0 auto;animation:fynFade .3s ease" key="{{screen}}">
+
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px">
+          <div>
+            <div style="display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;color:var(--text-s);margin-bottom:7px"><span>{{head.root}}</span><span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px"></span><span style="color:var(--fyn-purple)">{{head.crumb}}</span></div>
+            <h1 style="margin:0;font-size:27px;font-weight:700;letter-spacing:-.025em;color:var(--text-h)">{{head.title}}</h1>
+            <p style="margin:7px 0 0;font-size:14px;color:var(--text-m);max-width:660px;line-height:1.5">{{head.desc}}</p>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="button" style="display:flex;align-items:center;gap:7px;height:42px;padding:0 17px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:var(--fyn-purple);color:var(--fyn-purple)"><span class="dashicons dashicons-update" style="font-size:16px;width:16px;height:16px"></span>Ververs</button>
+            <button type="button" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)" style-hover="transform:translateY(-2px);box-shadow:0 7px 20px rgba(143,57,172,.45)"><span class="{{head.actionIcon}}" style="font-size:16px;width:16px;height:16px"></span>{{head.action}}</button>
+          </div>
+        </div>
+
+        <!-- reusable stat tiles -->
+        <sc-if value="{{hasStats}}" hint-placeholder-val="{{true}}">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px">
+          <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+            <div style="position:relative;background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:18px 20px;overflow:hidden">
+              <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span></div>
+              <div style="font-size:30px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div>
+              <div style="margin-top:8px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><sc-if value="{{s.delta}}" hint-placeholder-val=""><span style="{{s.deltaStyle}}">{{s.delta}}</span></sc-if>{{s.sub}}</div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== DASHBOARD (provider) ===================== -->
+        <sc-if value="{{isDash}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px">
+            <sc-for list="{{breakdowns}}" as="bd" hint-placeholder-count="3">
+              <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px 24px">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="{{bd.iconCls}}" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">{{bd.title}}</h3></div>
+                <sc-for list="{{bd.rows}}" as="r" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--divide)"><div style="display:flex;align-items:center;gap:9px"><span style="{{r.dotStyle}}"></span><span style="font-size:13px;color:var(--text-b)">{{r.label}}</span></div><span style="font-size:13.5px;font-weight:700;color:var(--text-h)">{{r.count}}</span></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-admin-network" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Recente licenties</h3></div><a href="#" style="font-size:12.5px;font-weight:600;color:var(--fyn-purple)">Alle licenties →</a></div>
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:820px">
+              <thead><tr style="border-bottom:2px solid var(--divide)">
+                <th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Licentiesleutel</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Tier</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Toegewezen aan</th>
+                <th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Aangemaakt</th>
+              </tr></thead>
+              <tbody><sc-for list="{{recentLic}}" as="l" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px"><code style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--text-h);letter-spacing:.5px">{{l.key}}</code></td><td style="padding:13px 12px"><span style="{{l.tierStyle}}">{{l.tier}}</span></td><td style="padding:13px 12px"><span style="{{l.statusStyle}}">{{l.status}}</span></td><td style="padding:13px 12px;font-size:13px;color:var(--text-b)">{{l.assigned}}</td><td style="padding:13px 22px;text-align:right;font-size:12.5px;color:var(--text-m)">{{l.created}}</td></tr></sc-for></tbody>
+            </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== ALL LICENSES ===================== -->
+        <sc-if value="{{isLicenses}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:220px;height:40px;padding:0 13px;background:var(--card);border:1.5px solid var(--input-border);border-radius:9px"><span class="dashicons dashicons-search" style="font-size:15px;width:15px;height:15px;color:var(--text-s)"></span><input placeholder="Zoek op sleutel of e-mail…" style="flex:1;background:transparent;border:none;outline:none;color:var(--text-b);font-family:inherit;font-size:13px" /></div>
+            <sc-for list="{{licFilters}}" as="f" hint-placeholder-count="4"><div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 13px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);font-size:12.5px;font-weight:600;color:var(--text-b);cursor:pointer">{{f}}<span class="dashicons dashicons-arrow-down-alt2" style="font-size:12px;width:12px;height:12px;color:var(--text-m)"></span></div></sc-for>
+            <button type="button" style="height:40px;padding:0 15px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="border-color:var(--fyn-purple);color:var(--fyn-purple)"><span class="dashicons dashicons-download" style="font-size:15px;width:15px;height:15px"></span>Export CSV</button>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:1040px">
+              <thead><tr style="border-bottom:2px solid var(--divide)">
+                <th style="padding:12px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Licentiesleutel</th>
+                <th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Type</th>
+                <th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Tier</th>
+                <th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th>
+                <th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Platform</th>
+                <th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Toegewezen</th>
+                <th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Verloopt</th>
+                <th style="padding:12px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Acties</th>
+              </tr></thead>
+              <tbody><sc-for list="{{licenses}}" as="l" hint-placeholder-count="10"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)">
+                <td style="padding:12px 22px"><code style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--text-h);letter-spacing:.5px">{{l.key}}</code></td>
+                <td style="padding:12px 12px;font-size:12.5px;color:var(--text-b)">{{l.type}}</td>
+                <td style="padding:12px 12px"><span style="{{l.tierStyle}}">{{l.tier}}</span></td>
+                <td style="padding:12px 12px"><span style="{{l.statusStyle}}">{{l.status}}</span></td>
+                <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-b)"><span class="dashicons dashicons-{{l.platIcon}}" style="font-size:14px;width:14px;height:14px;color:var(--text-m)"></span>{{l.platform}}</span></td>
+                <td style="padding:12px 12px;font-size:12.5px;color:var(--text-b)">{{l.assigned}}</td>
+                <td style="padding:12px 12px;font-size:12.5px;color:var(--text-m)">{{l.expires}}</td>
+                <td style="padding:12px 22px"><div style="display:flex;gap:6px;justify-content:flex-end"><button type="button" style="height:30px;padding:0 11px;border-radius:7px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer">Features</button><button type="button" style="height:30px;padding:0 11px;border-radius:7px;border:1.5px solid var(--fyn-danger);background:transparent;color:var(--fyn-danger);font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer">Intrekken</button></div></td>
+              </tr></sc-for></tbody>
+            </table></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:1px solid var(--divide)"><span style="font-size:12.5px;color:var(--text-m)">1–10 van 1.284 licenties</span><div style="display:flex;gap:6px"><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-m);cursor:pointer">‹</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:none;background:var(--fyn-purple);color:#fff;cursor:pointer">1</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-b);cursor:pointer">2</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-b);cursor:pointer">3</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-m);cursor:pointer">›</button></div></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== TENANTS ===================== -->
+        <sc-if value="{{isTenants}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:220px;height:40px;padding:0 13px;background:var(--card);border:1.5px solid var(--input-border);border-radius:9px"><span class="dashicons dashicons-search" style="font-size:15px;width:15px;height:15px;color:var(--text-s)"></span><input placeholder="Zoek op domein of e-mail…" style="flex:1;background:transparent;border:none;outline:none;color:var(--text-b);font-family:inherit;font-size:13px" /></div>
+            <sc-for list="{{tenantFilters}}" as="f" hint-placeholder-count="3"><div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 13px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);font-size:12.5px;font-weight:600;color:var(--text-b);cursor:pointer">{{f}}<span class="dashicons dashicons-arrow-down-alt2" style="font-size:12px;width:12px;height:12px;color:var(--text-m)"></span></div></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+            <sc-for list="{{tenants}}" as="t" hint-placeholder-count="6">
+              <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                  <div style="width:42px;height:42px;border-radius:11px;background:var(--well);border:1px solid var(--well-border);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-admin-site" style="font-size:19px;width:19px;height:19px;color:var(--fyn-purple)"></span></div>
+                  <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:var(--text-h);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{t.domain}}</div><div style="font-size:12px;color:var(--text-m)">{{t.email}}</div></div>
+                  <span style="{{t.statusStyle}}">{{t.status}}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="{{t.tierStyle}}">{{t.tier}}</span><span style="font-size:12px;color:var(--text-s)">· {{t.platform}} · {{t.sites}} site(s)</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-m);margin-bottom:5px"><span>API-verbruik deze maand</span><span style="font-weight:700;color:var(--text-b)">{{t.usage}}</span></div>
+                <div style="height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{t.usagePct}};background:{{t.usageBar}}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== USAGE & COSTS ===================== -->
+        <sc-if value="{{isUsage}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;margin-bottom:18px;align-items:start">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-chart-area" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">API-verbruik — 30 dagen</h3></div><div style="display:flex;gap:14px;font-size:12px;color:var(--text-m)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#8F39AC"></span>API-calls</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#379FD3"></span>Kosten</span></div></div>
+              <svg viewBox="0 0 800 220" preserveAspectRatio="none" style="width:100%;height:210px">
+                <defs><linearGradient id="uf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F39AC" stop-opacity=".28"></stop><stop offset="1" stop-color="#8F39AC" stop-opacity="0"></stop></linearGradient><linearGradient id="ug" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8F39AC"></stop><stop offset="1" stop-color="#379FD3"></stop></linearGradient></defs>
+                <path d="M0,170 C90,150 150,120 240,130 C330,140 380,90 470,78 C560,66 620,50 800,36 L800,220 L0,220 Z" fill="url(#uf)"></path>
+                <path d="M0,170 C90,150 150,120 240,130 C330,140 380,90 470,78 C560,66 620,50 800,36" fill="none" stroke="url(#ug)" stroke-width="3"></path>
+                <path d="M0,196 C100,190 160,180 250,182 C360,184 420,160 520,150 C620,140 700,132 800,120" fill="none" stroke="#379FD3" stroke-width="2.5" stroke-dasharray="5 5"></path>
+              </svg>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-money-alt" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Kosten per provider</h3></div>
+              <sc-for list="{{costSplit}}" as="c" hint-placeholder-count="4"><div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:var(--text-b)">{{c.label}}</span><span style="font-weight:700;color:var(--text-h)">{{c.amount}}</span></div><div style="height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{c.pct}};background:{{c.bar}}"></div></div></div></sc-for>
+              <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--divide);display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:600;color:var(--text-b)">Totaal deze maand</span><span style="font-size:16px;font-weight:700;color:var(--fyn-purple)">€2.847</span></div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-chart-bar" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Top-verbruik per tenant</h3></div>
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:860px">
+              <thead><tr style="border-bottom:2px solid var(--divide)">
+                <th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Tenant</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Tier</th>
+                <th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">API-calls</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Limiet</th>
+                <th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Kosten</th>
+                <th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Marge</th>
+              </tr></thead>
+              <tbody><sc-for list="{{usageRows}}" as="u" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)">
+                <td style="padding:13px 22px"><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{u.domain}}</div><div style="font-size:11px;color:var(--text-s)">{{u.email}}</div></td>
+                <td style="padding:13px 12px"><span style="{{u.tierStyle}}">{{u.tier}}</span></td>
+                <td style="padding:13px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--text-b)">{{u.calls}}</td>
+                <td style="padding:13px 12px"><div style="display:flex;align-items:center;gap:8px"><div style="width:70px;height:6px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{u.pct}};background:{{u.bar}}"></div></div><span style="font-size:11.5px;color:var(--text-m)">{{u.pct}}</span></div></td>
+                <td style="padding:13px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{u.cost}}</td>
+                <td style="padding:13px 22px;text-align:right;font-size:13px;font-weight:700;color:{{u.marginCol}}">{{u.margin}}</td>
+              </tr></sc-for></tbody>
+            </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== SETTINGS ===================== -->
+        <sc-if value="{{isSettings}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;gap:4px;border-bottom:1px solid var(--divide);margin-bottom:22px;flex-wrap:wrap">
+            <sc-for list="{{setTabs}}" as="t" hint-placeholder-count="5"><button type="button" onClick="{{t.go}}" style="{{t.style}}">{{t.label}}</button></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:26px">
+              <h3 style="margin:0 0 4px;font-size:16px;font-weight:700;color:var(--text-h)">{{setPanel.title}}</h3>
+              <p style="margin:0 0 20px;font-size:13px;color:var(--text-m)">{{setPanel.desc}}</p>
+              <sc-for list="{{setPanel.fields}}" as="f" hint-placeholder-count="5">
+                <div style="margin-bottom:18px">
+                  <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">{{f.label}}</label>
+                  <sc-if value="{{f.isSelect}}" hint-placeholder-val=""><div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);font-size:13.5px;color:var(--text-b)">{{f.value}}<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div></sc-if>
+                  <sc-if value="{{f.isText}}" hint-placeholder-val=""><div style="height:44px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--text-b)">{{f.value}}</div></sc-if>
+                  <sc-if value="{{f.isToggle}}" hint-placeholder-val=""><div style="display:flex;align-items:center;gap:11px"><div style="{{f.track}}"><div style="{{f.knob}}"></div></div><span style="font-size:13px;color:var(--text-m)">{{f.value}}</span></div></sc-if>
+                  <sc-if value="{{f.hint}}" hint-placeholder-val=""><div style="font-size:11.5px;color:var(--text-s);margin-top:6px">{{f.hint}}</div></sc-if>
+                </div>
+              </sc-for>
+              <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--divide)"><button type="button" style="height:42px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)">Instellingen opslaan</button><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Verbinding testen</button></div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-info" style="font-size:17px;width:17px;height:17px;color:var(--fyn-blue)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Status</h3></div>
+              <sc-for list="{{setStatus}}" as="s" hint-placeholder-count="4"><div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--divide)"><span style="font-size:12.5px;color:var(--text-b)">{{s.label}}</span><span style="{{s.style}}">{{s.value}}</span></div></sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AGENCY DASHBOARD ===================== -->
+        <sc-if value="{{isAgencyDash}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;background:linear-gradient(135deg,#8F39AC,#379FD3);border-radius:14px;margin-bottom:18px;box-shadow:0 8px 22px rgba(143,57,172,.3);flex-wrap:wrap">
+            <div><div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Welkom terug</div><div style="font-size:21px;font-weight:700;color:#fff">Acme Digital Agency</div><div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:3px">Agency-plan · 50 licenties · 38 actief</div></div>
+            <div style="display:flex;gap:12px"><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:none;background:rgba(255,255,255,.95);color:#8F39AC;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">+ Genereer licentie</button><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer">Extra licenties kopen</button></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-groups" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Licentieverdeling</h3></div>
+              <div style="display:flex;align-items:center;gap:24px"><div style="position:relative;width:130px;height:130px;flex:none"><svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--sev-track)" stroke-width="14"></circle><circle cx="60" cy="60" r="50" fill="none" stroke="url(#ug2)" stroke-width="14" stroke-dasharray="314" stroke-dashoffset="75"></circle><defs><linearGradient id="ug2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8F39AC"></stop><stop offset="1" stop-color="#379FD3"></stop></linearGradient></defs></svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:28px;font-weight:700;color:var(--text-h);line-height:1">76%</span><span style="font-size:10.5px;color:var(--text-m)">benut</span></div></div>
+                <div style="flex:1"><sc-for list="{{agencyDist}}" as="d" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-top:1px solid var(--divide)"><div style="display:flex;align-items:center;gap:8px"><span style="{{d.dotStyle}}"></span><span style="font-size:13px;color:var(--text-b)">{{d.label}}</span></div><span style="font-size:13.5px;font-weight:700;color:var(--text-h)">{{d.count}}</span></div></sc-for></div>
+              </div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-money-alt" style="font-size:18px;width:18px;height:18px;color:var(--fyn-success)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Maandelijkse omzet</h3></div>
+              <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:6px"><span style="font-size:34px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">€6.840</span><span style="padding:2px 8px;border-radius:6px;background:var(--fyn-success-light);color:#047857;font-size:12px;font-weight:700;margin-bottom:4px">+12%</span></div>
+              <div style="font-size:12.5px;color:var(--text-m);margin-bottom:16px">Terugkerende omzet uit doorverkochte licenties</div>
+              <svg viewBox="0 0 320 90" preserveAspectRatio="none" style="width:100%;height:80px"><defs><linearGradient id="agf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10b981" stop-opacity=".3"></stop><stop offset="1" stop-color="#10b981" stop-opacity="0"></stop></linearGradient></defs><path d="M0,70 C40,66 60,54 100,50 C140,46 160,34 200,30 C240,26 280,18 320,10 L320,90 L0,90 Z" fill="url(#agf)"></path><path d="M0,70 C40,66 60,54 100,50 C140,46 160,34 200,30 C240,26 280,18 320,10" fill="none" stroke="#10b981" stroke-width="2.5"></path></svg>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden;margin-top:18px">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-admin-multisite" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Recente klantsites</h3></div><a href="#" style="font-size:12.5px;font-weight:600;color:var(--fyn-purple)">Alle tenants →</a></div>
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:760px">
+              <thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Klantsite</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Tier</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Verbonden</th></tr></thead>
+              <tbody><sc-for list="{{agencyTenants}}" as="t" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{t.domain}}</td><td style="padding:13px 12px"><span style="{{t.tierStyle}}">{{t.tier}}</span></td><td style="padding:13px 12px"><span style="{{t.statusStyle}}">{{t.status}}</span></td><td style="padding:13px 22px;text-align:right;font-size:12.5px;color:var(--text-m)">{{t.connected}}</td></tr></sc-for></tbody>
+            </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== GENERATE KEYS ===================== -->
+        <sc-if value="{{isGenerate}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:26px">
+            <h3 style="margin:0 0 4px;font-size:16px;font-weight:700;color:var(--text-h)">Nieuwe licentiesleutels</h3>
+            <p style="margin:0 0 20px;font-size:13px;color:var(--text-m)">Genereer tot 100 licenties tegelijk met tier-specifieke limieten.</p>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+              <sc-for list="{{genFields}}" as="f" hint-placeholder-count="8"><div><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">{{f.label}}</label><div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);font-size:13.5px;color:var(--text-b)">{{f.value}}<sc-if value="{{f.isSelect}}" hint-placeholder-val=""><span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></sc-if></div></div></sc-for>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--divide)"><button type="button" style="height:44px;padding:0 22px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35);display:flex;align-items:center;gap:8px"><span class="dashicons dashicons-admin-network" style="font-size:16px;width:16px;height:16px"></span>Genereer licentiesleutels</button></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-star-filled" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Tiers</h3></div>
+            <sc-for list="{{genTiers}}" as="t" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--divide)"><span style="{{t.style}}">{{t.name}}</span><div style="flex:1;min-width:0"><div style="font-size:11.5px;color:var(--text-m)">{{t.spec}}</div></div><span style="font-size:13.5px;font-weight:700;color:var(--text-h)">{{t.price}}</span></div></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AGENCY ACCOUNTS ===================== -->
+        <sc-if value="{{isAgencies}}" hint-placeholder-val="">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+          <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:860px">
+            <thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:12px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Agency</th><th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Quota-benutting</th><th style="padding:12px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Omzet/mnd</th><th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th><th style="padding:12px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+            <tbody><sc-for list="{{agencyRows}}" as="a" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)">
+              <td style="padding:14px 22px"><div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:10px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-groups" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span></div><div><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{a.name}}</div><div style="font-size:11px;color:var(--text-s)">{{a.email}}</div></div></div></td>
+              <td style="padding:14px 12px"><div style="display:flex;align-items:center;gap:10px"><div style="width:90px;height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{a.pct}};background:{{a.bar}}"></div></div><span style="font-size:12px;color:var(--text-m)">{{a.used}}/{{a.quota}}</span></div></td>
+              <td style="padding:14px 12px;text-align:right;font-size:13.5px;font-weight:700;color:var(--text-h)">{{a.revenue}}</td>
+              <td style="padding:14px 12px"><span style="{{a.statusStyle}}">{{a.status}}</span></td>
+              <td style="padding:14px 22px;text-align:right"><button type="button" style="height:30px;padding:0 13px;border-radius:7px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Beheer</button></td>
+            </tr></sc-for></tbody>
+          </table></div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== CLIENT VERSIONS ===================== -->
+        <sc-if value="{{isVersions}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-update" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Versiedistributie</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Versie</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Omschrijving</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Sites</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th></tr></thead>
+              <tbody><sc-for list="{{versionRows}}" as="v" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px"><code style="font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:var(--text-h)">{{v.ver}}</code></td><td style="padding:14px 12px;font-size:13px;color:var(--text-b)">{{v.label}}</td><td style="padding:14px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--text-b)">{{v.sites}}</td><td style="padding:14px 22px;text-align:right"><span style="{{v.statusStyle}}">{{v.status}}</span></td></tr></sc-for></tbody>
+            </table>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-upload" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Nieuwe versie uitrollen</h3></div>
+            <p style="margin:0 0 14px;font-size:12.5px;color:var(--text-m);line-height:1.5">Upload een plugin-zip en kies of de update automatisch naar tenants wordt uitgerold.</p>
+            <div style="border:2px dashed var(--input-border);border-radius:11px;padding:24px;text-align:center;margin-bottom:14px"><span class="dashicons dashicons-media-archive" style="font-size:28px;width:28px;height:28px;color:var(--text-s)"></span><div style="font-size:12.5px;color:var(--text-m);margin-top:8px">Sleep plugin.zip hierheen</div></div>
+            <button type="button" style="width:100%;height:42px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Upload & publiceer</button>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== REVENUE ===================== -->
+        <sc-if value="{{isRevenue}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:20px"><span class="dashicons dashicons-chart-line" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">MRR-groei — 12 maanden</h3></div>
+              <div style="display:flex;align-items:flex-end;gap:8px;height:180px">
+                <sc-for list="{{revMonths}}" as="m" hint-placeholder-count="12"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end"><div style="width:100%;max-width:34px;height:{{m.h}};background:linear-gradient(180deg,#8F39AC,#379FD3);border-radius:6px 6px 0 0"></div><span style="font-size:10.5px;color:var(--text-s)">{{m.label}}</span></div></sc-for>
+              </div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-chart-pie" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Omzet per tier</h3></div>
+              <sc-for list="{{revByTier}}" as="c" hint-placeholder-count="4"><div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:var(--text-b)">{{c.label}}</span><span style="font-weight:700;color:var(--text-h)">{{c.amount}}</span></div><div style="height:8px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{c.pct}};background:{{c.bar}}"></div></div></div></sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== COSTS ===================== -->
+        <sc-if value="{{isCosts}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-money-alt" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Kosten per model</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Model</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Gebruik</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Kosten</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Aandeel</th></tr></thead>
+              <tbody><sc-for list="{{costByModel}}" as="c" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px"><code style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--text-h)">{{c.model}}</code></td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-m)">{{c.use}}</td><td style="padding:13px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--text-b)">{{c.cost}}</td><td style="padding:13px 22px;text-align:right;font-size:13px;color:var(--text-b)">{{c.pct}}</td></tr></sc-for></tbody>
+            </table>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-chart-pie" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Kosten per tier</h3></div>
+            <sc-for list="{{costByTier}}" as="c" hint-placeholder-count="4"><div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:var(--text-b)">{{c.label}}</span><span style="font-weight:700;color:var(--text-h)">{{c.amount}}</span></div><div style="height:8px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{c.pct}};background:{{c.bar}}"></div></div></div></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== CHECKOUT ===================== -->
+        <sc-if value="{{isCheckout}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px"><span class="dashicons dashicons-cart" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Zichtbare tiers in checkout</h3></div>
+            <p style="margin:0 0 18px;font-size:13px;color:var(--text-m)">Bepaal welke abonnementen klanten zien op de self-serve checkout.</p>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+              <sc-for list="{{checkoutTiers}}" as="t" hint-placeholder-count="4"><div style="{{t.cardStyle}}">
+                <sc-if value="{{t.featured}}" hint-placeholder-val=""><span style="position:absolute;top:-10px;left:18px;padding:2px 10px;border-radius:999px;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Populair</span></sc-if>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:15px;font-weight:700;color:var(--text-h)">{{t.name}}</span><div style="{{t.toggle}}"><div style="{{t.knob}}"></div></div></div>
+                <div style="font-size:24px;font-weight:700;color:var(--fyn-purple);letter-spacing:-.02em">{{t.price}}<span style="font-size:12px;color:var(--text-m);font-weight:500">/mnd</span></div>
+                <div style="font-size:12px;color:var(--text-m);margin-top:8px;line-height:1.45">{{t.spec}}</div>
+              </div></sc-for>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-admin-settings" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Checkout-instellingen</h3></div>
+            <sc-for list="{{checkoutSettings}}" as="s" hint-placeholder-count="5"><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--divide)"><span style="font-size:12.5px;color:var(--text-b)">{{s.label}}</span><span style="font-size:12.5px;font-weight:700;color:var(--text-h)">{{s.value}}</span></div></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== BOOKKEEPING / INVOICES ===================== -->
+        <sc-if value="{{isAinvoices}}" hint-placeholder-val="">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+          <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-media-text" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Facturen</h3></div><button type="button" style="height:34px;padding:0 14px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px"><span class="dashicons dashicons-download" style="font-size:14px;width:14px;height:14px"></span>Export</button></div>
+          <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:760px">
+            <thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Factuurnr.</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Klant</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Datum</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bedrag</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+            <tbody><sc-for list="{{invoiceRows}}" as="i" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px"><code style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--text-h)">{{i.num}}</code></td><td style="padding:13px 12px;font-size:13px;font-weight:600;color:var(--text-h)">{{i.client}}</td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-m)">{{i.date}}</td><td style="padding:13px 12px;text-align:right;font-size:13px;font-weight:700;color:var(--text-h)">{{i.amount}}</td><td style="padding:13px 12px"><span style="{{i.statusStyle}}">{{i.status}}</span></td><td style="padding:13px 22px;text-align:right"><button type="button" style="height:30px;padding:0 12px;border-radius:7px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">PDF</button></td></tr></sc-for></tbody>
+          </table></div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== SUPPORT ===================== -->
+        <sc-if value="{{isSupport}}" hint-placeholder-val="">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+          <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:820px">
+            <thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:12px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Onderwerp</th><th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Van</th><th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Prioriteit</th><th style="padding:12px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th><th style="padding:12px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Leeftijd</th></tr></thead>
+            <tbody><sc-for list="{{ticketRows}}" as="t" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px"><div style="display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;border-radius:9px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-format-chat" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{t.subj}}</div><div style="font-size:11px;color:var(--text-s)">{{t.id}}</div></div></div></td><td style="padding:14px 12px;font-size:12.5px;color:var(--text-b)">{{t.from}}</td><td style="padding:14px 12px"><span style="{{t.prioStyle}}">{{t.prio}}</span></td><td style="padding:14px 12px"><span style="{{t.statusStyle}}">{{t.status}}</span></td><td style="padding:14px 22px;text-align:right;font-size:12.5px;color:var(--text-m)">{{t.age}}</td></tr></sc-for></tbody>
+          </table></div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== FEEDBACK ===================== -->
+        <sc-if value="{{isFeedback}}" hint-placeholder-val="">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{feedbackRows}}" as="f" hint-placeholder-count="5"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:18px 20px;display:flex;align-items:center;gap:16px">
+            <div style="flex:1;min-width:0"><div style="font-size:14px;color:var(--text-h);font-weight:500;margin-bottom:5px">"{{f.text}}"</div><div style="font-size:11.5px;color:var(--text-s)">{{f.from}}</div></div>
+            <div style="font-size:15px;color:#f59e0b;letter-spacing:1px;flex:none">{{f.stars}}</div>
+            <span style="{{f.tagStyle}}">{{f.tag}}</span>
+          </div></sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== GEO SCAN ===================== -->
+        <sc-if value="{{isGeoscan}}" hint-placeholder-val="">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+          <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-visibility" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">GEO-scans per site</h3></div>
+          <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:820px">
+            <thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Site</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Modellen</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zichtbaarheid</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Laatste scan</th></tr></thead>
+            <tbody><sc-for list="{{geoRows}}" as="g" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{g.domain}}</td><td style="padding:13px 12px;font-size:12px;color:var(--text-m)">{{g.models}}</td><td style="padding:13px 12px;text-align:center;font-size:14px;font-weight:700;color:var(--fyn-purple)">{{g.vis}}</td><td style="padding:13px 12px"><span style="{{g.statusStyle}}">{{g.status}}</span></td><td style="padding:13px 22px;text-align:right;font-size:12.5px;color:var(--text-m)">{{g.when}}</td></tr></sc-for></tbody>
+          </table></div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== EMAIL TEMPLATES ===================== -->
+        <sc-if value="{{isEmails}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-email-alt" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Transactionele templates</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Template</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Trigger</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+              <tbody><sc-for list="{{emailTemplates}}" as="e" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px"><div style="display:flex;align-items:center;gap:11px"><div style="width:34px;height:34px;border-radius:8px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-email" style="font-size:15px;width:15px;height:15px;color:var(--fyn-purple)"></span></div><span style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{e.name}}</span></div></td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-m)">{{e.trigger}}</td><td style="padding:13px 12px"><span style="{{e.statusStyle}}">{{e.status}}</span></td><td style="padding:13px 22px;text-align:right"><button type="button" style="height:30px;padding:0 12px;border-radius:7px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Bewerk</button></td></tr></sc-for></tbody>
+            </table>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-controls-repeat" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Automations</h3></div>
+            <sc-for list="{{emailAutomations}}" as="a" hint-placeholder-count="3"><div style="padding:12px 0;border-top:1px solid var(--divide)"><div style="font-size:13px;font-weight:600;color:var(--text-h)">{{a.name}}</div><div style="font-size:11.5px;color:var(--text-m);margin-top:2px">{{a.detail}}</div><div style="font-size:11px;color:var(--fyn-purple);font-weight:600;margin-top:4px">{{a.sent}}</div></div></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== CHATBOT ===================== -->
+        <sc-if value="{{isChatbot}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-admin-settings" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Chatbot-configuratie</h3></div>
+            <sc-for list="{{chatSettings}}" as="s" hint-placeholder-count="5"><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--divide)"><span style="font-size:13px;color:var(--text-b)">{{s.label}}</span><span style="font-size:12.5px;font-weight:700;color:var(--text-h)">{{s.value}}</span></div></sc-for>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:20px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-format-chat" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Voorbeeld</h3></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{chatPreview}}" as="m" hint-placeholder-count="4"><div style="{{m.row}}"><div style="{{m.bubble}}">{{m.text}}</div></div></sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AI MODELS ===================== -->
+        <sc-if value="{{isModels}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{modelProviders}}" as="p" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:18px"><div style="width:42px;height:42px;border-radius:11px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-superhero-alt" style="font-size:19px;width:19px;height:19px;color:var(--fyn-purple)"></span></div><div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text-h)">{{p.name}}</div><div style="font-size:11.5px;color:var(--text-m)">{{p.models}}</div></div><span style="display:inline-block;padding:3px 10px;border-radius:999px;background:var(--fyn-success-light);color:#047857;font-size:11px;font-weight:700">{{p.status}}</span></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-randomize" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Model-routing per functie</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Functie</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Model</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Niveau</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+              <tbody><sc-for list="{{modelRouting}}" as="r" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.feature}}</td><td style="padding:13px 12px"><code style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--text-b)">{{r.model}}</code></td><td style="padding:13px 12px"><span style="{{r.tierStyle}}">{{r.tier}}</span></td><td style="padding:13px 22px;text-align:right"><button type="button" style="height:30px;padding:0 12px;border-radius:7px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Wijzig</button></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== WHITE-LABEL ===================== -->
+        <sc-if value="{{isWhitelabel}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:26px">
+            <h3 style="margin:0 0 4px;font-size:16px;font-weight:700;color:var(--text-h)">White-label-branding</h3>
+            <p style="margin:0 0 20px;font-size:13px;color:var(--text-m)">Je eigen merk tonen aan klanten in de client-plugin.</p>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+              <sc-for list="{{wlFields}}" as="f" hint-placeholder-count="6"><div><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">{{f.label}}</label>
+                <sc-if value="{{f.isText}}" hint-placeholder-val=""><div style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);font-size:13.5px;color:var(--text-b)">{{f.value}}</div></sc-if>
+                <sc-if value="{{f.isColor}}" hint-placeholder-val=""><div style="height:44px;display:flex;align-items:center;gap:11px;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg)"><span style="width:22px;height:22px;border-radius:6px;background:{{f.color}};border:1px solid var(--well-border)"></span><span style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--text-b)">{{f.value}}</span></div></sc-if>
+                <sc-if value="{{f.isToggle}}" hint-placeholder-val=""><div style="display:flex;align-items:center;gap:11px;height:44px"><div style="{{f.track}}"><div style="{{f.knob}}"></div></div><span style="font-size:13px;color:var(--text-m)">{{f.value}}</span></div></sc-if>
+              </div></sc-for>
+            </div>
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--divide)"><button type="button" style="height:42px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)">White-label opslaan</button></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:0;overflow:hidden">
+            <div style="padding:14px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);border-bottom:1px solid var(--divide)">Voorbeeld — client-header</div>
+            <div style="padding:20px"><div style="display:flex;align-items:center;gap:12px;height:52px;padding:0 16px;background:linear-gradient(135deg,#2A1533,#132A38);border-radius:10px"><div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#379FD3,#8F39AC);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-chart-line" style="font-size:17px;width:17px;height:17px;color:#fff"></span></div><div style="display:flex;flex-direction:column;line-height:1.1"><span style="font-size:14px;font-weight:700;color:#fff">Acme SEO Suite</span><span style="font-size:9.5px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em">Powered by Acme</span></div></div>
+              <div style="margin-top:16px;font-size:12px;color:var(--text-m);line-height:1.5">Klanten zien jouw merknaam, logo en kleuren — de Fyndable-naam is volledig verborgen.</div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AGENCY: EXTRA LICENSES ===================== -->
+        <sc-if value="{{isAextra}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+          <sc-for list="{{packages}}" as="p" hint-placeholder-count="4"><div style="{{p.cardStyle}}">
+            <sc-if value="{{p.featured}}" hint-placeholder-val=""><span style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:3px 12px;border-radius:999px;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Beste waarde</span></sc-if>
+            <div style="font-size:15px;font-weight:700;color:var(--text-h);margin-bottom:10px">{{p.name}}</div>
+            <div style="font-size:30px;font-weight:700;color:var(--fyn-purple);letter-spacing:-.02em;line-height:1">{{p.price}}</div>
+            <div style="font-size:12px;color:var(--text-m);margin-top:8px">{{p.per}}</div>
+            <button type="button" style="margin-top:18px;height:40px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Koop pakket</button>
+          </div></sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AGENCY: MY ACCOUNT ===================== -->
+        <sc-if value="{{isAaccount}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:26px">
+            <h3 style="margin:0 0 20px;font-size:16px;font-weight:700;color:var(--text-h)">Bedrijfsgegevens</h3>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+              <sc-for list="{{accountFields}}" as="f" hint-placeholder-count="5"><div><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">{{f.label}}</label><div style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);font-size:13.5px;color:var(--text-b)">{{f.value}}</div></div></sc-for>
+            </div>
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--divide)"><button type="button" style="height:42px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)">Gegevens opslaan</button></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-admin-users" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Teamleden</h3></div>
+            <sc-for list="{{teamMembers}}" as="m" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--divide)"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#8F39AC,#379FD3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex:none">{{m.initials}}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text-h)">{{m.name}}</div><div style="font-size:11px;color:var(--text-s)">{{m.email}}</div></div><span style="{{m.roleStyle}}">{{m.role}}</span></div></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1360,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { theme:'light', portal:'provider', screen:'dashboard', setTab:'api', prevProvider:'dashboard', prevAgency:'adash' };
+
+  providerGroups() {
+    return [
+      { label:'Overzicht', items:[['dashboard','Dashboard','chart-bar']] },
+      { label:'Licenties', items:[
+        ['generate','Genereer keys','admin-network'],
+        ['licenses','Alle licenties','list-view'],
+        ['agencies','Agency-accounts','groups'],
+        ['versions','Client-versies','update'],
+      ]},
+      { label:'Klanten', items:[
+        ['tenants','Tenants','admin-multisite'],
+        ['usage','Gebruik & rapporten','chart-area'],
+      ]},
+      { label:'Financieel', items:[
+        ['revenue','Omzet','chart-line'],
+        ['costs','Kosten-dashboard','money-alt'],
+        ['checkout','Checkout','cart'],
+        ['bookkeeping','Boekhouding','media-spreadsheet'],
+      ]},
+      { label:'Groei & support', items:[
+        ['support','Support','sos'],
+        ['feedback','Feedback','format-status'],
+        ['geoscan','GEO Scans','visibility'],
+        ['emails','E-mail templates','email-alt'],
+        ['chatbot','Chatbot','format-chat'],
+      ]},
+      { label:'Systeem', items:[
+        ['models','AI-modellen','superhero-alt'],
+        ['whitelabel','White-label','art'],
+        ['settings','Instellingen','admin-settings'],
+      ]},
+    ];
+  }
+  agencyGroups() {
+    return [
+      { label:'Overzicht', items:[['adash','Dashboard','chart-bar']] },
+      { label:'Licenties', items:[
+        ['agenerate','Genereer licenties','admin-network'],
+        ['alicenses','Alle licenties','list-view'],
+        ['aextra','Extra licenties','plus-alt2'],
+      ]},
+      { label:'Klanten', items:[
+        ['atenants','Tenants','admin-multisite'],
+        ['ausage','Gebruik & kosten','chart-area'],
+      ]},
+      { label:'Financieel', items:[
+        ['ainvoices','Facturen','media-text'],
+        ['aaccount','Mijn account','admin-users'],
+      ]},
+      { label:'Support', items:[
+        ['asupport','Support','sos'],
+        ['awl','White-label','art'],
+      ]},
+    ];
+  }
+
+  heads() {
+    return {
+      dashboard:['Provider','License Management','Licentiebeheer-dashboard','Overzicht van je volledige licentieportefeuille, tenants en API-gebruik.','Genereer keys','dashicons dashicons-admin-network'],
+      generate:['Provider','Genereer keys','Genereer licentiesleutels','Maak losse of batch-licenties aan met tier, limieten en vervaldatum.','Genereer','dashicons dashicons-admin-network'],
+      licenses:['Provider','Alle licenties','Alle licentiesleutels','Doorzoek, filter en beheer elke uitgegeven licentie.','Genereer keys','dashicons dashicons-admin-network'],
+      agencies:['Provider','Agency-accounts','Agency-accounts','Beheer reseller-agencies, hun quota en doorverkochte licenties.','Nieuwe agency','dashicons dashicons-groups'],
+      versions:['Provider','Client-versies','Client-versies','Beheer welke plugin-versie elke tenant draait en rol updates uit.','Upload versie','dashicons dashicons-update'],
+      tenants:['Provider','Tenants','Tenant-beheer','Alle klantsites die aan een licentie zijn gekoppeld.','Export','dashicons dashicons-admin-multisite'],
+      usage:['Provider','Gebruik & rapporten','Gebruik & API-rapporten','API-verbruik, kosten en marges per tenant en provider.','Export rapport','dashicons dashicons-chart-area'],
+      revenue:['Provider','Omzet','Omzet-dashboard','MRR, ARR, churn en omzet per tier over de tijd.','Export','dashicons dashicons-chart-line'],
+      costs:['Provider','Kosten-dashboard','Kosten-dashboard','AI- en SERP-kosten per provider, model en tier — met marge.','Export','dashicons dashicons-money-alt'],
+      checkout:['Provider','Checkout','Self-serve checkout','Configureer de publieke checkout-pagina en zichtbare tiers.','Bekijk pagina','dashicons dashicons-cart'],
+      bookkeeping:['Provider','Boekhouding','Boekhouding & facturen','Facturen, BTW-overzichten en de factuursjabloon.','Nieuwe factuur','dashicons dashicons-media-spreadsheet'],
+      support:['Provider','Support','Support-tickets','Beheer inkomende supporttickets van alle tenants en agencies.','Nieuw ticket','dashicons dashicons-sos'],
+      feedback:['Provider','Feedback','Klantfeedback','Verzamelde feedback, feature-verzoeken en NPS-scores.','Export','dashicons dashicons-format-status'],
+      geoscan:['Provider','GEO Scans','GEO Scan-beheer','AI-zichtbaarheidsscans (ChatGPT, Gemini, Perplexity) per site.','Nieuwe scan','dashicons dashicons-visibility'],
+      emails:['Provider','E-mail templates','E-mail templates','Transactionele e-mails en automations met block-editor.','Nieuwe template','dashicons dashicons-email-alt'],
+      chatbot:['Provider','Chatbot','Support-chatbot','Configureer de AI-supportchatbot en de kennisbron.','Instellingen','dashicons dashicons-format-chat'],
+      models:['Provider','AI-modellen','AI-model-routing','Koppel tiers aan AI-modellen en beheer de routing.','Voeg model toe','dashicons dashicons-superhero-alt'],
+      whitelabel:['Provider','White-label','White-label-instellingen','Merknaam, logo, kleuren en support-e-mail voor resellers.','Opslaan','dashicons dashicons-art'],
+      settings:['Provider','Instellingen','SaaS-instellingen','API-credentials, DataForSEO, beeldgeneratie, integraties en e-mail.','Opslaan','dashicons dashicons-admin-settings'],
+      // agency
+      adash:['Agency','Dashboard','Agency-dashboard','Je doorverkochte licenties, klantsites en omzet in één overzicht.','Genereer licentie','dashicons dashicons-admin-network'],
+      agenerate:['Agency','Genereer licenties','Genereer licenties','Maak licenties aan uit je beschikbare quota.','Genereer','dashicons dashicons-admin-network'],
+      alicenses:['Agency','Alle licenties','Je licenties','Alle licenties die je hebt uitgegeven aan klanten.','Genereer','dashicons dashicons-admin-network'],
+      aextra:['Agency','Extra licenties','Extra licenties kopen','Breid je quota uit met extra licentiepakketten.','Koop pakket','dashicons dashicons-plus-alt2'],
+      atenants:['Agency','Tenants','Je klantsites','Alle WordPress-sites van je klanten met status en gebruik.','Export','dashicons dashicons-admin-multisite'],
+      ausage:['Agency','Gebruik & kosten','Gebruik & kosten','API-verbruik en kosten over al je klantsites.','Export','dashicons dashicons-chart-area'],
+      ainvoices:['Agency','Facturen','Facturen','Je facturen en betalingen aan Fyndable.','Download alle','dashicons dashicons-media-text'],
+      aaccount:['Agency','Mijn account','Mijn account','Bedrijfsgegevens, abonnement en gebruikersrollen.','Opslaan','dashicons dashicons-admin-users'],
+      asupport:['Agency','Support','Support','Open een ticket of doorzoek de kennisbank.','Nieuw ticket','dashicons dashicons-sos'],
+      awl:['Agency','White-label','White-label','Jouw merk tonen aan je klanten in de client-plugin.','Opslaan','dashicons dashicons-art'],
+    };
+  }
+
+  b(bg,fg){ return {display:'inline-block',padding:'3px 11px',borderRadius:'999px',background:bg,color:fg,fontSize:'11.5px',fontWeight:700}; }
+  tierBadge(t){
+    const m={ Trial:['var(--fyn-info-light)','#1d4ed8'], Starter:['var(--fyn-info-light)','#1d4ed8'], Professional:['var(--fyn-accent-light)','#9333ea'], Business:['var(--fyn-purple-tint)','#8F39AC'], Agency:['var(--fyn-success-light)','#047857'], Free:['var(--sev-track)','var(--text-m)'], Lifetime:['var(--fyn-warning-light)','#92700a'] };
+    const c=m[t]||['var(--sev-track)','var(--text-m)']; return this.b(c[0],c[1]);
+  }
+  statusBadge(s){
+    const m={ Actief:['var(--fyn-success-light)','#047857'], Verbonden:['var(--fyn-info-light)','#1d4ed8'], Ingetrokken:['var(--fyn-danger-light)','#b91c1c'], Verlopen:['var(--sev-track)','var(--text-m)'], Inactief:['var(--sev-track)','var(--text-m)'], Opgeschort:['var(--fyn-warning-light)','#92700a'] };
+    const c=m[s]||['var(--sev-track)','var(--text-m)']; return this.b(c[0],c[1]);
+  }
+  dot(c){ return {width:'9px',height:'9px',borderRadius:'50%',background:c,flex:'none'}; }
+
+  renderVals() {
+    const { theme, portal, screen, setTab } = this.state;
+    const H = this.heads();
+    const h = H[screen] || H.dashboard;
+    const G = 'linear-gradient(90deg,#8F39AC,#379FD3)';
+    const groups = portal==='provider' ? this.providerGroups() : this.agencyGroups();
+
+    const base = { display:'flex', alignItems:'center', gap:'11px', width:'100%', padding:'9px 11px', margin:'1px 0', border:'none', borderRadius:'9px', background:'transparent', color:'var(--nav-fg)', fontFamily:'Outfit,sans-serif', fontSize:'13.5px', fontWeight:600, cursor:'pointer', lineHeight:1 };
+    const activeStyle = { ...base, background:'linear-gradient(135deg,#8F39AC,#379FD3)', color:'#fff', boxShadow:'0 5px 14px rgba(143,57,172,.32)' };
+    const hoverStyle = { background:'var(--nav-hover)', color:'var(--text-h)' };
+    const nav = groups.map(g=>({ label:g.label, items:g.items.map(([id,label,icon])=>{
+      const active=id===screen;
+      return { id,label, iconCls:'dashicons dashicons-'+icon, go:()=>this.go(id), style:active?activeStyle:base, hover:active?activeStyle:hoverStyle,
+        badge: id==='support'||id==='asupport'?'3':(id==='feedback'?'7':''),
+        badgeStyle:{flex:'none',minWidth:'18px',height:'18px',padding:'0 5px',borderRadius:'999px',background:active?'rgba(255,255,255,.25)':'var(--fyn-danger)',color:'#fff',fontSize:'10.5px',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'} };
+    })}));
+
+    const tabBtn=(on)=>({padding:'6px 14px',borderRadius:'7px',border:'none',background:on?'rgba(255,255,255,.9)':'transparent',color:on?'#2A1533':'rgba(255,255,255,.7)',fontFamily:'Outfit,sans-serif',fontSize:'12.5px',fontWeight:700,cursor:'pointer'});
+
+    const up={padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-success-light)',color:'#047857',fontSize:'11.5px',fontWeight:700};
+    const down={padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-danger-light)',color:'#b91c1c',fontSize:'11.5px',fontWeight:700};
+    const info={padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-info-light)',color:'#1d4ed8',fontSize:'11.5px',fontWeight:700};
+    const tile=(label,value,delta,ds,sub,icon)=>({label,value,delta:delta||'',deltaStyle:ds||{},sub:sub||'',iconCls:'dashicons dashicons-'+icon});
+
+    let stats=[], hasStats=false;
+    if(screen==='dashboard'){ hasStats=true; stats=[ tile('Totaal licenties','1.284','+42',up,'deze maand','admin-network'), tile('Vandaag aangemaakt','18',null,null,'licenties','plus-alt2'), tile('Deze maand','142','+12%',up,'','calendar-alt'), tile('Actieve tenants','312','+8',up,'','admin-multisite') ]; }
+    else if(screen==='licenses'){ hasStats=true; stats=[ tile('Actief','842',null,null,'licenties','yes-alt'), tile('Verbonden','312',null,null,'in gebruik','admin-links'), tile('Ingetrokken','94',null,null,'','dismiss'), tile('Verlopen','36',null,null,'','clock') ]; }
+    else if(screen==='tenants'){ hasStats=true; stats=[ tile('Actieve tenants','312','+8',up,'','admin-multisite'), tile('Trial','47',null,null,'in proefperiode','clock'), tile('Opgeschort','9',null,null,'','warning'), tile('Gem. gebruik','58%',null,null,'van limiet','chart-area') ]; }
+    else if(screen==='usage'){ hasStats=true; stats=[ tile('API-calls','1,24M','+9%',up,'deze maand','chart-area'), tile('Totale kosten','€2.847','+6%',down,'AI + SERP','money-alt'), tile('Omzet','€18.640','+12%',up,'','chart-line'), tile('Brutomarge','84,7%','+1,2%',up,'','awards') ]; }
+    else if(screen==='adash'){ hasStats=true; stats=[ tile('Je licenties','50',null,null,'in quota','admin-network'), tile('Actief','38','+3',up,'klantsites','admin-multisite'), tile('Beschikbaar','12',null,null,'ongebruikt','plus-alt2'), tile('MRR','€6.840','+12%',up,'','money-alt') ]; }
+    else if(screen==='alicenses'){ hasStats=true; stats=[ tile('Je licenties','50',null,null,'quota','admin-network'), tile('Actief','38',null,null,'in gebruik','yes-alt'), tile('Beschikbaar','12',null,null,'','plus-alt2'), tile('Verlopen','2',null,null,'','clock') ]; }
+    else if(screen==='atenants'){ hasStats=true; stats=[ tile('Klantsites','38','+3',up,'','admin-multisite'), tile('Actief','35',null,null,'','yes-alt'), tile('Opgeschort','1',null,null,'','warning'), tile('Gem. gebruik','54%',null,null,'van limiet','chart-area') ]; }
+    else if(screen==='ausage'){ hasStats=true; stats=[ tile('API-calls','184k','+9%',up,'deze maand','chart-area'), tile('Kosten','€420',null,null,'doorbelast','money-alt'), tile('Omzet','€6.840','+12%',up,'','chart-line'), tile('Marge','78%',null,null,'','awards') ]; }
+
+    // dashboard breakdowns
+    const breakdowns=[
+      { title:'Per status', iconCls:'dashicons dashicons-chart-pie', rows:[ {label:'Actief',count:'842',dotStyle:this.dot('#10b981')},{label:'Verbonden',count:'312',dotStyle:this.dot('#3b82f6')},{label:'Ingetrokken',count:'94',dotStyle:this.dot('#ef4444')},{label:'Verlopen',count:'36',dotStyle:this.dot('#9a95a8')} ]},
+      { title:'Per tier', iconCls:'dashicons dashicons-star-filled', rows:[ {label:'Starter',count:'486',dotStyle:this.dot('#3b82f6')},{label:'Professional',count:'402',dotStyle:this.dot('#a855f7')},{label:'Business',count:'248',dotStyle:this.dot('#8F39AC')},{label:'Agency',count:'148',dotStyle:this.dot('#10b981')} ]},
+      { title:'Per platform', iconCls:'dashicons dashicons-admin-site', rows:[ {label:'WordPress',count:'1.124',dotStyle:this.dot('#8F39AC')},{label:'Shopify',count:'98',dotStyle:this.dot('#10b981')},{label:'Webflow',count:'47',dotStyle:this.dot('#3b82f6')},{label:'Onbekend',count:'15',dotStyle:this.dot('#9a95a8')} ]},
+    ];
+    const lkey=(a)=>'SSEO-'+a;
+    const recentLic=[
+      ['A4F9-7K2P-XR81','Business','Verbonden','studio@brightlab.nl','2 uur geleden'],
+      ['B8M2-3QW9-LP44','Agency','Actief','acme@agency.com','5 uur geleden'],
+      ['C1T7-9XN3-KD20','Professional','Verbonden','info@groenmarketing.nl','1 dag geleden'],
+      ['D5R0-2YB6-MV88','Starter','Actief','hallo@webfix.be','1 dag geleden'],
+      ['E9K4-6PL1-QZ37','Business','Verbonden','team@scaleup.io','2 dagen geleden'],
+      ['F2H8-5WC7-RT90','Starter','Verlopen','oud@klant.nl','3 dagen geleden'],
+    ].map(r=>({key:lkey(r[0]),tier:r[1],tierStyle:this.tierBadge(r[1]),status:r[2],statusStyle:this.statusBadge(r[2]),assigned:r[3],created:r[4]}));
+
+    // licenses
+    const licFilters=['Alle statussen','Alle types','Alle tiers','Alle platforms'];
+    const platIcon={WordPress:'wordpress',Shopify:'cart',Webflow:'cloud',Onbekend:'editor-help'};
+    const licenses=[
+      ['A4F9-7K2P-XR81-9MQ2','Paid','Business','Verbonden','WordPress','studio@brightlab.nl','14 nov 2026'],
+      ['B8M2-3QW9-LP44-7KX1','Paid','Agency','Actief','WordPress','acme@agency.com','Nooit'],
+      ['C1T7-9XN3-KD20-4BV8','Paid','Professional','Verbonden','WordPress','info@groenmarketing.nl','2 dec 2026'],
+      ['D5R0-2YB6-MV88-1NC5','Paid','Starter','Actief','Shopify','hallo@webfix.be','9 nov 2026'],
+      ['E9K4-6PL1-QZ37-8RT2','Paid','Business','Verbonden','WordPress','team@scaleup.io','21 jan 2027'],
+      ['F2H8-5WC7-RT90-3PL6','Trial','Trial','Verlopen','Webflow','oud@klant.nl','Verlopen'],
+      ['G7D3-1KN9-WX52-6QB4','Lifetime','Business','Actief','WordPress','founder@indiemaker.dev','Nooit'],
+      ['H3V6-8ML2-PK71-9ZC0','Paid','Professional','Verbonden','WordPress','marketing@dutchcraft.nl','5 feb 2027'],
+      ['J1N5-4RT8-BV36-2KX7','Free','Free','Actief','WordPress','gratis@starter.nl','Nooit'],
+      ['K6P2-7QW4-LM90-1BT3','Paid','Agency','Verbonden','WordPress','ops@growthlab.co','18 mrt 2027'],
+    ].map(r=>({key:r[0],type:r[1],tier:r[2],tierStyle:this.tierBadge(r[2]),status:r[3],statusStyle:this.statusBadge(r[3]),platform:r[4],platIcon:platIcon[r[4]]||'editor-help',assigned:r[5],expires:r[6]}));
+
+    // tenants
+    const tenantFilters=['Alle statussen','Alle tiers','Alle platforms'];
+    const usageBar=(p)=> p>=85?'#ef4444':p>=60?'#f59e0b':G;
+    const tenants=[
+      ['brightlab.nl','studio@brightlab.nl','Actief','Business','WordPress',1,72],
+      ['groenmarketing.nl','info@groenmarketing.nl','Actief','Professional','WordPress',1,44],
+      ['scaleup.io','team@scaleup.io','Actief','Business','WordPress',3,91],
+      ['webfix.be','hallo@webfix.be','Actief','Starter','Shopify',1,28],
+      ['dutchcraft.nl','marketing@dutchcraft.nl','Opgeschort','Professional','WordPress',1,0],
+      ['growthlab.co','ops@growthlab.co','Actief','Agency','WordPress',12,63],
+    ].map(r=>({domain:r[0],email:r[1],status:r[2],statusStyle:this.statusBadge(r[2]),tier:r[3],tierStyle:this.tierBadge(r[3]),platform:r[4],sites:r[5],usage:r[6]+'%',usagePct:r[6]+'%',usageBar:usageBar(r[6])}));
+
+    // usage & costs
+    const costSplit=[
+      {label:'OpenRouter (AI)',amount:'€1.420',pct:'50%',bar:G},
+      {label:'DataForSEO (SERP)',amount:'€820',pct:'29%',bar:'linear-gradient(90deg,#379FD3,#5bb8e8)'},
+      {label:'OpenAI (beeld)',amount:'€410',pct:'14%',bar:'linear-gradient(90deg,#a855f7,#c084fc)'},
+      {label:'Overig',amount:'€197',pct:'7%',bar:'linear-gradient(90deg,#9a95a8,#c4c0cc)'},
+    ];
+    const usageRows=[
+      ['scaleup.io','team@scaleup.io','Business',4820,91,'€78,40',68],
+      ['growthlab.co','ops@growthlab.co','Agency',3640,63,'€61,20',72],
+      ['brightlab.nl','studio@brightlab.nl','Business',3180,72,'€52,80',70],
+      ['groenmarketing.nl','info@groenmarketing.nl','Professional',1240,44,'€22,10',74],
+      ['webfix.be','hallo@webfix.be','Starter',380,28,'€6,40',66],
+      ['indiemaker.dev','founder@indiemaker.dev','Business',2940,58,'€47,90',71],
+    ].map(r=>({domain:r[0],email:r[1],tier:r[2],tierStyle:this.tierBadge(r[2]),calls:r[3].toLocaleString('nl-NL'),pct:r[4]+'%',bar:usageBar(r[4]),cost:r[5],margin:r[6]+'%',marginCol:r[6]>=70?'#10b981':'#f59e0b'}));
+
+    // settings
+    const setTabs=[['api','API-credentials'],['dataforseo','DataForSEO'],['image','Beeldgeneratie'],['integrations','Integraties'],['email','E-mail / SMTP']].map(t=>({label:t[1],go:()=>this.setState({setTab:t[0]}),
+      style:{padding:'11px 15px',border:'none',background:'transparent',fontFamily:'Outfit,sans-serif',fontSize:'13px',fontWeight:600,cursor:'pointer',color:t[0]===setTab?'var(--fyn-purple)':'var(--text-m)',borderBottom:t[0]===setTab?'2px solid var(--fyn-purple)':'2px solid transparent',marginBottom:'-1px'}}));
+    const field=(label,kind,value,hint)=>({label,isSelect:kind==='select',isText:kind==='text',isToggle:kind==='toggle',value,hint:hint||'',
+      track:{width:'44px',height:'24px',borderRadius:'999px',background:kind==='toggle'&&/aan|ingeschakeld|Verbonden/i.test(value)?'var(--fyn-purple)':'var(--sev-track)',position:'relative',cursor:'pointer',flex:'none'},
+      knob:{position:'absolute',top:'2px',[/aan|ingeschakeld|Verbonden/i.test(value)?'right':'left']:'2px',width:'20px',height:'20px',borderRadius:'50%',background:'#fff'}});
+    const setPanels={
+      api:{title:'API-credentials',desc:'De centrale AI- en SERP-sleutels die alle tenants delen.',fields:[
+        field('Standaard AI-provider','select','OpenRouter (aanbevolen)'),
+        field('OpenRouter API-sleutel','text','sk-or-v1-••••••••••••••••7a3f','Haal je sleutel op bij openrouter.ai/keys'),
+        field('SERP-provider','select','DataForSEO'),
+        field('SERP API-sleutel','text','••••••••••••:••••••••'),
+        field('GEO Scan-model','select','google/gemini-flash-1.5'),
+      ]},
+      dataforseo:{title:'DataForSEO API',desc:'Centrale sleutel voor SERP, AI-optimalisatie, keyword-data en backlinks.',fields:[
+        field('DataForSEO API-sleutel','text','you@fyndable.nl:••••••••','Formaat: login-email:wachtwoord'),
+        field('DataForSEO voor AI Overview','toggle','Ingeschakeld','Gebruik naast SerpApi voor AI Overview-data'),
+      ]},
+      image:{title:'AI-beeldgeneratie',desc:'Kies de beeldgeneratie-service voor alle tenants.',fields:[
+        field('Beeld-provider','select','OpenAI DALL·E 3'),
+        field('Beeld API-sleutel','text','sk-••••••••••••••••'),
+        field('Standaardmodel','select','dall-e-3'),
+      ]},
+      integrations:{title:'Integraties',desc:'Google OAuth-credentials, gedeeld door alle klantsites.',fields:[
+        field('Google Client ID','text','••••••.apps.googleusercontent.com'),
+        field('Google Client Secret','text','••••••••••••••••'),
+        field('Google Ads Developer Token','text','••••••••••'),
+        field('Google Places API-sleutel','text','AIza••••••••••••'),
+        field('Support-e-mail','text','support@fyndable.nl'),
+      ]},
+      email:{title:'E-mail / SMTP',desc:'Uitgaande e-mail voor transactionele berichten en automations.',fields:[
+        field('SMTP ingeschakeld','toggle','Ingeschakeld'),
+        field('SMTP-host','text','smtp.fyndable.nl'),
+        field('Poort','text','587'),
+        field('Encryptie','select','TLS'),
+        field('Afzender-e-mail','text','no-reply@fyndable.nl'),
+      ]},
+    };
+    const setStatus=[
+      {label:'OpenRouter',value:'Verbonden',style:this.b('var(--fyn-success-light)','#047857')},
+      {label:'DataForSEO',value:'Verbonden',style:this.b('var(--fyn-success-light)','#047857')},
+      {label:'Google OAuth',value:'Verbonden',style:this.b('var(--fyn-success-light)','#047857')},
+      {label:'SMTP',value:'Niet getest',style:this.b('var(--fyn-warning-light)','#92700a')},
+    ];
+
+    // agency dashboard
+    const agencyDist=[ {label:'Business',count:'14',dotStyle:this.dot('#8F39AC')},{label:'Professional',count:'16',dotStyle:this.dot('#a855f7')},{label:'Starter',count:'8',dotStyle:this.dot('#3b82f6')} ];
+    const agencyTenants=[
+      ['klantsite-een.nl','Business','Verbonden','3 dagen geleden'],
+      ['mooiwonen.nl','Professional','Verbonden','1 week geleden'],
+      ['fietsshop-amsterdam.nl','Starter','Actief','1 week geleden'],
+      ['advocatenkantoor.be','Professional','Verbonden','2 weken geleden'],
+      ['restaurant-bistro.nl','Starter','Opgeschort','3 weken geleden'],
+    ].map(r=>({domain:r[0],tier:r[1],tierStyle:this.tierBadge(r[1]),status:r[2],statusStyle:this.statusBadge(r[2]),connected:r[3]}));
+
+    const toggleOn={display:'flex',alignItems:'center',justifyContent:'center',width:'28px',height:'28px',borderRadius:'50%',fontSize:'14px'};
+    const extra=this.screenData2(screen,{G,up,down,info,tile,usageBar});
+    const built={dashboard:1,licenses:1,tenants:1,usage:1,settings:1,adash:1,
+      generate:1,agencies:1,versions:1,revenue:1,costs:1,checkout:1,bookkeeping:1,support:1,feedback:1,geoscan:1,emails:1,chatbot:1,models:1,whitelabel:1,
+      agenerate:1,alicenses:1,aextra:1,atenants:1,ausage:1,ainvoices:1,aaccount:1,asupport:1,awl:1};
+    if(extra.hasStats){ hasStats=true; stats=extra.stats; }
+
+    return {
+      themeClass: theme==='dark'?'fyn-dark':'',
+      toggleTheme:()=>this.setState({theme:theme==='dark'?'light':'dark'}),
+      sunStyle:{...toggleOn,background:theme==='light'?'rgba(255,255,255,.9)':'transparent',color:theme==='light'?'#8F39AC':'rgba(255,255,255,.6)'},
+      moonStyle:{...toggleOn,background:theme==='dark'?'rgba(255,255,255,.18)':'transparent',color:theme==='dark'?'#fff':'rgba(255,255,255,.6)'},
+      portalLabel: portal==='provider'?'SaaS Provider':'Agency Portal',
+      setProvider:()=>this.switchPortal('provider'), setAgency:()=>this.switchPortal('agency'),
+      provTab:tabBtn(portal==='provider'), agTab:tabBtn(portal==='agency'),
+      accountName: portal==='provider'?'Fyndable HQ':'Acme Digital',
+      accountRole: portal==='provider'?'Platform-beheerder':'Agency-eigenaar',
+      planTitle: portal==='provider'?'Platform-status':'Agency-quota',
+      planSub: portal==='provider'?'312 actieve tenants · API 62% deze maand.':'38 van 50 licenties in gebruik.',
+      planPct: portal==='provider'?'62%':'76%',
+      nav, screen,
+      head:{root:h[0],crumb:h[1],title:h[2],desc:h[3],action:h[4],actionIcon:h[5]},
+      hasStats, stats,
+      isDash:screen==='dashboard', isLicenses:screen==='licenses'||screen==='alicenses', isTenants:screen==='tenants'||screen==='atenants', isUsage:screen==='usage'||screen==='ausage', isSettings:screen==='settings', isAgencyDash:screen==='adash',
+      isStub: !built[screen],
+      breakdowns, recentLic, licFilters, licenses, tenantFilters, tenants, costSplit, usageRows,
+      setTabs, setPanel:setPanels[setTab]||setPanels.api, setStatus,
+      agencyDist, agencyTenants,
+      ...extra.vals,
+    };
+  }
+
+  screenData2(screen, u){
+    const {G,up,down,info,tile,usageBar}=u;
+    const b=(bg,fg)=>this.b(bg,fg);
+    const dot=(c)=>this.dot(c);
+    const vals={}; let hasStats=false; let stats=[];
+    const S={ ok:b('var(--fyn-success-light)','#047857'), warn:b('var(--fyn-warning-light)','#92700a'), danger:b('var(--fyn-danger-light)','#b91c1c'), info:b('var(--fyn-info-light)','#1d4ed8'), purple:b('var(--fyn-purple-tint)','#8F39AC'), neutral:b('var(--sev-track)','var(--text-m)'), accent:b('var(--fyn-accent-light)','#9333ea') };
+
+    vals.isGenerate=screen==='generate'; vals.isAgencies=screen==='agencies'; vals.isVersions=screen==='versions';
+    vals.isRevenue=screen==='revenue'; vals.isCosts=screen==='costs'; vals.isCheckout=screen==='checkout'; vals.isBookkeeping=screen==='bookkeeping';
+    vals.isSupport=screen==='support'||screen==='asupport'; vals.isFeedback=screen==='feedback'; vals.isGeoscan=screen==='geoscan';
+    vals.isEmails=screen==='emails'; vals.isChatbot=screen==='chatbot'; vals.isModels=screen==='models'; vals.isWhitelabel=screen==='whitelabel'||screen==='awl';
+    vals.isAgenerate=screen==='agenerate'||screen==='generate'; vals.isAlicenses=screen==='alicenses'; vals.isAextra=screen==='aextra';
+    vals.isAtenants=screen==='atenants'; vals.isAusage=screen==='ausage'; vals.isAinvoices=screen==='ainvoices'||screen==='bookkeeping'; vals.isAaccount=screen==='aaccount';
+
+    // GENERATE KEYS (provider + agency share form)
+    if(screen==='generate'||screen==='agenerate'){
+      vals.genFields=[
+        {label:'Aantal licenties',value:'1',kind:'num'},
+        {label:'Licentietype',value:'Paid (standaard)',kind:'select'},
+        {label:'Tier',value:'Starter — €29/maand',kind:'select'},
+        {label:'Max. sites',value:'1',kind:'num'},
+        {label:'Rate limit (per uur)',value:'60',kind:'num'},
+        {label:'Maandelijkse API-limiet',value:'200',kind:'num'},
+        {label:'Verloopt na (dagen)',value:'Nooit',kind:'num'},
+        {label:'Toewijzen aan (e-mail)',value:'klant@voorbeeld.nl',kind:'text'},
+      ];
+      vals.genTiers=[
+        ['Starter','€29','1 site · 200 calls',S.info],
+        ['Professional','€79','5 sites · 1.000 calls',S.accent],
+        ['Business','€199','15 sites · 5.000 calls',S.purple],
+        ['Agency','€499','50 sites · 20.000 calls',S.ok],
+      ].map(t=>({name:t[0],price:t[1],spec:t[2],style:t[3]}));
+    }
+
+    // AGENCY ACCOUNTS
+    if(screen==='agencies'){
+      hasStats=true; stats=[ tile('Agencies','24','+2',up,'','groups'), tile('Doorverkocht','486',null,null,'licenties','admin-network'), tile('Agency-omzet','€9.840','+15%',up,'','money-alt'), tile('Gem. benutting','71%',null,null,'van quota','chart-area') ];
+      vals.agencyRows=[
+        ['Acme Digital Agency','acme@agency.com',50,38,'€6.840','Actief'],
+        ['GrowthLab Collective','ops@growthlab.co',30,24,'€3.960','Actief'],
+        ['Dutch Web Studio','hi@dutchweb.nl',20,12,'€2.280','Actief'],
+        ['BrightLab','studio@brightlab.nl',15,9,'€1.740','Actief'],
+        ['Noord Marketing','info@noordmkt.nl',10,3,'€580','Opgeschort'],
+      ].map(r=>({name:r[0],email:r[1],quota:r[2],used:r[3],pct:Math.round(r[3]/r[2]*100)+'%',bar:usageBar(Math.round(r[3]/r[2]*100)),revenue:r[4],status:r[5],statusStyle:this.statusBadge(r[5])}));
+    }
+
+    // CLIENT VERSIONS
+    if(screen==='versions'){
+      hasStats=true; stats=[ tile('Nieuwste versie','4.2.1',null,null,'uitgebracht','update'), tile('Up-to-date','268','86%',up,'tenants','yes-alt'), tile('Verouderd','38',null,null,'tenants','warning'), tile('Kritiek verouderd','6',null,null,'< v3.9','dismiss') ];
+      vals.versionRows=[
+        ['4.2.1','Huidige release','2.140','Nieuwste','ok'],
+        ['4.1.0','Vorige release','680','Ondersteund','info'],
+        ['4.0.3','Oudere release','210','Verouderd','warn'],
+        ['3.8.x','Legacy','96','Update vereist','danger'],
+      ].map(r=>({ver:r[0],label:r[1],sites:r[2],status:r[3],statusStyle:S[r[4]]}));
+    }
+
+    // REVENUE
+    if(screen==='revenue'){
+      hasStats=true; stats=[ tile('MRR','€18.640','+12%',up,'maandelijks','chart-line'), tile('ARR','€223.680','+14%',up,'jaarlijks','money-alt'), tile('Nieuwe klanten','42','+8',up,'deze maand','groups'), tile('Churn','2,1%','−0,4%',up,'','chart-area') ];
+      vals.revByTier=[
+        {label:'Agency',amount:'€7.380',pct:'40%',bar:'linear-gradient(90deg,#10b981,#34d399)'},
+        {label:'Business',amount:'€4.930',pct:'26%',bar:G},
+        {label:'Professional',amount:'€3.780',pct:'20%',bar:'linear-gradient(90deg,#a855f7,#c084fc)'},
+        {label:'Starter',amount:'€2.550',pct:'14%',bar:'linear-gradient(90deg,#379FD3,#5bb8e8)'},
+      ];
+      vals.revMonths=[48,52,51,58,64,68,72,78,82,88,92,100].map((v,i)=>({h:v+'%',label:['J','F','M','A','M','J','J','A','S','O','N','D'][i]}));
+    }
+
+    // COSTS
+    if(screen==='costs'){
+      hasStats=true; stats=[ tile('Totale kosten','€2.847','+6%',down,'deze maand','money-alt'), tile('Kosten/tenant','€9,12',null,null,'gemiddeld','admin-multisite'), tile('AI-kosten','€1.830',null,null,'64%','superhero-alt'), tile('SERP-kosten','€820',null,null,'29%','search') ];
+      vals.costByModel=[
+        ['google/gemini-flash-1.5','AI-content','€680','24%'],
+        ['openai/gpt-4o','AI-optimalisatie','€590','21%'],
+        ['anthropic/claude-sonnet','Briefs & analyse','€420','15%'],
+        ['DataForSEO','SERP & keywords','€820','29%'],
+        ['DALL·E 3','Beeldgeneratie','€337','11%'],
+      ].map(r=>({model:r[0],use:r[1],cost:r[2],pct:r[3]}));
+      vals.costByTier=[
+        {label:'Agency',amount:'€1.140',pct:'40%',bar:'linear-gradient(90deg,#10b981,#34d399)'},
+        {label:'Business',amount:'€790',pct:'28%',bar:G},
+        {label:'Professional',amount:'€560',pct:'20%',bar:'linear-gradient(90deg,#a855f7,#c084fc)'},
+        {label:'Starter',amount:'€357',pct:'12%',bar:'linear-gradient(90deg,#379FD3,#5bb8e8)'},
+      ];
+    }
+
+    // CHECKOUT
+    if(screen==='checkout'){
+      vals.checkoutTiers=[
+        ['Starter','€29','1 site, 200 API-calls, 15 posts/mnd',true,false],
+        ['Professional','€79','5 sites, 1.000 calls, 35 posts/mnd',true,true],
+        ['Business','€199','15 sites, 5.000 calls, 150 posts/mnd',true,false],
+        ['Agency','€499','50 sites, 20.000 calls, onbeperkt',true,false],
+      ].map(t=>({name:t[0],price:t[1],spec:t[2],visible:t[3],featured:t[4],
+        cardStyle:{padding:'18px',borderRadius:'12px',border:t[4]?'2px solid var(--fyn-purple)':'2px solid var(--input-border)',background:'var(--well)',position:'relative'},
+        toggle:{width:'44px',height:'24px',borderRadius:'999px',background:t[3]?'var(--fyn-purple)':'var(--sev-track)',position:'relative',cursor:'pointer',flex:'none'},
+        knob:{position:'absolute',top:'2px',[t[3]?'right':'left']:'2px',width:'20px',height:'20px',borderRadius:'50%',background:'#fff'}}));
+      vals.checkoutSettings=[
+        {label:'Self-serve checkout',value:'Ingeschakeld',on:true},
+        {label:'Gratis proefperiode',value:'14 dagen',on:true},
+        {label:'Betaalprovider',value:'Mollie (live)',on:true},
+        {label:'Valuta',value:'EUR',on:true},
+        {label:'BTW-tarief',value:'21%',on:true},
+      ];
+    }
+
+    // BOOKKEEPING / INVOICES (provider) + agency invoices
+    if(screen==='bookkeeping'||screen==='ainvoices'){
+      hasStats=true; stats=[ tile('Omzet (jaar)','€223.680','+14%',up,'','money-alt'), tile('Openstaand','€4.280',null,null,'3 facturen','clock'), tile('Betaald (mnd)','€18.640','+12%',up,'','yes-alt'), tile('BTW te voldoen','€3.914',null,null,'Q4','media-spreadsheet') ];
+      vals.invoiceRows=[
+        ['FYND-2026-0412','Acme Digital Agency','14 okt 2026','€499,00','Betaald','ok'],
+        ['FYND-2026-0411','GrowthLab Collective','12 okt 2026','€499,00','Betaald','ok'],
+        ['FYND-2026-0410','BrightLab','10 okt 2026','€199,00','Openstaand','warn'],
+        ['FYND-2026-0409','Dutch Web Studio','8 okt 2026','€199,00','Betaald','ok'],
+        ['FYND-2026-0408','Noord Marketing','5 okt 2026','€79,00','Te laat','danger'],
+        ['FYND-2026-0407','ScaleUp','2 okt 2026','€199,00','Betaald','ok'],
+      ].map(r=>({num:r[0],client:r[1],date:r[2],amount:r[3],status:r[4],statusStyle:S[r[5]]}));
+    }
+
+    // SUPPORT (provider + agency)
+    if(screen==='support'||screen==='asupport'){
+      hasStats=true; stats=[ tile('Open tickets','14',null,null,'','sos'), tile('Wacht op ons','5',null,null,'','clock'), tile('Opgelost (mnd)','86','+9',up,'','yes-alt'), tile('Gem. reactietijd','2,4u','−18%',up,'','chart-line') ];
+      vals.ticketRows=[
+        ['Rank tracker werkt niet','brightlab.nl','#4821','Open','Hoog','2u'],
+        ['Licentie-activatie mislukt','webfix.be','#4820','Wacht op ons','Hoog','3u'],
+        ['Vraag over API-limieten','growthlab.co','#4818','Open','Normaal','5u'],
+        ['White-label logo verschijnt niet','acme@agency.com','#4810','Wacht op klant','Normaal','1d'],
+        ['Factuur niet ontvangen','dutchweb.nl','#4795','Opgelost','Laag','3d'],
+      ].map(r=>({subj:r[0],from:r[1],id:r[2],status:r[3],statusStyle:r[3]==='Opgelost'?S.ok:r[3]==='Open'?S.info:S.warn,prio:r[4],prioStyle:r[4]==='Hoog'?S.danger:r[4]==='Normaal'?S.info:S.neutral,age:r[5]}));
+    }
+
+    // FEEDBACK
+    if(screen==='feedback'){
+      hasStats=true; stats=[ tile('NPS','62','+7',up,'','chart-line'), tile('Feedback (mnd)','148','+22',up,'','format-status'), tile('Feature-verzoeken','43',null,null,'open','lightbulb'), tile('Gem. rating','4,6','van 5','up','','star-filled') ];
+      vals.feedbackRows=[
+        ['De AI content writer is echt goed','brightlab.nl',5,'Lof','ok'],
+        ['Graag bulk-export van keywords','growthlab.co',4,'Feature-verzoek','info'],
+        ['Rank tracker soms traag','scaleup.io',3,'Bug','warn'],
+        ['Meer taalopties voor GEO scans','dutchcraft.nl',4,'Feature-verzoek','info'],
+        ['White-label is perfect voor ons','acme@agency.com',5,'Lof','ok'],
+      ].map(r=>({text:r[0],from:r[1],rating:r[2],stars:'★★★★★'.slice(0,r[2])+'☆☆☆☆☆'.slice(0,5-r[2]),tag:r[3],tagStyle:S[r[4]]}));
+    }
+
+    // GEO SCAN
+    if(screen==='geoscan'){
+      hasStats=true; stats=[ tile('Scans (mnd)','312','+18%',up,'','visibility'), tile('Gem. zichtbaarheid','42%','+6%',up,'in AI-antwoorden','chart-pie'), tile('In wachtrij','7',null,null,'','clock'), tile('Mislukt','2',null,null,'','warning') ];
+      vals.geoRows=[
+        ['brightlab.nl','ChatGPT · Gemini · Perplexity','48%','Voltooid','ok','2 uur geleden'],
+        ['scaleup.io','ChatGPT · Gemini','52%','Voltooid','ok','5 uur geleden'],
+        ['groenmarketing.nl','ChatGPT · Perplexity','31%','Voltooid','ok','1 dag geleden'],
+        ['webfix.be','Alle modellen','—','In wachtrij','info','—'],
+        ['dutchcraft.nl','ChatGPT','—','Mislukt','danger','1 dag geleden'],
+      ].map(r=>({domain:r[0],models:r[1],vis:r[2],status:r[3],statusStyle:S[r[4]],when:r[5]}));
+    }
+
+    // EMAIL TEMPLATES
+    if(screen==='emails'){
+      vals.emailTemplates=[
+        ['Welkom bij Fyndable','Na registratie','Actief','welcome','ok'],
+        ['Licentie geactiveerd','Bij activatie','Actief','license','ok'],
+        ['Proefperiode verloopt','3 dagen voor einde','Actief','trial-end','ok'],
+        ['Betaling mislukt','Bij mislukte incasso','Actief','payment-failed','ok'],
+        ['Maandelijks rapport','1e van de maand','Concept','report','warn'],
+        ['Factuur','Bij nieuwe factuur','Actief','invoice','ok'],
+      ].map(r=>({name:r[0],trigger:r[1],status:r[2],slug:r[3],statusStyle:S[r[4]]}));
+      vals.emailAutomations=[
+        ['Onboarding-reeks','3 e-mails · 7 dagen','142 verzonden'],
+        ['Win-back','2 e-mails · 30 dagen','38 verzonden'],
+        ['Upsell naar Business','1 e-mail · trigger','21 verzonden'],
+      ].map(r=>({name:r[0],detail:r[1],sent:r[2]}));
+    }
+
+    // CHATBOT
+    if(screen==='chatbot'){
+      hasStats=true; stats=[ tile('Gesprekken (mnd)','1.420','+24%',up,'','format-chat'), tile('Opgelost door AI','78%','+5%',up,'','superhero-alt'), tile('Doorgezet','312',null,null,'naar support','sos'), tile('Tevredenheid','4,4','van 5','up','','smiley') ];
+      vals.chatSettings=[
+        {label:'Chatbot ingeschakeld',value:'Ingeschakeld',on:true},
+        {label:'AI-model',value:'google/gemini-flash-1.5',on:true},
+        {label:'Kennisbron',value:'Kennisbank + docs',on:true},
+        {label:'Doorzetten naar mens',value:'Na 3 pogingen',on:true},
+        {label:'Talen',value:'Nederlands, Engels',on:true},
+      ];
+      vals.chatPreview=[
+        {who:'user',text:'Hoe activeer ik mijn licentie?'},
+        {who:'bot',text:'Ga in je WordPress-admin naar Fyndable → Verbinding, plak je licentiesleutel en klik op "Verbind site". Lukt het niet? Dan zet ik je door naar support.'},
+        {who:'user',text:'En waar vind ik mijn sleutel?'},
+        {who:'bot',text:'Je licentiesleutel staat in je welkomst-e-mail en in je account op app.fyndable.nl onder "Licenties".'},
+      ].map(m=>({...m, row:{display:'flex',justifyContent:m.who==='user'?'flex-end':'flex-start'},
+        bubble:{maxWidth:'85%',padding:'10px 13px',borderRadius:m.who==='user'?'12px 12px 3px 12px':'12px 12px 12px 3px',fontSize:'12.5px',lineHeight:1.45,
+          background:m.who==='user'?'linear-gradient(135deg,#8F39AC,#379FD3)':'var(--well)',color:m.who==='user'?'#fff':'var(--text-b)',border:m.who==='user'?'none':'1px solid var(--well-border)'}}));
+    }
+
+    // AI MODELS
+    if(screen==='models'){
+      vals.modelRouting=[
+        ['Content Writer','google/gemini-flash-1.5','Standaard',S.info],
+        ['Content Optimizer','openai/gpt-4o','Premium',S.purple],
+        ['Briefs & analyse','anthropic/claude-sonnet-4','Premium',S.purple],
+        ['GEO Scans','google/gemini-flash-1.5','Standaard',S.info],
+        ['Meta & FAQ','google/gemini-flash-1.5','Standaard',S.info],
+        ['Beeldgeneratie','openai/dall-e-3','Premium',S.purple],
+      ].map(r=>({feature:r[0],model:r[1],tier:r[2],tierStyle:r[3]}));
+      vals.modelProviders=[
+        {name:'OpenRouter',status:'Verbonden',ok:true,models:'320+ modellen'},
+        {name:'OpenAI',status:'Verbonden',ok:true,models:'GPT-4o, DALL·E 3'},
+        {name:'DataForSEO',status:'Verbonden',ok:true,models:'SERP, keywords'},
+      ];
+    }
+
+    // WHITE-LABEL (provider + agency)
+    if(screen==='whitelabel'||screen==='awl'){
+      vals.wlFields=[
+        {label:'Merknaam',value:'Acme SEO Suite',kind:'text'},
+        {label:'Menu-label',value:'Acme SEO',kind:'text'},
+        {label:'Support-e-mail',value:'support@acme.agency',kind:'text'},
+        {label:'Primaire kleur',value:'#379FD3',kind:'color',color:'#379FD3'},
+        {label:'Secundaire kleur',value:'#8F39AC',kind:'color',color:'#8F39AC'},
+        {label:'White-label ingeschakeld',value:'Ingeschakeld',kind:'toggle'},
+      ].map(f=>({...f,isText:f.kind==='text',isColor:f.kind==='color',isToggle:f.kind==='toggle',
+        track:{width:'44px',height:'24px',borderRadius:'999px',background:'var(--fyn-purple)',position:'relative',cursor:'pointer',flex:'none'},
+        knob:{position:'absolute',top:'2px',right:'2px',width:'20px',height:'20px',borderRadius:'50%',background:'#fff'}}));
+    }
+
+    // AGENCY: EXTRA LICENSES
+    if(screen==='aextra'){
+      vals.packages=[
+        ['10 licenties','€390','€39 per licentie',false],
+        ['25 licenties','€875','€35 per licentie',true],
+        ['50 licenties','€1.500','€30 per licentie',false],
+        ['100 licenties','€2.600','€26 per licentie',false],
+      ].map(p=>({name:p[0],price:p[1],per:p[2],featured:p[3],
+        cardStyle:{background:'var(--card)',border:p[3]?'2px solid var(--fyn-purple)':'2px solid var(--card-border)',borderRadius:'14px',boxShadow:'var(--card-shadow)',padding:'24px',display:'flex',flexDirection:'column',position:'relative',textAlign:'center'}}));
+    }
+
+    // AGENCY: MY ACCOUNT
+    if(screen==='aaccount'){
+      vals.accountFields=[
+        {label:'Bedrijfsnaam',value:'Acme Digital Agency'},
+        {label:'E-mail',value:'acme@agency.com'},
+        {label:'KvK-nummer',value:'12345678'},
+        {label:'BTW-nummer',value:'NL812345678B01'},
+        {label:'Adres',value:'Herengracht 1, 1015 Amsterdam'},
+      ];
+      vals.teamMembers=[
+        ['Jan de Vries','jan@acme.agency','Eigenaar','ok'],
+        ['Lisa Bakker','lisa@acme.agency','Beheerder','info'],
+        ['Tom Jansen','tom@acme.agency','Alleen-lezen','neutral'],
+      ].map(m=>({name:m[0],email:m[1],role:m[2],roleStyle:S[m[3]],initials:m[0].split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}));
+    }
+
+    return { vals, hasStats, stats };
+  }
+
+  go(id){ this.setState({screen:id}); }
+  switchPortal(p){
+    const s=this.state;
+    if(p===s.portal) return;
+    if(p==='provider'){ this.setState({portal:'provider',prevAgency:s.screen,screen:s.prevProvider||'dashboard'}); }
+    else { this.setState({portal:'agency',prevProvider:s.screen,screen:s.prevAgency||'adash'}); }
+  }
+}
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ namespace SSEOAIClient;
 
 /**
  * Unified Post Meta Box with Grouped Accordion
- * 
+ *
  * Replaces 20+ individual meta boxes on the post edit screen
  * with a single "Fyndable Smart SEO" meta box containing grouped
  * accordion sections with custom branding.
@@ -16,13 +16,20 @@ class PostMetaBox
 
     /**
      * Define a group (accordion section).
+     *
+     * @param string $id     Group identifier
+     * @param string $label  Section title
+     * @param string $icon   Dashicon class (e.g. 'dashicons-edit'). Raw HTML
+     *                       (an entity/emoji) is still accepted for back-compat.
+     * @param string $accent Section accent colour (hex) for the left border and icon.
      */
-    public function addGroup(string $id, string $label, string $icon = ''): void
+    public function addGroup(string $id, string $label, string $icon = '', string $accent = ''): void
     {
         $this->groups[$id] = [
             'id' => $id,
             'label' => $label,
             'icon' => $icon,
+            'accent' => $accent,
             'items' => [],
         ];
     }
@@ -55,6 +62,7 @@ class PostMetaBox
         add_action('add_meta_boxes', [$this, 'addMetaBox']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('enqueue_block_editor_assets', [$this, 'enqueueEditorLoader']);
+        add_filter('admin_body_class', [$this, 'addAdminBodyClass']);
     }
 
     public function addMetaBox(): void
@@ -103,15 +111,55 @@ class PostMetaBox
         }
     }
 
+    /**
+     * Scope the meta-box theme tokens to the editor screens.
+     *
+     * The plugin admin pages carry `fyndable-ui` from Client::addAdminBodyClass(),
+     * but post.php / post-new.php / attachment.php do not (client-admin.css is not
+     * loaded there). This emits a dedicated scope so the editor panel can use the
+     * very same design tokens without touching the rest of the edit screen.
+     */
+    public function addAdminBodyClass(string $classes): string
+    {
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
+            return $classes;
+        }
+
+        $classes .= ' fyndable-seo-editor';
+
+        // Same source of truth as the dashboard shell, so the editor opens in
+        // whichever theme the admin pages are in.
+        if (isset($_GET['fyndable_dark'])) {
+            $dark = $_GET['fyndable_dark'] === '1';
+        } else {
+            $dark = get_option('sseo_ai_client_dark_theme', '0') === '1';
+        }
+        if ($dark) {
+            $classes .= ' fyndable-dark';
+        }
+
+        return $classes;
+    }
+
     public function enqueueAssets(string $hook): void
     {
         if (!in_array($hook, ['post.php', 'post-new.php', 'attachment.php'], true)) {
             return;
         }
 
-        wp_register_style('fyndable-post-metabox', false);
-        wp_enqueue_style('fyndable-post-metabox');
-        wp_add_inline_style('fyndable-post-metabox', $this->getInlineCSS());
+        wp_enqueue_style('dashicons');
+
+        wp_enqueue_style(
+            'fyndable-post-metabox',
+            SSEO_AI_CLIENT_PLUGIN_URL . 'assets/post-metabox.css',
+            [],
+            SSEO_AI_CLIENT_VERSION . '.' . filemtime(SSEO_AI_CLIENT_PLUGIN_DIR . 'assets/post-metabox.css')
+        );
+        $whiteLabelCss = $this->getWhiteLabelCSS();
+        if ($whiteLabelCss !== '') {
+            wp_add_inline_style('fyndable-post-metabox', $whiteLabelCss);
+        }
 
         wp_register_script('fyndable-post-metabox', false);
         wp_enqueue_script('fyndable-post-metabox');
@@ -176,7 +224,8 @@ class PostMetaBox
                     'id' => $group['id'],
                     'label' => $group['label'],
                     'icon' => $group['icon'],
-                    'items' => $items,
+                    'accent' => $group['accent'],
+                    'items' => array_values($items),
                 ];
             }
         }
@@ -193,15 +242,25 @@ class PostMetaBox
 
         echo '<div class="fyndable-seo-container">';
 
-        // Gradient header
+        // Brand header band
         echo '<div class="fyndable-seo-header">';
         echo '<span class="fyndable-seo-logo">';
         if ($companyLogo) {
-            echo '<img src="' . esc_url($companyLogo) . '" alt="' . esc_attr($companyName) . '" style="max-height: 22px; max-width: 160px; display: block; vertical-align: middle;">';
-        } else {
+            echo '<img src="' . esc_url($companyLogo) . '" alt="' . esc_attr($brandName) . '">';
+        } elseif (!empty($whiteLabel['company_name'])) {
             echo esc_html($brandName);
+        } else {
+            echo '<img src="' . esc_url(SSEO_AI_CLIENT_PLUGIN_URL . 'assets/FYN-LOGO-DIA-LONG300ppi.png')
+                . '" alt="' . esc_attr($brandName) . '">';
         }
         echo '</span>';
+        echo '<span class="fyndable-seo-header-spacer"></span>';
+        echo '<button type="button" class="fyndable-seo-themetoggle" title="'
+            . esc_attr__('Switch theme', 'ai-seo-client') . '" data-nonce="'
+            . esc_attr(wp_create_nonce('sseo_ai_toggle_theme')) . '">';
+        echo '<span class="fyn-sun" aria-hidden="true">&#9728;</span>';
+        echo '<span class="fyn-moon" aria-hidden="true">&#9790;</span>';
+        echo '</button>';
         echo '<span class="fyndable-seo-badge">' . esc_html__('Post Optimization', 'ai-seo-client') . '</span>';
         echo '</div>';
 
@@ -215,13 +274,20 @@ class PostMetaBox
         foreach ($groupsWithItems as $gIndex => $group) {
             $isOpen = $gIndex === 0;
             $groupState = $isOpen ? ' open' : '';
+            $accent = sanitize_hex_color($group['accent']) ?: '';
+            $accentStyle = $accent ? ' style="--fyn-sect-accent:' . esc_attr($accent) . '"' : '';
 
-            echo '<div class="fyndable-seo-group' . $groupState . '">';
-            echo '<button type="button" class="fyndable-seo-group-header" data-group="' . esc_attr($group['id']) . '">';
-            echo '<span class="fyndable-seo-group-icon">' . $group['icon'] . '</span>';
+            echo '<div class="fyndable-seo-group' . $groupState . '"' . $accentStyle . '>';
+            echo '<button type="button" class="fyndable-seo-group-header" data-group="' . esc_attr($group['id'])
+                . '" aria-expanded="' . ($isOpen ? 'true' : 'false') . '">';
+            if (strpos($group['icon'], 'dashicons-') === 0) {
+                echo '<span class="fyndable-seo-group-icon dashicons ' . esc_attr($group['icon']) . '"></span>';
+            } elseif ($group['icon'] !== '') {
+                echo '<span class="fyndable-seo-group-icon">' . $group['icon'] . '</span>';
+            }
             echo '<span class="fyndable-seo-group-title">' . esc_html($group['label']) . '</span>';
             echo '<span class="fyndable-seo-group-count">' . count($group['items']) . '</span>';
-            echo '<span class="fyndable-seo-chevron">&#9662;</span>';
+            echo '<span class="fyndable-seo-chevron dashicons dashicons-arrow-down-alt2"></span>';
             echo '</button>';
 
             $panelDisplay = $isOpen ? '' : ' style="display:none;"';
@@ -254,7 +320,9 @@ class PostMetaBox
                 echo '</div>';
             } else {
                 // Single item — no sub-tabs needed
+                echo '<div class="fyndable-seo-group-fields">';
                 call_user_func($group['items'][0]['callback'], $post);
+                echo '</div>';
             }
 
             echo '</div>';
@@ -271,136 +339,87 @@ class PostMetaBox
     {
         $verdict = $report['verdict'] ?? 'uncertain';
         $warnings = $report['warnings'] ?? [];
-        $verdictColors = [
-            'supported' => '#16a34a',
-            'uncertain' => '#d97706',
-            'questionable' => '#dc2626',
+        $verdictAccents = [
+            'supported' => 'var(--fyn-success)',
+            'uncertain' => 'var(--fyn-warning)',
+            'questionable' => 'var(--fyn-danger)',
+        ];
+        $verdictText = [
+            'supported' => 'var(--fyn-success-text)',
+            'uncertain' => 'var(--fyn-warning-text)',
+            'questionable' => 'var(--fyn-danger-text)',
+        ];
+        $verdictIcons = [
+            'supported' => 'dashicons-yes-alt',
+            'uncertain' => 'dashicons-warning',
+            'questionable' => 'dashicons-dismiss',
         ];
         $verdictLabels = [
             'supported' => __('Fact check: supported', 'ai-seo-client'),
             'uncertain' => __('Fact check: uncertain', 'ai-seo-client'),
             'questionable' => __('Fact check: questionable', 'ai-seo-client'),
         ];
-        $color = $verdictColors[$verdict] ?? '#6b7280';
+        $accent = $verdictAccents[$verdict] ?? 'var(--text-m)';
+        $textColor = $verdictText[$verdict] ?? 'var(--text-b)';
+        $icon = $verdictIcons[$verdict] ?? 'dashicons-info';
         $label = $verdictLabels[$verdict] ?? __('Fact check: unknown', 'ai-seo-client');
         $warningCount = count($warnings);
 
-        echo '<div class="sseo-fact-check-badge" style="padding:10px 14px;border-radius:8px;margin:10px 0;background:'
-            . $color . '15;border:1px solid ' . $color . '40;">';
-        echo '<div style="display:flex;align-items:center;gap:8px;">';
-        echo '<span style="color:' . $color . ';font-weight:600;">&#9888; ' . esc_html($label) . '</span>';
+        echo '<div class="sseo-fact-check-badge" style="--fyn-fact-accent:' . esc_attr($accent) . '">';
+        echo '<div style="display:flex;align-items:center;gap:9px;">';
+        echo '<span class="dashicons ' . esc_attr($icon)
+            . '" style="width:17px;height:17px;font-size:17px;line-height:17px;color:' . esc_attr($accent) . ';"></span>';
+        echo '<span style="font-size:13.5px;font-weight:700;color:' . esc_attr($textColor) . ';">'
+            . esc_html($label) . '</span>';
         if ($warningCount > 0) {
-            echo '<span style="background:' . $color . ';color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;">'
-                . $warningCount . '</span>';
+            echo '<span class="fyn-badge" style="background:' . esc_attr($accent) . ';color:#fff;">'
+                . esc_html((string) $warningCount) . '</span>';
         }
         echo '</div>';
 
         if (!empty($warnings)) {
-            echo '<ul style="margin:8px 0 0 0;padding-left:20px;color:#475569;font-size:13px;">';
+            echo '<ul>';
             foreach ($warnings as $warning) {
                 echo '<li>' . esc_html($warning) . '</li>';
             }
             echo '</ul>';
         }
 
-        echo '<p style="margin:8px 0 0 0;font-size:11px;color:#6b7280;">'
+        echo '<p>'
             . esc_html__('This is an AI self-assessment, not external fact verification.', 'ai-seo-client')
             . '</p>';
         echo '</div>';
     }
 
-    private function getInlineCSS(): string
+    /**
+     * White-label accent overrides. Returns an empty string when no custom brand
+     * is configured — assets/post-metabox.css already carries the Fyndable values.
+     */
+    private function getWhiteLabelCSS(): string
     {
         $whiteLabel = get_option('sseo_ai_white_label', []);
-        $hasCustomBrand = !empty($whiteLabel['company_name']);
-        $primaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3') : '#379fd3';
-        $secondaryColor = $hasCustomBrand ? (sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac') : '#8f39ac';
-        $usePrimaryOnly = $hasCustomBrand && !empty($whiteLabel['use_primary_only']);
-        $headerGradient = $usePrimaryOnly ? $primaryColor : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
+        if (empty($whiteLabel['company_name'])) {
+            return '';
+        }
 
-        $css = <<<'CSS'
-/* Container */
-.fyndable-seo-container { margin: -6px -12px -12px; }
+        $primaryColor = sanitize_hex_color($whiteLabel['primary_color'] ?? '') ?: '#379fd3';
+        $secondaryColor = sanitize_hex_color($whiteLabel['secondary_color'] ?? '') ?: '#8f39ac';
+        $usePrimaryOnly = !empty($whiteLabel['use_primary_only']);
+        $gradient = $usePrimaryOnly
+            ? $primaryColor
+            : "linear-gradient(135deg, {$primaryColor} 0%, {$secondaryColor} 100%)";
 
-/* Gradient header */
-.fyndable-seo-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px;
-    background: __HEADER_GRADIENT__;
-    color: #fff;
-}
-.fyndable-seo-logo { font-size: 15px; letter-spacing: 0.3px; opacity: 0.95; }
-.fyndable-seo-logo strong { font-weight: 700; }
-.fyndable-seo-logo img { display: inline-block; vertical-align: middle; }
-.fyndable-seo-badge {
-    font-size: 11px; font-weight: 600; 
-    letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px;
-    background: rgba(255,255,255,0.2); color: #fff;
-}
-
-/* Accordion groups */
-.fyndable-seo-group { border-bottom: 1px solid #e0e0e0; }
-.fyndable-seo-group:last-child { border-bottom: none; }
-
-.fyndable-seo-group-header {
-    display: flex; align-items: center; width: 100%;
-    padding: 12px 18px; border: none; background: #f8f9fb;
-    cursor: pointer; font-size: 13px; font-weight: 600;
-    color: #1e1e1e; text-align: left; transition: background 0.15s;
-}
-.fyndable-seo-group-header:hover { background: #eef2ff; }
-.fyndable-seo-group-icon { margin-right: 8px; font-size: 16px; line-height: 1; }
-.fyndable-seo-group-title { flex: 1; }
-.fyndable-seo-group-count {
-    font-size: 11px; font-weight: 600; color: #6b7280;
-    background: #e5e7eb; border-radius: 10px; padding: 1px 8px; margin-right: 8px;
-}
-.fyndable-seo-chevron { font-size: 12px; color: #9ca3af; transition: transform 0.2s; }
-.fyndable-seo-group.open .fyndable-seo-chevron { transform: rotate(180deg); }
-.fyndable-seo-group.open .fyndable-seo-group-header {
-    background: #eef2ff; color: __PRIMARY__;
-    border-left: 3px solid __PRIMARY__; padding-left: 15px;
-}
-
-/* Group body */
-.fyndable-seo-group-body { padding: 0; background: #fff; }
-
-/* Sub-tabs */
-.fyndable-seo-subtabs { }
-.fyndable-seo-subtab-nav {
-    display: flex; flex-wrap: wrap; margin: 0; padding: 0;
-    background: #f3f4f6; border-bottom: 1px solid #e0e0e0;
-}
-.fyndable-seo-subtab-nav li { list-style: none; margin: 0; }
-.fyndable-seo-subtab-nav li a {
-    display: block; padding: 8px 14px; text-decoration: none;
-    color: #6b7280; font-size: 12px; font-weight: 500;
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: all 0.15s;
-}
-.fyndable-seo-subtab-nav li a:hover { color: __PRIMARY__; background: #fff; }
-.fyndable-seo-subtab-nav li.active a {
-    color: __PRIMARY__; border-bottom-color: __PRIMARY__; background: #fff;
-    font-weight: 600;
-}
-.fyndable-seo-subtab-panel { padding: 16px 18px; }
-.fyndable-seo-subtab-panel h3,
-.fyndable-seo-subtab-panel h4 { margin-top: 0; }
-.fyndable-seo-subtab-panel table.form-table { margin-top: 10px; }
-.fyndable-seo-subtab-panel .inside { margin: 0; padding: 0; }
-
-/* WordPress meta box adjustments */
-#fyndable_seo_meta .postbox-header,
-#fyndable_seo_meta_attachment .postbox-header { display: none; }
-#fyndable_seo_meta .inside,
-#fyndable_seo_meta_attachment .inside { padding: 0; margin: 0; }
-CSS;
-
-        return str_replace(
-            ['__HEADER_GRADIENT__', '__PRIMARY__'],
-            [$headerGradient, $primaryColor],
-            $css
-        );
+        // Accents only — surfaces, text and wells keep using the shared tokens.
+        return "body.fyndable-seo-editor {"
+            . " --fyn-purple: {$secondaryColor};"
+            . " --fyn-blue: {$primaryColor};"
+            . " --fyn-gradient: {$gradient};"
+            . " --fyn-gradient-flat: linear-gradient(90deg, {$primaryColor}, {$secondaryColor});"
+            . " --fyn-purple-tint: {$secondaryColor}1f;"
+            . " --fyn-blue-tint: {$primaryColor}1f;"
+            . " --input-focus: {$secondaryColor};"
+            . " }\n"
+            . ".fyndable-seo-header { background: {$gradient}; }\n";
     }
 
     private function getInlineJS(): string
@@ -429,6 +448,8 @@ CSS;
                         g.classList.remove('open');
                         var b = g.querySelector('.fyndable-seo-group-body');
                         if (b) b.style.display = 'none';
+                        var h = g.querySelector('.fyndable-seo-group-header');
+                        if (h) h.setAttribute('aria-expanded', 'false');
                     });
                 }
 
@@ -436,6 +457,7 @@ CSS;
                 if (!isOpen) {
                     group.classList.add('open');
                     if (body) body.style.display = '';
+                    header.setAttribute('aria-expanded', 'true');
                 }
             });
         });
@@ -461,9 +483,27 @@ CSS;
                 return false;
             });
         });
+
+        // Theme toggle in the brand header band. Flips the scope class straight
+        // away and persists to the same option the dashboard shell uses.
+        var themeToggle = document.querySelector('.fyndable-seo-themetoggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                var dark = !document.body.classList.contains('fyndable-dark');
+                document.body.classList.toggle('fyndable-dark', dark);
+
+                if (typeof ajaxurl === 'undefined') return;
+                var data = new FormData();
+                data.append('action', 'sseo_ai_toggle_theme');
+                data.append('nonce', themeToggle.getAttribute('data-nonce') || '');
+                data.append('dark', dark ? '1' : '0');
+                fetch(ajaxurl, { method: 'POST', body: data, credentials: 'same-origin' })
+                    .catch(function() {});
+            });
+        }
     });
 })();
 JS;
     }
 }
-

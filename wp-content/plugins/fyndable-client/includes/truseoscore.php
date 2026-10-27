@@ -72,87 +72,102 @@ class TruSEOSCORE
         update_post_meta($post->ID, '_sseo_ai_score', $score);
         delete_transient('sseo_dashboard_overview_' . get_current_blog_id());
         $analysis = $this->getAnalysis($post, $focusKeyphrase);
-        
+
+        $scoreBand = $score >= 80 ? 'good' : ($score >= 50 ? 'ok' : 'bad');
+        $scoreVerdict = $score >= 80
+            ? __('Great! Your content is well-optimized.', 'ai-seo-client')
+            : ($score >= 50
+                ? __('Your content needs some improvements.', 'ai-seo-client')
+                : __('Major improvements needed.', 'ai-seo-client'));
+
+        $titleLength = strlen($title);
+        $descriptionLength = strlen($description);
+        $severityMap = [
+            'good' => ['ok', 'dashicons-yes-alt'],
+            'warning' => ['warn', 'dashicons-warning'],
+            'error' => ['danger', 'dashicons-dismiss'],
+        ];
+
         wp_nonce_field('aiseo_truseo_save', 'aiseo_truseo_nonce');
         ?>
         <div class="aiseo-truseo-metabox">
-            <style>
-                .aiseo-truseo-metabox { padding: 15px; }
-                .aiseo-score-circle { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white; margin-bottom: 15px; }
-                .aiseo-score-good { background: #00a32a; }
-                .aiseo-score-ok { background: #dba617; }
-                .aiseo-score-bad { background: #d63638; }
-                .aiseo-analysis-list { list-style: none; padding: 0; }
-                .aiseo-analysis-list li { padding: 8px; margin: 4px 0; border-left: 3px solid #ddd; }
-                .aiseo-analysis-list li.good { border-left-color: #00a32a; background: #edfaef; }
-                .aiseo-analysis-list li.warning { border-left-color: #dba617; background: #fcf9e8; }
-                .aiseo-analysis-list li.error { border-left-color: #d63638; background: #fcf0f1; }
-                .aiseo-preview-box { border: 1px solid #ddd; padding: 15px; background: #f9f9f9; margin: 15px 0; }
-                .aiseo-preview-title { color: #1a0dab; font-size: 18px; text-decoration: underline; cursor: pointer; }
-                .aiseo-preview-url { color: #006621; font-size: 14px; }
-                .aiseo-preview-desc { color: #4d5156; font-size: 14px; line-height: 1.4; }
-            </style>
 
-            <div style="display:flex; gap:20px; margin-bottom:20px;">
-                <div class="aiseo-score-circle <?php echo $score >= 80 ? 'aiseo-score-good' : ($score >= 50 ? 'aiseo-score-ok' : 'aiseo-score-bad'); ?>">
-                    <?php echo $score; ?>
+            <div class="fyn-score-head">
+                <div class="fyn-score-disc fyn-score-disc--<?php echo esc_attr($scoreBand); ?>">
+                    <?php echo esc_html((string) $score); ?>
                 </div>
                 <div>
-                    <h3><?php esc_html_e('SEO Score', 'ai-seo-client'); ?></h3>
-                    <p><?php echo $score >= 80 ? __('Great! Your content is well-optimized.', 'ai-seo-client') : ($score >= 50 ? __('Your content needs some improvements.', 'ai-seo-client') : __('Major improvements needed.', 'ai-seo-client')); ?></p>
+                    <h2><?php esc_html_e('SEO Score', 'ai-seo-client'); ?></h2>
+                    <p><?php echo esc_html($scoreVerdict); ?></p>
                 </div>
             </div>
 
-            <h4><?php esc_html_e('Focus Keyphrase', 'ai-seo-client'); ?></h4>
-            <p>
-                <input type="text" name="aiseo_focus_keyphrase" value="<?php echo esc_attr($focusKeyphrase); ?>" class="large-text" placeholder="<?php esc_attr_e('Enter your main keyword...', 'ai-seo-client'); ?>">
-            </p>
-
-            <h4><?php esc_html_e('Secondary Keyphrases', 'ai-seo-client'); ?></h4>
-            <p>
-                <input type="text" name="aiseo_secondary_keyphrases" value="<?php echo esc_attr($secondaryKeyphrases); ?>" class="large-text" placeholder="<?php esc_attr_e('keyword 1, keyword 2, keyword 3', 'ai-seo-client'); ?>">
-                <small><?php esc_html_e('Comma-separated list of related keywords', 'ai-seo-client'); ?></small>
-            </p>
-
-            <h4><?php esc_html_e('SEO Title', 'ai-seo-client'); ?></h4>
-            <p>
-                <input type="text" name="aiseo_title" value="<?php echo esc_attr($title); ?>" class="large-text" maxlength="60">
-                <small><?php printf(__('Recommended: 50-60 characters. Current: %d', 'ai-seo-client'), strlen($title)); ?></small>
-            </p>
-
-            <h4><?php esc_html_e('Meta Description', 'ai-seo-client'); ?></h4>
-            <p>
-                <textarea name="aiseo_description" rows="3" class="large-text" maxlength="160"><?php echo esc_textarea($description); ?></textarea>
-                <small><?php printf(__('Recommended: 150-160 characters. Current: %d', 'ai-seo-client'), strlen($description)); ?></small>
-            </p>
-
-            <h4><?php esc_html_e('Google SERP Preview', 'ai-seo-client'); ?></h4>
-            <div class="aiseo-preview-box">
-                <div class="aiseo-preview-title"><?php echo esc_html($title); ?></div>
-                <div class="aiseo-preview-url"><?php echo esc_url($this->getCanonicalUrl($post)); ?></div>
-                <div class="aiseo-preview-desc"><?php echo esc_html($description); ?></div>
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="aiseo-focus-keyphrase"><?php esc_html_e('Focus Keyphrase', 'ai-seo-client'); ?></label>
+                <input type="text" class="fyn-inp" id="aiseo-focus-keyphrase" name="aiseo_focus_keyphrase"
+                    value="<?php echo esc_attr($focusKeyphrase); ?>"
+                    placeholder="<?php esc_attr_e('Enter your main keyword...', 'ai-seo-client'); ?>">
             </div>
 
-            <h4><?php esc_html_e('Analysis Results', 'ai-seo-client'); ?></h4>
-            <ul class="aiseo-analysis-list">
-                <?php foreach ($analysis as $item) : ?>
-                <li class="<?php echo esc_attr($item['status']); ?>">
-                    <strong><?php echo esc_html($item['label']); ?>:</strong> 
-                    <?php echo esc_html($item['message']); ?>
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="aiseo-secondary-keyphrases"><?php esc_html_e('Secondary Keyphrases', 'ai-seo-client'); ?></label>
+                <input type="text" class="fyn-inp" id="aiseo-secondary-keyphrases" name="aiseo_secondary_keyphrases"
+                    value="<?php echo esc_attr($secondaryKeyphrases); ?>"
+                    placeholder="<?php esc_attr_e('keyword 1, keyword 2, keyword 3', 'ai-seo-client'); ?>">
+                <div class="fyn-hint"><?php esc_html_e('Comma-separated list of related keywords', 'ai-seo-client'); ?></div>
+            </div>
+
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="aiseo-title"><?php esc_html_e('SEO Title', 'ai-seo-client'); ?></label>
+                <input type="text" class="fyn-inp" id="aiseo-title" name="aiseo_title"
+                    value="<?php echo esc_attr($title); ?>" maxlength="60">
+                <div class="fyn-hint<?php echo $titleLength > 60 ? ' fyn-hint--warn' : ''; ?>">
+                    <?php printf(esc_html__('Recommended: 50-60 characters. Current: %d', 'ai-seo-client'), $titleLength); ?>
+                </div>
+            </div>
+
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="aiseo-description"><?php esc_html_e('Meta Description', 'ai-seo-client'); ?></label>
+                <textarea class="fyn-ta" id="aiseo-description" name="aiseo_description" rows="3" maxlength="160"><?php echo esc_textarea($description); ?></textarea>
+                <div class="fyn-hint<?php echo $descriptionLength > 160 ? ' fyn-hint--warn' : ''; ?>">
+                    <?php printf(esc_html__('Recommended: 150-160 characters. Current: %d', 'ai-seo-client'), $descriptionLength); ?>
+                </div>
+            </div>
+
+            <label class="fyn-lbl"><?php esc_html_e('Google SERP Preview', 'ai-seo-client'); ?></label>
+            <div class="fyn-serp">
+                <div class="fyn-serp-title"><?php echo esc_html($title); ?></div>
+                <div class="fyn-serp-url"><?php echo esc_url($this->getCanonicalUrl($post)); ?></div>
+                <div class="fyn-serp-desc"><?php echo esc_html($description); ?></div>
+            </div>
+
+            <label class="fyn-lbl"><?php esc_html_e('Analysis Results', 'ai-seo-client'); ?></label>
+            <ul class="fyn-sev-list">
+                <?php foreach ($analysis as $item) :
+                    [$tone, $icon] = $severityMap[$item['status']] ?? $severityMap['warning'];
+                ?>
+                <li class="fyn-sev fyn-sev--<?php echo esc_attr($tone); ?>">
+                    <span class="dashicons <?php echo esc_attr($icon); ?>"></span>
+                    <div>
+                        <strong><?php echo esc_html($item['label']); ?>:</strong>
+                        <?php echo esc_html($item['message']); ?>
+                    </div>
                 </li>
                 <?php endforeach; ?>
             </ul>
 
-            <p>
-                <button type="button" class="button" id="aiseo-analyze-content">
-                    <?php esc_html_e('Re-analyze Content', 'ai-seo-client'); ?>
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary" id="aiseo-analyze-content">
+                    <span class="dashicons dashicons-update"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Re-analyze Content', 'ai-seo-client'); ?></span>
                 </button>
-                <button type="button" class="button button-secondary" id="aiseo-suggest-improvements">
-                    <?php esc_html_e('AI Suggest Improvements', 'ai-seo-client'); ?>
+                <button type="button" class="fyn-btn fyn-btn--outline" id="aiseo-suggest-improvements">
+                    <span class="dashicons dashicons-superhero-alt"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('AI Suggest Improvements', 'ai-seo-client'); ?></span>
                 </button>
-            </p>
+            </div>
 
-            <div id="aiseo-suggestions" style="margin-top:15px;"></div>
+            <div id="aiseo-suggestions"></div>
         </div>
 
         <script>
@@ -162,7 +177,7 @@ class TruSEOSCORE
             // Re-analyze Content button
             $('#aiseo-analyze-content').on('click', function() {
                 var btn = $(this);
-                btn.prop('disabled', true).text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
+                btn.prop('disabled', true).find('.fyn-btn-label').text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
 
                 wp.apiFetch({
                     path: '/sseo-ai/v1/content-analyze/' + postId,
@@ -172,7 +187,7 @@ class TruSEOSCORE
                     location.reload();
                 }).catch(function(err) {
                     alert(err.message || '<?php echo esc_js(__('Analysis failed', 'ai-seo-client')); ?>');
-                    btn.prop('disabled', false).text('<?php echo esc_js(__('Re-analyze Content', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false).find('.fyn-btn-label').text('<?php echo esc_js(__('Re-analyze Content', 'ai-seo-client')); ?>');
                 });
             });
 
@@ -186,8 +201,8 @@ class TruSEOSCORE
                     return;
                 }
 
-                btn.prop('disabled', true).text('<?php echo esc_js(__('Generating suggestions...', 'ai-seo-client')); ?>');
-                $('#aiseo-suggestions').html('<p><?php echo esc_js(__('Loading AI suggestions...', 'ai-seo-client')); ?></p>');
+                btn.prop('disabled', true).find('.fyn-btn-label').text('<?php echo esc_js(__('Generating suggestions...', 'ai-seo-client')); ?>');
+                $('#aiseo-suggestions').html('<p class="fyn-suggestions-wait"><?php echo esc_js(__('Loading AI suggestions...', 'ai-seo-client')); ?></p>');
 
                 wp.apiFetch({
                     path: '/sseo-ai/v1/content-suggest/' + postId,
@@ -195,21 +210,21 @@ class TruSEOSCORE
                     data: { keyphrase: focusKeyphrase }
                 }).then(function(data) {
                     if (data.suggestions && data.suggestions.length > 0) {
-                        var html = '<div class="aiseo-suggestions-list" style="background:#e8f4fa;border-left:3px solid #379fd3;padding:10px 15px;margin:10px 0;border-radius:0 4px 4px 0;">';
-                        html += '<h4 style="margin-top:0;color:#379fd3;"><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul style="margin:0;">';
+                        var html = '<div class="fyn-suggestions">';
+                        html += '<h4><?php echo esc_js(__('AI Improvement Suggestions', 'ai-seo-client')); ?></h4><ul>';
                         data.suggestions.forEach(function(s) {
-                            html += '<li style="margin:5px 0;">' + s + '</li>';
+                            html += '<li>' + s + '</li>';
                         });
                         html += '</ul></div>';
                         $('#aiseo-suggestions').html(html);
                     } else {
-                        $('#aiseo-suggestions').html('<p style="color:#00a32a;"><?php echo esc_js(__('No suggestions needed - your content looks great!', 'ai-seo-client')); ?></p>');
+                        $('#aiseo-suggestions').html('<p class="fyn-suggestions-ok"><?php echo esc_js(__('No suggestions needed - your content looks great!', 'ai-seo-client')); ?></p>');
                     }
-                    btn.prop('disabled', false).text('<?php echo esc_js(__('AI Suggest Improvements', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false).find('.fyn-btn-label').text('<?php echo esc_js(__('AI Suggest Improvements', 'ai-seo-client')); ?>');
                 }).catch(function(err) {
                     alert(err.message || '<?php echo esc_js(__('Failed to get suggestions', 'ai-seo-client')); ?>');
                     $('#aiseo-suggestions').html('');
-                    btn.prop('disabled', false).text('<?php echo esc_js(__('AI Suggest Improvements', 'ai-seo-client')); ?>');
+                    btn.prop('disabled', false).find('.fyn-btn-label').text('<?php echo esc_js(__('AI Suggest Improvements', 'ai-seo-client')); ?>');
                 });
             });
         });

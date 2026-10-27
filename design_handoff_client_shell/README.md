@@ -131,8 +131,23 @@ Recurring **compact stat tile** (4-up grid, `gap:16px`): card, `padding:16px 18p
 - **Dashicons** — already vendored in the plugin (`assets/` / core WP). Use the glyph names listed per nav item and per screen.
 - No photography/illustration anywhere (deliberate brand constraint).
 
+## The single-post editor meta box (`Fyndable Post Editor.dc.html`)
+The plugin also injects SEO fields into the WordPress **post/page editor** (the `Fyndable Smart SEO` meta box). This is redesigned in the same token system — same dark brand header band, same light/dark variables, same card/field/badge vocabulary — but as a self-contained panel (max-width ~1040px) rather than the full-page shell.
+
+Structure:
+- **Brand header band** (`#2A1533 → #132A38`): logo + theme toggle + a "Postoptimalisatie" pill, 56px tall.
+- **Collapsible accordion sections**, each a full-width header row with a 3px coloured left border, a Dashicon in the section accent colour, the title, a count badge, and an up/down chevron. Open section header uses `--sect-head` background. Sections: **Content & zoekwoorden** (accent blue `#379FD3`), **Technische SEO** (purple `#8F39AC`), **Social & schema** (accent `#a855f7`), **AI-hulpmiddelen** (green `#10b981`).
+- **Content & zoekwoorden** opens to a **tab bar** (SEO-score, Zoekwoorden, Slimme tags, Interne links, E-E-A-T, Prestaties, Workflow — active tab = purple text + 2px purple underline).
+  - **SEO-score tab**: an 84px solid score disc coloured by band (≥80 green, ≥50 amber, else red) with the number in white + verdict sentence; form fields **Focus-zoekterm**, **Secundaire zoektermen** (empty → real input w/ placeholder), **SEO-titel** (char-count hint turns amber when over 60), **Meta-beschrijving** (textarea, char-count hint); a **Google SERP-preview** card (`--serp-bg`, blue title, green URL, muted desc); an **Analyseresultaten** list (each row: severity left-border + tint bg — green `ok` / amber `warn` / red `danger` — Dashicon, bold label, finding text); two actions: **Content opnieuw analyseren** (primary gradient) + **AI-verbeteringen voorstellen** (outline).
+  - Other tabs render a labelled row-list (icon chip + label + detail + status badge) populated with that tab's real signals (keyword density, smart tags, internal-link opportunities, E-E-A-T checks, GSC performance, workflow status).
+- **Technische SEO / Social & schema / AI-hulpmiddelen** open to field bodies built from the same controls: select rows (value + chevron), toggle rows (purple switch + description), text field rows (filled value or placeholder input), and action rows (gradient icon chip + label + "Genereer" button) for AI/image generation.
+- Form controls: `.fyn-inp` (46px, 2px border → purple on focus) and `.fyn-ta` (textarea); labels 13px/700 `--text-b`; hints 12px `--text-s` (amber/red when a limit is exceeded).
+
+Where to apply: the meta-box renderer in the client plugin — the `add_meta_box` callback and its `render*MetaBox()` / tab-render methods (search `includes/` for the post-editor SEO panel, e.g. `postmetabox.php` / `seometabox.php`), plus the matching meta-box CSS. Reuse the exact same CSS variables as the shell so light/dark stay consistent across admin pages and the editor.
+
 ## Files in this bundle
-- `Fyndable Client.dc.html` — the full interactive design reference (all 23 screens, both themes). Open in a browser to inspect exact markup, styles and behavior; use browser dev tools to read computed values.
+- `Fyndable Client.dc.html` — the full interactive design reference (all 23 admin screens, both themes). Open in a browser to inspect exact markup, styles and behavior; use browser dev tools to read computed values.
+- `Fyndable Post Editor.dc.html` — the single-post editor meta box (accordion sections + tabs, both themes).
 - `FYN-LOGO-DIA-LONG300ppi.png` — header logo asset.
 - `tokens-colors.css` — the Fyndable design-system colour tokens for reference.
 
