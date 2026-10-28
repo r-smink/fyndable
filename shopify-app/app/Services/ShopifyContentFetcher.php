@@ -401,6 +401,119 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Fetch all markets with regions, web presences and locale data.
+     *
+     * Requires read_markets + read_locales scopes.
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getMarkets(Shop $shop): array
+    {
+        $query = <<<'GRAPHQL'
+        query getMarkets {
+          markets(first: 50) {
+            edges {
+              node {
+                id
+                name
+                enabled
+                primary
+                regions(first: 50) {
+                  edges {
+                    node {
+                      ... on Country {
+                        code
+                        name
+                        currency { isoCode }
+                      }
+                    }
+                  }
+                }
+                webPresences(first: 10) {
+                  edges {
+                    node {
+                      rootUrls { locale url }
+                      defaultLocale
+                      alternateLocales
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query);
+        if (isset($response['error'])) {
+            return $response;
+        }
+
+        $markets = [];
+        foreach ($response['data']['markets']['edges'] ?? [] as $edge) {
+            $node = $edge['node'] ?? [];
+
+            // Flatten regions
+            $regions = array_map(
+                fn ($re) => $re['node'] ?? [],
+                $node['regions']['edges'] ?? []
+            );
+
+            // Flatten web presences
+            $webPresences = array_map(
+                fn ($wpe) => $wpe['node'] ?? [],
+                $node['webPresences']['edges'] ?? []
+            );
+
+            $markets[] = [
+                'id' => $node['id'] ?? '',
+                'name' => $node['name'] ?? '',
+                'enabled' => $node['enabled'] ?? false,
+                'primary' => $node['primary'] ?? false,
+                'regions' => $regions,
+                'webPresences' => $webPresences,
+            ];
+        }
+
+        return $markets;
+    }
+
+    /**
+     * Fetch translations for a resource in a given locale.
+     *
+     * Requires read_translations scope.
+     *
+     * @param  string  $resourceGid  e.g. "gid://shopify/Product/123"
+     * @param  string  $locale  e.g. "nl", "de", "fr"
+     * @return array<int, array{key: string, value: string}>|array{error: string}
+     */
+    public function getTranslations(Shop $shop, string $resourceGid, string $locale): array
+    {
+        $query = <<<'GRAPHQL'
+        query getTranslations($resourceId: ID!, $locale: String!) {
+          translatableResource(resourceId: $resourceId) {
+            translations(locale: $locale) {
+              key
+              value
+              locale
+            }
+          }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query, [
+            'resourceId' => $resourceGid,
+            'locale' => $locale,
+        ]);
+
+        if (isset($response['error'])) {
+            return $response;
+        }
+
+        return $response['data']['translatableResource']['translations'] ?? [];
+    }
+
+    /**
      * Execute a GraphQL query with pagination for a top-level connection.
      *
      * @param  Shop  $shop

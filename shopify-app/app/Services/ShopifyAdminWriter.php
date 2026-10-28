@@ -205,8 +205,12 @@ class ShopifyAdminWriter
         }
         GRAPHQL;
 
-        // Shopify GIDs use the case-sensitive resource type (e.g. "Product")
-        $gid = $this->gid(ucfirst($ownerType), $ownerId);
+        // Shopify GIDs use the case-sensitive resource type (e.g. "Product", "ProductVariant")
+        $gidType = match (strtolower($ownerType)) {
+            'productvariant' => 'ProductVariant',
+            default => ucfirst($ownerType),
+        };
+        $gid = $this->gid($gidType, $ownerId);
 
         $metafields = array_map(
             fn (array $metafield) => ['ownerId' => $gid] + $metafield,

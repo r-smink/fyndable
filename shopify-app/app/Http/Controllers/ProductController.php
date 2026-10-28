@@ -539,8 +539,188 @@ class ProductController extends Controller
             : ['error' => 'partial_save', 'saved' => $results];
     }
 
+    // -----------------------------------------------------------------------
+    //  Product Variant SEO (Feature 6)
+    // -----------------------------------------------------------------------
+
+    /**
+     * List product variants with SEO-relevant data.
+     *
+     * GET /api/products/{productId}/variants
+     */
+    public function variants(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $variants = $this->fetchProductVariants($shop, $productId);
+        if (isset($variants['error'])) {
+            return $variants;
+        }
+
+        return ['success' => true, 'variants' => $variants];
+    }
+
+    /**
+     * Generate an AI description for a specific product variant.
+     *
+     * POST /api/products/{productId}/variants/{variantId}/generate-description
+     */
+    public function generateVariantDescription(Request $request, string $productId, string $variantId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $product = $this->getProduct($shop, $productId);
+        if (isset($product['error'])) {
+            return $product;
+        }
+
+        $variant = $this->findVariant($product, $variantId);
+        if (! $variant) {
+            return ['error' => 'variant_not_found'];
+        }
+
+        $optionsStr = '';
+        foreach ($variant['selectedOptions'] ?? [] as $opt) {
+            $optionsStr .= ($opt['name'] ?? '').': '.($opt['value'] ?? '').', ';
+        }
+        $optionsStr = rtrim($optionsStr, ', ');
+
+        $prompt = "Write a unique, SEO-optimized description for this specific product variant.\n\n"
+            ."Product: ".($product['title'] ?? '')."\n"
+            ."Variant: ".($variant['title'] ?? '')."\n"
+            ."Options: {$optionsStr}\n"
+            ."SKU: ".($variant['sku'] ?? '')."\n"
+            ."Price: ".($variant['price'] ?? '')."\n"
+            ."General product description: ".strip_tags($product['description'] ?? '')."\n\n"
+            ."Write a 2-3 sentence description highlighting what makes this specific variant unique (e.g. color, size, material). Do not repeat the general description verbatim.";
+
+        $result = $this->saas->aiGenerate(
+            $shop->license_key,
+            $shop->tenant_key,
+            [
+                ['role' => 'system', 'content' => 'You are an expert e-commerce copywriter specializing in product variant descriptions.'],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+            'openai/gpt-4o-mini',
+            300,
+            0.7,
+            'variant_description'
+        );
+
+        if (isset($result['error'])) {
+            return $result;
+        }
+
+        return [
+            'success' => true,
+            'description' => $result['text'],
+            'variant_id' => $variantId,
+            'variant_title' => $variant['title'] ?? '',
+        ];
+    }
+
+    /**
+     * Save a variant description to a Shopify metafield.
+     *
+     * POST /api/products/{productId}/variants/{variantId}/save-description
+     * Body: { description }
+     */
+    public function saveVariantDescription(Request $request, string $productId, string $variantId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $description = trim((string) $request->input('description', ''));
+        if ($description === '') {
+            return ['error' => 'description_required'];
+        }
+
+        $metafield = $this->writer->metafieldInput(
+            self::METAFIELD_NAMESPACE,
+            'variant_description',
+            $description,
+            'multi_line_text_field'
+        );
+
+        $error = $this->writer->setMetafields($shop, 'productvariant', $variantId, [$metafield]);
+
+        return $error
+            ? ['error' => 'save_failed', 'message' => $error]
+            : ['success' => true];
+    }
+
+    // -----------------------------------------------------------------------
+    //  Product Review Schema (Feature 7)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Preview AggregateRating schema from review app metafields.
+     *
+     * GET /api/products/{productId}/review-schema
+     */
+    public function reviewSchema(Request $request, string $productId): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        if (! $this->license->isActive($shop)) {
+            return ['error' => 'license_inactive'];
+        }
+
+        $gid = str_starts_with($productId, 'gid://') ? $productId : "gid://shopify/Product/{$productId}";
+        $node = $this->fetcher->getNode($shop, $gid);
+        if (isset($node['error'])) {
+            return $node;
+        }
+
+        $reviewData = $this->extractReviewData($node);
+
+        if (! $reviewData) {
+            return ['success' => true, 'review_data' => null, 'message' => 'No review data found in product metafields.'];
+        }
+
+        return [
+            'success' => true,
+            'review_data' => $reviewData,
+            'schema' => [
+                '@type' => 'AggregateRating',
+                'ratingValue' => $reviewData['rating'],
+                'reviewCount' => $reviewData['count'],
+                'bestRating' => '5',
+                'worstRating' => '1',
+            ],
+        ];
+    }
+
+    // -----------------------------------------------------------------------
+    //  Private helpers
+    // -----------------------------------------------------------------------
+
     /**
      * Build a Product JSON-LD schema from Shopify product data.
+     * Includes per-variant Offers and AggregateRating when available.
      */
     private function buildProductSchema(array $product, Shop $shop): array
     {
@@ -572,43 +752,247 @@ class ProductController extends Controller
             $schema['category'] = $product['productType'];
         }
 
-        // Offers from variants
+        // Offers from variants — with per-variant detail when available
         $variants = $product['variants']['edges'] ?? [];
         if (! empty($variants)) {
+            $offers = [];
             $prices = [];
-            $available = true;
+            $allAvailable = true;
+
             foreach ($variants as $edge) {
                 $v = $edge['node'];
-                if (isset($v['price'])) {
-                    $prices[] = (float) $v['price'];
+                $price = isset($v['price']) ? (float) $v['price'] : null;
+                if ($price !== null) {
+                    $prices[] = $price;
                 }
-                if (! ($v['availableForSale'] ?? false)) {
-                    $available = false;
+                $available = $v['availableForSale'] ?? false;
+                if (! $available) {
+                    $allAvailable = false;
                 }
+
+                $offer = [
+                    '@type' => 'Offer',
+                    'priceCurrency' => $shop->currency ?: 'USD',
+                    'price' => $price ?? 0,
+                    'availability' => $available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                    'url' => $url,
+                ];
+
+                if (! empty($v['sku'])) {
+                    $offer['sku'] = $v['sku'];
+                }
+
+                // Per-variant details (if fetched with extended query)
+                if (! empty($v['title']) && $v['title'] !== 'Default Title') {
+                    $offer['name'] = $v['title'];
+                }
+                if (! empty($v['selectedOptions'])) {
+                    $offer['additionalProperty'] = array_map(fn ($opt) => [
+                        '@type' => 'PropertyValue',
+                        'name' => $opt['name'],
+                        'value' => $opt['value'],
+                    ], $v['selectedOptions']);
+                }
+                if (! empty($v['image']['url'])) {
+                    $offer['image'] = $v['image']['url'];
+                }
+
+                $offers[] = $offer;
             }
 
-            if (count($prices) > 1) {
+            if (count($offers) > 1) {
                 $schema['offers'] = [
                     '@type' => 'AggregateOffer',
                     'priceCurrency' => $shop->currency ?: 'USD',
                     'lowPrice' => min($prices),
                     'highPrice' => max($prices),
-                    'offerCount' => count($variants),
-                    'availability' => $available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                    'offerCount' => count($offers),
+                    'availability' => $allAvailable ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                     'url' => $url,
+                    'offers' => $offers,
                 ];
             } else {
-                $schema['offers'] = [
-                    '@type' => 'Offer',
-                    'priceCurrency' => $shop->currency ?: 'USD',
-                    'price' => $prices[0] ?? 0,
-                    'availability' => $available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-                    'url' => $url,
-                ];
+                $schema['offers'] = $offers[0] ?? [];
             }
         }
 
+        // AggregateRating from review app metafields
+        $reviewData = $this->extractReviewData($product);
+        if ($reviewData) {
+            $schema['aggregateRating'] = [
+                '@type' => 'AggregateRating',
+                'ratingValue' => $reviewData['rating'],
+                'reviewCount' => $reviewData['count'],
+                'bestRating' => '5',
+                'worstRating' => '1',
+            ];
+        }
+
         return $schema;
+    }
+
+    /**
+     * Extract review rating/count from known review-app metafield patterns.
+     *
+     * @return array{rating: string, count: string}|null
+     */
+    private function extractReviewData(array $node): ?array
+    {
+        $metafields = [];
+        foreach ($node['metafields']['edges'] ?? [] as $edge) {
+            $mf = $edge['node'] ?? [];
+            $ns = $mf['namespace'] ?? '';
+            $key = $mf['key'] ?? '';
+            $metafields["{$ns}.{$key}"] = $mf['value'] ?? '';
+        }
+
+        // Known review-app metafield patterns (namespace.key → type)
+        $ratingKeys = [
+            'reviews.rating',
+            'judgeme.badge',
+            'loox.avg_rating',
+            'stamped.reviews_average',
+            'yotpo.reviews_average',
+            'okendo.summaryData',
+        ];
+
+        $countKeys = [
+            'reviews.rating_count',
+            'judgeme.review_count',
+            'loox.num_reviews',
+            'stamped.reviews_count',
+            'yotpo.reviews_count',
+        ];
+
+        $rating = null;
+        $count = null;
+
+        foreach ($ratingKeys as $key) {
+            if (! empty($metafields[$key])) {
+                $value = $metafields[$key];
+                // Handle JSON-encoded rating objects (e.g. Judge.me: {"value":"4.7","scale_min":"1","scale_max":"5"})
+                $decoded = json_decode($value, true);
+                if (is_array($decoded) && isset($decoded['value'])) {
+                    $rating = (string) $decoded['value'];
+                } elseif (is_numeric($value)) {
+                    $rating = (string) $value;
+                }
+                if ($rating !== null) {
+                    break;
+                }
+            }
+        }
+
+        foreach ($countKeys as $key) {
+            if (! empty($metafields[$key])) {
+                $value = $metafields[$key];
+                if (is_numeric($value)) {
+                    $count = (string) (int) $value;
+                }
+                if ($count !== null) {
+                    break;
+                }
+            }
+        }
+
+        // Also check spr.reviews (Shopify Product Reviews app stores as JSON array)
+        if (($rating === null || $count === null) && ! empty($metafields['spr.reviews'])) {
+            $sprReviews = json_decode($metafields['spr.reviews'], true);
+            if (is_array($sprReviews) && ! empty($sprReviews)) {
+                $count = $count ?? (string) count($sprReviews);
+                if ($rating === null) {
+                    $total = array_sum(array_column($sprReviews, 'rating'));
+                    $rating = (string) round($total / count($sprReviews), 1);
+                }
+            }
+        }
+
+        if ($rating === null || $count === null) {
+            return null;
+        }
+
+        return ['rating' => $rating, 'count' => $count];
+    }
+
+    /**
+     * Fetch all variants for a product with extended fields.
+     */
+    private function fetchProductVariants(Shop $shop, string $productId): array
+    {
+        $gid = str_starts_with($productId, 'gid://') ? $productId : "gid://shopify/Product/{$productId}";
+
+        $query = <<<'GRAPHQL'
+        query getProductVariants($id: ID!) {
+          product(id: $id) {
+            title
+            variants(first: 100) {
+              edges {
+                node {
+                  id
+                  title
+                  sku
+                  price
+                  compareAtPrice
+                  availableForSale
+                  barcode
+                  weight
+                  weightUnit
+                  selectedOptions { name value }
+                  image { url altText }
+                  metafields(first: 5) { edges { node { namespace key value } } }
+                }
+              }
+            }
+          }
+        }
+        GRAPHQL;
+
+        $endpoint = "https://{$shop->shop_domain}/admin/api/".config('shopify.api_version').'/graphql.json';
+        $accessToken = app(\App\Services\ShopifyTokenService::class)->tokenFor($shop);
+
+        if ($accessToken === null) {
+            return ['error' => 'no_access_token'];
+        }
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-Shopify-Access-Token' => $accessToken,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($endpoint, [
+                    'query' => $query,
+                    'variables' => ['id' => $gid],
+                ]);
+        } catch (ConnectionException $e) {
+            return ['error' => 'connection_failed'];
+        }
+
+        if ($response->failed()) {
+            return ['error' => 'http_'.$response->status()];
+        }
+
+        $body = $response->json();
+        $variants = $body['data']['product']['variants']['edges'] ?? [];
+
+        return array_map(fn ($edge) => $edge['node'], $variants);
+    }
+
+    /**
+     * Find a variant by ID within a product's variant edges.
+     */
+    private function findVariant(array $product, string $variantId): ?array
+    {
+        $gid = str_starts_with($variantId, 'gid://') ? $variantId : "gid://shopify/ProductVariant/{$variantId}";
+
+        foreach ($product['variants']['edges'] ?? [] as $edge) {
+            $v = $edge['node'];
+            if (($v['id'] ?? '') === $gid || ($v['id'] ?? '') === $variantId) {
+                return $v;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -692,10 +1076,14 @@ class ProductController extends Controller
             variants(first: 20) {
               edges {
                 node {
+                  id
+                  title
                   sku
                   price
                   compareAtPrice
                   availableForSale
+                  selectedOptions { name value }
+                  image { url altText }
                 }
               }
             }

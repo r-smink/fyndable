@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(rtk php:*)"
+      "Bash(rtk php:*)",
+      "Bash(ls /c/Workspace/Fyndable/wp-content/plugins/fyndable-client/includes/*.php)",
+      "Bash(ls /c/Workspace/Fyndable/wp-content/plugins/fyndable-saas-dashboard/includes/*.php)",
+      "Bash(wc -l /c/Workspace/Fyndable/shopify-app/app/**/*.php)",
+      "Bash(rtk find:*)",
+      "Bash(rtk ls:*)",
+      "mcp__claude_ai_Claude_Docs__guide",
+      "mcp__claude_ai_Claude_Docs__batch",
+      "mcp__claude_ai_Claude_Docs__update",
+      "Bash(rtk wc:*)",
+      "Bash(rtk grep:*)"
     ]
   }
 }

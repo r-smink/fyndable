@@ -384,6 +384,121 @@ class SaasProxyClient
         ], 180);
     }
 
+    // -----------------------------------------------------------------------
+    //  GEO Scan (AI Visibility)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Start an async GEO scan via the SaaS dashboard.
+     *
+     * @param  string  $url  The shop's URL to scan.
+     * @param  string  $keywords  Comma-separated keywords (1-2).
+     * @return array{success?: bool, scan_id?: int}|array{error: string}
+     */
+    public function geoScan(string $licenseKey, string $tenantKey, string $url, string $keywords): array
+    {
+        return $this->post('admin/geo-scan', $licenseKey, $tenantKey, [
+            'url' => $url,
+            'keywords' => $keywords,
+        ], 90);
+    }
+
+    /**
+     * Poll GEO scan status / results.
+     */
+    public function geoScanStatus(string $licenseKey, string $tenantKey, int $scanId): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/admin/geo-scan/{$scanId}";
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ])
+                ->get($endpoint);
+        } catch (ConnectionException $e) {
+            Log::error('SaasProxyClient: GEO scan status failed', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        if ($response->failed()) {
+            return ['error' => 'geo_scan_status_failed', 'status' => $response->status()];
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
+     * Get recent GEO scans for a tenant.
+     */
+    public function geoScanRecent(string $licenseKey, string $tenantKey, int $limit = 10): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/admin/geo-scan/recent";
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ])
+                ->get($endpoint, ['limit' => $limit]);
+        } catch (ConnectionException $e) {
+            Log::error('SaasProxyClient: GEO scan recent failed', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        if ($response->failed()) {
+            return ['error' => 'geo_scan_recent_failed', 'status' => $response->status()];
+        }
+
+        return $response->json() ?? [];
+    }
+
+    // -----------------------------------------------------------------------
+    //  Keyword Explorer
+    // -----------------------------------------------------------------------
+
+    /**
+     * Expand a seed keyword into related keywords via the SaaS keyword expand endpoint.
+     *
+     * @return array{keywords?: array, ...}|array{error: string}
+     */
+    public function keywordExpand(string $licenseKey, string $tenantKey, string $seed, string $country = 'us', string $language = 'en'): array
+    {
+        return $this->post('keywords/expand', $licenseKey, $tenantKey, [
+            'seed' => $seed,
+            'country' => $country,
+            'language' => $language,
+        ], 90);
+    }
+
+    /**
+     * Cluster a list of keywords by SERP similarity.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    public function keywordCluster(string $licenseKey, string $tenantKey, array $keywords): array
+    {
+        return $this->post('keywords/cluster', $licenseKey, $tenantKey, [
+            'keywords' => array_values($keywords),
+        ], 90);
+    }
+
+    /**
+     * Google Trends data for keywords.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    public function googleTrends(string $licenseKey, string $tenantKey, array $keywords): array
+    {
+        return $this->post('keywords/google-trends', $licenseKey, $tenantKey, [
+            'keywords' => array_values($keywords),
+        ]);
+    }
+
     /**
      * Shared POST helper for SaaS endpoints.
      */

@@ -30,6 +30,12 @@ Schedule::call(function () {
     }
 })->dailyAt('06:00')->name('daily-rank-check')->withoutOverlapping();
 
+// Publish scheduled blog articles every 15 minutes
+Schedule::command('app:publish-scheduled-articles')
+    ->everyFifteenMinutes()
+    ->name('publish-scheduled-articles')
+    ->withoutOverlapping();
+
 // Daily llms.txt cache refresh (prevents stale cache from building up)
 Schedule::call(function () {
     $shops = Shop::where('is_installed', true)

@@ -1,13 +1,19 @@
 <?php
 
+use App\Http\Controllers\AiTrackerController;
 use App\Http\Controllers\BlogWriterController;
 use App\Http\Controllers\BulkOptimizerController;
+use App\Http\Controllers\CompetitorController;
+use App\Http\Controllers\ContentCalendarController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeoScanController;
 use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\InsightsController;
+use App\Http\Controllers\KeywordExplorerController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\MarketsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
 use Illuminate\Support\Facades\Route;
@@ -120,4 +126,45 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/rank-tracker/check', [RankTrackerController::class, 'checkRankings']);
     Route::get('/rank-tracker/keywords/{id}/history', [RankTrackerController::class, 'keywordHistory']);
     Route::get('/rank-tracker/stats', [RankTrackerController::class, 'stats']);
+
+    // GEO Scan (AI Visibility)
+    Route::post('/geo-scan/start', [GeoScanController::class, 'start']);
+    Route::get('/geo-scan/{id}/status', [GeoScanController::class, 'status'])->where('id', '[0-9]+');
+    Route::get('/geo-scan/recent', [GeoScanController::class, 'recent']);
+
+    // Keyword Explorer
+    Route::post('/keywords/explore', [KeywordExplorerController::class, 'explore']);
+    Route::post('/keywords/volume', [KeywordExplorerController::class, 'volume']);
+    Route::post('/keywords/cluster', [KeywordExplorerController::class, 'cluster']);
+    Route::post('/keywords/trends', [KeywordExplorerController::class, 'trends']);
+
+    // SERP Competitor Analysis
+    Route::post('/competitor/analyze', [CompetitorController::class, 'analyze']);
+    Route::post('/competitor/compare', [CompetitorController::class, 'compare']);
+
+    // AI Optimization Tracker
+    Route::get('/ai-tracker/overview', [AiTrackerController::class, 'overview']);
+    Route::get('/ai-tracker/timeseries', [AiTrackerController::class, 'timeseries']);
+    Route::post('/ai-tracker/check', [AiTrackerController::class, 'check']);
+    Route::get('/ai-tracker/recommendations', [AiTrackerController::class, 'recommendations']);
+
+    // Content Calendar
+    Route::get('/calendar/articles', [ContentCalendarController::class, 'index']);
+    Route::post('/calendar/schedule', [ContentCalendarController::class, 'schedule']);
+    Route::put('/calendar/{id}', [ContentCalendarController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/calendar/{id}', [ContentCalendarController::class, 'destroy'])->where('id', '[0-9]+');
+    Route::get('/calendar/published', [ContentCalendarController::class, 'published']);
+
+    // Product Variant SEO
+    Route::get('/products/{productId}/variants', [ProductController::class, 'variants']);
+    Route::post('/products/{productId}/variants/{variantId}/generate-description', [ProductController::class, 'generateVariantDescription']);
+    Route::post('/products/{productId}/variants/{variantId}/save-description', [ProductController::class, 'saveVariantDescription'])->middleware('shopify.scope:write_products');
+
+    // Product Review Schema
+    Route::get('/products/{productId}/review-schema', [ProductController::class, 'reviewSchema']);
+
+    // Shopify Markets SEO Check
+    Route::get('/markets/overview', [MarketsController::class, 'overview']);
+    Route::get('/markets/audit', [MarketsController::class, 'audit']);
+    Route::get('/markets/{marketId}/content-status', [MarketsController::class, 'contentStatus'])->where('marketId', '.+');
 });

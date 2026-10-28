@@ -245,9 +245,13 @@ class LicenseAdmin
     private function tierDotClass(string $tier): string
     {
         switch (strtolower($tier)) {
+            case 'free':
+                return 'fyn-dot--muted';
             case 'trial':
             case 'starter':
                 return 'fyn-dot--info';
+            case 'early_adopters':
+                return 'fyn-dot--warning';
             case 'professional':
                 return 'fyn-dot--accent';
             case 'business':
@@ -301,10 +305,11 @@ class LicenseAdmin
                 'title' => __('By tier', 'sseo-ai-saas'),
                 'icon' => 'dashicons-star-filled',
                 'rows' => array_map(function (array $row): array {
+                    $tier = (string)$row['tier'];
                     return [
-                        'label' => ucfirst((string)$row['tier']),
+                        'label' => $tier !== '' ? str_replace('_', ' ', ucfirst($tier)) : __('Unassigned', 'sseo-ai-saas'),
                         'count' => (int)$row['count'],
-                        'dot' => $this->tierDotClass((string)$row['tier']),
+                        'dot' => $this->tierDotClass($tier),
                     ];
                 }, $stats['by_tier']),
             ],
