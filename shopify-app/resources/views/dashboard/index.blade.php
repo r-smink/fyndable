@@ -55,7 +55,7 @@
         @keyframes fynFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
         /* ---- Brand band + tab bar ---- */
-        .band { background: var(--fyn-band); }
+        .band { background: var(--fyn-band); position: relative; z-index: 100; }
         .band-inner { display: flex; align-items: center; gap: 16px; height: 60px; padding: 0 26px; max-width: 1340px; margin: 0 auto; }
         .band-logo { height: 24px; width: auto; display: block; }
         .band-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.55); letter-spacing: .05em; text-transform: uppercase; border-left: 1px solid rgba(255,255,255,.2); padding-left: 14px; white-space: nowrap; }
@@ -70,7 +70,7 @@
         .lic-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.75); font-size: 12px; font-weight: 700; white-space: nowrap; text-transform: capitalize; }
         .lic-pill .dashicons { font-size: 14px; width: 14px; height: 14px; }
         .lic-pill.active { background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.35); color: #6ee7a8; }
-        .tabs { max-width: 1340px; margin: 0 auto; padding: 0 18px; display: flex; gap: 2px; overflow-x: auto; align-items: stretch; }
+        .tabs { max-width: 1340px; margin: 0 auto; padding: 0 18px; display: flex; gap: 2px; overflow: visible; align-items: stretch; flex-wrap: wrap; }
         .tab { display: flex; align-items: center; gap: 7px; padding: 13px 15px; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; color: rgba(255,255,255,.62); border-bottom: 3px solid transparent; transition: all .2s ease; }
         .tab .dashicons { font-size: 15px; width: 15px; height: 15px; pointer-events: none; }
         .tab:hover { color: rgba(255,255,255,.9); }
