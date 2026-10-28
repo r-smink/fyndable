@@ -145,6 +145,7 @@ class Dashboard
             $this->dataForSeoClient
         );
         $this->geoScanQueue = new GeoScanQueue($this->geoScanner, $this->geoScanRepository, $this->saasSettings);
+        $this->apiGateway->setGeoScan($this->geoScanRepository, $this->geoScanQueue);
         $this->geoScanReport = new GeoScanReport($this->geoScanRepository);
         $this->geoScanPdf = new GeoScanPdf($this->geoScanRepository);
         $this->geoScanAdmin = new GeoScanAdmin(

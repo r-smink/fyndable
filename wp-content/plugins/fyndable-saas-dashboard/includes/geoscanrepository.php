@@ -121,7 +121,8 @@ class GeoScanRepository
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
-        $source = ($meta['source'] ?? 'admin') === 'website' ? 'website' : 'admin';
+        $rawSource = $meta['source'] ?? 'admin';
+        $source = in_array($rawSource, ['website', 'tenant'], true) ? $rawSource : 'admin';
         $retentionDays = $source === 'website' ? self::WEBSITE_RETENTION_DAYS : self::RETENTION_DAYS;
         $consent = !empty($meta['consent']);
 

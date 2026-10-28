@@ -397,7 +397,7 @@ class SaasProxyClient
      */
     public function geoScan(string $licenseKey, string $tenantKey, string $url, string $keywords): array
     {
-        return $this->post('admin/geo-scan', $licenseKey, $tenantKey, [
+        return $this->post('geo-scan/start', $licenseKey, $tenantKey, [
             'url' => $url,
             'keywords' => $keywords,
         ], 90);
@@ -408,7 +408,7 @@ class SaasProxyClient
      */
     public function geoScanStatus(string $licenseKey, string $tenantKey, int $scanId): array
     {
-        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/admin/geo-scan/{$scanId}";
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/geo-scan/{$scanId}/status";
 
         try {
             $response = Http::timeout(30)
@@ -435,7 +435,7 @@ class SaasProxyClient
      */
     public function geoScanRecent(string $licenseKey, string $tenantKey, int $limit = 10): array
     {
-        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/admin/geo-scan/recent";
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/geo-scan/recent";
 
         try {
             $response = Http::timeout(30)

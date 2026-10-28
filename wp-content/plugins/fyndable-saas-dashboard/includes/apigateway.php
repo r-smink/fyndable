@@ -14,6 +14,8 @@ class ApiGateway
     private SaaSSettings $settings;
     private ProviderRouter $providerRouter;
     private ?DataForSeoClient $dataForSeoClient = null;
+    private ?GeoScanRepository $geoScanRepository = null;
+    private ?GeoScanQueue $geoScanQueue = null;
 
     // SERP API pricing per request (approximate)
     private const SERP_PRICING = [
@@ -34,12 +36,30 @@ class ApiGateway
     private const AI_MAX_RETRIES = 3;
     private const AI_RETRY_BASE_MS = 500000; // 0.5 seconds
 
-    public function __construct(TenantRepository $tenants, SaaSSettings $settings, ProviderRouter $providerRouter, ?DataForSeoClient $dataForSeoClient = null)
-    {
+    public function __construct(
+        TenantRepository $tenants,
+        SaaSSettings $settings,
+        ProviderRouter $providerRouter,
+        ?DataForSeoClient $dataForSeoClient = null,
+        ?GeoScanRepository $geoScanRepository = null,
+        ?GeoScanQueue $geoScanQueue = null
+    ) {
         $this->tenants = $tenants;
         $this->settings = $settings;
         $this->providerRouter = $providerRouter;
         $this->dataForSeoClient = $dataForSeoClient;
+        $this->geoScanRepository = $geoScanRepository;
+        $this->geoScanQueue = $geoScanQueue;
+    }
+
+    /**
+     * Inject GEO scan dependencies (called after construction when geo scan
+     * classes are instantiated later in the bootstrap sequence).
+     */
+    public function setGeoScan(GeoScanRepository $repository, GeoScanQueue $queue): void
+    {
+        $this->geoScanRepository = $repository;
+        $this->geoScanQueue = $queue;
     }
 
     /**
@@ -156,6 +176,38 @@ class ApiGateway
         register_rest_route('ai-seo-saas/v1', '/places/geocode', [
             'methods' => 'POST',
             'callback' => [$this, 'handleGeocodeRequest'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // GEO Scan — tenant-authenticated (Shopify app / WP plugin)
+        register_rest_route('ai-seo-saas/v1', '/geo-scan/start', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleGeoScanStart'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        register_rest_route('ai-seo-saas/v1', '/geo-scan/(?P<id>\d+)/status', [
+            'methods' => 'GET',
+            'callback' => [$this, 'handleGeoScanStatus'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        register_rest_route('ai-seo-saas/v1', '/geo-scan/recent', [
+            'methods' => 'GET',
+            'callback' => [$this, 'handleGeoScanRecent'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        // Keyword expand & cluster (tenant-authenticated)
+        register_rest_route('ai-seo-saas/v1', '/keywords/expand', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleKeywordExpand'],
+            'permission_callback' => [$this, 'validateTenantRequest'],
+        ]);
+
+        register_rest_route('ai-seo-saas/v1', '/keywords/cluster', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handleKeywordCluster'],
             'permission_callback' => [$this, 'validateTenantRequest'],
         ]);
     }
@@ -2062,5 +2114,281 @@ class ApiGateway
     private function recordProviderSuccess(string $provider, string $type = 'serp'): void
     {
         delete_transient('sseo_' . $type . '_fail_' . $provider);
+    }
+
+    // -----------------------------------------------------------------------
+    //  GEO Scan (tenant-authenticated)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Start a GEO scan for a tenant.
+     */
+    public function handleGeoScanStart(\WP_REST_Request $request): \WP_REST_Response
+    {
+        if (!$this->geoScanRepository || !$this->geoScanQueue) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'geo_scan_not_configured'], 503);
+        }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $url = esc_url_raw($body['url'] ?? '');
+        $rawKeywords = $body['keywords'] ?? '';
+
+        if (is_string($rawKeywords)) {
+            $rawKeywords = array_filter(array_map('trim', preg_split('/[,\n]+/', $rawKeywords)));
+        }
+        $keywords = array_values(array_map('sanitize_text_field', $rawKeywords));
+        $language = sanitize_text_field($body['language'] ?? 'auto');
+
+        if (empty($url) || empty($keywords)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'url_and_keywords_required'], 400);
+        }
+
+        $scanId = $this->geoScanRepository->insertQueued($url, $keywords, $language, [
+            'source' => 'tenant',
+            'name' => $tenantKey,
+        ]);
+        $this->geoScanQueue->enqueue($scanId);
+
+        $this->trackUsage($tenant, 'geo_scan', 1, 0.01);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'scan_id' => $scanId,
+            'status' => 'queued',
+        ], 202);
+    }
+
+    /**
+     * Get GEO scan status for a tenant.
+     */
+    public function handleGeoScanStatus(\WP_REST_Request $request): \WP_REST_Response
+    {
+        if (!$this->geoScanRepository) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'geo_scan_not_configured'], 503);
+        }
+
+        $scanId = (int) $request->get_param('id');
+        $scan = $this->geoScanRepository->getById($scanId);
+
+        if (!$scan) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_found'], 404);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'id' => $scan['id'],
+            'status' => $scan['status'],
+            'progress' => (int) $scan['progress'],
+            'progress_label' => $scan['progress_label'] ?? '',
+            'score' => $scan['score'] ?? null,
+            'result' => $scan['result'] ?? null,
+            'url' => $scan['url'] ?? '',
+            'keywords' => $scan['keywords'] ?? '',
+            'created_at' => $scan['created_at'] ?? '',
+        ]);
+    }
+
+    /**
+     * Get recent GEO scans for a tenant.
+     */
+    public function handleGeoScanRecent(\WP_REST_Request $request): \WP_REST_Response
+    {
+        if (!$this->geoScanRepository) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'geo_scan_not_configured'], 503);
+        }
+
+        $limit = max(1, min(50, (int) ($request->get_param('limit') ?: 10)));
+        $scans = $this->geoScanRepository->getRecent($limit, 'tenant');
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'scans' => $scans,
+            'count' => count($scans),
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
+    //  Keyword expand & cluster (tenant-authenticated)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Expand a seed keyword into related keywords.
+     *
+     * Fetches SERP data for the seed keyword and extracts related searches,
+     * then enriches with search volume via DataForSEO keyword data.
+     */
+    public function handleKeywordExpand(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+
+        $body = $request->get_json_params();
+        $seed = sanitize_text_field($body['seed'] ?? '');
+        $country = sanitize_text_field($body['country'] ?? 'us');
+        $language = sanitize_text_field($body['language'] ?? 'en');
+
+        if (empty($seed)) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'seed_required'], 400);
+        }
+
+        // 1. SERP query to get related searches and People Also Ask
+        $location = $this->countryToLocation($country) ?: 'United States';
+        $provider = $this->settings->getSerpApiProvider();
+        $apiKey = $this->settings->getSerpApiKey();
+
+        $serpResult = $this->fetchSerpData($provider, $apiKey, $seed, $location, true, $country, $language);
+
+        $relatedKeywords = [];
+        if (!is_wp_error($serpResult)) {
+            // Extract related searches
+            foreach ($serpResult['related_searches'] ?? [] as $rs) {
+                $kw = $rs['query'] ?? $rs['keyword'] ?? $rs['text'] ?? '';
+                if ($kw !== '') $relatedKeywords[] = $kw;
+            }
+            // Extract People Also Ask questions
+            foreach ($serpResult['people_also_ask'] ?? [] as $paa) {
+                $kw = $paa['question'] ?? $paa['text'] ?? '';
+                if ($kw !== '') $relatedKeywords[] = $kw;
+            }
+        }
+
+        $relatedKeywords = array_unique(array_slice($relatedKeywords, 0, 30));
+
+        // 2. Get search volume for seed + related keywords
+        $allKeywords = array_merge([$seed], $relatedKeywords);
+        $locationCode = $this->countryToLocationCode($country);
+        $volumeResult = $this->dataForSeoClient
+            ? $this->dataForSeoClient->aiKeywordDataSearchVolume([
+                'keywords' => array_slice($allKeywords, 0, 50),
+                'location_code' => $locationCode,
+                'language_code' => $language,
+            ])
+            : [];
+
+        // Build keyword list with volume data
+        $volumeMap = [];
+        if (!is_wp_error($volumeResult)) {
+            foreach ($volumeResult['data'] ?? $volumeResult as $item) {
+                $kw = $item['keyword'] ?? '';
+                if ($kw !== '') $volumeMap[strtolower($kw)] = $item;
+            }
+        }
+
+        $keywords = [];
+        foreach ($allKeywords as $kw) {
+            $data = $volumeMap[strtolower($kw)] ?? [];
+            $keywords[] = [
+                'keyword' => $kw,
+                'search_volume' => $data['search_volume'] ?? $data['volume'] ?? null,
+                'cpc' => $data['cpc'] ?? null,
+                'difficulty' => $data['keyword_difficulty'] ?? $data['difficulty'] ?? null,
+                'competition' => $data['competition'] ?? null,
+            ];
+        }
+
+        $cost = 0.002 + (empty($volumeResult) ? 0 : 0.002);
+        $this->trackUsage($tenant, 'serp_query', 1, $cost);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'seed' => $seed,
+            'keywords' => $keywords,
+        ]);
+    }
+
+    /**
+     * Map a two-letter country code to a DataForSEO location code.
+     */
+    private function countryToLocationCode(string $country): int
+    {
+        $map = [
+            'us' => 2840, 'gb' => 2826, 'uk' => 2826, 'nl' => 2528, 'de' => 2276,
+            'fr' => 2250, 'es' => 2724, 'it' => 2380, 'au' => 2036, 'ca' => 2124,
+            'br' => 2076, 'in' => 2356, 'jp' => 2392, 'mx' => 2484, 'be' => 2056,
+        ];
+
+        return $map[strtolower($country)] ?? 2840;
+    }
+
+    /**
+     * Cluster keywords by SERP similarity.
+     */
+    public function handleKeywordCluster(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $body = $request->get_json_params();
+        $keywords = $body['keywords'] ?? [];
+
+        if (!is_array($keywords) || count($keywords) < 2) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'min_2_keywords_required'], 400);
+        }
+
+        $keywords = array_values(array_map('sanitize_text_field', array_slice($keywords, 0, 100)));
+
+        // Simple Jaccard-based clustering using SERP overlap
+        // For each keyword, get top 10 SERP results, then cluster by URL overlap
+        $serpResults = [];
+        foreach (array_slice($keywords, 0, 20) as $kw) {
+            $serp = $this->handleSerpQueryInternal($kw, $body['country'] ?? 'us', $body['language'] ?? 'en');
+            $urls = [];
+            foreach (($serp['organic_results'] ?? $serp['results'] ?? []) as $r) {
+                $urls[] = parse_url($r['url'] ?? $r['link'] ?? '', PHP_URL_HOST);
+            }
+            $serpResults[$kw] = array_filter($urls);
+        }
+
+        // Build Jaccard similarity matrix and cluster
+        $clusters = [];
+        $assigned = [];
+        foreach ($serpResults as $kwA => $urlsA) {
+            if (isset($assigned[$kwA])) continue;
+            $cluster = [$kwA];
+            $assigned[$kwA] = true;
+            foreach ($serpResults as $kwB => $urlsB) {
+                if (isset($assigned[$kwB]) || $kwA === $kwB) continue;
+                $intersection = count(array_intersect($urlsA, $urlsB));
+                $union = count(array_unique(array_merge($urlsA, $urlsB)));
+                $similarity = $union > 0 ? $intersection / $union : 0;
+                if ($similarity >= 0.3) {
+                    $cluster[] = $kwB;
+                    $assigned[$kwB] = true;
+                }
+            }
+            $clusters[] = $cluster;
+        }
+
+        // Add unclustered keywords (those we didn't SERP-check)
+        foreach ($keywords as $kw) {
+            if (!isset($assigned[$kw])) {
+                $clusters[] = [$kw];
+            }
+        }
+
+        $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
+        $tenant = $this->tenants->getTenant($tenantKey);
+        $this->trackUsage($tenant, 'serp_query', count($serpResults), 0.002 * count($serpResults));
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'clusters' => $clusters,
+            'total_keywords' => count($keywords),
+            'total_clusters' => count($clusters),
+        ]);
+    }
+
+    /**
+     * Internal SERP query helper (no HTTP, direct call).
+     */
+    private function handleSerpQueryInternal(string $keyword, string $country = 'us', string $language = 'en'): array
+    {
+        if (!$this->dataForSeoClient) {
+            return [];
+        }
+
+        $result = $this->dataForSeoClient->serpQuery($keyword, $country, $language);
+
+        return is_array($result) ? $result : [];
     }
 }
