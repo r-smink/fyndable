@@ -313,6 +313,12 @@
             <button class="tab" data-tab="backlinks" onclick="showTab('backlinks')"><span class="dashicons dashicons-admin-links"></span>Backlinks</button>
             <button class="tab" data-tab="aivisibility" onclick="showTab('aivisibility')"><span class="dashicons dashicons-visibility"></span>AI Visibility</button>
             <button class="tab" data-tab="blogwriter" onclick="showTab('blogwriter')"><span class="dashicons dashicons-edit-page"></span>Blog Writer</button>
+            <button class="tab" data-tab="geoscan" onclick="showTab('geoscan')"><span class="dashicons dashicons-welcome-view-site"></span>GEO Scan</button>
+            <button class="tab" data-tab="kwexplorer" onclick="showTab('kwexplorer')"><span class="dashicons dashicons-search"></span>Keyword Explorer</button>
+            <button class="tab" data-tab="competitor" onclick="showTab('competitor')"><span class="dashicons dashicons-groups"></span>Competitors</button>
+            <button class="tab" data-tab="aitracker" onclick="showTab('aitracker')"><span class="dashicons dashicons-trending-up"></span>AI Tracker</button>
+            <button class="tab" data-tab="calendar" onclick="showTab('calendar')"><span class="dashicons dashicons-calendar-alt"></span>Calendar</button>
+            <button class="tab" data-tab="markets" onclick="showTab('markets')"><span class="dashicons dashicons-admin-site-alt3"></span>Markets SEO</button>
             <button class="tab" data-tab="tools" onclick="showTab('tools')"><span class="dashicons dashicons-admin-tools"></span>Tools</button>
             <button class="tab" data-tab="license" onclick="showTab('license')"><span class="dashicons dashicons-admin-network"></span>License</button>
         </nav>
@@ -800,6 +806,254 @@
             </div>
         </div>
 
+        <!-- GEO Scan Tab -->
+        <div id="geoscan" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>GEO Scan</h1>
+                    <p>Scan your store for AI search visibility — see how well ChatGPT, Gemini, Claude and Perplexity cite your content.</p>
+                </div>
+            </div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-welcome-view-site"></span><h2>Start a scan</h2></div>
+                        <div class="form-group">
+                            <label for="geo-keywords">Keywords <span class="hint">· 1-2, comma-separated</span></label>
+                            <input type="text" id="geo-keywords" placeholder="e.g. sustainable fashion, organic clothing">
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn" onclick="startGeoScan()">Start GEO Scan</button>
+                        </div>
+                        <div id="geo-result" style="margin-top:15px;"></div>
+                    </div>
+                    <div class="card" id="geo-detail-card" style="display:none;">
+                        <div class="card-head"><span class="dashicons dashicons-chart-pie"></span><h2>Scan results</h2></div>
+                        <div id="geo-detail"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-backup"></span><h3>Recent scans</h3></div>
+                    <div id="geo-recent"><div class="loading">Loading...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyword Explorer Tab -->
+        <div id="kwexplorer" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>Keyword Explorer</h1>
+                    <p>Discover related keywords, search volume, difficulty and trends for any seed keyword.</p>
+                </div>
+            </div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-search"></span><h2>Explore keywords</h2></div>
+                        <div class="form-group">
+                            <label for="kwe-seed">Seed keyword</label>
+                            <input type="text" id="kwe-seed" placeholder="e.g. organic skincare">
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <div class="form-group" style="flex:1;">
+                                <label for="kwe-country">Country</label>
+                                <select id="kwe-country"><option value="us">United States</option><option value="gb">United Kingdom</option><option value="nl">Netherlands</option><option value="de">Germany</option><option value="fr">France</option><option value="es">Spain</option><option value="it">Italy</option><option value="au">Australia</option><option value="ca">Canada</option></select>
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="kwe-language">Language</label>
+                                <select id="kwe-language"><option value="en">English</option><option value="nl">Dutch</option><option value="de">German</option><option value="fr">French</option><option value="es">Spanish</option><option value="it">Italian</option></select>
+                            </div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn" onclick="exploreKeywords()">Explore</button>
+                            <button class="btn secondary" onclick="clusterKeywords()">Cluster Results</button>
+                        </div>
+                    </div>
+                    <div class="card" id="kwe-results-card" style="display:none;">
+                        <div class="card-head"><span class="dashicons dashicons-list-view"></span><h2>Results</h2></div>
+                        <div id="kwe-results"></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-chart-area"></span><h3>Volume lookup</h3></div>
+                        <div class="form-group">
+                            <label for="kwe-volume-input">Keywords <span class="hint">· comma-separated</span></label>
+                            <textarea id="kwe-volume-input" rows="3" placeholder="keyword1, keyword2, keyword3"></textarea>
+                        </div>
+                        <button class="btn secondary" onclick="lookupVolume()">Get volume</button>
+                        <div id="kwe-volume-result" style="margin-top:12px;"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-chart-line"></span><h3>Google Trends</h3></div>
+                        <div class="form-group">
+                            <label for="kwe-trends-input">Keywords <span class="hint">· comma-separated</span></label>
+                            <input type="text" id="kwe-trends-input" placeholder="keyword1, keyword2">
+                        </div>
+                        <button class="btn secondary" onclick="lookupTrends()">Get trends</button>
+                        <div id="kwe-trends-result" style="margin-top:12px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competitor Analysis Tab -->
+        <div id="competitor" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>SERP Competitor Analysis</h1>
+                    <p>See who ranks for your target keywords, with backlink metrics and competitive insights.</p>
+                </div>
+            </div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-groups"></span><h2>Analyze competitors</h2></div>
+                        <div class="form-group">
+                            <label for="comp-keyword">Target keyword</label>
+                            <input type="text" id="comp-keyword" placeholder="e.g. best running shoes">
+                        </div>
+                        <div class="form-group">
+                            <label for="comp-target">Your URL <span class="hint">· optional, defaults to your shop</span></label>
+                            <input type="text" id="comp-target" placeholder="https://your-store.com">
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <div class="form-group" style="flex:1;"><label for="comp-country">Country</label><select id="comp-country"><option value="us">US</option><option value="gb">UK</option><option value="nl">NL</option><option value="de">DE</option><option value="fr">FR</option></select></div>
+                            <div class="form-group" style="flex:1;"><label for="comp-lang">Language</label><select id="comp-lang"><option value="en">EN</option><option value="nl">NL</option><option value="de">DE</option><option value="fr">FR</option></select></div>
+                        </div>
+                        <button class="btn" onclick="analyzeCompetitors()">Analyze SERP</button>
+                    </div>
+                    <div class="card" id="comp-results-card" style="display:none;">
+                        <div class="card-head"><span class="dashicons dashicons-editor-ol"></span><h2>SERP Results</h2></div>
+                        <div id="comp-results"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-image-flip-horizontal"></span><h3>Compare domains</h3></div>
+                    <div class="form-group"><label for="comp-domain-a">Domain A</label><input type="text" id="comp-domain-a" placeholder="your-store.com"></div>
+                    <div class="form-group"><label for="comp-domain-b">Domain B</label><input type="text" id="comp-domain-b" placeholder="competitor.com"></div>
+                    <button class="btn secondary" onclick="compareDomains()">Compare</button>
+                    <div id="comp-compare-result" style="margin-top:12px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Tracker Tab -->
+        <div id="aitracker" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>AI Optimization Tracker</h1>
+                    <p>Track your brand visibility across AI search engines over time — mentions, trends, and actionable recommendations.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn" onclick="loadAiTrackerOverview()"><span class="dashicons dashicons-update"></span>Refresh</button>
+                </div>
+            </div>
+            <div id="ait-stats" class="stats cols-4"><div class="loading">Loading...</div></div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-chart-area"></span><h2>Visibility trends</h2></div>
+                        <div id="ait-timeseries"><div class="loading">Loading...</div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-megaphone"></span><h2>Multi-provider brand check</h2></div>
+                        <div class="form-group">
+                            <label for="ait-prompt">Ask all 4 AI models about your brand</label>
+                            <input type="text" id="ait-prompt" placeholder="e.g. What are the best stores for organic skincare?">
+                        </div>
+                        <button class="btn" onclick="runAiTrackerCheck()">Check all providers</button>
+                        <div id="ait-check-result" style="margin-top:12px;"></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-lightbulb"></span><h3>AI recommendations</h3></div>
+                        <div id="ait-recommendations"><div class="loading">Loading...</div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-star-filled"></span><h3>Top pages</h3></div>
+                        <div id="ait-top-pages"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Calendar Tab -->
+        <div id="calendar" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>Content Calendar</h1>
+                    <p>Schedule blog articles for future publishing. Articles are automatically published to Shopify every 15 minutes.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn" onclick="loadCalendar()"><span class="dashicons dashicons-update"></span>Refresh</button>
+                </div>
+            </div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-calendar-alt"></span><h2>Scheduled articles</h2></div>
+                        <div style="display:flex;gap:10px;margin-bottom:14px;">
+                            <select id="cal-status" onchange="loadCalendarArticles()" style="flex:1;"><option value="">All statuses</option><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select>
+                            <input type="month" id="cal-month" onchange="loadCalendarArticles()" style="flex:1;">
+                        </div>
+                        <div id="cal-articles"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-plus-alt2"></span><h3>Schedule new article</h3></div>
+                        <div class="form-group"><label for="cal-blog">Blog</label><select id="cal-blog"><option>Loading...</option></select></div>
+                        <div class="form-group"><label for="cal-title">Title</label><input type="text" id="cal-title" placeholder="Article title"></div>
+                        <div class="form-group"><label for="cal-body">Body HTML</label><textarea id="cal-body" rows="6" placeholder="Article body..."></textarea></div>
+                        <div class="form-group"><label for="cal-tags">Tags <span class="hint">· comma-separated</span></label><input type="text" id="cal-tags" placeholder="seo, tips"></div>
+                        <div class="form-group"><label for="cal-date">Publish date &amp; time</label><input type="datetime-local" id="cal-date"></div>
+                        <div class="form-group"><label for="cal-author">Author <span class="hint">· optional</span></label><input type="text" id="cal-author" placeholder="Author name"></div>
+                        <button class="btn" onclick="scheduleArticle()">Schedule</button>
+                        <div id="cal-result" style="margin-top:12px;"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-media-text"></span><h3>Quick tip</h3></div>
+                        <p class="muted" style="line-height:1.6;">Use the <strong>Blog Writer</strong> tab to generate an article with AI, then come here to schedule it for later. You can also generate the body directly via the Blog Writer and paste it above.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Markets SEO Tab -->
+        <div id="markets" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>Markets SEO Check</h1>
+                    <p>Audit your Shopify Markets setup for hreflang consistency, locale coverage, and translation gaps.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn" onclick="loadMarketsAudit()"><span class="dashicons dashicons-update"></span>Run audit</button>
+                </div>
+            </div>
+            <div id="markets-stats" class="stats cols-4"><div class="loading">Loading...</div></div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-admin-site-alt3"></span><h2>Audit checks</h2></div>
+                        <div id="markets-checks"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-lightbulb"></span><h3>Recommendations</h3></div>
+                        <div id="markets-recommendations"><div class="loading">Loading...</div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-translation"></span><h3>Markets overview</h3></div>
+                        <div id="markets-overview"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tools Tab -->
         <div id="tools" class="tab-content">
             <div class="page-head">
@@ -865,6 +1119,14 @@
                     <div class="feature">Blog Writer</div>
                     <div class="feature">IndexNow</div>
                     <div class="feature">Schema &amp; FAQ markup</div>
+                    <div class="feature">GEO Scan (AI visibility)</div>
+                    <div class="feature">Keyword Explorer</div>
+                    <div class="feature">SERP Competitor Analysis</div>
+                    <div class="feature">AI Optimization Tracker</div>
+                    <div class="feature">Content Calendar</div>
+                    <div class="feature">Product Variant SEO</div>
+                    <div class="feature">Review Schema</div>
+                    <div class="feature">Markets SEO Check</div>
                 </div>
             </div>
         </div>
@@ -927,6 +1189,10 @@
             if (tabId === 'blogwriter') loadBlogs();
             if (tabId === 'tools') loadIndexNowStatus();
             if (tabId === 'license') loadLicenseStatus();
+            if (tabId === 'geoscan') loadGeoRecent();
+            if (tabId === 'aitracker') loadAiTrackerOverview();
+            if (tabId === 'calendar') loadCalendar();
+            if (tabId === 'markets') loadMarketsAudit();
         }
 
         // API helper — App Bridge v4 automatically intercepts window.fetch
@@ -1744,6 +2010,406 @@
             } else {
                 box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
             }
+        }
+
+        // -----------------------------------------------------------------------
+        //  GEO Scan
+        // -----------------------------------------------------------------------
+        async function startGeoScan() {
+            const keywords = document.getElementById('geo-keywords').value.trim();
+            if (!keywords) { alert('Enter at least one keyword'); return; }
+            const box = document.getElementById('geo-result');
+            box.innerHTML = '<div class="loading">Starting GEO scan...</div>';
+            const data = await api('/geo-scan/start', {
+                method: 'POST',
+                body: JSON.stringify({ keywords }),
+            });
+            if (data.error) {
+                box.innerHTML = `<div class="alert error">Error: ${data.error}${data.message ? ' — ' + data.message : ''}</div>`;
+                return;
+            }
+            const scanId = data.scan_id || data.id;
+            if (!scanId) {
+                box.innerHTML = `<div class="alert success">Scan queued.</div>`;
+                return;
+            }
+            box.innerHTML = `<div class="alert info">Scan started (ID: ${scanId}). Polling for results...</div>`;
+            pollGeoScan(scanId);
+        }
+
+        async function pollGeoScan(scanId) {
+            const box = document.getElementById('geo-result');
+            const detailBox = document.getElementById('geo-detail');
+            const detailCard = document.getElementById('geo-detail-card');
+            let attempts = 0;
+            const poll = async () => {
+                if (attempts++ > 60) { box.innerHTML = '<div class="alert error">Scan timed out.</div>'; return; }
+                const data = await api(`/geo-scan/${scanId}/status`);
+                if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+                const status = data.status || 'unknown';
+                const progress = data.progress || 0;
+                box.innerHTML = `<div class="alert info">Status: <strong>${status}</strong> — ${progress}%${data.progress_label ? ' · ' + data.progress_label : ''}</div>
+                    <div class="progress"><div style="width:${progress}%;"></div></div>`;
+                if (status === 'completed') {
+                    box.innerHTML = `<div class="alert success">Scan complete! Score: <strong>${data.score ?? data.result?.score ?? '—'}</strong></div>`;
+                    detailCard.style.display = 'block';
+                    const r = data.result || data;
+                    detailBox.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(r, null, 2))}</pre>`;
+                    loadGeoRecent();
+                    return;
+                }
+                if (status === 'failed') {
+                    box.innerHTML = `<div class="alert error">Scan failed: ${data.error || 'Unknown error'}</div>`;
+                    return;
+                }
+                setTimeout(poll, 5000);
+            };
+            poll();
+        }
+
+        async function loadGeoRecent() {
+            const box = document.getElementById('geo-recent');
+            const data = await api('/geo-scan/recent?limit=10');
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            const scans = data.scans || data.data || (Array.isArray(data) ? data : []);
+            if (!scans.length) { box.innerHTML = '<p class="muted">No scans yet. Start your first GEO scan!</p>'; return; }
+            box.innerHTML = scans.map(s => `
+                <div class="status-row" style="cursor:pointer;" onclick="pollGeoScan(${s.id})">
+                    <div class="icon-chip well"><span class="dashicons dashicons-${s.status === 'completed' ? 'yes-alt' : s.status === 'running' ? 'update' : 'clock'}"></span></div>
+                    <div class="grow"><div class="t">${escHtml(s.keywords || s.url || 'Scan #' + s.id)}</div>
+                    <div class="s">${s.status}${s.score ? ' · Score: ' + s.score : ''}</div></div>
+                    <span class="badge ${s.status === 'completed' ? 'green' : s.status === 'failed' ? 'red' : 'gray'}">${s.status}</span>
+                </div>`).join('');
+        }
+
+        // -----------------------------------------------------------------------
+        //  Keyword Explorer
+        // -----------------------------------------------------------------------
+        let _kweLastKeywords = [];
+
+        async function exploreKeywords() {
+            const seed = document.getElementById('kwe-seed').value.trim();
+            if (!seed) { alert('Enter a seed keyword'); return; }
+            const card = document.getElementById('kwe-results-card');
+            const box = document.getElementById('kwe-results');
+            card.style.display = 'block';
+            box.innerHTML = '<div class="loading">Exploring keywords...</div>';
+            const data = await api('/keywords/explore', {
+                method: 'POST',
+                body: JSON.stringify({
+                    seed,
+                    country: document.getElementById('kwe-country').value,
+                    language: document.getElementById('kwe-language').value,
+                }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}${data.message ? ' — ' + data.message : ''}</div>`; return; }
+            const keywords = data.keywords || data.data || [];
+            _kweLastKeywords = Array.isArray(keywords) ? keywords.map(k => typeof k === 'string' ? k : (k.keyword || k.term || '')) : [];
+            if (!keywords.length) { box.innerHTML = '<p class="muted">No related keywords found.</p>'; return; }
+            box.innerHTML = `<div class="table-wrap fyn-scroll"><table><thead><tr><th>Keyword</th><th class="num">Volume</th><th class="num">CPC</th><th class="num">Difficulty</th></tr></thead><tbody>
+                ${(Array.isArray(keywords) ? keywords : []).map(k => {
+                    const kw = typeof k === 'string' ? k : k;
+                    return `<tr><td class="kw">${escHtml(kw.keyword || kw.term || kw)}</td>
+                        <td class="num">${kw.search_volume ?? kw.volume ?? '—'}</td>
+                        <td class="num">${kw.cpc ? '$' + Number(kw.cpc).toFixed(2) : '—'}</td>
+                        <td class="num">${kw.difficulty ?? kw.keyword_difficulty ?? '—'}</td></tr>`;
+                }).join('')}</tbody></table></div>`;
+        }
+
+        async function clusterKeywords() {
+            if (_kweLastKeywords.length < 2) { alert('Explore keywords first (need at least 2)'); return; }
+            const box = document.getElementById('kwe-results');
+            box.innerHTML = '<div class="loading">Clustering keywords...</div>';
+            const data = await api('/keywords/cluster', {
+                method: 'POST',
+                body: JSON.stringify({ keywords: _kweLastKeywords }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.clusters || data, null, 2))}</pre>`;
+        }
+
+        async function lookupVolume() {
+            const raw = document.getElementById('kwe-volume-input').value;
+            const keywords = raw.split(',').map(k => k.trim()).filter(Boolean);
+            if (!keywords.length) { alert('Enter at least one keyword'); return; }
+            const box = document.getElementById('kwe-volume-result');
+            box.innerHTML = '<div class="loading">Looking up volume...</div>';
+            const data = await api('/keywords/volume', {
+                method: 'POST',
+                body: JSON.stringify({ keywords }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.data || data, null, 2))}</pre>`;
+        }
+
+        async function lookupTrends() {
+            const raw = document.getElementById('kwe-trends-input').value;
+            const keywords = raw.split(',').map(k => k.trim()).filter(Boolean);
+            if (!keywords.length) { alert('Enter at least one keyword'); return; }
+            const box = document.getElementById('kwe-trends-result');
+            box.innerHTML = '<div class="loading">Loading trends...</div>';
+            const data = await api('/keywords/trends', {
+                method: 'POST',
+                body: JSON.stringify({ keywords }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.data || data, null, 2))}</pre>`;
+        }
+
+        // -----------------------------------------------------------------------
+        //  Competitor Analysis
+        // -----------------------------------------------------------------------
+        async function analyzeCompetitors() {
+            const keyword = document.getElementById('comp-keyword').value.trim();
+            if (!keyword) { alert('Enter a target keyword'); return; }
+            const card = document.getElementById('comp-results-card');
+            const box = document.getElementById('comp-results');
+            card.style.display = 'block';
+            box.innerHTML = '<div class="loading">Analyzing SERP competitors (this may take a moment)...</div>';
+            const data = await api('/competitor/analyze', {
+                method: 'POST',
+                body: JSON.stringify({
+                    keyword,
+                    target_url: document.getElementById('comp-target').value.trim() || undefined,
+                    country: document.getElementById('comp-country').value,
+                    language: document.getElementById('comp-lang').value,
+                }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}${data.message ? ' — ' + data.message : ''}</div>`; return; }
+            const pos = data.target_position;
+            let html = `<div class="alert ${pos ? (pos <= 10 ? 'success' : 'info') : 'info'}">Your position: <strong>${pos || 'Not found in top results'}</strong></div>`;
+            html += `<div class="table-wrap fyn-scroll"><table><thead><tr><th>#</th><th>Domain</th><th>Title</th><th class="num">Backlinks</th><th class="num">Ref. Domains</th><th class="num">DR</th></tr></thead><tbody>`;
+            (data.competitors || []).forEach((c, i) => {
+                const bl = c.backlinks || {};
+                html += `<tr><td>${c.position || i + 1}</td><td class="kw">${escHtml(c.domain)}</td>
+                    <td>${escHtml((c.title || '').substring(0, 60))}</td>
+                    <td class="num">${bl.total ?? '—'}</td><td class="num">${bl.referring_domains ?? '—'}</td>
+                    <td class="num">${bl.domain_rank ?? '—'}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            if (data.serp_features && Object.keys(data.serp_features).length) {
+                html += `<div style="margin-top:14px;"><strong>SERP Features:</strong> ${Object.keys(data.serp_features).map(f => `<span class="badge gray">${escHtml(f)}</span>`).join(' ')}</div>`;
+            }
+            box.innerHTML = html;
+        }
+
+        async function compareDomains() {
+            const a = document.getElementById('comp-domain-a').value.trim();
+            const b = document.getElementById('comp-domain-b').value.trim();
+            if (!a || !b) { alert('Enter both domains'); return; }
+            const box = document.getElementById('comp-compare-result');
+            box.innerHTML = '<div class="loading">Comparing...</div>';
+            const data = await api('/competitor/compare', {
+                method: 'POST',
+                body: JSON.stringify({ domain_a: a, domain_b: b }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.domains || data, null, 2))}</pre>`;
+        }
+
+        // -----------------------------------------------------------------------
+        //  AI Optimization Tracker
+        // -----------------------------------------------------------------------
+        async function loadAiTrackerOverview() {
+            const statsBox = document.getElementById('ait-stats');
+            statsBox.innerHTML = '<div class="loading">Loading AI visibility data...</div>';
+            const data = await api('/ai-tracker/overview');
+            if (data.error) { statsBox.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            const m = data.metrics || {};
+            statsBox.innerHTML =
+                statTile('Total Mentions', m.total_mentions ?? m.mentions_count ?? '—', 'megaphone', 'purple', 'across AI models')
+                + statTile('Top Domains', (data.top_brands?.data || []).length || '—', 'groups', 'blue', 'mentioned brands')
+                + statTile('Top Pages', (data.top_pages?.data || []).length || '—', 'admin-page', '', 'cited pages')
+                + statTile('Target', escHtml(data.target || shopDomain), 'admin-site-alt3', '', '');
+
+            // Top pages
+            const pages = data.top_pages?.data || [];
+            document.getElementById('ait-top-pages').innerHTML = pages.length
+                ? pages.slice(0, 10).map(p => `<div class="status-row"><div class="grow"><div class="t">${escHtml(p.url || p.page || p.title || '—')}</div><div class="s">${p.mentions || p.count || '—'} mentions</div></div></div>`).join('')
+                : '<p class="muted">No top pages data yet.</p>';
+
+            // Timeseries
+            loadAiTrackerTimeseries();
+            loadAiTrackerRecommendations();
+        }
+
+        async function loadAiTrackerTimeseries() {
+            const box = document.getElementById('ait-timeseries');
+            const data = await api('/ai-tracker/timeseries');
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.delta || data, null, 2))}</pre>`;
+        }
+
+        async function loadAiTrackerRecommendations() {
+            const box = document.getElementById('ait-recommendations');
+            const data = await api('/ai-tracker/recommendations');
+            if (data.error) { box.innerHTML = `<p class="muted">No recommendations available yet. Run a GEO scan first.</p>`; return; }
+            const recs = data.recommendations || [];
+            if (!recs.length) { box.innerHTML = '<p class="muted">No recommendations available.</p>'; return; }
+            box.innerHTML = recs.map(r => `
+                <div class="status-row">
+                    <div class="icon-chip well"><span class="dashicons dashicons-${r.priority === 'high' ? 'warning' : r.priority === 'medium' ? 'info' : 'marker'}"></span></div>
+                    <div class="grow"><div class="t">${escHtml(r.title)}</div><div class="s">${escHtml(r.description)}</div></div>
+                    <span class="badge ${r.priority === 'high' ? 'red' : r.priority === 'medium' ? 'amber' : 'gray'}">${r.priority}</span>
+                </div>`).join('');
+        }
+
+        async function runAiTrackerCheck() {
+            const prompt = document.getElementById('ait-prompt').value.trim();
+            if (!prompt) { alert('Enter a question'); return; }
+            const box = document.getElementById('ait-check-result');
+            box.innerHTML = '<div class="loading">Checking all 4 AI providers (this takes ~30s)...</div>';
+            const data = await api('/ai-tracker/check', {
+                method: 'POST',
+                body: JSON.stringify({ prompt }),
+            });
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            const results = data.results || {};
+            let html = '';
+            for (const [provider, result] of Object.entries(results)) {
+                const icon = provider === 'chatgpt' ? '💬' : provider === 'claude' ? '🤖' : provider === 'gemini' ? '✨' : '🔍';
+                const hasError = result.error;
+                html += `<div class="card" style="margin-top:10px;padding:16px;">
+                    <div style="font-weight:700;margin-bottom:8px;">${icon} ${provider.charAt(0).toUpperCase() + provider.slice(1)}</div>
+                    ${hasError ? `<div class="alert error">${result.error}</div>` : `<pre class="code fyn-scroll" style="max-height:200px;">${escHtml(JSON.stringify(result, null, 2))}</pre>`}
+                </div>`;
+            }
+            box.innerHTML = html;
+        }
+
+        // -----------------------------------------------------------------------
+        //  Content Calendar
+        // -----------------------------------------------------------------------
+        function loadCalendar() {
+            loadCalendarBlogs();
+            loadCalendarArticles();
+        }
+
+        async function loadCalendarBlogs() {
+            const sel = document.getElementById('cal-blog');
+            const data = await api('/blogs');
+            if (data.error || !data.blogs) { sel.innerHTML = '<option>Error loading blogs</option>'; return; }
+            sel.innerHTML = data.blogs.map(b => `<option value="${b.id.split('/').pop()}">${escHtml(b.title)}</option>`).join('') || '<option>No blogs</option>';
+        }
+
+        async function loadCalendarArticles() {
+            const box = document.getElementById('cal-articles');
+            const status = document.getElementById('cal-status').value;
+            const month = document.getElementById('cal-month').value;
+            let url = '/calendar/articles?';
+            if (status) url += `status=${status}&`;
+            if (month) url += `month=${month}&`;
+            const data = await api(url);
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            const articles = data.articles || [];
+            if (!articles.length) { box.innerHTML = '<div class="empty"><span class="dashicons dashicons-calendar-alt"></span>No scheduled articles found.</div>'; return; }
+            box.innerHTML = `<div class="table-wrap fyn-scroll"><table><thead><tr><th>Title</th><th>Scheduled</th><th>Status</th><th class="end">Action</th></tr></thead><tbody>
+                ${articles.map(a => `<tr>
+                    <td class="kw">${escHtml(a.title)}</td>
+                    <td class="muted">${new Date(a.scheduled_at).toLocaleString()}</td>
+                    <td><span class="badge ${a.status === 'published' ? 'green' : a.status === 'failed' ? 'red' : a.status === 'cancelled' ? 'gray' : 'amber'}">${a.status}</span></td>
+                    <td class="end">${a.status === 'scheduled' ? `<button class="icon-btn" title="Cancel" onclick="cancelScheduled(${a.id})"><span class="dashicons dashicons-dismiss"></span></button>` : ''}</td>
+                </tr>`).join('')}</tbody></table></div>`;
+        }
+
+        async function scheduleArticle() {
+            const blogId = document.getElementById('cal-blog').value;
+            const title = document.getElementById('cal-title').value.trim();
+            const body = document.getElementById('cal-body').value.trim();
+            const date = document.getElementById('cal-date').value;
+            if (!title || !body || !date) { alert('Title, body and date are required'); return; }
+            const box = document.getElementById('cal-result');
+            box.innerHTML = '<div class="loading">Scheduling...</div>';
+            const data = await api('/calendar/schedule', {
+                method: 'POST',
+                body: JSON.stringify({
+                    blog_id: blogId,
+                    title,
+                    body_html: body,
+                    tags: document.getElementById('cal-tags').value,
+                    scheduled_at: date,
+                    author: document.getElementById('cal-author').value.trim(),
+                }),
+            });
+            if (data.success) {
+                box.innerHTML = '<div class="alert success">Article scheduled!</div>';
+                document.getElementById('cal-title').value = '';
+                document.getElementById('cal-body').value = '';
+                loadCalendarArticles();
+            } else {
+                box.innerHTML = `<div class="alert error">${data.error}</div>`;
+            }
+        }
+
+        async function cancelScheduled(id) {
+            if (!confirm('Cancel this scheduled article?')) return;
+            await api(`/calendar/${id}`, { method: 'DELETE' });
+            loadCalendarArticles();
+        }
+
+        // -----------------------------------------------------------------------
+        //  Markets SEO Check
+        // -----------------------------------------------------------------------
+        async function loadMarketsAudit() {
+            const statsBox = document.getElementById('markets-stats');
+            const checksBox = document.getElementById('markets-checks');
+            const recsBox = document.getElementById('markets-recommendations');
+            const overviewBox = document.getElementById('markets-overview');
+            statsBox.innerHTML = '<div class="loading">Running markets SEO audit...</div>';
+            checksBox.innerHTML = '<div class="loading">Loading...</div>';
+
+            // Load audit
+            const data = await api('/markets/audit');
+            if (data.error) {
+                statsBox.innerHTML = `<div class="alert error">${data.error}${data.message ? ' — ' + data.message : ''}</div>`;
+                checksBox.innerHTML = '';
+                return;
+            }
+
+            const score = data.score ?? 0;
+            const scoreColor = score >= 80 ? 'green' : score >= 50 ? 'amber' : 'red';
+            statsBox.innerHTML =
+                statTile('SEO Score', score + '%', 'awards', scoreColor, score >= 80 ? 'Good' : score >= 50 ? 'Needs work' : 'Issues found')
+                + statTile('Markets', data.markets_count ?? 0, 'admin-site-alt3', 'blue', 'configured')
+                + statTile('Locales', (data.locales || []).length || 0, 'translation', '', (data.locales || []).join(', ') || 'none')
+                + statTile('Checks', (data.checks || []).length, 'yes-alt', '', 'audit checks run');
+
+            // Checks table
+            const checks = data.checks || [];
+            checksBox.innerHTML = checks.length
+                ? checks.map(c => `<div class="status-row">
+                    <div class="icon-chip well"><span class="dashicons dashicons-${c.passed ? 'yes-alt' : 'warning'}" style="color:var(${c.passed ? '--fyn-success' : '--fyn-danger'});"></span></div>
+                    <div class="grow"><div class="t">${escHtml(c.name)}${c.market ? ' · ' + escHtml(c.market) : ''}${c.locale ? ' · ' + escHtml(c.locale) : ''}</div>
+                    <div class="s">${escHtml(c.detail)}</div></div>
+                    <span class="badge ${c.passed ? 'green' : 'red'}">${c.passed ? 'Pass' : 'Fail'}</span>
+                </div>`).join('')
+                : '<p class="muted">No checks run.</p>';
+
+            // Recommendations
+            const recs = data.recommendations || [];
+            recsBox.innerHTML = recs.length
+                ? recs.map(r => `<div class="status-row"><div class="icon-chip well"><span class="dashicons dashicons-lightbulb"></span></div><div class="grow"><div class="s">${escHtml(r)}</div></div></div>`).join('')
+                : '<p class="muted">No issues found — your markets setup looks good!</p>';
+
+            // Markets overview
+            loadMarketsOverview(overviewBox);
+        }
+
+        async function loadMarketsOverview(box) {
+            const data = await api('/markets/overview');
+            if (data.error) { box.innerHTML = `<div class="alert error">${data.error}</div>`; return; }
+            const markets = data.markets || [];
+            if (!markets.length) { box.innerHTML = '<p class="muted">No markets configured in your Shopify store.</p>'; return; }
+            box.innerHTML = markets.map(m => {
+                const locales = (m.webPresences || []).flatMap(wp => [wp.defaultLocale, ...(wp.alternateLocales || [])]).filter(Boolean);
+                const regions = (m.regions || []).map(r => r.name || r.code).join(', ');
+                return `<div class="status-row">
+                    <div class="icon-chip well"><span class="dashicons dashicons-${m.primary ? 'star-filled' : 'admin-site-alt3'}" style="color:${m.primary ? 'var(--fyn-warning)' : 'var(--fyn-purple)'};"></span></div>
+                    <div class="grow"><div class="t">${escHtml(m.name)}${m.primary ? ' (Primary)' : ''}</div>
+                    <div class="s">Locales: ${locales.join(', ') || 'none'} · Regions: ${regions || 'none'}</div></div>
+                    <span class="badge ${m.enabled ? 'green' : 'gray'}">${m.enabled ? 'Active' : 'Disabled'}</span>
+                </div>`;
+            }).join('');
         }
 
         // Load overview on page load
