@@ -70,11 +70,31 @@
         .lic-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.75); font-size: 12px; font-weight: 700; white-space: nowrap; text-transform: capitalize; }
         .lic-pill .dashicons { font-size: 14px; width: 14px; height: 14px; }
         .lic-pill.active { background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.35); color: #6ee7a8; }
-        .tabs { max-width: 1340px; margin: 0 auto; padding: 0 18px; display: flex; gap: 2px; overflow-x: auto; }
+        .tabs { max-width: 1340px; margin: 0 auto; padding: 0 18px; display: flex; gap: 2px; overflow-x: auto; align-items: stretch; }
         .tab { display: flex; align-items: center; gap: 7px; padding: 13px 15px; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; color: rgba(255,255,255,.62); border-bottom: 3px solid transparent; transition: all .2s ease; }
-        .tab .dashicons { font-size: 15px; width: 15px; height: 15px; pointer-events: none; } /* keep event.target on the button for showTab() */
+        .tab .dashicons { font-size: 15px; width: 15px; height: 15px; pointer-events: none; }
         .tab:hover { color: rgba(255,255,255,.9); }
         .tab.active { color: #fff; border-bottom-color: #fff; }
+
+        /* Tab dropdown groups */
+        .tab-group { position: relative; display: flex; align-items: stretch; }
+        .tab-group-trigger { display: flex; align-items: center; gap: 7px; padding: 13px 15px; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; color: rgba(255,255,255,.62); border-bottom: 3px solid transparent; transition: all .2s ease; }
+        .tab-group-trigger .dashicons { font-size: 15px; width: 15px; height: 15px; pointer-events: none; }
+        .tab-group-trigger:hover { color: rgba(255,255,255,.9); }
+        .tab-group-trigger.has-active { color: #fff; border-bottom-color: #fff; }
+        .tab-group-trigger .caret { font-size: 10px; margin-left: 2px; opacity: .6; pointer-events: none; }
+        .tab-dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 210px; background: var(--card); border: 1px solid var(--card-border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; z-index: 100; animation: fynFade .15s ease; }
+        .tab-group.open .tab-dropdown { display: block; }
+        .tab-dropdown .tab { width: 100%; padding: 10px 14px; border-bottom: none; border-radius: 7px; color: var(--text-b); gap: 9px; }
+        .tab-dropdown .tab .dashicons { color: var(--fyn-purple); }
+        .tab-dropdown .tab:hover { background: var(--well); color: var(--text-h); }
+        .tab-dropdown .tab.active { background: var(--fyn-purple-tint); color: var(--fyn-purple); }
+        html.fyn-dark .tab-dropdown .tab.active { background: rgba(143,57,172,.2); color: #c084fc; }
+
+        /* App manage link in header */
+        .band-manage { display: flex; align-items: center; gap: 6px; padding: 0 10px; height: 34px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 9px; color: rgba(255,255,255,.7); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; transition: all .2s ease; font-family: inherit; }
+        .band-manage:hover { background: rgba(255,255,255,.14); color: #fff; }
+        .band-manage .dashicons { font-size: 14px; width: 14px; height: 14px; }
 
         /* ---- Content area ---- */
         .app { max-width: 1340px; margin: 0 auto; padding: 26px 26px 48px; }
@@ -303,22 +323,46 @@
             <div class="shop-chip" title="{{ $shopDomain }}"><span class="dashicons dashicons-store"></span><span>{{ $shopDomain }}</span></div>
             <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark theme"><span class="tt-sun">☀</span><span class="tt-moon">☾</span></button>
             <span class="lic-pill" id="hdr-license"><span class="dashicons dashicons-admin-network"></span><span id="hdr-license-label">License</span></span>
+            <a class="band-manage" href="https://admin.shopify.com/store/{{ str_replace('.myshopify.com', '', $shopDomain) }}/settings/apps" target="_top" title="App beheren in Shopify"><span class="dashicons dashicons-admin-generic"></span>App beheren</a>
         </div>
         <nav class="tabs fyn-scroll">
             <button class="tab active" data-tab="overview" onclick="showTab('overview')"><span class="dashicons dashicons-chart-bar"></span>Dashboard</button>
-            <button class="tab" data-tab="content" onclick="showTab('content')"><span class="dashicons dashicons-edit"></span>Content Optimizer</button>
+
+            <!-- Content group -->
+            <div class="tab-group" data-tabs="content,bulk,blogwriter,calendar">
+                <button class="tab-group-trigger" onclick="toggleGroup(this)"><span class="dashicons dashicons-edit"></span>Content<span class="caret">▾</span></button>
+                <div class="tab-dropdown">
+                    <button class="tab" data-tab="content" onclick="showTab('content')"><span class="dashicons dashicons-edit"></span>Content Optimizer</button>
+                    <button class="tab" data-tab="bulk" onclick="showTab('bulk')"><span class="dashicons dashicons-yes-alt"></span>Bulk Optimizer</button>
+                    <button class="tab" data-tab="blogwriter" onclick="showTab('blogwriter')"><span class="dashicons dashicons-edit-page"></span>Blog Writer</button>
+                    <button class="tab" data-tab="calendar" onclick="showTab('calendar')"><span class="dashicons dashicons-calendar-alt"></span>Content Calendar</button>
+                </div>
+            </div>
+
+            <!-- SEO group -->
+            <div class="tab-group" data-tabs="ranktracker,kwexplorer,competitor,backlinks,markets">
+                <button class="tab-group-trigger" onclick="toggleGroup(this)"><span class="dashicons dashicons-chart-line"></span>SEO<span class="caret">▾</span></button>
+                <div class="tab-dropdown">
+                    <button class="tab" data-tab="ranktracker" onclick="showTab('ranktracker')"><span class="dashicons dashicons-chart-line"></span>Rank Tracker</button>
+                    <button class="tab" data-tab="kwexplorer" onclick="showTab('kwexplorer')"><span class="dashicons dashicons-search"></span>Keyword Explorer</button>
+                    <button class="tab" data-tab="competitor" onclick="showTab('competitor')"><span class="dashicons dashicons-groups"></span>Competitors</button>
+                    <button class="tab" data-tab="backlinks" onclick="showTab('backlinks')"><span class="dashicons dashicons-admin-links"></span>Backlinks</button>
+                    <button class="tab" data-tab="markets" onclick="showTab('markets')"><span class="dashicons dashicons-admin-site-alt3"></span>Markets SEO</button>
+                </div>
+            </div>
+
+            <!-- AI group -->
+            <div class="tab-group" data-tabs="aivisibility,geoscan,aitracker">
+                <button class="tab-group-trigger" onclick="toggleGroup(this)"><span class="dashicons dashicons-visibility"></span>AI<span class="caret">▾</span></button>
+                <div class="tab-dropdown">
+                    <button class="tab" data-tab="aivisibility" onclick="showTab('aivisibility')"><span class="dashicons dashicons-visibility"></span>AI Visibility</button>
+                    <button class="tab" data-tab="geoscan" onclick="showTab('geoscan')"><span class="dashicons dashicons-welcome-view-site"></span>GEO Scan</button>
+                    <button class="tab" data-tab="aitracker" onclick="showTab('aitracker')"><span class="dashicons dashicons-trending-up"></span>AI Tracker</button>
+                </div>
+            </div>
+
+            <!-- Standalone tabs -->
             <button class="tab" data-tab="llmstxt" onclick="showTab('llmstxt')"><span class="dashicons dashicons-media-code"></span>llms.txt</button>
-            <button class="tab" data-tab="bulk" onclick="showTab('bulk')"><span class="dashicons dashicons-yes-alt"></span>Bulk Optimizer</button>
-            <button class="tab" data-tab="ranktracker" onclick="showTab('ranktracker')"><span class="dashicons dashicons-chart-line"></span>Rank Tracker</button>
-            <button class="tab" data-tab="backlinks" onclick="showTab('backlinks')"><span class="dashicons dashicons-admin-links"></span>Backlinks</button>
-            <button class="tab" data-tab="aivisibility" onclick="showTab('aivisibility')"><span class="dashicons dashicons-visibility"></span>AI Visibility</button>
-            <button class="tab" data-tab="blogwriter" onclick="showTab('blogwriter')"><span class="dashicons dashicons-edit-page"></span>Blog Writer</button>
-            <button class="tab" data-tab="geoscan" onclick="showTab('geoscan')"><span class="dashicons dashicons-welcome-view-site"></span>GEO Scan</button>
-            <button class="tab" data-tab="kwexplorer" onclick="showTab('kwexplorer')"><span class="dashicons dashicons-search"></span>Keyword Explorer</button>
-            <button class="tab" data-tab="competitor" onclick="showTab('competitor')"><span class="dashicons dashicons-groups"></span>Competitors</button>
-            <button class="tab" data-tab="aitracker" onclick="showTab('aitracker')"><span class="dashicons dashicons-trending-up"></span>AI Tracker</button>
-            <button class="tab" data-tab="calendar" onclick="showTab('calendar')"><span class="dashicons dashicons-calendar-alt"></span>Calendar</button>
-            <button class="tab" data-tab="markets" onclick="showTab('markets')"><span class="dashicons dashicons-admin-site-alt3"></span>Markets SEO</button>
             <button class="tab" data-tab="tools" onclick="showTab('tools')"><span class="dashicons dashicons-admin-tools"></span>Tools</button>
             <button class="tab" data-tab="license" onclick="showTab('license')"><span class="dashicons dashicons-admin-network"></span>License</button>
         </nav>
@@ -1143,9 +1187,27 @@
             try { localStorage.setItem('fyn-theme', dark ? 'dark' : 'light'); } catch (e) {}
         }
 
+        // Dropdown group toggle
+        function toggleGroup(trigger) {
+            const group = trigger.closest('.tab-group');
+            const wasOpen = group.classList.contains('open');
+            closeAllGroups();
+            if (!wasOpen) group.classList.add('open');
+        }
+
+        function closeAllGroups() {
+            document.querySelectorAll('.tab-group').forEach(g => g.classList.remove('open'));
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.tab-group')) closeAllGroups();
+        });
+
         // Route through the real tab button so showTab() gets it as event.target.
         function goTab(tabId) {
-            document.querySelector(`.tab[data-tab="${tabId}"]`).click();
+            const btn = document.querySelector(`.tab[data-tab="${tabId}"]`);
+            if (btn) btn.click();
         }
 
         function setContentType(type) {
@@ -1178,8 +1240,19 @@
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-group-trigger').forEach(el => el.classList.remove('has-active'));
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+
+            // Highlight the clicked tab
+            const tabBtn = document.querySelector(`.tab[data-tab="${tabId}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
+
+            // Highlight parent group trigger if tab is inside a dropdown
+            const group = tabBtn?.closest('.tab-group');
+            if (group) group.querySelector('.tab-group-trigger')?.classList.add('has-active');
+
+            // Close all dropdowns
+            closeAllGroups();
 
             // Load tab data
             if (tabId === 'overview') loadOverview();
