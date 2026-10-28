@@ -36,8 +36,9 @@ class RevenueDashboard
 
     public function enqueueAssets(string $hook): void
     {
-        $isRevenuePage = $hook === 'saaS-ai_page_sseo-ai-revenue';
-        $isRevenueTab = isset($_GET['page']) && $_GET['page'] === 'sseo-ai-costs' && isset($_GET['tab']) && $_GET['tab'] === 'revenue';
+        $page = $_GET['page'] ?? '';
+        $isRevenuePage = $page === 'sseo-ai-revenue' || str_ends_with($hook, 'sseo-ai-revenue');
+        $isRevenueTab = $page === 'sseo-ai-costs' && ($_GET['tab'] ?? '') === 'revenue';
         if (!$isRevenuePage && !$isRevenueTab) {
             return;
         }

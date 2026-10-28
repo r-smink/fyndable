@@ -197,6 +197,7 @@ class Dashboard
         add_action('admin_menu', [$this->feedbackAdmin, 'register']);
         add_action('admin_menu', [$this->emailTemplateAdmin, 'addMenu']);
         add_action('admin_menu', [$this->geoScanAdmin, 'register']);
+        add_action('admin_menu', [$this->revenueDashboard, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->emailTemplateAdmin, 'enqueueAssets']);
