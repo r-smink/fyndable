@@ -128,14 +128,10 @@ class PostMetaBox
 
         $classes .= ' fyndable-seo-editor';
 
-        // Same source of truth as the dashboard shell, so the editor opens in
-        // whichever theme the admin pages are in.
-        if (isset($_GET['fyndable_dark'])) {
-            $dark = $_GET['fyndable_dark'] === '1';
-        } else {
-            $dark = get_option('sseo_ai_client_dark_theme', '0') === '1';
-        }
-        if ($dark) {
+        // The editor always opens in the light theme; the header toggle switches
+        // to dark for the current browser (remembered client-side). `?fyndable_dark=1`
+        // forces dark for a single page load.
+        if (isset($_GET['fyndable_dark']) && $_GET['fyndable_dark'] === '1') {
             $classes .= ' fyndable-dark';
         }
 
@@ -256,8 +252,7 @@ class PostMetaBox
         echo '</span>';
         echo '<span class="fyndable-seo-header-spacer"></span>';
         echo '<button type="button" class="fyndable-seo-themetoggle" title="'
-            . esc_attr__('Switch theme', 'ai-seo-client') . '" data-nonce="'
-            . esc_attr(wp_create_nonce('sseo_ai_toggle_theme')) . '">';
+            . esc_attr__('Switch theme', 'ai-seo-client') . '">';
         echo '<span class="fyn-sun" aria-hidden="true">&#9728;</span>';
         echo '<span class="fyn-moon" aria-hidden="true">&#9790;</span>';
         echo '</button>';
@@ -484,22 +479,23 @@ class PostMetaBox
             });
         });
 
-        // Theme toggle in the brand header band. Flips the scope class straight
-        // away and persists to the same option the dashboard shell uses.
+        // Theme toggle in the brand header band. The panel opens light; the
+        // chosen theme is remembered in this browser only, so other admin
+        // screens keep their own setting.
+        var THEME_KEY = 'fyndableSeoEditorTheme';
+        var storedTheme = null;
+        try { storedTheme = window.localStorage.getItem(THEME_KEY); } catch (err) {}
+        if (storedTheme === 'dark') {
+            document.body.classList.add('fyndable-dark');
+        }
+
         var themeToggle = document.querySelector('.fyndable-seo-themetoggle');
         if (themeToggle) {
             themeToggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 var dark = !document.body.classList.contains('fyndable-dark');
                 document.body.classList.toggle('fyndable-dark', dark);
-
-                if (typeof ajaxurl === 'undefined') return;
-                var data = new FormData();
-                data.append('action', 'sseo_ai_toggle_theme');
-                data.append('nonce', themeToggle.getAttribute('data-nonce') || '');
-                data.append('dark', dark ? '1' : '0');
-                fetch(ajaxurl, { method: 'POST', body: data, credentials: 'same-origin' })
-                    .catch(function() {});
+                try { window.localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (err) {}
             });
         }
     });
