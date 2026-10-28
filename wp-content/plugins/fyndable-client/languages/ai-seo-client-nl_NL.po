@@ -27,13 +27,13 @@ msgid "## Additional resources&#10;- [About](https://example.com/about): ..."
 msgstr ""
 
 msgid "%.0f%% of LSI keywords used in content"
-msgstr ""
+msgstr "%.0f%% van de LSI-zoekwoorden gebruikt in de content"
 
 msgid "%.1f%% (%d occurrences)"
-msgstr ""
+msgstr "%.1f%% (%d keer)"
 
 msgid "%d H1 headings. Use exactly one."
-msgstr ""
+msgstr "%d H1-koppen. Gebruik er precies één."
 
 msgid "%d definitional phrases"
 msgstr ""
@@ -42,7 +42,7 @@ msgid "%d headings, %d lists, %d tables"
 msgstr ""
 
 msgid "%d internal links."
-msgstr ""
+msgstr "%d interne links."
 
 msgid "%d keywords deleted"
 msgstr ""
@@ -57,7 +57,7 @@ msgid "%d of %d checked sentences found in other posts."
 msgstr ""
 
 msgid "%d of %d images have alt text."
-msgstr ""
+msgstr "%d van %d afbeeldingen hebben alt-tekst."
 
 msgid "%d paragraph(s) exceed 150 words. Break them up."
 msgstr ""
@@ -93,7 +93,7 @@ msgid "%d words"
 msgstr ""
 
 msgid "%d words. %s"
-msgstr ""
+msgstr "%d woorden. %s"
 
 msgid "%d%% of sentences are over 20 words."
 msgstr ""
@@ -123,7 +123,7 @@ msgid "%s SEO Report"
 msgstr ""
 
 msgid "(Set in SEO tab)"
-msgstr ""
+msgstr "(Stel in op het SEO-tabblad)"
 
 msgid "(main entry point)"
 msgstr ""
@@ -165,7 +165,7 @@ msgid "A/B Testing"
 msgstr "A/B-testen"
 
 msgid "A/B test creation coming soon"
-msgstr ""
+msgstr "A/B-tests maken komt binnenkort"
 
 msgid "AI Agent"
 msgstr ""
@@ -240,7 +240,7 @@ msgid "AI Images"
 msgstr "AI afbeeldingen"
 
 msgid "AI Improvement Suggestions"
-msgstr ""
+msgstr "AI-verbetersuggesties"
 
 msgid "AI Keyword Search Volume"
 msgstr "AI zoekwoord zoekvolume"
@@ -285,7 +285,7 @@ msgid "AI SEO Schema Markup"
 msgstr ""
 
 msgid "AI SEO Score & Optimization"
-msgstr ""
+msgstr "AI SEO-score & optimalisatie"
 
 msgid "AI SEO: Canonical URL"
 msgstr ""
@@ -309,10 +309,10 @@ msgid "AI Search Visibility"
 msgstr "AI-zichtbaarheid"
 
 msgid "AI Smart Tags"
-msgstr ""
+msgstr "AI slimme tags"
 
 msgid "AI Suggest Improvements"
-msgstr ""
+msgstr "AI-verbeteringen voorstellen"
 
 msgid "AI Suggest Missing Terms"
 msgstr ""
@@ -375,13 +375,13 @@ msgid "AI-powered tools for content, images and optimization."
 msgstr ""
 
 msgid "AI-ranked opportunities to add internal links."
-msgstr ""
+msgstr "Door AI gerangschikte kansen om interne links toe te voegen."
 
 msgid "AI-suggested internal link opportunities"
 msgstr "AI-gesuggereerde interne linkmogelijkheden"
 
 msgid "AI-suggested tags based on your content:"
-msgstr ""
+msgstr "Door AI voorgestelde tags op basis van je content:"
 
 msgid "AIza..."
 msgstr "AIza..."
@@ -465,7 +465,7 @@ msgid "Add Competitor Domain:"
 msgstr "Concurrent domein toevoegen:"
 
 msgid "Add Credential"
-msgstr ""
+msgstr "Referentie toevoegen"
 
 msgid "Add Custom Webhook"
 msgstr ""
@@ -486,7 +486,7 @@ msgid "Add Keyword to Track"
 msgstr ""
 
 msgid "Add Link"
-msgstr ""
+msgstr "Link toevoegen"
 
 msgid "Add New Redirect"
 msgstr ""
@@ -504,7 +504,7 @@ msgid "Add Rule"
 msgstr ""
 
 msgid "Add a compelling meta description (150-160 characters) to improve CTR from search results."
-msgstr ""
+msgstr "Schrijf een pakkende meta-beschrijving (150-160 tekens) voor een betere CTR vanuit de zoekresultaten."
 
 msgid "Add a concise 40-60 word answer at the beginning of your content"
 msgstr ""
@@ -519,10 +519,10 @@ msgid "Add custom webhook URLs for specific events:"
 msgstr ""
 
 msgid "Add keyphrase to first paragraph."
-msgstr ""
+msgstr "Voeg de zoekterm toe aan de eerste alinea."
 
 msgid "Add keyphrase to title."
-msgstr ""
+msgstr "Voeg de zoekterm toe aan de titel."
 
 msgid "Add keyword"
 msgstr ""
@@ -531,7 +531,7 @@ msgid "Add more internal links"
 msgstr ""
 
 msgid "Add more internal links to related content on your site to improve topical authority."
-msgstr ""
+msgstr "Voeg meer interne links naar verwante content toe om je topicale autoriteit te versterken."
 
 msgid "Add nofollow"
 msgstr ""
@@ -681,10 +681,10 @@ msgid "Always show"
 msgstr ""
 
 msgid "Analysis Results"
-msgstr ""
+msgstr "Analyseresultaten"
 
 msgid "Analysis failed"
-msgstr ""
+msgstr "Analyse mislukt"
 
 msgid "Analytics 4"
 msgstr ""
@@ -699,7 +699,7 @@ msgid "Analyze Site"
 msgstr ""
 
 msgid "Analyze and optimize your publishing schedule?"
-msgstr ""
+msgstr "Je publicatieschema analyseren en optimaliseren?"
 
 msgid "Analyze the competitive landscape for any keyword. See what top-ranking pages cover, identify gaps, and find winning patterns."
 msgstr ""
@@ -711,7 +711,7 @@ msgid "Analyzed links: %d"
 msgstr "Geanalyseerde links: %d"
 
 msgid "Analyzing content and generating AI suggestions..."
-msgstr ""
+msgstr "Content analyseren en AI-suggesties genereren..."
 
 msgid "Analyzing gaps..."
 msgstr ""
@@ -732,7 +732,7 @@ msgid "Anchor Text Distribution"
 msgstr "Ankertekst-verdeling"
 
 msgid "Anchor Text Variants"
-msgstr ""
+msgstr "Varianten ankertekst"
 
 msgid "Answer"
 msgstr ""
@@ -789,25 +789,25 @@ msgid "Apply brand voice to generated content"
 msgstr "Merkidentiteit toepassen op gegenereerde content"
 
 msgid "Approve"
-msgstr ""
+msgstr "Goedkeuren"
 
 msgid "Approve & Publish"
-msgstr ""
+msgstr "Goedkeuren & publiceren"
 
 msgid "Approve and publish this content?"
-msgstr ""
+msgstr "Deze content goedkeuren en publiceren?"
 
 msgid "Approved"
-msgstr ""
+msgstr "Goedgekeurd"
 
 msgid "Approver:"
-msgstr ""
+msgstr "Fiatteur:"
 
 msgid "Are you sure you want to disconnect your Google account? This will remove access to Search Console and Analytics 4."
 msgstr ""
 
 msgid "Areas of Expertise"
-msgstr ""
+msgstr "Expertisegebieden"
 
 msgid "Article"
 msgstr ""
@@ -825,10 +825,10 @@ msgid "Ask your question..."
 msgstr ""
 
 msgid "Assigned To"
-msgstr ""
+msgstr "Toegewezen aan"
 
 msgid "Assigned To:"
-msgstr ""
+msgstr "Toegewezen aan:"
 
 msgid "Attachment is not an image"
 msgstr ""
@@ -849,7 +849,7 @@ msgid "Author"
 msgstr "Auteur"
 
 msgid "Author Expertise"
-msgstr ""
+msgstr "Auteursexpertise"
 
 msgid "Author Sitemap:"
 msgstr ""
@@ -861,10 +861,10 @@ msgid "Authoritative"
 msgstr "Autoritair"
 
 msgid "Authoritativeness"
-msgstr ""
+msgstr "Autoriteit"
 
 msgid "Authoritativeness:"
-msgstr ""
+msgstr "Autoriteit:"
 
 msgid "Authority Potential"
 msgstr ""
@@ -876,7 +876,7 @@ msgid "Auto Repair"
 msgstr ""
 
 msgid "Auto-Fix"
-msgstr ""
+msgstr "Automatisch oplossen"
 
 msgid "Auto-detect"
 msgstr ""
@@ -912,7 +912,7 @@ msgid "Automatic Indexing"
 msgstr ""
 
 msgid "Automatically add internal links to this orphan page?"
-msgstr ""
+msgstr "Automatisch interne links naar deze verweesde pagina toevoegen?"
 
 msgid "Automatically add internal links to your content based on custom rules and AI-powered suggestions."
 msgstr ""
@@ -972,19 +972,19 @@ msgid "Avg Headings"
 msgstr ""
 
 msgid "Avg Internal Links"
-msgstr ""
+msgstr "Gem. interne links"
 
 msgid "Avg Position"
 msgstr ""
 
 msgid "Avg Time-to-Rank"
-msgstr ""
+msgstr "Gem. tijd tot ranking"
 
 msgid "Avg Word Count"
 msgstr ""
 
 msgid "Avg. Position"
-msgstr ""
+msgstr "Gem. positie"
 
 msgid "Back"
 msgstr "Terug"
@@ -1017,7 +1017,7 @@ msgid "Base Keyword:"
 msgstr "Basiszoekwoord:"
 
 msgid "Baseline set successfully!"
-msgstr ""
+msgstr "Nulmeting vastgelegd!"
 
 msgid "Basic SEO Configuration"
 msgstr "Basis SEO-configuratie"
@@ -1026,7 +1026,7 @@ msgid "Best"
 msgstr ""
 
 msgid "Bio Completeness"
-msgstr ""
+msgstr "Volledigheid bio"
 
 msgid "Blog"
 msgstr ""
@@ -1254,13 +1254,13 @@ msgid "Clear custom canonical"
 msgstr ""
 
 msgid "Click \"Generate LSI Keywords\" to get suggestions based on your focus keyphrase."
-msgstr ""
+msgstr "Klik op \"LSI-zoekwoorden genereren\" voor suggesties op basis van je focus zoekterm."
 
 msgid "Click \"Generate Link Opportunities\" to find internal linking opportunities."
-msgstr ""
+msgstr "Klik op \"Linkkansen genereren\" om kansen voor interne links te vinden."
 
 msgid "Click \"Generate Smart Tags\" to analyze your content and suggest relevant tags."
-msgstr ""
+msgstr "Klik op \"Slimme tags genereren\" om je content te analyseren en relevante tags voor te stellen."
 
 msgid "Click \"Load Data\" to fetch."
 msgstr ""
@@ -1290,7 +1290,7 @@ msgid "Cluster Performance"
 msgstr "Cluster prestaties"
 
 msgid "Cluster data required"
-msgstr ""
+msgstr "Clusterdata vereist"
 
 msgid "Cluster map generation queued. Poll /clusters/map-queue/{queue_id} for status."
 msgstr ""
@@ -1317,7 +1317,7 @@ msgid "Comma-separated list of post/page IDs to exclude from the sitemap."
 msgstr ""
 
 msgid "Comma-separated list of related keywords"
-msgstr ""
+msgstr "Komma-gescheiden lijst met verwante zoekwoorden"
 
 msgid "Commercial"
 msgstr ""
@@ -1419,7 +1419,7 @@ msgid "Configuration saved!"
 msgstr ""
 
 msgid "Configure GA4"
-msgstr ""
+msgstr "GA4 instellen"
 
 msgid "Configure geographic targeting for local SEO"
 msgstr ""
@@ -1443,7 +1443,7 @@ msgid "Connect"
 msgstr "Verbinden"
 
 msgid "Connect Google Analytics 4 to track content performance."
-msgstr ""
+msgstr "Koppel Google Analytics 4 om contentprestaties te volgen."
 
 msgid "Connect Google Search Console for search performance data"
 msgstr "Verbind Google Search Console voor zoekprestatiedata"
@@ -1494,7 +1494,7 @@ msgid "Connection"
 msgstr "Verbinding"
 
 msgid "Consider expanding your content to at least 500 words. Currently at %d words."
-msgstr ""
+msgstr "Breid je content uit naar minimaal 500 woorden. Nu %d woorden."
 
 msgid "Contact"
 msgstr ""
@@ -1506,7 +1506,7 @@ msgid "Content & Keywords"
 msgstr "Content & zoekwoorden"
 
 msgid "Content Approval Required"
-msgstr ""
+msgstr "Goedkeuring vereist"
 
 msgid "Content Brief"
 msgstr "Content Brief"
@@ -1539,7 +1539,7 @@ msgid "Content Depth"
 msgstr ""
 
 msgid "Content Gap Calendar"
-msgstr ""
+msgstr "Contentgatenkalender"
 
 msgid "Content Gaps & Opportunities"
 msgstr ""
@@ -1554,7 +1554,7 @@ msgid "Content Language"
 msgstr ""
 
 msgid "Content Length"
-msgstr ""
+msgstr "Contentlengte"
 
 msgid "Content Optimizer"
 msgstr "Content optimaliseerder"
@@ -1563,7 +1563,7 @@ msgid "Content Outline"
 msgstr "Content overzicht"
 
 msgid "Content Performance"
-msgstr ""
+msgstr "Contentprestaties"
 
 msgid "Content Performance Monitor"
 msgstr "Content Prestatiemonitor"
@@ -1608,7 +1608,7 @@ msgid "Content Types: Selected"
 msgstr "Contenttypen: Geselecteerd"
 
 msgid "Content Workflow"
-msgstr ""
+msgstr "Contentworkflow"
 
 msgid "Content Writer"
 msgstr "Content schrijver"
@@ -1617,7 +1617,7 @@ msgid "Content appears unique within your site."
 msgstr ""
 
 msgid "Content approved!"
-msgstr ""
+msgstr "Content goedgekeurd!"
 
 msgid "Content decay alerts"
 msgstr ""
@@ -1644,10 +1644,10 @@ msgid "Content readability is already good!"
 msgstr ""
 
 msgid "Content ready for review: %s"
-msgstr ""
+msgstr "Content klaar voor review: %s"
 
 msgid "Content rejected"
-msgstr ""
+msgstr "Content afgewezen"
 
 msgid "Content required"
 msgstr ""
@@ -1800,7 +1800,7 @@ msgid "Coverage"
 msgstr ""
 
 msgid "Coverage:"
-msgstr ""
+msgstr "Dekking:"
 
 msgid "Covered"
 msgstr ""
@@ -1824,10 +1824,10 @@ msgid "Crawlable:"
 msgstr ""
 
 msgid "Create A/B Test"
-msgstr ""
+msgstr "A/B-test maken"
 
 msgid "Create Content"
-msgstr ""
+msgstr "Content maken"
 
 msgid "Create New Test"
 msgstr "Nieuwe test aanmaken"
@@ -1890,10 +1890,10 @@ msgid "Created until"
 msgstr ""
 
 msgid "Credential Title"
-msgstr ""
+msgstr "Titel referentie"
 
 msgid "Credentials"
-msgstr ""
+msgstr "Referenties"
 
 msgid "Credits used / available:"
 msgstr ""
@@ -2301,13 +2301,13 @@ msgid "Draft"
 msgstr "Concept"
 
 msgid "Drafts"
-msgstr ""
+msgstr "Concepten"
 
 msgid "Drop threshold:"
 msgstr ""
 
 msgid "Due Date:"
-msgstr ""
+msgstr "Deadline:"
 
 msgid "Duration (ISO 8601)"
 msgstr ""
@@ -2316,10 +2316,10 @@ msgid "E-E-A-T"
 msgstr "E-E-A-T"
 
 msgid "E-E-A-T Expertise Profile"
-msgstr ""
+msgstr "E-E-A-T expertiseprofiel"
 
 msgid "E-E-A-T Score"
-msgstr ""
+msgstr "E-E-A-T-score"
 
 msgid "E-E-A-T Signals"
 msgstr ""
@@ -2352,7 +2352,7 @@ msgid "Edit Post"
 msgstr "Bericht bewerken"
 
 msgid "Edit Profile"
-msgstr ""
+msgstr "Profiel bewerken"
 
 msgid "Edit Status"
 msgstr ""
@@ -2538,7 +2538,7 @@ msgid "Enter your license key to unlock all features."
 msgstr "Voer je licentiesleutel in om alle functies te ontgrendelen."
 
 msgid "Enter your main keyword..."
-msgstr ""
+msgstr "Voer je belangrijkste zoekwoord in..."
 
 msgid "Enter your target keyword..."
 msgstr ""
@@ -2562,10 +2562,10 @@ msgid "Error creating queue"
 msgstr ""
 
 msgid "Error generating opportunities"
-msgstr ""
+msgstr "Fout bij het genereren van kansen"
 
 msgid "Error generating opportunities. Please try again."
-msgstr ""
+msgstr "Fout bij het genereren van kansen. Probeer het opnieuw."
 
 msgid "Error loading data."
 msgstr ""
@@ -2601,7 +2601,7 @@ msgid "Estimated Months"
 msgstr ""
 
 msgid "Estimated ROI"
-msgstr ""
+msgstr "Geschatte ROI"
 
 msgid "Event"
 msgstr ""
@@ -2640,16 +2640,16 @@ msgid "Expensive"
 msgstr ""
 
 msgid "Experience"
-msgstr ""
+msgstr "Ervaring"
 
 msgid "Experience:"
-msgstr ""
+msgstr "Ervaring:"
 
 msgid "Expertise"
-msgstr ""
+msgstr "Expertise"
 
 msgid "Expertise:"
-msgstr ""
+msgstr "Expertise:"
 
 msgid "Explore"
 msgstr ""
@@ -2715,16 +2715,16 @@ msgid "Facebook URL (optional)"
 msgstr "Facebook URL (optioneel)"
 
 msgid "Fact check: questionable"
-msgstr ""
+msgstr "Factcheck: twijfelachtig"
 
 msgid "Fact check: supported"
-msgstr ""
+msgstr "Factcheck: onderbouwd"
 
 msgid "Fact check: uncertain"
-msgstr ""
+msgstr "Factcheck: onzeker"
 
 msgid "Fact check: unknown"
-msgstr ""
+msgstr "Factcheck: onbekend"
 
 msgid "Factual Density (stats, numbers)"
 msgstr ""
@@ -2793,7 +2793,7 @@ msgid "Failed to get ideas"
 msgstr ""
 
 msgid "Failed to get suggestions"
-msgstr ""
+msgstr "Ophalen van suggesties mislukt"
 
 msgid "Failed to list customers"
 msgstr ""
@@ -2904,7 +2904,7 @@ msgid "File upload failed"
 msgstr ""
 
 msgid "Fill Gap"
-msgstr ""
+msgstr "Gat opvullen"
 
 msgid "Filter"
 msgstr "Filteren"
@@ -2931,7 +2931,7 @@ msgid "Fixed"
 msgstr "Opgelost"
 
 msgid "Flesch score: %d (%s)"
-msgstr ""
+msgstr "Flesch-score: %d (%s)"
 
 msgid "Flesch score: %d. Aim for 60+ for general audiences."
 msgstr ""
@@ -2949,7 +2949,7 @@ msgid "Focus Keyphrase"
 msgstr "Focus zoekterm"
 
 msgid "Focus Keyphrase:"
-msgstr ""
+msgstr "Focus zoekterm:"
 
 msgid "Focus Keyphrases"
 msgstr ""
@@ -2997,13 +2997,13 @@ msgid "Frequently Asked Questions"
 msgstr ""
 
 msgid "Fri"
-msgstr ""
+msgstr "vr"
 
 msgid "Friendly"
 msgstr "Vriendelijk"
 
 msgid "From Page"
-msgstr ""
+msgstr "Van pagina"
 
 msgid "From manual"
 msgstr ""
@@ -3072,10 +3072,10 @@ msgid "GTM snippet active"
 msgstr ""
 
 msgid "Gap"
-msgstr ""
+msgstr "Gat"
 
 msgid "Gaps in your content calendar:"
-msgstr ""
+msgstr "Gaten in je contentkalender:"
 
 msgid "Gemini Mentions"
 msgstr "Gemini-vermeldingen"
@@ -3132,10 +3132,10 @@ msgid "Generate Keywords"
 msgstr ""
 
 msgid "Generate LSI Keywords"
-msgstr ""
+msgstr "LSI-zoekwoorden genereren"
 
 msgid "Generate Link Opportunities"
-msgstr ""
+msgstr "Linkkansen genereren"
 
 msgid "Generate Map"
 msgstr ""
@@ -3156,7 +3156,7 @@ msgid "Generate Selected"
 msgstr ""
 
 msgid "Generate Smart Tags"
-msgstr ""
+msgstr "Slimme tags genereren"
 
 msgid "Generate Social Images"
 msgstr ""
@@ -3171,7 +3171,7 @@ msgid "Generate all content in background"
 msgstr ""
 
 msgid "Generate an SEO title that includes your focus keyphrase near the beginning."
-msgstr ""
+msgstr "Maak een SEO-titel met je focus zoekterm vooraan."
 
 msgid "Generate and manage content ideas for your website."
 msgstr ""
@@ -3246,13 +3246,13 @@ msgid "Generates blog post ideas for the keyword using AI and saves them to the 
 msgstr ""
 
 msgid "Generating suggestions..."
-msgstr ""
+msgstr "Suggesties genereren..."
 
 msgid "Generating..."
 msgstr "Genereren..."
 
 msgid "Generating... (this may take a minute)"
-msgstr ""
+msgstr "Genereren... (dit kan een minuut duren)"
 
 msgid "Generation Progress"
 msgstr "Voortgang generatie"
@@ -3267,7 +3267,7 @@ msgid "Geo-specific keywords generated!"
 msgstr ""
 
 msgid "Get AI Recommendations"
-msgstr ""
+msgstr "AI-aanbevelingen ophalen"
 
 msgid "Get Search Volume"
 msgstr "Zoekvolume ophalen"
@@ -3306,7 +3306,7 @@ msgid "Good content but %s — easy to fix with AI"
 msgstr ""
 
 msgid "Good length."
-msgstr ""
+msgstr "Goede lengte."
 
 msgid "Good readability"
 msgstr ""
@@ -3342,7 +3342,7 @@ msgid "Google Analytics 4"
 msgstr ""
 
 msgid "Google Analytics 4 Integration"
-msgstr ""
+msgstr "Google Analytics 4-koppeling"
 
 msgid "Google Analytics 4 Tracking"
 msgstr ""
@@ -3381,7 +3381,7 @@ msgid "Google PageSpeed API Key (optional)"
 msgstr "Google PageSpeed API-sleutel (optioneel)"
 
 msgid "Google SERP Preview"
-msgstr ""
+msgstr "Google SERP-preview"
 
 msgid "Google Search Console"
 msgstr "Google Search Console"
@@ -3426,7 +3426,7 @@ msgid "Great"
 msgstr ""
 
 msgid "Great! Your content is well-optimized."
-msgstr ""
+msgstr "Top! Je content is goed geoptimaliseerd."
 
 msgid "Grid"
 msgstr ""
@@ -3441,7 +3441,7 @@ msgid "Guest posts"
 msgstr "Gastblogs"
 
 msgid "H1 Heading"
-msgstr ""
+msgstr "H1-kop"
 
 msgid "H2: Eerste sectie\nH2: Tweede sectie\nH3: Subsectie\n..."
 msgstr ""
@@ -3564,7 +3564,7 @@ msgid "Ideas"
 msgstr "Ideeën"
 
 msgid "Ideation"
-msgstr ""
+msgstr "Ideevorming"
 
 msgid "Identify and fix technical SEO issues across your entire site"
 msgstr "Identificeer en los technische SEO problemen op je hele site op"
@@ -3612,10 +3612,10 @@ msgid "Images Generated"
 msgstr "Afbeeldingen gegenereerd"
 
 msgid "Images with Alt Text"
-msgstr ""
+msgstr "Afbeeldingen met alt-tekst"
 
 msgid "Impact"
-msgstr ""
+msgstr "Impact"
 
 msgid "Import"
 msgstr "Importeren"
@@ -3639,13 +3639,13 @@ msgid "Impressions"
 msgstr "Vertoningen"
 
 msgid "In Progress"
-msgstr ""
+msgstr "In bewerking"
 
 msgid "In Queue"
 msgstr "In wachtrij"
 
 msgid "In Review"
-msgstr ""
+msgstr "In review"
 
 msgid "Include FAQ section"
 msgstr ""
@@ -3684,7 +3684,7 @@ msgid "Informative"
 msgstr "Informatief"
 
 msgid "Insert Link"
-msgstr ""
+msgstr "Link invoegen"
 
 msgid "Insert into Editor"
 msgstr ""
@@ -3723,13 +3723,13 @@ msgid "Internal Link Opportunities"
 msgstr "Interne link kansen"
 
 msgid "Internal Link Suggestions"
-msgstr ""
+msgstr "Suggesties voor interne links"
 
 msgid "Internal Linking"
 msgstr "Interne linking"
 
 msgid "Internal Linking Overview"
-msgstr ""
+msgstr "Overzicht interne links"
 
 msgid "Internal Linking Strategy"
 msgstr ""
@@ -3783,10 +3783,10 @@ msgid "Invalid license key."
 msgstr ""
 
 msgid "Invalid link data: no URL available."
-msgstr ""
+msgstr "Ongeldige linkgegevens: geen URL beschikbaar."
 
 msgid "Invalid link data: no anchor text."
-msgstr ""
+msgstr "Ongeldige linkgegevens: geen ankertekst."
 
 msgid "Invalid refresh response"
 msgstr ""
@@ -3825,7 +3825,7 @@ msgid "Issues Found"
 msgstr "Problemen gevonden"
 
 msgid "Issuing Organization"
-msgstr ""
+msgstr "Uitgevende organisatie"
 
 msgid "Keep one primary post for this phrase: merge content or 301-redirect the others, or give each post a unique focus keyphrase."
 msgstr ""
@@ -3840,19 +3840,19 @@ msgid "Key phrases or values to include in AI content (e.g., innovation, custome
 msgstr "Belangrijke woorden of waarden voor AI-content (bijv. innovatie, klantgericht, duurzaamheid...)"
 
 msgid "Keyphrase Density"
-msgstr ""
+msgstr "Zoektermdichtheid"
 
 msgid "Keyphrase appears in first paragraph."
-msgstr ""
+msgstr "Zoekterm staat in de eerste alinea."
 
 msgid "Keyphrase found in title."
-msgstr ""
+msgstr "Zoekterm gevonden in de titel."
 
 msgid "Keyphrase in Intro"
-msgstr ""
+msgstr "Zoekterm in intro"
 
 msgid "Keyphrase in Title"
-msgstr ""
+msgstr "Zoekterm in titel"
 
 msgid "Keyword"
 msgstr "Zoekwoord"
@@ -3867,7 +3867,7 @@ msgid "Keyword Gap: keywords you rank for but"
 msgstr ""
 
 msgid "Keyword Opportunity Timeline"
-msgstr ""
+msgstr "Tijdlijn zoekwoordkansen"
 
 msgid "Keyword Rank Tracker"
 msgstr ""
@@ -3981,7 +3981,7 @@ msgid "LSI Keywords"
 msgstr ""
 
 msgid "LSI Keywords & Synonyms"
-msgstr ""
+msgstr "LSI-zoekwoorden & synoniemen"
 
 msgid "Language"
 msgstr "Taal"
@@ -4020,7 +4020,7 @@ msgid "Last checked: %s"
 msgstr ""
 
 msgid "Last optimized:"
-msgstr ""
+msgstr "Laatst geoptimaliseerd:"
 
 msgid "Last run: %1$s — %2$s post(s) trashed."
 msgstr ""
@@ -4125,7 +4125,7 @@ msgid "Link Manager"
 msgstr "Linkbeheer"
 
 msgid "Link Opportunities"
-msgstr ""
+msgstr "Linkkansen"
 
 msgid "Link Type"
 msgstr "Linktype"
@@ -4134,13 +4134,13 @@ msgid "Link Types"
 msgstr "Linktypen"
 
 msgid "Link added successfully!"
-msgstr ""
+msgstr "Link toegevoegd!"
 
 msgid "Link added to disavow file"
 msgstr ""
 
 msgid "Link inserted!"
-msgstr ""
+msgstr "Link ingevoegd!"
 
 msgid "Link/Button Click"
 msgstr "Link/knop-klik"
@@ -4149,13 +4149,13 @@ msgid "LinkedIn Post"
 msgstr "LinkedIn bericht"
 
 msgid "LinkedIn:"
-msgstr ""
+msgstr "LinkedIn:"
 
 msgid "Links"
 msgstr "Links"
 
 msgid "Links added successfully!"
-msgstr ""
+msgstr "Links toegevoegd!"
 
 msgid "List"
 msgstr ""
@@ -4167,7 +4167,7 @@ msgid "List Available Properties"
 msgstr "Toon beschikbare properties"
 
 msgid "List your areas of expertise (one per line)"
-msgstr ""
+msgstr "Noem je expertisegebieden (één per regel)"
 
 msgid "Lists or Tables"
 msgstr ""
@@ -4176,7 +4176,7 @@ msgid "Load Data"
 msgstr "Laad data"
 
 msgid "Loading AI suggestions..."
-msgstr ""
+msgstr "AI-suggesties laden..."
 
 msgid "Loading overview data..."
 msgstr "Overzichtsdata laden..."
@@ -4278,7 +4278,7 @@ msgid "Main Sitemap:"
 msgstr ""
 
 msgid "Major improvements needed."
-msgstr ""
+msgstr "Flinke verbeteringen nodig."
 
 msgid "Make sure the DataForSEO API key is configured in the Portal settings."
 msgstr ""
@@ -4299,7 +4299,7 @@ msgid "Manage brand, content and advanced settings."
 msgstr ""
 
 msgid "Manage internal links, find orphan pages and discover link opportunities."
-msgstr ""
+msgstr "Beheer interne links, vind verweesde pagina's en ontdek linkkansen."
 
 msgid "Manage reusable AI prompt templates for content generation."
 msgstr ""
@@ -4350,7 +4350,7 @@ msgid "Maybe Later"
 msgstr ""
 
 msgid "Measurement ID:"
-msgstr ""
+msgstr "Meet-ID:"
 
 msgid "Medium"
 msgstr "Gemiddeld"
@@ -4431,7 +4431,7 @@ msgid "Missing Schema"
 msgstr ""
 
 msgid "Missing Signals"
-msgstr ""
+msgstr "Ontbrekende signalen"
 
 msgid "Missing Title"
 msgstr "Ontbrekende titel"
@@ -4473,7 +4473,7 @@ msgid "Moderate competition. Mix of authoritative and niche sites. Winnable with
 msgstr ""
 
 msgid "Mon"
-msgstr ""
+msgstr "ma"
 
 msgid "Monitor ranking changes and auto-update content when positions drop."
 msgstr ""
@@ -4554,7 +4554,7 @@ msgid "Never miss a publication deadline"
 msgstr "Mis nooit een publicatiedeadline"
 
 msgid "New Content Assignment"
-msgstr ""
+msgstr "Nieuwe contentopdracht"
 
 msgid "New Conversation"
 msgstr "Nieuw gesprek"
@@ -4620,7 +4620,7 @@ msgid "No accounts found."
 msgstr ""
 
 msgid "No active A/B tests. Create a test to optimize your titles and meta descriptions."
-msgstr ""
+msgstr "Geen actieve A/B-tests. Maak een test om je titels en meta-beschrijvingen te optimaliseren."
 
 msgid "No active background tasks. Here's what I can help with:\n• Generate a topic cluster\n• Write an article\n• Research keywords\n• Run a site audit"
 msgstr ""
@@ -4629,10 +4629,10 @@ msgid "No anchor text data available yet."
 msgstr ""
 
 msgid "No approval required"
-msgstr ""
+msgstr "Geen goedkeuring nodig"
 
 msgid "No authors found."
-msgstr ""
+msgstr "Geen auteurs gevonden."
 
 msgid "No backlink data available for this competitor."
 msgstr "Geen backlinkdata beschikbaar voor deze concurrent."
@@ -4692,10 +4692,10 @@ msgid "No featured image"
 msgstr ""
 
 msgid "No focus keyphrase set"
-msgstr ""
+msgstr "Geen focus zoekterm ingesteld"
 
 msgid "No gaps found!"
-msgstr ""
+msgstr "Geen gaten gevonden!"
 
 msgid "No history data yet"
 msgstr ""
@@ -4719,7 +4719,7 @@ msgid "No issues found! Your sitemap is healthy."
 msgstr "Geen problemen gevonden! Je sitemap is gezond."
 
 msgid "No keyword opportunities found yet."
-msgstr ""
+msgstr "Nog geen zoekwoordkansen gevonden."
 
 msgid "No keywords found"
 msgstr ""
@@ -4737,13 +4737,13 @@ msgid "No link building suggestions available yet."
 msgstr ""
 
 msgid "No link suggestions available."
-msgstr ""
+msgstr "Geen linksuggesties beschikbaar."
 
 msgid "No local results found."
 msgstr ""
 
 msgid "No major E-E-A-T issues detected. Keep adding first-hand experience, citations, and author credentials."
-msgstr ""
+msgstr "Geen grote E-E-A-T-problemen gevonden. Blijf eigen ervaring, bronvermeldingen en auteursreferenties toevoegen."
 
 msgid "No matching internal pages found."
 msgstr ""
@@ -4752,7 +4752,7 @@ msgid "No missing terms!"
 msgstr ""
 
 msgid "No orphan pages detected!"
-msgstr ""
+msgstr "Geen verweesde pagina's gevonden!"
 
 msgid "No orphan pages found."
 msgstr ""
@@ -4764,10 +4764,10 @@ msgid "No pages to generate. Generate a cluster map first."
 msgstr ""
 
 msgid "No pending approvals."
-msgstr ""
+msgstr "Geen openstaande goedkeuringen."
 
 msgid "No performance data available yet. Connect GA4 to start tracking."
-msgstr ""
+msgstr "Nog geen prestatiegegevens. Koppel GA4 om te gaan meten."
 
 msgid "No post targets this tracked keyword"
 msgstr ""
@@ -4815,7 +4815,7 @@ msgid "No strong rank correlation yet"
 msgstr ""
 
 msgid "No suggestions needed - your content looks great!"
-msgstr ""
+msgstr "Geen suggesties nodig - je content ziet er goed uit!"
 
 msgid "No toxic links detected. Great job!"
 msgstr "Geen toxische links gedetecteerd. Goed gedaan!"
@@ -4830,7 +4830,7 @@ msgid "Nofollow"
 msgstr "Nofollow"
 
 msgid "None detected."
-msgstr ""
+msgstr "Niets gevonden."
 
 msgid "Not Found"
 msgstr ""
@@ -4917,7 +4917,7 @@ msgid "Once Weekly"
 msgstr ""
 
 msgid "One H1 heading found."
-msgstr ""
+msgstr "Eén H1-kop gevonden."
 
 msgid "One per line. Format: Mo-Fr 09:00-17:00"
 msgstr ""
@@ -5001,13 +5001,13 @@ msgid "Opportunity Score"
 msgstr "Kansscore"
 
 msgid "Opportunity Type"
-msgstr ""
+msgstr "Type kans"
 
 msgid "Optimization Impact"
-msgstr ""
+msgstr "Effect van optimalisatie"
 
 msgid "Optimization Impact:"
-msgstr ""
+msgstr "Effect van optimalisatie:"
 
 msgid "Optimization Score"
 msgstr ""
@@ -5019,7 +5019,7 @@ msgid "Optimize"
 msgstr "Optimaliseren"
 
 msgid "Optimize Schedule"
-msgstr ""
+msgstr "Schema optimaliseren"
 
 msgid "Optimize posting times for maximum engagement"
 msgstr "Optimaliseer posttijden voor maximale betrokkenheid"
@@ -5058,7 +5058,7 @@ msgid "Originality"
 msgstr "Originaliteit"
 
 msgid "Orphan Pages"
-msgstr ""
+msgstr "Verweesde pagina's"
 
 msgid "Other"
 msgstr "Anders"
@@ -5073,10 +5073,10 @@ msgid "Outreach Email Template"
 msgstr ""
 
 msgid "Overall Assessment"
-msgstr ""
+msgstr "Totaalbeoordeling"
 
 msgid "Overall E-E-A-T Score"
-msgstr ""
+msgstr "Totale E-E-A-T-score"
 
 msgid "Override the global \"Show social share buttons\" setting for this page."
 msgstr ""
@@ -5142,7 +5142,7 @@ msgid "Pages with Issues"
 msgstr ""
 
 msgid "Pages with no internal links pointing to them."
-msgstr ""
+msgstr "Pagina's waar geen interne links naartoe wijzen."
 
 msgid "Pages with no internal links pointing to them. Consider adding links from other posts."
 msgstr ""
@@ -5181,7 +5181,7 @@ msgid "Pending"
 msgstr "In afwachting"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "Wacht op goedkeuring"
 
 msgid "People Also Ask (PAA)"
 msgstr ""
@@ -5196,13 +5196,13 @@ msgid "Performance"
 msgstr "Prestaties"
 
 msgid "Performance Metrics"
-msgstr ""
+msgstr "Prestatiecijfers"
 
 msgid "Performance Monitor"
-msgstr ""
+msgstr "Prestatiemonitor"
 
 msgid "Performance Overview (Last 30 Days)"
-msgstr ""
+msgstr "Prestatieoverzicht (laatste 30 dagen)"
 
 msgid "Performance data from Google Search Console. Connect via Settings to enable."
 msgstr ""
@@ -5214,7 +5214,7 @@ msgid "Person"
 msgstr ""
 
 msgid "Personal Website:"
-msgstr ""
+msgstr "Eigen website:"
 
 msgid "Persuasive"
 msgstr "Overtuigend"
@@ -5244,7 +5244,7 @@ msgid "Plan ahead (weeks)"
 msgstr "Vooruitplannen (weken)"
 
 msgid "Plan and manage your publishing schedule, discover content gaps."
-msgstr ""
+msgstr "Plan en beheer je publicatieschema en ontdek gaten in je content."
 
 msgid "Planned Posts"
 msgstr "Geplande berichten"
@@ -5268,7 +5268,7 @@ msgid "Please enter a domain."
 msgstr ""
 
 msgid "Please enter a focus keyphrase first"
-msgstr ""
+msgstr "Stel eerst een focus zoekterm in"
 
 msgid "Please enter a keyword"
 msgstr "Voer een zoekwoord in"
@@ -5307,7 +5307,7 @@ msgid "Please select posts first"
 msgstr ""
 
 msgid "Please set a focus keyphrase in the SEO Score tab first to generate LSI keywords."
-msgstr ""
+msgstr "Stel eerst een focus zoekterm in op het tabblad SEO-score om LSI-zoekwoorden te genereren."
 
 msgid "Plugin Settings"
 msgstr "Plugin instellingen"
@@ -5382,7 +5382,7 @@ msgid "Post marked for regeneration"
 msgstr ""
 
 msgid "Post not found"
-msgstr ""
+msgstr "Bericht niet gevonden"
 
 msgid "Post not found."
 msgstr ""
@@ -5460,7 +5460,7 @@ msgid "Preparing..."
 msgstr ""
 
 msgid "Present Signals"
-msgstr ""
+msgstr "Aanwezige signalen"
 
 msgid "Preview"
 msgstr "Voorbeeld"
@@ -5502,7 +5502,7 @@ msgid "Priority Legend"
 msgstr ""
 
 msgid "Priority Score"
-msgstr ""
+msgstr "Prioriteitsscore"
 
 msgid "Private"
 msgstr ""
@@ -5589,13 +5589,13 @@ msgid "Published"
 msgstr "Gepubliceerd"
 
 msgid "Published (30d)"
-msgstr ""
+msgstr "Gepubliceerd (30d)"
 
 msgid "Published / scheduled"
 msgstr "Gepubliceerd / ingepland"
 
 msgid "Published Posts"
-msgstr ""
+msgstr "Gepubliceerde berichten"
 
 msgid "Published from"
 msgstr "Gepubliceerd vanaf"
@@ -5604,7 +5604,7 @@ msgid "Published to"
 msgstr "Gepubliceerd tot"
 
 msgid "Publishing Calendar"
-msgstr ""
+msgstr "Publicatiekalender"
 
 msgid "Publishing Schedule"
 msgstr "Publicatieschema"
@@ -5706,7 +5706,7 @@ msgid "Rating"
 msgstr ""
 
 msgid "Re-analyze Content"
-msgstr ""
+msgstr "Content opnieuw analyseren"
 
 msgid "Re-check"
 msgstr ""
@@ -5730,7 +5730,7 @@ msgid "Reason"
 msgstr "Reden"
 
 msgid "Reason for rejection:"
-msgstr ""
+msgstr "Reden van afwijzing:"
 
 msgid "Recent Changes"
 msgstr ""
@@ -5754,7 +5754,7 @@ msgid "Recommendation"
 msgstr ""
 
 msgid "Recommendations"
-msgstr ""
+msgstr "Aanbevelingen"
 
 msgid "Recommended Headings"
 msgstr "Aanbevolen koppen"
@@ -5763,10 +5763,10 @@ msgid "Recommended: 1200×630px. Leave empty to use featured image."
 msgstr ""
 
 msgid "Recommended: 150-160 characters. Current: %d"
-msgstr ""
+msgstr "Aanbevolen: 150-160 tekens. Nu: %d"
 
 msgid "Recommended: 50-60 characters. Current: %d"
-msgstr ""
+msgstr "Aanbevolen: 50-60 tekens. Nu: %d"
 
 msgid "Redirect"
 msgstr "Redirect"
@@ -5793,7 +5793,7 @@ msgid "Reference Images"
 msgstr ""
 
 msgid "References"
-msgstr ""
+msgstr "Bronnen"
 
 msgid "Referring Domains"
 msgstr "Verwijzende domeinen"
@@ -5811,7 +5811,7 @@ msgid "Refresh Pool Now rebuilds the keyword pool immediately (uses SERP/AI cred
 msgstr "'Pool nu verversen' bouwt de keyword-pool direct opnieuw op (verbruikt SERP/AI-credits); 'Keyword-pool legen' bouwt pas opnieuw op bij de volgende run."
 
 msgid "Refresh Suggestions"
-msgstr ""
+msgstr "Suggesties vernieuwen"
 
 msgid "Refresh competitor data? This may take a few minutes."
 msgstr ""
@@ -5835,13 +5835,13 @@ msgid "Reject"
 msgstr "Afwijzen"
 
 msgid "Rejected"
-msgstr ""
+msgstr "Afgewezen"
 
 msgid "Related Keywords"
 msgstr ""
 
 msgid "Relevance"
-msgstr ""
+msgstr "Relevantie"
 
 msgid "Relevance Score"
 msgstr ""
@@ -5928,7 +5928,7 @@ msgid "Reviewing"
 msgstr "In review"
 
 msgid "Revision Needed"
-msgstr ""
+msgstr "Revisie nodig"
 
 msgid "Revision restored. Reload the page to see changes."
 msgstr ""
@@ -6138,7 +6138,7 @@ msgid "Same focus keyphrase on multiple posts"
 msgstr ""
 
 msgid "Sat"
-msgstr ""
+msgstr "za"
 
 msgid "Save Brand Voice"
 msgstr "Merkidentiteit opslaan"
@@ -6195,7 +6195,7 @@ msgid "Scan failed:"
 msgstr ""
 
 msgid "Scan for Orphan Pages"
-msgstr ""
+msgstr "Scannen op verweesde pagina's"
 
 msgid "Scan the Google local pack around your business address for any keyword."
 msgstr ""
@@ -6213,7 +6213,7 @@ msgid "Schedule"
 msgstr ""
 
 msgid "Schedule New Content"
-msgstr ""
+msgstr "Nieuwe content inplannen"
 
 msgid "Schedule Post"
 msgstr ""
@@ -6303,7 +6303,7 @@ msgid "Search: %s"
 msgstr ""
 
 msgid "Secondary Keyphrases"
-msgstr ""
+msgstr "Secundaire zoektermen"
 
 msgid "Section"
 msgstr ""
@@ -6456,10 +6456,10 @@ msgid "Serves a markdown overview at %1$s and a full-content version at %2$s for
 msgstr ""
 
 msgid "Set Current as Baseline"
-msgstr ""
+msgstr "Huidige waarden als nulmeting"
 
 msgid "Set current metrics as baseline for future comparisons?"
-msgstr ""
+msgstr "Huidige cijfers vastleggen als nulmeting voor toekomstige vergelijkingen?"
 
 msgid "Set property ID to enable GA4 data"
 msgstr ""
@@ -6573,7 +6573,7 @@ msgid "Site Audit"
 msgstr "Site Audit"
 
 msgid "Site E-E-A-T Score"
-msgstr ""
+msgstr "E-E-A-T-score van de site"
 
 msgid "Site ID"
 msgstr ""
@@ -6678,7 +6678,7 @@ msgid "Social Preview"
 msgstr "Social preview"
 
 msgid "Social Profiles"
-msgstr ""
+msgstr "Socialmediaprofielen"
 
 msgid "Social Sharing"
 msgstr "Social sharing"
@@ -6753,10 +6753,10 @@ msgid "Status:"
 msgstr ""
 
 msgid "Stop Test"
-msgstr ""
+msgstr "Test stoppen"
 
 msgid "Stop this A/B test and apply the winning variant?"
-msgstr ""
+msgstr "Deze A/B-test stoppen en de winnende variant toepassen?"
 
 msgid "Store"
 msgstr ""
@@ -6801,7 +6801,7 @@ msgid "Submit ticket"
 msgstr ""
 
 msgid "Submitted"
-msgstr ""
+msgstr "Ingediend"
 
 msgid "Submitted successfully."
 msgstr ""
@@ -6813,22 +6813,22 @@ msgid "Successfully connected to Google!"
 msgstr ""
 
 msgid "Suggested Anchor"
-msgstr ""
+msgstr "Voorgestelde ankertekst"
 
 msgid "Suggested Date"
-msgstr ""
+msgstr "Voorgestelde datum"
 
 msgid "Suggested Internal Links:"
-msgstr ""
+msgstr "Voorgestelde interne links:"
 
 msgid "Suggested Keywords:"
-msgstr ""
+msgstr "Voorgestelde zoekwoorden:"
 
 msgid "Suggested Sources"
-msgstr ""
+msgstr "Voorgestelde bronnen"
 
 msgid "Suggested:"
-msgstr ""
+msgstr "Voorgesteld:"
 
 msgid "Suggestions"
 msgstr "Suggesties"
@@ -6837,7 +6837,7 @@ msgid "Summary"
 msgstr "Samenvatting"
 
 msgid "Sun"
-msgstr ""
+msgstr "zo"
 
 msgid "Support"
 msgstr "Ondersteuning"
@@ -7029,7 +7029,7 @@ msgid "This is a location/branch page"
 msgstr ""
 
 msgid "This is an AI self-assessment, not external fact verification."
-msgstr ""
+msgstr "Dit is een AI-zelfbeoordeling, geen externe feitencontrole."
 
 msgid "This is your own domain."
 msgstr "Dit is je eigen domein."
@@ -7059,7 +7059,7 @@ msgid "This will fetch fresh data from the API. Continue?"
 msgstr ""
 
 msgid "Thu"
-msgstr ""
+msgstr "do"
 
 msgid "Ticket created successfully."
 msgstr ""
@@ -7101,7 +7101,7 @@ msgid "Title is required"
 msgstr ""
 
 msgid "To Page"
-msgstr ""
+msgstr "Naar pagina"
 
 msgid "Toggle light/dark theme"
 msgstr ""
@@ -7134,7 +7134,7 @@ msgid "Top Anchor Texts"
 msgstr "Top ankerteksten"
 
 msgid "Top Issues:"
-msgstr ""
+msgstr "Belangrijkste aandachtspunten:"
 
 msgid "Top Keywords"
 msgstr ""
@@ -7143,7 +7143,7 @@ msgid "Top Pages"
 msgstr "Toppagina's"
 
 msgid "Top Performing Content"
-msgstr ""
+msgstr "Best presterende content"
 
 msgid "Top Queries"
 msgstr ""
@@ -7200,7 +7200,7 @@ msgid "Total Keywords"
 msgstr ""
 
 msgid "Total Pages"
-msgstr ""
+msgstr "Totaal pagina's"
 
 msgid "Total Pages:"
 msgstr ""
@@ -7218,7 +7218,7 @@ msgid "Total Scans"
 msgstr ""
 
 msgid "Total Traffic"
-msgstr ""
+msgstr "Totaal verkeer"
 
 msgid "Total URLs"
 msgstr "Totaal aantal URL's"
@@ -7263,7 +7263,7 @@ msgid "Track traffic and conversion data"
 msgstr "Volg verkeer en conversiedata"
 
 msgid "Track traffic, conversions and ROI of your optimized content."
-msgstr ""
+msgstr "Volg verkeer, conversies en ROI van je geoptimaliseerde content."
 
 msgid "Track your keyword positions in Google search results. Positions are checked daily."
 msgstr ""
@@ -7284,7 +7284,7 @@ msgid "Traffic %"
 msgstr ""
 
 msgid "Traffic (30 days)"
-msgstr ""
+msgstr "Verkeer (30 dagen)"
 
 msgid "Traffic Impact"
 msgstr "Verkeer impact"
@@ -7314,19 +7314,19 @@ msgid "Trigger Zaps when SEO events occur"
 msgstr ""
 
 msgid "Trust Signals Detected"
-msgstr ""
+msgstr "Gevonden vertrouwenssignalen"
 
 msgid "Trustworthiness"
-msgstr ""
+msgstr "Betrouwbaarheid"
 
 msgid "Trustworthiness:"
-msgstr ""
+msgstr "Betrouwbaarheid:"
 
 msgid "Try to add more content."
-msgstr ""
+msgstr "Probeer meer content toe te voegen."
 
 msgid "Tue"
-msgstr ""
+msgstr "di"
 
 msgid "Twitter Card (1200x600):"
 msgstr ""
@@ -7353,7 +7353,7 @@ msgid "Twitter/X URL (optional)"
 msgstr "Twitter/X URL (optioneel)"
 
 msgid "Twitter/X:"
-msgstr ""
+msgstr "Twitter/X:"
 
 msgid "Type"
 msgstr "Type"
@@ -7404,7 +7404,7 @@ msgid "Unable to get access token. Please reconnect your Google account."
 msgstr ""
 
 msgid "Unassigned"
-msgstr ""
+msgstr "Niet toegewezen"
 
 msgid "Unauthorized"
 msgstr "Niet geautoriseerd"
@@ -7521,7 +7521,7 @@ msgid "Validate License"
 msgstr ""
 
 msgid "Validate your content against Google\'s Experience, Expertise, Authoritativeness and Trustworthiness guidelines."
-msgstr ""
+msgstr "Toets je content aan de richtlijnen van Google voor ervaring, expertise, autoriteit en betrouwbaarheid."
 
 msgid "Value"
 msgstr "Waarde"
@@ -7530,13 +7530,13 @@ msgid "Variant A (Control)"
 msgstr "Variant A (Controle)"
 
 msgid "Variant A CTR"
-msgstr ""
+msgstr "CTR variant A"
 
 msgid "Variant B"
 msgstr "Variant B"
 
 msgid "Variant B CTR"
-msgstr ""
+msgstr "CTR variant B"
 
 msgid "Veelgestelde vragen"
 msgstr ""
@@ -7611,7 +7611,7 @@ msgid "View Dashboard"
 msgstr ""
 
 msgid "View Details"
-msgstr ""
+msgstr "Details bekijken"
 
 msgid "View Drafts"
 msgstr ""
@@ -7626,7 +7626,7 @@ msgid "View Sitemap"
 msgstr "Sitemap bekijken"
 
 msgid "View Suggestions"
-msgstr ""
+msgstr "Suggesties bekijken"
 
 msgid "View all pages, select which ones to generate, and create content drafts in bulk."
 msgstr ""
@@ -7713,7 +7713,7 @@ msgid "Website Description"
 msgstr "Websitebeschrijving"
 
 msgid "Wed"
-msgstr ""
+msgstr "wo"
 
 msgid "Weekly"
 msgstr "Wekelijks"
@@ -7746,7 +7746,7 @@ msgid "Win/Loss Analysis"
 msgstr "Win/verlies analyse"
 
 msgid "Winner"
-msgstr ""
+msgstr "Winnaar"
 
 msgid "Winning Patterns"
 msgstr ""
@@ -7776,10 +7776,10 @@ msgid "Workflow"
 msgstr "Workflow"
 
 msgid "Workflow Status"
-msgstr ""
+msgstr "Workflowstatus"
 
 msgid "Workflow Status:"
-msgstr ""
+msgstr "Workflowstatus:"
 
 msgid "Write another article"
 msgstr ""
@@ -7836,7 +7836,7 @@ msgid "You do not have permission to view this post."
 msgstr ""
 
 msgid "You have been assigned to: %s"
-msgstr ""
+msgstr "Je bent toegewezen aan: %s"
 
 msgid "You have no support tickets yet."
 msgstr ""
@@ -7902,7 +7902,7 @@ msgid "Your content may be outdated. Consider adding new insights, statistics, o
 msgstr ""
 
 msgid "Your content needs some improvements."
-msgstr ""
+msgstr "Je content kan nog wat verbeteringen gebruiken."
 
 msgid "Your conversational SEO assistant — research, plan, write and publish in one chat."
 msgstr "Uw SEO-assistent — onderzoek, plan, schrijf en publiceer in één gesprek."
@@ -7941,7 +7941,7 @@ msgid "\\"%s\\" dropped %d positions"
 msgstr "\\"%s\\" is %d posities gezakt"
 
 msgid "ago"
-msgstr ""
+msgstr "geleden"
 
 msgid "and"
 msgstr "en"
@@ -7956,7 +7956,7 @@ msgid "completed"
 msgstr ""
 
 msgid "days"
-msgstr ""
+msgstr "dagen"
 
 msgid "does not"
 msgstr ""
@@ -8040,7 +8040,7 @@ msgid "items"
 msgstr "items"
 
 msgid "keyword 1, keyword 2, keyword 3"
-msgstr ""
+msgstr "zoekwoord 1, zoekwoord 2, zoekwoord 3"
 
 msgid "keyword1, keyword2, keyword3..."
 msgstr ""
@@ -8353,3 +8353,11 @@ msgstr "AI-functies niet beschikbaar"
 
 msgid "AI features require an active license"
 msgstr "AI-functies vereisen een actieve licentie"
+
+# Post editor meta box (added 2026-10-28)
+msgid "Anchor:"
+msgstr "Ankertekst:"
+
+msgid "Switch theme"
+msgstr "Thema wisselen"
+

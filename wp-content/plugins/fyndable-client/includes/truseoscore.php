@@ -80,8 +80,10 @@ class TruSEOSCORE
                 ? __('Your content needs some improvements.', 'ai-seo-client')
                 : __('Major improvements needed.', 'ai-seo-client'));
 
-        $titleLength = strlen($title);
-        $descriptionLength = strlen($description);
+        // mb_strlen: the hints count characters, not bytes, so accented Dutch
+        // titles are not reported (and flagged) as longer than they are.
+        $titleLength = mb_strlen($title);
+        $descriptionLength = mb_strlen($description);
         $severityMap = [
             'good' => ['ok', 'dashicons-yes-alt'],
             'warning' => ['warn', 'dashicons-warning'],

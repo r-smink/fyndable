@@ -246,63 +246,63 @@ class EEATValidator
     public function renderMetaBox(\WP_Post $post): void
     {
         $eeatScore = $this->analyzePostEEAT($post);
-        
+
+        // Same thresholds as getScoreColor(), expressed as design-token bands.
+        $band = static function ($score): string {
+            $score = (int) $score;
+            return $score >= 80 ? 'good' : ($score >= 60 ? 'ok' : 'bad');
+        };
+        $meters = [
+            'experience' => __('Experience:', 'ai-seo-client'),
+            'expertise' => __('Expertise:', 'ai-seo-client'),
+            'authoritativeness' => __('Authoritativeness:', 'ai-seo-client'),
+            'trustworthiness' => __('Trustworthiness:', 'ai-seo-client'),
+        ];
+
         wp_nonce_field('sseo_eeat_save', 'sseo_eeat_nonce');
         ?>
         <div class="sseo-eeat-box">
-            <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px; margin-bottom: 15px;">
-                <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($eeatScore['overall']); ?>;">
-                    <?php echo esc_html($eeatScore['overall']); ?>
+            <div class="fyn-score-head">
+                <div class="fyn-score-disc fyn-score-disc--<?php echo esc_attr($band($eeatScore['overall'])); ?>">
+                    <?php echo esc_html((string) $eeatScore['overall']); ?>
                 </div>
-                <div style="font-weight: bold;"><?php esc_html_e('Overall E-E-A-T Score', 'ai-seo-client'); ?></div>
-            </div>
-            
-            <div style="margin-bottom: 10px;">
-                <strong><?php esc_html_e('Experience:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['experience']); ?>; width: <?php echo $eeatScore['experience']; ?>%; height: 100%; border-radius: 4px;"></div>
+                <div>
+                    <h2><?php esc_html_e('Overall E-E-A-T Score', 'ai-seo-client'); ?></h2>
                 </div>
-                <small><?php echo esc_html($eeatScore['experience']); ?>/100</small>
             </div>
-            
-            <div style="margin-bottom: 10px;">
-                <strong><?php esc_html_e('Expertise:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['expertise']); ?>; width: <?php echo $eeatScore['expertise']; ?>%; height: 100%; border-radius: 4px;"></div>
+
+            <div class="fyn-meters">
+                <?php foreach ($meters as $key => $label) : ?>
+                <div class="fyn-meter">
+                    <div class="fyn-meter-head">
+                        <span class="fyn-meter-label"><?php echo esc_html($label); ?></span>
+                        <span class="fyn-meter-value"><?php echo esc_html($eeatScore[$key]); ?>/100</span>
+                    </div>
+                    <div class="fyn-meter-track">
+                        <div class="fyn-meter-fill fyn-meter-fill--<?php echo esc_attr($band($eeatScore[$key])); ?>"
+                             style="width: <?php echo esc_attr($eeatScore[$key]); ?>%"></div>
+                    </div>
                 </div>
-                <small><?php echo esc_html($eeatScore['expertise']); ?>/100</small>
+                <?php endforeach; ?>
             </div>
-            
-            <div style="margin-bottom: 10px;">
-                <strong><?php esc_html_e('Authoritativeness:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['authoritativeness']); ?>; width: <?php echo $eeatScore['authoritativeness']; ?>%; height: 100%; border-radius: 4px;"></div>
-                </div>
-                <small><?php echo esc_html($eeatScore['authoritativeness']); ?>/100</small>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <strong><?php esc_html_e('Trustworthiness:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['trustworthiness']); ?>; width: <?php echo $eeatScore['trustworthiness']; ?>%; height: 100%; border-radius: 4px;"></div>
-                </div>
-                <small><?php echo esc_html($eeatScore['trustworthiness']); ?>/100</small>
-            </div>
-            
-            <div style="padding: 10px; background: #f0f6fc; border-left: 3px solid #2271b1; margin-bottom: 15px;">
-                <strong><?php esc_html_e('Top Issues:', 'ai-seo-client'); ?></strong>
-                <ul style="margin: 5px 0 0; padding-left: 20px; font-size: 12px;">
+
+            <div class="fyn-note">
+                <h4><?php esc_html_e('Top Issues:', 'ai-seo-client'); ?></h4>
+                <ul>
                     <?php foreach (array_slice($eeatScore['issues'], 0, 3) as $issue): ?>
                     <li><?php echo esc_html($issue); ?></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
-            
-            <button type="button" class="button" style="width: 100%;" onclick="sseoGetEEATRecommendations(<?php echo $post->ID; ?>)">
-                <?php esc_html_e('Get AI Recommendations', 'ai-seo-client'); ?>
-            </button>
-            
-            <div id="eeat-recommendations" style="margin-top: 15px;"></div>
+
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary fyn-btn--block" onclick="sseoGetEEATRecommendations(<?php echo $post->ID; ?>)">
+                    <span class="dashicons dashicons-superhero-alt"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Get AI Recommendations', 'ai-seo-client'); ?></span>
+                </button>
+            </div>
+
+            <div id="eeat-recommendations"></div>
         </div>
         
         <script>

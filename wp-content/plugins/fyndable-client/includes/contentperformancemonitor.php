@@ -331,63 +331,56 @@ class ContentPerformanceMonitor
         $metrics = $this->getPostPerformance($post->ID);
         $baseline = get_post_meta($post->ID, '_sseo_ai_performance_baseline', true);
         $optimizationDate = get_post_meta($post->ID, '_sseo_ai_last_optimization', true);
-        
+
         ?>
         <div class="sseo-performance-box">
-            <style>
-                .sseo-metric { margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #2271b1; }
-                .sseo-metric-value { font-size: 24px; font-weight: bold; color: #2271b1; }
-                .sseo-metric-label { font-size: 12px; color: #666;  }
-                .sseo-metric-change { font-size: 14px; margin-top: 5px; }
-            </style>
-            
-            <div class="sseo-metric">
-                <div class="sseo-metric-label"><?php esc_html_e('Traffic (30 days)', 'ai-seo-client'); ?></div>
-                <div class="sseo-metric-value"><?php echo esc_html(number_format($metrics['traffic'] ?? 0)); ?></div>
-                <?php if (isset($metrics['traffic_change'])): ?>
-                <div class="sseo-metric-change" style="color: <?php echo $metrics['traffic_change'] >= 0 ? '#00a32a' : '#d63638'; ?>;">
-                    <?php echo ($metrics['traffic_change'] >= 0 ? '↑' : '↓'); ?>
-                    <?php echo esc_html(abs($metrics['traffic_change'])); ?>%
-                </div>
-                <?php endif; ?>
-            </div>
-            
-            <div class="sseo-metric">
-                <div class="sseo-metric-label"><?php esc_html_e('Conversions', 'ai-seo-client'); ?></div>
-                <div class="sseo-metric-value"><?php echo esc_html(number_format($metrics['conversions'] ?? 0)); ?></div>
-            </div>
-            
-            <div class="sseo-metric">
-                <div class="sseo-metric-label"><?php esc_html_e('Avg. Position', 'ai-seo-client'); ?></div>
-                <div class="sseo-metric-value"><?php echo esc_html(number_format($metrics['avg_position'] ?? 0, 1)); ?></div>
-            </div>
-            
-            <?php if ($optimizationDate): ?>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-                <p style="margin: 0; font-size: 12px; color: #666;">
-                    <?php esc_html_e('Last optimized:', 'ai-seo-client'); ?>
-                    <?php echo esc_html(human_time_diff(strtotime($optimizationDate))); ?> ago
-                </p>
-                
-                <?php if ($baseline): ?>
-                <p style="margin: 5px 0 0; font-size: 12px;">
-                    <strong><?php esc_html_e('Optimization Impact:', 'ai-seo-client'); ?></strong>
-                    <?php 
-                    $impact = $this->calculateOptimizationImpact($post->ID, $baseline, $metrics);
-                    $color = $impact >= 0 ? '#00a32a' : '#d63638';
+            <div class="fyn-stats">
+                <div class="fyn-stat">
+                    <div class="fyn-stat-label"><?php esc_html_e('Traffic (30 days)', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['traffic'] ?? 0)); ?></div>
+                    <?php if (isset($metrics['traffic_change'])):
+                        $up = $metrics['traffic_change'] >= 0;
                     ?>
-                    <span style="color: <?php echo $color; ?>;">
-                        <?php echo ($impact >= 0 ? '+' : '') . number_format($impact, 1); ?>%
-                    </span>
-                </p>
-                <?php endif; ?>
+                    <div class="fyn-stat-delta fyn-stat-delta--<?php echo $up ? 'up' : 'down'; ?>">
+                        <span class="dashicons dashicons-arrow-<?php echo $up ? 'up' : 'down'; ?>-alt"></span>
+                        <?php echo esc_html(abs($metrics['traffic_change'])); ?>%
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="fyn-stat">
+                    <div class="fyn-stat-label"><?php esc_html_e('Conversions', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['conversions'] ?? 0)); ?></div>
+                </div>
+
+                <div class="fyn-stat">
+                    <div class="fyn-stat-label"><?php esc_html_e('Avg. Position', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-value"><?php echo esc_html(number_format($metrics['avg_position'] ?? 0, 1)); ?></div>
+                </div>
             </div>
+
+            <?php if ($optimizationDate): ?>
+            <p class="fyn-foot">
+                <?php esc_html_e('Last optimized:', 'ai-seo-client'); ?>
+                <?php echo esc_html(human_time_diff(strtotime($optimizationDate))); ?> ago
+
+                <?php if ($baseline):
+                    $impact = $this->calculateOptimizationImpact($post->ID, $baseline, $metrics);
+                ?>
+                <br>
+                <strong><?php esc_html_e('Optimization Impact:', 'ai-seo-client'); ?></strong>
+                <span class="fyn-stat-delta fyn-stat-delta--<?php echo $impact >= 0 ? 'up' : 'down'; ?>">
+                    <?php echo esc_html(($impact >= 0 ? '+' : '') . number_format($impact, 1)); ?>%
+                </span>
+                <?php endif; ?>
+            </p>
             <?php endif; ?>
-            
-            <div style="margin-top: 15px;">
-                <button type="button" class="button button-small button-primary" style="width: 100%;" 
+
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary fyn-btn--block"
                         onclick="sseoSetPerformanceBaseline(<?php echo $post->ID; ?>)">
-                    <?php esc_html_e('Set Current as Baseline', 'ai-seo-client'); ?>
+                    <span class="dashicons dashicons-flag"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Set Current as Baseline', 'ai-seo-client'); ?></span>
                 </button>
             </div>
         </div>

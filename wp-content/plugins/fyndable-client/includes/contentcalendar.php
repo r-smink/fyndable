@@ -564,13 +564,13 @@ class ContentCalendar
         $approver = get_post_meta($post->ID, '_sseo_ai_approver', true);
         $dueDate = get_post_meta($post->ID, '_sseo_ai_due_date', true);
         $workflowStatus = get_post_meta($post->ID, '_sseo_ai_workflow_status', true) ?: 'draft';
-        
+
         wp_nonce_field('sseo_workflow_save', 'sseo_workflow_nonce');
         ?>
         <div class="sseo-workflow-box">
-            <p>
-                <label for="assigned_to"><strong><?php esc_html_e('Assigned To:', 'ai-seo-client'); ?></strong></label><br>
-                <select id="assigned_to" name="sseo_assigned_to" style="width: 100%;">
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="assigned_to"><?php esc_html_e('Assigned To:', 'ai-seo-client'); ?></label>
+                <select class="fyn-inp" id="assigned_to" name="sseo_assigned_to">
                     <option value=""><?php esc_html_e('Unassigned', 'ai-seo-client'); ?></option>
                     <?php
                     $users = get_users(['role__in' => ['administrator', 'editor', 'author']]);
@@ -581,11 +581,11 @@ class ContentCalendar
                     </option>
                     <?php endforeach; ?>
                 </select>
-            </p>
-            
-            <p>
-                <label for="approver"><strong><?php esc_html_e('Approver:', 'ai-seo-client'); ?></strong></label><br>
-                <select id="approver" name="sseo_approver" style="width: 100%;">
+            </div>
+
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="approver"><?php esc_html_e('Approver:', 'ai-seo-client'); ?></label>
+                <select class="fyn-inp" id="approver" name="sseo_approver">
                     <option value=""><?php esc_html_e('No approval required', 'ai-seo-client'); ?></option>
                     <?php
                     $approvers = get_users(['role__in' => ['administrator', 'editor']]);
@@ -596,17 +596,17 @@ class ContentCalendar
                     </option>
                     <?php endforeach; ?>
                 </select>
-            </p>
-            
-            <p>
-                <label for="due_date"><strong><?php esc_html_e('Due Date:', 'ai-seo-client'); ?></strong></label><br>
-                <input type="date" id="due_date" name="sseo_due_date" 
-                       value="<?php echo esc_attr($dueDate); ?>" style="width: 100%;">
-            </p>
-            
-            <p>
-                <label for="workflow_status"><strong><?php esc_html_e('Workflow Status:', 'ai-seo-client'); ?></strong></label><br>
-                <select id="workflow_status" name="sseo_workflow_status" style="width: 100%;">
+            </div>
+
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="due_date"><?php esc_html_e('Due Date:', 'ai-seo-client'); ?></label>
+                <input type="date" class="fyn-inp" id="due_date" name="sseo_due_date"
+                       value="<?php echo esc_attr($dueDate); ?>">
+            </div>
+
+            <div class="fyn-field">
+                <label class="fyn-lbl" for="workflow_status"><?php esc_html_e('Workflow Status:', 'ai-seo-client'); ?></label>
+                <select class="fyn-inp" id="workflow_status" name="sseo_workflow_status">
                     <option value="draft" <?php selected($workflowStatus, 'draft'); ?>><?php esc_html_e('Draft', 'ai-seo-client'); ?></option>
                     <option value="sseo_ideation" <?php selected($workflowStatus, 'sseo_ideation'); ?>><?php esc_html_e('Ideation', 'ai-seo-client'); ?></option>
                     <option value="sseo_in_progress" <?php selected($workflowStatus, 'sseo_in_progress'); ?>><?php esc_html_e('In Progress', 'ai-seo-client'); ?></option>
@@ -616,15 +616,16 @@ class ContentCalendar
                     <option value="sseo_scheduled" <?php selected($workflowStatus, 'sseo_scheduled'); ?>><?php esc_html_e('Scheduled', 'ai-seo-client'); ?></option>
                     <option value="rejected" <?php selected($workflowStatus, 'rejected'); ?>><?php esc_html_e('Rejected', 'ai-seo-client'); ?></option>
                 </select>
-            </p>
+            </div>
 
             <?php if (in_array($workflowStatus, ['pending_review', 'sseo_review']) && current_user_can('edit_others_posts')): ?>
-            <p>
-                <button type="button" class="button button-primary" style="width: 100%;" 
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary fyn-btn--block"
                         onclick="sseoQuickApprove(<?php echo $post->ID; ?>)">
-                    <?php esc_html_e('Approve & Publish', 'ai-seo-client'); ?>
+                    <span class="dashicons dashicons-yes-alt"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Approve & Publish', 'ai-seo-client'); ?></span>
                 </button>
-            </p>
+            </div>
             <?php endif; ?>
         </div>
         

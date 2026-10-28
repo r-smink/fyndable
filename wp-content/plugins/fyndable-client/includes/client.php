@@ -133,6 +133,12 @@ class Client
         $this->reviewPrompt = new ReviewPrompt();
         $this->reviewPrompt->register();
 
+        // Dashboard shell. Registered here rather than from registerAdminMenu()
+        // so its wp_ajax handlers also exist on admin-ajax.php, where the
+        // `admin_menu` hook never fires (the theme toggle never persisted).
+        $this->dashboardShell = new DashboardShell($this);
+        $this->dashboardShell->register();
+
         // SEO Importer (Yoast/RankMath/AIOSEO migration)
         $this->seoImporter = new SeoImporter();
         $this->seoImporter->register();
@@ -853,9 +859,12 @@ class Client
         $menuName = $this->getBrandName();
         $iconUrl = dirname(plugin_dir_url(__FILE__)) . '/assets/FYN-ICON-WHITE.png';
 
-        // Initialize dashboard shell
-        $this->dashboardShell = new DashboardShell($this);
-        $this->dashboardShell->register();
+        // Dashboard shell is created in init(); this is a fallback for callers
+        // that reach the menu without having gone through init().
+        if (!$this->dashboardShell) {
+            $this->dashboardShell = new DashboardShell($this);
+            $this->dashboardShell->register();
+        }
 
         // Main menu — renders the full-page dashboard shell
         add_menu_page(

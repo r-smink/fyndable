@@ -803,6 +803,226 @@ body.fyndable-seo-editor.fyndable-dark .fyn-suggestions {
     font-weight: 600;
 }
 
+/* ---------------- 14c. Panel components ---------------- */
+
+/* Keyword / tag chips */
+.fyn-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+.fyndable-seo-container .fyn-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: var(--well);
+    border: 1px solid var(--well-border);
+    color: var(--text-b);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: all .18s ease;
+}
+.fyndable-seo-container .fyn-chip .dashicons {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    line-height: 14px;
+    color: var(--text-s);
+}
+.fyndable-seo-container .fyn-chip:hover {
+    border-color: var(--fyn-purple);
+    color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyndable-seo-container .fyn-chip:hover .dashicons {
+    color: var(--fyn-purple);
+}
+.fyndable-seo-container .fyn-chip--on,
+.fyndable-seo-container .fyn-chip--on:hover {
+    background: var(--fyn-success);
+    border-color: var(--fyn-success);
+    color: #fff;
+}
+.fyndable-seo-container .fyn-chip--on .dashicons,
+.fyndable-seo-container .fyn-chip--on:hover .dashicons {
+    color: #fff;
+}
+
+/* Meter bars (E-E-A-T breakdown) */
+.fyn-meters {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+.fyn-meter-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 7px;
+}
+.fyn-meter-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-b);
+}
+.fyn-meter-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-m);
+}
+.fyn-meter-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--sev-track);
+    overflow: hidden;
+}
+.fyn-meter-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width .3s ease;
+}
+.fyn-meter-fill--good { background: linear-gradient(90deg, #10b981, #34d399); }
+.fyn-meter-fill--ok   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.fyn-meter-fill--bad  { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+/* Stat tiles (performance metrics) */
+.fyn-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+.fyn-stat {
+    padding: 15px 16px;
+    border-radius: 10px;
+    background: var(--well);
+    border: 1px solid var(--well-border);
+}
+.fyn-stat-label {
+    font-size: 12px;
+    color: var(--text-m);
+}
+.fyn-stat-value {
+    margin-top: 4px;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-h);
+}
+.fyn-stat-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 5px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.fyn-stat-delta .dashicons {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    line-height: 14px;
+}
+.fyn-stat-delta--up   { color: var(--fyn-success-text); }
+.fyn-stat-delta--down { color: var(--fyn-danger-text); }
+
+/* Callout note */
+.fyn-note {
+    margin: 18px 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--fyn-info-light);
+    border: 1px solid var(--well-border);
+    border-left: 3px solid var(--fyn-info);
+}
+body.fyndable-seo-editor.fyndable-dark .fyn-note {
+    background: rgba(59,130,246,.12);
+}
+.fyn-note--warn {
+    background: var(--fyn-warning-light);
+    border-left-color: var(--fyn-warning);
+}
+body.fyndable-seo-editor.fyndable-dark .fyn-note--warn {
+    background: rgba(245,158,11,.12);
+}
+.fyndable-seo-container .fyn-note h4 {
+    margin: 0 0 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-h);
+}
+.fyndable-seo-container .fyn-note p,
+.fyndable-seo-container .fyn-note li {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-b);
+}
+.fyndable-seo-container .fyn-note p {
+    margin: 0;
+}
+.fyndable-seo-container .fyn-note ul {
+    margin: 0;
+    padding-left: 18px;
+    list-style: disc;
+}
+
+/* Muted empty state + footer line */
+.fyndable-seo-container .fyn-empty {
+    margin: 0;
+    padding: 22px 0;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-m);
+}
+.fyndable-seo-container .fyn-foot {
+    margin: 18px 0 0;
+    padding-top: 15px;
+    border-top: 1px solid var(--divide);
+    font-size: 12.5px;
+    color: var(--text-m);
+}
+.fyn-row-actions {
+    display: flex;
+    flex: none;
+    gap: 8px;
+}
+.fyn-btn--block {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Spacing between stacked panel blocks */
+.fyn-rows + .fyn-btnbar,
+.fyn-rows + .fyn-chips,
+.fyn-chips + .fyn-btnbar,
+.fyn-stats + .fyn-btnbar,
+.fyn-meters + .fyn-btnbar,
+.fyn-note + .fyn-btnbar,
+.fyn-btnbar + .fyn-rows,
+.fyn-rows + .fyn-rows,
+.fyn-foot + .fyn-btnbar,
+.fyn-btnbar + div[id] {
+    margin-top: 18px;
+}
+.fyn-rows + .fyn-lbl,
+.fyn-btnbar + .fyn-lbl,
+.fyn-stats + .fyn-lbl {
+    margin-top: 20px;
+}
+
+/* WordPress spinner inside the panel (upgraded by fyndable-loader.js) */
+.fyndable-seo-container .spinner {
+    float: none;
+    margin: 0 0 0 4px;
+    align-self: center;
+}
+
 /* ================================================================
    15. Legacy markup bridge
 

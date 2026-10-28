@@ -391,40 +391,45 @@ class SmartInternalLinking
     public function renderLinkSuggestionsMetaBox(\WP_Post $post): void
     {
         $suggestions = $this->getLinkSuggestionsForPost($post->ID);
-        
+
         ?>
         <div class="sseo-link-suggestions">
             <?php if (!empty($suggestions)): ?>
-            <p><strong><?php esc_html_e('Suggested Internal Links:', 'ai-seo-client'); ?></strong></p>
-            <ul style="list-style: none; padding: 0;">
+            <label class="fyn-lbl"><?php esc_html_e('Suggested Internal Links:', 'ai-seo-client'); ?></label>
+            <div class="fyn-rows">
                 <?php foreach (array_slice($suggestions, 0, 5) as $suggestion):
                     $suggestionUrl = $suggestion['url'] ?? get_permalink($suggestion['id']);
                     if (!$suggestionUrl) continue;
                 ?>
-                <li style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #2271b1;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">
-                        <?php echo esc_html($this->truncate($suggestion['title'], 40)); ?>
+                <div class="fyn-row">
+                    <span class="fyn-row-chip"><span class="dashicons dashicons-admin-links"></span></span>
+                    <div class="fyn-row-main">
+                        <div class="fyn-row-label"><?php echo esc_html($this->truncate($suggestion['title'], 40)); ?></div>
+                        <div class="fyn-row-detail">
+                            <?php esc_html_e('Anchor:', 'ai-seo-client'); ?>
+                            <code><?php echo esc_html($suggestion['anchor']); ?></code>
+                        </div>
                     </div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
-                        Anchor: <code><?php echo esc_html($suggestion['anchor']); ?></code>
+                    <span class="fyn-badge fyn-badge--info" title="<?php esc_attr_e('Relevance', 'ai-seo-client'); ?>"><?php echo esc_html($suggestion['relevance']); ?>%</span>
+                    <div class="fyn-row-actions">
+                        <button type="button" class="fyn-btn fyn-btn--sm"
+                                onclick="sseoInsertLink('<?php echo esc_js($suggestionUrl); ?>', '<?php echo esc_js($suggestion['anchor']); ?>')">
+                            <?php esc_html_e('Insert Link', 'ai-seo-client'); ?>
+                        </button>
                     </div>
-                    <div style="font-size: 11px; color: #666;">
-                        Relevance: <?php echo esc_html($suggestion['relevance']); ?>%
-                    </div>
-                    <button type="button" class="button button-small" style="margin-top: 5px;"
-                            onclick="sseoInsertLink('<?php echo esc_js($suggestionUrl); ?>', '<?php echo esc_js($suggestion['anchor']); ?>')">
-                        <?php esc_html_e('Insert Link', 'ai-seo-client'); ?>
-                    </button>
-                </li>
+                </div>
                 <?php endforeach; ?>
-            </ul>
+            </div>
             <?php else: ?>
-            <p><?php esc_html_e('No link suggestions available.', 'ai-seo-client'); ?></p>
+            <p class="fyn-empty"><?php esc_html_e('No link suggestions available.', 'ai-seo-client'); ?></p>
             <?php endif; ?>
-            
-            <button type="button" class="button" onclick="sseoRefreshSuggestions(<?php echo $post->ID; ?>)">
-                <?php esc_html_e('Refresh Suggestions', 'ai-seo-client'); ?>
-            </button>
+
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--outline" onclick="sseoRefreshSuggestions(<?php echo $post->ID; ?>)">
+                    <span class="dashicons dashicons-update"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Refresh Suggestions', 'ai-seo-client'); ?></span>
+                </button>
+            </div>
         </div>
         
         <script>

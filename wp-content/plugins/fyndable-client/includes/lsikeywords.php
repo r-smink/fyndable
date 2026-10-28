@@ -47,83 +47,97 @@ class LSIKeywords
         $focusKeyphrase = get_post_meta($post->ID, '_sseo_ai_focus_keyphrase', true);
         $suggested = get_post_meta($post->ID, '_sseo_ai_lsi_suggestions', true);
         $used = get_post_meta($post->ID, '_sseo_ai_lsi_used', true) ?: [];
-        
+
         wp_nonce_field('aiseo_lsi_save', 'aiseo_lsi_nonce');
         ?>
         <div class="aiseo-lsi-box">
-            <p>
-                <strong><?php esc_html_e('Focus Keyphrase:', 'ai-seo-client'); ?></strong>
-                <?php echo $focusKeyphrase ? esc_html($focusKeyphrase) : '<em>' . esc_html__('(Set in SEO tab)', 'ai-seo-client') . '</em>'; ?>
-            </p>
-            
+            <div class="fyn-rows">
+                <div class="fyn-row">
+                    <span class="fyn-row-chip"><span class="dashicons dashicons-search"></span></span>
+                    <div class="fyn-row-main">
+                        <div class="fyn-row-label"><?php esc_html_e('Focus Keyphrase:', 'ai-seo-client'); ?></div>
+                        <div class="fyn-row-detail">
+                            <?php echo $focusKeyphrase
+                                ? esc_html($focusKeyphrase)
+                                : esc_html__('(Set in SEO tab)', 'ai-seo-client'); ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($focusKeyphrase) :
+                    $coverage = $this->calculateCoverage($post->ID, $focusKeyphrase, $used);
+                    $coverageTone = $coverage >= 60 ? 'ok' : ($coverage >= 30 ? 'warn' : 'danger');
+                ?>
+                <div class="fyn-row">
+                    <span class="fyn-row-chip"><span class="dashicons dashicons-chart-bar"></span></span>
+                    <div class="fyn-row-main">
+                        <div class="fyn-row-label"><?php esc_html_e('Coverage:', 'ai-seo-client'); ?></div>
+                        <div class="fyn-row-detail" id="aiseo-lsi-coverage">
+                            <?php printf(esc_html__('%.0f%% of LSI keywords used in content', 'ai-seo-client'), $coverage); ?>
+                        </div>
+                    </div>
+                    <span class="fyn-badge fyn-badge--<?php echo esc_attr($coverageTone); ?>"><?php echo esc_html((string) round($coverage)); ?>%</span>
+                </div>
+                <?php endif; ?>
+            </div>
+
             <?php if ($focusKeyphrase) : ?>
-            <p>
-                <button type="button" class="button" id="aiseo-generate-lsi" data-post="<?php echo $post->ID; ?>">
-                    <?php esc_html_e('Generate LSI Keywords', 'ai-seo-client'); ?>
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary" id="aiseo-generate-lsi" data-post="<?php echo $post->ID; ?>">
+                    <span class="dashicons dashicons-superhero-alt"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Generate LSI Keywords', 'ai-seo-client'); ?></span>
                 </button>
-                <span class="spinner" style="float:none; margin-left:5px;"></span>
-            </p>
-            
-            <div id="aiseo-lsi-suggestions" style="margin-top:15px;">
+                <span class="spinner"></span>
+            </div>
+
+            <div id="aiseo-lsi-suggestions">
                 <?php if ($suggested) : ?>
-                <h4><?php esc_html_e('Suggested Keywords:', 'ai-seo-client'); ?></h4>
-                <div class="aiseo-lsi-cloud" style="padding:10px; background:#f9f9f9; border:1px solid #ddd;">
-                    <?php foreach ($suggested as $keyword) : 
+                <label class="fyn-lbl"><?php esc_html_e('Suggested Keywords:', 'ai-seo-client'); ?></label>
+                <div class="fyn-chips aiseo-lsi-cloud">
+                    <?php foreach ($suggested as $keyword) :
                         $isUsed = in_array($keyword, $used);
                     ?>
-                    <span class="aiseo-lsi-tag <?php echo $isUsed ? 'used' : ''; ?>" 
-                          data-keyword="<?php echo esc_attr($keyword); ?>"
-                          style="display:inline-block; padding:5px 10px; margin:3px; border-radius:3px; cursor:pointer; <?php echo $isUsed ? 'background:#00a32a; color:white;' : 'background:#f0f0f0; color:#333;'; ?>">
-                        <?php echo esc_html($keyword); ?> <?php echo $isUsed ? '✓' : '+'; ?>
-                    </span>
+                    <button type="button"
+                            class="fyn-chip aiseo-lsi-tag<?php echo $isUsed ? ' fyn-chip--on used' : ''; ?>"
+                            data-keyword="<?php echo esc_attr($keyword); ?>">
+                        <span class="fyn-chip-label"><?php echo esc_html($keyword); ?></span>
+                        <span class="dashicons <?php echo $isUsed ? 'dashicons-yes' : 'dashicons-plus-alt2'; ?>"></span>
+                    </button>
                     <?php endforeach; ?>
                 </div>
                 <input type="hidden" name="aiseo_lsi_used" id="aiseo-lsi-used" value="<?php echo esc_attr(json_encode($used)); ?>">
                 <?php else : ?>
-                <p><em><?php esc_html_e('Click "Generate LSI Keywords" to get suggestions based on your focus keyphrase.', 'ai-seo-client'); ?></em></p>
+                <p class="fyn-empty"><?php esc_html_e('Click "Generate LSI Keywords" to get suggestions based on your focus keyphrase.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
             </div>
-            
-            <p style="margin-top:15px;">
-                <strong><?php esc_html_e('Coverage:', 'ai-seo-client'); ?></strong>
-                <span id="aiseo-lsi-coverage">
-                    <?php 
-                    $coverage = $this->calculateCoverage($post->ID, $focusKeyphrase, $used);
-                    printf(__('%.0f%% of LSI keywords used in content', 'ai-seo-client'), $coverage);
-                    ?>
-                </span>
-            </p>
             <?php else : ?>
-            <p class="notice notice-warning">
-                <?php esc_html_e('Please set a focus keyphrase in the SEO Score tab first to generate LSI keywords.', 'ai-seo-client'); ?>
-            </p>
+            <div class="fyn-note fyn-note--warn">
+                <p><?php esc_html_e('Please set a focus keyphrase in the SEO Score tab first to generate LSI keywords.', 'ai-seo-client'); ?></p>
+            </div>
             <?php endif; ?>
         </div>
-        
-        <style>
-            .aiseo-lsi-tag:hover { opacity: 0.8; }
-            .aiseo-lsi-tag.used { background: #00a32a !important; color: white !important; }
-        </style>
-        
+
         <script>
         jQuery(document).ready(function($) {
             $('#aiseo-generate-lsi').on('click', function() {
                 var btn = $(this);
                 var postId = btn.data('post');
                 var spinner = btn.next('.spinner');
-                
+
                 spinner.addClass('is-active');
                 btn.prop('disabled', true);
-                
+
                 wp.apiFetch({
                     path: 'sseo-ai/v1/lsi-suggest',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {
-                    var html = '<h4><?php echo esc_js(__('Suggested Keywords:', 'ai-seo-client')); ?></h4>';
-                    html += '<div class="aiseo-lsi-cloud" style="padding:10px; background:#f9f9f9; border:1px solid #ddd;">';
+                    var html = '<label class="fyn-lbl"><?php echo esc_js(__('Suggested Keywords:', 'ai-seo-client')); ?></label>';
+                    html += '<div class="fyn-chips aiseo-lsi-cloud">';
                     response.keywords.forEach(function(kw) {
-                        html += '<span class="aiseo-lsi-tag" data-keyword="' + kw + '" style="display:inline-block; padding:5px 10px; margin:3px; border-radius:3px; cursor:pointer; background:#f0f0f0; color:#333;">' + kw + ' +</span>';
+                        html += '<button type="button" class="fyn-chip aiseo-lsi-tag" data-keyword="' + kw + '">';
+                        html += '<span class="fyn-chip-label">' + kw + '</span>';
+                        html += '<span class="dashicons dashicons-plus-alt2"></span></button>';
                     });
                     html += '</div>';
                     html += '<input type="hidden" name="aiseo_lsi_used" id="aiseo-lsi-used" value="[]">';
@@ -136,20 +150,22 @@ class LSIKeywords
                     btn.prop('disabled', false);
                 });
             });
-            
+
             $(document).on('click', '.aiseo-lsi-tag', function() {
                 var tag = $(this);
                 var keyword = tag.data('keyword');
                 var used = JSON.parse($('#aiseo-lsi-used').val() || '[]');
-                
+
                 if (tag.hasClass('used')) {
                     used = used.filter(function(k) { return k !== keyword; });
-                    tag.removeClass('used').css({background: '#f0f0f0', color: '#333'}).text(keyword + ' +');
+                    tag.removeClass('used fyn-chip--on')
+                       .find('.dashicons').attr('class', 'dashicons dashicons-plus-alt2');
                 } else {
                     used.push(keyword);
-                    tag.addClass('used').css({background: '#00a32a', color: 'white'}).text(keyword + ' ✓');
+                    tag.addClass('used fyn-chip--on')
+                       .find('.dashicons').attr('class', 'dashicons dashicons-yes');
                 }
-                
+
                 $('#aiseo-lsi-used').val(JSON.stringify(used));
             });
         });
