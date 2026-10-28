@@ -6,479 +6,906 @@
     <title>Fyndable SEO</title>
     <meta name="shopify-api-key" content="{{ $apiKey }}">
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+        // Apply the stored theme before first paint to avoid a light flash in dark mode.
+        try { if (localStorage.getItem('fyn-theme') === 'dark') document.documentElement.classList.add('fyn-dark'); } catch (e) {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="{{ asset('vendor/dashicons/dashicons.css') }}">
     <style>
+        /* ---- Theme tokens (light default, html.fyn-dark flips) ---- */
+        :root {
+            --fyn-purple: #8F39AC; --fyn-blue: #379FD3; --fyn-ink: #333333;
+            --fyn-purple-tint: #F4E9F8;
+            --fyn-gradient: linear-gradient(135deg, #8F39AC 0%, #379FD3 100%);
+            --fyn-gradient-flat: linear-gradient(90deg, #8F39AC, #379FD3);
+            --fyn-band: linear-gradient(135deg, #2A1533 0%, #132A38 100%);
+            --fyn-success: #10b981; --fyn-success-light: #d1fae5; --fyn-success-ink: #047857;
+            --fyn-warning: #f59e0b; --fyn-warning-light: #fef3c7; --fyn-warning-ink: #92700a;
+            --fyn-danger: #ef4444; --fyn-danger-light: #fee2e2; --fyn-danger-ink: #b91c1c;
+            --fyn-info: #3b82f6; --fyn-info-light: #dbeafe; --fyn-info-ink: #1d4ed8;
+
+            --page: #f1f0f5; --card: #ffffff; --card-border: #e7e6ee; --panel: #ffffff;
+            --text-h: #1a1430; --text-b: #413b52; --text-m: #746e82; --text-s: #a39dae;
+            --well: #f7f6fa; --well-border: #edecf2; --row-hover: #faf7fe; --divide: #efeef4;
+            --input-bg: #ffffff; --input-border: #d8d6e0; --sev-track: #e9e7f0;
+            --serp-bg: #f8f8fb; --serp-title: #1a0dab; --serp-url: #0f7a37;
+            --shadow: 0 1px 3px rgba(20, 14, 30, .06);
+        }
+        html.fyn-dark {
+            --page: #120c1c; --card: #1d1630; --card-border: rgba(255,255,255,.07); --panel: #19122a;
+            --text-h: #f4f1fa; --text-b: #cdc6dd; --text-m: #958da7; --text-s: #6f6784;
+            --well: #211a35; --well-border: rgba(255,255,255,.07); --row-hover: rgba(143,57,172,.12); --divide: rgba(255,255,255,.07);
+            --input-bg: #211a35; --input-border: rgba(255,255,255,.12); --sev-track: rgba(255,255,255,.1);
+            --serp-bg: #17112a; --serp-title: #8ab4f8; --serp-url: #6ee7a8;
+            color-scheme: dark;
+        }
+
+        /* ---- Base ---- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f6f6f7; color: #202223; }
-        .app { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
-        .header h1 { font-size: 24px; margin: 0; }
-        .header p { margin: 5px 0 0; opacity: 0.85; font-size: 14px; }
-        .tabs { display: flex; gap: 2px; margin-bottom: 20px; border-bottom: 2px solid #e1e1e1; }
-        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-size: 14px; font-weight: 500; color: #637381; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .tab.active { color: #379fd3; border-bottom-color: #379fd3; }
+        body { font-family: 'Outfit', system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; background: var(--page); color: var(--text-b); min-height: 100vh; }
+        a { color: var(--fyn-purple); text-decoration: none; }
+        a:hover { color: var(--fyn-blue); }
+        code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: var(--well); border: 1px solid var(--well-border); padding: 1px 6px; border-radius: 5px; color: var(--text-b); word-break: break-all; }
+        .dashicons { width: 16px; height: 16px; font-size: 16px; line-height: 1; flex: none; }
+        .fyn-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .fyn-scroll::-webkit-scrollbar-thumb { background: rgba(143,57,172,.35); border-radius: 8px; }
+        @keyframes fynFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+        /* ---- Brand band + tab bar ---- */
+        .band { background: var(--fyn-band); }
+        .band-inner { display: flex; align-items: center; gap: 16px; height: 60px; padding: 0 26px; max-width: 1340px; margin: 0 auto; }
+        .band-logo { height: 24px; width: auto; display: block; }
+        .band-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.55); letter-spacing: .05em; text-transform: uppercase; border-left: 1px solid rgba(255,255,255,.2); padding-left: 14px; white-space: nowrap; }
+        .band-spacer { flex: 1; }
+        .shop-chip { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 13px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); border-radius: 9px; min-width: 0; }
+        .shop-chip .dashicons { font-size: 15px; width: 15px; height: 15px; color: rgba(255,255,255,.7); }
+        .shop-chip span:last-child { font-size: 12.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .theme-toggle { display: flex; align-items: center; gap: 5px; height: 34px; padding: 3px; background: rgba(0,0,0,.22); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; cursor: pointer; font-family: inherit; }
+        .theme-toggle span { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; color: rgba(255,255,255,.6); transition: all .2s ease; }
+        html:not(.fyn-dark) .theme-toggle .tt-sun { background: rgba(255,255,255,.9); color: var(--fyn-purple); }
+        html.fyn-dark .theme-toggle .tt-moon { background: rgba(255,255,255,.18); color: #fff; }
+        .lic-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.75); font-size: 12px; font-weight: 700; white-space: nowrap; text-transform: capitalize; }
+        .lic-pill .dashicons { font-size: 14px; width: 14px; height: 14px; }
+        .lic-pill.active { background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.35); color: #6ee7a8; }
+        .tabs { max-width: 1340px; margin: 0 auto; padding: 0 18px; display: flex; gap: 2px; overflow-x: auto; }
+        .tab { display: flex; align-items: center; gap: 7px; padding: 13px 15px; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; color: rgba(255,255,255,.62); border-bottom: 3px solid transparent; transition: all .2s ease; }
+        .tab .dashicons { font-size: 15px; width: 15px; height: 15px; pointer-events: none; } /* keep event.target on the button for showTab() */
+        .tab:hover { color: rgba(255,255,255,.9); }
+        .tab.active { color: #fff; border-bottom-color: #fff; }
+
+        /* ---- Content area ---- */
+        .app { max-width: 1340px; margin: 0 auto; padding: 26px 26px 48px; }
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-        .card h2 { font-size: 18px; margin: 0 0 15px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-        .stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; }
-        .stat .label { font-size: 13px; color: #637381; margin-bottom: 5px; }
-        .stat .value { font-size: 28px; font-weight: 700; color: #202223; }
-        .stat .value.green { color: #16a34a; }
-        .stat .value.blue { color: #379fd3; }
-        .stat .value.purple { color: #8f39ac; }
+        .tab-content.active { display: block; animation: fynFade .3s ease; }
+        .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+        .page-head h1 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; color: var(--text-h); }
+        .page-head p { margin-top: 6px; font-size: 13.5px; color: var(--text-m); max-width: 640px; line-height: 1.5; }
+        .page-actions { display: flex; gap: 10px; }
+        .grid { display: grid; gap: 18px; align-items: start; }
+        .grid.side-r { grid-template-columns: minmax(0, 1fr) 360px; }
+        .grid.side-r-wide { grid-template-columns: minmax(0, 1fr) 380px; }
+        .grid.side-l { grid-template-columns: 340px minmax(0, 1fr); }
+        .grid.content-split { grid-template-columns: 380px minmax(0, 1fr); }
+        .grid.halves { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .stack > * + * { margin-top: 18px; }
+
+        /* ---- Cards ---- */
+        .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; box-shadow: var(--shadow); padding: 24px; margin-bottom: 18px; }
+        .grid > .card, .stack > .card { margin-bottom: 0; }
+        .card.flush { padding: 0; overflow: hidden; }
+        .card-head { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+        .card-head .dashicons { font-size: 18px; width: 18px; height: 18px; color: var(--fyn-purple); }
+        .card-head h2, .card-head h3 { font-size: 16px; font-weight: 700; color: var(--text-h); }
+        .card-head + .card-desc { margin-top: -12px; }
+        .card-desc { font-size: 13px; color: var(--text-m); line-height: 1.5; margin-bottom: 18px; }
+        .card-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 22px; border-bottom: 1px solid var(--divide); }
+        .card-bar .card-head { margin-bottom: 0; }
+        .card-pad { padding: 20px 22px; }
+        .card-pad:empty { display: none; }
+        .section { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--divide); }
+        .section h3 { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 700; color: var(--text-h); margin-bottom: 12px; }
+        .section h3 .dashicons { color: var(--fyn-purple); }
+
+        /* ---- Stat tiles ---- */
+        .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+        .stats.cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .stats > .loading, .stats > .alert { grid-column: 1 / -1; margin-bottom: 0; }
+        .stat { position: relative; background: var(--card); border: 1px solid var(--card-border); border-radius: 13px; box-shadow: var(--shadow); padding: 18px 20px; overflow: hidden; transition: all .2s ease; }
+        .stat::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--fyn-gradient-flat); }
+        .stat:hover { transform: translateY(-2px); border-color: var(--fyn-purple); box-shadow: 0 6px 18px rgba(143,57,172,.2); }
+        .stat .label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-m); }
+        .stat .label .dashicons { font-size: 17px; width: 17px; height: 17px; color: var(--fyn-purple); }
+        .stat .value { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1; color: var(--text-h); text-transform: capitalize; }
+        .stat .value.green { color: var(--fyn-success); }
+        .stat .value.blue { color: var(--fyn-blue); }
+        .stat .value.purple { color: var(--fyn-purple); }
+        .stat .value.red { color: var(--fyn-danger); }
+        .stat .sub { margin-top: 8px; font-size: 12px; color: var(--text-m); }
+
+        /* ---- Forms ---- */
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; }
-        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #379fd3; }
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; }
-        .checkbox-group label { display: flex; align-items: center; gap: 6px; font-weight: 400; }
-        .btn { padding: 10px 20px; background: linear-gradient(135deg, #379fd3, #8f39ac); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .btn:hover { opacity: 0.9; }
-        .btn.secondary { background: #fff; color: #379fd3; border: 1px solid #379fd3; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .preview { background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-family: monospace; font-size: 12px; max-height: 400px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .badge.green { background: #dcfce7; color: #16a34a; }
-        .badge.red { background: #fee2e2; color: #dc2626; }
-        .badge.gray { background: #f1f5f9; color: #64748b; }
-        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
-        .alert.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-        .alert.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-        .alert.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .form-group > label, .field-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-b); margin-bottom: 7px; }
+        .field-label .hint { color: var(--text-s); font-weight: 500; }
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .form-row > .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
+        .form-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .fyn-inp, .fyn-ta, .form-group input:not([type=checkbox]), .form-group textarea, .form-group select {
+            width: 100%; border-radius: 9px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-b);
+            font-family: inherit; font-size: 13.5px; outline: none; transition: border-color .2s ease;
+        }
+        .fyn-inp, .form-group input:not([type=checkbox]), .form-group select { height: 44px; padding: 0 14px; }
+        .fyn-ta, .form-group textarea { min-height: 90px; padding: 11px 14px; line-height: 1.5; resize: vertical; }
+        .form-group select:not([size]), select.fyn-inp { appearance: none; -webkit-appearance: none; padding-right: 36px; cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%23746e82' d='M5 6l5 5 5-5 2 1-7 7-7-7z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; }
+        .fyn-inp:focus, .fyn-ta:focus, .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--fyn-purple); }
+        ::placeholder { color: var(--text-s); }
+        textarea.mono, .form-group textarea.mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+        .inline-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-b); cursor: pointer; }
+        input[type=checkbox] { accent-color: var(--fyn-purple); width: 16px; height: 16px; }
+
+        /* Toggle rows (checkbox rendered as a switch) */
+        .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border-radius: 10px; background: var(--well); border: 1px solid var(--well-border); margin-bottom: 10px; cursor: pointer; }
+        .switch-row .t { font-size: 13.5px; font-weight: 600; color: var(--text-h); }
+        .switch-row .s { font-size: 11.5px; color: var(--text-m); }
+        .switch-row input { position: absolute; opacity: 0; pointer-events: none; }
+        .switch { position: relative; width: 44px; height: 24px; border-radius: 999px; background: var(--sev-track); flex: none; transition: all .2s ease; }
+        .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: all .2s ease; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+        .switch-row input:checked + .switch { background: var(--fyn-purple); }
+        .switch-row input:checked + .switch::after { left: 22px; }
+        .switch-row input:focus-visible + .switch { box-shadow: 0 0 0 3px rgba(143,57,172,.25); }
+
+        /* Chip checkboxes */
+        .chip-group { display: flex; flex-wrap: wrap; gap: 9px; }
+        .chip-check { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--input-border); background: var(--card); color: var(--text-m); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s ease; }
+        .chip-check input { position: absolute; opacity: 0; pointer-events: none; }
+        .chip-check .dashicons { font-size: 14px; width: 14px; height: 14px; visibility: hidden; }
+        .chip-check:has(input:checked) { background: var(--fyn-purple-tint); border-color: transparent; color: var(--fyn-purple); }
+        .chip-check:has(input:checked) .dashicons { visibility: visible; }
+        .chip-check:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(143,57,172,.25); }
+
+        /* ---- Buttons ---- */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; padding: 0 18px; border-radius: 9px; border: none; background: var(--fyn-gradient); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .2s ease; box-shadow: 0 4px 14px rgba(143,57,172,.25); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(143,57,172,.35); }
+        .btn.secondary { background: var(--card); color: var(--text-b); border: 2px solid var(--input-border); box-shadow: none; }
+        .btn.secondary:hover { border-color: var(--fyn-purple); background: var(--well); color: var(--text-h); }
+        .btn.danger { background: transparent; color: var(--fyn-danger); border: 2px solid var(--fyn-danger); box-shadow: none; }
+        .btn.danger:hover { background: var(--fyn-danger-light); color: var(--fyn-danger-ink); }
+        .btn.sm { height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; }
+        .btn.input-h { height: 44px; }
+        .btn.block { width: 100%; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--fyn-danger); cursor: pointer; transition: all .2s ease; }
+        .icon-btn:hover { background: var(--fyn-danger-light); }
+
+        /* AI action tiles + quick actions */
+        .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+        .tile-btn { display: flex; align-items: center; gap: 9px; padding: 11px 12px; border-radius: 9px; border: 2px solid var(--input-border); background: var(--card); color: var(--text-b); font-family: inherit; font-size: 12.5px; font-weight: 600; text-align: left; cursor: pointer; transition: all .2s ease; }
+        .tile-btn .dashicons { color: var(--fyn-purple); }
+        .tile-btn:hover { border-color: var(--fyn-purple); background: var(--well); transform: translateY(-2px); }
+        .quick { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 13px; margin-bottom: 9px; border-radius: 10px; border: 2px solid var(--input-border); background: var(--card); font-family: inherit; text-align: left; cursor: pointer; transition: all .2s ease; }
+        .quick:hover { border-color: var(--fyn-purple); background: var(--well); transform: translateY(-2px); }
+        .quick .t { font-size: 13px; font-weight: 600; color: var(--text-h); }
+        .quick .s { font-size: 11.5px; color: var(--text-m); }
+        .quick .grow { flex: 1; min-width: 0; }
+        .quick .dashicons-arrow-right-alt2 { font-size: 14px; width: 14px; height: 14px; color: var(--text-s); }
+        .icon-chip { width: 34px; height: 34px; border-radius: 9px; background: var(--fyn-purple-tint); display: flex; align-items: center; justify-content: center; flex: none; }
+        .icon-chip .dashicons { color: var(--fyn-purple); }
+        .icon-chip.well { background: var(--well); border: 1px solid var(--well-border); }
+        .icon-chip.lg { width: 46px; height: 46px; border-radius: 12px; }
+        .icon-chip.lg .dashicons { font-size: 22px; width: 22px; height: 22px; }
+
+        /* Content type pills */
+        .pills { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .pill { display: flex; align-items: center; gap: 8px; padding: 9px 15px; border-radius: 9px; border: 2px solid var(--input-border); background: var(--card); color: var(--text-b); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s ease; }
+        .pill .dashicons { font-size: 15px; width: 15px; height: 15px; pointer-events: none; }
+        .pill:hover { border-color: var(--fyn-purple); }
+        .pill.active { background: var(--fyn-gradient); border-color: transparent; color: #fff; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+        /* Searchable item list */
+        .search-bar { display: flex; align-items: center; gap: 9px; height: 48px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--divide); background: var(--well); }
+        .search-bar .dashicons { font-size: 15px; width: 15px; height: 15px; color: var(--text-s); }
+        .search-bar input { flex: 1; min-width: 0; height: 100%; background: transparent; border: none; outline: none; color: var(--text-b); font-family: inherit; font-size: 13px; }
+        .item-list { display: block; width: 100%; min-height: 360px; border: none; outline: none; background: var(--card); color: var(--text-b); font-family: inherit; font-size: 13.5px; padding: 6px 0; }
+        .item-list option { padding: 11px 16px; border-bottom: 1px solid var(--divide); white-space: normal; }
+        .item-list option:checked { background: var(--row-hover); color: var(--fyn-purple); font-weight: 600; }
+        .empty { padding: 28px 16px; text-align: center; color: var(--text-m); font-size: 13px; }
+        .empty .dashicons { display: block; margin: 0 auto 10px; font-size: 28px; width: 28px; height: 28px; color: var(--text-s); }
+        .item-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .item-head .t { font-size: 15px; font-weight: 700; color: var(--text-h); }
+        .item-head .s { font-size: 12px; color: var(--text-m); word-break: break-all; }
+
+        /* ---- Badges / alerts ---- */
+        .badge { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+        .badge.green { background: var(--fyn-success-light); color: var(--fyn-success-ink); }
+        .badge.red { background: var(--fyn-danger-light); color: var(--fyn-danger-ink); }
+        .badge.blue { background: var(--fyn-info-light); color: var(--fyn-info-ink); }
+        .badge.amber { background: var(--fyn-warning-light); color: var(--fyn-warning-ink); }
+        .badge.gray { background: var(--sev-track); color: var(--text-m); }
+        .alert { display: flex; align-items: flex-start; gap: 9px; padding: 11px 15px; border-radius: 9px; margin-bottom: 15px; font-size: 13px; font-weight: 600; line-height: 1.5; }
+        .alert::before { font-family: dashicons; font-size: 16px; line-height: 1.3; flex: none; }
+        .alert.info { background: var(--fyn-info-light); border: 1px solid rgba(59,130,246,.25); color: var(--fyn-info-ink); }
+        .alert.info::before { content: "\f348"; color: var(--fyn-info); }
+        .alert.error { background: var(--fyn-danger-light); border: 1px solid rgba(239,68,68,.25); color: var(--fyn-danger-ink); }
+        .alert.error::before { content: "\f534"; color: var(--fyn-danger); }
+        .alert.success { background: var(--fyn-success-light); border: 1px solid rgba(16,185,129,.25); color: var(--fyn-success-ink); }
+        .alert.success::before { content: "\f12a"; color: var(--fyn-success); }
+        .alert a { color: inherit; text-decoration: underline; }
+        .alert img { display: block; }
+
+        /* ---- Tables ---- */
+        .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-        th { font-weight: 600; color: #637381; }
-        .loading { text-align: center; padding: 40px; color: #637381; }
+        th { padding: 11px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-m); border-bottom: 2px solid var(--divide); white-space: nowrap; }
+        td { padding: 13px 12px; font-size: 13px; color: var(--text-b); border-bottom: 1px solid var(--divide); }
+        th:first-child, td:first-child { padding-left: 22px; }
+        th:last-child, td:last-child { padding-right: 22px; }
+        tbody tr { transition: background .2s ease; }
+        tbody tr:hover { background: var(--row-hover); }
+        td.kw { font-size: 13.5px; font-weight: 600; color: var(--text-h); }
+        td.num, th.num { text-align: center; }
+        td.end, th.end { text-align: right; }
+        td.muted { color: var(--text-m); font-size: 12.5px; }
+
+        /* ---- Misc ---- */
+        .preview, .code { margin: 0; padding: 18px; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; line-height: 1.6; color: var(--text-b); white-space: pre-wrap; word-break: break-word; background: var(--serp-bg); max-height: 520px; overflow: auto; }
+        .code { border-radius: 11px; border: 1px solid var(--well-border); max-height: 400px; }
+        .muted { color: var(--text-m); font-size: 13px; }
+        .note { font-size: 12.5px; color: var(--text-m); line-height: 1.5; }
+        .loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 28px; color: var(--text-m); font-size: 13px; }
+        .loading::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--sev-track); border-top-color: var(--fyn-purple); animation: fynSpin .8s linear infinite; }
+        @keyframes fynSpin { to { transform: rotate(360deg); } }
+        .progress { height: 9px; border-radius: 999px; background: var(--sev-track); overflow: hidden; }
+        .progress > div { height: 100%; background: var(--fyn-gradient-flat); transition: width .3s ease; }
+        .progress-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--text-h); }
+        .progress-head span:last-child { font-size: 12.5px; color: var(--fyn-purple); }
+        .status-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--divide); }
+        .status-row .grow { flex: 1; min-width: 0; }
+        .status-row .t { font-size: 13px; font-weight: 600; color: var(--text-h); }
+        .status-row .s { font-size: 11.5px; color: var(--text-m); word-break: break-all; }
+        .link-row { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--divide); font-size: 13px; }
+        .link-row .grow { flex: 1; min-width: 0; word-break: break-word; }
+        .link-row em { color: var(--text-s); }
+        .feature { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--text-b); }
+        .feature::before { content: "✓"; color: var(--fyn-success); font-weight: 700; }
+        .lic-key { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 15px; border-radius: 9px; background: var(--well); border: 1px solid var(--well-border); font-family: ui-monospace, Menlo, monospace; font-size: 13.5px; letter-spacing: 1px; color: var(--text-b); margin-bottom: 20px; }
+        #license-key { font-family: ui-monospace, Menlo, monospace; letter-spacing: 1px; }
+        .draft-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        #bw-draft[style*="block"] ~ .bw-empty { display: none; }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 1199px) {
+            .stats, .stats.cols-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 1023px) {
+            .stats, .stats.cols-5 { grid-template-columns: minmax(0, 1fr); }
+            .grid.side-r, .grid.side-r-wide, .grid.side-l, .grid.content-split, .grid.halves { grid-template-columns: minmax(0, 1fr); }
+            .band-label, .shop-chip { display: none; }
+        }
+        @media (max-width: 600px) {
+            .app { padding: 20px 16px 40px; }
+            .band-inner { padding: 0 16px; }
+            .form-cols, .action-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    <div class="app">
-        <div class="header">
-            <h1>Fyndable SEO</h1>
-            <p>AI-powered SEO optimization for {{ $shopDomain }}</p>
+    <header class="band">
+        <div class="band-inner">
+            <img class="band-logo" src="{{ asset('images/fyndable-logo.png') }}" alt="Fyndable Smart SEO">
+            <span class="band-label">Shopify-app</span>
+            <div class="band-spacer"></div>
+            <div class="shop-chip" title="{{ $shopDomain }}"><span class="dashicons dashicons-store"></span><span>{{ $shopDomain }}</span></div>
+            <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark theme"><span class="tt-sun">☀</span><span class="tt-moon">☾</span></button>
+            <span class="lic-pill" id="hdr-license"><span class="dashicons dashicons-admin-network"></span><span id="hdr-license-label">License</span></span>
         </div>
+        <nav class="tabs fyn-scroll">
+            <button class="tab active" data-tab="overview" onclick="showTab('overview')"><span class="dashicons dashicons-chart-bar"></span>Dashboard</button>
+            <button class="tab" data-tab="content" onclick="showTab('content')"><span class="dashicons dashicons-edit"></span>Content Optimizer</button>
+            <button class="tab" data-tab="llmstxt" onclick="showTab('llmstxt')"><span class="dashicons dashicons-media-code"></span>llms.txt</button>
+            <button class="tab" data-tab="bulk" onclick="showTab('bulk')"><span class="dashicons dashicons-yes-alt"></span>Bulk Optimizer</button>
+            <button class="tab" data-tab="ranktracker" onclick="showTab('ranktracker')"><span class="dashicons dashicons-chart-line"></span>Rank Tracker</button>
+            <button class="tab" data-tab="backlinks" onclick="showTab('backlinks')"><span class="dashicons dashicons-admin-links"></span>Backlinks</button>
+            <button class="tab" data-tab="aivisibility" onclick="showTab('aivisibility')"><span class="dashicons dashicons-visibility"></span>AI Visibility</button>
+            <button class="tab" data-tab="blogwriter" onclick="showTab('blogwriter')"><span class="dashicons dashicons-edit-page"></span>Blog Writer</button>
+            <button class="tab" data-tab="tools" onclick="showTab('tools')"><span class="dashicons dashicons-admin-tools"></span>Tools</button>
+            <button class="tab" data-tab="license" onclick="showTab('license')"><span class="dashicons dashicons-admin-network"></span>License</button>
+        </nav>
+    </header>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('overview')">Overview</button>
-            <button class="tab" onclick="showTab('llmstxt')">llms.txt</button>
-            <button class="tab" onclick="showTab('content')">Content</button>
-            <button class="tab" onclick="showTab('bulk')">Bulk Optimize</button>
-            <button class="tab" onclick="showTab('ranktracker')">Rank Tracker</button>
-            <button class="tab" onclick="showTab('backlinks')">Backlinks</button>
-            <button class="tab" onclick="showTab('aivisibility')">AI Visibility</button>
-            <button class="tab" onclick="showTab('blogwriter')">Blog Writer</button>
-            <button class="tab" onclick="showTab('tools')">Tools</button>
-            <button class="tab" onclick="showTab('license')">License</button>
-        </div>
+    <main class="app">
 
         <!-- Overview Tab -->
         <div id="overview" class="tab-content active">
-            <div class="card">
-                <h2>SEO Overview</h2>
-                <div id="overview-stats" class="stats">
-                    <div class="loading">Loading...</div>
+            <div class="page-head">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>An overview of your SEO status, store setup and quick actions for {{ $shopDomain }}.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn" onclick="loadOverview()"><span class="dashicons dashicons-update"></span>Refresh</button>
+                </div>
+            </div>
+            <div id="overview-stats" class="stats cols-5">
+                <div class="loading">Loading...</div>
+            </div>
+            <div class="grid side-r">
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-chart-bar"></span><h2>Store status</h2></div>
+                    <div id="overview-status"><div class="loading">Loading...</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-lightbulb"></span><h3>Quick actions</h3></div>
+                    <button type="button" class="quick" onclick="goTab('bulk')"><div class="icon-chip"><span class="dashicons dashicons-yes-alt"></span></div><div class="grow"><div class="t">Start bulk optimization</div><div class="s">Meta, titles, alt text or descriptions</div></div><span class="dashicons dashicons-arrow-right-alt2"></span></button>
+                    <button type="button" class="quick" onclick="goTab('llmstxt')"><div class="icon-chip"><span class="dashicons dashicons-media-code"></span></div><div class="grow"><div class="t">Refresh llms.txt</div><div class="s">Regenerate what AI crawlers see</div></div><span class="dashicons dashicons-arrow-right-alt2"></span></button>
+                    <button type="button" class="quick" onclick="goTab('ranktracker')"><div class="icon-chip"><span class="dashicons dashicons-chart-line"></span></div><div class="grow"><div class="t">Check rankings</div><div class="s">Google positions for tracked keywords</div></div><span class="dashicons dashicons-arrow-right-alt2"></span></button>
+                    <button type="button" class="quick" onclick="goTab('blogwriter')"><div class="icon-chip"><span class="dashicons dashicons-edit-page"></span></div><div class="grow"><div class="t">New blog article</div><div class="s">Generate with AI</div></div><span class="dashicons dashicons-arrow-right-alt2"></span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Tab -->
+        <div id="content" class="tab-content">
+            <div class="page-head">
+                <div>
+                    <h1>Content Optimizer</h1>
+                    <p>Generate AI-powered descriptions, meta tags, image alt text and JSON-LD schema for products, collections, pages and blog articles. Review, edit and save to Shopify.</p>
+                </div>
+            </div>
+            <div class="pills" id="content-type-pills">
+                <button type="button" class="pill active" data-type="product" onclick="setContentType('product')"><span class="dashicons dashicons-products"></span>Products</button>
+                <button type="button" class="pill" data-type="collection" onclick="setContentType('collection')"><span class="dashicons dashicons-category"></span>Collections</button>
+                <button type="button" class="pill" data-type="page" onclick="setContentType('page')"><span class="dashicons dashicons-admin-page"></span>Pages</button>
+                <button type="button" class="pill" data-type="article" onclick="setContentType('article')"><span class="dashicons dashicons-media-document"></span>Blog articles</button>
+            </div>
+            <label for="content-type" class="sr-only">Content type</label>
+            <select id="content-type" class="sr-only" onchange="onContentTypeChange()" tabindex="-1">
+                <option value="product">Products</option>
+                <option value="collection">Collections</option>
+                <option value="page">Pages</option>
+                <option value="article">Blog articles</option>
+            </select>
+            <div class="grid content-split">
+                <div class="card flush">
+                    <div class="search-bar">
+                        <span class="dashicons dashicons-search"></span>
+                        <label for="content-search" class="sr-only">Search</label>
+                        <input type="text" id="content-search" placeholder="Search by title..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchContent();}">
+                        <button class="btn secondary sm" onclick="searchContent()">Search</button>
+                    </div>
+                    <select id="content-list" class="item-list fyn-scroll" size="12" onchange="onContentSelect()" aria-label="Items"></select>
+                </div>
+
+                <div class="card">
+                    <div id="product-result"></div>
+                    <div id="content-empty" class="empty"><span class="dashicons dashicons-edit"></span>Select an item to load the editor.</div>
+
+                    <div id="content-editor" style="display: none;">
+                        <div class="item-head">
+                            <div class="icon-chip lg"><span class="dashicons dashicons-products"></span></div>
+                            <div><div class="t" id="content-selected"></div><div class="s">Edit, generate with AI and save to Shopify</div></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-context">Additional context for AI <span class="hint">· optional — keywords, target audience, tone</span></label>
+                            <textarea id="product-context" rows="2" placeholder="e.g. Target audience: outdoor enthusiasts. Tone: adventurous and eco-friendly."></textarea>
+                        </div>
+                        <div class="field-label">AI actions</div>
+                        <div class="action-grid" style="margin-bottom: 20px;">
+                            <button class="tile-btn" onclick="generateMeta()"><span class="dashicons dashicons-tag"></span>Generate Meta Tags</button>
+                            <button class="tile-btn" onclick="generateDescription('long')"><span class="dashicons dashicons-edit"></span>Generate Description</button>
+                            <button class="tile-btn" onclick="generateDescription('short')"><span class="dashicons dashicons-editor-paragraph"></span>Short Description</button>
+                            <button class="tile-btn" onclick="generateSchema()"><span class="dashicons dashicons-media-code"></span>Generate Schema</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-meta-title">Meta title</label>
+                            <input type="text" id="edit-meta-title">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-meta-desc">Meta description</label>
+                            <textarea id="edit-meta-desc" rows="2"></textarea>
+                        </div>
+                        <button class="btn" onclick="saveMeta()"><span class="dashicons dashicons-upload"></span>Save Meta</button>
+
+                        <div class="section">
+                            <div class="form-group">
+                                <label for="edit-description">Description / body</label>
+                                <textarea id="edit-description" rows="8"></textarea>
+                            </div>
+                            <button class="btn" onclick="saveDescription()"><span class="dashicons dashicons-upload"></span>Save Description</button>
+                        </div>
+
+                        <div class="section" id="alt-text-section">
+                            <h3><span class="dashicons dashicons-format-image"></span>Image alt text</h3>
+                            <div class="form-group">
+                                <label for="edit-image">Image</label>
+                                <select id="edit-image"></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-alt-text">Alt text</label>
+                                    <input type="text" id="edit-alt-text" placeholder="Alt text...">
+                                </div>
+                                <button class="btn secondary input-h" onclick="generateAltText()">Generate</button>
+                                <button class="btn input-h" onclick="saveAltText()">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h3><span class="dashicons dashicons-media-code"></span>JSON-LD schema</h3>
+                            <div class="form-group">
+                                <label for="edit-schema">Schema <span class="hint">· editable</span></label>
+                                <textarea id="edit-schema" class="mono" rows="10"></textarea>
+                            </div>
+                            <button class="btn" onclick="saveSchema()"><span class="dashicons dashicons-upload"></span>Save Schema</button>
+                        </div>
+
+                        <div class="section">
+                            <h3><span class="dashicons dashicons-editor-help"></span>FAQ schema</h3>
+                            <div class="btn-row" style="margin-bottom: 14px;">
+                                <label for="faq-count" class="sr-only">Number of questions</label>
+                                <input type="number" id="faq-count" class="fyn-inp" value="5" min="2" max="10" style="width: 80px;">
+                                <button class="btn secondary" onclick="generateFaq()">Generate FAQ</button>
+                                <button class="btn" onclick="saveFaq()">Save FAQ Schema</button>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-faq">FAQ items <span class="hint">· JSON, editable — question/answer pairs</span></label>
+                                <textarea id="edit-faq" class="mono" rows="6" placeholder='[{"question": "...", "answer": "..."}]'></textarea>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h3><span class="dashicons dashicons-admin-links"></span>Internal links</h3>
+                            <button class="btn secondary" onclick="findLinkSuggestions()">Find link suggestions</button>
+                            <div id="link-suggestions" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="section" id="ai-image-section" style="display: none;">
+                            <h3><span class="dashicons dashicons-format-image"></span>AI product image</h3>
+                            <div class="form-group">
+                                <label for="ai-image-prompt">Image prompt <span class="hint">· optional — defaults to product title</span></label>
+                                <input type="text" id="ai-image-prompt" placeholder="e.g. product on a wooden table, warm light">
+                            </div>
+                            <button class="btn secondary" onclick="generateAiImage()">Generate &amp; attach image</button>
+                        </div>
+
+                        <div class="section" id="push-all-section">
+                            <div class="btn-row">
+                                <button class="btn" onclick="pushAll()"><span class="dashicons dashicons-upload"></span>Push All to Shopify</button>
+                                <label class="inline-check"><input type="checkbox" id="product-overwrite"> Overwrite existing product content</label>
+                            </div>
+                        </div>
+
+                        <p class="note" style="margin-top: 18px;">
+                            Note: to output the generated JSON-LD on your storefront, enable the
+                            <strong>Fyndable SEO Schema</strong> app embed in the Shopify theme editor
+                            (Online Store → Themes → Customize → App embeds).
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- llms.txt Tab -->
         <div id="llmstxt" class="tab-content">
-            <div class="card">
-                <h2>llms.txt Generator</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Serves <code>/llms.txt</code> (markdown summary) and <code>/llms-full.txt</code> (full content)
-                    for AI crawlers (ChatGPT, Claude, Gemini, Perplexity).
-                </p>
-                <div id="llmstxt-status"></div>
-                <div id="llmstxt-settings" style="margin-top: 20px;">
-                    <div class="form-group">
-                        <label><input type="checkbox" id="llmstxt-enabled"> Enable /llms.txt</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" id="llmstxt-full-enabled"> Enable /llms-full.txt</label>
-                    </div>
-                    <div class="form-group">
-                        <label>Content types to include:</label>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" id="llmstxt-products" checked> Products</label>
-                            <label><input type="checkbox" id="llmstxt-collections" checked> Collections</label>
-                            <label><input type="checkbox" id="llmstxt-pages" checked> Pages</label>
-                            <label><input type="checkbox" id="llmstxt-blogs" checked> Blog articles</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="llmstxt-max-products">Max products</label>
-                        <input type="number" id="llmstxt-max-products" value="100" min="1" max="1000">
-                    </div>
-                    <div class="form-group">
-                        <label for="llmstxt-max-chars">Max chars per item (full version)</label>
-                        <input type="number" id="llmstxt-max-chars" value="50000" min="100" max="500000" step="500">
-                    </div>
-                    <div class="form-group">
-                        <label for="llmstxt-description">Site description (optional)</label>
-                        <input type="text" id="llmstxt-description" placeholder="Defaults to shop description">
-                    </div>
-                    <div class="form-group">
-                        <label for="llmstxt-custom">Custom sections (markdown, optional)</label>
-                        <textarea id="llmstxt-custom" rows="4" placeholder="## Additional info&#10;- [About](/pages/about)"></textarea>
-                    </div>
-                    <button class="btn" onclick="saveLlmsTxtSettings()">Save Settings</button>
-                    <button class="btn secondary" onclick="regenerateLlmsTxt()">Regenerate</button>
-                    <button class="btn secondary" onclick="previewLlmsTxt()">Preview</button>
-                    <button class="btn secondary" onclick="setupLlmsTxtRedirects()">Create root /llms.txt redirects</button>
-                    <div id="llmstxt-redirect-status" style="margin-top: 10px; font-size: 13px; color: #637381;"></div>
+            <div class="page-head">
+                <div>
+                    <h1>llms.txt</h1>
+                    <p>Help AI assistants (ChatGPT, Claude, Gemini, Perplexity) understand your store through a structured llms.txt file.</p>
                 </div>
             </div>
-            <div class="card" id="llmstxt-preview-card" style="display:none;">
-                <h2>llms.txt Preview</h2>
-                <div id="llmstxt-preview" class="preview"></div>
-            </div>
-        </div>
-
-        <!-- Content Tab -->
-        <div id="content" class="tab-content">
-            <div class="card">
-                <h2>Content SEO</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Generate AI-powered descriptions, meta tags, image alt text, and JSON-LD schema
-                    for products, collections, pages and blog articles. Review, edit and save to Shopify.
-                </p>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="content-type">Content type</label>
-                        <select id="content-type" onchange="onContentTypeChange()" style="min-width: 160px;">
-                            <option value="product">Products</option>
-                            <option value="collection">Collections</option>
-                            <option value="page">Pages</option>
-                            <option value="article">Blog articles</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 220px;">
-                        <label for="content-search">Search</label>
-                        <input type="text" id="content-search" placeholder="Search by title..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchContent();}">
-                    </div>
-                    <button class="btn secondary" onclick="searchContent()">Search</button>
-                </div>
-                <div class="form-group" style="margin-top: 12px;">
-                    <select id="content-list" size="6" onchange="onContentSelect()" style="width: 100%;"></select>
-                </div>
-                <div id="content-empty" style="color: #637381; font-size: 13px;">Select an item to load the editor.</div>
-
-                <div id="content-editor" style="display: none;">
-                    <div id="content-selected" style="margin: 15px 0; font-weight: 600;"></div>
-                    <div class="form-group">
-                        <label for="product-context">Additional context for AI (optional — keywords, target audience, tone)</label>
-                        <textarea id="product-context" rows="2" placeholder="e.g. Target audience: outdoor enthusiasts. Tone: adventurous and eco-friendly."></textarea>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
-                        <button class="btn secondary" onclick="generateDescription('long')">Generate Description</button>
-                        <button class="btn secondary" onclick="generateDescription('short')">Short Description</button>
-                        <button class="btn secondary" onclick="generateMeta()">Generate Meta Tags</button>
-                        <button class="btn secondary" onclick="generateSchema()">Generate Schema</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit-meta-title">Meta title</label>
-                        <input type="text" id="edit-meta-title">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-meta-desc">Meta description</label>
-                        <textarea id="edit-meta-desc" rows="2"></textarea>
-                    </div>
-                    <button class="btn" onclick="saveMeta()">Save Meta</button>
-
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label for="edit-description">Description / body</label>
-                        <textarea id="edit-description" rows="8"></textarea>
-                    </div>
-                    <button class="btn" onclick="saveDescription()">Save Description</button>
-
-                    <div class="form-group" id="alt-text-section" style="margin-top: 20px;">
-                        <label for="edit-image">Image alt text</label>
-                        <select id="edit-image" style="margin-bottom: 8px;"></select>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="edit-alt-text" placeholder="Alt text...">
-                            <button class="btn secondary" onclick="generateAltText()">Generate</button>
-                            <button class="btn" onclick="saveAltText()">Save</button>
+            <div class="grid side-r-wide">
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-media-code"></span><h2>llms.txt generator</h2></div>
+                    <p class="card-desc">Serves <code>/llms.txt</code> (markdown summary) and <code>/llms-full.txt</code> (full content) for AI crawlers.</p>
+                    <div id="llmstxt-status"></div>
+                    <div id="llmstxt-settings">
+                        <label class="switch-row">
+                            <div><div class="t">Enable /llms.txt</div><div class="s">Markdown summary of your store</div></div>
+                            <input type="checkbox" id="llmstxt-enabled"><span class="switch"></span>
+                        </label>
+                        <label class="switch-row">
+                            <div><div class="t">Enable /llms-full.txt</div><div class="s">Full content for AI crawlers</div></div>
+                            <input type="checkbox" id="llmstxt-full-enabled"><span class="switch"></span>
+                        </label>
+                        <div class="form-group" style="margin-top: 18px;">
+                            <div class="field-label">Content types to include</div>
+                            <div class="chip-group">
+                                <label class="chip-check"><input type="checkbox" id="llmstxt-products" checked><span class="dashicons dashicons-yes"></span>Products</label>
+                                <label class="chip-check"><input type="checkbox" id="llmstxt-collections" checked><span class="dashicons dashicons-yes"></span>Collections</label>
+                                <label class="chip-check"><input type="checkbox" id="llmstxt-pages" checked><span class="dashicons dashicons-yes"></span>Pages</label>
+                                <label class="chip-check"><input type="checkbox" id="llmstxt-blogs" checked><span class="dashicons dashicons-yes"></span>Blog articles</label>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label for="edit-schema">JSON-LD schema (editable)</label>
-                        <textarea id="edit-schema" rows="10" style="font-family: monospace; font-size: 12px;"></textarea>
-                    </div>
-                    <button class="btn" onclick="saveSchema()">Save Schema</button>
-
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <h3 style="font-size: 15px; margin-bottom: 10px;">FAQ schema</h3>
-                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
-                            <input type="number" id="faq-count" value="5" min="2" max="10" style="width: 70px;">
-                            <button class="btn secondary" onclick="generateFaq()">Generate FAQ</button>
-                            <button class="btn" onclick="saveFaq()">Save FAQ Schema</button>
+                        <div class="form-cols">
+                            <div class="form-group">
+                                <label for="llmstxt-max-products">Max products</label>
+                                <input type="number" id="llmstxt-max-products" value="100" min="1" max="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="llmstxt-max-chars">Max chars per item (full)</label>
+                                <input type="number" id="llmstxt-max-chars" value="50000" min="100" max="500000" step="500">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="edit-faq">FAQ items (JSON, editable — question/answer pairs)</label>
-                            <textarea id="edit-faq" rows="6" style="font-family: monospace; font-size: 12px;" placeholder='[{"question": "...", "answer": "..."}]'></textarea>
+                            <label for="llmstxt-description">Site description <span class="hint">· optional</span></label>
+                            <input type="text" id="llmstxt-description" placeholder="Defaults to shop description">
                         </div>
-                    </div>
-
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <h3 style="font-size: 15px; margin-bottom: 10px;">Internal links</h3>
-                        <button class="btn secondary" onclick="findLinkSuggestions()">Find link suggestions</button>
-                        <div id="link-suggestions" style="margin-top: 10px;"></div>
-                    </div>
-
-                    <div id="ai-image-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: none;">
-                        <h3 style="font-size: 15px; margin-bottom: 10px;">AI product image</h3>
                         <div class="form-group">
-                            <label for="ai-image-prompt">Image prompt (optional — defaults to product title)</label>
-                            <input type="text" id="ai-image-prompt" placeholder="e.g. product on a wooden table, warm light">
+                            <label for="llmstxt-custom">Custom sections <span class="hint">· markdown, optional</span></label>
+                            <textarea id="llmstxt-custom" class="mono" rows="4" placeholder="## Additional info&#10;- [About](/pages/about)"></textarea>
                         </div>
-                        <button class="btn secondary" onclick="generateAiImage()">Generate &amp; attach image</button>
+                        <div class="btn-row">
+                            <button class="btn" onclick="saveLlmsTxtSettings()">Save Settings</button>
+                            <button class="btn secondary" onclick="regenerateLlmsTxt()">Regenerate</button>
+                            <button class="btn secondary" onclick="previewLlmsTxt()">Preview</button>
+                            <button class="btn secondary" onclick="setupLlmsTxtRedirects()">Create root /llms.txt redirects</button>
+                        </div>
+                        <div id="llmstxt-redirect-status" class="note" style="margin-top: 10px; white-space: pre-line;"></div>
                     </div>
-
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;" id="push-all-section">
-                        <button class="btn" onclick="pushAll()">Push All to Shopify</button>
-                        <label style="margin-left: 10px; font-size: 13px;"><input type="checkbox" id="product-overwrite"> Overwrite existing product content</label>
-                    </div>
-
-                    <p style="margin-top: 15px; color: #637381; font-size: 13px;">
-                        Note: to output the generated JSON-LD on your storefront, enable the
-                        <strong>Fyndable SEO Schema</strong> app embed in the Shopify theme editor
-                        (Online Store → Themes → Customize → App embeds).
-                    </p>
                 </div>
-                <div id="product-result" style="margin-top: 20px;"></div>
+                <div class="card flush" id="llmstxt-preview-card">
+                    <div class="card-bar">
+                        <div class="card-head"><span class="dashicons dashicons-visibility"></span><h3>Preview — /llms.txt</h3></div>
+                    </div>
+                    <div id="llmstxt-preview" class="preview fyn-scroll">Click "Preview" to load the generated llms.txt.</div>
+                </div>
             </div>
         </div>
 
         <!-- Bulk Optimize Tab -->
         <div id="bulk" class="tab-content">
-            <div class="card">
-                <h2>Bulk SEO Optimizer</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Optimize all products at once. Processing happens in the background.
-                </p>
-                <div class="form-group">
-                    <label for="bulk-action">Action</label>
-                    <select id="bulk-action">
-                        <option value="meta">Generate meta descriptions</option>
-                        <option value="titles">Optimize product titles</option>
-                        <option value="alt_text">Generate image alt text</option>
-                        <option value="descriptions">Rewrite product descriptions</option>
-                    </select>
+            <div class="page-head">
+                <div>
+                    <h1>Bulk Optimizer</h1>
+                    <p>Optimize all products at once. Processing happens in the background.</p>
                 </div>
-                <div class="form-group">
-                    <label for="bulk-limit">Max products to process</label>
-                    <input type="number" id="bulk-limit" value="100" min="1" max="500">
+            </div>
+            <div class="grid side-l">
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-yes-alt"></span><h3>New run</h3></div>
+                    <div class="form-group">
+                        <label for="bulk-action">Action</label>
+                        <select id="bulk-action">
+                            <option value="meta">Generate meta descriptions</option>
+                            <option value="titles">Optimize product titles</option>
+                            <option value="alt_text">Generate image alt text</option>
+                            <option value="descriptions">Rewrite product descriptions</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk-limit">Max products to process</label>
+                        <input type="number" id="bulk-limit" value="100" min="1" max="500">
+                    </div>
+                    <button class="btn block" style="margin-bottom: 10px;" onclick="startBulkOptimize()">Start Bulk Optimize</button>
+                    <div class="btn-row" style="flex-wrap: nowrap;">
+                        <button class="btn secondary sm" style="flex: 1;" onclick="checkBulkProgress()">Check Progress</button>
+                        <button class="btn danger sm" style="flex: 1;" onclick="cancelBulkOptimize()">Cancel</button>
+                    </div>
                 </div>
-                <button class="btn" onclick="startBulkOptimize()">Start Bulk Optimize</button>
-                <button class="btn secondary" onclick="checkBulkProgress()">Check Progress</button>
-                <button class="btn secondary" onclick="cancelBulkOptimize()">Cancel</button>
-                <div id="bulk-result" style="margin-top: 20px;"></div>
+                <div class="card flush">
+                    <div class="card-bar">
+                        <div class="card-head"><span class="dashicons dashicons-update"></span><h3>Run status</h3></div>
+                    </div>
+                    <div class="card-pad">
+                        <div id="bulk-result"><div class="empty"><span class="dashicons dashicons-clock"></span>Start a run or check progress for the selected action.</div></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Rank Tracker Tab -->
         <div id="ranktracker" class="tab-content">
-            <div class="card">
-                <h2>Rank Tracker</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Track keyword rankings in Google SERP for your product and collection pages.
-                </p>
-                <div id="rank-stats" class="stats" style="margin-bottom: 20px;">
-                    <div class="loading">Loading...</div>
+            <div class="page-head">
+                <div>
+                    <h1>Rank Tracker</h1>
+                    <p>Track keyword rankings in Google SERP for your product and collection pages.</p>
                 </div>
-                <button class="btn" onclick="checkRankings()">Check Rankings Now</button>
-                <div style="margin-top: 20px;">
-                    <h3 style="font-size: 16px; margin-bottom: 10px;">Add Keyword</h3>
+                <div class="page-actions">
+                    <button class="btn" onclick="checkRankings()"><span class="dashicons dashicons-update"></span>Check Rankings Now</button>
+                </div>
+            </div>
+            <div id="rank-stats" class="stats cols-5">
+                <div class="loading">Loading...</div>
+            </div>
+            <div class="card" style="padding: 18px 22px;">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="rt-keyword">Keyword</label>
                         <input type="text" id="rt-keyword" placeholder="e.g. blue sneakers">
                     </div>
                     <div class="form-group">
-                        <label for="rt-url">URL to track (optional)</label>
+                        <label for="rt-url">URL to track <span class="hint">· optional</span></label>
                         <input type="text" id="rt-url" placeholder="https://your-store.com/products/...">
                     </div>
-                    <button class="btn" onclick="addKeyword()">Add Keyword</button>
+                    <button class="btn input-h" onclick="addKeyword()">+ Add Keyword</button>
                 </div>
-                <div id="rank-keywords" style="margin-top: 20px;"></div>
+            </div>
+            <div class="card flush">
+                <div class="card-bar">
+                    <div class="card-head"><span class="dashicons dashicons-chart-line"></span><h3>Tracked keywords</h3></div>
+                </div>
+                <div id="rank-keywords"></div>
             </div>
         </div>
 
         <!-- Backlinks Tab -->
         <div id="backlinks" class="tab-content">
-            <div class="card">
-                <h2>Backlinks</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Analyze the backlink profile of your store (or any domain) via DataForSEO.
-                </p>
-                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
-                        <label for="bl-target">Domain or URL</label>
-                        <input type="text" id="bl-target" placeholder="your-store.com">
-                    </div>
-                    <button class="btn" onclick="loadBacklinks(false)">Summary</button>
-                    <button class="btn secondary" onclick="loadBacklinks(true)">Live backlinks</button>
+            <div class="page-head">
+                <div>
+                    <h1>Backlinks</h1>
+                    <p>Analyze the backlink profile of your store (or any domain) via DataForSEO.</p>
                 </div>
-                <div id="backlinks-result" style="margin-top: 20px;"></div>
+            </div>
+            <div class="card flush">
+                <div class="card-bar">
+                    <div class="card-head"><span class="dashicons dashicons-admin-links"></span><h3>Backlink profile</h3></div>
+                </div>
+                <div class="card-pad">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bl-target">Domain or URL</label>
+                            <input type="text" id="bl-target" placeholder="your-store.com">
+                        </div>
+                        <button class="btn input-h" onclick="loadBacklinks(false)">Summary</button>
+                        <button class="btn secondary input-h" onclick="loadBacklinks(true)">Live backlinks</button>
+                    </div>
+                </div>
+                <div id="backlinks-result" class="card-pad" style="padding-top: 0;"></div>
             </div>
         </div>
 
         <!-- AI Visibility Tab -->
         <div id="aivisibility" class="tab-content">
-            <div class="card">
-                <h2>AI / LLM Visibility</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Check whether AI assistants mention your brand, and inspect live LLM answers.
-                </p>
-                <h3 style="font-size: 15px; margin-bottom: 10px;">Live LLM answer</h3>
-                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
-                        <label for="llm-prompt">Question to ask</label>
-                        <input type="text" id="llm-prompt" placeholder="e.g. What are the best shops for outdoor gear?">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="llm-provider">Provider</label>
-                        <select id="llm-provider">
-                            <option value="chatgpt">ChatGPT</option>
-                            <option value="claude">Claude</option>
-                            <option value="gemini">Gemini</option>
-                            <option value="perplexity">Perplexity</option>
-                        </select>
-                    </div>
-                    <button class="btn" onclick="runLlmCheck()">Ask</button>
+            <div class="page-head">
+                <div>
+                    <h1>AI Visibility</h1>
+                    <p>Check whether AI assistants mention your brand, and inspect live LLM answers.</p>
                 </div>
-                <div id="llm-result" style="margin-top: 15px;"></div>
-                <h3 style="font-size: 15px; margin: 25px 0 10px;">AI mentions</h3>
-                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
+            </div>
+            <div class="grid side-r">
+                <div class="stack">
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-format-chat"></span><h2>Live LLM answer</h2></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="llm-prompt">Question to ask</label>
+                                <input type="text" id="llm-prompt" placeholder="e.g. What are the best shops for outdoor gear?">
+                            </div>
+                            <div class="form-group" style="flex: none; min-width: 150px;">
+                                <label for="llm-provider">Provider</label>
+                                <select id="llm-provider">
+                                    <option value="chatgpt">ChatGPT</option>
+                                    <option value="claude">Claude</option>
+                                    <option value="gemini">Gemini</option>
+                                    <option value="perplexity">Perplexity</option>
+                                </select>
+                            </div>
+                            <button class="btn input-h" onclick="runLlmCheck()">Ask</button>
+                        </div>
+                        <div id="llm-result" style="margin-top: 15px;"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><span class="dashicons dashicons-chart-area"></span><h3>Keyword data</h3></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="kw-data-input">Keywords <span class="hint">· comma separated</span></label>
+                                <input type="text" id="kw-data-input" placeholder="e.g. snowboard, splitboard, snow gear">
+                            </div>
+                            <button class="btn secondary input-h" onclick="loadKeywordData()">Get volumes</button>
+                        </div>
+                        <div id="kw-data-result" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-search"></span><h3>AI mentions</h3></div>
+                    <div class="form-group">
                         <label for="llm-mentions-target">Brand or domain</label>
                         <input type="text" id="llm-mentions-target" placeholder="your-store.com">
                     </div>
-                    <button class="btn secondary" onclick="loadLlmMentions()">Search mentions</button>
+                    <button class="btn secondary block" onclick="loadLlmMentions()">Search mentions</button>
+                    <div id="llm-mentions-result" style="margin-top: 15px;"></div>
                 </div>
-                <div id="llm-mentions-result" style="margin-top: 15px;"></div>
-                <h3 style="font-size: 15px; margin: 25px 0 10px;">Keyword data</h3>
-                <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 240px;">
-                        <label for="kw-data-input">Keywords (comma separated)</label>
-                        <input type="text" id="kw-data-input" placeholder="e.g. snowboard, splitboard, snow gear">
-                    </div>
-                    <button class="btn secondary" onclick="loadKeywordData()">Get volumes</button>
-                </div>
-                <div id="kw-data-result" style="margin-top: 15px;"></div>
             </div>
         </div>
 
         <!-- Blog Writer Tab -->
         <div id="blogwriter" class="tab-content">
-            <div class="card">
-                <h2>Blog Writer</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Generate an SEO-optimized article with AI, review it, and publish it to a blog.
-                </p>
-                <div class="form-group">
-                    <label for="bw-blog">Blog</label>
-                    <select id="bw-blog" style="min-width: 220px;"></select>
+            <div class="page-head">
+                <div>
+                    <h1>Blog Writer</h1>
+                    <p>Generate an SEO-optimized article with AI, review it, and publish it to a blog.</p>
                 </div>
-                <div class="form-group">
-                    <label for="bw-topic">Topic</label>
-                    <input type="text" id="bw-topic" placeholder="e.g. How to choose the right snowboard size">
-                </div>
-                <div class="form-group">
-                    <label for="bw-keywords">Keywords (optional, comma separated)</label>
-                    <input type="text" id="bw-keywords" placeholder="e.g. snowboard size chart, beginner snowboard">
-                </div>
-                <div class="form-group">
-                    <label for="bw-words">Word count</label>
-                    <input type="number" id="bw-words" value="800" min="200" max="2500" style="width: 110px;">
-                </div>
-                <div class="form-group">
-                    <label for="bw-lang">Language</label>
-                    <select id="bw-lang" style="min-width: 160px;">
-                        <option value="en">English</option>
-                        <option value="nl">Nederlands</option>
-                        <option value="de">Deutsch</option>
-                        <option value="fr">Français</option>
-                        <option value="es">Español</option>
-                        <option value="it">Italiano</option>
-                        <option value="pt">Português</option>
-                        <option value="da">Dansk</option>
-                        <option value="sv">Svenska</option>
-                        <option value="no">Norsk</option>
-                        <option value="fi">Suomi</option>
-                        <option value="pl">Polski</option>
-                    </select>
-                </div>
-                <button class="btn" onclick="generateArticle()">Generate draft</button>
-                <div id="bw-draft" style="display: none; margin-top: 20px;">
+            </div>
+            <div class="grid side-l">
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-edit-page"></span><h3>New article</h3></div>
                     <div class="form-group">
-                        <label for="bw-title">Title</label>
-                        <input type="text" id="bw-title">
+                        <label for="bw-blog">Blog</label>
+                        <select id="bw-blog"></select>
                     </div>
                     <div class="form-group">
-                        <label for="bw-body">Body (HTML)</label>
-                        <textarea id="bw-body" rows="14" style="font-family: monospace; font-size: 12px;"></textarea>
+                        <label for="bw-topic">Topic</label>
+                        <input type="text" id="bw-topic" placeholder="e.g. How to choose the right snowboard size">
                     </div>
                     <div class="form-group">
-                        <label for="bw-author">Author (optional — defaults to shop name)</label>
-                        <input type="text" id="bw-author" placeholder="e.g. Jane Doe">
+                        <label for="bw-keywords">Keywords <span class="hint">· optional, comma separated</span></label>
+                        <input type="text" id="bw-keywords" placeholder="e.g. snowboard size chart, beginner snowboard">
                     </div>
-                    <div class="form-group">
-                        <label for="bw-tags">Tags (optional, comma separated)</label>
-                        <input type="text" id="bw-tags">
+                    <div class="form-cols">
+                        <div class="form-group">
+                            <label for="bw-words">Word count</label>
+                            <input type="number" id="bw-words" value="800" min="200" max="2500">
+                        </div>
+                        <div class="form-group">
+                            <label for="bw-lang">Language</label>
+                            <select id="bw-lang">
+                                <option value="en">English</option>
+                                <option value="nl">Nederlands</option>
+                                <option value="de">Deutsch</option>
+                                <option value="fr">Français</option>
+                                <option value="es">Español</option>
+                                <option value="it">Italiano</option>
+                                <option value="pt">Português</option>
+                                <option value="da">Dansk</option>
+                                <option value="sv">Svenska</option>
+                                <option value="no">Norsk</option>
+                                <option value="fi">Suomi</option>
+                                <option value="pl">Polski</option>
+                            </select>
+                        </div>
                     </div>
-                    <button class="btn" onclick="createArticle(true)">Publish article</button>
-                    <button class="btn secondary" onclick="createArticle(false)">Save as draft</button>
+                    <button class="btn block" onclick="generateArticle()"><span class="dashicons dashicons-superhero-alt"></span>Generate draft</button>
                 </div>
-                <div id="bw-result" style="margin-top: 20px;"></div>
+                <div class="card flush">
+                    <div class="card-bar">
+                        <div class="card-head"><span class="dashicons dashicons-media-document"></span><h3>Draft</h3></div>
+                        <span class="badge amber">Not published</span>
+                    </div>
+                    <div class="card-pad">
+                        <div id="bw-result"></div>
+                        <div id="bw-draft" style="display: none;">
+                            <div class="form-group">
+                                <label for="bw-title">Title</label>
+                                <input type="text" id="bw-title">
+                            </div>
+                            <div class="form-group">
+                                <label for="bw-body">Body <span class="hint">· HTML</span></label>
+                                <textarea id="bw-body" class="mono" rows="14"></textarea>
+                            </div>
+                            <div class="form-cols">
+                                <div class="form-group">
+                                    <label for="bw-author">Author <span class="hint">· optional — defaults to shop name</span></label>
+                                    <input type="text" id="bw-author" placeholder="e.g. Jane Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bw-tags">Tags <span class="hint">· optional, comma separated</span></label>
+                                    <input type="text" id="bw-tags">
+                                </div>
+                            </div>
+                            <div class="btn-row" style="padding-top: 18px; border-top: 1px solid var(--divide);">
+                                <button class="btn" onclick="createArticle(true)"><span class="dashicons dashicons-upload"></span>Publish article</button>
+                                <button class="btn secondary" onclick="createArticle(false)">Save as draft</button>
+                            </div>
+                        </div>
+                        <div class="empty bw-empty"><span class="dashicons dashicons-media-document"></span>Your generated draft appears here.</div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Tools Tab -->
         <div id="tools" class="tab-content">
-            <div class="card">
-                <h2>IndexNow</h2>
-                <p style="margin-bottom: 15px; color: #637381; font-size: 14px;">
-                    Instantly notify Bing and other IndexNow search engines when URLs change.
-                    One-time setup creates a key file on your domain via a redirect to the app proxy.
-                </p>
-                <div id="indexnow-status" style="margin-bottom: 15px;"></div>
-                <button class="btn secondary" onclick="setupIndexNow()">Setup key redirect</button>
-                <div class="form-group" style="margin-top: 20px;">
-                    <label for="indexnow-urls">URLs to submit (one per line)</label>
-                    <textarea id="indexnow-urls" rows="5" placeholder="https://your-store.com/products/example"></textarea>
+            <div class="page-head">
+                <div>
+                    <h1>Tools</h1>
+                    <p>IndexNow and technical SEO helpers for your store.</p>
                 </div>
-                <button class="btn" onclick="submitIndexNow()">Submit URLs</button>
-                <div id="indexnow-result" style="margin-top: 15px;"></div>
+            </div>
+            <div class="grid halves">
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-update"></span><h2>IndexNow</h2></div>
+                    <p class="card-desc">
+                        Instantly notify Bing and other IndexNow search engines when URLs change.
+                        One-time setup creates a key file on your domain via a redirect to the app proxy.
+                    </p>
+                    <div class="form-group">
+                        <label for="indexnow-urls">URLs to submit <span class="hint">· one per line</span></label>
+                        <textarea id="indexnow-urls" rows="5" placeholder="https://your-store.com/products/example"></textarea>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn" onclick="submitIndexNow()">Submit URLs</button>
+                        <button class="btn secondary" onclick="setupIndexNow()">Setup key redirect</button>
+                    </div>
+                    <div id="indexnow-result" style="margin-top: 15px;"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-admin-tools"></span><h2>Technical status</h2></div>
+                    <div id="indexnow-status"><div class="loading">Loading...</div></div>
+                </div>
             </div>
         </div>
 
         <!-- License Tab -->
         <div id="license" class="tab-content">
-            <div class="card">
-                <h2>License</h2>
-                <div id="license-status" style="margin-bottom: 20px;"></div>
-                <div id="license-form">
-                    <div class="form-group">
-                        <label for="license-key">Fyndable License Key</label>
-                        <input type="text" id="license-key" placeholder="FYND-XXXX-XXXX-XXXX">
-                    </div>
-                    <button class="btn" onclick="activateLicense()">Activate License</button>
+            <div class="page-head">
+                <div>
+                    <h1>License</h1>
+                    <p>Manage your Fyndable license.</p>
                 </div>
-                <div id="license-active" style="display:none;">
-                    <button class="btn secondary" onclick="deactivateLicense()">Deactivate License</button>
+            </div>
+            <div class="grid side-r">
+                <div class="card" style="padding: 26px;">
+                    <div id="license-status"><div class="loading">Loading...</div></div>
+                    <div id="license-form">
+                        <div class="form-group">
+                            <label for="license-key">Fyndable License Key</label>
+                            <input type="text" id="license-key" placeholder="FYND-XXXX-XXXX-XXXX">
+                        </div>
+                        <button class="btn" onclick="activateLicense()">Activate License</button>
+                    </div>
+                    <div id="license-active" style="display:none;">
+                        <button class="btn danger" onclick="deactivateLicense()">Deactivate License</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><span class="dashicons dashicons-star-filled"></span><h3>Fyndable SEO modules</h3></div>
+                    <div class="feature">Content Optimizer</div>
+                    <div class="feature">Bulk optimization</div>
+                    <div class="feature">llms.txt generator</div>
+                    <div class="feature">Rank tracker</div>
+                    <div class="feature">Backlink analysis</div>
+                    <div class="feature">AI visibility checks</div>
+                    <div class="feature">Blog Writer</div>
+                    <div class="feature">IndexNow</div>
+                    <div class="feature">Schema &amp; FAQ markup</div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         const API_BASE = '/api';
         const shopDomain = @json($shopDomain);
         const apiKey = @json($apiKey);
+
+        // UI helpers (presentation only)
+        function toggleTheme() {
+            const dark = document.documentElement.classList.toggle('fyn-dark');
+            try { localStorage.setItem('fyn-theme', dark ? 'dark' : 'light'); } catch (e) {}
+        }
+
+        // Route through the real tab button so showTab() gets it as event.target.
+        function goTab(tabId) {
+            document.querySelector(`.tab[data-tab="${tabId}"]`).click();
+        }
+
+        function setContentType(type) {
+            document.querySelectorAll('#content-type-pills .pill').forEach(el => el.classList.toggle('active', el.dataset.type === type));
+            document.getElementById('content-type').value = type;
+            onContentTypeChange();
+        }
+
+        function statTile(label, value, icon, cls = '', sub = '') {
+            return `<div class="stat"><div class="label">${label}<span class="dashicons dashicons-${icon}"></span></div>`
+                + `<div class="value ${cls}">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+        }
+
+        function statusRow(icon, title, sub, badge) {
+            return `<div class="status-row"><div class="icon-chip well"><span class="dashicons dashicons-${icon}"></span></div>`
+                + `<div class="grow"><div class="t">${title}</div><div class="s">${sub}</div></div>${badge}</div>`;
+        }
+
+        function setLicensePill(tier, valid) {
+            document.getElementById('hdr-license-label').textContent = tier || 'free';
+            document.getElementById('hdr-license').classList.toggle('active', !!valid);
+        }
 
         // App Bridge v4 (loaded via cdn.shopify.com/shopifycloud/app-bridge.js)
         // automatically intercepts the global fetch() function and adds the
@@ -528,15 +955,24 @@
             const data = await api('/dashboard/overview');
             if (data.error) {
                 document.getElementById('overview-stats').innerHTML = `<div class="alert error">Error: ${data.error} — ${data.message || ''}</div>`;
+                document.getElementById('overview-status').innerHTML = '';
                 return;
             }
-            document.getElementById('overview-stats').innerHTML = `
-                <div class="stat"><div class="label">License Tier</div><div class="value purple">${data.license?.tier || 'free'}</div></div>
-                <div class="stat"><div class="label">Products</div><div class="value blue">${data.product_count ?? 0}</div></div>
-                <div class="stat"><div class="label">Tracked Keywords</div><div class="value">${data.tracked_keywords ?? 0}</div></div>
-                <div class="stat"><div class="label">Top 10 Rankings</div><div class="value green">${data.top_10_keywords ?? 0}</div></div>
-                <div class="stat"><div class="label">llms.txt</div><div class="value ${data.llms_txt_enabled ? 'green' : 'red'}">${data.llms_txt_enabled ? 'Enabled' : 'Disabled'}</div></div>
-            `;
+            const valid = !!data.license?.valid;
+            setLicensePill(data.license?.tier, valid);
+            document.getElementById('overview-stats').innerHTML =
+                statTile('License Tier', data.license?.tier || 'free', 'admin-network', 'purple', valid ? 'Active plan' : 'No active license')
+                + statTile('Products', data.product_count ?? 0, 'products', 'blue', 'in your store')
+                + statTile('Tracked Keywords', data.tracked_keywords ?? 0, 'search', '', 'in Rank Tracker')
+                + statTile('Top 10 Rankings', data.top_10_keywords ?? 0, 'awards', 'green', 'Google positions 1–10')
+                + statTile('llms.txt', data.llms_txt_enabled ? 'Enabled' : 'Disabled', 'media-code', data.llms_txt_enabled ? 'green' : 'red', data.llms_txt_full_enabled ? 'llms-full.txt enabled' : 'llms-full.txt disabled');
+            const on = (ok, yes, no) => `<span class="badge ${ok ? 'green' : 'gray'}">${ok ? yes : no}</span>`;
+            document.getElementById('overview-status').innerHTML =
+                statusRow('admin-network', 'License', `Tier: ${data.license?.tier || 'free'}`, on(valid, 'Active', 'Inactive'))
+                + statusRow('media-code', '/llms.txt', 'Markdown summary for AI crawlers', on(data.llms_txt_enabled, 'Enabled', 'Disabled'))
+                + statusRow('media-text', '/llms-full.txt', 'Full content for AI crawlers', on(data.llms_txt_full_enabled, 'Enabled', 'Disabled'))
+                + statusRow('lock', 'App permissions', data.missing_scopes?.length ? `Missing: ${data.missing_scopes.join(', ')}` : 'All required scopes granted',
+                    data.missing_scopes?.length ? '<span class="badge red">Action needed</span>' : '<span class="badge green">OK</span>');
             if (data.missing_scopes && data.missing_scopes.length) {
                 document.getElementById('overview-stats').insertAdjacentHTML('beforeend', `
                     <div class="alert error" style="grid-column: 1 / -1;">
@@ -904,10 +1340,15 @@
         async function checkBulkProgress() {
             const action = document.getElementById('bulk-action').value;
             const data = await api(`/bulk/progress?action=${action}`);
+            const bar = () => {
+                const pct = data.total ? Math.round(data.processed / data.total * 100) : 0;
+                return `<div class="progress-head"><span>${data.processed} of ${data.total} products</span><span>${pct}%</span></div>
+                    <div class="progress" style="margin-bottom: 14px;"><div style="width: ${pct}%;"></div></div>`;
+            };
             if (data.status === 'running') {
-                document.getElementById('bulk-result').innerHTML = `<div class="alert info">Progress: ${data.processed}/${data.total} (Succeeded: ${data.succeeded}, Failed: ${data.failed})</div>`;
+                document.getElementById('bulk-result').innerHTML = `${bar()}<div class="alert info">Progress: ${data.processed}/${data.total} (Succeeded: ${data.succeeded}, Failed: ${data.failed})</div>`;
             } else if (data.status === 'completed') {
-                document.getElementById('bulk-result').innerHTML = `<div class="alert success">Completed: ${data.processed}/${data.total} (Succeeded: ${data.succeeded}, Failed: ${data.failed})</div>`;
+                document.getElementById('bulk-result').innerHTML = `${bar()}<div class="alert success">Completed: ${data.processed}/${data.total} (Succeeded: ${data.succeeded}, Failed: ${data.failed})</div>`;
             } else if (data.status === 'cancelled') {
                 document.getElementById('bulk-result').innerHTML = `<div class="alert error">Cancelled</div>`;
             } else {
@@ -927,30 +1368,34 @@
         async function loadRankStats() {
             const data = await api('/rank-tracker/stats');
             if (data.error) return;
-            document.getElementById('rank-stats').innerHTML = `
-                <div class="stat"><div class="label">Total Keywords</div><div class="value">${data.total_keywords}</div></div>
-                <div class="stat"><div class="label">Top 3</div><div class="value green">${data.top_3}</div></div>
-                <div class="stat"><div class="label">Top 10</div><div class="value green">${data.top_10}</div></div>
-                <div class="stat"><div class="label">Top 100</div><div class="value blue">${data.top_100}</div></div>
-                <div class="stat"><div class="label">Not Ranked</div><div class="value">${data.not_ranked}</div></div>
-            `;
+            document.getElementById('rank-stats').innerHTML =
+                statTile('Total Keywords', data.total_keywords, 'search', '', 'tracked')
+                + statTile('Top 3', data.top_3, 'awards', 'green', 'positions 1–3')
+                + statTile('Top 10', data.top_10, 'star-filled', 'green', 'positions 1–10')
+                + statTile('Top 100', data.top_100, 'chart-line', 'blue', 'positions 1–100')
+                + statTile('Not Ranked', data.not_ranked, 'dismiss', '', 'outside top 100');
+        }
+
+        function posBadge(pos) {
+            if (!pos) return '<span class="badge gray">—</span>';
+            return `<span class="badge ${pos <= 3 ? 'green' : pos <= 10 ? 'blue' : 'amber'}">${pos}</span>`;
         }
 
         async function loadKeywords() {
             const data = await api('/rank-tracker/keywords');
             if (data.error || !data.keywords) return;
             const html = data.keywords.length === 0
-                ? '<p style="color:#637381;">No keywords tracked yet.</p>'
-                : `<table><thead><tr><th>Keyword</th><th>URL</th><th>Last Position</th><th>Best</th><th>Last Checked</th><th></th></tr></thead><tbody>
+                ? '<div class="empty"><span class="dashicons dashicons-chart-line"></span>No keywords tracked yet.</div>'
+                : `<div class="table-wrap fyn-scroll"><table style="min-width: 720px;"><thead><tr><th>Keyword</th><th>URL</th><th class="num">Last Position</th><th class="num">Best</th><th>Last Checked</th><th class="end">Action</th></tr></thead><tbody>
                 ${data.keywords.map(k => `<tr>
-                    <td>${k.keyword}</td>
-                    <td>${k.url ? k.url.substring(0, 40) + '...' : '—'}</td>
-                    <td>${k.last_position || '—'}</td>
-                    <td>${k.best_position || '—'}</td>
-                    <td>${k.last_checked_at ? new Date(k.last_checked_at).toLocaleDateString() : '—'}</td>
-                    <td><button class="btn secondary" onclick="deleteKeyword(${k.id})">Delete</button></td>
+                    <td class="kw">${k.keyword}</td>
+                    <td class="muted">${k.url ? k.url.substring(0, 40) + '...' : '—'}</td>
+                    <td class="num">${posBadge(k.last_position)}</td>
+                    <td class="num">${posBadge(k.best_position)}</td>
+                    <td class="muted">${k.last_checked_at ? new Date(k.last_checked_at).toLocaleDateString() : '—'}</td>
+                    <td class="end"><button class="icon-btn" title="Delete" aria-label="Delete keyword" onclick="deleteKeyword(${k.id})"><span class="dashicons dashicons-trash"></span></button></td>
                 </tr>`).join('')}
-                </tbody></table>`;
+                </tbody></table></div>`;
             document.getElementById('rank-keywords').innerHTML = html;
         }
 
@@ -987,9 +1432,14 @@
         async function loadLicenseStatus() {
             const data = await api('/license/status');
             if (data.error) return;
+            setLicensePill(data.tier, data.valid);
+            const head = (ok, title, sub) => `<div style="display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--divide);margin-bottom:20px;">
+                    <div class="icon-chip lg" style="background: var(${ok ? '--fyn-success-light' : '--fyn-danger-light'});"><span class="dashicons dashicons-${ok ? 'yes-alt' : 'warning'}" style="color: var(${ok ? '--fyn-success' : '--fyn-danger'});"></span></div>
+                    <div><div style="font-size:17px;font-weight:700;color:var(--text-h);">${title}</div><div class="muted">${sub}</div></div></div>`;
             const statusHtml = data.valid
-                ? `<div class="alert success">License active — Tier: <strong>${data.tier}</strong> (Key: ${data.license_key})</div>`
-                : `<div class="alert error">No active license. Enter your Fyndable license key below.</div>`;
+                ? head(true, 'License active', `Tier: <strong style="text-transform:capitalize;">${data.tier}</strong>`)
+                    + `<div class="field-label">Fyndable license key</div><div class="lic-key"><span style="flex:1;">${data.license_key}</span><span class="dashicons dashicons-admin-network" style="color:var(--fyn-purple);"></span></div>`
+                : head(false, 'No active license', 'Enter your Fyndable license key below.');
             document.getElementById('license-status').innerHTML = statusHtml;
             if (data.has_license) {
                 document.getElementById('license-form').style.display = 'none';
@@ -1083,13 +1533,13 @@
                 return;
             }
             if (!data.suggestions.length) {
-                box.innerHTML = '<p style="color:#637381;font-size:13px;">No linkable titles found in the body text.</p>';
+                box.innerHTML = '<p class="muted">No linkable titles found in the body text.</p>';
                 return;
             }
             box.innerHTML = data.suggestions.map((s, i) => `
-                <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
-                    <span style="flex:1;"><strong>${escHtml(s.anchor)}</strong> → ${escHtml(s.url)} <em>(${s.target_type})</em></span>
-                    <button class="btn secondary" style="padding:4px 10px;font-size:12px;" onclick="applyLink(${i})">Apply</button>
+                <div class="link-row">
+                    <span class="grow"><strong>${escHtml(s.anchor)}</strong> → ${escHtml(s.url)} <em>(${s.target_type})</em></span>
+                    <button class="btn secondary sm" onclick="applyLink(${i})">Apply</button>
                 </div>`).join('');
             window._linkSuggestions = data.suggestions;
         }
@@ -1141,7 +1591,7 @@
                 box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
                 return;
             }
-            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
         }
 
         // AI visibility
@@ -1159,7 +1609,7 @@
                 box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
                 return;
             }
-            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
         }
 
         async function loadLlmMentions() {
@@ -1174,7 +1624,7 @@
                 box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
                 return;
             }
-            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
         }
 
         async function loadKeywordData() {
@@ -1191,7 +1641,7 @@
                 box.innerHTML = `<div class="alert error">Error: ${data.error || ''}${data.message ? ' — ' + data.message : ''}</div>`;
                 return;
             }
-            box.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:400px;">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
+            box.innerHTML = `<pre class="code fyn-scroll">${escHtml(JSON.stringify(data.data ?? data, null, 2))}</pre>`;
         }
 
         // Blog writer
@@ -1263,10 +1713,10 @@
                 box.innerHTML = `<div class="alert error">Error: ${data.error}</div>`;
                 return;
             }
-            box.innerHTML = `<div style="font-size:13px;color:#45545f;">
-                Key: <code>${data.key}</code><br>
-                Key file: <code>${data.key_location}</code><br>
-                → redirects to <code>${data.proxy_path}</code></div>`;
+            box.innerHTML =
+                statusRow('admin-network', 'IndexNow key', `<code>${data.key}</code>`, '<span class="badge green">Generated</span>')
+                + statusRow('media-text', 'Key file', `<code>${data.key_location}</code>`, '')
+                + statusRow('admin-links', 'App proxy target', `→ redirects to <code>${data.proxy_path}</code>`, '');
         }
 
         async function setupIndexNow() {

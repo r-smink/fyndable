@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/colors.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/typography.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/assets/dashicons/css/dashicons.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/base.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Outfit',system-ui,sans-serif;background:#eef0f4}
+a{color:var(--fyn-purple);text-decoration:none}
+a:hover{color:var(--fyn-blue)}
+.fyn-root{
+  --page:#f1f0f5; --card:#ffffff; --card-border:#e7e6ee; --panel:#ffffff;
+  --text-h:#1a1430; --text-b:#413b52; --text-m:#746e82; --text-s:#a39dae;
+  --well:#f7f6fa; --well-border:#edecf2; --row-hover:#faf7fe; --divide:#efeef4;
+  --input-bg:#ffffff; --input-border:#d8d6e0; --sev-track:#e9e7f0;
+  --tabbar:#ffffff; --serp-bg:#f8f8fb; --serp-title:#1a0dab; --serp-url:#0f7a37;
+}
+.fyn-root.fyn-dark{
+  --page:#120c1c; --card:#1d1630; --card-border:rgba(255,255,255,.07); --panel:#19122a;
+  --text-h:#f4f1fa; --text-b:#cdc6dd; --text-m:#958da7; --text-s:#6f6784;
+  --well:#211a35; --well-border:rgba(255,255,255,.07); --row-hover:rgba(143,57,172,.12); --divide:rgba(255,255,255,.07);
+  --input-bg:#211a35; --input-border:rgba(255,255,255,.12); --sev-track:rgba(255,255,255,.1);
+  --tabbar:#19122a; --serp-bg:#17112a; --serp-title:#8ab4f8; --serp-url:#6ee7a8;
+}
+@keyframes fynFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fyn-scroll::-webkit-scrollbar{height:8px;width:8px}
+.fyn-scroll::-webkit-scrollbar-thumb{background:rgba(143,57,172,.35);border-radius:8px}
+.fyn-inp{width:100%;height:44px;padding:0 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:13.5px;outline:none;transition:border-color .2s ease}
+.fyn-inp:focus{border-color:var(--fyn-purple)}
+.fyn-inp::placeholder{color:var(--text-s)}
+.fyn-ta{width:100%;min-height:90px;padding:11px 14px;border-radius:9px;border:2px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:13.5px;line-height:1.5;outline:none;resize:vertical;transition:border-color .2s ease}
+.fyn-ta:focus{border-color:var(--fyn-purple)}
+</style>
+</helmet>
+<div class="fyn-root {{themeClass}}" style="min-height:100vh;background:var(--page);display:flex;flex-direction:column">
+
+  <!-- Shopify admin faux chrome hint + brand band -->
+  <header style="flex:none;background:linear-gradient(135deg,#2A1533 0%,#132A38 100%)">
+    <div style="display:flex;align-items:center;gap:16px;padding:0 26px;height:60px;max-width:1340px;margin:0 auto">
+      <img src="uploads/FYN-LOGO-DIA-LONG300ppi.png" alt="Fyndable Smart SEO" style="height:24px;width:auto;display:block" />
+      <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.05em;text-transform:uppercase;border-left:1px solid rgba(255,255,255,.2);padding-left:14px">Shopify-app</span>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:9px"><span class="dashicons dashicons-store" style="font-size:15px;width:15px;height:15px;color:rgba(255,255,255,.7)"></span><span style="font-size:12.5px;font-weight:600;color:#fff">northgear.myshopify.com</span></div>
+      <button type="button" onClick="{{toggleTheme}}" title="Wissel thema" style="display:flex;align-items:center;gap:5px;height:34px;padding:3px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);border-radius:999px;cursor:pointer"><span style="{{sunStyle}}">☀</span><span style="{{moonStyle}}">☾</span></button>
+      <span style="{{licPill}}"><span class="dashicons dashicons-yes-alt" style="font-size:14px;width:14px;height:14px"></span>{{licLabel}}</span>
+    </div>
+    <!-- tab bar -->
+    <div class="fyn-scroll" style="max-width:1340px;margin:0 auto;padding:0 18px;display:flex;gap:2px;overflow-x:auto">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="10"><button type="button" onClick="{{t.go}}" style="{{t.style}}"><span class="{{t.iconCls}}" style="font-size:15px;width:15px;height:15px"></span>{{t.label}}</button></sc-for>
+    </div>
+  </header>
+
+  <main class="fyn-scroll" style="flex:1;overflow-y:auto;padding:26px 26px 48px">
+    <div style="max-width:1340px;margin:0 auto;animation:fynFade .3s ease" key="{{tab}}">
+
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px">
+        <div>
+          <h1 style="margin:0;font-size:25px;font-weight:700;letter-spacing:-.02em;color:var(--text-h)">{{head.title}}</h1>
+          <p style="margin:6px 0 0;font-size:13.5px;color:var(--text-m);max-width:640px;line-height:1.5">{{head.desc}}</p>
+        </div>
+        <div style="display:flex;gap:10px"><sc-if value="{{head.action}}" hint-placeholder-val=""><button type="button" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)" style-hover="transform:translateY(-2px)"><span class="{{head.actionIcon}}" style="font-size:16px;width:16px;height:16px"></span>{{head.action}}</button></sc-if></div>
+      </div>
+
+      <!-- stat tiles -->
+      <sc-if value="{{hasStats}}" hint-placeholder-val="{{true}}">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4"><div style="position:relative;background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:18px 20px;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span></div><div style="font-size:28px;font-weight:700;color:{{s.valCol}};letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:8px;font-size:12px;color:var(--text-m)">{{s.sub}}</div></div></sc-for>
+      </div>
+      </sc-if>
+
+      <!-- DASHBOARD -->
+      <sc-if value="{{isDash}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:24px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-chart-bar" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">SEO-dekking van je winkel</h3></div>
+          <sc-for list="{{coverage}}" as="c" hint-placeholder-count="4"><div style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="font-weight:600;color:var(--text-b)">{{c.label}}</span><span style="font-weight:700;color:{{c.col}}">{{c.val}}</span></div><div style="height:9px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{c.pct}};background:{{c.bar}}"></div></div></div></sc-for>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-lightbulb" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Snelle acties</h3></div>
+          <sc-for list="{{quickActions}}" as="q" hint-placeholder-count="4"><button type="button" onClick="{{q.go}}" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 13px;margin-bottom:9px;border-radius:10px;border:2px solid var(--input-border);background:var(--card);cursor:pointer;text-align:left" style-hover="border-color:var(--fyn-purple);background:var(--well)"><div style="width:34px;height:34px;border-radius:9px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="{{q.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text-h)">{{q.label}}</div><div style="font-size:11.5px;color:var(--text-m)">{{q.sub}}</div></div><span class="dashicons dashicons-arrow-right-alt2" style="font-size:14px;width:14px;height:14px;color:var(--text-s)"></span></button></sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- CONTENT OPTIMIZER -->
+      <sc-if value="{{isContent}}" hint-placeholder-val="">
+      <div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <sc-for list="{{contentTypes}}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{c.go}}" style="{{c.style}}"><span class="{{c.iconCls}}" style="font-size:15px;width:15px;height:15px"></span>{{c.label}}<span style="{{c.countStyle}}">{{c.count}}</span></button></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:9px;height:44px;padding:0 16px;border-bottom:1px solid var(--divide);background:var(--well)"><span class="dashicons dashicons-search" style="font-size:15px;width:15px;height:15px;color:var(--text-s)"></span><input placeholder="Zoek producten…" style="flex:1;background:transparent;border:none;outline:none;color:var(--text-b);font-family:inherit;font-size:13px" /></div>
+            <sc-for list="{{products}}" as="p" hint-placeholder-count="6"><button type="button" onClick="{{p.go}}" style="{{p.rowStyle}}"><div style="width:44px;height:44px;border-radius:9px;background:linear-gradient(135deg,rgba(143,57,172,.15),rgba(55,159,211,.15));display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-{{p.icon}}" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span></div><div style="flex:1;min-width:0;text-align:left"><div style="font-size:13.5px;font-weight:600;color:var(--text-h);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{p.title}}</div><div style="font-size:11.5px;color:var(--text-s)">{{p.meta}}</div></div><span style="{{p.scoreStyle}}">{{p.score}}</span></button></sc-for>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px"><div style="width:48px;height:48px;border-radius:11px;background:linear-gradient(135deg,rgba(143,57,172,.15),rgba(55,159,211,.15));display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-products" style="font-size:22px;width:22px;height:22px;color:var(--fyn-purple)"></span></div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text-h)">Merino wollen trui — heren</div><div style="font-size:12px;color:var(--text-m)">Product · €129,00 · voorraad 42</div></div></div>
+            <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Meta-titel <span style="color:var(--text-s);font-weight:500">· 58/60</span></label>
+            <div class="fyn-inp" style="display:flex;align-items:center;margin-bottom:16px">Merino wollen trui voor heren — warm & ademend | NorthGear</div>
+            <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Meta-beschrijving <span style="color:var(--text-s);font-weight:500">· 152/160</span></label>
+            <div class="fyn-ta" style="min-height:auto;margin-bottom:16px">100% merinowol, temperatuurregulerend en geurwerend. Perfect voor outdoor en dagelijks gebruik. Gratis verzending vanaf €50 en 30 dagen retour.</div>
+            <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:9px">AI-acties</label>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:18px">
+              <sc-for list="{{contentActions}}" as="a" hint-placeholder-count="6"><button type="button" style="display:flex;align-items:center;gap:9px;padding:11px 12px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);cursor:pointer;text-align:left" style-hover="border-color:var(--fyn-purple);background:var(--well)"><span class="dashicons {{a.icon}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple);flex:none"></span><span style="font-size:12.5px;font-weight:600;color:var(--text-b)">{{a.label}}</span></button></sc-for>
+            </div>
+            <div style="display:flex;gap:10px"><button type="button" style="flex:1;height:42px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span class="dashicons dashicons-upload" style="font-size:16px;width:16px;height:16px"></span>Opslaan naar Shopify</button><button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Preview</button></div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- LLMS.TXT -->
+      <sc-if value="{{isLlms}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:24px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px"><span class="dashicons dashicons-media-code" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">llms.txt generator</h3></div>
+          <p style="margin:0 0 20px;font-size:13px;color:var(--text-m)">Serveert <code style="font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--well);padding:1px 6px;border-radius:5px">/llms.txt</code> en <code style="font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--well);padding:1px 6px;border-radius:5px">/llms-full.txt</code> zodat AI-assistenten je winkel begrijpen.</p>
+          <sc-for list="{{llmsToggles}}" as="t" hint-placeholder-count="2"><div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-radius:10px;background:var(--well);border:1px solid var(--well-border);margin-bottom:10px"><div><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{t.label}}</div><div style="font-size:11.5px;color:var(--text-m)">{{t.sub}}</div></div><div style="{{t.track}}"><div style="{{t.knob}}"></div></div></div></sc-for>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin:18px 0 10px">Opnemen in output</label>
+          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:18px"><sc-for list="{{llmsInclude}}" as="i" hint-placeholder-count="4"><span style="{{i.style}}"><span class="dashicons dashicons-yes" style="font-size:14px;width:14px;height:14px"></span>{{i.label}}</span></sc-for></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+            <div><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Max. producten</label><div class="fyn-inp" style="display:flex;align-items:center">100</div></div>
+            <div><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Max. tekens (full)</label><div class="fyn-inp" style="display:flex;align-items:center">50.000</div></div>
+          </div>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Site-omschrijving</label>
+          <input class="fyn-inp" placeholder="Standaard: winkelomschrijving" style="margin-bottom:18px" />
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Instellingen opslaan</button><button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Regenereer</button><button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Maak root-redirects</button></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--divide)"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-visibility" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14px;font-weight:700;color:var(--text-h)">Preview — /llms.txt</h3></div><span style="display:inline-block;padding:3px 10px;border-radius:999px;background:var(--fyn-success-light);color:#047857;font-size:11px;font-weight:700">Actief</span></div>
+          <pre style="margin:0;padding:18px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.6;color:var(--text-b);white-space:pre-wrap;background:var(--serp-bg)"># NorthGear
+&gt; Outdoor- en wandelkleding voor koud weer.
+
+## Producten
+- [Merino wollen trui](/products/merino-trui): 100% merinowol, temperatuurregulerend.
+- [Hardshell jas 3L](/products/hardshell-3l): Waterdicht, winddicht, ademend.
+- [Trekking sokken (3-pack)](/products/trekking-sokken): Naadloos, anti-blaren.
+
+## Collecties
+- [Winterjassen](/collections/winterjassen)
+- [Basislagen](/collections/basislagen)
+
+## Pagina's
+- [Over ons](/pages/over-ons)
+- [Verzending & retour](/pages/verzending)</pre>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- BULK OPTIMIZE -->
+      <sc-if value="{{isBulk}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Actie</label>
+          <div class="fyn-inp" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">Meta-titels & beschrijvingen<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Max. producten</label>
+          <input class="fyn-inp" value="100" style="margin-bottom:18px" />
+          <button type="button" style="width:100%;height:44px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px">Start bulk-optimalisatie</button>
+          <div style="display:flex;gap:9px"><button type="button" style="flex:1;height:38px;border-radius:8px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Voortgang</button><button type="button" style="flex:1;height:38px;border-radius:8px;border:2px solid var(--fyn-danger);background:transparent;color:var(--fyn-danger);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Annuleer</button></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);overflow:hidden">
+          <div style="padding:20px 22px;border-bottom:1px solid var(--divide)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:var(--text-h)">Lopende run — 64 van 100 producten</div><span style="font-size:12.5px;font-weight:600;color:var(--fyn-purple)">64%</span></div><div style="height:9px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:64%;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div></div>
+          <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Product</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Gewijzigd</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th></tr></thead>
+            <tbody><sc-for list="{{bulkRows}}" as="r" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)"><td style="padding:13px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.title}}</td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-m)">{{r.changed}}</td><td style="padding:13px 22px;text-align:right"><span style="{{r.statusStyle}}">{{r.status}}</span></td></tr></sc-for></tbody>
+          </table>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- RANK TRACKER -->
+      <sc-if value="{{isRank}}" hint-placeholder-val="">
+      <div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:18px 22px;margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:200px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Zoekwoord</label><input class="fyn-inp" placeholder="bijv. merino trui heren" /></div>
+          <div style="flex:1;min-width:200px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Doel-URL</label><input class="fyn-inp" placeholder="https://northgear.com/products/…" /></div>
+          <button type="button" style="height:44px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">+ Volg zoekwoord</button>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--divide)"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-chart-line" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Gevolgde zoekwoorden</h3></div><button type="button" style="height:34px;padding:0 14px;border-radius:8px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Controleer posities</button></div>
+          <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:760px"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Positie</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Wijziging</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Trend (7d)</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+            <tbody><sc-for list="{{rankRows}}" as="r" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.kw}}</td><td style="padding:13px 12px;text-align:center"><span style="{{r.posStyle}}">{{r.pos}}</span></td><td style="padding:13px 12px;text-align:center"><span style="{{r.chgStyle}}">{{r.chg}}</span></td><td style="padding:13px 12px"><svg viewBox="0 0 90 26" style="width:90px;height:24px"><polyline points="{{r.spark}}" fill="none" stroke="{{r.sparkCol}}" stroke-width="2"></polyline></svg></td><td style="padding:13px 22px;text-align:right"><span class="dashicons dashicons-trash" style="font-size:15px;width:15px;height:15px;color:var(--fyn-danger);cursor:pointer"></span></td></tr></sc-for></tbody>
+          </table></div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- BACKLINKS -->
+      <sc-if value="{{isBacklinks}}" hint-placeholder-val="">
+      <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--divide)"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-admin-links" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Verwijzende domeinen</h3></div><div style="display:flex;gap:9px"><button type="button" style="height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Samenvatting</button><button type="button" style="height:34px;padding:0 14px;border-radius:8px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Live backlinks</button></div></div>
+        <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:720px"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Domein</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">DR</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Backlinks</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Type</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Eerst gezien</th></tr></thead>
+          <tbody><sc-for list="{{backlinkRows}}" as="r" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px;font-size:13px;font-weight:600;color:var(--fyn-purple)">{{r.domain}}</td><td style="padding:13px 12px;text-align:center"><span style="display:inline-block;min-width:30px;padding:3px 8px;border-radius:7px;background:var(--well);border:1px solid var(--well-border);font-size:12.5px;font-weight:700;color:var(--text-h)">{{r.dr}}</span></td><td style="padding:13px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{r.count}}</td><td style="padding:13px 12px"><span style="{{r.typeStyle}}">{{r.type}}</span></td><td style="padding:13px 22px;text-align:right;font-size:12.5px;color:var(--text-m)">{{r.seen}}</td></tr></sc-for></tbody>
+        </table></div>
+      </div>
+      </sc-if>
+
+      <!-- AI / LLM VISIBILITY -->
+      <sc-if value="{{isLlm}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-format-chat" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Live LLM-antwoord</h3></div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"><input class="fyn-inp" style="flex:1;min-width:220px" placeholder="bijv. wat zijn de beste winkels voor outdoorkleding?" /><div class="fyn-inp" style="width:150px;display:flex;align-items:center;justify-content:space-between">ChatGPT<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div><button type="button" style="height:44px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Vraag</button></div>
+          <div style="padding:16px 18px;border-radius:11px;background:var(--well);border:1px solid var(--well-border);font-size:13.5px;line-height:1.6;color:var(--text-b)">Voor outdoorkleding in Nederland worden vaak <strong style="color:var(--fyn-purple)">NorthGear</strong>, Bever en AS Adventure genoemd. NorthGear valt op door merinowol-basislagen en een sterk retourbeleid…</div>
+          <div style="display:flex;align-items:center;gap:9px;margin-top:14px;padding:11px 15px;border-radius:9px;background:var(--fyn-success-light);border:1px solid rgba(16,185,129,.25)"><span class="dashicons dashicons-yes-alt" style="font-size:16px;width:16px;height:16px;color:#10b981"></span><span style="font-size:13px;font-weight:600;color:#047857">Je merk werd genoemd op positie 1 van 3.</span></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-search" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Merkvermeldingen</h3></div>
+          <input class="fyn-inp" placeholder="northgear.com" style="margin-bottom:12px" />
+          <button type="button" style="width:100%;height:40px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;margin-bottom:16px">Zoek vermeldingen</button>
+          <sc-for list="{{llmPlatforms}}" as="p" hint-placeholder-count="3"><div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="font-weight:600;color:var(--text-b)">{{p.name}}</span><span style="font-weight:700;color:var(--text-h)">{{p.pct}}</span></div><div style="height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{p.pct}};background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div></div></sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- BLOG WRITER -->
+      <sc-if value="{{isBlog}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-edit-page" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Nieuw artikel</h3></div>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Blog</label>
+          <div class="fyn-inp" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">Nieuws<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Onderwerp / zoekwoord</label>
+          <input class="fyn-inp" value="merinowol vs synthetische basislagen" style="margin-bottom:14px" />
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Toon</label>
+          <div class="fyn-inp" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">Informatief & deskundig<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div>
+          <button type="button" style="width:100%;height:44px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span class="dashicons dashicons-superhero-alt" style="font-size:16px;width:16px;height:16px"></span>Genereer artikel</button>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--divide)"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-media-document" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Concept</h3></div><span style="display:inline-block;padding:3px 10px;border-radius:999px;background:var(--fyn-warning-light);color:#92700a;font-size:11px;font-weight:700">Niet gepubliceerd</span></div>
+          <div style="padding:22px"><h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:var(--text-h);line-height:1.3">Merinowol vs. synthetische basislagen: wat kies je?</h2><div style="font-size:12px;color:var(--text-s);margin-bottom:16px">1.240 woorden · SEO-score 92 · leesniveau: toegankelijk</div>
+            <p style="margin:0 0 12px;font-size:13.5px;line-height:1.65;color:var(--text-b)">Als je serieus de outdoor in gaat, bepaalt je basislaag het verschil tussen een comfortabele dag en een koude, natte strijd tegen de elementen. De twee grote kampen: merinowol en synthetische vezels…</p>
+            <p style="margin:0 0 12px;font-size:13.5px;line-height:1.65;color:var(--text-b)">Merinowol reguleert temperatuur uitstekend en blijft geurvrij na dagen gebruik. Synthetisch droogt sneller en is voordeliger…</p>
+            <div style="display:flex;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--divide)"><button type="button" style="height:42px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px"><span class="dashicons dashicons-upload" style="font-size:16px;width:16px;height:16px"></span>Publiceer naar blog</button><button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Bewerk</button><button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Regenereer</button></div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- TOOLS / INDEXNOW -->
+      <sc-if value="{{isTools}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:24px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px"><span class="dashicons dashicons-update" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">IndexNow</h3></div>
+          <p style="margin:0 0 16px;font-size:13px;color:var(--text-m)">Meld Bing en andere IndexNow-zoekmachines direct bij URL-wijzigingen.</p>
+          <div style="display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:10px;background:var(--fyn-success-light);border:1px solid rgba(16,185,129,.25);margin-bottom:16px"><span class="dashicons dashicons-yes-alt" style="font-size:17px;width:17px;height:17px;color:#10b981"></span><div><div style="font-size:13px;font-weight:700;color:#047857">Sleutel geïnstalleerd</div><div style="font-size:11.5px;color:#047857;opacity:.8">indexnow-key.txt bereikbaar via app-proxy</div></div></div>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">URL's indienen (één per regel)</label>
+          <textarea class="fyn-ta" placeholder="https://northgear.com/products/merino-trui" style="margin-bottom:14px"></textarea>
+          <div style="display:flex;gap:10px"><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">URL's indienen</button><button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Sleutel-redirect instellen</button></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:24px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-admin-tools" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Technische status</h3></div>
+          <sc-for list="{{toolStatus}}" as="s" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--divide)"><div style="width:34px;height:34px;border-radius:9px;background:var(--well);border:1px solid var(--well-border);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons {{s.icon}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text-h)">{{s.label}}</div><div style="font-size:11.5px;color:var(--text-m)">{{s.sub}}</div></div><span style="{{s.badgeStyle}}">{{s.badge}}</span></div></sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- LICENSE -->
+      <sc-if value="{{isLicense}}" hint-placeholder-val="">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start">
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:26px">
+          <div style="display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--divide);margin-bottom:20px"><div style="width:46px;height:46px;border-radius:12px;background:var(--fyn-success-light);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-yes-alt" style="font-size:22px;width:22px;height:22px;color:#10b981"></span></div><div><div style="font-size:17px;font-weight:700;color:var(--text-h)">Licentie actief</div><div style="font-size:13px;color:var(--text-m)">Business-plan · verlengt 14 nov 2026</div></div></div>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--text-b);margin-bottom:7px">Fyndable licentiesleutel</label>
+          <div style="display:flex;align-items:center;gap:10px;height:46px;padding:0 15px;border-radius:9px;background:var(--well);border:1px solid var(--well-border);font-family:ui-monospace,Menlo,monospace;font-size:13.5px;letter-spacing:1px;color:var(--text-b);margin-bottom:20px"><span style="flex:1">FYND-A4F9-7K2P-XR81</span><span class="dashicons dashicons-admin-page" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple);cursor:pointer"></span></div>
+          <div style="display:flex;gap:10px"><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:2px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Opnieuw valideren</button><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:2px solid var(--fyn-danger);background:transparent;color:var(--fyn-danger);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Licentie deactiveren</button></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:0 1px 3px rgba(20,14,30,.06);padding:22px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-star-filled" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:14.5px;font-weight:700;color:var(--text-h)">Inbegrepen in Business</h3></div>
+          <sc-for list="{{licFeatures}}" as="f" hint-placeholder-count="7"><div style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text-b)"><span style="color:#10b981;font-weight:700">✓</span>{{f}}</div></sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { theme:'light', tab:'dashboard', ctype:'product' };
+
+  b(bg,fg){ return {display:'inline-block',padding:'3px 11px',borderRadius:'999px',background:bg,color:fg,fontSize:'11.5px',fontWeight:700}; }
+
+  heads(){
+    return {
+      dashboard:['Dashboard','Een overzicht van je SEO-status, winkeldekking en snelle acties.','Analyseer winkel','dashicons dashicons-update'],
+      content:['Content Optimizer','Genereer en optimaliseer meta, beschrijvingen, schema en FAQ voor producten, collecties, pagina\u2019s en artikelen.','',''],
+      llms:['llms.txt','Laat AI-assistenten je winkel begrijpen via een gestructureerd llms.txt-bestand.','',''],
+      bulk:['Bulk Optimizer','Optimaliseer al je producten in één keer — verwerking gebeurt op de achtergrond.','',''],
+      rank:['Rank Tracker','Volg dagelijkse Google-posities voor je belangrijkste zoekwoorden.','',''],
+      backlinks:['Backlinks','Bewaak je verwijzende domeinen en backlinkprofiel.','',''],
+      llm:['AI-zichtbaarheid','Controleer of AI-assistenten je merk noemen en inspecteer live LLM-antwoorden.','',''],
+      blog:['Blog Writer','Genereer een SEO-geoptimaliseerd artikel met AI en publiceer het naar een blog.','',''],
+      tools:['Tools','IndexNow en technische SEO-hulpmiddelen voor je winkel.','',''],
+      license:['Licentie','Beheer je Fyndable-licentie en bekijk wat je plan bevat.','',''],
+    };
+  }
+
+  renderVals(){
+    const { theme, tab, ctype } = this.state;
+    const H=this.heads(); const h=H[tab]||H.dashboard;
+    const G='linear-gradient(90deg,#8F39AC,#379FD3)';
+    const OK='#10b981', AM='#f59e0b', RD='#ef4444';
+
+    const tabDefs=[['dashboard','Dashboard','chart-bar'],['content','Content Optimizer','edit'],['llms','llms.txt','media-code'],['bulk','Bulk Optimizer','yes-alt'],['rank','Rank Tracker','chart-line'],['backlinks','Backlinks','admin-links'],['llm','AI-zichtbaarheid','visibility'],['blog','Blog Writer','edit-page'],['tools','Tools','admin-tools'],['license','Licentie','admin-network']];
+    const tabs=tabDefs.map(([id,label,icon])=>{
+      const active=id===tab;
+      return { label, iconCls:'dashicons dashicons-'+icon, go:()=>this.setState({tab:id}),
+        style:{display:'flex',alignItems:'center',gap:'7px',padding:'13px 15px',border:'none',background:'transparent',fontFamily:'Outfit,sans-serif',fontSize:'13px',fontWeight:600,whiteSpace:'nowrap',cursor:'pointer',color:active?'#fff':'rgba(255,255,255,.62)',borderBottom:active?'3px solid #fff':'3px solid transparent'} };
+    });
+
+    const tile=(label,value,sub,icon,valCol)=>({label,value,sub:sub||'',iconCls:'dashicons dashicons-'+icon,valCol:valCol||'var(--text-h)'});
+    let hasStats=false, stats=[];
+    if(tab==='dashboard'){ hasStats=true; stats=[ tile('Licentie','Business','Actief plan','admin-network','#8F39AC'), tile('Producten','248','in je winkel','products','#379FD3'), tile('Gevolgde zoekwoorden','18','3 in top-10','search'), tile('llms.txt','Actief','laatst 2u geleden','media-code','#10b981') ]; }
+    else if(tab==='rank'){ hasStats=true; stats=[ tile('Gevolgd','18','zoekwoorden','search'), tile('Top-10','3','posities','awards','#10b981'), tile('Gem. positie','14,2','+2,1 deze week','chart-line'), tile('Gestegen','7','deze week','arrow-up-alt','#10b981') ]; }
+    else if(tab==='backlinks'){ hasStats=true; stats=[ tile('Backlinks','486','+12 deze maand','admin-links'), tile('Verw. domeinen','94','+3','admin-site'), tile('Domain Rating','38','+2','chart-bar','#10b981'), tile('Verloren','4','deze maand','dismiss','#ef4444') ]; }
+    else if(tab==='bulk'){ hasStats=true; stats=[ tile('Producten','248','totaal','products'), tile('Geoptimaliseerd','184','74%','yes-alt','#10b981'), tile('Ontbreekt meta','42','te doen','warning','#f59e0b'), tile('Laatste run','Vandaag','64 verwerkt','update') ]; }
+
+    // dashboard
+    const coverage=[
+      {label:'Producten met meta-titel',val:'206/248 (83%)',pct:'83%',col:AM,bar:'linear-gradient(90deg,#f59e0b,#fbbf24)'},
+      {label:'Producten met meta-beschrijving',val:'198/248 (80%)',pct:'80%',col:AM,bar:'linear-gradient(90deg,#f59e0b,#fbbf24)'},
+      {label:'Afbeeldingen met alt-tekst',val:'612/640 (96%)',pct:'96%',col:OK,bar:G},
+      {label:'Producten met schema',val:'248/248 (100%)',pct:'100%',col:OK,bar:G},
+    ];
+    const quickActions=[
+      {label:'Bulk-optimalisatie starten',sub:'42 producten missen meta',iconCls:'dashicons dashicons-yes-alt',go:()=>this.setState({tab:'bulk'})},
+      {label:'llms.txt verversen',sub:'laatst 2 uur geleden',iconCls:'dashicons dashicons-media-code',go:()=>this.setState({tab:'llms'})},
+      {label:'Posities controleren',sub:'18 gevolgde zoekwoorden',iconCls:'dashicons dashicons-chart-line',go:()=>this.setState({tab:'rank'})},
+      {label:'Nieuw blogartikel',sub:'genereer met AI',iconCls:'dashicons dashicons-edit-page',go:()=>this.setState({tab:'blog'})},
+    ];
+
+    // content optimizer
+    const ctypeDefs=[['product','Producten','products',248],['collection','Collecties','category',16],['page','Pagina\u2019s','admin-page',9],['article','Artikelen','media-document',34]];
+    const contentTypes=ctypeDefs.map(([id,label,icon,count])=>{
+      const active=id===ctype;
+      return { label, count, iconCls:'dashicons dashicons-'+icon, go:()=>this.setState({ctype:id}),
+        style:{display:'flex',alignItems:'center',gap:'8px',padding:'9px 15px',borderRadius:'9px',border:active?'none':'2px solid var(--input-border)',background:active?'linear-gradient(135deg,#8F39AC,#379FD3)':'var(--card)',color:active?'#fff':'var(--text-b)',fontFamily:'Outfit,sans-serif',fontSize:'13px',fontWeight:600,cursor:'pointer'},
+        countStyle:{minWidth:'20px',height:'18px',padding:'0 6px',borderRadius:'999px',background:active?'rgba(255,255,255,.25)':'var(--sev-track)',color:active?'#fff':'var(--text-m)',fontSize:'10.5px',fontWeight:700,display:'inline-flex',alignItems:'center',justifyContent:'center'} };
+    });
+    const scoreBadge=(n)=> this.b(n>=80?'var(--fyn-success-light)':n>=50?'var(--fyn-warning-light)':'var(--fyn-danger-light)', n>=80?'#047857':n>=50?'#92700a':'#b91c1c');
+    const prodSeed=[
+      ['Merino wollen trui — heren','€129,00 · SKU MW-H-01','products',92,true],
+      ['Hardshell jas 3-laags','€249,00 · SKU HS-3L','products',78,false],
+      ['Trekking sokken (3-pack)','€34,95 · SKU TS-3P','products',45,false],
+      ['Donzen slaapzak -10°C','€189,00 · SKU DS-10','products',88,false],
+      ['Wandelstokken carbon','€79,00 · SKU WS-CB','products',64,false],
+      ['Thermosfles 1L','€29,95 · SKU TF-1L','products',71,false],
+    ];
+    const products=prodSeed.map((p,i)=>({ title:p[0], meta:p[1], icon:p[2], score:p[3], scoreStyle:scoreBadge(p[3]),
+      rowStyle:{display:'flex',alignItems:'center',gap:'12px',width:'100%',padding:'12px 16px',border:'none',borderBottom:'1px solid var(--divide)',background:p[4]?'var(--row-hover)':'transparent',cursor:'pointer'} }));
+    const contentActions=[
+      {icon:'dashicons-tag',label:'Meta genereren'},{icon:'dashicons-edit',label:'Beschrijving'},
+      {icon:'dashicons-media-code',label:'Schema markup'},{icon:'dashicons-editor-help',label:'FAQ-blok'},
+      {icon:'dashicons-format-image',label:'Alt-tekst'},{icon:'dashicons-admin-links',label:'Interne links'},
+    ];
+
+    // llms.txt
+    const tgl=(on)=>({track:{width:'44px',height:'24px',borderRadius:'999px',background:on?'var(--fyn-purple)':'var(--sev-track)',position:'relative',cursor:'pointer',flex:'none'},knob:{position:'absolute',top:'2px',[on?'right':'left']:'2px',width:'20px',height:'20px',borderRadius:'50%',background:'#fff'}});
+    const llmsToggles=[
+      {label:'/llms.txt inschakelen',sub:'Markdown-samenvatting van je winkel',...tgl(true)},
+      {label:'/llms-full.txt inschakelen',sub:'Volledige content voor AI-crawlers',...tgl(true)},
+    ];
+    const llmsInclude=['Producten','Collecties','Pagina\u2019s','Blogartikelen'].map(l=>({label:l,style:{display:'inline-flex',alignItems:'center',gap:'6px',padding:'6px 13px',borderRadius:'999px',background:'var(--fyn-purple-tint)',color:'#8F39AC',fontSize:'12px',fontWeight:600}}));
+
+    // bulk rows
+    const sOK=this.b('var(--fyn-success-light)','#047857'), sBusy=this.b('var(--fyn-info-light)','#1d4ed8'), sWait=this.b('var(--sev-track)','var(--text-m)');
+    const bulkRows=[
+      ['Merino wollen trui — heren','Meta + beschrijving','done'],['Hardshell jas 3-laags','Meta-titel','done'],
+      ['Trekking sokken (3-pack)','Meta + beschrijving','busy'],['Donzen slaapzak -10°C','—','wait'],['Wandelstokken carbon','—','wait'],
+    ].map(r=>({title:r[0],changed:r[1],status:r[2]==='done'?'Voltooid':r[2]==='busy'?'Bezig':'In wachtrij',statusStyle:r[2]==='done'?sOK:r[2]==='busy'?sBusy:sWait}));
+
+    // rank rows
+    const spark=(pts)=>{ const w=90,h=26,max=Math.max(...pts),min=Math.min(...pts),r=(max-min)||1; return pts.map((v,i)=>`${(i/(pts.length-1)*w).toFixed(0)},${(h-2-((v-min)/r)*(h-6)).toFixed(0)}`).join(' '); };
+    const posBadge=(n)=> this.b(n<=3?'var(--fyn-success-light)':n<=10?'var(--fyn-info-light)':'var(--fyn-warning-light)', n<=3?'#047857':n<=10?'#1d4ed8':'#92700a');
+    const rankSeed=[
+      ['merino trui heren',2,3,[8,7,6,5,4,3,2]],
+      ['outdoor basislaag',7,5,[4,5,5,6,6,7,7]],
+      ['hardshell jas kopen',12,14,[16,15,15,14,13,13,12]],
+      ['donzen slaapzak winter',4,4,[5,4,4,5,4,4,4]],
+      ['trekking sokken anti-blaren',9,12,[14,13,12,11,10,9,9]],
+      ['thermosfles rvs 1 liter',21,19,[18,18,19,20,20,21,21]],
+    ];
+    const rankRows=rankSeed.map(r=>{ const up=r[2]>r[1]; const same=r[2]===r[1]; const diff=Math.abs(r[2]-r[1]);
+      return { kw:r[0], pos:r[1], posStyle:posBadge(r[1]), chg:same?'—':(up?'▲ '+diff:'▼ '+diff), chgStyle:{fontSize:'12px',fontWeight:700,color:same?'var(--text-s)':(up?OK:RD)}, spark:spark(r[3]), sparkCol:up?OK:same?'#9a95a8':RD }; });
+
+    // backlinks
+    const dof=this.b('var(--fyn-success-light)','#047857'), nof=this.b('var(--sev-track)','var(--text-m)');
+    const backlinkRows=[
+      ['outdoorreviews.nl',68,'14','Dofollow','4 okt 2026'],['wandel-forum.be',52,'8','Dofollow','28 sep 2026'],
+      ['gearjunkie.com',81,'3','Nofollow','20 sep 2026'],['bergsport-blog.nl',47,'6','Dofollow','15 sep 2026'],
+      ['reddit.com',94,'2','Nofollow','9 sep 2026'],['natuurmonumenten.nl',72,'1','Dofollow','1 sep 2026'],
+    ].map(r=>({domain:r[0],dr:r[1],count:r[2],type:r[3],typeStyle:r[3]==='Dofollow'?dof:nof,seen:r[4]}));
+
+    // llm platforms
+    const llmPlatforms=[{name:'ChatGPT',pct:'62%'},{name:'Gemini',pct:'48%'},{name:'Perplexity',pct:'54%'}];
+
+    // tools
+    const tOK=this.b('var(--fyn-success-light)','#047857'), tWarn=this.b('var(--fyn-warning-light)','#92700a');
+    const toolStatus=[
+      {icon:'dashicons-update',label:'IndexNow',sub:'Sleutel geïnstalleerd',badge:'Actief',badgeStyle:tOK},
+      {icon:'dashicons-media-code',label:'llms.txt',sub:'Gegenereerd & geserveerd',badge:'Actief',badgeStyle:tOK},
+      {icon:'dashicons-networking',label:'Sitemap',sub:'Shopify-standaard',badge:'Actief',badgeStyle:tOK},
+      {icon:'dashicons-admin-links',label:'App-proxy',sub:'/apps/fyndable',badge:'Verbonden',badgeStyle:tOK},
+      {icon:'dashicons-google',label:'Search Console',sub:'Nog niet gekoppeld',badge:'Instellen',badgeStyle:tWarn},
+    ];
+
+    const licFeatures=['AI Content Optimizer','Bulk-optimalisatie','llms.txt generator','Rank tracker (50 zoekwoorden)','Backlink-monitoring','AI-zichtbaarheidschecks','Blog Writer','IndexNow','Schema & FAQ markup'];
+
+    const toggleOn={display:'flex',alignItems:'center',justifyContent:'center',width:'28px',height:'28px',borderRadius:'50%',fontSize:'14px'};
+    return {
+      themeClass: theme==='dark'?'fyn-dark':'',
+      toggleTheme:()=>this.setState({theme:theme==='dark'?'light':'dark'}),
+      sunStyle:{...toggleOn,background:theme==='light'?'rgba(255,255,255,.9)':'transparent',color:theme==='light'?'#8F39AC':'rgba(255,255,255,.6)'},
+      moonStyle:{...toggleOn,background:theme==='dark'?'rgba(255,255,255,.18)':'transparent',color:theme==='dark'?'#fff':'rgba(255,255,255,.6)'},
+      licPill:{display:'inline-flex',alignItems:'center',gap:'6px',padding:'6px 13px',borderRadius:'999px',background:'rgba(16,185,129,.2)',border:'1px solid rgba(16,185,129,.35)',color:'#6ee7a8',fontSize:'12px',fontWeight:700},
+      licLabel:'Business',
+      tabs, tab,
+      head:{title:h[0],desc:h[1],action:h[2],actionIcon:h[3]},
+      hasStats, stats,
+      isDash:tab==='dashboard', isContent:tab==='content', isLlms:tab==='llms', isBulk:tab==='bulk', isRank:tab==='rank', isBacklinks:tab==='backlinks', isLlm:tab==='llm', isBlog:tab==='blog', isTools:tab==='tools', isLicense:tab==='license',
+      coverage, quickActions, contentTypes, products, contentActions,
+      llmsToggles, llmsInclude, bulkRows, rankRows, backlinkRows, llmPlatforms, toolStatus, licFeatures,
+    };
+  }
+}
+</script>
+</body>
+</html>
