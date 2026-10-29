@@ -167,6 +167,7 @@ class AgencyPortal
         add_submenu_page('sseo-ai-agency', __('My Account', 'sseo-ai-saas'), __('My Account', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-account', [$this, 'renderAccountPage']);
         add_submenu_page('sseo-ai-agency', __('Invoices', 'sseo-ai-saas'), __('Invoices', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-invoices', [$this, 'renderInvoicesPage']);
         add_submenu_page('sseo-ai-agency', __('Extra Licenses', 'sseo-ai-saas'), __('Extra Licenses', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-add-licenses', [$this, 'renderAddLicensesPage']);
+        add_submenu_page('sseo-ai-agency', __('Download Plugin', 'sseo-ai-saas'), __('Download Plugin', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-download', [$this, 'renderDownloadPage']);
     }
 
     private function getAgencyContext(): array
@@ -333,6 +334,9 @@ class AgencyPortal
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-support')); ?>" class="button button-secondary button-hero">
                         <?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_download_wl_client&_wpnonce=' . wp_create_nonce('sseo_ai_agency_wl_download'))); ?>" class="button button-secondary button-hero">
+                        <?php esc_html_e('Download Client Plugin', 'sseo-ai-saas'); ?>
                     </a>
                 </div>
             </div>
@@ -1039,6 +1043,19 @@ class AgencyPortal
             }
         }
 
+        // Handle new ticket creation by agency
+        if (isset($_POST['agency_create_ticket']) && isset($_POST['agency_ticket_nonce'])) {
+            if (wp_verify_nonce($_POST['agency_ticket_nonce'], 'agency_create_ticket')) {
+                $ticketSubject = sanitize_text_field($_POST['ticket_subject'] ?? '');
+                $ticketMessage = sanitize_textarea_field($_POST['ticket_message'] ?? '');
+                $ticketPriority = sanitize_text_field($_POST['ticket_priority'] ?? 'middle');
+                if ($ticketSubject && $ticketMessage) {
+                    $this->supportTickets->insertTicket($agencyTenantId, $ticketSubject, $ticketMessage, $ticketPriority);
+                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Support ticket created.', 'sseo-ai-saas') . '</p></div>';
+                }
+            }
+        }
+
         $filters = [];
         if (!empty($_GET['status'])) {
             $filters['status'] = sanitize_text_field($_GET['status']);
@@ -1047,7 +1064,9 @@ class AgencyPortal
             $filters['priority'] = sanitize_text_field($_GET['priority']);
         }
 
-        $tickets = $this->supportTickets->getTicketsForTenants($subTenantIds, $filters);
+        // Include agency's own tickets + sub-tenant tickets
+        $allTenantIds = array_merge([$agencyTenantId], $subTenantIds);
+        $tickets = $this->supportTickets->getTicketsForTenants($allTenantIds, $filters);
         ?>
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
@@ -1056,8 +1075,37 @@ class AgencyPortal
                 __('Agency', 'sseo-ai-saas'),
                 __('Support', 'sseo-ai-saas'),
                 __('Support Tickets', 'sseo-ai-saas'),
-                __('Your tickets with Fyndable support.', 'sseo-ai-saas')
+                __('Create and manage support tickets for your agency and sub-tenants.', 'sseo-ai-saas')
             ); ?>
+
+            <!-- New Ticket Form -->
+            <div class="sseo-ai-card" style="margin-bottom:20px;">
+                <h3 style="margin-top:0;"><?php esc_html_e('Create Support Ticket', 'sseo-ai-saas'); ?></h3>
+                <form method="post">
+                    <?php wp_nonce_field('agency_create_ticket', 'agency_ticket_nonce'); ?>
+                    <table class="form-table" style="margin:0;">
+                        <tr>
+                            <th><label for="ticket_subject"><?php esc_html_e('Subject', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" id="ticket_subject" name="ticket_subject" class="regular-text" required style="width:100%;"></td>
+                        </tr>
+                        <tr>
+                            <th><label for="ticket_priority"><?php esc_html_e('Priority', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select id="ticket_priority" name="ticket_priority">
+                                    <option value="low"><?php esc_html_e('Low', 'sseo-ai-saas'); ?></option>
+                                    <option value="middle" selected><?php esc_html_e('Middle', 'sseo-ai-saas'); ?></option>
+                                    <option value="high"><?php esc_html_e('High', 'sseo-ai-saas'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="ticket_message"><?php esc_html_e('Message', 'sseo-ai-saas'); ?></label></th>
+                            <td><textarea id="ticket_message" name="ticket_message" rows="5" class="large-text" required></textarea></td>
+                        </tr>
+                    </table>
+                    <p><button type="submit" name="agency_create_ticket" class="button button-primary"><?php esc_html_e('Submit Ticket', 'sseo-ai-saas'); ?></button></p>
+                </form>
+            </div>
 
             <div class="sseo-ai-card">
                 <form method="get" style="margin-bottom: 15px;">
@@ -2435,5 +2483,59 @@ class AgencyPortal
         ]);
 
         $redirect(['success' => 'scheduled']);
+    }
+
+    /**
+     * Render the Download Plugin page — a simple page with download link for the latest client ZIP.
+     */
+    public function renderDownloadPage(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $wl = get_user_meta(get_current_user_id(), 'sseo_ai_agency_wl', true);
+        $hasWl = is_array($wl) && !empty($wl['company_name']);
+        $downloadUrl = admin_url('admin-post.php?action=sseo_ai_agency_download_wl_client&_wpnonce=' . wp_create_nonce('sseo_ai_agency_wl_download'));
+
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Download Plugin', 'sseo-ai-saas'),
+                __('Download Client Plugin', 'sseo-ai-saas'),
+                __('Download the latest version of the Fyndable client plugin for your customers.', 'sseo-ai-saas')
+            ); ?>
+
+            <div class="sseo-ai-card" style="max-width:600px;">
+                <?php if ($hasWl): ?>
+                    <h3 style="margin-top:0;"><?php echo esc_html(sprintf(__('White-Label: %s', 'sseo-ai-saas'), $wl['company_name'])); ?></h3>
+                    <p><?php esc_html_e('Download the client plugin with your white-label branding applied.', 'sseo-ai-saas'); ?></p>
+                    <a href="<?php echo esc_url($downloadUrl); ?>" class="button button-primary button-hero" style="margin-top:10px;">
+                        <span class="dashicons dashicons-download" style="margin-top:5px;"></span>
+                        <?php esc_html_e('Download White-Label Client (.zip)', 'sseo-ai-saas'); ?>
+                    </a>
+                    <p class="description" style="margin-top:12px;"><?php echo esc_html(sprintf(__('Version: %s', 'sseo-ai-saas'), defined('SSEO_AI_CLIENT_VERSION') ? SSEO_AI_CLIENT_VERSION : 'latest')); ?></p>
+                <?php else: ?>
+                    <h3 style="margin-top:0;"><?php esc_html_e('Fyndable Client Plugin', 'sseo-ai-saas'); ?></h3>
+                    <p><?php esc_html_e('Set up your White-Label branding first to download a branded version of the plugin.', 'sseo-ai-saas'); ?></p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-wl')); ?>" class="button button-primary">
+                        <?php esc_html_e('Set up White-Label', 'sseo-ai-saas'); ?>
+                    </a>
+                    <hr style="margin:20px 0;">
+                    <p><?php esc_html_e('Or download the standard (unbranded) Fyndable client plugin:', 'sseo-ai-saas'); ?></p>
+                    <a href="<?php echo esc_url($downloadUrl); ?>" class="button button-secondary button-hero" style="margin-top:10px;">
+                        <span class="dashicons dashicons-download" style="margin-top:5px;"></span>
+                        <?php esc_html_e('Download Fyndable Client (.zip)', 'sseo-ai-saas'); ?>
+                    </a>
+                <?php endif; ?>
+            </div>
+            </div>
+        </div>
+        <?php
     }
 }

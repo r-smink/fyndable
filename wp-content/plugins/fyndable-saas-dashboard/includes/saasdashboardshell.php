@@ -142,10 +142,11 @@ class SaaSDashboardShell
                     ],
                 ],
                 [
-                    'label' => __('Support', 'sseo-ai-saas'),
+                    'label' => __('Support & Tools', 'sseo-ai-saas'),
                     'items' => [
                         ['slug' => 'sseo-ai-agency-support', 'label' => __('Support', 'sseo-ai-saas'), 'icon' => 'dashicons-sos'],
                         ['slug' => 'sseo-ai-agency-wl', 'label' => __('White-Label', 'sseo-ai-saas'), 'icon' => 'dashicons-art'],
+                        ['slug' => 'sseo-ai-agency-download', 'label' => __('Download Plugin', 'sseo-ai-saas'), 'icon' => 'dashicons-download'],
                     ],
                 ],
             ];

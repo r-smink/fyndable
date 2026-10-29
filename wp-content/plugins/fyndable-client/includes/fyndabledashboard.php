@@ -148,6 +148,7 @@ class DashboardShell
             'items' => [
                 ['slug' => 'ai-seo-ai-tools', 'label' => __('AI Tools', 'ai-seo-client'), 'icon' => 'dashicons-superhero-alt'],
                 ['slug' => 'ai-seo-integrations', 'label' => __('Integrations', 'ai-seo-client'), 'icon' => 'dashicons-admin-plugins'],
+                ['slug' => 'ai-seo-settings', 'label' => __('Settings', 'ai-seo-client'), 'icon' => 'dashicons-admin-settings'],
                 ['slug' => 'ai-seo-support', 'label' => __('Support', 'ai-seo-client'), 'icon' => 'dashicons-sos', 'badge' => $unreadCount],
             ],
         ];

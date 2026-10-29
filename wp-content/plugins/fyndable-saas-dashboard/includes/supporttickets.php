@@ -673,7 +673,7 @@ class SupportTickets
         return $results ?: [];
     }
 
-    private function insertTicket(int $tenantId, string $subject, string $message, string $priority, array $screenshots): int
+    public function insertTicket(int $tenantId, string $subject, string $message, string $priority, array $screenshots = []): int
     {
         global $wpdb;
         $table = $wpdb->prefix . self::TICKETS_TABLE;
