@@ -26,19 +26,6 @@ class LicenseKeyGenerator
         'dev'          => 10000,
     ];
     
-    /**
-     * Default API call limits (per month) per tier
-     */
-    private const TIER_API_LIMITS = [
-        'starter'      => 1000,
-        'early_adopters' => 1000,
-        'trial'        => 5000,
-        'professional' => 10000,
-        'business'     => 50000,
-        'agency'       => 200000,
-        'dev'          => 1000000,
-    ];
-    
     private TenantRepository $tenants;
     
     public function __construct(TenantRepository $tenants)
@@ -59,7 +46,8 @@ class LicenseKeyGenerator
      */
     public static function getDefaultApiLimit(string $tier): int
     {
-        return self::TIER_API_LIMITS[$tier] ?? 1000;
+        // Single source of truth: the per-tier billing settings (WP-admin editable).
+        return (new SaaSSettings())->getApiLimitForTier($tier);
     }
     
     /**

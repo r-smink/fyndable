@@ -10,6 +10,8 @@ namespace SSEOAISaaS;
  */
 class Dashboard
 {
+    private const DB_VERSION_OPTION = 'sseo_ai_saas_db_version';
+
     private string $pluginFile;
     private TenantRepository $tenants;
     private LicenseKeyGenerator $licenseGenerator;
@@ -61,8 +63,6 @@ class Dashboard
     {
         // Initialize core services
         $this->tenants = new TenantRepository();
-        $this->tenants->maybeCreateTables();
-        $this->tenants->migrateExistingTables();
 
         // Force currency to EUR; all prices, invoices and cost caps are shown in Euro.
         if (get_option('sseo_ai_saas_currency') !== 'EUR') {
@@ -73,16 +73,13 @@ class Dashboard
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
         $this->saasSettings = new SaaSSettings();
-        add_action('phpmailer_init', [$this->saasSettings, 'configureMailer']);
-        add_filter('wp_mail_from', [$this->saasSettings, 'getSmtpFromEmail']);
-        add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
+        (new SmtpConfigurator())->register();
         $this->providerRouter = new ProviderRouter($this->saasSettings);
         $this->dataForSeoClient = new DataForSeoClient($this->saasSettings);
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter, $this->dataForSeoClient);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->emailTemplateRepository = new EmailTemplateRepository();
-        $this->emailTemplateRepository->maybeCreateTables();
         add_action('init', [$this->emailTemplateRepository, 'seedDefaults'], 20);
 
         $this->supportTickets = new SupportTickets($this->tenants, $this->emailTemplateRepository);
@@ -238,7 +235,6 @@ class Dashboard
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
         add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
         add_action('admin_init', [$this->emailTemplateAdmin, 'registerSettings']);
-        add_action('admin_init', [$this->geoScanRepository, 'maybeCreateTables']);
 
         // Register email automation
         $this->emailAutomation->register();
@@ -248,16 +244,31 @@ class Dashboard
 
         // Register activation hook for table creation
         register_activation_hook($this->pluginFile, [$this, 'activate']);
+
+        // Plugin updates via the update server don't fire the activation hook,
+        // so schema work runs once whenever the stored version differs.
+        if (get_option(self::DB_VERSION_OPTION) !== SSEO_AI_SAAS_VERSION) {
+            $this->upgradeSchema();
+        }
     }
 
     public function activate(): void
+    {
+        $this->upgradeSchema();
+        $this->emailTemplateRepository->seedDefaults();
+    }
+
+    /**
+     * Create/migrate all plugin tables and record the schema version.
+     */
+    private function upgradeSchema(): void
     {
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
         $this->geoScanRepository->maybeCreateTables();
         $this->emailTemplateRepository->maybeCreateTables();
-        $this->emailTemplateRepository->seedDefaults();
         $this->feedback->maybeCreateTable();
+        update_option(self::DB_VERSION_OPTION, SSEO_AI_SAAS_VERSION, true);
     }
 
     /**

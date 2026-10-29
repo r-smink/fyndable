@@ -382,8 +382,8 @@ class LicenseAPI
         // NOTE: image_api credentials are intentionally NOT returned by validateLicense.
         // This endpoint only checks validity — returning central API keys here would leak
         // the operator's OpenArt/OpenRouter keys to anyone who knows any valid license key.
-        // Clients receive image_api credentials only via activateLicense / getTenantStatus,
-        // which require a valid license_key + tenant_key pair.
+        // Clients receive image_api credentials only via activateLicense (valid license_key)
+        // and getTenantStatus (license_key + tenant_key pair, active tenant).
 
         return new \WP_REST_Response([
             'success' => true,
@@ -496,8 +496,10 @@ class LicenseAPI
     /**
      * Build the image_api credentials payload for a tenant.
      *
-     * SECURITY: Only call this from endpoints that have already verified a valid
-     * license_key + tenant_key pair (activateLicense, getTenantStatus). The central
+     * SECURITY: Only call this from endpoints that have already authenticated the
+     * caller: activateLicense (valid, non-revoked/expired license_key — the key is
+     * the bearer credential at activation time) and getTenantStatus (matching
+     * license_key + tenant_key pair, tenant active and not expired). The central
      * operator API keys (OpenArt/OpenRouter) are returned here so the client plugin
      * can call the image provider directly. Long-term this should be replaced by a
      * proxy architecture where the SaaS server makes the API call on behalf of the
@@ -678,6 +680,13 @@ class LicenseAPI
 
         $license = $this->licenseGenerator->getLicense($licenseKey);
 
+        // Only hand out image-API credentials to tenants that are actually entitled
+        // to use them — a suspended/revoked/expired tenant with a matching key pair
+        // must not keep receiving the operator key on every status sync.
+        $tenantEntitled = ($tenant['status'] ?? '') === 'active'
+            && (empty($tenant['expires_at']) || strtotime($tenant['expires_at']) >= time())
+            && ($license['status'] ?? '') !== 'revoked';
+
         return new \WP_REST_Response([
             'success' => true,
             'valid' => $limits['valid'],
@@ -695,7 +704,7 @@ class LicenseAPI
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'chatbot_config' => $this->getChatbotConfig(),
             'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
-            'image_api' => $this->getImageApiData(),
+            'image_api' => $tenantEntitled ? $this->getImageApiData() : [],
             'portal_url' => $this->getPortalUrl(),
         ], 200);
     }

@@ -872,16 +872,18 @@ class SignupCheckout
      */
     private function getTierLimits(string $tier): array
     {
-        $limits = [
-            'starter' => ['max_sites' => 1, 'rate_limit' => 60, 'api_calls_limit' => 500, 'geo_scan_limit' => 5],
-            'professional' => ['max_sites' => 1, 'rate_limit' => 120, 'api_calls_limit' => 2000, 'geo_scan_limit' => 35],
-            'business' => ['max_sites' => 3, 'rate_limit' => 300, 'api_calls_limit' => 5000, 'geo_scan_limit' => 90],
-            'agency' => ['max_sites' => 5, 'rate_limit' => 600, 'api_calls_limit' => 20000, 'geo_scan_limit' => 999999],
+        // Only max_sites is checkout-specific; rate/API limits come from the same
+        // sources as admin-generated licenses so every creation route matches.
+        $maxSites = ['starter' => 1, 'early_adopters' => 1, 'professional' => 1, 'business' => 3, 'agency' => 5];
+        if (!isset($maxSites[$tier])) {
+            $tier = 'starter';
+        }
+
+        return [
+            'max_sites' => $maxSites[$tier],
+            'rate_limit' => LicenseKeyGenerator::getDefaultRateLimit($tier),
+            'api_calls_limit' => LicenseKeyGenerator::getDefaultApiLimit($tier),
         ];
-
-        $limits['early_adopters'] = $limits['starter'];
-
-        return $limits[$tier] ?? $limits['starter'];
     }
 
     /**

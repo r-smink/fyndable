@@ -542,8 +542,8 @@ Provide a concise analysis (3-4 sentences):";
             }
             $visitedUrls[$url] = true;
 
-            // wp_safe_*: URLs come from the competitor's own sitemap — block private/loopback targets (SSRF).
-            $response = wp_safe_remote_get($url, ['timeout' => 20]);
+            // URLs are user/competitor-supplied — safeRemoteGet blocks non-public hosts (SSRF).
+            $response = $this->safeRemoteGet($url, ['timeout' => 20]);
             if (is_wp_error($response)) {
                 continue;
             }
@@ -630,7 +630,7 @@ Provide a brief analysis (2-3 sentences):";
                     $visited[$subLoc] = true;
                     $subSitemapCount++;
 
-                    $subResponse = wp_safe_remote_get($subLoc, ['timeout' => 20]);
+                    $subResponse = $this->safeRemoteGet($subLoc, ['timeout' => 20]);
                     if (is_wp_error($subResponse)) {
                         continue;
                     }
@@ -798,7 +798,7 @@ Respond in JSON format:
     private function getCompetitorPosts(string $domain, int $limit = 10): array
     {
         $sitemapUrl = "https://{$domain}/sitemap.xml";
-        $response = wp_safe_remote_get($sitemapUrl, ['timeout' => 15]);
+        $response = $this->safeRemoteGet($sitemapUrl, ['timeout' => 15]);
         
         if (is_wp_error($response)) {
             return [];
@@ -809,13 +809,92 @@ Respond in JSON format:
         
         return array_slice($posts, 0, $limit);
     }
-    
+
+    /**
+     * SSRF-safe GET for user/competitor-supplied URLs.
+     *
+     * wp_safe_remote_get() alone is not enough: core's wp_http_validate_url()
+     * doesn't block link-local 169.254.0.0/16 (cloud metadata) or IPv6, and
+     * redirect targets are only checked against that same weak list. So every
+     * hop is validated here and redirects are followed manually.
+     */
+    private function safeRemoteGet(string $url, array $args = []): array|\WP_Error
+    {
+        $args['redirection'] = 0;
+
+        for ($hop = 0; $hop <= 3; $hop++) {
+            if (!$this->isPublicUrl($url)) {
+                return new \WP_Error('unsafe_url', __('URL is not allowed', 'ai-seo-client'));
+            }
+
+            $response = wp_safe_remote_get($url, $args);
+            if (is_wp_error($response)) {
+                return $response;
+            }
+
+            $code = (int) wp_remote_retrieve_response_code($response);
+            $location = wp_remote_retrieve_header($response, 'location');
+            if ($code < 300 || $code >= 400 || empty($location)) {
+                return $response;
+            }
+
+            $url = \WP_Http::make_absolute_url(is_array($location) ? end($location) : $location, $url);
+        }
+
+        return new \WP_Error('too_many_redirects', __('Too many redirects', 'ai-seo-client'));
+    }
+
+    /**
+     * True when the URL is http(s) and every resolved IP of its host is public.
+     */
+    private function isPublicUrl(string $url): bool
+    {
+        $parts = wp_parse_url($url);
+        $scheme = strtolower($parts['scheme'] ?? '');
+        $host = strtolower(trim($parts['host'] ?? '', '[]'));
+        if (!in_array($scheme, ['http', 'https'], true) || $host === '' || $host === 'localhost') {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            $ips = [$host];
+        } else {
+            $ips = [];
+            foreach (@dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $record) {
+                if (!empty($record['ip'])) {
+                    $ips[] = $record['ip'];
+                } elseif (!empty($record['ipv6'])) {
+                    $ips[] = $record['ipv6'];
+                }
+            }
+            if (!$ips) {
+                $ip = gethostbyname($host);
+                if ($ip !== $host) {
+                    $ips[] = $ip;
+                }
+            }
+        }
+
+        if (!$ips) {
+            return false;
+        }
+        foreach ($ips as $ip) {
+            // NO_RES_RANGE covers 0/8, 127/8, 169.254/16, ::1, fe80::/10; NO_PRIV covers 10/8, 172.16/12, 192.168/16, fc00::/7.
+            // 100.64/10 (CGNAT) is not covered by either flag.
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+                || (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && (ip2long($ip) & 0xFFC00000) === (ip2long('100.64.0.0') & 0xFFC00000))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Scrape post content
      */
     private function scrapePostContent(string $url): string
     {
-        $response = wp_safe_remote_get($url, [
+        $response = $this->safeRemoteGet($url, [
             'timeout' => 20,
             'user-agent' => 'Mozilla/5.0 (compatible; SSEOBot/1.0)',
         ]);
