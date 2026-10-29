@@ -16,14 +16,16 @@ class ContentWriter
     private ?ContentBrief $contentBrief;
     private ?PromptTemplateLibrary $templates;
     private ?AIImageGenerator $imageGenerator;
+    private ?BackgroundTasks $backgroundTasks;
 
-    public function __construct(LlmClient $llm, Settings $settings, ?ContentBrief $contentBrief = null, ?PromptTemplateLibrary $templates = null, ?AIImageGenerator $imageGenerator = null)
+    public function __construct(LlmClient $llm, Settings $settings, ?ContentBrief $contentBrief = null, ?PromptTemplateLibrary $templates = null, ?AIImageGenerator $imageGenerator = null, ?BackgroundTasks $backgroundTasks = null)
     {
         $this->llm = $llm;
         $this->settings = $settings;
         $this->contentBrief = $contentBrief;
         $this->templates = $templates;
         $this->imageGenerator = $imageGenerator;
+        $this->backgroundTasks = $backgroundTasks;
     }
 
     public function register(): void
@@ -750,7 +752,7 @@ Requirements:
             return new \WP_Error('no_keyword', __('Keyword is required', 'ai-seo-client'));
         }
 
-        return $this->writeArticle($keyword, [
+        $options = [
             'title' => sanitize_text_field($request->get_param('title') ?? ''),
             'tone' => sanitize_text_field($request->get_param('tone') ?? ''),
             'word_count' => (int)($request->get_param('word_count') ?: 1500),
@@ -759,7 +761,18 @@ Requirements:
             'template_id' => sanitize_text_field($request->get_param('template_id') ?? ''),
             'create_draft' => (bool)$request->get_param('create_draft'),
             'include_faq' => $request->get_param('include_faq') === null ? null : (bool)$request->get_param('include_faq'),
-        ]);
+        ];
+
+        if ($this->backgroundTasks) {
+            return $this->backgroundTasks->wrap(
+                'write_article',
+                sprintf(__('Article: %s', 'ai-seo-client'), $keyword),
+                ['keyword' => $keyword],
+                fn() => $this->writeArticle($keyword, $options)
+            );
+        }
+
+        return $this->writeArticle($keyword, $options);
     }
 
     /**
@@ -774,18 +787,31 @@ Requirements:
             return new \WP_Error('missing_params', __('Keyword and heading are required', 'ai-seo-client'));
         }
 
-        $content = $this->writeSection($keyword, $heading, [
+        $options = [
             'tone' => sanitize_text_field($request->get_param('tone') ?? ''),
             'word_count' => (int)($request->get_param('word_count') ?: 300),
             'context' => $request->get_param('context') ?? '',
             'template_id' => sanitize_text_field($request->get_param('template_id') ?? ''),
-        ]);
+        ];
 
-        if (is_wp_error($content)) {
-            return $content;
+        $doWork = function () use ($keyword, $heading, $options) {
+            $content = $this->writeSection($keyword, $heading, $options);
+            if (is_wp_error($content)) {
+                return $content;
+            }
+            return ['content' => $content, 'heading' => $heading];
+        };
+
+        if ($this->backgroundTasks) {
+            return $this->backgroundTasks->wrap(
+                'write_section',
+                sprintf(__('Section: %s', 'ai-seo-client'), $heading),
+                ['keyword' => $keyword, 'heading' => $heading],
+                $doWork
+            );
         }
 
-        return ['content' => $content, 'heading' => $heading];
+        return $doWork();
     }
 
     /**

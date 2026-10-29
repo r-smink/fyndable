@@ -14,11 +14,13 @@ class BulkActions
 {
     private Settings $settings;
     private LlmClient $llm;
+    private ?BackgroundTasks $backgroundTasks;
 
-    public function __construct(Settings $settings, LlmClient $llm)
+    public function __construct(Settings $settings, LlmClient $llm, ?BackgroundTasks $backgroundTasks = null)
     {
         $this->settings = $settings;
         $this->llm = $llm;
+        $this->backgroundTasks = $backgroundTasks;
     }
 
     public function register(): void
@@ -167,6 +169,15 @@ class BulkActions
 
         if (!$post) {
             return new \WP_Error('not_found', __('Post not found', 'ai-seo-client'));
+        }
+
+        if ($this->backgroundTasks) {
+            return $this->backgroundTasks->wrap(
+                'generate_meta',
+                sprintf(__('Meta: %s', 'ai-seo-client'), $post->post_title),
+                ['post_id' => $postId, 'fields' => $fields],
+                fn() => $this->generateMetaForPost($post, $fields)
+            );
         }
 
         return $this->generateMetaForPost($post, $fields);

@@ -106,6 +106,7 @@ class Client
     private ?PostAutoCleaner $postAutoCleaner = null;
     private ?MobileApp $mobileApp = null;
     private ?FeedbackPage $feedbackPage = null;
+    public ?BackgroundTasks $backgroundTasks = null;
 
     public function init(): void
     {
@@ -114,6 +115,8 @@ class Client
         $this->dashboardAPI = new DashboardAPI($this->settings);
         $this->healthLogger = new HealthLogger(new AlertNotifier());
         $this->llmClient = new LlmClient($this->settings, $this->healthLogger, $this->dashboardAPI);
+        $this->backgroundTasks = new BackgroundTasks();
+        $this->backgroundTasks->register();
         $this->supportTickets = new Supportickets($this->settings, $this->dashboardAPI);
         $this->feedbackPage = new FeedbackPage($this->settings, $this->dashboardAPI);
 
@@ -420,7 +423,7 @@ class Client
         $this->simpleContentGenerator->register();
 
         // Editor Assistant (Gutenberg sidebar) - available to all tiers
-        $this->editorAssistant = new EditorAssistant($this->llmClient);
+        $this->editorAssistant = new EditorAssistant($this->llmClient, $this->backgroundTasks);
         $this->editorAssistant->register();
 
         // Social Sharing - available to all tiers
@@ -559,13 +562,13 @@ class Client
             $this->promptTemplateLibrary = new PromptTemplateLibrary($this->settings, $this->licenseValidator);
             $this->promptTemplateLibrary->register();
 
-            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary, $this->aiImageGenerator);
+            $this->contentWriter = new ContentWriter($this->llmClient, $this->settings, $this->contentBrief, $this->promptTemplateLibrary, $this->aiImageGenerator, $this->backgroundTasks);
             $this->contentWriter->register();
             
             $this->aiRepurposer = new AIRepurposer($this->settings, $this->llmClient);
             $this->aiRepurposer->register();
             
-            $this->bulkActions = new BulkActions($this->settings, $this->llmClient);
+            $this->bulkActions = new BulkActions($this->settings, $this->llmClient, $this->backgroundTasks);
             $this->bulkActions->register();
             
             $snapshots = new SnapshotRepository();
