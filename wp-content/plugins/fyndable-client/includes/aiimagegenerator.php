@@ -13,6 +13,28 @@ namespace SSEOAIClient;
  */
 class AIImageGenerator
 {
+    private const REF_TYPE_LABELS = [
+        'logo' => 'Logo / brand identity',
+        'person' => 'Person / team member',
+        'environment' => 'Building / environment / location',
+        'product' => 'Product',
+        'style' => 'Brand style / mood / color palette',
+    ];
+
+    // How much the AI may change a reference (mirrors FynnAI's EDIT_POLICIES).
+    private const REF_POLICY_RULES = [
+        'locked' => 'is a PROTECTED brand asset. When it appears, reproduce it EXACTLY as in the reference: identical shape, '
+            . 'proportions, colors, facial features, outfit, logo and every detail. Do NOT redesign, restyle, simplify '
+            . 'or reinterpret it. Only its placement, size and the surrounding scene may change.',
+        'minimal' => 'is a brand asset that must stay clearly recognizable: keep its design, colors, proportions and key '
+            . 'details. Only pose, angle, expression and lighting may vary slightly to fit the scene.',
+        'free' => 'is loose inspiration; you may reinterpret it freely.',
+    ];
+
+    // Most image providers cap reference images; protected/limited ones go first.
+    private const MAX_INPUT_REFERENCES = 6;
+    private const MAX_REFERENCE_BYTES = 4 * 1024 * 1024;
+
     private Settings $settings;
     private LLMClient $llm;
     
@@ -409,7 +431,7 @@ class AIImageGenerator
         }
 
         // Generate image using AI (DALL-E, Midjourney, Stable Diffusion, etc.)
-        $imageUrl = $this->generateImageFromPrompt($prompt);
+        $imageUrl = $this->generateImageFromPrompt($prompt, true);
 
         if (!$imageUrl) {
             return null;
@@ -438,7 +460,7 @@ class AIImageGenerator
         
         // Generate Open Graph image (1200x630)
         $ogPrompt = $this->generateImagePrompt($post, $style, '1200x630', $context, $wordCount);
-        $ogUrl = $this->generateImageFromPrompt($ogPrompt);
+        $ogUrl = $this->generateImageFromPrompt($ogPrompt, true);
         
         if ($ogUrl) {
             $ogAttachment = $this->downloadAndAttachImage($ogUrl, $postId, $post->post_title . ' - OG Image');
@@ -450,7 +472,7 @@ class AIImageGenerator
         
         // Generate Twitter Card image (1200x600)
         $twitterPrompt = $this->generateImagePrompt($post, $style, '1200x600', $context, $wordCount);
-        $twitterUrl = $this->generateImageFromPrompt($twitterPrompt);
+        $twitterUrl = $this->generateImageFromPrompt($twitterPrompt, true);
         
         if ($twitterUrl) {
             $twitterAttachment = $this->downloadAndAttachImage($twitterUrl, $postId, $post->post_title . ' - Twitter Card');
@@ -469,8 +491,11 @@ class AIImageGenerator
      */
     private function generateImagePrompt(\WP_Post $post, string $style, string $size = '1024x1024', string $context = '', int $wordCount = 100): string
     {
-        // Build brand reference description from photo portfolio
-        $brandReferenceDesc = $this->getBrandReferenceDescription();
+        // Build brand reference instructions from the photo portfolio: either vision
+        // descriptions, or a numbered list of the images that are sent along.
+        $brandReferenceDesc = $this->getBrandRefMode() === 'images'
+            ? $this->getBrandReferenceImageList()
+            : $this->getBrandReferenceDescription();
 
         // Custom prompt instructions configured on the settings page apply to all AI prompts
         $customInstructions = trim((string) get_option('sseo_ai_prompt_settings', ''));
@@ -491,7 +516,7 @@ Article summary: {$excerpt}
 {$contextSection}Target prompt length: approximately {$wordCount} words.
 {$brandReferenceDesc}{$customSection}
 
-Describe a concrete scene, objects, environment and composition tied directly to the article subject. Prefer subject matter, tools, interfaces, locations or visual metaphors over generic stock photography. Do not depict a woman, man, portrait, model, team or other person unless people are essential to the article subject. Do not introduce cats, pets or unrelated decorative characters. Do not request readable text, captions, logos or watermarks in the image. If a person reference exists in the brand portfolio, use it only when a person is genuinely required by the article. Return only the final image prompt.";
+Describe a concrete scene, objects, environment and composition tied directly to the article subject. Prefer subject matter, tools, interfaces, locations or visual metaphors over generic stock photography. Do not depict a woman, man, portrait, model, team or other person unless people are essential to the article subject. Do not introduce cats, pets or unrelated decorative characters. Do not request readable text, captions, logos or watermarks in the image, except a brand logo from the portfolio, which must then follow its reference rules. If a person reference exists in the brand portfolio, use it only when a person is genuinely required by the article. Return only the final image prompt.";
 
         $imagePrompt = $this->llm->generateText($aiPrompt, [
             'max_tokens' => max(150, (int)($wordCount * 2)),
@@ -538,29 +563,39 @@ Describe a concrete scene, objects, environment and composition tied directly to
             return $cached;
         }
 
-        $typeLabels = [
-            'logo' => 'Logo / brand identity',
-            'person' => 'Person / team member',
-            'environment' => 'Building / environment / location',
-            'product' => 'Product',
-            'style' => 'Brand style / mood / color palette',
-        ];
+        $typeLabels = self::REF_TYPE_LABELS;
+        $policyRules = self::REF_POLICY_RULES;
 
         $descriptions = [];
+        $hasProtected = false;
         foreach ($portfolio as $ref) {
             $url = $ref['url'] ?? '';
             $type = $ref['type'] ?? 'style';
+            $policy = isset($policyRules[$ref['policy'] ?? '']) ? $ref['policy'] : 'free';
             if (empty($url)) {
                 continue;
             }
 
             $label = $typeLabels[$type] ?? 'Reference image';
-            $visionPrompt = "Describe this image concisely for use as a brand style reference in AI image generation. "
-                . "Focus on: colors, visual style, mood, composition, key visual elements. "
-                . "This image is categorized as: {$label}. "
-                . "Provide a 1-2 sentence description.";
+            if ($policy === 'free') {
+                $visionPrompt = "Describe this image concisely for use as a brand style reference in AI image generation. "
+                    . "Focus on: colors, visual style, mood, composition, key visual elements. "
+                    . "This image is categorized as: {$label}. "
+                    . "Provide a 1-2 sentence description.";
+                $maxTokens = 100;
+            } else {
+                // Protected/limited assets are only passed on as text, so the description must be
+                // precise enough for the image model to recreate the asset.
+                $visionPrompt = "Describe this image precisely so an AI image model can recreate it faithfully. "
+                    . "This image is categorized as: {$label}. "
+                    . "Cover exact shapes and proportions, colors (with approximate hex codes), materials, "
+                    . "distinctive details and, for people, face, hair, build and clothing. "
+                    . "Do not describe the background unless it is the subject. Use 3-5 sentences.";
+                $maxTokens = 250;
+                $hasProtected = true;
+            }
 
-            $result = $this->llm->callWithImage($visionPrompt, $url, null, 100, 'image_alt_text');
+            $result = $this->llm->callWithImage($visionPrompt, $url, null, $maxTokens, 'image_alt_text');
 
             if (is_wp_error($result)) {
                 error_log('Fyndable Image: Vision call failed for portfolio reference ' . $url . ' - ' . $result->get_error_message());
@@ -568,7 +603,8 @@ Describe a concrete scene, objects, environment and composition tied directly to
             }
 
             if (!empty($result['text'])) {
-                $descriptions[] = "{$label}: " . trim($result['text']);
+                $n = count($descriptions) + 1;
+                $descriptions[] = "Reference {$n} ({$label}) {$policyRules[$policy]}\n  Description: " . trim($result['text']);
             }
         }
 
@@ -579,17 +615,154 @@ Describe a concrete scene, objects, environment and composition tied directly to
         $brandDesc = "\nBRAND VISUAL REFERENCES (incorporate these in the generated image):\n"
             . implode("\n", $descriptions)
             . "\nEnsure the generated image aligns with these brand visual references where appropriate.\n";
+        if ($hasProtected) {
+            $brandDesc .= "Copy the descriptions of protected and limited references into the final prompt verbatim "
+                . "when they are used, so the image model receives every detail.\n";
+        }
 
         set_transient($cacheKey, $brandDesc, WEEK_IN_SECONDS);
 
         return $brandDesc;
     }
+
+    /**
+     * How portfolio references reach the image model: 'describe' (vision text
+     * descriptions in the prompt) or 'images' (the images themselves).
+     */
+    private function getBrandRefMode(): string
+    {
+        return get_option('sseo_ai_client_brand_ref_mode', 'describe') === 'images' ? 'images' : 'describe';
+    }
+
+    /**
+     * Portfolio references for 'images' mode, in the order they are sent:
+     * protected first, then limited, then free; capped and with SVGs skipped
+     * (image models don't accept them as input).
+     *
+     * @return array<int, array{url:string, attachment_id:int, type:string, policy:string}>
+     */
+    private function getOrderedPortfolio(): array
+    {
+        $portfolio = get_option('sseo_ai_client_photo_portfolio', []);
+        if (empty($portfolio) || !is_array($portfolio)) {
+            return [];
+        }
+
+        $rank = ['locked' => 0, 'minimal' => 1, 'free' => 2];
+        $refs = [];
+        foreach ($portfolio as $ref) {
+            $url = $ref['url'] ?? '';
+            if ($url === '' || preg_match('/\.svgz?(\?|$)/i', $url)) {
+                continue;
+            }
+            $policy = $ref['policy'] ?? 'free';
+            $refs[] = [
+                'url' => $url,
+                'attachment_id' => (int) ($ref['attachment_id'] ?? 0),
+                'type' => isset(self::REF_TYPE_LABELS[$ref['type'] ?? '']) ? $ref['type'] : 'style',
+                'policy' => isset($rank[$policy]) ? $policy : 'free',
+            ];
+        }
+        usort($refs, fn($a, $b) => $rank[$a['policy']] <=> $rank[$b['policy']]);
+
+        return array_slice($refs, 0, self::MAX_INPUT_REFERENCES);
+    }
+
+    /**
+     * One rule line per reference image, numbered in send order.
+     */
+    private function getBrandReferenceRules(array $refs): string
+    {
+        $rules = [];
+        foreach ($refs as $i => $ref) {
+            $rules[] = 'Reference image ' . ($i + 1) . ' (' . self::REF_TYPE_LABELS[$ref['type']] . ') '
+                . self::REF_POLICY_RULES[$ref['policy']];
+        }
+        return implode("\n", $rules);
+    }
+
+    /**
+     * Prompt-writer section for 'images' mode: tells the LLM which reference
+     * images will accompany the prompt, without spending vision calls.
+     */
+    private function getBrandReferenceImageList(): string
+    {
+        $refs = $this->getOrderedPortfolio();
+        if (!$refs) {
+            return '';
+        }
+
+        return "\nBRAND REFERENCE IMAGES (these images are sent to the image model together with your prompt):\n"
+            . $this->getBrandReferenceRules($refs)
+            . "\nWhen a reference fits the scene, refer to it as \"reference image N\" instead of describing it.\n";
+    }
+
+    /**
+     * Build OpenRouter input_references (base64 data URLs, so local/staging
+     * sites work too) plus the matching rule text for the final prompt.
+     *
+     * @return array{inputs: array, rules: string}|null
+     */
+    private function getBrandReferenceInputs(): ?array
+    {
+        $inputs = [];
+        $sent = [];
+        foreach ($this->getOrderedPortfolio() as $ref) {
+            $dataUrl = $this->referenceToDataUrl($ref);
+            if ($dataUrl === null) {
+                continue;
+            }
+            $inputs[] = ['type' => 'image_url', 'image_url' => ['url' => $dataUrl]];
+            $sent[] = $ref;
+        }
+
+        if (!$inputs) {
+            return null;
+        }
+
+        return ['inputs' => $inputs, 'rules' => $this->getBrandReferenceRules($sent)];
+    }
+
+    /**
+     * Read a portfolio image from disk (preferring the 'large' size) as a data
+     * URL. Falls back to the public URL when the file isn't available locally.
+     */
+    private function referenceToDataUrl(array $ref): ?string
+    {
+        $file = $ref['attachment_id'] ? get_attached_file($ref['attachment_id']) : '';
+        if ($file) {
+            $meta = wp_get_attachment_metadata($ref['attachment_id']);
+            if (!empty($meta['sizes']['large']['file'])) {
+                $large = trailingslashit(dirname($file)) . $meta['sizes']['large']['file'];
+                if (is_readable($large)) {
+                    $file = $large;
+                }
+            }
+        }
+
+        if ($file && is_readable($file) && filesize($file) <= self::MAX_REFERENCE_BYTES) {
+            $mime = wp_check_filetype($file)['type'] ?? '';
+            if (in_array($mime, ['image/png', 'image/jpeg', 'image/webp', 'image/gif'], true)) {
+                $bytes = file_get_contents($file);
+                if ($bytes !== false) {
+                    return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+                }
+            }
+        }
+
+        return wp_http_validate_url($ref['url']) ? $ref['url'] : null;
+    }
     
     /**
      * Generate image from prompt using AI
      */
-    public function generateImageFromPrompt(string $prompt): ?string
+    public function generateImageFromPrompt(string $prompt, bool $withBrandReferences = false): ?string
     {
+        // In 'images' mode the portfolio images themselves are sent along (OpenRouter only).
+        $brandRefs = ($withBrandReferences && $this->getBrandRefMode() === 'images')
+            ? $this->getBrandReferenceInputs()
+            : null;
+
         // Get image API credentials from SaaS dashboard (stored during license activation)
         $imageApi = get_option('sseo_ai_client_image_api', []);
         $primaryProvider = $this->resolveImageProvider($imageApi['provider'] ?? '', $imageApi['key'] ?? '', $imageApi['model'] ?? 'dall-e-3');
@@ -625,7 +798,12 @@ Describe a concrete scene, objects, environment and composition tied directly to
                     $result = $this->generateWithOpenAI($prompt, $apiKey, $model);
                     break;
                 case 'openrouter':
-                    $result = $this->generateWithOpenRouter($prompt, $apiKey, $model);
+                    $result = $this->generateWithOpenRouter($prompt, $apiKey, $model, $brandRefs);
+                    if (empty($result) && $brandRefs) {
+                        // Not every model accepts reference images — retry once without them.
+                        error_log('Fyndable Image: OpenRouter model ' . $model . ' failed with reference images, retrying without');
+                        $result = $this->generateWithOpenRouter($prompt, $apiKey, $model);
+                    }
                     break;
                 case 'stability':
                     $result = $this->generateWithStabilityAI($prompt, $apiKey, $model);
@@ -805,9 +983,13 @@ Describe a concrete scene, objects, environment and composition tied directly to
     /**
      * Generate image with OpenRouter (unified Image API)
      */
-    private function generateWithOpenRouter(string $prompt, string $apiKey, string $model): ?string
+    private function generateWithOpenRouter(string $prompt, string $apiKey, string $model, ?array $brandRefs = null): ?string
     {
         [$model, $quality] = $this->resolveOpenRouterImageModel($model);
+
+        if ($brandRefs) {
+            $prompt .= "\n\n" . $brandRefs['rules'];
+        }
 
         $body = [
             'model'   => $model,
@@ -815,6 +997,10 @@ Describe a concrete scene, objects, environment and composition tied directly to
             'n'       => 1,
             'size'    => $this->openRouterSizeForModel($model),
         ];
+
+        if ($brandRefs) {
+            $body['input_references'] = $brandRefs['inputs'];
+        }
 
         if (!empty($quality) && $quality !== 'auto') {
             $body['quality'] = $quality;

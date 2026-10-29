@@ -8361,3 +8361,30 @@ msgstr "Ankertekst:"
 msgid "Switch theme"
 msgstr "Thema wisselen"
 
+
+msgid "Free — inspiration only"
+msgstr "Vrij — alleen inspiratie"
+
+msgid "Limited — keep recognizable"
+msgstr "Beperkt — herkenbaar houden"
+
+msgid "Protected — reproduce exactly"
+msgstr "Beschermd — exact overnemen"
+
+msgid "What is this image?"
+msgstr "Wat is deze afbeelding?"
+
+msgid "How much may the AI change this image?"
+msgstr "Hoeveel mag de AI deze afbeelding aanpassen?"
+
+msgid "Protected: shape, colors and details must stay identical — only placement and size may change. Limited: must stay recognizable; only pose, angle or lighting may vary. Free: loose inspiration."
+msgstr "Beschermd: vorm, kleuren en details blijven identiek — alleen plaatsing en grootte mogen veranderen. Beperkt: blijft herkenbaar; alleen houding, hoek of belichting mag variëren. Vrij: losse inspiratie."
+
+msgid "How references are used"
+msgstr "Hoe referenties worden gebruikt"
+
+msgid "Text description — the AI describes each image and adds that to the prompt. Works with every image model."
+msgstr "Tekstbeschrijving — de AI beschrijft elke afbeelding en voegt dat toe aan de prompt. Werkt met elk beeldmodel."
+
+msgid "Send images to the model — most faithful for protected logos and persons. Requires an OpenRouter image model that accepts reference images (e.g. Gemini or GPT Image); otherwise the image is generated without references."
+msgstr "Afbeeldingen meesturen naar het model — meest getrouw voor beschermde logo's en personen. Vereist een OpenRouter-beeldmodel dat referentieafbeeldingen accepteert (bijv. Gemini of GPT Image); anders wordt de afbeelding zonder referenties gegenereerd."

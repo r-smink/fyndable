@@ -2536,30 +2536,64 @@ class Client
                             <?php
                             $photoPortfolio = get_option('sseo_ai_client_photo_portfolio', []);
                             if (!is_array($photoPortfolio)) { $photoPortfolio = []; }
+                            $refTypes = [
+                                'logo' => __('Logo', 'ai-seo-client'),
+                                'person' => __('Person', 'ai-seo-client'),
+                                'environment' => __('Environment/Building', 'ai-seo-client'),
+                                'product' => __('Product', 'ai-seo-client'),
+                                'style' => __('Brand Style/Mood', 'ai-seo-client'),
+                            ];
+                            $refPolicies = [
+                                'free' => __('Free — inspiration only', 'ai-seo-client'),
+                                'minimal' => __('Limited — keep recognizable', 'ai-seo-client'),
+                                'locked' => __('Protected — reproduce exactly', 'ai-seo-client'),
+                            ];
+                            // One renderer for saved items and the JS <template> (idx = '__IDX__').
+                            $renderRefItem = function ($idx, array $ref) use ($refTypes, $refPolicies) {
+                                $name = 'photo_portfolio[' . $idx . ']';
+                                ?>
+                                <div class="photo-portfolio-item" style="position:relative;border:1px solid var(--card-border);border-radius:9px;padding:8px;text-align:center;">
+                                    <img src="<?php echo esc_url($ref['url'] ?? ''); ?>" class="photo-ref-img" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">
+                                    <select name="<?php echo esc_attr($name); ?>[type]" title="<?php esc_attr_e('What is this image?', 'ai-seo-client'); ?>" style="width:100%;font-size:11px;margin-bottom:3px;">
+                                        <?php foreach ($refTypes as $value => $label): ?>
+                                            <option value="<?php echo esc_attr($value); ?>" <?php selected($ref['type'] ?? 'logo', $value); ?>><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <select name="<?php echo esc_attr($name); ?>[policy]" title="<?php esc_attr_e('How much may the AI change this image?', 'ai-seo-client'); ?>" style="width:100%;font-size:11px;margin-bottom:3px;">
+                                        <?php foreach ($refPolicies as $value => $label): ?>
+                                            <option value="<?php echo esc_attr($value); ?>" <?php selected($ref['policy'] ?? 'free', $value); ?>><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="fyn-btn fyn-btn-outline photo-ref-remove" style="color:var(--fyn-danger);border-color:var(--fyn-danger);width:100%;font-size:11px;padding:4px 8px;">&times; <?php esc_html_e('Remove', 'ai-seo-client'); ?></button>
+                                    <input type="hidden" class="photo-ref-attachment" name="<?php echo esc_attr($name); ?>[attachment_id]" value="<?php echo esc_attr($ref['attachment_id'] ?? 0); ?>">
+                                    <input type="hidden" class="photo-ref-url" name="<?php echo esc_attr($name); ?>[url]" value="<?php echo esc_attr($ref['url'] ?? ''); ?>">
+                                </div>
+                                <?php
+                            };
                             ?>
 
                             <div class="fyn-settings-field">
                                 <label><?php esc_html_e('Reference Images', 'ai-seo-client'); ?></label>
-                                <div id="photo-portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:10px;">
-                                    <?php foreach ($photoPortfolio as $idx => $ref): ?>
-                                        <div class="photo-portfolio-item" data-idx="<?php echo esc_attr($idx); ?>" style="position:relative;border:1px solid var(--card-border);border-radius:9px;padding:8px;text-align:center;">
-                                            <img src="<?php echo esc_url($ref['url'] ?? ''); ?>" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">
-                                            <select class="photo-ref-type" data-idx="<?php echo esc_attr($idx); ?>" style="width:100%;font-size:11px;margin-bottom:3px;">
-                                                <option value="logo" <?php selected($ref['type'] ?? '', 'logo'); ?>><?php esc_html_e('Logo', 'ai-seo-client'); ?></option>
-                                                <option value="person" <?php selected($ref['type'] ?? '', 'person'); ?>><?php esc_html_e('Person', 'ai-seo-client'); ?></option>
-                                                <option value="environment" <?php selected($ref['type'] ?? '', 'environment'); ?>><?php esc_html_e('Environment/Building', 'ai-seo-client'); ?></option>
-                                                <option value="product" <?php selected($ref['type'] ?? '', 'product'); ?>><?php esc_html_e('Product', 'ai-seo-client'); ?></option>
-                                                <option value="style" <?php selected($ref['type'] ?? '', 'style'); ?>><?php esc_html_e('Brand Style/Mood', 'ai-seo-client'); ?></option>
-                                            </select>
-                                            <button type="button" class="fyn-btn fyn-btn-outline photo-ref-remove" data-idx="<?php echo esc_attr($idx); ?>" style="color:var(--fyn-danger);border-color:var(--fyn-danger);width:100%;font-size:11px;padding:4px 8px;">&times; <?php esc_html_e('Remove', 'ai-seo-client'); ?></button>
-                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][attachment_id]" value="<?php echo esc_attr($ref['attachment_id'] ?? 0); ?>">
-                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][url]" value="<?php echo esc_attr($ref['url'] ?? ''); ?>">
-                                            <input type="hidden" name="photo_portfolio[<?php echo esc_attr($idx); ?>][type]" class="photo-ref-type-hidden" value="<?php echo esc_attr($ref['type'] ?? 'logo'); ?>">
-                                        </div>
-                                    <?php endforeach; ?>
+                                <div id="photo-portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:10px;">
+                                    <?php foreach (array_values($photoPortfolio) as $idx => $ref) { $renderRefItem($idx, $ref); } ?>
                                 </div>
+                                <template id="photo-portfolio-template"><?php $renderRefItem('__IDX__', []); ?></template>
                                 <button type="button" class="fyn-btn fyn-btn-outline" id="photo-portfolio-add"><?php esc_html_e('+ Add Reference', 'ai-seo-client'); ?></button>
                                 <p class="field-description"><?php esc_html_e('The AI uses these images to recognize and apply logos, colors, mood and persons in generated images.', 'ai-seo-client'); ?></p>
+                                <p class="field-description"><?php esc_html_e('Protected: shape, colors and details must stay identical — only placement and size may change. Limited: must stay recognizable; only pose, angle or lighting may vary. Free: loose inspiration.', 'ai-seo-client'); ?></p>
+                            </div>
+
+                            <?php $brandRefMode = get_option('sseo_ai_client_brand_ref_mode', 'describe') === 'images' ? 'images' : 'describe'; ?>
+                            <div class="fyn-settings-field">
+                                <label><?php esc_html_e('How references are used', 'ai-seo-client'); ?></label>
+                                <label style="display:block;font-weight:normal;margin-bottom:6px;">
+                                    <input type="radio" name="brand_ref_mode" value="describe" <?php checked($brandRefMode, 'describe'); ?>>
+                                    <?php esc_html_e('Text description — the AI describes each image and adds that to the prompt. Works with every image model.', 'ai-seo-client'); ?>
+                                </label>
+                                <label style="display:block;font-weight:normal;">
+                                    <input type="radio" name="brand_ref_mode" value="images" <?php checked($brandRefMode, 'images'); ?>>
+                                    <?php esc_html_e('Send images to the model — most faithful for protected logos and persons. Requires an OpenRouter image model that accepts reference images (e.g. Gemini or GPT Image); otherwise the image is generated without references.', 'ai-seo-client'); ?>
+                                </label>
                             </div>
                         </div>
 
@@ -2641,17 +2675,9 @@ class Client
                             // Photo Portfolio media uploader
                             var addBtn = document.getElementById('photo-portfolio-add');
                             var grid = document.getElementById('photo-portfolio-grid');
-                            if (!addBtn || !grid) return;
+                            var tpl = document.getElementById('photo-portfolio-template');
+                            if (!addBtn || !grid || !tpl) return;
                             var idxCounter = grid.children.length;
-
-                            // Update hidden type field when select changes
-                            document.addEventListener('change', function(e) {
-                                if (e.target && e.target.classList && e.target.classList.contains('photo-ref-type')) {
-                                    var idx = e.target.getAttribute('data-idx');
-                                    var hidden = document.querySelector('.photo-ref-type-hidden[data-idx="' + idx + '"]');
-                                    if (hidden) hidden.value = e.target.value;
-                                }
-                            });
 
                             // Remove reference
                             document.addEventListener('click', function(e) {
@@ -2669,23 +2695,12 @@ class Client
                                 frame.on('select', function() {
                                     var attachment = frame.state().get('selection').first().toJSON();
                                     var idx = idxCounter++;
-                                    var item = document.createElement('div');
-                                    item.className = 'photo-portfolio-item';
-                                    item.setAttribute('data-idx', idx);
-                                    item.style.cssText = 'position:relative;border:1px solid #ddd;border-radius:8px;padding:8px;text-align:center;';
-                                    item.innerHTML =
-                                        '<img src="' + attachment.url + '" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:5px;">' +
-                                        '<select class="photo-ref-type" data-idx="' + idx + '" style="width:100%;font-size:11px;margin-bottom:3px;">' +
-                                        '<option value="logo">Logo</option>' +
-                                        '<option value="person">Person</option>' +
-                                        '<option value="environment">Environment/Building</option>' +
-                                        '<option value="product">Product</option>' +
-                                        '<option value="style">Brand Style/Mood</option>' +
-                                        '</select>' +
-                                        '<button type="button" class="button button-small photo-ref-remove" data-idx="' + idx + '" style="color:#dc2626;border-color:#fecaca;width:100%;">&times; Remove</button>' +
-                                        '<input type="hidden" name="photo_portfolio[' + idx + '][attachment_id]" value="' + attachment.id + '">' +
-                                        '<input type="hidden" name="photo_portfolio[' + idx + '][url]" value="' + attachment.url + '">' +
-                                        '<input type="hidden" name="photo_portfolio[' + idx + '][type]" class="photo-ref-type-hidden" value="logo">';
+                                    var wrap = document.createElement('div');
+                                    wrap.innerHTML = tpl.innerHTML.replace(/__IDX__/g, String(idx));
+                                    var item = wrap.firstElementChild;
+                                    item.querySelector('.photo-ref-img').src = attachment.url;
+                                    item.querySelector('.photo-ref-url').value = attachment.url;
+                                    item.querySelector('.photo-ref-attachment').value = attachment.id;
                                     grid.appendChild(item);
                                 });
                                 frame.open();
@@ -2909,14 +2924,18 @@ class Client
             foreach ($_POST['photo_portfolio'] as $ref) {
                 $url = esc_url_raw($ref['url'] ?? '');
                 if (empty($url)) continue;
+                $type = sanitize_key($ref['type'] ?? 'logo');
+                $policy = sanitize_key($ref['policy'] ?? 'free');
                 $photoPortfolio[] = [
                     'attachment_id' => (int)($ref['attachment_id'] ?? 0),
                     'url' => $url,
-                    'type' => sanitize_text_field($ref['type'] ?? 'logo'),
+                    'type' => in_array($type, ['logo', 'person', 'environment', 'product', 'style'], true) ? $type : 'logo',
+                    'policy' => in_array($policy, ['free', 'minimal', 'locked'], true) ? $policy : 'free',
                 ];
             }
         }
         update_option('sseo_ai_client_photo_portfolio', $photoPortfolio);
+        update_option('sseo_ai_client_brand_ref_mode', ($_POST['brand_ref_mode'] ?? '') === 'images' ? 'images' : 'describe');
         // Invalidate cached brand reference descriptions so changed images are re-analyzed
         delete_transient('sseo_ai_brand_ref_desc');
 
