@@ -208,6 +208,7 @@ class Dashboard
         add_action('rest_api_init', [$this->updateServer, 'register']);
         add_action('rest_api_init', [$this->adminApi, 'register']);
         add_action('rest_api_init', [$this->publicApi, 'register']);
+        add_action('rest_api_init', [new ShopifyBillingApi($this->licenseGenerator, $this->tenants), 'register']);
 
         // Async GEO scan queue (WP-Cron worker + sweep).
         $this->geoScanQueue->register();
