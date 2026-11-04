@@ -27,6 +27,8 @@ use Illuminate\Validation\Rule;
  * POST /api/onboarding/profile  - save language, country and brand voice
  * POST /api/onboarding/complete - mark the wizard as finished
  * POST /api/onboarding/skip     - hide the wizard without finishing
+ * GET  /api/settings/profile    - profile for the Settings page
+ * POST /api/settings/profile    - same as /api/onboarding/profile
  */
 class OnboardingController extends Controller
 {
@@ -57,6 +59,28 @@ class OnboardingController extends Controller
             'tones' => array_keys(BrandVoice::TONES),
             'products' => $this->suggestedProducts($shop),
             'trial' => $this->billing->status($shop)['trial'],
+        ];
+    }
+
+    /**
+     * Settings page: the saved profile plus the choices. The Shopify locale
+     * suggestion is only fetched while no content language is saved yet.
+     */
+    public function settings(Request $request): array
+    {
+        $shop = $request->attributes->get('shop');
+        if (! $shop instanceof Shop) {
+            return ['error' => 'shop_not_found'];
+        }
+
+        $profile = $this->profile($shop);
+
+        return [
+            'success' => true,
+            'profile' => $this->profilePayload($profile),
+            'suggestions' => $profile->content_language === null ? $this->suggestions($shop, $request) : null,
+            'languages' => BrandVoice::LANGUAGES,
+            'tones' => array_keys(BrandVoice::TONES),
         ];
     }
 

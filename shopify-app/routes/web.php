@@ -23,8 +23,10 @@ Route::get('/llms-full.txt', [LlmsTxtController::class, 'full']);
 // Webhooks (POST from Shopify)
 Route::post('/webhooks', [WebhookController::class, 'handle'])->name('webhooks');
 
-// Embedded app dashboard (served with Shopify session middleware)
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// Embedded app pages (App Bridge s-app-nav links to /dashboard/{page}).
+Route::get('/dashboard/{page?}', [DashboardController::class, 'index'])
+    ->where('page', implode('|', DashboardController::PAGES))
+    ->name('dashboard');
 
 // Install form (for shops that need to enter their license key)
 Route::get('/install/form', function () {

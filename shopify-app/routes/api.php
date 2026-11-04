@@ -41,6 +41,7 @@ Route::middleware(['shopify.session'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
+    Route::get('/dashboard/context', [DashboardController::class, 'context']);
 
     // Billing (Shopify App Pricing)
     Route::get('/billing/status', [BillingController::class, 'status']);
@@ -51,6 +52,10 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/onboarding/profile', [OnboardingController::class, 'saveProfile']);
     Route::post('/onboarding/complete', [OnboardingController::class, 'complete']);
     Route::post('/onboarding/skip', [OnboardingController::class, 'skip']);
+
+    // Settings: store language, market and brand voice (same profile as onboarding)
+    Route::get('/settings/profile', [OnboardingController::class, 'settings']);
+    Route::post('/settings/profile', [OnboardingController::class, 'saveProfile']);
 
     // License
     Route::get('/license/status', [LicenseController::class, 'status']);
