@@ -32,7 +32,7 @@ class BulkOptimizeJob implements ShouldQueue
     public int $tries = 1;
 
     /** Bulk action => activity kind for the reports (1.7). */
-    private const ACTIVITY = ['meta_title' => 'meta', 'meta' => 'meta', 'titles' => 'title', 'alt_text' => 'alt_text', 'descriptions' => 'description'];
+    private const ACTIVITY = ['meta_title' => 'meta', 'meta' => 'meta', 'titles' => 'title', 'alt_text' => 'alt_text', 'descriptions' => 'description', 'ai_attributes' => 'ai_attributes'];
 
     /** Failed items listed in the progress (title + reason). */
     private const MAX_ERRORS = 25;

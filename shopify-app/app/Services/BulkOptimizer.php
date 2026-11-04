@@ -23,7 +23,7 @@ class BulkOptimizer
 
     /** Actions per content type. */
     public const ACTIONS = [
-        'product' => ['meta_title', 'meta', 'titles', 'alt_text', 'descriptions'],
+        'product' => ['meta_title', 'meta', 'titles', 'alt_text', 'descriptions', 'ai_attributes'],
         'collection' => ['meta_title', 'meta', 'descriptions'],
         'page' => ['meta_title', 'meta'],
         'article' => ['meta_title', 'meta'],
@@ -74,6 +74,9 @@ class BulkOptimizer
         $items = [];
         foreach ($nodes as $node) {
             $normalized = $this->auditor->normalize($type, $node, $shop->shop_domain);
+            if ($onlyNeeded && $action === 'ai_attributes' && ! empty($node['aiAttributes']['value'])) {
+                continue;
+            }
             if ($onlyNeeded && isset(self::ISSUES[$action])) {
                 $codes = array_column($this->auditor->scoreItem($normalized)['issues'], 'code');
                 if (array_intersect($codes, self::ISSUES[$action]) === []) {
@@ -134,6 +137,7 @@ class BulkOptimizer
             'titles' => $this->aiProductTitle($shop, $item),
             'alt_text' => $this->aiAltText($shop, $item),
             'descriptions' => $this->aiDescription($shop, $item),
+            'ai_attributes' => $this->aiAttributes($shop, $item),
             default => 'invalid_action',
         };
     }
@@ -196,6 +200,17 @@ class BulkOptimizer
         }
 
         return $this->writer->updateMediaAlt($shop, $target['id'], $this->cut(trim($result['text'], " \t\n\r\"'"), 125));
+    }
+
+    /**
+     * Shopping attributes for AI feeds (2.1).
+     */
+    private function aiAttributes(Shop $shop, array $item): ?string
+    {
+        $attributes = app(AiAttributes::class);
+        $result = $attributes->generate($shop, $item['id']);
+
+        return isset($result['error']) ? (string) $result['error'] : $attributes->save($shop, $item['id'], $result['attributes']);
     }
 
     private function aiDescription(Shop $shop, array $item): ?string

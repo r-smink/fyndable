@@ -8,7 +8,7 @@
 
     const { t, esc } = Fyn;
     const ACTIONS = {
-        product: ['meta_title', 'meta', 'titles', 'alt_text', 'descriptions'],
+        product: ['meta_title', 'meta', 'titles', 'alt_text', 'descriptions', 'ai_attributes'],
         collection: ['meta_title', 'meta', 'descriptions'],
         page: ['meta_title', 'meta'],
         article: ['meta_title', 'meta'],

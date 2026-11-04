@@ -8,6 +8,7 @@ use App\Jobs\TrackHandleChangeJob;
 use App\Models\ActivityEvent;
 use App\Models\GoogleConnection;
 use App\Models\NotFoundUrl;
+use App\Models\ProductFeed;
 use App\Models\RankHistory;
 use App\Models\RedirectEvent;
 use App\Models\ResourceHandle;
@@ -16,6 +17,7 @@ use App\Models\SeoAudit;
 use App\Models\SeoAuditItem;
 use App\Models\Shop;
 use App\Models\StoreSchemaSetting;
+use App\Services\FeedBuilder;
 use App\Services\LlmsTxtGenerator;
 use App\Services\ShopifySignature;
 use Illuminate\Http\Request;
@@ -151,6 +153,8 @@ class WebhookController extends Controller
 
         // Google tokens are not needed after uninstall (Search Console, 1.5).
         GoogleConnection::where('shop_id', $shop->id)->delete();
+        // Stop serving the public product feeds (2.1).
+        ProductFeed::where('shop_id', $shop->id)->update(['enabled' => false]);
 
         // Shopify cancels the App Pricing subscription on uninstall; suspend
         // the SaaS tenant outside the webhook request (5 second budget).
@@ -163,7 +167,7 @@ class WebhookController extends Controller
      * shop/redact — erase shop data after uninstall grace period.
      *
      * Removes tracked keywords, rank history, llms.txt settings, the store
-     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log), schema settings, the Google connection with Search Console data, reports, the activity log and usage counters, and deletes the App Pricing tenant on the
+     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log), schema settings, the Google connection with Search Console data, reports, the activity log, product feeds and usage counters, and deletes the App Pricing tenant on the
      * SaaS (queued). The shop row is kept without credentials, license or
      * contact data. trial_products and trial_ended_at stay (product IDs only)
      * so a reinstall cannot restart the free trial.
@@ -186,6 +190,7 @@ class WebhookController extends Controller
         StoreSchemaSetting::where('shop_id', $shop->id)->delete();
         GoogleConnection::where('shop_id', $shop->id)->delete();
         ActivityEvent::where('shop_id', $shop->id)->delete();
+        app(FeedBuilder::class)->delete($shop);
         DB::table('seo_reports')->where('shop_id', $shop->id)->delete();
         DB::table('gsc_page_stats')->where('shop_id', $shop->id)->delete();
         DB::table('gsc_query_stats')->where('shop_id', $shop->id)->delete();

@@ -1,11 +1,13 @@
 <?php
 
+use App\Jobs\BuildProductFeedJob;
 use App\Jobs\CheckRankingsJob;
 use App\Jobs\SendSeoReportJob;
 use App\Jobs\SyncSearchConsoleJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Jobs\SyncStoreSchemaJob;
 use App\Models\GoogleConnection;
+use App\Models\ProductFeed;
 use App\Models\Shop;
 use App\Models\StoreSchemaSetting;
 use App\Services\LlmsTxtGenerator;
@@ -65,6 +67,15 @@ Schedule::call(function () {
         ->pluck('id')
         ->each(fn (int $shopId, int $i) => SendSeoReportJob::dispatch($shopId)->delay(now()->addSeconds($i * 2)));
 })->weeklyOn(1, '07:00')->name('weekly-seo-report')->withoutOverlapping();
+
+// Daily product feed + AI-ready score rebuild (2.1) for enabled feeds, so
+// prices and stock in the feeds stay current.
+Schedule::call(function () {
+    ProductFeed::where('enabled', true)
+        ->whereHas('shop', fn ($q) => $q->where('is_installed', true)->where('is_uninstalled', false))
+        ->pluck('shop_id')
+        ->each(fn (int $shopId, int $i) => BuildProductFeedJob::dispatch($shopId)->delay(now()->addSeconds($i * 5)));
+})->dailyAt('02:00')->name('product-feed-build')->withoutOverlapping();
 
 // Daily llms.txt cache refresh (prevents stale cache from building up)
 Schedule::call(function () {

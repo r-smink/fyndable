@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\WebhookController;
@@ -33,6 +34,11 @@ Route::get('/dashboard/{page?}', [DashboardController::class, 'index'])
 // from the email or the Reports page, so they use signed URLs.
 Route::get('/report/unsubscribe/{shop}', [ReportController::class, 'unsubscribe'])->middleware('signed')->name('report.unsubscribe');
 Route::get('/report/{report}', [ReportController::class, 'show'])->middleware('signed')->whereNumber('report')->name('report.show');
+
+// Product feeds for AI shopping and Google Merchant Center (2.1), secret token.
+Route::get('/feeds/{token}/{file}', [FeedController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{32,64}')->where('file', 'google\.xml|openai\.jsonl')
+    ->middleware('throttle:60,1')->name('feeds.show');
 
 // Install form (for shops that need to enter their license key)
 Route::get('/install/form', function () {

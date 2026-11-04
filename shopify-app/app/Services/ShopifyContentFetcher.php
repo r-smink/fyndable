@@ -228,7 +228,7 @@ class ShopifyContentFetcher
             .'descriptionTag: metafield(namespace: "global", key: "description_tag") { value }';
 
         [$connection, $filter, $fields, $pageSize] = match ($type) {
-            'product' => ['products', 'status:active', "id handle title vendor productType onlineStoreUrl descriptionHtml seo { title description } priceRangeV2 { minVariantPrice { amount currencyCode } } media(first: 10) { nodes { id alt mediaContentType preview { image { url } } } } {$hidden}", 40],
+            'product' => ['products', 'status:active', "id handle title vendor productType onlineStoreUrl descriptionHtml seo { title description } priceRangeV2 { minVariantPrice { amount currencyCode } } media(first: 10) { nodes { id alt mediaContentType preview { image { url } } } } aiAttributes: metafield(namespace: \"fyndable\", key: \"ai_attributes\") { value } {$hidden}", 40],
             'collection' => ['collections', null, "id handle title descriptionHtml seo { title description } productsCount { count } image { altText } {$hidden}", 100],
             'page' => ['pages', 'published_status:published', "id handle title body {$tags} {$hidden}", 50],
             'article' => ['articles', 'published_status:published', "id handle title body blog { handle title } image { altText } {$tags} {$hidden}", 50],
@@ -320,6 +320,44 @@ class ShopifyContentFetcher
         } while ($after !== null && count($files) < $max);
 
         return ['theme' => $theme, 'files' => $files];
+    }
+
+    /**
+     * All variants with their product data for the product feed and the
+     * AI-ready score (2.1). Variant pages of 50 keep the query cost low;
+     * the product fields repeat per variant. Draft and archived products are
+     * filtered by the caller (status).
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getFeedVariants(Shop $shop, int $max = 20000): array
+    {
+        $query = <<<'GRAPHQL'
+        query feedVariants($first: Int!, $after: String) {
+          productVariants(first: $first, after: $after) {
+            pageInfo { hasNextPage endCursor }
+            edges { node {
+              id sku barcode price compareAtPrice availableForSale title
+              selectedOptions { name value }
+              image { url }
+              product {
+                id handle title vendor productType status onlineStoreUrl descriptionHtml totalVariants
+                category { fullName }
+                seo { description }
+                media(first: 6) { nodes { ... on MediaImage { image { url } alt } } }
+                aiAttributes: metafield(namespace: "fyndable", key: "ai_attributes") { value }
+                rating: metafield(namespace: "reviews", key: "rating") { value }
+                ratingCount: metafield(namespace: "reviews", key: "rating_count") { value }
+              }
+            } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $items = $this->paginate($shop, $query, 'productVariants', $max, 50, $error);
+
+        return $error !== null ? ['error' => $error] : $items;
     }
 
     /**

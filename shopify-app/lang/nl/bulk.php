@@ -29,6 +29,7 @@ return [
         'action_titles' => 'Producttitels (AI)',
         'action_alt_text' => 'Alt-teksten van afbeeldingen (AI)',
         'action_descriptions' => 'Beschrijvingen (AI)',
+        'action_ai_attributes' => 'Shopping-attributen voor AI-feeds (AI)',
         'type_product' => 'Producten',
         'type_collection' => 'Collecties',
         'type_page' => 'Pagina\'s',

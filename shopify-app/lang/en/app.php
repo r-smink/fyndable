@@ -25,6 +25,7 @@ return [
         'competitor' => 'Competitors',
         'backlinks' => 'Backlinks',
         'markets' => 'Markets SEO',
+        'aiready' => 'AI shopping',
         'aivisibility' => 'AI visibility',
         'geoscan' => 'GEO scan',
         'aitracker' => 'AI tracker',

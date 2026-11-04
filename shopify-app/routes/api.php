@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiReadyController;
 use App\Http\Controllers\AiTrackerController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BlogWriterController;
@@ -70,6 +71,19 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // AI-commerce readiness + product feeds (2.1)
+    Route::middleware('shopify.tier:ai_readiness')->prefix('ai-ready')->group(function () {
+        Route::get('/', [AiReadyController::class, 'show']);
+        Route::get('/products', [AiReadyController::class, 'products']);
+        Route::post('/feed', [AiReadyController::class, 'feed']);
+        Route::post('/rebuild', [AiReadyController::class, 'rebuild']);
+        Route::post('/rotate-token', [AiReadyController::class, 'rotateToken']);
+    });
+    Route::post('/ai-ready/{productId}/attributes', [AiReadyController::class, 'generateAttributes'])
+        ->whereNumber('productId')->middleware('shopify.tier:ai_attributes')->middleware('shopify.trial');
+    Route::post('/ai-ready/{productId}/attributes/save', [AiReadyController::class, 'saveAttributes'])
+        ->whereNumber('productId')->middleware('shopify.tier:ai_attributes')->middleware('shopify.scope:write_products');
 
     // Weekly SEO report (1.7)
     Route::get('/reports', [ReportController::class, 'index'])->middleware('shopify.tier:reports');

@@ -128,6 +128,7 @@
   {%- comment -%} Automatic Product schema when no item schema was saved. {%- endcomment -%}
   {%- if fyndable_cfg.product and request.page_type == 'product' and product and fyndable_schema == nil -%}
     {%- assign fyndable_variant = product.selected_or_first_available_variant -%}
+    {%- assign fyndable_attrs = product.metafields.fyndable.ai_attributes.value -%}
 <script type="application/ld+json" data-fyndable="product">
 {
   "@context": "https://schema.org",
@@ -141,6 +142,8 @@
   {%- endif -%}
   {%- if product.vendor != blank -%}"brand": { "@type": "Brand", "name": {{ product.vendor | json }} },{%- endif -%}
   {%- if fyndable_variant.sku != blank -%}"sku": {{ fyndable_variant.sku | json }},{%- endif -%}
+  {%- if fyndable_attrs.material != blank -%}"material": {{ fyndable_attrs.material | json }},{%- endif -%}
+  {%- if fyndable_attrs.color != blank -%}"color": {{ fyndable_attrs.color | json }},{%- endif -%}
   {%- if product.metafields.reviews.rating.value and product.metafields.reviews.rating_count.value > 0 -%}
   "aggregateRating": {
     "@type": "AggregateRating",

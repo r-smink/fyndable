@@ -26,6 +26,7 @@ class RecordActivity
         '#/generate-image$#' => 'image',
         '#^api/blogs/[^/]+/articles$#' => 'article',
         '#^api/calendar/schedule$#' => 'article',
+        '#/attributes/save$#' => 'ai_attributes',
     ];
 
     public function handle(Request $request, Closure $next): Response

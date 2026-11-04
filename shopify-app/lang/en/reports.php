@@ -41,6 +41,7 @@ return [
     'kind_image' => 'AI product images',
     'kind_article' => 'Blog articles',
     'kind_redirect' => 'Redirects',
+    'kind_ai_attributes' => 'Shopping attributes for AI',
     'open_app' => 'Open Fyndable',
     'view_report' => 'View or print the full report',
     'print' => 'Print or save as PDF',

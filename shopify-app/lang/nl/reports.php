@@ -40,6 +40,7 @@ return [
     'kind_image' => 'AI-productafbeeldingen',
     'kind_article' => 'Blogartikelen',
     'kind_redirect' => 'Redirects',
+    'kind_ai_attributes' => 'Shopping-attributen voor AI',
     'open_app' => 'Fyndable openen',
     'view_report' => 'Het volledige rapport bekijken of afdrukken',
     'print' => 'Afdrukken of opslaan als PDF',

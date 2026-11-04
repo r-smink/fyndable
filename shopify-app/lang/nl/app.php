@@ -20,6 +20,7 @@ return [
         'competitor' => 'Concurrenten',
         'backlinks' => 'Backlinks',
         'markets' => 'Markets SEO',
+        'aiready' => 'AI-shopping',
         'aivisibility' => 'AI-zichtbaarheid',
         'geoscan' => 'GEO-scan',
         'aitracker' => 'AI tracker',

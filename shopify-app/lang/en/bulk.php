@@ -29,6 +29,7 @@ return [
         'action_titles' => 'Product titles (AI)',
         'action_alt_text' => 'Image alt text (AI)',
         'action_descriptions' => 'Descriptions (AI)',
+        'action_ai_attributes' => 'Shopping attributes for AI feeds (AI)',
         'type_product' => 'Products',
         'type_collection' => 'Collections',
         'type_page' => 'Pages',
