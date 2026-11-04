@@ -22,7 +22,9 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 2.2 AI-crawlerbeheer (zie "Stand 2.2")
 - [x] 2.3 AI-vertalingen voor Markets (zie "Stand 2.3")
 - [-] 2.4 ApexFlow voor Shopify: vervalt (besluit 2026-11-04: ApexFlow hoeft niet op Shopify)
-- [ ] 2.5 t/m 2.9 (fase 2)
+- [x] 2.5 Collectiepagina's als SEO-landingspagina's (zie "Stand 2.5")
+- [ ] 2.8 AI-referralverkeer en omzet: later (besluit 2026-11-04; vraagt `read_orders` + protected customer data Level 1, eventueel een web pixel)
+- [ ] 2.6, 2.7, 2.9 (fase 2)
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
 
@@ -196,6 +198,16 @@ Open:
 - Vertalingen per markt (`marketId`, bv. Belgisch-Nederlands vs. Nederlands) nog niet; nu per taal.
 - Metafields (zoals `fyndable.ai_attributes`) en menu's worden niet vertaald.
 - Voor livegang: `shopify app deploy` (scope) en `SHOPIFY_SCOPES` in de `.env` aanvullen.
+
+### Stand 2.5 (2026-11-04)
+
+Gebouwd: pagina "Collectiepagina's" met alle collecties (aantal producten, wel/geen landingscontent). Per collectie: zoekwoordideeen van AI met zoekvolume (SaaS `ai/keyword-data`, hoogste volume eerst), kiezen van maximaal 5 zoekwoorden, AI-intro (80-150 woorden, boven de producten) en FAQ (4-6 vragen, onder de producten) in de merkstem, bewerken en opslaan. Opslag in metafield `fyndable.collection_landing` (json, HTML gefilterd op een vaste lijst tags, links alleen http(s) of relatief) en de FAQ ook als `fyndable.faq_schema` (FAQPage, getoond door de app embed). Twee nieuwe theme app blocks voor de collectietemplate: "Fyndable collection intro" en "Fyndable collection FAQ" (zichtbare vragen via `<details>`, Google eist dat FAQ-schema zichtbaar is); blokstatus via `app.extensions()`.
+
+Open / te bevestigen:
+- Tier: geen WP-equivalent; voorstel Professional (rij 41 in de spreadsheet), gelijk aan FAQ en keyword-data.
+- Geen bulk voor alle collecties tegelijk (collecties zijn meestal beperkt in aantal); kan via de bulk optimizer worden toegevoegd.
+- Zoekvolume komt uit de DataForSEO-AI-keyworddata van de SaaS; zonder data blijven de AI-ideeen bruikbaar (zonder volume).
+- `shopify app deploy` voor de nieuwe theme blocks.
 
 ## Wat er al staat (uitgangspunt)
 

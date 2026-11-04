@@ -576,3 +576,10 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - `AiTranslator`: `TYPES` (type => [TranslatableResourceType, keys]), `locales()`, `gaps()` (ontbrekend/verouderd per resource), `translate()` (AI, JSON met dezelfde keys, lengtelimieten), `register()` (`ShopifyAdminWriter::registerTranslations`, met `translatableContentDigest`). Fetcher: `getShopLocales()`, `getTranslatableResources()` (25 per pagina), `getTranslatableResource()`.
 - `BrandVoice::apply($shop, $messages, $voice, $market)`: `$market = false` laat contenttaal en land weg (nodig bij vertalen naar een andere taal).
 - API `/api/translations/*` (tier `translations`, professional; save/run vragen `write_translations`). `TranslateJob` (cache `translate:{shop_id}`), activiteitensoort `translation`. Gaten worden 5 minuten gecachet (`translation_gaps:{shop}:{type}:{locale}`).
+
+## Shopify collectiepagina's (2.5, 2026-11-04)
+
+- `CollectionLanding`: `keywords()` (AI-ideeen + volume via `SaasProxyClient::keywordData`, defensief geparsed), `draft()` (intro_html + faq), `current()`, `save()` (metafields `fyndable.collection_landing` json + `fyndable.faq_schema` FAQPage), `clean()`/`sanitize()` (toegestane tags p, br, strong, b, em, i, ul, ol, li, h2, h3, a[href http(s) of /]).
+- Fetcher: `getCollectionsForLanding()`, `getCollectionForLanding()`. API `/api/collection-pages/*` (tier `collection_pages`, professional; save vraagt `write_products`). Activiteitensoort `collection_page`.
+- Theme app blocks (`target: section`, `enabled_on: collection`): `fyndable-collection-intro.liquid`, `fyndable-collection-faq.liquid`.
+- 2.4 ApexFlow vervalt voor Shopify; 2.8 (AI-omzet) staat op later (vraagt `read_orders` + protected customer data).
