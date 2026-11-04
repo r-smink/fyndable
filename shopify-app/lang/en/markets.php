@@ -7,6 +7,9 @@ return [
     'recommendations' => 'Recommendations',
     'overview' => 'Markets overview',
 
+    'translate_hint' => 'Translation gaps found? Fill them in with AI, search-optimized per language and in your brand voice.',
+    'translate_open' => 'Open Translations',
+
     'js' => [
         'mk_score' => 'SEO score',
         'mk_good' => 'Good',

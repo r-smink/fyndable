@@ -234,6 +234,25 @@ class ShopifyAdminWriter
         return $body['data']['currentAppInstallation']['id'] ?? null;
     }
 
+    /**
+     * Register translations for one resource (2.3, write_translations).
+     *
+     * @param  array<int, array{locale:string, key:string, value:string, translatableContentDigest:string}>  $translations
+     */
+    public function registerTranslations(Shop $shop, string $resourceId, array $translations): ?string
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation register($resourceId: ID!, $translations: [TranslationInput!]!) {
+          translationsRegister(resourceId: $resourceId, translations: $translations) {
+            translations { key locale }
+            userErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        return $this->runMutation($shop, $mutation, ['resourceId' => $resourceId, 'translations' => array_values($translations)], 'translationsRegister');
+    }
+
     public function metafieldInput(string $namespace, string $key, string $value, string $type): array
     {
         return [

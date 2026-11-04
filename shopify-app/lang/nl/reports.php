@@ -39,6 +39,7 @@ return [
     'kind_internal_link' => 'Interne links',
     'kind_image' => 'AI-productafbeeldingen',
     'kind_article' => 'Blogartikelen',
+    'kind_translation' => 'Vertalingen voor andere talen',
     'kind_redirect' => 'Redirects',
     'kind_ai_attributes' => 'Shopping-attributen voor AI',
     'open_app' => 'Fyndable openen',

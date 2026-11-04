@@ -7,6 +7,9 @@ return [
     'recommendations' => 'Aanbevelingen',
     'overview' => 'Overzicht van markten',
 
+    'translate_hint' => 'Ontbrekende vertalingen gevonden? Vul ze aan met AI, per taal geoptimaliseerd voor zoekmachines en in je merkstem.',
+    'translate_open' => 'Vertalingen openen',
+
     'js' => [
         'mk_score' => 'SEO-score',
         'mk_good' => 'Goed',

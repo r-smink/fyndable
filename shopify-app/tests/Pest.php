@@ -48,7 +48,7 @@ function configureShopifyTestApp(bool $billing = true): void
         'shopify.billing.trial_products' => 5,
         'shopify.billing.check_ttl' => 600,
         // Same list as shopify.app.toml, independent of the local .env.
-        'shopify.scopes' => 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy,write_online_store_navigation,read_markets,read_locales,read_translations',
+        'shopify.scopes' => 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy,write_online_store_navigation,read_markets,read_locales,read_translations,write_translations',
     ]);
 }
 

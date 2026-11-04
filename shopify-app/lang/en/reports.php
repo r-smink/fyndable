@@ -40,6 +40,7 @@ return [
     'kind_internal_link' => 'Internal links',
     'kind_image' => 'AI product images',
     'kind_article' => 'Blog articles',
+    'kind_translation' => 'Translations for other languages',
     'kind_redirect' => 'Redirects',
     'kind_ai_attributes' => 'Shopping attributes for AI',
     'open_app' => 'Open Fyndable',

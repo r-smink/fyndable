@@ -64,7 +64,7 @@ class BrandVoice
      *
      * @param  bool  $voice  false = language/market only (e.g. alt text)
      */
-    public function instructions(Shop $shop, bool $voice = true): string
+    public function instructions(Shop $shop, bool $voice = true, bool $market = true): string
     {
         $profile = $this->profile($shop);
         if ($profile === null) {
@@ -72,11 +72,11 @@ class BrandVoice
         }
 
         $lines = [];
-        $language = $this->languageCode($shop);
+        $language = $market ? $this->languageCode($shop) : null;
         if ($language !== null) {
             $lines[] = 'Write all text in '.self::LANGUAGES[$language].'.';
         }
-        if (! empty($profile->target_country)) {
+        if ($market && ! empty($profile->target_country)) {
             $lines[] = 'The store sells to customers in country '.strtoupper($profile->target_country).'; use local spelling, terms and units.';
         }
 
@@ -98,9 +98,13 @@ class BrandVoice
     /**
      * Add the store profile instructions to an OpenAI-style message list.
      */
-    public function apply(Shop $shop, array $messages, bool $voice = true): array
+    /**
+     * $market = false leaves out the store language and country (AI
+     * translations set the target language themselves, 2.3).
+     */
+    public function apply(Shop $shop, array $messages, bool $voice = true, bool $market = true): array
     {
-        $instructions = $this->instructions($shop, $voice);
+        $instructions = $this->instructions($shop, $voice, $market);
         if ($instructions === '') {
             return $messages;
         }

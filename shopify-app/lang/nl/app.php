@@ -14,6 +14,7 @@ return [
         'bulk' => 'Bulk optimizer',
         'blogwriter' => 'Blogschrijver',
         'calendar' => 'Contentkalender',
+        'translations' => 'Vertalingen',
         'gsc' => 'Search Console',
         'ranktracker' => 'Rank tracker',
         'kwexplorer' => 'Zoekwoordverkenner',

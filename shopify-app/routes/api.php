@@ -26,6 +26,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SchemaController;
 use App\Http\Controllers\SearchConsoleController;
 use App\Http\Controllers\SeoAuditController;
+use App\Http\Controllers\TranslationsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -72,6 +73,17 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // AI translations for Markets (2.3)
+    Route::middleware('shopify.tier:translations')->prefix('translations')->group(function () {
+        Route::get('/', [TranslationsController::class, 'index']);
+        Route::get('/gaps', [TranslationsController::class, 'gaps']);
+        Route::post('/preview', [TranslationsController::class, 'preview'])->middleware('shopify.scope:read_translations');
+        Route::post('/save', [TranslationsController::class, 'save'])->middleware('shopify.scope:write_translations');
+        Route::post('/run', [TranslationsController::class, 'run'])->middleware('shopify.scope:write_translations');
+        Route::get('/progress', [TranslationsController::class, 'progress']);
+        Route::post('/cancel', [TranslationsController::class, 'cancel']);
+    });
 
     // AI crawler management via robots.txt.liquid (2.2)
     Route::get('/ai-crawlers', [AiCrawlersController::class, 'show'])->middleware('shopify.tier:ai_crawlers');

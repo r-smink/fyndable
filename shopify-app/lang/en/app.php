@@ -19,6 +19,7 @@ return [
         'bulk' => 'Bulk optimizer',
         'blogwriter' => 'Blog writer',
         'calendar' => 'Content calendar',
+        'translations' => 'Translations',
         'gsc' => 'Search Console',
         'ranktracker' => 'Rank tracker',
         'kwexplorer' => 'Keyword explorer',

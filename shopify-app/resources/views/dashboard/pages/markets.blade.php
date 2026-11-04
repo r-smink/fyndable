@@ -6,7 +6,13 @@
 
 @section('content')
     <s-section>
-        <s-paragraph>{{ __('markets.intro') }}</s-paragraph>
+        <s-stack gap="base">
+            <s-paragraph>{{ __('markets.intro') }}</s-paragraph>
+            <s-banner tone="info">
+                {{ __('markets.translate_hint') }}
+                <s-button slot="secondary-actions" href="/dashboard/translations{{ $navQuery !== '' ? '?'.$navQuery : '' }}">{{ __('markets.translate_open') }}</s-button>
+            </s-banner>
+        </s-stack>
     </s-section>
 
     <s-section>

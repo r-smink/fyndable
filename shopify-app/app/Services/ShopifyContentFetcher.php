@@ -361,6 +361,78 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Shop languages (2.3): [{locale, name, primary, published}].
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getShopLocales(Shop $shop): array
+    {
+        $response = $this->graphql($shop, '{ shopLocales { locale name primary published } }');
+
+        return isset($response['error']) ? ['error' => (string) $response['error']] : ($response['data']['shopLocales'] ?? []);
+    }
+
+    /**
+     * Translatable resources of one type with their source content (digest)
+     * and the translations for one locale (2.3).
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getTranslatableResources(Shop $shop, string $resourceType, string $locale, int $max = 250): array
+    {
+        $query = <<<'GRAPHQL'
+        query translatable($first: Int!, $after: String, $type: TranslatableResourceType!, $locale: String!) {
+          translatableResources(first: $first, after: $after, resourceType: $type) {
+            pageInfo { hasNextPage endCursor }
+            edges { node {
+              resourceId
+              translatableContent { key value digest locale }
+              translations(locale: $locale) { key value outdated }
+            } }
+          }
+        }
+        GRAPHQL;
+
+        $items = [];
+        $cursor = null;
+        do {
+            $response = $this->graphql($shop, $query, ['first' => 25, 'after' => $cursor, 'type' => $resourceType, 'locale' => $locale]);
+            if (isset($response['error'])) {
+                return ['error' => (string) $response['error']];
+            }
+            $connection = $response['data']['translatableResources'] ?? [];
+            foreach ($connection['edges'] ?? [] as $edge) {
+                $items[] = $edge['node'];
+            }
+            $cursor = ($connection['pageInfo']['hasNextPage'] ?? false) ? ($connection['pageInfo']['endCursor'] ?? null) : null;
+        } while ($cursor !== null && count($items) < $max);
+
+        return array_slice($items, 0, $max);
+    }
+
+    /**
+     * @return array|array{error: string}
+     */
+    public function getTranslatableResource(Shop $shop, string $resourceId, string $locale): array
+    {
+        $response = $this->graphql($shop, <<<'GRAPHQL'
+        query translatableOne($id: ID!, $locale: String!) {
+          translatableResource(resourceId: $id) {
+            resourceId
+            translatableContent { key value digest locale }
+            translations(locale: $locale) { key value outdated }
+          }
+        }
+        GRAPHQL, ['id' => $resourceId, 'locale' => $locale]);
+
+        if (isset($response['error'])) {
+            return ['error' => (string) $response['error']];
+        }
+
+        return $response['data']['translatableResource'] ?? ['error' => 'not_found'];
+    }
+
+    /**
      * Search a single content type by title.
      *
      * Uses Shopify's search `query` argument; an empty search returns the first
