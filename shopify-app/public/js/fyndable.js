@@ -197,6 +197,34 @@
             return `<s-badge tone="${esc(tone)}">${esc(text)}</s-badge>`;
         },
 
+        /**
+         * Status of one of our theme app extension blocks/embeds via App
+         * Bridge (Built for Shopify 4.2.3): 'active', 'available',
+         * 'unavailable', or null when App Bridge cannot tell.
+         */
+        async embedStatus(blockHandle) {
+            try {
+                if (!window.shopify || !window.shopify.app || !window.shopify.app.extensions) return null;
+                const extensions = await window.shopify.app.extensions();
+                let found = null;
+                const walk = list => (list || []).forEach(item => {
+                    if (item && item.handle === blockHandle && item.status) {
+                        if (found !== 'active') found = item.status;
+                    }
+                    if (item && item.activations) walk(item.activations);
+                });
+                extensions.filter(e => e.type === 'theme_app_extension').forEach(e => walk(e.activations));
+                return found;
+            } catch (e) {
+                return null;
+            }
+        },
+
+        /** Theme editor deep link that turns on one of our app embeds. */
+        embedEditorUrl(blockHandle) {
+            return `shopify://admin/themes/current/editor?context=apps&activateAppId=${encodeURIComponent(cfg.apiKey || '')}/${encodeURIComponent(blockHandle)}`;
+        },
+
         /** SEO score badge (1.1): green from 80, orange from 50, red below. */
         scoreBadge(score) {
             if (score === null || score === undefined) return '';

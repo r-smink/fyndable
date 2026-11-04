@@ -20,6 +20,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
 use App\Http\Controllers\RedirectController;
+use App\Http\Controllers\SchemaController;
 use App\Http\Controllers\SeoAuditController;
 use Illuminate\Support\Facades\Route;
 
@@ -67,6 +68,11 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // Store-wide structured data via the app embed (1.4)
+    Route::get('/schema', [SchemaController::class, 'show'])->middleware('shopify.tier:schema');
+    Route::post('/schema', [SchemaController::class, 'save'])->middleware('shopify.tier:schema');
+    Route::post('/schema/theme-check', [SchemaController::class, 'themeCheck'])->middleware('shopify.tier:schema')->middleware('shopify.scope:read_themes');
 
     // Redirect manager + 404 monitor (1.2)
     Route::middleware('shopify.tier:redirects')->prefix('redirects')->group(function () {

@@ -223,6 +223,17 @@ class ShopifyAdminWriter
     /**
      * Build a metafield input array for the metafieldsSet mutation.
      */
+    /**
+     * GID of this app's installation on the shop (owner of app-data
+     * metafields that theme app extensions read via `app.metafields`).
+     */
+    public function currentAppInstallationId(Shop $shop): ?string
+    {
+        $body = $this->graphql($shop, 'query { currentAppInstallation { id } }');
+
+        return $body['data']['currentAppInstallation']['id'] ?? null;
+    }
+
     public function metafieldInput(string $namespace, string $key, string $value, string $type): array
     {
         return [

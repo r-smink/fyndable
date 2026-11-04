@@ -13,6 +13,7 @@ return [
     'nav' => [
         'home' => 'Home',
         'redirects' => 'Redirects and 404s',
+        'schema' => 'Structured data',
         'seoaudit' => 'SEO audit',
         'content' => 'Content optimizer',
         'bulk' => 'Bulk optimizer',
@@ -128,6 +129,10 @@ return [
         'row_scopes' => 'App permissions',
         'row_scopes_ok' => 'All required permissions granted',
         'row_scopes_missing' => 'Missing: {scopes}',
+        'row_embed' => 'Schema app embed',
+        'row_embed_on' => 'Structured data is shown in your store',
+        'row_embed_off' => 'Turn on the app embed to show structured data',
+        'row_embed_enable' => 'Turn on',
         'action_needed' => 'Action needed',
         'usage_month' => '{used} / {limit} this month',
         'usage_unlimited' => '{used} this month (unlimited)',

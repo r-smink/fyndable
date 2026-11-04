@@ -7,6 +7,7 @@
     $pageScript = 'js/pages/'.$page.'.js';
     $fynConfig = [
         'shop' => $shopDomain,
+        'apiKey' => $apiKey,
         'page' => $page,
         'feature' => $feature,
         'lang' => $lang,

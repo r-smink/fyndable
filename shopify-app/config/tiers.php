@@ -53,6 +53,7 @@ return [
         'markets' => 'professional',
         'seo_audit' => 'professional',
         'not_found_monitor' => 'professional',
+        'local_business_schema' => 'professional',
         'blog_writer' => 'business',
         'content_calendar' => 'business',
         'bulk_optimizer' => 'business',
@@ -62,6 +63,7 @@ return [
     'tabs' => [
         'seoaudit' => 'seo_audit',
         'redirects' => 'redirects',
+        'schema' => 'schema',
         'content' => 'content_meta',
         'bulk' => 'bulk_optimizer',
         'blogwriter' => 'blog_writer',

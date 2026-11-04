@@ -2,7 +2,9 @@
 
 use App\Jobs\CheckRankingsJob;
 use App\Jobs\SyncShopBillingJob;
+use App\Jobs\SyncStoreSchemaJob;
 use App\Models\Shop;
+use App\Models\StoreSchemaSetting;
 use App\Services\LlmsTxtGenerator;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -36,6 +38,14 @@ Schedule::command('app:publish-scheduled-articles')
     ->everyFifteenMinutes()
     ->name('publish-scheduled-articles')
     ->withoutOverlapping();
+
+// Daily re-publish of the store-wide schema config (1.4), so plan changes
+// also switch off structured data that is no longer included.
+Schedule::call(function () {
+    StoreSchemaSetting::whereHas('shop', fn ($q) => $q->where('is_installed', true)->where('is_uninstalled', false))
+        ->pluck('shop_id')
+        ->each(fn (int $shopId, int $i) => SyncStoreSchemaJob::dispatch($shopId)->delay(now()->addSeconds(intdiv($i, 3))));
+})->dailyAt('04:00')->name('store-schema-sync')->withoutOverlapping();
 
 // Daily llms.txt cache refresh (prevents stale cache from building up)
 Schedule::call(function () {

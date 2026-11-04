@@ -47,6 +47,15 @@
             + Fyn.row(t('row_scopes'), scopes.length ? t('row_scopes_missing', { scopes: scopes.join(', ') }) : t('row_scopes_ok'),
                 Fyn.badge(scopes.length ? 'critical' : 'success', scopes.length ? t('action_needed') : t('ok'))));
 
+        // Built for Shopify 4.2.3: show the app embed status on the home page.
+        Fyn.embedStatus('fyndable-seo-schema').then(status => {
+            if (status === null) return;
+            const on = status === 'active';
+            const action = on ? Fyn.badge('success', t('active'))
+                : `<s-button variant="tertiary" href="${esc(Fyn.embedEditorUrl('fyndable-seo-schema'))}" target="_top">${esc(t('row_embed_enable'))}</s-button>`;
+            Fyn.$('home-status').insertAdjacentHTML('beforeend', Fyn.row(t('row_embed'), on ? t('row_embed_on') : t('row_embed_off'), action));
+        });
+
         Fyn.html('home-alerts', scopes.length
             ? `<s-banner tone="critical">${esc(t('missing_scopes', { scopes: scopes.join(', ') }))}
                 <s-button slot="secondary-actions" href="${esc(data.reauth_url)}" target="_top">${esc(t('reauth'))}</s-button></s-banner>`

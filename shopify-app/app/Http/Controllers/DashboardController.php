@@ -35,7 +35,7 @@ class DashboardController extends Controller
      * cacheable script (public/js/pages/{page}.js).
      */
     public const PAGES = [
-        'home', 'seoaudit', 'redirects', 'content', 'bulk', 'blogwriter', 'calendar',
+        'home', 'seoaudit', 'redirects', 'schema', 'content', 'bulk', 'blogwriter', 'calendar',
         'ranktracker', 'kwexplorer', 'competitor', 'backlinks', 'markets',
         'aivisibility', 'geoscan', 'aitracker', 'llmstxt', 'tools',
         'settings', 'plan',

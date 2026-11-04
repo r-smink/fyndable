@@ -8,6 +8,7 @@ return [
     'nav' => [
         'home' => 'Home',
         'redirects' => 'Redirects en 404',
+        'schema' => 'Gestructureerde data',
         'seoaudit' => 'SEO-audit',
         'content' => 'Content optimizer',
         'bulk' => 'Bulk optimizer',
@@ -120,6 +121,10 @@ return [
         'row_scopes' => 'App-rechten',
         'row_scopes_ok' => 'Alle benodigde rechten zijn verleend',
         'row_scopes_missing' => 'Ontbreekt: {scopes}',
+        'row_embed' => 'Schema-app embed',
+        'row_embed_on' => 'Gestructureerde data wordt getoond in je winkel',
+        'row_embed_off' => 'Zet de app embed aan om gestructureerde data te tonen',
+        'row_embed_enable' => 'Aanzetten',
         'action_needed' => 'Actie nodig',
         'usage_month' => '{used} / {limit} deze maand',
         'usage_unlimited' => '{used} deze maand (onbeperkt)',
