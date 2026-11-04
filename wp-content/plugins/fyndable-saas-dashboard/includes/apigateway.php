@@ -255,7 +255,7 @@ class ApiGateway
     private function isOverLimit(array $tenant): bool
     {
         $tier = $tenant['tier'];
-        $apiLimit = (int)$tenant['api_calls_limit'] ?: $this->settings->getApiLimitForTier($tier);
+        $apiLimit = $this->settings->getEffectiveApiLimit($tenant);
         $costLimit = $this->settings->getCostLimitForTier($tier);
         
         // Get current month's usage
@@ -1019,7 +1019,7 @@ class ApiGateway
         $tenant = $this->tenants->getTenant($tenantKey);
         
         $tier = $tenant['tier'];
-        $apiLimit = (int)$tenant['api_calls_limit'] ?: $this->settings->getApiLimitForTier($tier);
+        $apiLimit = $this->settings->getEffectiveApiLimit($tenant);
         $costLimit = $this->settings->getCostLimitForTier($tier);
         
         global $wpdb;
@@ -1149,7 +1149,7 @@ class ApiGateway
             return;
         }
 
-        $apiLimit = (int)$tenant['api_calls_limit'] ?: $this->settings->getApiLimitForTier($tenant['tier']);
+        $apiLimit = $this->settings->getEffectiveApiLimit($tenant);
 
         do_action('sseo_ai_usage_limit_reached', $tenantKey, [
             'limit' => $apiLimit,

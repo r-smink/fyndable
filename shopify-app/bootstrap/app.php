@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\RequireShopifyScope;
+use App\Http\Middleware\RequireTier;
 use App\Http\Middleware\VerifyShopifySession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'shopify.session' => VerifyShopifySession::class,
             'shopify.scope' => RequireShopifyScope::class,
+            'shopify.tier' => RequireTier::class,
         ]);
         // Shopify webhooks are POST requests from Shopify servers without a
         // CSRF token — exclude them from Laravel's VerifyCsrfToken middleware.

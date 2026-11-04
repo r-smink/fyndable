@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
+use App\Services\UsageLimiter;
 use Illuminate\Http\Request;
 
 /**
@@ -18,7 +19,8 @@ class GeoScanController extends Controller
 {
     public function __construct(
         private SaasProxyClient $saas,
-        private LicenseService $license
+        private LicenseService $license,
+        private UsageLimiter $usage
     ) {}
 
     /**
@@ -41,9 +43,19 @@ class GeoScanController extends Controller
             return ['error' => 'keywords_required'];
         }
 
+        $limitError = $this->usage->guard($shop, 'geo_scans');
+        if ($limitError) {
+            return $limitError;
+        }
+
         $url = "https://{$shop->shop_domain}";
 
-        return $this->saas->geoScan($shop->license_key, $shop->tenant_key, $url, $keywords);
+        $result = $this->saas->geoScan($shop->license_key, $shop->tenant_key, $url, $keywords);
+        if (! isset($result['error'])) {
+            $this->usage->increment($shop, 'geo_scans');
+        }
+
+        return $result;
     }
 
     /**

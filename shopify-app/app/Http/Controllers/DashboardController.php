@@ -8,6 +8,7 @@ use App\Models\TrackedKeyword;
 use App\Services\LicenseService;
 use App\Services\ShopifyContentFetcher;
 use App\Services\ShopifySignature;
+use App\Services\UsageLimiter;
 use Illuminate\Http\Request;
 
 /**
@@ -20,7 +21,8 @@ class DashboardController extends Controller
 {
     public function __construct(
         private LicenseService $license,
-        private ShopifyContentFetcher $fetcher
+        private ShopifyContentFetcher $fetcher,
+        private UsageLimiter $usage
     ) {}
 
     /**
@@ -89,6 +91,12 @@ class DashboardController extends Controller
                 'llms_txt_full_enabled' => $llmsSettings->full_enabled,
                 'missing_scopes' => $shop->missingScopes(),
                 'reauth_url' => '/install?shop='.urlencode($shop->shop_domain),
+                'plan' => [
+                    'tier' => $this->license->effectiveTier($shop),
+                    'features' => $this->license->featureAccess($shop),
+                    'required' => config('tiers.features', []),
+                    'usage' => $this->usage->summary($shop),
+                ],
             ];
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('DashboardController::overview failed', [

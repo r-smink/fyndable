@@ -100,6 +100,12 @@
         .app { max-width: 1340px; margin: 0 auto; padding: 26px 26px 48px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fynFade .3s ease; }
+        .tab-content.locked > :not(.tier-lock) { display: none; }
+        .tier-lock { text-align: center; padding: 48px 24px; }
+        .tier-lock .dashicons { font-size: 40px; width: 40px; height: 40px; color: var(--fyn-purple); }
+        .tier-lock h2 { margin: 12px 0 6px; font-size: 20px; color: var(--text-h); }
+        .tier-lock p { margin: 0 auto 18px; max-width: 460px; font-size: 13.5px; color: var(--text-m); line-height: 1.5; }
+        .tab.locked::after { content: "\f160"; font-family: dashicons; font-size: 13px; opacity: .6; }
         .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
         .page-head h1 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; color: var(--text-h); }
         .page-head p { margin-top: 6px; font-size: 13.5px; color: var(--text-m); max-width: 640px; line-height: 1.5; }
@@ -1226,6 +1232,46 @@
                 + `<div class="grow"><div class="t">${title}</div><div class="s">${sub}</div></div>${badge}</div>`;
         }
 
+        // Tier gating — tab => feature key from config/tiers.php. Filled from
+        // /dashboard/overview (plan.features / plan.required); the server
+        // enforces the same map via the shopify.tier middleware.
+        const TAB_FEATURES = {
+            content: 'content_meta', bulk: 'bulk_optimizer', blogwriter: 'blog_writer', calendar: 'content_calendar',
+            ranktracker: 'rank_tracker', kwexplorer: 'keyword_explorer', competitor: 'competitor', backlinks: 'backlinks',
+            markets: 'markets', aivisibility: 'llm_insights', geoscan: 'geo_scan', aitracker: 'ai_tracker',
+            llmstxt: 'llmstxt', tools: 'indexnow',
+        };
+        const tierLabel = t => t ? t.charAt(0).toUpperCase() + t.slice(1).replace('_', ' ') : '';
+
+        function tierLockHtml(required, current) {
+            const why = current === 'free'
+                ? 'Activate a Fyndable license to use this feature.'
+                : `Your current plan is ${tierLabel(current)}. Upgrade to unlock this feature.`;
+            return `<div class="tier-lock card"><span class="dashicons dashicons-lock"></span>`
+                + `<h2>Available on ${tierLabel(required)} and higher</h2><p>${why}</p>`
+                + `<button class="btn" onclick="goTab('license')">${current === 'free' ? 'Activate license' : 'Upgrade plan'}</button></div>`;
+        }
+
+        function applyPlan(plan) {
+            if (!plan || !plan.features) return;
+            Object.entries(TAB_FEATURES).forEach(([tabId, feature]) => {
+                const panel = document.getElementById(tabId);
+                if (!panel) return;
+                const locked = plan.features[feature] === false;
+                document.querySelector(`.tab[data-tab="${tabId}"]`)?.classList.toggle('locked', locked);
+                panel.querySelector(':scope > .tier-lock')?.remove();
+                panel.classList.toggle('locked', locked);
+                if (locked) panel.insertAdjacentHTML('afterbegin', tierLockHtml(plan.required?.[feature], plan.tier));
+            });
+        }
+
+        function usageRow(icon, title, u) {
+            if (!u || u.limit === 0) return '';
+            const text = u.limit === null ? `${u.used} this month (unlimited)` : `${u.used} / ${u.limit} this month`;
+            const full = u.limit !== null && u.used >= u.limit;
+            return statusRow(icon, title, text, `<span class="badge ${full ? 'red' : 'green'}">${full ? 'Limit reached' : 'Available'}</span>`);
+        }
+
         function setLicensePill(tier, valid) {
             document.getElementById('hdr-license-label').textContent = tier || 'free';
             document.getElementById('hdr-license').classList.toggle('active', !!valid);
@@ -1253,6 +1299,9 @@
 
             // Close all dropdowns
             closeAllGroups();
+
+            // Locked tabs only show the upgrade notice
+            if (document.getElementById(tabId).classList.contains('locked')) return;
 
             // Load tab data
             if (tabId === 'overview') loadOverview();
@@ -1299,6 +1348,7 @@
             }
             const valid = !!data.license?.valid;
             setLicensePill(data.license?.tier, valid);
+            applyPlan(data.plan);
             document.getElementById('overview-stats').innerHTML =
                 statTile('License Tier', data.license?.tier || 'free', 'admin-network', 'purple', valid ? 'Active plan' : 'No active license')
                 + statTile('Products', data.product_count ?? 0, 'products', 'blue', 'in your store')
@@ -1308,6 +1358,8 @@
             const on = (ok, yes, no) => `<span class="badge ${ok ? 'green' : 'gray'}">${ok ? yes : no}</span>`;
             document.getElementById('overview-status').innerHTML =
                 statusRow('admin-network', 'License', `Tier: ${data.license?.tier || 'free'}`, on(valid, 'Active', 'Inactive'))
+                + usageRow('welcome-view-site', 'GEO scans', data.plan?.usage?.geo_scans)
+                + usageRow('edit-page', 'Blog articles', data.plan?.usage?.blog_articles)
                 + statusRow('media-code', '/llms.txt', 'Markdown summary for AI crawlers', on(data.llms_txt_enabled, 'Enabled', 'Disabled'))
                 + statusRow('media-text', '/llms-full.txt', 'Full content for AI crawlers', on(data.llms_txt_full_enabled, 'Enabled', 'Disabled'))
                 + statusRow('lock', 'App permissions', data.missing_scopes?.length ? `Missing: ${data.missing_scopes.join(', ')}` : 'All required scopes granted',
@@ -1414,6 +1466,11 @@
         }
 
         function showApiError(data) {
+            if (data.error === 'tier_too_low') {
+                contentResult(`<div class="alert error">${data.message}
+                    <br><a href="#" onclick="goTab('license'); return false;" style="font-weight:600;">Upgrade plan</a></div>`);
+                return;
+            }
             if (data.error === 'missing_scopes' && data.reauth_url) {
                 contentResult(`<div class="alert error">${data.message || 'Missing permissions.'}
                     <br><a href="${data.reauth_url}" target="_top" style="font-weight:600;">Re-authorize the app</a></div>`);

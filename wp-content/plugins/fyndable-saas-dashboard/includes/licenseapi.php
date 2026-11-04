@@ -697,7 +697,7 @@ class LicenseAPI
             'domain' => $tenant['domain'] ?? null,
             'limits' => $limits['checks'] ?? [],
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
-            'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
+            'api_calls_limit' => $settings->getEffectiveApiLimit($tenant),
             'monthly_auto_posts' => (int)$settings->getAutoPostLimitForTier($tenant['tier']),
             'monthly_geo_scans' => (int)$settings->getGeoScanLimitForTier($tenant['tier']),
             'expires_at' => $tenant['expires_at'],
@@ -920,6 +920,7 @@ class LicenseAPI
         $currentPeriod = current_time('Y-m');
         $usage = $this->tenants->getTenantUsage($tenantKey, $currentPeriod);
         $limits = $this->tenants->checkTenantLimits($tenantKey);
+        $apiLimit = (new \SSEOAISaaS\SaaSSettings())->getEffectiveApiLimit($tenant);
 
         // Get effective features for this license/tenant
         $featureManager = $this->getFeatureManager();
@@ -937,18 +938,18 @@ class LicenseAPI
                 'expires_at' => $tenant['expires_at'],
                 'max_sites' => (int)$tenant['max_sites'],
                 'rate_limit' => (int)$tenant['rate_limit'],
-                'api_calls_limit' => (int)$tenant['api_calls_limit'],
+                'api_calls_limit' => $apiLimit,
             ],
             'usage' => [
                 'current_month' => [
                     'api_calls' => (int)($usage['api_calls'] ?? 0),
-                    'api_calls_limit' => (int)$tenant['api_calls_limit'],
+                    'api_calls_limit' => $apiLimit,
                     'content_generated' => (int)($usage['content_generated'] ?? 0),
                     'serp_requests' => (int)($usage['serp_requests'] ?? 0),
                     'keywords_tracked' => (int)($usage['keywords_tracked'] ?? 0),
                     'api_cost' => (float)($usage['api_cost'] ?? 0),
                 ],
-                'remaining_calls' => max(0, (int)$tenant['api_calls_limit'] - (int)($usage['api_calls'] ?? 0)),
+                'remaining_calls' => max(0, $apiLimit - (int)($usage['api_calls'] ?? 0)),
             ],
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'limits' => $limits['checks'] ?? [],

@@ -120,6 +120,14 @@ class SaaSSettings
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_professional_api_calls', ['default' => 1000]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_business_api_calls', ['default' => 5000]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_agency_api_calls', ['default' => 20000]);
+
+        // Shopify tenants have their own API call limits per tier
+        foreach (array_keys(self::SHOPIFY_API_LIMITS) as $tier_slug) {
+            register_setting('sseo_ai_saas_billing', "ai_seo_saas_shopify_{$tier_slug}_api_calls", [
+                'default' => self::SHOPIFY_API_LIMITS[$tier_slug],
+                'sanitize_callback' => 'absint',
+            ]);
+        }
         
         // Cost limits per tier (in EUR)
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_starter_cost_limit', ['default' => 20]);
@@ -502,7 +510,44 @@ class SaaSSettings
         $optionName = "ai_seo_saas_{$tier}_api_calls";
         return (int)get_option($optionName, $this->getDefaultApiLimit($tier));
     }
-    
+
+    /**
+     * Default monthly API call limits for Shopify tenants (platform = shopify).
+     * Shopify has its own limits; trial mirrors Professional.
+     */
+    private const SHOPIFY_API_LIMITS = [
+        'starter'        => 500,
+        'early_adopters' => 500,
+        'trial'          => 2000,
+        'professional'   => 2000,
+        'business'       => 5000,
+        'agency'         => 20000,
+        'dev'            => 1000000,
+    ];
+
+    /**
+     * Monthly API call limit for a Shopify tenant of the given tier
+     * (option `ai_seo_saas_shopify_{tier}_api_calls`).
+     */
+    public static function shopifyApiLimit(string $tier): int
+    {
+        return (int)get_option("ai_seo_saas_shopify_{$tier}_api_calls", self::SHOPIFY_API_LIMITS[$tier] ?? 100);
+    }
+
+    /**
+     * Effective monthly API call limit for a tenant row. Shopify tenants follow
+     * the Shopify tier limit (so upgrades apply without touching the tenant row);
+     * other platforms keep the stored per-tenant limit with the tier option as fallback.
+     */
+    public function getEffectiveApiLimit(array $tenant): int
+    {
+        $tier = (string)($tenant['tier'] ?? '');
+        if (($tenant['platform'] ?? '') === 'shopify') {
+            return self::shopifyApiLimit($tier);
+        }
+        return (int)($tenant['api_calls_limit'] ?? 0) ?: $this->getApiLimitForTier($tier);
+    }
+
     /**
      * Get cost limit for tier (EUR)
      */
@@ -1312,6 +1357,7 @@ class SaaSSettings
                             <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Shopify API Calls/mo', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Cost Cap (EUR)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Auto Posts/mo', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('GEO Scans/mo', 'sseo-ai-saas'); ?></th>
@@ -1347,6 +1393,12 @@ class SaaSSettings
                                 <input type="number" step="1" min="0"
                                        name="ai_seo_saas_<?php echo esc_attr($tier); ?>_api_calls"
                                        value="<?php echo esc_attr($calls); ?>"
+                                       style="width: 120px;">
+                            </td>
+                            <td>
+                                <input type="number" step="1" min="0"
+                                       name="ai_seo_saas_shopify_<?php echo esc_attr($tier); ?>_api_calls"
+                                       value="<?php echo esc_attr(self::shopifyApiLimit($tier)); ?>"
                                        style="width: 120px;">
                             </td>
                             <td>

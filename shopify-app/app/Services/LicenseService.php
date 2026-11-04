@@ -122,6 +122,54 @@ class LicenseService
     }
 
     /**
+     * Tier used for feature gating: 'free' when the license is missing or invalid.
+     */
+    public function effectiveTier(Shop $shop): string
+    {
+        $result = $this->validate($shop);
+
+        return ($result['valid'] ?? false) ? ($result['tier'] ?? 'free') : 'free';
+    }
+
+    /**
+     * Minimum tier for a feature from config/tiers.php (null = not gated).
+     */
+    public function requiredTier(string $feature): ?string
+    {
+        return config("tiers.features.{$feature}");
+    }
+
+    /**
+     * Whether the shop's tier unlocks a feature.
+     */
+    public function canUse(Shop $shop, string $feature): bool
+    {
+        $required = $this->requiredTier($feature);
+        if ($required === null) {
+            return true;
+        }
+
+        $levels = config('tiers.levels', []);
+
+        return ($levels[$this->effectiveTier($shop)] ?? 0) >= ($levels[$required] ?? PHP_INT_MAX);
+    }
+
+    /**
+     * Feature => unlocked map for the dashboard.
+     *
+     * @return array<string, bool>
+     */
+    public function featureAccess(Shop $shop): array
+    {
+        $access = [];
+        foreach (array_keys(config('tiers.features', [])) as $feature) {
+            $access[$feature] = $this->canUse($shop, $feature);
+        }
+
+        return $access;
+    }
+
+    /**
      * Deactivate the license (clears local state; SaaS dashboard keeps the activation).
      */
     public function deactivate(Shop $shop): void

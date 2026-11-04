@@ -56,10 +56,6 @@ class RankTrackerController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
-        if (! $this->license->hasTier($shop, ['professional', 'business', 'agency', 'trial', 'dev'])) {
-            return ['error' => 'tier_too_low', 'message' => 'Rank tracking requires Professional tier or higher.'];
-        }
-
         $keyword = trim($request->input('keyword', ''));
         $url = trim($request->input('url', ''));
         $country = $request->input('country', 'us');

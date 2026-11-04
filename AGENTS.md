@@ -466,3 +466,14 @@ Volledig verslag: `security-patch-1.md` (repo root). Kort:
 - Settings → Brand Style References (`client.php`): per afbeelding `type` (logo|person|environment|product|style) én `policy` (free|minimal|locked = Vrij/Beperkt/Beschermd, zelfde instructies als FynnAI `EDIT_POLICIES`) in option `sseo_ai_client_photo_portfolio`. Bugfix: type werd nooit opgeslagen (JS zocht hidden field op een ontbrekend `data-idx`) — selects posten nu zelf; nieuwe items via `<template id="photo-portfolio-template">`.
 - Option `sseo_ai_client_brand_ref_mode`: `describe` (default — vision-beschrijving per afbeelding in de prompt; locked/minimal krijgen een gedetailleerde beschrijving) of `images` (geen vision-calls; afbeeldingen gaan als `input_references` mee naar OpenRouter `/api/v1/images`, base64 data-URL uit de 'large'-size, ≤4 MB, anders publieke URL; SVG overgeslagen; max 6, locked→minimal→free). Per afbeelding een regel "Reference image N (type) <policy>" achter de prompt. Faalt het model met referenties → één retry zonder. Andere providers (OpenAI/Stability/OpenArt) krijgen geen afbeeldingen.
 - Alleen `generateFeaturedImage`/`generateSocialImages` geven referenties mee (`generateImageFromPrompt($prompt, true)`); editor assistant en topiccluster niet.
+
+## Shopify tier-gating (2026-11-04)
+
+Indeling vastgelegd in `shopify-tier-indeling.xlsx` (repo root). Eén bron: `shopify-app/config/tiers.php`.
+
+- `features` → minimale tier per feature; route-middleware `shopify.tier:{feature}` (`RequireTier`) op alle routes in `routes/api.php` behalve dashboard/license/content-list/show. 403 `tier_too_low` (of `license_inactive` bij geen geldige licentie) met `required_tier`/`current_tier`. Trial = Professional-niveau. Oude hardcoded `hasTier()` in RankTrackerController verwijderd.
+- Starter: llms.txt, IndexNow, meta/beschrijving/alt-tekst/schema. Professional: FAQ, linksuggesties, AI-afbeelding, varianten, rank tracker, keyword explorer, competitor, GEO, AI tracker, insights, markets. Business: blog writer, content calendar, bulk optimizer.
+- `limits` → maandlimieten alleen voor Shopify, lokaal geteld in tabel `shop_usage` (`UsageLimiter`): GEO-scans Pro 10 / Business 30 / Agency onbeperkt; blogartikelen (generaties) Business 50 / Agency onbeperkt. Fout `limit_reached`.
+- API-calls/maand: SaaS `SaaSSettings::getEffectiveApiLimit($tenant)` — tenants met `platform=shopify` gebruiken `ai_seo_saas_shopify_{tier}_api_calls` (default Starter 500 / Pro+trial 2.000 / Business 5.000 / Agency 20.000; kolom "Shopify API Calls/mo" op Tier Pricing & Limits) i.p.v. de opgeslagen `api_calls_limit`. WordPress ongewijzigd.
+- `/dashboard/overview` geeft `plan {tier, features, required, usage}`; de blade zet een slotje op tabs + upgrade-kaart (`TAB_FEATURES` in de view moet synchroon blijven met `config/tiers.php`).
+- Let op: queue-jobs (`CheckRankingsJob`, `BulkOptimizeJob`) gaan niet door de middleware.

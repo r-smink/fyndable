@@ -963,7 +963,9 @@ class TenantRepository
         $usage = $this->getTenantUsage($tenantKey);
         
         // Get limits from tier settings or use defaults
-        $apiLimit = $tierLimits['api_calls'] ?? (int)$tenant['api_calls_limit'];
+        $apiLimit = $tierLimits['api_calls'] ?? (($tenant['platform'] ?? '') === 'shopify'
+            ? SaaSSettings::shopifyApiLimit((string)$tenant['tier'])
+            : (int)$tenant['api_calls_limit']);
         $costLimit = $tierLimits['api_cost'] ?? 100; // Default $100 cost limit
         $currentCost = (float)($usage['api_cost'] ?? 0);
         
