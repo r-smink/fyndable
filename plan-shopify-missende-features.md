@@ -10,7 +10,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 0.2 Zero-config onboarding + automatische trial (commit `2f25da4`; trial-tenant bij eerste app-load via 0.1, wizard met taal/land/merkstem + eerste 5 producten, merkstem in alle AI-teksten)
 - [x] 0.3 Consistente tier-gating (gebouwd in de IDE, commit `259f252`; tests toegevoegd in `tests/Feature/TierGatingTest.php`, commit `6b02973`)
 - [x] 0.4 Library-migratie + testsuite (commits `d824c7c`, `bb7b304`: Pest, eigen dunne GraphQL/Partner-clients via `Http::`, `shopify-app-php` verwijderd, 103 tests, audit schoon)
-- [ ] 0.5 Built for Shopify-eisen
+- [x] 0.5 Built for Shopify-eisen, app-kant (commits `8332c71` + Polaris-commit: Polaris web components, `s-app-nav`, `s-modal`, toasts, pagina per scherm, NL/EN overal, Instellingen-pagina voor taal/land/merkstem; zie "Stand 0.5")
 - [ ] 1.1 SEO-score + audit
 - [ ] 1.2 404-monitor + redirectmanager
 - [ ] 1.3 Bulk optimizer uitbreiden
@@ -28,7 +28,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - **OAuth-callback (opgelost, `bb7b304`):** de dode code-exchange is weg; `/auth/callback` controleert de HMAC en stuurt door naar het dashboard (route blijft omdat de TOML hem als redirect-URL declareert).
 - **GDPR (opgelost, `22ea92c`):** `shop/redact` verwijdert nu ook `scheduled_articles` en `shop_usage`, wist naam/e-mail/licentie en laat de SaaS de App Pricing-tenant verwijderen (`GdprDeleteTenantJob`). Daarbij drie bestaande fouten in de SaaS-route `/gdpr/delete` gerepareerd (ongeldige enum-status `deleted`, usage en tickets werden op een niet-bestaande kolom `tenant_key` verwijderd, `tenant_settings` bleven staan).
 - **0.2 (2026-11-05):** de product-AI-prompts gaven geen taal mee, dus Nederlandse winkels kregen Engelse teksten. Opgelost met `BrandVoice` (taal, land, toon, doelgroep, merkomschrijving uit `shop_profiles`). AiTracker (zichtbaarheidscheck) gebruikt bewust geen merkstem. Open: de wizard optimaliseert alleen SEO-titel + metabeschrijving, geen productbeschrijving (sneller, en bespaart trial-tegoed).
-- **i18n:** de dashboard-UI is Engelstalig. Sinds 0.1 is er een kleine NL/EN-laag (`I18N`/`t()`/`data-i18n` in de blade, taal uit `?locale=`) voor de plan- en trialteksten; de rest vertalen hoort bij 0.5.
+- **i18n (opgelost in 0.5):** alle merchant-teksten staan in `lang/{en,nl}/*.php` (Blade `__()`, JS `t()` via `window.FYN.i18n`); de UI-taal volgt de Shopify-admin (`?locale=`), de AI-contenttaal is een aparte instelling (Instellingen-pagina).
 - **App Pricing (docs gecontroleerd):** klopt met het plan. Aanvullend: Partner API-endpoint `https://partners.shopify.com/{partner_id}/api/2026-10/graphql.json`, header `X-Shopify-Access-Token`, client met permissie *Manage apps*, limiet 4 req/s. `activeSubscription` geeft `null` zonder actief abonnement en heeft geen statusveld; plan zit in `items[].handle`, verder `trialEndsAt`, `cancelAtEndOfCycle`, `currentBillingCycle`, `pendingUpdate`. Redirect geeft `plan_handle` (+ `shop` bij externe URL), `charge_id` niet meer. Geen eenmalige aankopen, dus credit-packs kunnen niet via App Pricing.
 
 ### Stand 0.1 (2026-11-04)
@@ -50,6 +50,17 @@ Open productvragen / vervolgpunten:
 - De SaaS-kant heeft geen geautomatiseerde tests (alleen `php -l`).
 - GDPR `shop/redact`: `trial_products` en `trial_ended_at` blijven bewust staan (alleen product-ID's, voorkomt trial-misbruik na herinstallatie).
 - 0.3: queue-jobs checken de tier nu zelf (`1da5e88`); `TAB_FEATURES` komt uit `config/tiers.php` `tabs`.
+
+### Stand 0.5 (2026-11-04)
+
+Gebouwd: de dashboard-blade van 189 KB (16 tabs, eigen tabbalk, dark mode, eigen knoppen, `alert()`/`confirm()`) is vervangen door 17 losse pagina's (`/dashboard/{page}`) op Polaris web components (`polaris-2.js`) met App Bridge-navigatie (`s-app-nav`), `s-page`/`s-section`, `s-modal` (onboarding + bevestigen) en App Bridge-toasts. Per pagina een eigen cachebaar script (`public/js/pages/*.js`, versie op filemtime); gedeelde code in `public/js/fyndable.js`. Plan-gating per pagina via `GET /api/dashboard/context` (vergrendelde pagina toont uitleg + knop naar Abonnement, BFS 4.3.7). Geen eigen kleuren meer (BFS 4.1.1 en 4.3.5, geen paars). Nieuwe pagina **Instellingen**: contenttaal, land en merkstem (`GET|POST /api/settings/profile`), los van de admintaal.
+
+Open / nog te controleren:
+- [ ] In een development store testen: navigatie (App Bridge laadt de pagina's met `shop`/`host`/`locale` in de URL), modals, toasts en de Polaris-velden (`s-date-field`, `s-number-field`).
+- [ ] Web Vitals meten in de admin (LCP <= 2,5 s, CLS <= 0,1, INP <= 200 ms); Shopify meet dit pas met echt verkeer.
+- [ ] Home-status via `app.extensions()` (BFS 4.2.3) zodra de theme-extensie (1.4) een app embed heeft.
+- Ruwe JSON-weergave blijft bij een paar inzicht-endpoints (backlinks, LLM-mentions, trends, clustering, GEO-detail); nette weergave per endpoint is vervolgwerk.
+- Storefront-impact: de theme app block laadt alleen JSON-LD (geen JS), dus geen meetbare score-daling verwacht; meten bij 1.4.
 
 ## Wat er al staat (uitgangspunt)
 
