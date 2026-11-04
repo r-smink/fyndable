@@ -530,3 +530,10 @@ Billing loopt via **Shopify App Pricing** (voorheen Managed Pricing). Geen Billi
 ### Tier-indeling nieuwe Shopify-functies (2026-11-04)
 
 Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier uit `LicenseFeatureManager` als basis): `seo_audit` professional, itemscore iedereen (niet gegated), `redirects` starter, `not_found_monitor` professional (404-routes en de beacon checken deze feature apart). Nieuwe Shopify-functie = eerst een rij in de spreadsheet, dan `config/tiers.php`.
+
+## Shopify winkelbreed schema (1.4, 2026-11-04)
+
+- App embed `extensions/fyndable-seo-schema/blocks/fyndable-seo-schema.liquid`: handmatig itemschema (metafields `fyndable.*_schema`, `fyndable.faq_schema`) gaat voor; daarna, als `app.metafields.fyndable.schema_config.value` bestaat: `home`-blokken (Organization/LocalBusiness, door de app gebouwd) + WebSite/SearchAction op `request.page_type == 'index'`, BreadcrumbList, automatisch Product en BlogPosting uit Liquid. Alle strings via `| json`, geen JavaScript.
+- `StoreSchemaService`: instellingen in `store_schema_settings` (flags, organization, local_business), `buildConfig()` (gating: `schema` starter, `local_business_schema` professional), `publish()` (metafieldsSet op `currentAppInstallation`, type json), `themeCheck()` (`ShopifyContentFetcher::getMainThemeFiles`, patterns `layout|sections|snippets|templates|blocks/*.liquid`).
+- API: `GET|POST /api/schema`, `POST /api/schema/theme-check` (scope `read_themes`). Dagelijks `SyncStoreSchemaJob` via scheduler `store-schema-sync`.
+- JS: `Fyn.embedStatus(handle)` (App Bridge `shopify.app.extensions()`, null als onbekend) en `Fyn.embedEditorUrl(handle)` (deeplink `shopify://admin/themes/current/editor?context=apps&activateAppId={apiKey}/{handle}`); `window.FYN.apiKey` is de publieke client-id.

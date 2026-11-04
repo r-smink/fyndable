@@ -14,7 +14,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 1.1 SEO-score + audit (zie "Stand 1.1")
 - [x] 1.2 404-monitor + redirectmanager (zie "Stand 1.2")
 - [ ] 1.3 Bulk optimizer uitbreiden
-- [ ] 1.4 Winkelbreed schema via app embed
+- [x] 1.4 Winkelbreed schema via app embed (zie "Stand 1.4")
 - [ ] 1.5 Google Search Console-koppeling
 - [ ] 1.6 Beeld-SEO
 - [ ] 1.7 Rapportage
@@ -89,6 +89,20 @@ Voor livegang (aanvulling op "Stand 0.1"):
 - [ ] `shopify app deploy` (webhooks, nieuwe scope, app embed).
 - [ ] Lokale/productie-`.env`: `SHOPIFY_SCOPES` aanvullen met `write_online_store_navigation` (zie `.env.example`); bestaande installaties krijgen de herautorisatie-melding.
 - [ ] In een development store testen: handle wijzigen, product verwijderen, 404 bezoeken met de app embed aan.
+
+### Stand 1.4 (2026-11-04)
+
+Gebouwd: de bestaande app embed "Fyndable SEO schema" geeft nu ook winkelbreed schema, aan/uit te zetten op de nieuwe pagina "Gestructureerde data":
+- **Uit Liquid, zonder API-calls en altijd actueel:** Product (alle varianten als Offer met prijs, valuta, voorraad, SKU, GTIN uit de barcode, merk, afbeeldingen, `reviews.rating`-metafields als AggregateRating), BlogPosting, BreadcrumbList (home > collectie/blog > item) en WebSite + SearchAction op de homepage. Handmatig opgeslagen itemschema (Content optimizer) gaat voor.
+- **Uit de instellingen:** Organization (merknaam, logo, sociale profielen, contact) en LocalBusiness (type, adres, geo, openingstijden, prijsklasse). Gepubliceerd als app-data-metafield `fyndable.schema_config` op de AppInstallation, die de embed via `app.metafields` leest.
+- **Dubbel-schema-check:** leest de Liquid-bestanden van het live thema (`read_themes`), vindt JSON-LD-blokken en het `structured_data`-filter, en toont per bestand de types en welke Fyndable-instelling dubbel zou zijn.
+- **Embed-status** via App Bridge `app.extensions()` op deze pagina en op Home (Built for Shopify 4.2.3), met een deeplink die de embed in de thema-editor aanzet.
+- Tier volgens `shopify-tier-indeling.xlsx` (rijen 32-33): winkelbreed schema Starter (volgt "Schema / JSON-LD"), LocalBusiness Professional (WP: Local SEO). De app publiceert functies buiten het plan als "uit"; dagelijks opnieuw gepubliceerd (`store-schema-sync`, 04:00), zodat downgrade of opzegging ook in de winkel doorwerkt.
+
+Afwijkingen / open:
+- "Uitschakeling van dubbel theme-schema" kan de app niet zelf doen: we hebben alleen `read_themes` (themacode aanpassen vraagt `write_themes`, wat de App Store alleen bij uitzondering toestaat). De check geeft de bestanden; de merchant zet het dubbele type in Fyndable uit of laat het thema aanpassen.
+- In een development store testen: de embed aanzetten en de output met de Google Rich Results Test controleren (Product, Breadcrumb, Organization).
+- `shopify app deploy` is nodig voor de nieuwe embed-code.
 
 ## Wat er al staat (uitgangspunt)
 
