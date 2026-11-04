@@ -5,6 +5,15 @@
     $pageUrl = fn (string $p) => ($p === 'home' ? '/dashboard' : '/dashboard/'.$p).($navQuery !== '' ? '?'.$navQuery : '');
     $pageI18n = \Illuminate\Support\Facades\Lang::has($page.'.js') ? __($page.'.js') : [];
     $pageScript = 'js/pages/'.$page.'.js';
+    $fynConfig = [
+        'shop' => $shopDomain,
+        'page' => $page,
+        'feature' => $feature,
+        'lang' => $lang,
+        'navQuery' => $navQuery,
+        'tabFeatures' => config('tiers.tabs', []),
+        'i18n' => array_merge(__('app.js'), is_array($pageI18n) ? $pageI18n : []),
+    ];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $lang }}">
@@ -17,17 +26,13 @@
     <script src="https://cdn.shopify.com/shopifycloud/polaris-2.js"></script>
     <link rel="stylesheet" href="{{ $asset('css/fyndable.css') }}">
     <script>
-        window.FYN = @json([
-            'shop' => $shopDomain,
-            'page' => $page,
-            'feature' => $feature,
-            'lang' => $lang,
-            'navQuery' => $navQuery,
-            'tabFeatures' => config('tiers.tabs', []),
-            'i18n' => array_merge(__('app.js'), is_array($pageI18n) ? $pageI18n : []),
-        ]);
+        window.FYN = {!! json_encode($fynConfig, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
     </script>
     <script src="{{ $asset('js/fyndable.js') }}" defer></script>
+    {{-- Shared scripts a page needs, e.g. @php($scripts = ['onboarding']) in the page view. --}}
+    @foreach ($scripts ?? [] as $extra)
+        <script src="{{ $asset('js/'.trim($extra).'.js') }}" defer></script>
+    @endforeach
     @if (file_exists(public_path($pageScript)))
         <script src="{{ $asset($pageScript) }}" defer></script>
     @endif

@@ -246,11 +246,14 @@ it('produces signature headers that change with the body', function () {
         ->and($a['X-Fyndable-Timestamp'])->toBe('1700000000');
 });
 
-it('renders the dashboard shell with the plan tab and the billing i18n strings', function () {
-    $this->get('/dashboard?shop='.TEST_SHOP.'&locale=nl-NL')
+it('renders the plan page with the billing i18n strings in the admin language', function () {
+    $this->get('/dashboard/plan?shop='.TEST_SHOP.'&locale=nl-NL')
         ->assertOk()
         ->assertSee('id="billing-card"', false)
         ->assertSee('Kies een abonnement')
+        ->assertDontSee('Choose a plan');
+
+    $this->get('/dashboard/plan?shop='.TEST_SHOP.'&locale=en-US')
         ->assertSee('Choose a plan');
 });
 

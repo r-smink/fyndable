@@ -199,9 +199,19 @@ it('sends the store language with product meta generation', function () {
         && str_contains(json_encode($r['messages'] ?? $r->data()), 'Write all text in Dutch.'));
 });
 
-it('renders the onboarding wizard in the dashboard', function () {
-    $this->get('/dashboard?shop='.TEST_SHOP)
+it('renders the onboarding wizard as a Polaris modal on home and settings', function (string $url) {
+    $this->get($url.'?shop='.TEST_SHOP.'&locale=nl-NL')
         ->assertOk()
-        ->assertSee('id="onboarding"', false)
+        ->assertSee('<s-modal id="onb-modal"', false)
+        ->assertSee('js/onboarding.js', false)
         ->assertSee('Optimaliseer je eerste producten');
+})->with(['/dashboard', '/dashboard/settings']);
+
+it('only opens the wizard from the setup card, never on page load', function () {
+    // Built for Shopify 4.3.6: the card is hidden until the overview says
+    // onboarding is open, and only its button calls FynOnboarding.open().
+    $this->get('/dashboard?shop='.TEST_SHOP)
+        ->assertSee('<s-section id="onb-card" hidden>', false);
+
+    expect(file_get_contents(public_path('js/pages/home.js')))->not->toContain('FynOnboarding.open(');
 });

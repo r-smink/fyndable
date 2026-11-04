@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'intro' => 'Help AI-assistenten (ChatGPT, Claude, Gemini, Perplexity) je winkel te begrijpen met een gestructureerd llms.txt-bestand. Levert /llms.txt (markdown-samenvatting) en /llms-full.txt (volledige content) voor AI-crawlers.',
+    'save' => 'Instellingen opslaan',
+    'regenerate' => 'Opnieuw genereren',
+    'preview' => 'Voorbeeld',
+    'redirects' => 'Redirects voor /llms.txt in de root maken',
+    'settings_title' => 'llms.txt-generator',
+    'enabled' => '/llms.txt inschakelen',
+    'enabled_details' => 'Markdown-samenvatting van je winkel',
+    'full_enabled' => '/llms-full.txt inschakelen',
+    'full_enabled_details' => 'Volledige content voor AI-crawlers',
+    'content_types' => 'Welke content opnemen',
+    'products' => 'Producten',
+    'collections' => 'Collecties',
+    'pages' => 'Pagina\'s',
+    'blogs' => 'Blogartikelen',
+    'max_products' => 'Maximaal aantal producten',
+    'max_chars' => 'Maximaal aantal tekens per item (volledige versie)',
+    'description' => 'Omschrijving van de site',
+    'description_details' => 'Optioneel, standaard de omschrijving van je winkel',
+    'custom' => 'Eigen secties',
+    'custom_details' => 'Markdown, optioneel',
+    'preview_title' => 'Voorbeeld van /llms.txt',
+    'preview_empty' => 'Klik op "Voorbeeld" om de gegenereerde llms.txt te laden.',
+
+    'js' => [
+        'sizes' => 'Samenvatting: {summary} KB | Volledig: {full} KB',
+        'settings_saved' => 'Instellingen opgeslagen',
+        'regenerated' => 'Opnieuw gegenereerd. Samenvatting: {summary} KB, volledig: {full} KB',
+        'no_content' => 'Geen content ontvangen',
+        'creating_redirects' => 'Redirects maken...',
+        'redirects_result' => 'Redirects:',
+    ],
+];

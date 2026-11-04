@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'intro' => 'Track keyword rankings in Google for your product and collection pages.',
+    'check_now' => 'Check rankings now',
+    'add_title' => 'Add keyword',
+    'keyword' => 'Keyword',
+    'keyword_ph' => 'e.g. blue sneakers',
+    'url' => 'URL to track',
+    'url_details' => 'Optional',
+    'add' => 'Add keyword',
+    'tracked' => 'Tracked keywords',
+
+    'js' => [
+        'rt_total' => 'Total keywords',
+        'rt_total_sub' => 'tracked',
+        'rt_top3' => 'Top 3',
+        'rt_top3_sub' => 'positions 1-3',
+        'rt_top10' => 'Top 10',
+        'rt_top10_sub' => 'positions 1-10',
+        'rt_top100' => 'Top 100',
+        'rt_top100_sub' => 'positions 1-100',
+        'rt_not_ranked' => 'Not ranked',
+        'rt_not_ranked_sub' => 'outside the top 100',
+        'rt_empty' => 'No keywords tracked yet.',
+        'rt_col_keyword' => 'Keyword',
+        'rt_col_url' => 'URL',
+        'rt_col_last' => 'Last position',
+        'rt_col_best' => 'Best',
+        'rt_col_checked' => 'Last checked',
+        'rt_delete' => 'Delete',
+        'rt_delete_confirm' => 'Stop tracking this keyword?',
+        'rt_enter_keyword' => 'Enter a keyword',
+        'rt_check_started' => 'Rank check started. Results appear after processing.',
+    ],
+];

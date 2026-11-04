@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'intro' => 'Help AI assistants (ChatGPT, Claude, Gemini, Perplexity) understand your store through a structured llms.txt file. Serves /llms.txt (markdown summary) and /llms-full.txt (full content) for AI crawlers.',
+    'save' => 'Save settings',
+    'regenerate' => 'Regenerate',
+    'preview' => 'Preview',
+    'redirects' => 'Create root /llms.txt redirects',
+    'settings_title' => 'llms.txt generator',
+    'enabled' => 'Enable /llms.txt',
+    'enabled_details' => 'Markdown summary of your store',
+    'full_enabled' => 'Enable /llms-full.txt',
+    'full_enabled_details' => 'Full content for AI crawlers',
+    'content_types' => 'Content types to include',
+    'products' => 'Products',
+    'collections' => 'Collections',
+    'pages' => 'Pages',
+    'blogs' => 'Blog articles',
+    'max_products' => 'Max products',
+    'max_chars' => 'Max characters per item (full version)',
+    'description' => 'Site description',
+    'description_details' => 'Optional, defaults to the shop description',
+    'custom' => 'Custom sections',
+    'custom_details' => 'Markdown, optional',
+    'preview_title' => 'Preview of /llms.txt',
+    'preview_empty' => 'Click "Preview" to load the generated llms.txt.',
+
+    'js' => [
+        'sizes' => 'Summary size: {summary} KB | Full size: {full} KB',
+        'settings_saved' => 'Settings saved',
+        'regenerated' => 'Regenerated. Summary: {summary} KB, full: {full} KB',
+        'no_content' => 'No content returned',
+        'creating_redirects' => 'Creating redirects...',
+        'redirects_result' => 'Redirects:',
+    ],
+];
