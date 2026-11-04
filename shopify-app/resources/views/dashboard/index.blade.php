@@ -330,6 +330,9 @@
         .onb-product { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
         .onb-product img, .onb-noimg { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--well); flex-shrink: 0; }
         .onb-product .grow { flex: 1; }
+        .onb-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 0; }
+        .onb-card .grow { flex: 1; min-width: 220px; }
+        .onb-card h2 { margin: 0 0 4px; font-size: 16px; color: var(--text-h); }
     </style>
 </head>
 <body>
@@ -1528,11 +1531,16 @@
             if (data.onboarding?.language && document.querySelector(`#bw-lang option[value="${data.onboarding.language}"]`)) {
                 document.getElementById('bw-lang').value = data.onboarding.language;
             }
-            // First visit: open the onboarding wizard once per session (not
-            // when a plan is required; the merchant goes to the plan page first).
-            if (data.onboarding && !data.onboarding.done && !['none', 'unknown'].includes(data.billing?.state) && !sessionStorage.getItem('fyn-onboarding-shown')) {
-                sessionStorage.setItem('fyn-onboarding-shown', '1');
-                openOnboarding();
+            // Setup card on the home page until onboarding is completed or
+            // skipped. Built for Shopify 4.3.6: no auto-opening modals, so the
+            // wizard only opens on click; 4.2.2: the card disappears when done.
+            if (data.onboarding && !data.onboarding.done && !['none', 'unknown'].includes(data.billing?.state)) {
+                document.getElementById('overview-stats').insertAdjacentHTML('afterbegin', `
+                    <div class="card onb-card" style="grid-column: 1 / -1;">
+                        <div class="grow"><h2>${escHtml(t('onb_card_title'))}</h2><p class="muted">${escHtml(t('onb_card_text'))}</p></div>
+                        <button class="btn" onclick="openOnboarding()">${escHtml(t('onb_card_start'))}</button>
+                        <button class="btn secondary" onclick="skipOnboarding()">${escHtml(t('onb_skip'))}</button>
+                    </div>`);
             }
             if (data.missing_scopes && data.missing_scopes.length) {
                 document.getElementById('overview-stats').insertAdjacentHTML('beforeend', `
@@ -2731,6 +2739,7 @@
                 onb_working: 'Optimizing...', onb_ok: 'Done', onb_failed: 'Failed', onb_finish: 'Go to dashboard', onb_done_title: 'All set!',
                 onb_done_text: '{ok} of {total} products optimized. Find more tools in the menu above.', onb_save_failed: 'Could not save your settings. Please check the fields.',
                 onb_reopen: 'Store profile and onboarding',
+                onb_card_title: 'Set up Fyndable in 3 steps', onb_card_text: 'Choose your store language and brand voice, then optimize your first products. Takes about 2 minutes.', onb_card_start: 'Start setup',
             },
             nl: {
                 onb_title: 'Welkom bij Fyndable', onb_step: 'Stap {n} van 3', onb_skip: 'Later doen', onb_next: 'Volgende', onb_back: 'Terug',
@@ -2745,6 +2754,7 @@
                 onb_working: 'Bezig...', onb_ok: 'Klaar', onb_failed: 'Mislukt', onb_finish: 'Naar het dashboard', onb_done_title: 'Helemaal klaar!',
                 onb_done_text: '{ok} van {total} producten geoptimaliseerd. Meer tools vind je in het menu hierboven.', onb_save_failed: 'Je instellingen konden niet worden opgeslagen. Controleer de velden.',
                 onb_reopen: 'Winkelprofiel en onboarding',
+                onb_card_title: 'Stel Fyndable in 3 stappen in', onb_card_text: 'Kies de taal en merkstem van je winkel en optimaliseer je eerste producten. Duurt ongeveer 2 minuten.', onb_card_start: 'Setup starten',
             },
         };
         Object.keys(ONB_I18N).forEach(lang => Object.assign(I18N[lang], ONB_I18N[lang]));
@@ -2779,6 +2789,7 @@
         async function skipOnboarding() {
             await api('/onboarding/skip', { method: 'POST' });
             closeOnboarding();
+            loadOverview();
         }
 
         function onbField(id) { return document.getElementById(id); }
@@ -2889,6 +2900,7 @@
         async function finishOnboarding() {
             await api('/onboarding/complete', { method: 'POST' });
             closeOnboarding();
+            loadOverview();
         }
 
         // Load overview on page load
