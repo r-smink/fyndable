@@ -537,3 +537,10 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - `StoreSchemaService`: instellingen in `store_schema_settings` (flags, organization, local_business), `buildConfig()` (gating: `schema` starter, `local_business_schema` professional), `publish()` (metafieldsSet op `currentAppInstallation`, type json), `themeCheck()` (`ShopifyContentFetcher::getMainThemeFiles`, patterns `layout|sections|snippets|templates|blocks/*.liquid`).
 - API: `GET|POST /api/schema`, `POST /api/schema/theme-check` (scope `read_themes`). Dagelijks `SyncStoreSchemaJob` via scheduler `store-schema-sync`.
 - JS: `Fyn.embedStatus(handle)` (App Bridge `shopify.app.extensions()`, null als onbekend) en `Fyn.embedEditorUrl(handle)` (deeplink `shopify://admin/themes/current/editor?context=apps&activateAppId={apiKey}/{handle}`); `window.FYN.apiKey` is de publieke client-id.
+
+## Shopify bulk optimizer (1.3, 2026-11-04)
+
+- `BulkOptimizer`: `ACTIONS` per type (product: meta_title, meta, titles, alt_text, descriptions; collection: meta_title, meta, descriptions; page/article: meta_title, meta), `TEMPLATE_ACTIONS` (meta_title, meta), `select()` (via `getAuditItems`, met "alleen nodig" op basis van `SeoAuditor`-issues), `render()` (placeholders, scheidingstekens opruimen, woordgrens), `process()` (AI of sjabloon, opslaan per type).
+- `BulkOptimizeJob(shopId, type, action, mode, template, items)` draait in de queue; voortgang in cache `bulk:{shop_id}` (status queued|running|completed|cancelled|failed, errors[]). Na elk item wordt eerst gecontroleerd op "cancelled" voordat de voortgang wordt weggeschreven.
+- API: `POST /api/bulk/optimize|preview|cancel`, `GET /api/bulk/progress` (tier `bulk_optimizer`; pagina's/artikelen checken `write_content` in de controller). Deep link `/dashboard/bulk?type=product&action=meta`.
+- JS `t()` laat onbekende `{naam}`-placeholders staan (nodig voor `{{title}}` in helpteksten).

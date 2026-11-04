@@ -13,7 +13,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 0.5 Built for Shopify-eisen, app-kant (commits `8332c71` + Polaris-commit: Polaris web components, `s-app-nav`, `s-modal`, toasts, pagina per scherm, NL/EN overal, Instellingen-pagina voor taal/land/merkstem; zie "Stand 0.5")
 - [x] 1.1 SEO-score + audit (zie "Stand 1.1")
 - [x] 1.2 404-monitor + redirectmanager (zie "Stand 1.2")
-- [ ] 1.3 Bulk optimizer uitbreiden
+- [x] 1.3 Bulk optimizer uitbreiden (zie "Stand 1.3")
 - [x] 1.4 Winkelbreed schema via app embed (zie "Stand 1.4")
 - [ ] 1.5 Google Search Console-koppeling
 - [ ] 1.6 Beeld-SEO
@@ -103,6 +103,26 @@ Afwijkingen / open:
 - "Uitschakeling van dubbel theme-schema" kan de app niet zelf doen: we hebben alleen `read_themes` (themacode aanpassen vraagt `write_themes`, wat de App Store alleen bij uitzondering toestaat). De check geeft de bestanden; de merchant zet het dubbele type in Fyndable uit of laat het thema aanpassen.
 - In een development store testen: de embed aanzetten en de output met de Google Rich Results Test controleren (Product, Breadcrumb, Organization).
 - `shopify app deploy` is nodig voor de nieuwe embed-code.
+
+### Stand 1.3 (2026-11-04)
+
+Gebouwd: de bulk optimizer is opnieuw opgezet (`BulkOptimizer`-service + `BulkOptimizeJob`):
+- **Alle types:** producten (metatitel, metabeschrijving, producttitel, alt-tekst, beschrijving), collecties (metatitel, metabeschrijving, beschrijving), pagina's en blogartikelen (metatitel, metabeschrijving). Opslaan zoals de Content optimizer: SEO-velden voor producten/collecties, `global.title_tag`/`description_tag` voor pagina's en artikelen.
+- **Sjabloonregels zonder AI** voor metatitels en -beschrijvingen: `{{title}}`, `{{shop}}`, `{{vendor}}`, `{{type}}`, `{{price}}`, `{{blog}}`, `{{excerpt}}`; lege placeholders en hun scheidingstekens verdwijnen, afkappen op een woordgrens (60/155 tekens). Voorbeeld van 5 items (huidig -> nieuw) voor je start.
+- **"Alleen items die het nodig hebben"** (standaard aan): kiest items met het bijbehorende SEO-audit-probleem, zodat goede content niet wordt overschreven.
+- Echte achtergrondrun met live voortgang, foutlijst per item, stoppen tussen items en een run per winkel. De SEO-audit linkt nu ook metatitel-problemen naar de bulk optimizer.
+- Tier: Business (rij 34 in `shopify-tier-indeling.xlsx`, uitbreiding van "Bulk Optimizer"; ook de sjabloonmodus, conform de bestaande rij).
+
+Gevonden en opgelost:
+- De run draaide binnen het HTTP-verzoek (`dispatchSync`), wat bij grote aantallen een timeout gaf; nu via de queue.
+- Na een run bleef dezelfde actie een uur geblokkeerd (`job_running`).
+- De productlijst kwam uit de zware `getProducts`-query (varianten, metafields, afbeeldingen, tot 250 per pagina). Die gaat boven Shopify's querykostenlimiet, waardoor er bij een limiet van 100 waarschijnlijk niets terugkwam. Nu de slanke audit-query (40 per pagina).
+- Een "Stop" tijdens het verwerken van een item werd overschreven door de voortgangsupdate.
+- Alt-teksten via het verouderde `productUpdateMedia`; nu `fileUpdate` (`ShopifyAdminWriter::updateMediaAlt`).
+
+Open:
+- Pagina- en artikelteksten herschrijven zit er bewust niet in (te riskant voor lange content); kan later met een voorbeeldstap.
+- De queue worker moet draaien (zie "Stand 0.1").
 
 ## Wat er al staat (uitgangspunt)
 
