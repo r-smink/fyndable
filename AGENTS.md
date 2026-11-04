@@ -558,3 +558,10 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - `ReportBuilder::create($shop, $end)` maakt een `seo_reports`-snapshot van de 7 dagen tot `$end` (seo, rankings, search_console met vorige klikken, geo, activity). `ReportMailer::createAndSend()` mailt `WeeklyReportMail` (view `reports/email`, gedeelde partial `reports/_content` met inline styles) in `report_language` (anders contenttaal, anders en). Instellingen op `shop_profiles` (`report_enabled`, `report_email`, `report_language`).
 - Signed web-routes: `report.show` (`/report/{report}`, printbaar, noindex) en `report.unsubscribe` (`/report/unsubscribe/{shop}`). Scheduler `weekly-seo-report` (maandag 07:00), job `SendSeoReportJob($shopId, $manual)`.
 - API `/api/reports`, `/api/reports/settings`, `/api/reports/send` (tier `reports`, professional). `shop/redact` verwijdert rapporten en het activiteitenlog.
+
+## Shopify AI-shopping (2.1, 2026-11-04)
+
+- `AiCommerce` (puur): `group()` (varianten -> producten, alleen ACTIVE + online), `score()` (`CHECKS`, totaal 100), `openAiRow()` / `googleItem()` (OpenAI Product Feed Spec / Merchant Center), `validGtin()` (GTIN-8/12/13/14 controlecijfer), `attributes()` (metafield `fyndable.ai_attributes`).
+- `ShopifyContentFetcher::getFeedVariants()` (productVariants, 50 per pagina, productvelden per variant). `FeedBuilder::build()` schrijft `storage/app/private/feeds/{shop_id}/google.xml|openai.jsonl`, vult `ai_readiness_items` en `product_feeds` (status, tellingen, gemiddelde, issue-samenvatting).
+- `AiAttributes`: `generate()` (AI, JSON, normaliseert enums), `save()` (metafieldsSet json). Bulkactie `ai_attributes` in `BulkOptimizer` ("alleen nodig" = metafield leeg).
+- API `/api/ai-ready/*` (tier `ai_readiness`; attributen `ai_attributes`, met `shopify.trial`). Publiek: `GET /feeds/{token}/{google.xml|openai.jsonl}` (`FeedController`, 404 als uit, geen plan of niet geinstalleerd). Scheduler `product-feed-build` 02:00.

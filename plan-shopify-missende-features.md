@@ -18,7 +18,8 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 1.5 Google Search Console-koppeling (zie "Stand 1.5")
 - [ ] 1.6 Beeld-SEO
 - [x] 1.7 Rapportage (zie "Stand 1.7"; PDF als printbare pagina, server-side PDF wacht op akkoord voor een dependency)
-- [ ] 2.1 t/m 2.9 (fase 2)
+- [x] 2.1 AI-commerce readiness + productfeeds (zie "Stand 2.1")
+- [ ] 2.2 t/m 2.9 (fase 2)
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
 
@@ -156,6 +157,19 @@ Afwijkingen / beslissing nodig:
 Voor livegang:
 - [ ] Mail instellen in productie (`MAIL_MAILER`, `MAIL_HOST`, `MAIL_FROM_ADDRESS`, ...; nu `log` in `.env.example`) en SPF/DKIM voor het afzenderdomein.
 - [ ] Queue worker + scheduler (al nodig, zie "Stand 0.1").
+
+### Stand 2.1 (2026-11-04)
+
+Gebouwd: pagina "AI-shopping".
+- **AI-ready score per product** (0-100): geldige GTIN (met controlecijfer), beschrijving van minstens 80 woorden, shopping-attributen (materiaal, kenmerken, toepassingen), merk, Shopify-productcategorie, minstens 3 afbeeldingen, producttype, optienamen bij varianten, reviewscore (`reviews.rating`-metafields), metabeschrijving. Gemiddelde, overzicht per probleem en productlijst (slechtste eerst).
+- **Shopping-attributen met AI:** materiaal, kleur, kenmerken, toepassingen, doelgroep, onderhoud, geslacht, leeftijdsgroep, alleen uit de productgegevens ("verzin geen specificaties"); voorbeeld, aanpassen en opslaan als metafield `fyndable.ai_attributes` (json). Ook als bulkactie voor alle producten. Materiaal en kleur gaan ook in het automatische Product-schema van de app embed.
+- **Productfeeds:** Google Merchant Center (RSS-XML met `g:`-velden) en OpenAI (JSONL volgens de OpenAI Product Feed Spec: `item_id`, `url`, `image_url`, `price` "79.00 EUR", `sale_price`, `group_id`/`variant_dict`, `gtin`, `product_category`, `material`, `star_rating` ...). Een regel per variant, alleen actieve producten in de onlinewinkel, `is_eligible_checkout=false`. Publiek onder een geheime URL (`/feeds/{token}/google.xml|openai.jsonl`), elke nacht opnieuw opgebouwd (`product-feed-build`, 02:00), token te vernieuwen. Bij uninstall gaan de feeds offline, bij `shop/redact` worden ze verwijderd.
+- **Tier:** geen WordPress-equivalent, dus een voorstel in `shopify-tier-indeling.xlsx` (rijen 37-38): score + feeds Professional, AI-attributen Professional, bulk via de Bulk Optimizer (Business). **Te bevestigen.**
+
+Open:
+- Feeds moeten de merchant zelf aanmelden (Merchant Center: geplande ophaal-URL; OpenAI: merchant-programma). Instant Checkout (`is_eligible_checkout`) staat uit.
+- Gewicht/afmetingen en voorraadaantallen ontbreken (vragen `read_inventory`).
+- Shopify-standaardcategorie-metafields (taxonomiewaarden) worden niet automatisch ingevuld; de score wijst ze aan.
 
 ## Wat er al staat (uitgangspunt)
 
