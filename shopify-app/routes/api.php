@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiCrawlersController;
 use App\Http\Controllers\AiReadyController;
 use App\Http\Controllers\AiTrackerController;
 use App\Http\Controllers\BillingController;
@@ -71,6 +72,11 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // AI crawler management via robots.txt.liquid (2.2)
+    Route::get('/ai-crawlers', [AiCrawlersController::class, 'show'])->middleware('shopify.tier:ai_crawlers');
+    Route::post('/ai-crawlers', [AiCrawlersController::class, 'save'])->middleware('shopify.tier:ai_crawlers');
+    Route::post('/ai-crawlers/check', [AiCrawlersController::class, 'check'])->middleware('shopify.tier:ai_crawlers')->middleware('shopify.scope:read_themes');
 
     // AI-commerce readiness + product feeds (2.1)
     Route::middleware('shopify.tier:ai_readiness')->prefix('ai-ready')->group(function () {

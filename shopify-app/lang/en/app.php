@@ -30,6 +30,7 @@ return [
         'geoscan' => 'GEO scan',
         'aitracker' => 'AI tracker',
         'llmstxt' => 'llms.txt',
+        'aicrawlers' => 'AI crawlers',
         'tools' => 'Tools',
         'reports' => 'Reports',
         'settings' => 'Settings',

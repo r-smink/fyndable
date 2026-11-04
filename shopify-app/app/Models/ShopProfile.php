@@ -23,6 +23,7 @@ class ShopProfile extends Model
         'report_enabled',
         'report_email',
         'report_language',
+        'ai_crawlers',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class ShopProfile extends Model
         'redirect_on_delete' => 'boolean',
         'not_found_monitor' => 'boolean',
         'report_enabled' => 'boolean',
+        'ai_crawlers' => 'array',
     ];
 
     public function shop(): BelongsTo

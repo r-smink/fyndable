@@ -32,6 +32,7 @@ return [
 
     'features' => [
         'llmstxt' => 'starter',
+        'ai_crawlers' => 'starter',
         'redirects' => 'starter',
         'indexnow' => 'starter',
         'content_meta' => 'starter',
@@ -84,6 +85,7 @@ return [
         'geoscan' => 'geo_scan',
         'aitracker' => 'ai_tracker',
         'llmstxt' => 'llmstxt',
+        'aicrawlers' => 'ai_crawlers',
         'tools' => 'indexnow',
     ],
 
