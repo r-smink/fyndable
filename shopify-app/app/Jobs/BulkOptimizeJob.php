@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Shop;
+use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use App\Services\ShopifyTokenService;
 use Illuminate\Bus\Queueable;
@@ -42,6 +43,15 @@ class BulkOptimizeJob implements ShouldQueue
         $shop = Shop::find($this->shopId);
         if (! $shop || ! $shop->hasAccessToken() || ! $shop->hasLicense()) {
             Log::warning('BulkOptimizeJob: shop not ready', ['shop_id' => $this->shopId]);
+
+            return;
+        }
+
+        // Queued work bypasses the shopify.tier route middleware: re-check the
+        // tier, the plan may have been downgraded or cancelled since dispatch.
+        if (! app(LicenseService::class)->canUse($shop, 'bulk_optimizer')) {
+            Log::info('BulkOptimizeJob: tier no longer allows bulk optimizer', ['shop_id' => $this->shopId]);
+            Cache::put("bulk:{$this->shopId}:{$this->action}", ['status' => 'failed', 'error' => 'tier_too_low'], now()->addHour());
 
             return;
         }

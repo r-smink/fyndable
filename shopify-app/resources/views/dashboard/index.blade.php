@@ -1238,15 +1238,10 @@
                 + `<div class="grow"><div class="t">${title}</div><div class="s">${sub}</div></div>${badge}</div>`;
         }
 
-        // Tier gating — tab => feature key from config/tiers.php. Filled from
-        // /dashboard/overview (plan.features / plan.required); the server
-        // enforces the same map via the shopify.tier middleware.
-        const TAB_FEATURES = {
-            content: 'content_meta', bulk: 'bulk_optimizer', blogwriter: 'blog_writer', calendar: 'content_calendar',
-            ranktracker: 'rank_tracker', kwexplorer: 'keyword_explorer', competitor: 'competitor', backlinks: 'backlinks',
-            markets: 'markets', aivisibility: 'llm_insights', geoscan: 'geo_scan', aitracker: 'ai_tracker',
-            llmstxt: 'llmstxt', tools: 'indexnow',
-        };
+        // Tier gating - tab => feature key, rendered from config/tiers.php
+        // (`tabs`). Lock state comes from /dashboard/overview (plan.features /
+        // plan.required); the server enforces it via the shopify.tier middleware.
+        const TAB_FEATURES = @json(config('tiers.tabs', []));
         const tierLabel = t => t ? t.charAt(0).toUpperCase() + t.slice(1).replace('_', ' ') : '';
 
         function tierLockHtml(required, current) {

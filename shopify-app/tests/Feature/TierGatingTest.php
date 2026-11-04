@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\CheckRankingsJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Models\Shop;
 use App\Services\LicenseService;
@@ -100,4 +101,25 @@ it('schedules the hourly billing sync for paying App Pricing shops and expired t
     Queue::assertPushed(SyncShopBillingJob::class, 2);
     Queue::assertPushed(SyncShopBillingJob::class, fn ($job) => $job->shopId === $expiredTrial->id);
     Queue::assertPushed(SyncShopBillingJob::class, fn ($job) => $job->shopId === $paying->id && ! $job->uninstalled);
+});
+
+it('skips the queued rank check when the plan no longer includes the rank tracker', function () {
+    $shop = licensedShop('starter');
+    $shop->trackedKeywords()->create(['keyword' => 'seo app', 'country' => 'us', 'language' => 'en']);
+
+    (new CheckRankingsJob($shop->id))->handle();
+
+    Http::assertNotSent(fn ($r) => str_contains($r->url(), '/serp/'));
+});
+
+it('only maps dashboard tabs to known feature keys', function () {
+    foreach (config('tiers.tabs') as $tab => $feature) {
+        expect(config('tiers.features'))->toHaveKey($feature);
+    }
+});
+
+it('renders the tab map from config into the dashboard', function () {
+    $this->get('/dashboard?shop='.TEST_SHOP)
+        ->assertOk()
+        ->assertSee('"geoscan":"geo_scan"', false);
 });

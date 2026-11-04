@@ -17,7 +17,7 @@ class BulkOptimizeJobTest extends TestCase
 
     private function makeShop(): Shop
     {
-        return Shop::create([
+        $shop = Shop::create([
             'shop_domain' => 'test-shop.myshopify.com',
             'access_token' => 'shpat_test',
             'token_expires_at' => now()->addHour(),
@@ -26,6 +26,23 @@ class BulkOptimizeJobTest extends TestCase
             'is_installed' => true,
             'is_uninstalled' => false,
         ]);
+
+        // Business plan (cached license validation), so the job's tier check passes.
+        Cache::put("shop:{$shop->id}:license_status", ['valid' => true, 'tier' => 'business'], 3600);
+
+        return $shop;
+    }
+
+    public function test_job_stops_when_the_tier_no_longer_allows_bulk_optimizer(): void
+    {
+        $shop = $this->makeShop();
+        Cache::put("shop:{$shop->id}:license_status", ['valid' => true, 'tier' => 'starter'], 3600);
+        Http::fake();
+
+        (new BulkOptimizeJob($shop->id, 'meta', ['gid://shopify/Product/1']))->handle();
+
+        $this->assertSame('tier_too_low', Cache::get("bulk:{$shop->id}:meta")['error'] ?? null);
+        Http::assertNothingSent();
     }
 
     public function test_cancelled_job_retains_cancelled_status(): void
@@ -68,6 +85,10 @@ class BulkOptimizeJobTest extends TestCase
         // First get() is the initial progress read (running); the in-loop get()
         // sees the cancellation; the post-loop get() reads the cancelled entry
         // the job must preserve.
+        // Tier check reads the cached license validation first.
+        Cache::shouldReceive('get')
+            ->with("shop:{$shop->id}:license_status")
+            ->andReturn(['valid' => true, 'tier' => 'business']);
         Cache::shouldReceive('get')
             ->with($jobKey, [])
             ->andReturn($running, $cancelled, $cancelled);

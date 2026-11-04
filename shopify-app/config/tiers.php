@@ -55,6 +55,24 @@ return [
         'bulk_optimizer' => 'business',
     ],
 
+    // Dashboard tab => feature key (locks the tab in the embedded app).
+    'tabs' => [
+        'content' => 'content_meta',
+        'bulk' => 'bulk_optimizer',
+        'blogwriter' => 'blog_writer',
+        'calendar' => 'content_calendar',
+        'ranktracker' => 'rank_tracker',
+        'kwexplorer' => 'keyword_explorer',
+        'competitor' => 'competitor',
+        'backlinks' => 'backlinks',
+        'markets' => 'markets',
+        'aivisibility' => 'llm_insights',
+        'geoscan' => 'geo_scan',
+        'aitracker' => 'ai_tracker',
+        'llmstxt' => 'llmstxt',
+        'tools' => 'indexnow',
+    ],
+
     'limits' => [
         'geo_scans' => [
             'free' => 0,
