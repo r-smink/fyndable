@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GdprDeleteTenantJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Models\RankHistory;
+use App\Models\ScheduledArticle;
 use App\Models\Shop;
 use App\Services\LlmsTxtGenerator;
 use App\Services\ShopifySignature;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -123,9 +126,11 @@ class WebhookController extends Controller
     /**
      * shop/redact — erase shop data after uninstall grace period.
      *
-     * Removes tracked keywords, rank history and llms.txt settings. The shop
-     * row itself is kept (license audit trail) but its credentials are
-     * cleared — uninstall already nulls the access token.
+     * Removes tracked keywords, rank history, llms.txt settings, scheduled
+     * articles and usage counters, and deletes the App Pricing tenant on the
+     * SaaS (queued). The shop row is kept without credentials, license or
+     * contact data. trial_products and trial_ended_at stay (product IDs only)
+     * so a reinstall cannot restart the free trial.
      */
     private function handleShopRedact(Shop $shop): void
     {
@@ -135,11 +140,28 @@ class WebhookController extends Controller
         )->delete();
         $shop->trackedKeywords()->delete();
         $shop->llmsTxtSettings()->delete();
+        ScheduledArticle::where('shop_id', $shop->id)->delete();
+        DB::table('shop_usage')->where('shop_id', $shop->id)->delete();
+
+        // The App Pricing tenant belongs to this shop: delete it on the SaaS.
+        // A manual agency license belongs to the agency account: only unlink.
+        if ($shop->license_source === 'app_pricing' && $shop->hasLicense()) {
+            GdprDeleteTenantJob::dispatch($shop->license_key, $shop->tenant_key, $shop->shop_domain);
+        }
 
         $shop->access_token = null;
         $shop->refresh_token = null;
         $shop->token_expires_at = null;
         $shop->shop_email = null;
+        $shop->shop_name = null;
+        $shop->license_key = null;
+        $shop->tenant_key = null;
+        $shop->license_tier = 'free';
+        $shop->license_source = null;
+        $shop->license_validated_at = null;
+        $shop->billing_state = null;
+        $shop->billing_plan = null;
+        $shop->billing_checked_at = null;
         $shop->save();
 
         Log::info('GDPR shop/redact processed', ['shop' => $shop->shop_domain]);

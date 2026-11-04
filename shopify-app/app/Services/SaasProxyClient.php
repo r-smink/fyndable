@@ -143,6 +143,20 @@ class SaasProxyClient
     }
 
     /**
+     * GDPR: delete/anonymize the tenant on the SaaS dashboard (shop/redact).
+     *
+     * @return array{success?: bool, error?: string}
+     */
+    public function gdprDelete(string $licenseKey, string $tenantKey): array
+    {
+        return $this->post('gdpr/delete', $licenseKey, $tenantKey, [
+            'license_key' => $licenseKey,
+            'tenant_key' => $tenantKey,
+            'confirm' => 'DELETE',
+        ], 30);
+    }
+
+    /**
      * Signature headers for server-to-server calls to the SaaS dashboard.
      *
      * @return array{X-Fyndable-Timestamp: string, X-Fyndable-Signature: string}

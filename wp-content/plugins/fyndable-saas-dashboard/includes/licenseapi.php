@@ -1493,22 +1493,34 @@ class LicenseAPI
             'name' => '[deleted]',
             'email' => '[deleted]',
             'domain' => null,
-            'status' => 'deleted',
+            // status is an enum (active/inactive/suspended/cancelled); 'deleted'
+            // is not a member and broke the update under strict SQL mode.
+            'status' => 'cancelled',
             'license_key' => null,
             'metadata' => null,
         ], ['tenant_key' => $tenantKey]);
 
+        // Delete tenant settings (incl. the Shopify shop mapping, so a later
+        // reinstall creates a fresh tenant instead of reviving this one)
+        $wpdb->delete($wpdb->prefix . 'sseo_ai_tenant_settings', ['tenant_id' => (int)$tenant['id']]);
+
         // Delete usage records
         $usageTable = $wpdb->prefix . 'sseo_ai_tenant_usage';
-        $wpdb->delete($usageTable, ['tenant_key' => $tenantKey]);
+        $wpdb->delete($usageTable, ['tenant_id' => (int)$tenant['id']]);
 
         // Delete license key record
         $licenseTable = $wpdb->prefix . 'sseo_ai_license_keys';
         $wpdb->delete($licenseTable, ['license_key' => $licenseKey]);
 
-        // Delete support tickets
+        // Delete support tickets + replies (both keyed by tenant_id / ticket_id;
+        // the old tenant_key filter matched no column and deleted nothing)
         $ticketsTable = $wpdb->prefix . 'sseo_ai_support_tickets';
-        $wpdb->delete($ticketsTable, ['tenant_key' => $tenantKey]);
+        $repliesTable = $wpdb->prefix . 'sseo_ai_support_replies';
+        $wpdb->query($wpdb->prepare(
+            "DELETE r FROM $repliesTable r INNER JOIN $ticketsTable t ON r.ticket_id = t.id WHERE t.tenant_id = %d",
+            (int)$tenant['id']
+        ));
+        $wpdb->delete($ticketsTable, ['tenant_id' => (int)$tenant['id']]);
 
         // Delete Google tokens if any
         delete_option('sseo_ai_google_tokens_' . $tenantKey);
