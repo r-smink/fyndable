@@ -20,6 +20,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
 use App\Http\Controllers\RedirectController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SchemaController;
 use App\Http\Controllers\SearchConsoleController;
 use App\Http\Controllers\SeoAuditController;
@@ -45,7 +46,7 @@ Route::get('/indexnow-key.txt', [IndexNowController::class, 'keyFile']);
 // 404 monitor beacon from the theme app embed (/apps/fyndable/404, signed by the app proxy).
 Route::post('/404', [NotFoundController::class, 'report'])->middleware('throttle:600,1');
 
-Route::middleware(['shopify.session'])->group(function () {
+Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
@@ -69,6 +70,11 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // Weekly SEO report (1.7)
+    Route::get('/reports', [ReportController::class, 'index'])->middleware('shopify.tier:reports');
+    Route::post('/reports/settings', [ReportController::class, 'saveSettings'])->middleware('shopify.tier:reports');
+    Route::post('/reports/send', [ReportController::class, 'send'])->middleware('shopify.tier:reports');
 
     // Google Search Console (1.5)
     Route::middleware('shopify.tier:search_console')->prefix('gsc')->group(function () {

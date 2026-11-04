@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\ActivityEvent;
 use App\Models\Shop;
 use App\Services\BulkOptimizer;
 use App\Services\LicenseService;
@@ -29,6 +30,9 @@ class BulkOptimizeJob implements ShouldQueue
     public int $timeout = 3600;
 
     public int $tries = 1;
+
+    /** Bulk action => activity kind for the reports (1.7). */
+    private const ACTIVITY = ['meta_title' => 'meta', 'meta' => 'meta', 'titles' => 'title', 'alt_text' => 'alt_text', 'descriptions' => 'description'];
 
     /** Failed items listed in the progress (title + reason). */
     private const MAX_ERRORS = 25;
@@ -95,6 +99,7 @@ class BulkOptimizeJob implements ShouldQueue
             $progress['processed']++;
             if ($error === null) {
                 $progress['succeeded']++;
+                ActivityEvent::record($this->shopId, self::ACTIVITY[$this->action] ?? $this->action);
             } else {
                 $progress['failed']++;
                 if (count($progress['errors']) < self::MAX_ERRORS) {

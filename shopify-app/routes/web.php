@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,11 @@ Route::post('/webhooks', [WebhookController::class, 'handle'])->name('webhooks')
 Route::get('/dashboard/{page?}', [DashboardController::class, 'index'])
     ->where('page', implode('|', DashboardController::PAGES))
     ->name('dashboard');
+
+// Weekly SEO report (1.7): printable page and one-click unsubscribe, opened
+// from the email or the Reports page, so they use signed URLs.
+Route::get('/report/unsubscribe/{shop}', [ReportController::class, 'unsubscribe'])->middleware('signed')->name('report.unsubscribe');
+Route::get('/report/{report}', [ReportController::class, 'show'])->middleware('signed')->whereNumber('report')->name('report.show');
 
 // Install form (for shops that need to enter their license key)
 Route::get('/install/form', function () {

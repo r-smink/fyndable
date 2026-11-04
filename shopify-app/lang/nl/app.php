@@ -25,6 +25,7 @@ return [
         'aitracker' => 'AI tracker',
         'llmstxt' => 'llms.txt',
         'tools' => 'Tools',
+        'reports' => 'Rapporten',
         'settings' => 'Instellingen',
         'plan' => 'Abonnement',
     ],

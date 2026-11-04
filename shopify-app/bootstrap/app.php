@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RecordActivity;
 use App\Http\Middleware\RequireShopifyScope;
 use App\Http\Middleware\RequireTier;
 use App\Http\Middleware\TrialProductGuard;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'shopify.scope' => RequireShopifyScope::class,
             'shopify.tier' => RequireTier::class,
             'shopify.trial' => TrialProductGuard::class,
+            'shopify.activity' => RecordActivity::class,
         ]);
         // Shopify webhooks are POST requests from Shopify servers without a
         // CSRF token — exclude them from Laravel's VerifyCsrfToken middleware.

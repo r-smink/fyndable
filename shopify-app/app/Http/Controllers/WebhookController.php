@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\GdprDeleteTenantJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Jobs\TrackHandleChangeJob;
+use App\Models\ActivityEvent;
 use App\Models\GoogleConnection;
 use App\Models\NotFoundUrl;
 use App\Models\RankHistory;
@@ -162,7 +163,7 @@ class WebhookController extends Controller
      * shop/redact — erase shop data after uninstall grace period.
      *
      * Removes tracked keywords, rank history, llms.txt settings, the store
-     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log), schema settings, the Google connection with Search Console data and usage counters, and deletes the App Pricing tenant on the
+     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log), schema settings, the Google connection with Search Console data, reports, the activity log and usage counters, and deletes the App Pricing tenant on the
      * SaaS (queued). The shop row is kept without credentials, license or
      * contact data. trial_products and trial_ended_at stay (product IDs only)
      * so a reinstall cannot restart the free trial.
@@ -184,6 +185,8 @@ class WebhookController extends Controller
         RedirectEvent::where('shop_id', $shop->id)->delete();
         StoreSchemaSetting::where('shop_id', $shop->id)->delete();
         GoogleConnection::where('shop_id', $shop->id)->delete();
+        ActivityEvent::where('shop_id', $shop->id)->delete();
+        DB::table('seo_reports')->where('shop_id', $shop->id)->delete();
         DB::table('gsc_page_stats')->where('shop_id', $shop->id)->delete();
         DB::table('gsc_query_stats')->where('shop_id', $shop->id)->delete();
         DB::table('shop_usage')->where('shop_id', $shop->id)->delete();

@@ -20,6 +20,9 @@ class ShopProfile extends Model
         'redirect_on_delete',
         'deleted_redirect_target',
         'not_found_monitor',
+        'report_enabled',
+        'report_email',
+        'report_language',
     ];
 
     protected $casts = [
@@ -28,6 +31,7 @@ class ShopProfile extends Model
         'redirect_on_handle_change' => 'boolean',
         'redirect_on_delete' => 'boolean',
         'not_found_monitor' => 'boolean',
+        'report_enabled' => 'boolean',
     ];
 
     public function shop(): BelongsTo

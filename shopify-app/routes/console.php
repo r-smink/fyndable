@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\CheckRankingsJob;
+use App\Jobs\SendSeoReportJob;
 use App\Jobs\SyncSearchConsoleJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Jobs\SyncStoreSchemaJob;
@@ -56,6 +57,14 @@ Schedule::call(function () {
         ->pluck('shop_id')
         ->each(fn (int $shopId, int $i) => SyncSearchConsoleJob::dispatch($shopId)->delay(now()->addSeconds($i * 2)));
 })->dailyAt('05:00')->name('search-console-sync')->withoutOverlapping();
+
+// Weekly SEO report email (1.7), Monday morning, for shops that turned it on.
+Schedule::call(function () {
+    Shop::where('is_installed', true)->where('is_uninstalled', false)
+        ->whereHas('profile', fn ($q) => $q->where('report_enabled', true))
+        ->pluck('id')
+        ->each(fn (int $shopId, int $i) => SendSeoReportJob::dispatch($shopId)->delay(now()->addSeconds($i * 2)));
+})->weeklyOn(1, '07:00')->name('weekly-seo-report')->withoutOverlapping();
 
 // Daily llms.txt cache refresh (prevents stale cache from building up)
 Schedule::call(function () {
