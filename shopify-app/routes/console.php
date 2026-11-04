@@ -51,8 +51,10 @@ Schedule::call(function () {
 
 // Hourly Shopify App Pricing sync: App Pricing sends no webhooks for
 // cancellations or freezes, so re-read every paying shop from the
-// Partner API. Spread at 3 shops per second (Partner API limit is 4/s,
-// shared with app-load checks).
+// Partner API. Trial shops whose trial window has passed are checked too,
+// so their SaaS tenant is suspended even when the merchant never returns.
+// Spread at 3 shops per second (Partner API limit is 4/s, shared with
+// app-load checks).
 Schedule::call(function () {
     if (! config('shopify.billing_enabled')) {
         return;
@@ -61,7 +63,9 @@ Schedule::call(function () {
     $shopIds = Shop::where('is_installed', true)
         ->where('is_uninstalled', false)
         ->where(fn ($q) => $q->whereNull('license_source')->orWhere('license_source', 'app_pricing'))
-        ->where('billing_state', 'active')
+        ->where(fn ($q) => $q->where('billing_state', 'active')
+            ->orWhere(fn ($t) => $t->where('billing_state', 'trial')
+                ->where('trial_started_at', '<=', now()->subDays((int) config('shopify.billing.trial_days', 7)))))
         ->pluck('id');
 
     foreach ($shopIds->values() as $i => $shopId) {

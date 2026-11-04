@@ -31,9 +31,11 @@ return [
         // 4 requests/second for the whole Partner organization).
         'check_ttl' => (int) env('SHOPIFY_BILLING_CHECK_TTL', 600),
 
-        // In-app trial: AI optimization of this many distinct products, then
-        // a paid plan is required. No Shopify-side trial days.
+        // In-app trial: AI optimization of this many distinct products for at
+        // most trial_days days (whichever comes first), then a paid plan is
+        // required. No Shopify-side trial days.
         'trial_products' => (int) env('SHOPIFY_TRIAL_PRODUCTS', 5),
+        'trial_days' => (int) env('SHOPIFY_TRIAL_DAYS', 7),
 
         // Manually entered license keys are only accepted for these tiers.
         'manual_license_tiers' => ['agency', 'dev'],

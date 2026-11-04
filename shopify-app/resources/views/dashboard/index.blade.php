@@ -1299,11 +1299,12 @@
                 trial_until: 'Shopify trial until',
                 cancels_on: 'Cancelled, access until',
                 trial_title: 'Free trial',
-                trial_text: 'Optimize up to {max} products with AI for free. {used} of {max} used.',
+                trial_text: 'Optimize up to {max} products with AI for free until {date}. {used} of {max} used.',
                 trial_full: 'You have used all {max} trial products. Choose a plan to optimize more products.',
                 required_title: 'Choose a plan to continue',
                 required_text: 'Your free trial has ended or your subscription is no longer active. Choose a plan in Shopify to keep using Fyndable.',
                 trial_exhausted: 'Your free trial covers {max} products. Choose a plan to continue.',
+                trial_expired: 'Your {days}-day free trial has ended. Choose a plan to continue.',
                 manual_title: 'Agency license active',
                 manual_text: 'This store uses an agency or enterprise license outside Shopify billing.',
                 unknown_title: 'Plan status unavailable',
@@ -1323,11 +1324,12 @@
                 trial_until: 'Shopify-proefperiode tot',
                 cancels_on: 'Opgezegd, toegang tot',
                 trial_title: 'Gratis proefperiode',
-                trial_text: 'Optimaliseer gratis tot {max} producten met AI. {used} van {max} gebruikt.',
+                trial_text: 'Optimaliseer tot {date} gratis tot {max} producten met AI. {used} van {max} gebruikt.',
                 trial_full: 'Je hebt alle {max} proefproducten gebruikt. Kies een abonnement om meer producten te optimaliseren.',
                 required_title: 'Kies een abonnement om verder te gaan',
                 required_text: 'Je gratis proefperiode is afgelopen of je abonnement is niet meer actief. Kies een abonnement in Shopify om Fyndable te blijven gebruiken.',
                 trial_exhausted: 'Je gratis proefperiode geldt voor {max} producten. Kies een abonnement om verder te gaan.',
+                trial_expired: 'Je gratis proefperiode van {days} dagen is afgelopen. Kies een abonnement om verder te gaan.',
                 manual_title: 'Agency-licentie actief',
                 manual_text: 'Deze winkel gebruikt een agency- of enterprise-licentie buiten Shopify-facturering om.',
                 unknown_title: 'Abonnementsstatus niet beschikbaar',
@@ -1372,7 +1374,7 @@
                 if (b.cycle_ends_at) lines.push(`${escHtml(t(b.cancel_at_cycle_end ? 'cancels_on' : 'renews_on'))}: ${fmtDate(b.cycle_ends_at)}`);
                 html = block('yes-alt', true, t('plan_active'), lines.join('<br>'), btn(t('change_plan'), false));
             } else if (b.state === 'trial') {
-                const vars = { used: b.trial.used, max: b.trial.max };
+                const vars = { used: b.trial.used, max: b.trial.max, date: fmtDate(b.trial.ends_at) };
                 const full = b.trial.used >= b.trial.max;
                 html = block('clock', true, t('trial_title'), escHtml(t(full ? 'trial_full' : 'trial_text', vars)), btn(t('choose_plan')));
                 banner = `<div class="alert ${full ? 'error' : 'info'}" style="grid-column: 1 / -1;">${escHtml(t(full ? 'trial_full' : 'trial_text', vars))} <a href="#" onclick="openPricing(billingState.pricing_url);return false;" style="font-weight:600;">${escHtml(t('choose_plan'))}</a></div>`;
@@ -1470,8 +1472,8 @@
                 // In-app trial used up: send the merchant to the Shopify plan page.
                 if (response.status === 402) {
                     const body = await response.json().catch(() => ({}));
-                    if (body.error === 'trial_exhausted') {
-                        alert(t('trial_exhausted', { max: body.trial_limit }));
+                    if (body.error === 'trial_exhausted' || body.error === 'trial_expired') {
+                        alert(t(body.error, { max: body.trial_limit, days: body.trial_days }));
                         openPricing(body.pricing_url);
                     }
                     return body;

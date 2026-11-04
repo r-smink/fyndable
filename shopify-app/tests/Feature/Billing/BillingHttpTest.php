@@ -253,3 +253,15 @@ it('renders the dashboard shell with the plan tab and the billing i18n strings',
         ->assertSee('Kies een abonnement')
         ->assertSee('Choose a plan');
 });
+
+it('returns 402 trial_expired for product AI after the 7-day trial', function () {
+    $shop = makeTestShop([
+        'billing_state' => 'trial', 'billing_checked_at' => now(), 'license_key' => 'K', 'tenant_key' => 'T',
+        'license_tier' => 'trial', 'trial_started_at' => now()->subDays(8),
+    ]);
+    fakeSaas('trial');
+
+    $this->postJson('/api/products/1/generate-meta', [], authHeaders())
+        ->assertStatus(402)
+        ->assertJson(['error' => 'trial_expired', 'trial_days' => 7]);
+});

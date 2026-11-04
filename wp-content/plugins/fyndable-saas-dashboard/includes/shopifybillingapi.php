@@ -24,7 +24,8 @@ namespace SSEOAISaaS;
  *   shop_name, shop_email,
  *   state: "active" | "trial" | "none" | "uninstalled",
  *   tier: "starter" | "professional" | "business" | "trial" (state active/trial),
- *   plan_handle, trial_ends_at, cycle_ends_at, cancel_at_end_of_cycle
+ *   plan_handle, trial_ends_at (in-app trial end for state trial, sets the
+ *   tenant expires_at), cycle_ends_at, cancel_at_end_of_cycle
  * }
  * Returns: { success, tenant_key, license_key, tier, status }
  */
@@ -143,8 +144,10 @@ class ShopifyBillingApi
             $update['status'] = 'active';
             $update['tier'] = $tier;
             $update['payment_status'] = $state === 'active' ? 'shopify' : 'trial';
-            // Shopify bills the subscription; the tenant itself never expires.
-            $update['expires_at'] = null;
+            // Paid: Shopify bills the subscription, the tenant never expires.
+            // In-app trial: expire at the trial end, so the tenant stops even
+            // when the app cannot send the final sync.
+            $update['expires_at'] = $state === 'trial' ? $billing['trial_ends_at'] : null;
         } else {
             // Cancelled, frozen, trial used up or uninstalled: keep the data,
             // block usage until a new plan is chosen.
@@ -157,7 +160,7 @@ class ShopifyBillingApi
         }
 
         $this->tenants->updateTenant($tenant['tenant_key'], $update);
-        if (array_key_exists('expires_at', $update)) {
+        if (array_key_exists('expires_at', $update) && $update['expires_at'] === null) {
             $this->clearTenantExpiry($tenant['tenant_key']);
         }
         $this->tenants->setTenantSetting($tenant['tenant_key'], self::SETTING_BILLING, $billing);

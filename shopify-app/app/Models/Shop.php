@@ -29,6 +29,7 @@ class Shop extends Model
         'billing_cycle_ends_at',
         'billing_cancel_at_cycle_end',
         'billing_checked_at',
+        'trial_started_at',
         'trial_ended_at',
         'is_installed',
         'is_uninstalled',
@@ -52,6 +53,7 @@ class Shop extends Model
         'billing_cycle_ends_at' => 'datetime',
         'billing_cancel_at_cycle_end' => 'boolean',
         'billing_checked_at' => 'datetime',
+        'trial_started_at' => 'datetime',
         'trial_ended_at' => 'datetime',
     ];
 

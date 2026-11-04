@@ -12,8 +12,10 @@ use Illuminate\Http\Request;
  *
  * In-app trial cap: during the trial a shop may run AI optimizations on a
  * limited number of distinct products (config shopify.billing.trial_products).
- * Already counted products stay usable; the first product beyond the limit
- * ends the trial and returns 402 trial_exhausted with the plan selection URL.
+ * The trial is valid for config shopify.billing.trial_days days. Already
+ * counted products stay usable; the first product beyond the limit ends the
+ * trial (402 trial_exhausted), as does any product after the trial window
+ * (402 trial_expired). Both include the plan selection URL.
  *
  * Usage: ->middleware('shopify.trial') on product AI routes. The product id
  * comes from the {productId} route parameter, or {id} when {type} = product.
@@ -36,11 +38,16 @@ class TrialProductGuard
         }
 
         if (! $this->billing->claimTrialProduct($shop, $productId)) {
+            $expired = $this->billing->trialExpired($shop);
+
             return response()->json([
-                'error' => 'trial_exhausted',
+                'error' => $expired ? 'trial_expired' : 'trial_exhausted',
                 'trial_limit' => $this->billing->trialLimit(),
+                'trial_days' => $this->billing->trialDays(),
                 'pricing_url' => $this->billing->pricingPageUrl($shop),
-                'message' => 'Your free trial covers '.$this->billing->trialLimit().' products. Choose a plan to continue.',
+                'message' => $expired
+                    ? 'Your '.$this->billing->trialDays().'-day free trial has ended. Choose a plan to continue.'
+                    : 'Your free trial covers '.$this->billing->trialLimit().' products. Choose a plan to continue.',
             ], 402);
         }
 

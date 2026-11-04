@@ -36,7 +36,7 @@ it('starts a new shop without subscription in the in-app trial and creates the t
 
     expect($status['state'])->toBe('trial')
         ->and($status['required'])->toBeFalse()
-        ->and($status['trial'])->toBe(['used' => 0, 'max' => 5, 'ended' => false]);
+        ->and($status['trial'])->toMatchArray(['used' => 0, 'max' => 5, 'ended' => false, 'days' => 7]);
 
     $shop->refresh();
     expect($shop->billing_state)->toBe('trial')
@@ -210,4 +210,70 @@ it('sends the uninstall state to the SaaS and resets the local check', function 
 
     expect(sentSync()[0]['state'])->toBe('uninstalled');
     expect($shop->refresh()->billing_state)->toBeNull()->and($shop->billing_checked_at)->toBeNull();
+});
+
+// --- 7-day trial window --------------------------------------------------
+
+it('starts the 7-day trial window on the first trial check and sends its end to the SaaS', function () {
+    $this->travelTo(now()->startOfDay());
+    $shop = makeTestShop();
+    fakeBilling(partnerSubscription(null), saasSyncResponse('trial'));
+
+    $status = billing()->refresh($shop);
+
+    expect($shop->refresh()->trial_started_at->equalTo(now()))->toBeTrue()
+        ->and($status['trial']['days'])->toBe(7)
+        ->and($status['trial']['ends_at'])->toBe(now()->addDays(7)->toIso8601String());
+    expect(sentSync()[0]['trial_ends_at'])->toBe(now()->addDays(7)->toIso8601String());
+});
+
+it('ends the trial after 7 days even when the cached check is still fresh', function () {
+    $shop = makeTestShop([
+        'billing_state' => 'trial',
+        'license_tier' => 'trial',
+        'license_key' => 'K',
+        'tenant_key' => 'T',
+        'trial_started_at' => now()->subDays(7)->subMinute(),
+        'billing_checked_at' => now(),
+    ]);
+    fakeBilling(partnerSubscription(null), saasSyncResponse('trial', 'suspended'));
+
+    $status = billing()->refresh($shop);
+
+    expect($status['state'])->toBe('none')->and($status['required'])->toBeTrue();
+    expect($shop->refresh()->trial_ended_at)->not->toBeNull();
+    expect(sentSync()[0]['state'])->toBe('none');
+});
+
+it('keeps the trial on day 6', function () {
+    $shop = makeTestShop(['billing_state' => 'trial', 'trial_started_at' => now()->subDays(6), 'billing_checked_at' => now()]);
+    Http::fake();
+
+    expect(billing()->refresh($shop)['state'])->toBe('trial');
+    Http::assertNothingSent();
+});
+
+it('switches an expired trial to the paid plan the merchant chose meanwhile', function () {
+    $shop = makeTestShop(['billing_state' => 'trial', 'license_tier' => 'trial', 'trial_started_at' => now()->subDays(9), 'billing_checked_at' => now()]);
+    fakeBilling(partnerSubscription('business'), saasSyncResponse('business'));
+
+    expect(billing()->refresh($shop)['state'])->toBe('active');
+});
+
+it('ends an expired trial when the Partner API is unavailable', function () {
+    $shop = makeTestShop(['billing_state' => 'trial', 'license_key' => 'K', 'tenant_key' => 'T', 'trial_started_at' => now()->subDays(8)]);
+    Http::fake([
+        'partners.shopify.com/*' => Http::response([], 503),
+        'portal.test/*' => Http::response(saasSyncResponse('trial', 'suspended')),
+    ]);
+
+    expect(billing()->refresh($shop, true)['state'])->toBe('none');
+});
+
+it('refuses new trial products after the trial window', function () {
+    $shop = makeTestShop(['billing_state' => 'trial', 'license_key' => 'K', 'tenant_key' => 'T', 'trial_started_at' => now()->subDays(8)]);
+    fakeBilling(partnerSubscription(null), saasSyncResponse('trial', 'suspended'));
+
+    expect(billing()->claimTrialProduct($shop, '1'))->toBeFalse()
+        ->and($shop->refresh()->billing_state)->toBe('none');
 });

@@ -61,9 +61,13 @@ class ShopifyBillingService
             return $this->status($shop);
         }
 
+        // An expired trial is re-checked right away (the merchant may have
+        // picked a plan meanwhile), regardless of the cache.
+        $trialExpired = $shop->billing_state === 'trial' && $this->trialExpired($shop);
+
         $fresh = $shop->billing_checked_at !== null
             && $shop->billing_checked_at->gt(now()->subSeconds((int) config('shopify.billing.check_ttl', 600)));
-        if ($fresh && ! $force && $shop->billing_state !== null) {
+        if ($fresh && ! $force && ! $trialExpired && $shop->billing_state !== null) {
             return $this->status($shop);
         }
 
@@ -73,8 +77,11 @@ class ShopifyBillingService
         if ($subscription === false) {
             // Partner API unavailable: keep the last known state. A shop that
             // was never checked and never had a trial starts in the trial (it
-            // cannot be paying yet); otherwise the state stays unknown.
-            if ($shop->billing_state === null && $shop->trial_ended_at === null) {
+            // cannot be paying yet); otherwise the state stays unknown. An
+            // expired trial still ends.
+            if ($trialExpired) {
+                $this->endTrial($shop);
+            } elseif ($shop->billing_state === null && $shop->trial_ended_at === null) {
                 $this->applyNoSubscription($shop);
                 $this->syncToSaas($shop);
             }
@@ -118,6 +125,8 @@ class ShopifyBillingService
                 'used' => $this->trialProductsUsed($shop),
                 'max' => $this->trialLimit(),
                 'ended' => $shop->trial_ended_at !== null,
+                'days' => $this->trialDays(),
+                'ends_at' => $this->trialExpiresAt($shop)?->toIso8601String(),
             ],
             'trial_ends_at' => $shop->billing_trial_ends_at?->toIso8601String(),
             'cycle_ends_at' => $shop->billing_cycle_ends_at?->toIso8601String(),
@@ -155,6 +164,26 @@ class ShopifyBillingService
         return max(0, (int) config('shopify.billing.trial_products', 5));
     }
 
+    public function trialDays(): int
+    {
+        return max(0, (int) config('shopify.billing.trial_days', 7));
+    }
+
+    /**
+     * End of the in-app trial window (null = trial not started).
+     */
+    public function trialExpiresAt(Shop $shop): ?Carbon
+    {
+        return $shop->trial_started_at?->copy()->addDays($this->trialDays());
+    }
+
+    public function trialExpired(Shop $shop): bool
+    {
+        $expiresAt = $this->trialExpiresAt($shop);
+
+        return $expiresAt !== null && $expiresAt->isPast();
+    }
+
     public function trialProductsUsed(Shop $shop): int
     {
         return (int) DB::table('trial_products')->where('shop_id', $shop->id)->count();
@@ -163,11 +192,18 @@ class ShopifyBillingService
     /**
      * Count a product towards the in-app trial.
      *
-     * Products already counted stay usable. A new product beyond the limit
-     * ends the trial (state none, tenant suspended) and returns false.
+     * Products already counted stay usable. A new product beyond the limit,
+     * or any product after the trial window, ends the trial (state none,
+     * tenant suspended) and returns false.
      */
     public function claimTrialProduct(Shop $shop, string $productId): bool
     {
+        if ($this->trialExpired($shop)) {
+            $this->endTrial($shop);
+
+            return false;
+        }
+
         if (DB::table('trial_products')->where('shop_id', $shop->id)->where('product_id', $productId)->exists()) {
             return true;
         }
@@ -328,10 +364,16 @@ class ShopifyBillingService
 
     private function applyNoSubscription(Shop $shop): void
     {
-        // The trial only ends via endTrial() (a product beyond the limit) or a
-        // paid plan, so the results of the last trial product can still be
-        // saved after the counter is full.
+        // The trial ends after trial_days, via endTrial() (a product beyond
+        // the limit) or with a paid plan. A full product counter alone does
+        // not end it, so the results of the last trial product can be saved.
+        if ($shop->trial_ended_at === null && $this->trialExpired($shop)) {
+            $shop->trial_ended_at = now();
+        }
         $inTrial = $shop->trial_ended_at === null;
+        if ($inTrial && $shop->trial_started_at === null) {
+            $shop->trial_started_at = now();
+        }
 
         $shop->billing_state = $inTrial ? 'trial' : 'none';
         $shop->billing_plan = null;
@@ -384,7 +426,11 @@ class ShopifyBillingService
             'state' => $state,
             'tier' => $tier,
             'plan_handle' => $shop->billing_plan,
-            'trial_ends_at' => $shop->billing_trial_ends_at?->toIso8601String(),
+            // In-app trial: its end date lets the SaaS expire the tenant even
+            // when a later sync fails. Paid plans: the Shopify trial end.
+            'trial_ends_at' => $state === 'trial'
+                ? $this->trialExpiresAt($shop)?->toIso8601String()
+                : $shop->billing_trial_ends_at?->toIso8601String(),
             'cycle_ends_at' => $shop->billing_cycle_ends_at?->toIso8601String(),
             'cancel_at_end_of_cycle' => (bool) $shop->billing_cancel_at_cycle_end,
         ];
