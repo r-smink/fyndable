@@ -20,7 +20,8 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 1.7 Rapportage (zie "Stand 1.7"; PDF als printbare pagina, server-side PDF wacht op akkoord voor een dependency)
 - [x] 2.1 AI-commerce readiness + productfeeds (zie "Stand 2.1")
 - [x] 2.2 AI-crawlerbeheer (zie "Stand 2.2")
-- [ ] 2.3 t/m 2.9 (fase 2)
+- [x] 2.3 AI-vertalingen voor Markets (zie "Stand 2.3")
+- [ ] 2.4 t/m 2.9 (fase 2)
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
 
@@ -181,6 +182,19 @@ Afwijking van het plan:
 - Toegestane bots krijgen bewust geen eigen regels: een eigen `User-agent`-groep met `Allow: /` zou Shopify's standaardregels (cart, checkout, admin) voor die bot opheffen.
 - Bots "op verzoek" (ChatGPT-User e.d.) volgen robots.txt volgens de aanbieders niet altijd.
 - Tier Starter (rij 39 in de spreadsheet, WP: Robots.txt Editor = base).
+
+### Stand 2.3 (2026-11-04)
+
+Gebouwd: pagina "Vertalingen" (en een verwijzing vanaf de Markets-audit).
+- Per taal van de winkel (`shopLocales`, ook niet-gepubliceerde talen) en per type (producten, collecties, pagina's, blogartikelen, alt-teksten van afbeeldingen) een lijst met ontbrekende en verouderde velden (`translatableResources` met `translations(locale)` en `outdated`). Alleen titel, beschrijving, samenvatting, SEO-titel/-beschrijving en alt-tekst; handles en lege bronvelden niet.
+- Per item: AI-vertaling (voorbeeld, aanpassen, opslaan) of alles in de achtergrond (max. 250 items per run, voortgang, stoppen, een run per winkel). Registratie met `translationsRegister` en de digest van de broninhoud; de vertalingen staan daarna in Translate & Adapt.
+- De prompt vraagt om zoekmachinegeoptimaliseerde teksten per taal (geen letterlijke vertaling), HTML intact, merk- en productnamen ongewijzigd, lengtelimieten voor SEO-titel/-beschrijving/alt. Merkstem via `BrandVoice::apply($shop, $messages, true, false)`: toon, doelgroep en merk wel, de eigen contenttaal en het land niet.
+- Nieuwe scope `write_translations` (TOML, config, `.env.example`); bestaande installaties krijgen de melding om opnieuw te autoriseren. Tier Professional (rij 40, WP: International SEO).
+
+Open:
+- Vertalingen per markt (`marketId`, bv. Belgisch-Nederlands vs. Nederlands) nog niet; nu per taal.
+- Metafields (zoals `fyndable.ai_attributes`) en menu's worden niet vertaald.
+- Voor livegang: `shopify app deploy` (scope) en `SHOPIFY_SCOPES` in de `.env` aanvullen.
 
 ## Wat er al staat (uitgangspunt)
 

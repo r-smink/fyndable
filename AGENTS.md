@@ -570,3 +570,9 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 
 - `AiCrawlers`: `BOTS` (user agent => [bedrijf, search|user|training]), keuzes in `shop_profiles.ai_crawlers` (standaard allow), `block()` (alleen `Disallow: /` voor geblokkeerde bots, tussen `# Fyndable AI crawlers - begin/end`), `fullTemplate()` (Shopify `robots.default_groups`-loop + blok), `themeStatus()` (`templates/robots.txt.liquid` via `getMainThemeFiles`), `liveStatus()` + `parse()`/`isBlocked()` (eigen groep, anders `*`; `Allow: /` wint).
 - API `GET|POST /api/ai-crawlers`, `POST /api/ai-crawlers/check` (tier `ai_crawlers`, starter; check vraagt `read_themes`). Geen `write_themes`: de merchant plakt de code zelf.
+
+## Shopify AI-vertalingen (2.3, 2026-11-04)
+
+- `AiTranslator`: `TYPES` (type => [TranslatableResourceType, keys]), `locales()`, `gaps()` (ontbrekend/verouderd per resource), `translate()` (AI, JSON met dezelfde keys, lengtelimieten), `register()` (`ShopifyAdminWriter::registerTranslations`, met `translatableContentDigest`). Fetcher: `getShopLocales()`, `getTranslatableResources()` (25 per pagina), `getTranslatableResource()`.
+- `BrandVoice::apply($shop, $messages, $voice, $market)`: `$market = false` laat contenttaal en land weg (nodig bij vertalen naar een andere taal).
+- API `/api/translations/*` (tier `translations`, professional; save/run vragen `write_translations`). `TranslateJob` (cache `translate:{shop_id}`), activiteitensoort `translation`. Gaten worden 5 minuten gecachet (`translation_gaps:{shop}:{type}:{locale}`).
