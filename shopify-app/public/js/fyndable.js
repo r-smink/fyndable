@@ -322,13 +322,24 @@
             return !!(cfg.feature && plan && plan.features && plan.features[cfg.feature] === false);
         },
 
+        /** Mark sub navigation entries whose feature is outside the plan (BFS 4.3.7). */
+        labelSubnav(plan) {
+            if (!plan || !plan.features) return;
+            document.querySelectorAll('#fyn-subnav [data-feature]').forEach(button => {
+                const feature = button.dataset.feature;
+                if (!feature || plan.features[feature] !== false || button.dataset.locked) return;
+                button.dataset.locked = '1';
+                button.textContent = `${button.textContent.trim()} (${Fyn.tierLabel(plan.required ? plan.required[feature] : '')})`;
+            });
+        },
+
         applyLock(plan) {
             const lock = $('fyn-lock');
             const pageEl = document.querySelector('s-page');
             if (!lock || !pageEl) return false;
             const locked = Fyn.isLocked(plan);
             [...pageEl.children].forEach(el => {
-                if (el.id === 'fyn-banners' || el.id === 'fyn-lock') return;
+                if (el.id === 'fyn-banners' || el.id === 'fyn-lock' || el.id === 'fyn-subnav') return;
                 if (locked) el.hidden = true;
             });
             if (!locked) {
@@ -353,6 +364,7 @@
         async applyContext(ctx) {
             Fyn.ctx = ctx;
             Fyn.renderBillingBanner(ctx.billing);
+            Fyn.labelSubnav(ctx.plan);
             if (Fyn.applyLock(ctx.plan)) return;
             if (pageInit && !pageRan) {
                 pageRan = true;

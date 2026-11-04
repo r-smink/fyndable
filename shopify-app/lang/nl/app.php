@@ -34,6 +34,15 @@ return [
         'plan' => 'Abonnement',
     ],
 
+    'groups' => [
+        'seo' => 'SEO',
+        'content' => 'Content',
+        'keywords' => 'Zoekwoorden',
+        'ai' => 'AI-zichtbaarheid',
+        'reports' => 'Rapporten',
+        'settings' => 'Instellingen',
+    ],
+
     'home' => [
         'title' => 'Fyndable Smart SEO',
         'refresh' => 'Vernieuwen',

@@ -40,14 +40,24 @@
 </head>
 <body>
     {{-- App Bridge navigation in the Shopify admin sidebar (Built for Shopify 4.1.4). --}}
+    {{-- Shopify allows one menu level: Home + the groups (first page of each group). --}}
     <s-app-nav>
-        @foreach ($pages as $p)
-            <s-link href="{{ $pageUrl($p) }}" @if ($p === 'home') rel="home" @endif>{{ __('app.nav.'.$p) }}</s-link>
+        <s-link href="{{ $pageUrl('home') }}" rel="home">{{ __('app.nav.home') }}</s-link>
+        @foreach ($groups as $g => $groupPages)
+            <s-link href="{{ $pageUrl($groupPages[0]) }}">{{ __('app.groups.'.$g) }}</s-link>
         @endforeach
     </s-app-nav>
 
     <s-page heading="@yield('heading', __('app.nav.'.$page))" @hasSection('inline-size') inline-size="@yield('inline-size')" @endif>
         @yield('actions')
+        @if ($group && count($groups[$group]) > 1)
+            {{-- Sub navigation of the menu group. Plan-locked pages get their tier label from fyndable.js. --}}
+            <s-stack id="fyn-subnav" slot="supplemental-start" direction="inline" gap="small-200" paddingBlockEnd="base" accessibilityRole="navigation" accessibilityLabel="{{ __('app.groups.'.$group) }}">
+                @foreach ($groups[$group] as $p)
+                    <s-button href="{{ $pageUrl($p) }}" variant="{{ $p === $page ? 'primary' : 'secondary' }}" data-feature="{{ $pageFeatures[$p] ?? '' }}" @if ($p === $page) aria-current="page" @endif>{{ __('app.nav.'.$p) }}</s-button>
+                @endforeach
+            </s-stack>
+        @endif
         <div id="fyn-banners" slot="supplemental-start"></div>
         <s-section id="fyn-lock" hidden></s-section>
         @yield('content')

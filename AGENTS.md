@@ -583,3 +583,8 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - Fetcher: `getCollectionsForLanding()`, `getCollectionForLanding()`. API `/api/collection-pages/*` (tier `collection_pages`, professional; save vraagt `write_products`). Activiteitensoort `collection_page`.
 - Theme app blocks (`target: section`, `enabled_on: collection`): `fyndable-collection-intro.liquid`, `fyndable-collection-faq.liquid`.
 - 2.4 ApexFlow vervalt voor Shopify; 2.8 (AI-omzet) staat op later (vraagt `read_orders` + protected customer data).
+
+## Shopify menu-groepen (2026-11-04)
+
+- Het Shopify-menu (`s-app-nav`) heeft maar een niveau. `DashboardController::GROUPS` deelt de pagina's in: seo, content, keywords, ai, reports, settings. Het menu toont Home + de groepen (link naar de eerste pagina van de groep, labels `app.groups.*`); op elke pagina van een groep staat bovenaan een subnavigatie (`#fyn-subnav`, `s-button` per pagina, actieve pagina `variant=primary` + `aria-current`). `Fyn.labelSubnav()` zet achter pagina's buiten het plan de vereiste tier (BFS 4.3.7); `applyLock` laat de subnavigatie zichtbaar.
+- Nieuwe pagina = ook toevoegen aan een groep in `GROUPS` (test controleert dat elke pagina behalve home in precies een groep zit).

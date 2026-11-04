@@ -41,6 +41,31 @@ class DashboardController extends Controller
         'collections', 'reports', 'settings', 'plan',
     ];
 
+    /**
+     * Menu groups. The Shopify admin menu (s-app-nav) has one level only, so
+     * it shows Home + these groups (linking to the first page); the pages of
+     * a group get a sub navigation at the top of the page.
+     */
+    public const GROUPS = [
+        'seo' => ['seoaudit', 'content', 'bulk', 'schema', 'redirects', 'collections'],
+        'content' => ['blogwriter', 'calendar', 'translations'],
+        'keywords' => ['gsc', 'ranktracker', 'kwexplorer', 'competitor', 'backlinks', 'markets'],
+        'ai' => ['aiready', 'aivisibility', 'geoscan', 'aitracker', 'llmstxt', 'aicrawlers'],
+        'reports' => ['reports', 'tools'],
+        'settings' => ['settings', 'plan'],
+    ];
+
+    public static function groupOf(string $page): ?string
+    {
+        foreach (self::GROUPS as $group => $pages) {
+            if (in_array($page, $pages, true)) {
+                return $group;
+            }
+        }
+
+        return null;
+    }
+
     /** Admin UI languages (merchant-facing text: lang/{en,nl}). */
     public const UI_LANGUAGES = ['en', 'nl'];
 
@@ -79,7 +104,9 @@ class DashboardController extends Controller
             'apiKey' => config('shopify.api_key'),
             'shopDomain' => $shopDomain,
             'page' => $page,
-            'pages' => self::PAGES,
+            'groups' => self::GROUPS,
+            'group' => self::groupOf($page),
+            'pageFeatures' => config('tiers.tabs', []),
             'navQuery' => $navQuery,
             'lang' => $lang,
             'feature' => config('tiers.tabs.'.$page),

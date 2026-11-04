@@ -39,6 +39,15 @@ return [
         'plan' => 'Plan',
     ],
 
+    'groups' => [
+        'seo' => 'SEO',
+        'content' => 'Content',
+        'keywords' => 'Keywords',
+        'ai' => 'AI visibility',
+        'reports' => 'Reports',
+        'settings' => 'Settings',
+    ],
+
     'home' => [
         'title' => 'Fyndable Smart SEO',
         'refresh' => 'Refresh',

@@ -55,7 +55,7 @@ it('does not pass unsafe query values on to the navigation', function () {
     $this->get('/dashboard?shop='.TEST_SHOP.'&host=%22%3E%3Cscript%3E&locale=xx%22')
         ->assertOk()
         ->assertDontSee('<script>"', false)
-        ->assertSee('href="/dashboard/plan?shop='.TEST_SHOP.'"', false);
+        ->assertSee('href="/dashboard/settings?shop='.TEST_SHOP.'"', false);
 });
 
 it('renders the tier map for plan gating', function () {
@@ -159,3 +159,36 @@ it('requires a session token for settings and context', function (string $url) {
 
     $this->getJson($url)->assertStatus(401);
 })->with(['/api/settings/profile', '/api/dashboard/context']);
+
+// --- Menu groups -------------------------------------------------------------------------
+
+it('puts every page except home in exactly one menu group', function () {
+    $grouped = array_merge(...array_values(DashboardController::GROUPS));
+
+    expect($grouped)->toHaveCount(count(array_unique($grouped)))
+        ->and(array_values(array_diff(DashboardController::PAGES, $grouped)))->toBe(['home'])
+        ->and(array_values(array_diff($grouped, DashboardController::PAGES)))->toBe([]);
+});
+
+it('shows home and the groups in the Shopify menu', function () {
+    $html = $this->get('/dashboard?shop='.TEST_SHOP.'&locale=nl-NL')->assertOk()->getContent();
+
+    preg_match('#<s-app-nav>(.*?)</s-app-nav>#s', $html, $nav);
+    preg_match_all('#<s-link [^>]*>([^<]+)</s-link>#', $nav[1], $links);
+
+    expect(array_map('trim', $links[1]))->toBe(['Home', 'SEO', 'Content', 'Zoekwoorden', 'AI-zichtbaarheid', 'Rapporten', 'Instellingen'])
+        ->and($html)->not->toContain('id="fyn-subnav"');
+});
+
+it('shows the sub navigation of the group with the current page marked', function () {
+    $html = $this->get('/dashboard/backlinks?shop='.TEST_SHOP)->assertOk()->getContent();
+
+    preg_match('#<s-stack id="fyn-subnav".*?</s-stack>#s', $html, $subnav);
+    preg_match_all('#<s-button href="/dashboard/([a-z]+)[^"]*" variant="(primary|secondary)" data-feature="([a-z_]*)"#', $subnav[0], $buttons, PREG_SET_ORDER);
+
+    expect(array_column($buttons, 1))->toBe(DashboardController::GROUPS['keywords'])
+        ->and(collect($buttons)->firstWhere(1, 'backlinks')[2])->toBe('primary')
+        ->and(collect($buttons)->firstWhere(1, 'gsc')[2])->toBe('secondary')
+        ->and(collect($buttons)->firstWhere(1, 'backlinks')[3])->toBe('backlinks')
+        ->and($subnav[0])->toContain('aria-current="page"');
+});
