@@ -26,6 +26,8 @@ return [
         'rt_col_keyword' => 'Zoekwoord',
         'rt_col_url' => 'URL',
         'rt_col_last' => 'Laatste positie',
+        'rt_col_gsc' => 'Search Console',
+        'rt_gsc_clicks' => '{clicks} klikken',
         'rt_col_best' => 'Beste',
         'rt_col_checked' => 'Laatst gecontroleerd',
         'rt_delete' => 'Verwijderen',

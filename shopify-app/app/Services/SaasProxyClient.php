@@ -603,6 +603,30 @@ class SaasProxyClient
     /**
      * Shared POST helper for SaaS endpoints.
      */
+    /**
+     * Google OAuth for Search Console (1.5). The SaaS keeps the Google client
+     * secret; these calls never log tokens.
+     */
+    public function googleOAuthSession(string $licenseKey, string $tenantKey): array
+    {
+        return $this->post('google/oauth-session', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey], 20);
+    }
+
+    public function googleExchange(string $licenseKey, string $tenantKey, string $code): array
+    {
+        return $this->post('google/exchange', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey, 'code' => $code], 20);
+    }
+
+    public function googleRefresh(string $licenseKey, string $tenantKey, string $refreshToken): array
+    {
+        return $this->post('google/refresh', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey, 'refresh_token' => $refreshToken], 20);
+    }
+
+    public function googleReportUsage(string $licenseKey, string $tenantKey, string $service, int $calls): array
+    {
+        return $this->post('google/report-usage', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey, 'service' => $service, 'calls' => $calls], 10);
+    }
+
     private function post(string $route, string $licenseKey, string $tenantKey, array $body, int $timeout = 60): array
     {
         $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/{$route}";
@@ -632,6 +656,7 @@ class SaasProxyClient
                 'error' => 'saas_request_failed',
                 'status' => $response->status(),
                 'message' => $json['message'] ?? $json['error'] ?? null,
+                'details' => $json['details'] ?? null,
             ];
         }
 

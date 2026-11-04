@@ -8,6 +8,7 @@ use App\Models\Shop;
 use App\Services\BrandVoice;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
+use App\Services\SearchConsoleService;
 use App\Services\SeoAuditor;
 use App\Services\ShopifyAdminWriter;
 use App\Services\ShopifyContentFetcher;
@@ -123,6 +124,9 @@ class ContentController extends Controller
             'images' => array_map(fn ($image) => trim((string) $image['alt']) !== '' ? $image['alt'] : null, $item['images']),
             'products_count' => $type === 'collection' ? ($node['productsCount']['count'] ?? null) : null,
         ]);
+
+        // Search Console (1.5), last 28 days, when connected.
+        $item['gsc'] = $item['url'] !== '' ? app(SearchConsoleService::class)->pageStats($shop, $item['url']) : null;
 
         return ['success' => true, 'item' => $item];
     }

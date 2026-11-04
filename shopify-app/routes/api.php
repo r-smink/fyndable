@@ -21,6 +21,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\SchemaController;
+use App\Http\Controllers\SearchConsoleController;
 use App\Http\Controllers\SeoAuditController;
 use Illuminate\Support\Facades\Route;
 
@@ -68,6 +69,19 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // Google Search Console (1.5)
+    Route::middleware('shopify.tier:search_console')->prefix('gsc')->group(function () {
+        Route::get('/', [SearchConsoleController::class, 'show']);
+        Route::post('/session', [SearchConsoleController::class, 'session']);
+        Route::post('/connect', [SearchConsoleController::class, 'connect']);
+        Route::get('/sites', [SearchConsoleController::class, 'sites']);
+        Route::post('/site', [SearchConsoleController::class, 'selectSite']);
+        Route::post('/sync', [SearchConsoleController::class, 'sync']);
+        Route::post('/disconnect', [SearchConsoleController::class, 'disconnect']);
+        Route::get('/pages', [SearchConsoleController::class, 'pages']);
+        Route::get('/opportunities', [SearchConsoleController::class, 'opportunities']);
+    });
 
     // Store-wide structured data via the app embed (1.4)
     Route::get('/schema', [SchemaController::class, 'show'])->middleware('shopify.tier:schema');

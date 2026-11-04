@@ -27,6 +27,8 @@ return [
         'rt_col_url' => 'URL',
         'rt_col_last' => 'Last position',
         'rt_col_best' => 'Best',
+        'rt_col_gsc' => 'Search Console',
+        'rt_gsc_clicks' => '{clicks} clicks',
         'rt_col_checked' => 'Last checked',
         'rt_delete' => 'Delete',
         'rt_delete_confirm' => 'Stop tracking this keyword?',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\GdprDeleteTenantJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Jobs\TrackHandleChangeJob;
+use App\Models\GoogleConnection;
 use App\Models\NotFoundUrl;
 use App\Models\RankHistory;
 use App\Models\RedirectEvent;
@@ -147,6 +148,9 @@ class WebhookController extends Controller
         $shop->access_token = null;
         $shop->save();
 
+        // Google tokens are not needed after uninstall (Search Console, 1.5).
+        GoogleConnection::where('shop_id', $shop->id)->delete();
+
         // Shopify cancels the App Pricing subscription on uninstall; suspend
         // the SaaS tenant outside the webhook request (5 second budget).
         SyncShopBillingJob::dispatch($shop->id, true);
@@ -158,7 +162,7 @@ class WebhookController extends Controller
      * shop/redact — erase shop data after uninstall grace period.
      *
      * Removes tracked keywords, rank history, llms.txt settings, the store
-     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log), schema settings and usage counters, and deletes the App Pricing tenant on the
+     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log), schema settings, the Google connection with Search Console data and usage counters, and deletes the App Pricing tenant on the
      * SaaS (queued). The shop row is kept without credentials, license or
      * contact data. trial_products and trial_ended_at stay (product IDs only)
      * so a reinstall cannot restart the free trial.
@@ -179,6 +183,9 @@ class WebhookController extends Controller
         NotFoundUrl::where('shop_id', $shop->id)->delete();
         RedirectEvent::where('shop_id', $shop->id)->delete();
         StoreSchemaSetting::where('shop_id', $shop->id)->delete();
+        GoogleConnection::where('shop_id', $shop->id)->delete();
+        DB::table('gsc_page_stats')->where('shop_id', $shop->id)->delete();
+        DB::table('gsc_query_stats')->where('shop_id', $shop->id)->delete();
         DB::table('shop_usage')->where('shop_id', $shop->id)->delete();
 
         // The App Pricing tenant belongs to this shop: delete it on the SaaS.

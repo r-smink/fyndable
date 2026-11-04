@@ -36,7 +36,7 @@ class DashboardController extends Controller
      */
     public const PAGES = [
         'home', 'seoaudit', 'redirects', 'schema', 'content', 'bulk', 'blogwriter', 'calendar',
-        'ranktracker', 'kwexplorer', 'competitor', 'backlinks', 'markets',
+        'gsc', 'ranktracker', 'kwexplorer', 'competitor', 'backlinks', 'markets',
         'aivisibility', 'geoscan', 'aitracker', 'llmstxt', 'tools',
         'settings', 'plan',
     ];

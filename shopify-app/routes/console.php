@@ -1,8 +1,10 @@
 <?php
 
 use App\Jobs\CheckRankingsJob;
+use App\Jobs\SyncSearchConsoleJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Jobs\SyncStoreSchemaJob;
+use App\Models\GoogleConnection;
 use App\Models\Shop;
 use App\Models\StoreSchemaSetting;
 use App\Services\LlmsTxtGenerator;
@@ -46,6 +48,14 @@ Schedule::call(function () {
         ->pluck('shop_id')
         ->each(fn (int $shopId, int $i) => SyncStoreSchemaJob::dispatch($shopId)->delay(now()->addSeconds(intdiv($i, 3))));
 })->dailyAt('04:00')->name('store-schema-sync')->withoutOverlapping();
+
+// Daily Search Console snapshot (1.5) for connected shops with a property.
+Schedule::call(function () {
+    GoogleConnection::where('status', 'connected')->whereNotNull('site_url')
+        ->whereHas('shop', fn ($q) => $q->where('is_installed', true)->where('is_uninstalled', false))
+        ->pluck('shop_id')
+        ->each(fn (int $shopId, int $i) => SyncSearchConsoleJob::dispatch($shopId)->delay(now()->addSeconds($i * 2)));
+})->dailyAt('05:00')->name('search-console-sync')->withoutOverlapping();
 
 // Daily llms.txt cache refresh (prevents stale cache from building up)
 Schedule::call(function () {

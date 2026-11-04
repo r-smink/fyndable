@@ -14,6 +14,7 @@ return [
         'bulk' => 'Bulk optimizer',
         'blogwriter' => 'Blogschrijver',
         'calendar' => 'Contentkalender',
+        'gsc' => 'Search Console',
         'ranktracker' => 'Rank tracker',
         'kwexplorer' => 'Zoekwoordverkenner',
         'competitor' => 'Concurrenten',
@@ -181,6 +182,7 @@ return [
         'severity_warning' => 'Waarschuwing',
         'severity_info' => 'Tip',
         'no_issues' => 'Geen problemen gevonden',
+        'gsc_line' => 'Search Console, laatste 28 dagen: {clicks} klikken, {impressions} vertoningen, positie {position}',
 
         'settings_saved' => 'Instellingen opgeslagen',
 

@@ -37,12 +37,13 @@
             return;
         }
         Fyn.html('rank-keywords', Fyn.table(
-            [t('rt_col_keyword'), t('rt_col_url'), { label: t('rt_col_last'), format: 'numeric' }, { label: t('rt_col_best'), format: 'numeric' }, t('rt_col_checked'), ''],
+            [t('rt_col_keyword'), t('rt_col_url'), { label: t('rt_col_last'), format: 'numeric' }, { label: t('rt_col_best'), format: 'numeric' }, { label: t('rt_col_gsc'), format: 'numeric' }, t('rt_col_checked'), ''],
             data.keywords.map(k => [
                 esc(k.keyword),
                 esc(k.url ? (k.url.length > 40 ? k.url.substring(0, 40) + '...' : k.url) : '-'),
                 posBadge(k.last_position),
                 posBadge(k.best_position),
+                k.gsc ? `${esc(k.gsc.position)} <s-text color="subdued">(${esc(t('rt_gsc_clicks', { clicks: k.gsc.clicks }))})</s-text>` : '-',
                 esc(k.last_checked_at ? Fyn.fmtDate(k.last_checked_at) : '-'),
                 `<s-button variant="tertiary" tone="critical" accessibilityLabel="${esc(t('rt_delete'))}" onclick="deleteKeyword(${Number(k.id)}, this)">${esc(t('rt_delete'))}</s-button>`,
             ])

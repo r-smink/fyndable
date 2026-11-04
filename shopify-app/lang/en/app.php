@@ -19,6 +19,7 @@ return [
         'bulk' => 'Bulk optimizer',
         'blogwriter' => 'Blog writer',
         'calendar' => 'Content calendar',
+        'gsc' => 'Search Console',
         'ranktracker' => 'Rank tracker',
         'kwexplorer' => 'Keyword explorer',
         'competitor' => 'Competitors',
@@ -191,6 +192,7 @@ return [
         'severity_warning' => 'Warning',
         'severity_info' => 'Tip',
         'no_issues' => 'No issues found',
+        'gsc_line' => 'Search Console, last 28 days: {clicks} clicks, {impressions} impressions, position {position}',
 
         'settings_saved' => 'Settings saved',
 

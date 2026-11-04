@@ -320,6 +320,20 @@ class LicenseAPI
             'callback' => [$this, 'googleOAuthStart'],
             'permission_callback' => '__return_true',
             'args' => [
+                // WordPress client: license credentials. Shopify app: one-time session.
+                'license_key' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'session' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_key'],
+            ],
+        ]);
+
+        // Google OAuth for the Shopify app: one-time popup session, created
+        // server-to-server so no license key ends up in a browser URL.
+        register_rest_route($this->namespace, '/google/oauth-session', [
+            'methods' => 'POST',
+            'callback' => [$this, 'createGoogleOAuthSession'],
+            'permission_callback' => '__return_true',
+            'args' => [
                 'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
             ],
@@ -1261,19 +1275,94 @@ class LicenseAPI
     }
 
     /**
+     * REST: One-time Google OAuth popup session for the Shopify app.
+     *
+     * The Shopify app calls this server-to-server and opens the returned
+     * URL in a popup. In session mode the popup does not exchange the code:
+     * it posts only the authorization code to the Shopify app origin, and the
+     * app exchanges it server-side via /google/exchange, so Google tokens
+     * never reach the browser. Sessions are single use and expire after
+     * 10 minutes.
+     */
+    public function createGoogleOAuthSession(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+        if (($tenant['platform'] ?? '') !== 'shopify') {
+            return new \WP_REST_Response(['success' => false, 'error' => 'unsupported_platform', 'message' => 'OAuth sessions are only used by the Shopify app'], 400);
+        }
+
+        $settings = new SaaSSettings();
+        if (empty($settings->getGoogleClientId())) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google OAuth is not configured on the SaaS dashboard'], 400);
+        }
+
+        $session = bin2hex(random_bytes(24));
+        set_transient('sseo_google_oauth_' . $session, ['tenant_key' => $tenant['tenant_key']], 10 * MINUTE_IN_SECONDS);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'url' => add_query_arg('session', $session, rest_url($this->namespace . '/google/oauth-start')),
+            'origin' => $this->siteOrigin(home_url()),
+        ], 200);
+    }
+
+    /**
+     * Origin of the Shopify app (target of the popup postMessage). Constant
+     * FYNDABLE_SHOPIFY_APP_ORIGIN or option sseo_ai_saas_shopify_app_origin.
+     */
+    private function shopifyAppOrigin(): string
+    {
+        $origin = defined('FYNDABLE_SHOPIFY_APP_ORIGIN') && is_string(FYNDABLE_SHOPIFY_APP_ORIGIN)
+            ? FYNDABLE_SHOPIFY_APP_ORIGIN
+            : (string) get_option('sseo_ai_saas_shopify_app_origin', 'https://shopify.fyndable.ai');
+
+        return $this->siteOrigin($origin);
+    }
+
+    private function siteOrigin(string $url): string
+    {
+        $parsed = wp_parse_url($url);
+        if (empty($parsed['host'])) {
+            return '';
+        }
+        $origin = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+
+        return !empty($parsed['port']) ? $origin . ':' . $parsed['port'] : $origin;
+    }
+
+    /**
      * REST: Render Google OAuth start page (GIS popup runs on SaaS domain)
      * This page loads GIS, gets the auth code, exchanges it server-side,
      * and sends tokens back to the client site via postMessage.
      */
     public function googleOAuthStart(\WP_REST_Request $request): void
     {
-        $licenseKey = $request->get_param('license_key');
-        $tenantKey = $request->get_param('tenant_key');
+        $licenseKey = (string) $request->get_param('license_key');
+        $tenantKey = (string) $request->get_param('tenant_key');
+        $session = (string) $request->get_param('session');
+        $codeOnly = $session !== '';
 
-        // Validate tenant
-        $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
-            wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+        if ($codeOnly) {
+            // Shopify app: single-use session, the app exchanges the code itself.
+            $data = get_transient('sseo_google_oauth_' . $session);
+            delete_transient('sseo_google_oauth_' . $session);
+            if (!is_array($data) || empty($data['tenant_key'])) {
+                wp_die(__('This connection link has expired. Start again from the app.', 'sseo-ai-saas'), 403);
+            }
+            $tenantKey = (string) $data['tenant_key'];
+            $tenant = $this->tenants->getTenant($tenantKey);
+            $licenseKey = '';
+            if (!$tenant) {
+                wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+            }
+        } else {
+            $tenant = $this->tenants->getTenant($tenantKey);
+            if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
+                wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+            }
         }
         if ($tenant['status'] !== 'active') {
             wp_die(__('Tenant is not active.', 'sseo-ai-saas'), 403);
@@ -1297,7 +1386,9 @@ class LicenseAPI
         // domain so OAuth tokens cannot be intercepted by an arbitrary opener.
         // No '*' fallback: without a parseable domain the flow stops.
         $clientOrigin = '';
-        if (!empty($tenant['domain'])) {
+        if ($codeOnly) {
+            $clientOrigin = $this->shopifyAppOrigin();
+        } elseif (!empty($tenant['domain'])) {
             $parsed = wp_parse_url($tenant['domain']);
             if (!empty($parsed['host'])) {
                 $clientOrigin = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
@@ -1349,6 +1440,7 @@ class LicenseAPI
             var LICENSE_KEY = <?php echo wp_json_encode($licenseKey); ?>;
             var TENANT_KEY = <?php echo wp_json_encode($tenantKey); ?>;
             var TARGET_ORIGIN = <?php echo wp_json_encode($clientOrigin); ?>;
+            var CODE_ONLY = <?php echo $codeOnly ? 'true' : 'false'; ?>;
 
             var statusArea = document.getElementById('status-area');
 
@@ -1377,6 +1469,19 @@ class LicenseAPI
                     scope: SCOPES,
                     ux_mode: 'popup',
                     callback: function(response) {
+                            if (CODE_ONLY) {
+                                // Shopify app: send only the code; the app exchanges it server-side.
+                                if (window.opener) {
+                                    window.opener.postMessage({
+                                        type: 'fyndable_google_code',
+                                        code: response.code,
+                                        success: true
+                                    }, TARGET_ORIGIN);
+                                }
+                                setStatus('Successfully connected! Closing...');
+                                closePopup();
+                                return;
+                            }
                             setStatus('Exchanging authorization code...');
 
                             fetch(EXCHANGE_URL, {
@@ -1428,7 +1533,7 @@ class LicenseAPI
                             var msg = error.message || error.type || 'Google login failed';
                             if (window.opener) {
                                 window.opener.postMessage({
-                                    type: 'fyndable_google_tokens',
+                                    type: CODE_ONLY ? 'fyndable_google_code' : 'fyndable_google_tokens',
                                     success: false,
                                     error: msg
                                 }, TARGET_ORIGIN);

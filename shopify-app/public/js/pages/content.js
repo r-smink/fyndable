@@ -14,6 +14,7 @@
     let currentId = null;
     let linkSuggestions = [];
     let descriptionFormat = 'html';
+    let currentGsc = null;
 
     function result(html) {
         Fyn.html('content-result', html);
@@ -82,6 +83,7 @@
         }
         const item = data.item;
         Fyn.$('content-selected').textContent = item.title + (item.url ? ' - ' + item.url : '');
+        currentGsc = item.gsc || null;
         renderSeo(item.seo);
         Fyn.setVal('edit-meta-title', item.seo_title || '');
         Fyn.setVal('edit-meta-desc', item.seo_description || '');
@@ -108,9 +110,12 @@
         const issues = seo.issues.length
             ? `<s-unordered-list>${seo.issues.map(i => `<s-list-item>${esc(Fyn.issueLabel(i))}</s-list-item>`).join('')}</s-unordered-list>`
             : `<s-text color="subdued">${esc(t('no_issues'))}</s-text>`;
+        const gsc = currentGsc
+            ? `<s-text color="subdued">${esc(t('gsc_line', { clicks: currentGsc.clicks, impressions: currentGsc.impressions, position: currentGsc.position }))}</s-text>`
+            : '';
         Fyn.html('content-seo', `<s-stack gap="small-200">
                 <s-stack direction="inline" gap="small-200" alignItems="center"><s-text type="strong">${esc(t('seo_score'))}</s-text>${Fyn.scoreBadge(seo.score)}</s-stack>
-                ${issues}</s-stack>`);
+                ${gsc}${issues}</s-stack>`);
     }
 
     function selectedImageUrl() {
