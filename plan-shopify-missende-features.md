@@ -12,7 +12,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 0.4 Library-migratie + testsuite (commits `d824c7c`, `bb7b304`: Pest, eigen dunne GraphQL/Partner-clients via `Http::`, `shopify-app-php` verwijderd, 103 tests, audit schoon)
 - [x] 0.5 Built for Shopify-eisen, app-kant (commits `8332c71` + Polaris-commit: Polaris web components, `s-app-nav`, `s-modal`, toasts, pagina per scherm, NL/EN overal, Instellingen-pagina voor taal/land/merkstem; zie "Stand 0.5")
 - [x] 1.1 SEO-score + audit (zie "Stand 1.1")
-- [ ] 1.2 404-monitor + redirectmanager
+- [x] 1.2 404-monitor + redirectmanager (zie "Stand 1.2")
 - [ ] 1.3 Bulk optimizer uitbreiden
 - [ ] 1.4 Winkelbreed schema via app embed
 - [ ] 1.5 Google Search Console-koppeling
@@ -71,6 +71,24 @@ Afwijkingen / open:
 - "Fix alles" kan alleen via de bulk optimizer (Business) en die doet alleen producten (metabeschrijving, alt-tekst, beschrijvingen). Metatitels, collecties, pagina's en artikelen: per item via de content optimizer. Uitbreiden hoort bij 1.3.
 - Gebroken links naar externe sites of niet-contentpaden worden niet gecontroleerd (zou HTTP-requests per link vragen).
 - Geen automatische periodieke audit; komt bij 1.7 (rapportage).
+
+### Stand 1.2 (2026-11-04)
+
+Gebouwd: pagina "Redirects en 404" met
+- **404-monitor:** nieuwe theme app embed "Fyndable 404 monitor" (alleen op de 404-pagina van het thema, één beacon naar `/apps/fyndable/404`, geen script op andere pagina's). Ondertekend via de app proxy, rate-limited, assets/app-paden genegeerd, referrer zonder querystring opgeslagen. Lijst met meeste bezoeken eerst, "Doorsturen" en "Negeren".
+- **Redirectmanager:** Shopify-redirects zoeken, toevoegen, bewerken, verwijderen; CSV-export (Shopify-formaat) en CSV-import (komma of puntkomma, kop optioneel, max. 5000 regels, op de achtergrond met voortgang).
+- **Automatische redirects:** bij een gewijzigde product- of collectie-URL (oude handle -> nieuwe) en bij verwijderen (naar de collectie van het product, alle producten, home of zoekresultaten; instelbaar). De app onthoudt handles in `resource_handles`, want `products/delete` stuurt alleen een id.
+- Tier: Starter (`redirects`). Te bevestigen, net als de audit.
+
+Gevonden en opgelost tijdens 1.2:
+- **Webhooks werden nooit geregistreerd.** `shopify.app.toml` had alleen de GDPR-topics, dus `app/uninstalled` (billing-suspend bij verwijderen, 0.1) en de product-/collectiewebhooks (llms.txt-cache) kwamen nooit binnen. Nu in de TOML: `app/uninstalled`, `products/*`, `collections/*`. Pagina-/artikeltopics staan er niet in (niet bevestigd in de Shopify-docs).
+- **App proxy-handtekening was fout** (pairs met `&` en niet-gedecodeerde waarden), waardoor llms.txt via `/apps/fyndable/llms.txt` altijd 404 gaf. Nu volgens de Shopify-spec in `ShopifySignature::verifyAppProxy`, gedeeld met de 404-monitor.
+- **Redirects liepen via de REST API met de verkeerde scope** (`write_content`). Nu GraphQL (`urlRedirectCreate/Update/Delete`, `urlRedirects`) met scope `write_online_store_navigation`. Dit geldt ook voor de llms.txt- en IndexNow-redirects.
+
+Voor livegang (aanvulling op "Stand 0.1"):
+- [ ] `shopify app deploy` (webhooks, nieuwe scope, app embed).
+- [ ] Lokale/productie-`.env`: `SHOPIFY_SCOPES` aanvullen met `write_online_store_navigation` (zie `.env.example`); bestaande installaties krijgen de herautorisatie-melding.
+- [ ] In een development store testen: handle wijzigen, product verwijderen, 404 bezoeken met de app embed aan.
 
 ## Wat er al staat (uitgangspunt)
 

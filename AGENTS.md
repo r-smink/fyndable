@@ -517,3 +517,12 @@ Billing loopt via **Shopify App Pricing** (voorheen Managed Pricing). Geen Billi
 - API: `POST /api/audit/start` (een tegelijk, na 30 min als vastgelopen beschouwd), `GET /api/audit/latest`, `GET /api/audit/items?issue=&type=&page=`. `ContentController::show` geeft `item.seo` (live itemscore), `index` geeft `score` uit de laatste audit; overview geeft `seo_score`.
 - UI: pagina `seoaudit`; deep links `/dashboard/bulk?action=meta` en `/dashboard/content?type=product&id=123`. Issue-labels staan gedeeld in `lang/*/app.php` (`issue_*`, `severity_*`).
 - GDPR `shop/redact` verwijdert ook `seo_audits`/`seo_audit_items`.
+
+## Shopify redirects + 404-monitor (1.2, 2026-11-04)
+
+- `ShopifyUrlRedirect` is nu GraphQL (`urlRedirects`, `urlRedirectCreate/Update/Delete`), scope `write_online_store_navigation` (ook voor de llms.txt- en IndexNow-redirects; route-middleware `shopify.scope:write_online_store_navigation`). `ensure()` maakt aan of zet een bestaande redirect om.
+- `RedirectManager`: instellingen (kolommen op `shop_profiles`: `redirect_on_handle_change`, `redirect_on_delete`, `deleted_redirect_target` collection|all|home|search, `not_found_monitor`), `resourceUpdated()/resourceDeleted()` (handles in `resource_handles`, eerste collectie van een product max. 24 uur gecachet), `redirect()` (logt in `redirect_events` en lost een bijbehorende 404 op), `recordNotFound()` (max. 2000 open 404's per shop, referrer zonder query).
+- Webhooks `products/*` en `collections/*` -> `TrackHandleChangeJob` (queue, checkt tier `redirects`). `shopify.app.toml` registreert nu `app/uninstalled`, `products/*`, `collections/*` (voorheen alleen GDPR-topics).
+- 404-beacon: theme app embed `extensions/fyndable-seo-schema/blocks/fyndable-404-monitor.liquid` -> `POST /apps/fyndable/404` -> `NotFoundController` (app proxy-handtekening via `ShopifySignature::verifyAppProxy`, Shopify-spec: gedecodeerd, gesorteerd, zonder scheidingsteken; 120/min per shop).
+- API onder `/api/redirects` (tier `redirects`, schrijfacties ook scope): lijst/zoeken, aanmaken, bewerken, verwijderen, `export` (CSV met formula-guard), `import` (`ImportRedirectsJob`, voortgang in cache `redirect_import:{shop_id}`), `not-found` (+ `fix`/`ignore`), `settings`.
+- Tests: `tests/Pest.php` zet `shopify.scopes` vast (los van de lokale `.env`) en bevat nu `sendWebhook()`.
