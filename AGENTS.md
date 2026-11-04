@@ -508,3 +508,12 @@ Billing loopt via **Shopify App Pricing** (voorheen Managed Pricing). Geen Billi
 - i18n: `lang/{en,nl}/app.php` (nav, gedeeld, home, instellingen, plan, onboarding) + `lang/{en,nl}/{page}.php`; de `js`-groep gaat als `window.FYN.i18n` naar de browser. Sleutels moeten in beide talen bestaan en er mogen geen em-/en-dashes in staan (`tests/Feature/DashboardPagesTest.php`). UI-taal = Shopify-admintaal (`?locale=`), AI-contenttaal = `shop_profiles.content_language` (pagina Instellingen, `GET|POST /api/settings/profile`).
 - Geen eigen kleuren/dark mode/dashicons meer (`public/vendor/dashicons` verwijderd). `public/css/fyndable.css` bevat alleen `[hidden]`-fix voor custom elements en code/preview-blokken.
 - Nieuwe pagina = view + script + `lang/en|nl/{page}.php` + entry in `DashboardController::PAGES` (+ `config/tiers.php` `tabs` als hij gegated is).
+
+## Shopify SEO-audit (1.1, 2026-11-04)
+
+- `App\Services\SeoAuditor`: pure scoring. `normalize($type, $node, $host)` (nodes uit `ShopifyContentFetcher::getAuditItems`), `scoreItem()` (itemchecks), `audit($items, $hosts)` (plus dubbele titels/beschrijvingen en gebroken interne links). Checks, ernst en strafpunten in `SeoAuditor::ISSUES`; bulk-acties per issue in `BULK_FIXES`.
+- `getAuditItems()` gebruikt slanke queries met kleine pagina's (producten 40, cost < 1000) en geeft `['error' => ...]` terug als een pagina faalt (geen misleidende score op een halve catalogus). Producten met `status:active`, pagina's/artikelen `published_status:published`.
+- `SeoAuditJob` (queue, 1 poging, 15 min) schrijft voortgang naar `seo_audits` en items naar `seo_audit_items`; houdt `KEEP` (5) audits per shop. Checkt zelf de tier (`seo_audit`, Starter).
+- API: `POST /api/audit/start` (een tegelijk, na 30 min als vastgelopen beschouwd), `GET /api/audit/latest`, `GET /api/audit/items?issue=&type=&page=`. `ContentController::show` geeft `item.seo` (live itemscore), `index` geeft `score` uit de laatste audit; overview geeft `seo_score`.
+- UI: pagina `seoaudit`; deep links `/dashboard/bulk?action=meta` en `/dashboard/content?type=product&id=123`. Issue-labels staan gedeeld in `lang/*/app.php` (`issue_*`, `severity_*`).
+- GDPR `shop/redact` verwijdert ook `seo_audits`/`seo_audit_items`.

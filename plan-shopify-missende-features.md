@@ -11,7 +11,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 0.3 Consistente tier-gating (gebouwd in de IDE, commit `259f252`; tests toegevoegd in `tests/Feature/TierGatingTest.php`, commit `6b02973`)
 - [x] 0.4 Library-migratie + testsuite (commits `d824c7c`, `bb7b304`: Pest, eigen dunne GraphQL/Partner-clients via `Http::`, `shopify-app-php` verwijderd, 103 tests, audit schoon)
 - [x] 0.5 Built for Shopify-eisen, app-kant (commits `8332c71` + Polaris-commit: Polaris web components, `s-app-nav`, `s-modal`, toasts, pagina per scherm, NL/EN overal, Instellingen-pagina voor taal/land/merkstem; zie "Stand 0.5")
-- [ ] 1.1 SEO-score + audit
+- [x] 1.1 SEO-score + audit (zie "Stand 1.1")
 - [ ] 1.2 404-monitor + redirectmanager
 - [ ] 1.3 Bulk optimizer uitbreiden
 - [ ] 1.4 Winkelbreed schema via app embed
@@ -61,6 +61,16 @@ Open / nog te controleren:
 - [ ] Home-status via `app.extensions()` (BFS 4.2.3) zodra de theme-extensie (1.4) een app embed heeft.
 - Ruwe JSON-weergave blijft bij een paar inzicht-endpoints (backlinks, LLM-mentions, trends, clustering, GEO-detail); nette weergave per endpoint is vervolgwerk.
 - Storefront-impact: de theme app block laadt alleen JSON-LD (geen JS), dus geen meetbare score-daling verwacht; meten bij 1.4.
+
+### Stand 1.1 (2026-11-04)
+
+Gebouwd: `SeoAuditor` (score 0-100 per item, winkelscore = gemiddelde) met 15 checks: verborgen voor zoekmachines (`seo.hidden`), actief maar niet in de onlinewinkel, lege collectie, gebroken interne links (zonder HTTP-requests: links naar onbekende product-/collectie-/pagina-/artikelhandles), metabeschrijving ontbreekt/te kort/te lang, metatitel ontbreekt/te kort/te lang, dubbele metatitels en -beschrijvingen (over alle types), te weinig tekst (minimum per type), afbeeldingen zonder alt-tekst, extra H1. `SeoAuditJob` haalt actieve producten, collecties en gepubliceerde pagina's en artikelen op (max. 1000 per type, `SHOPIFY_AUDIT_MAX_ITEMS`), bewaart de laatste 5 audits. Nieuwe pagina "SEO-audit" met probleemgroepen, "Producten in bulk oplossen" (bulk optimizer, alleen als het plan die bevat) en een itemlijst met link naar de content optimizer. Score per item ook live in de content optimizer en in de itemlijst; winkelscore op Home.
+
+Afwijkingen / open:
+- Tier: de audit zit in **Starter** (alle concurrenten bieden dit gratis aan). Te bevestigen; aanpassen in `config/tiers.php` (`seo_audit`).
+- "Fix alles" kan alleen via de bulk optimizer (Business) en die doet alleen producten (metabeschrijving, alt-tekst, beschrijvingen). Metatitels, collecties, pagina's en artikelen: per item via de content optimizer. Uitbreiden hoort bij 1.3.
+- Gebroken links naar externe sites of niet-contentpaden worden niet gecontroleerd (zou HTTP-requests per link vragen).
+- Geen automatische periodieke audit; komt bij 1.7 (rapportage).
 
 ## Wat er al staat (uitgangspunt)
 
