@@ -551,3 +551,10 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - App: `SearchConsoleService` (session, connect via SaaS `/google/exchange`, `accessToken()` met refresh via SaaS, `sites()`, `suggestSite()`, `sync()` -> `gsc_page_stats`/`gsc_query_stats` (laatste 28 dagen tot 3 dagen geleden), `pageStats()`, `resourceForPath()`). Tokens in `google_connections` met `encrypted` casts, nooit in API-responses. `SaasProxyClient::post` geeft bij fouten nu ook `details` terug.
 - API `/api/gsc/*` (tier `search_console`, professional). JS opent de popup leeg binnen de klik (popup-blockers) en controleert `event.origin` tegen de origin van de sessie-URL.
 - Koppelingen: `RankTrackerController::listKeywords` voegt `gsc {clicks, impressions, position}` toe; `ContentController::show` voegt `item.gsc` toe. Uninstall verwijdert de Google-koppeling, `shop/redact` ook de statistieken.
+
+## Shopify rapportage (1.7, 2026-11-04)
+
+- Activiteitenlog: middleware `shopify.activity` (`RecordActivity`) op de hele `shopify.session`-API-groep; mapt de route-URI naar een soort (meta, description, schema, alt_text, product, internal_link, image, article) en logt alleen geslaagde POSTs (`success: true`). `BulkOptimizeJob` logt per geslaagd item. Nieuwe opslaan-route = patroon toevoegen in `RecordActivity::ROUTES`.
+- `ReportBuilder::create($shop, $end)` maakt een `seo_reports`-snapshot van de 7 dagen tot `$end` (seo, rankings, search_console met vorige klikken, geo, activity). `ReportMailer::createAndSend()` mailt `WeeklyReportMail` (view `reports/email`, gedeelde partial `reports/_content` met inline styles) in `report_language` (anders contenttaal, anders en). Instellingen op `shop_profiles` (`report_enabled`, `report_email`, `report_language`).
+- Signed web-routes: `report.show` (`/report/{report}`, printbaar, noindex) en `report.unsubscribe` (`/report/unsubscribe/{shop}`). Scheduler `weekly-seo-report` (maandag 07:00), job `SendSeoReportJob($shopId, $manual)`.
+- API `/api/reports`, `/api/reports/settings`, `/api/reports/send` (tier `reports`, professional). `shop/redact` verwijdert rapporten en het activiteitenlog.

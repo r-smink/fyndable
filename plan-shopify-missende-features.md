@@ -17,7 +17,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 1.4 Winkelbreed schema via app embed (zie "Stand 1.4")
 - [x] 1.5 Google Search Console-koppeling (zie "Stand 1.5")
 - [ ] 1.6 Beeld-SEO
-- [ ] 1.7 Rapportage
+- [x] 1.7 Rapportage (zie "Stand 1.7"; PDF als printbare pagina, server-side PDF wacht op akkoord voor een dependency)
 - [ ] 2.1 t/m 2.9 (fase 2)
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
@@ -140,6 +140,22 @@ Voor livegang:
 Open:
 - Alleen producten en collecties krijgen een bewerk-link (via `resource_handles` uit 1.2); pagina's en artikelen nog niet.
 - GA4 zit al in de OAuth-scopes maar wordt nog niet gebruikt (kan bij 1.7 rapportage).
+
+### Stand 1.7 (2026-11-04)
+
+Gebouwd:
+- **Wekelijkse e-mail** (maandag 07:00, `weekly-seo-report`), opt-in op de nieuwe pagina "Rapporten" (aan/uit, e-mailadres met de winkeleigenaar als standaard, taal NL/EN). Inhoud: wat Fyndable deze week deed, SEO-score (met verschil t.o.v. de vorige audit en kritieke problemen), posities (top 3/10, gestegen/gedaald, grootste stijgers en dalers), Search Console (28 dagen, verschil in klikken t.o.v. vorige week, "bijna pagina 1"), score van de laatste GEO-scan. Secties buiten het plan vallen weg. Met knoppen naar het volledige rapport en de app, en een afmeldlink (signed URL, zonder in te loggen).
+- **Rapport als PDF:** printklare pagina (`/report/{id}`, signed URL: 30 dagen uit de e-mail, 1 uur vanuit de app) met "Afdrukken of opslaan als PDF". Rapporten worden bewaard (laatste 26) en zijn terug te vinden op de pagina Rapporten; "Nu een rapport maken en versturen" kan elke 10 minuten.
+- **Activiteitenlog** (`activity_events`) voor "wat Fyndable deed": middleware `shopify.activity` op de API registreert geslaagde opslag-/publicatieacties (meta, beschrijvingen, schema/FAQ, alt-tekst, interne links, AI-afbeeldingen, artikelen), de bulk optimizer per geslaagd item en redirects uit `redirect_events`.
+- Tier Professional (rij 36 in de spreadsheet, WP: SEO Report Export). Geen AI-kosten; per rapport hoogstens een SaaS-call (GEO-scans).
+
+Afwijkingen / beslissing nodig:
+- **PDF-bijlage:** een echte server-side PDF (bijlage in de mail) vraagt een nieuwe dependency, bv. `dompdf/dompdf` (de SaaS-plugin bundelt die al, v3.1.6). Volgens de werkafspraak niet toegevoegd zonder akkoord; nu printklare HTML die de browser als PDF opslaat.
+- **E-mail standaard uit (opt-in):** ongevraagde wekelijkse mails kunnen als spam worden ervaren; de setup-flow of de Home-pagina kan de merchant er later op wijzen.
+
+Voor livegang:
+- [ ] Mail instellen in productie (`MAIL_MAILER`, `MAIL_HOST`, `MAIL_FROM_ADDRESS`, ...; nu `log` in `.env.example`) en SPF/DKIM voor het afzenderdomein.
+- [ ] Queue worker + scheduler (al nodig, zie "Stand 0.1").
 
 ## Wat er al staat (uitgangspunt)
 
