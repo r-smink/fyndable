@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "548f025fbef8ebaa70a8abbf2de0fef8",
+    "content-hash": "a12416aab2272bcfbe7da34420d4f921",
     "packages": [
         {
             "name": "brick/math",
@@ -3422,62 +3422,6 @@
             },
             "time": "2026-09-16T11:39:30+00:00",
             "published-time": "2026-09-16T11:41:15+00:00"
-        },
-        {
-            "name": "shopify/shopify-app-php",
-            "version": "v1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Shopify/shopify-app-php.git",
-                "reference": "0f84ecd4177107c09100f8eeadfe32eb6e9b03c5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Shopify/shopify-app-php/zipball/0f84ecd4177107c09100f8eeadfe32eb6e9b03c5",
-                "reference": "0f84ecd4177107c09100f8eeadfe32eb6e9b03c5",
-                "shasum": ""
-            },
-            "require": {
-                "firebase/php-jwt": "^7.0",
-                "guzzlehttp/guzzle": "^7.0 || ^8.0",
-                "php": ">=8.2"
-            },
-            "require-dev": {
-                "squizlabs/php_codesniffer": "^3.13"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/Version.php"
-                ],
-                "psr-4": {
-                    "Shopify\\App\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Package for building Shopify apps. Authored and maintained by Shopify.",
-            "homepage": "https://packagist.org/packages/shopify/shopify-app-php",
-            "keywords": [
-                "admin-graphql",
-                "app-proxy",
-                "client-credentials",
-                "flow-action",
-                "shopify",
-                "shopify-apps",
-                "token-exchange",
-                "webhooks"
-            ],
-            "support": {
-                "changelog": "https://github.com/Shopify/shopify-app-php/blob/main/CHANGELOG.md",
-                "forum": "https://community.shopify.dev/c/shopify-cli-libraries/14",
-                "issues": "https://community.shopify.dev/c/shopify-cli-libraries/14",
-                "source": "https://github.com/Shopify/shopify-app-php/tree/v1.0.2"
-            },
-            "time": "2026-09-03T18:20:18+00:00",
-            "published-time": "2026-09-03T18:20:35+00:00"
         },
         {
             "name": "symfony/clock",
