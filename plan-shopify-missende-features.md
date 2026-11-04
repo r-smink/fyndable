@@ -9,7 +9,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 0.1 Shopify billing via App Pricing (commits `d824c7c`, `7ca10a2`, `6b02973`, `d472cc8`; zie "Stand 0.1" hieronder)
 - [ ] 0.2 Zero-config onboarding + automatische trial
 - [x] 0.3 Consistente tier-gating (gebouwd in de IDE, commit `259f252`; tests toegevoegd in `tests/Feature/TierGatingTest.php`, commit `6b02973`)
-- [ ] 0.4 Library-migratie + testsuite
+- [x] 0.4 Library-migratie + testsuite (commits `d824c7c`, `bb7b304`: Pest, eigen dunne GraphQL/Partner-clients via `Http::`, `shopify-app-php` verwijderd, 103 tests, audit schoon)
 - [ ] 0.5 Built for Shopify-eisen
 - [ ] 1.1 SEO-score + audit
 - [ ] 1.2 404-monitor + redirectmanager
@@ -22,11 +22,11 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
 
-- **0.3 tier-gating:** `config/tiers.php` (levels free/starter/professional/business/agency, trial = Professional), `RequireTier`-middleware (`shopify.tier:{feature}`) op alle feature-routes, `UsageLimiter` + tabel `shop_usage`. Consistent met de drie plannen; tests staan er nu. Open: queue-jobs (`BulkOptimizeJob`, `CheckRankingsJob`) checken alleen `hasLicense()`, niet de tier; `TAB_FEATURES` in de blade moet handmatig synchroon blijven met `config/tiers.php`.
-- **0.4:** `shopify/shopify-api` v6 is al vervangen. `composer.json` heeft Laravel `^12.69` en `shopify/shopify-app-php ~1.0.2`, maar die library wordt nergens gebruikt; alle Admin-calls lopen via `Http::`. Pest is sinds 0.1 geinstalleerd (82 tests groen) en `composer audit` is schoon (Laravel 12.71, `platform.php` 8.2.29). Voor 0.4 blijft over: de ongebruikte `shopify-app-php` opruimen of echt gebruiken, en tests voor OAuth/GraphQL.
+- **0.3 tier-gating:** `config/tiers.php` (levels free/starter/professional/business/agency, trial = Professional), `RequireTier`-middleware (`shopify.tier:{feature}`) op alle feature-routes, `UsageLimiter` + tabel `shop_usage`. Consistent met de drie plannen, met tests. Queue-jobs checken de tier zelf en de tabblokkades komen uit `config/tiers.php` `tabs` (`1da5e88`).
+- **0.4 (klaar):** geen Shopify-SDK meer; Admin GraphQL en Partner API lopen via eigen dunne clients op `Http::`. `shopify-app-php` (ongebruikt) is verwijderd, `firebase/php-jwt ^7.0` staat nu direct in `composer.json`. Laravel 12.71, `platform.php` 8.2.29, Pest met 103 tests (OAuth-HMAC, webhooks, sessietokens, SaasProxyClient, billing, tier-gating, GDPR), `composer audit` schoon.
 - **Scopes:** opgelost in `d472cc8` (`read_markets,read_locales,read_translations` in `shopify.app.toml`). Werkt pas na `shopify app deploy`.
-- **OAuth-callback:** `install()` zet geen OAuth-state meer (managed install), dus `/auth/callback` eindigt altijd in 403. Dode code.
-- **GDPR:** `shop/redact` verwijdert `scheduled_articles` en `shop_usage` niet en roept de SaaS (`/gdpr/delete`) niet aan.
+- **OAuth-callback (opgelost, `bb7b304`):** de dode code-exchange is weg; `/auth/callback` controleert de HMAC en stuurt door naar het dashboard (route blijft omdat de TOML hem als redirect-URL declareert).
+- **GDPR (opgelost, `22ea92c`):** `shop/redact` verwijdert nu ook `scheduled_articles` en `shop_usage`, wist naam/e-mail/licentie en laat de SaaS de App Pricing-tenant verwijderen (`GdprDeleteTenantJob`). Daarbij drie bestaande fouten in de SaaS-route `/gdpr/delete` gerepareerd (ongeldige enum-status `deleted`, usage en tickets werden op een niet-bestaande kolom `tenant_key` verwijderd, `tenant_settings` bleven staan).
 - **i18n:** de dashboard-UI is Engelstalig. Sinds 0.1 is er een kleine NL/EN-laag (`I18N`/`t()`/`data-i18n` in de blade, taal uit `?locale=`) voor de plan- en trialteksten; de rest vertalen hoort bij 0.5.
 - **App Pricing (docs gecontroleerd):** klopt met het plan. Aanvullend: Partner API-endpoint `https://partners.shopify.com/{partner_id}/api/2026-10/graphql.json`, header `X-Shopify-Access-Token`, client met permissie *Manage apps*, limiet 4 req/s. `activeSubscription` geeft `null` zonder actief abonnement en heeft geen statusveld; plan zit in `items[].handle`, verder `trialEndsAt`, `cancelAtEndOfCycle`, `currentBillingCycle`, `pendingUpdate`. Redirect geeft `plan_handle` (+ `shop` bij externe URL), `charge_id` niet meer. Geen eenmalige aankopen, dus credit-packs kunnen niet via App Pricing.
 
@@ -44,10 +44,11 @@ Nog te doen buiten de code (voor livegang):
 - [ ] Test met een development store in dezelfde Partner-organisatie (betaalde plannen zijn daar gratis).
 
 Open productvragen / vervolgpunten:
-- Tijdens de trial geldt Professional-niveau (`config/tiers.php`). Alleen product-AI telt mee voor de 5 producten; GEO-scans (10/maand), rank tracker en keyword explorer zijn tijdens de trial onbeperkt in tijd bruikbaar. Overweeg de trial te beperken tot product-features of een tijdslimiet toe te voegen.
-- Een merchant die via de Shopify-admin een plan kiest zonder de app te openen, wordt pas bij de volgende app-load of de uur-sync (alleen voor al betalende winkels) opgepakt.
+- Trial (besloten 2026-11-04): 7 dagen of 5 producten, wat het eerst komt (`d6f015f`). Tijdens de trial geldt Professional-niveau (`config/tiers.php`); de SaaS-tenant krijgt de trial-einddatum als `expires_at`.
+- Na de plankeuze stuurt Shopify de merchant naar de app (welcome link), waar het plan direct wordt bevestigd. Een plan dat buiten die redirect om ontstaat (bv. door Shopify-support) komt binnen bij de volgende app-load.
 - De SaaS-kant heeft geen geautomatiseerde tests (alleen `php -l`).
-- GDPR `shop/redact`: `trial_products` blijft bewust staan (alleen product-ID's, voorkomt trial-misbruik na herinstallatie); `scheduled_articles` en de SaaS-tenant worden nog niet opgeruimd (bestaand punt).
+- GDPR `shop/redact`: `trial_products` en `trial_ended_at` blijven bewust staan (alleen product-ID's, voorkomt trial-misbruik na herinstallatie).
+- 0.3: queue-jobs checken de tier nu zelf (`1da5e88`); `TAB_FEATURES` komt uit `config/tiers.php` `tabs`.
 
 ## Wat er al staat (uitgangspunt)
 
