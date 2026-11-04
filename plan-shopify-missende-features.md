@@ -7,7 +7,7 @@
 Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` schoon is.
 
 - [x] 0.1 Shopify billing via App Pricing (commits `d824c7c`, `7ca10a2`, `6b02973`, `d472cc8`; zie "Stand 0.1" hieronder)
-- [ ] 0.2 Zero-config onboarding + automatische trial
+- [x] 0.2 Zero-config onboarding + automatische trial (commit `2f25da4`; trial-tenant bij eerste app-load via 0.1, wizard met taal/land/merkstem + eerste 5 producten, merkstem in alle AI-teksten)
 - [x] 0.3 Consistente tier-gating (gebouwd in de IDE, commit `259f252`; tests toegevoegd in `tests/Feature/TierGatingTest.php`, commit `6b02973`)
 - [x] 0.4 Library-migratie + testsuite (commits `d824c7c`, `bb7b304`: Pest, eigen dunne GraphQL/Partner-clients via `Http::`, `shopify-app-php` verwijderd, 103 tests, audit schoon)
 - [ ] 0.5 Built for Shopify-eisen
@@ -27,6 +27,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - **Scopes:** opgelost in `d472cc8` (`read_markets,read_locales,read_translations` in `shopify.app.toml`). Werkt pas na `shopify app deploy`.
 - **OAuth-callback (opgelost, `bb7b304`):** de dode code-exchange is weg; `/auth/callback` controleert de HMAC en stuurt door naar het dashboard (route blijft omdat de TOML hem als redirect-URL declareert).
 - **GDPR (opgelost, `22ea92c`):** `shop/redact` verwijdert nu ook `scheduled_articles` en `shop_usage`, wist naam/e-mail/licentie en laat de SaaS de App Pricing-tenant verwijderen (`GdprDeleteTenantJob`). Daarbij drie bestaande fouten in de SaaS-route `/gdpr/delete` gerepareerd (ongeldige enum-status `deleted`, usage en tickets werden op een niet-bestaande kolom `tenant_key` verwijderd, `tenant_settings` bleven staan).
+- **0.2 (2026-11-05):** de product-AI-prompts gaven geen taal mee, dus Nederlandse winkels kregen Engelse teksten. Opgelost met `BrandVoice` (taal, land, toon, doelgroep, merkomschrijving uit `shop_profiles`). AiTracker (zichtbaarheidscheck) gebruikt bewust geen merkstem. Open: de wizard optimaliseert alleen SEO-titel + metabeschrijving, geen productbeschrijving (sneller, en bespaart trial-tegoed).
 - **i18n:** de dashboard-UI is Engelstalig. Sinds 0.1 is er een kleine NL/EN-laag (`I18N`/`t()`/`data-i18n` in de blade, taal uit `?locale=`) voor de plan- en trialteksten; de rest vertalen hoort bij 0.5.
 - **App Pricing (docs gecontroleerd):** klopt met het plan. Aanvullend: Partner API-endpoint `https://partners.shopify.com/{partner_id}/api/2026-10/graphql.json`, header `X-Shopify-Access-Token`, client met permissie *Manage apps*, limiet 4 req/s. `activeSubscription` geeft `null` zonder actief abonnement en heeft geen statusveld; plan zit in `items[].handle`, verder `trialEndsAt`, `cancelAtEndOfCycle`, `currentBillingCycle`, `pendingUpdate`. Redirect geeft `plan_handle` (+ `shop` bij externe URL), `charge_id` niet meer. Geen eenmalige aankopen, dus credit-packs kunnen niet via App Pricing.
 

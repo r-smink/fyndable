@@ -493,3 +493,10 @@ Billing loopt via **Shopify App Pricing** (voorheen Managed Pricing). Geen Billi
 - Geen Shopify-SDK: `shopify/shopify-app-php` is verwijderd (werd nooit gebruikt); `firebase/php-jwt ^7.0` is een directe dependency (sessietokens). `/auth/callback` verifieert alleen de HMAC en stuurt door naar `/dashboard` (managed install, geen code-exchange).
 - GDPR `shop/redact`: wist keywords, rank history, llms-instellingen, `scheduled_articles`, `shop_usage`, naam/e-mail/licentie/billing en queuet `GdprDeleteTenantJob` (SaaS `/gdpr/delete`, alleen voor App Pricing-tenants; agency-licenties worden alleen ontkoppeld). `trial_products`/`trial_ended_at` blijven (trial-misbruik). SaaS `/gdpr/delete` verwijdert nu ook `tenant_settings` en gebruikt `tenant_id` voor usage/tickets.
 - Queue-jobs (`BulkOptimizeJob`, `CheckRankingsJob`) checken de tier zelf via `LicenseService::canUse`. Tab -> feature-map voor het dashboard staat in `config/tiers.php` `tabs`.
+
+## Shopify onboarding + merkstem (0.2, 2026-11-05)
+
+- Trial-tenant ontstaat bij de eerste app-load (`ShopifyBillingService::refresh`, zie App Pricing). Daarna opent de wizard 1x per sessie zolang `shop_profiles.onboarding_completed_at`/`onboarding_skipped_at` leeg is en er geen plan vereist is. Heropenen via de Plan-tab.
+- `OnboardingController`: `GET /api/onboarding` (profiel, suggesties uit `shopLocales` primary + `billingAddress.countryCodeV2`, fallback `?locale=`; 5 productvoorstellen, zonder SEO eerst), `POST /api/onboarding/profile|complete|skip`. Stap 3 roept de gewone `/products/{id}/generate-meta` + `save-meta` aan, dus tier-gating en trial-limiet gelden ongewijzigd.
+- `BrandVoice::apply($shop, $messages, $voice = true)` voegt taal, land, toon, doelgroep en merkomschrijving toe aan de system prompt. Gebruikt in ProductController, ContentController en BulkOptimizeJob (alt-tekst: alleen taal/land). Blog Writer: standaardtaal uit het profiel, talenlijst = `BrandVoice::LANGUAGES`. Nieuwe AI-tekstgenerator = altijd via `BrandVoice::apply`.
+- `shop/redact` verwijdert ook `shop_profiles`.
