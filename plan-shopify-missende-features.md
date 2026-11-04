@@ -1,49 +1,6 @@
-# Plan — Missende features Fyndable Shopify-app
+# Plan - Missende features Fyndable Shopify-app
 
 *Opgesteld 2026-11-04 op basis van de huidige code in `shopify-app/` (routes, controllers, services, theme-extensie, dashboard-tabs).*
-
-## Voortgang
-
-Een feature wordt pas afgevinkt als de code gecommit is, de testsuite groen is en `composer audit` schoon is.
-
-**Fase 0**
-- [ ] 0.1 Shopify Billing (Managed Pricing / Billing API)
-- [ ] 0.2 Zero-config onboarding + automatische trial
-- [ ] 0.3 Consistente tier-gating
-- [ ] 0.4 Library-migratie + testsuite
-- [ ] 0.5 Built for Shopify-eisen
-
-**Fase 1**
-- [ ] 1.1 SEO-score per item + winkelbrede audit
-- [ ] 1.2 404-monitor + redirectmanager
-- [ ] 1.3 Bulk optimizer uitbreiden
-- [ ] 1.4 Winkelbreed schema via app embed
-- [ ] 1.5 Google Search Console-koppeling
-- [ ] 1.6 Beeld-SEO
-- [ ] 1.7 Rapportage
-
-**Fase 2**
-- [ ] 2.1 AI-commerce readiness / productfeed
-- [ ] 2.2 AI-crawlerbeheer via `robots.txt.liquid`
-- [ ] 2.3 AI-vertalingen voor Markets
-- [ ] 2.4 ApexFlow voor Shopify
-- [ ] 2.5 Collectiepagina's als SEO-landingspagina's
-- [ ] 2.6 Reviews naar content + schema
-- [ ] 2.7 Merkstem + brand style references
-- [ ] 2.8 AI-referralverkeer en omzet
-- [ ] 2.9 Agency multi-store-overzicht
-
-### Afwijkingen tussen plan en code (gecontroleerd 2026-11-04)
-
-- **Library (0.4):** `shopify/shopify-api` v6 is al vervangen. `composer.json` heeft Laravel `~12.66` en `shopify/shopify-app-php ~1.0.2`, maar die library wordt nergens in `app/` gebruikt; alle Admin-calls lopen via `Http::` (GraphQL + enkele REST-calls). AGENTS.md noemt nog Laravel 11 en v6.1.1.
-- **Tests (0.4):** er zijn wel tests: 33 PHPUnit-tests (o.a. `ShopifySignatureTest`, `VerifyShopifySessionTest`, `BulkOptimizeJobTest`, `ContentControllerTest`), allemaal groen. Pest is niet geinstalleerd.
-- **Tier-gating (0.3):** `hasTier()` wordt op 1 plek aangeroepen (`RankTrackerController`), niet 2. `BulkOptimizeJob` en `CheckRankingsJob` checken alleen `hasLicense()`.
-- **composer audit:** 6 advisories in 3 packages (`laravel/framework` 3x, `league/commonmark` 2x, `symfony/mime` 1x).
-- **Scopes:** `config/shopify.php` vereist `read_markets,read_locales,read_translations`, maar `shopify.app.toml` declareert die niet. Bij de managed install krijgt een winkel ze dus nooit, en `missingScopes()` blijft altijd een re-auth melden. App Store-risico.
-- **OAuth-callback:** `install()` zet geen `shopify_oauth_state` meer (managed install), dus `/auth/callback` eindigt altijd in 403. Dode code.
-- **Billing:** `config('shopify.billing_enabled')` bestaat maar wordt nergens gebruikt. Geen `app_subscriptions/update`-webhook.
-- **GDPR:** `shop/redact` verwijdert `scheduled_articles` niet en roept de SaaS-endpoint `/gdpr/delete` niet aan.
-- **i18n:** de dashboard-UI is volledig Engelstalig, zonder vertaallaag.
 
 ## Wat er al staat (uitgangspunt)
 
@@ -53,19 +10,29 @@ De basis is breed. De grootste gaten zitten in **(1) wat de App Store vereist**,
 
 ---
 
-## Fase 0 — Blokkerend voor App Store-lancering (eerst doen)
+## Fase 0 - Blokkerend voor App Store-lancering (eerst doen)
 
 | # | Feature | Waarom | Aanpak |
 |---|---------|--------|--------|
-| 0.1 | **Shopify Billing (Managed Pricing of Billing API)** | Apps in de App Store moeten via Shopify afrekenen. Een licentiesleutel van portal.fyndable.ai wordt bij review afgekeurd. | `appSubscriptionCreate` (of Managed Pricing in de Partner Dashboard) → bij `app_subscriptions/update`-webhook automatisch een tenant + licentie aanmaken via SaaS (`platform=shopify`). Handmatige licentie-invoer alleen nog voor agency/enterprise. |
+| 0.1 | **Shopify billing via Shopify App Pricing (voorheen Managed Pricing)** | Apps in de App Store moeten via Shopify afrekenen. Een licentiesleutel van portal.fyndable.ai wordt bij review afgekeurd. De Billing API is inmiddels legacy; Shopify App Pricing is de standaard. | Plannen (Starter/Professional/Business, trial) instellen in het Partner Dashboard. **Let op: App Pricing stuurt na 28 april 2026 geen webhooks meer voor abonnementswijzigingen** (dus geen `app_subscriptions/update`). Status uitlezen via de Partner API (`activeSubscription(appId, shopId)`), plus redirect-parameters `plan_handle` en `shop` na plankeuze. Annuleringen en freezes komen buiten een redirect binnen, dus controleer de status bij elke app-load en met een periodieke sync-job. Bij een actief abonnement automatisch een tenant + licentie aanmaken via SaaS (`platform=shopify`). Handmatige licentie-invoer alleen nog voor agency/enterprise. |
 | 0.2 | **Zero-config onboarding + automatische trial** | Nu moet de merchant eerst een licentiesleutel plakken. Dat kost conversie. | Na OAuth-install direct een trial-tenant aanmaken, plus een wizard (winkeltaal, land, merkstem, eerste 5 producten optimaliseren). |
-| 0.3 | **Consistente tier-gating** | `hasTier()` wordt maar op 2 plekken aangeroepen. Dure features (GEO-scan, AI-tracker, bulk, keyword explorer) staan open voor elke tier. | Centrale `RequireTier`-middleware op routegroepen + quota per tier vanuit de SaaS (`getApiLimitForTier`). |
+| 0.3 | **Consistente tier-gating (wordt apart in de IDE gebouwd, hier alleen controleren en integreren)** | `hasTier()` wordt maar op 2 plekken aangeroepen. Dure features (GEO-scan, AI-tracker, bulk, keyword explorer) staan open voor elke tier. | Centrale `RequireTier`-middleware op routegroepen + quota per tier vanuit de SaaS (`getApiLimitForTier`). |
 | 0.4 | **Library-migratie + testsuite** | `shopify/shopify-api` v6 is abandoned (bekend punt). Er is geen enkele test. | Migreren naar `shopify/shopify-app-php` of een eigen dunne GraphQL-client; Pest-tests voor OAuth-HMAC, webhooks, sessietokens, SaasProxyClient. `composer audit` schoon. |
 | 0.5 | **Built for Shopify-eisen** | Badge = ranking in de App Store. | Polaris-web-components/App Bridge-nav, sneller laden (de dashboard-blade is 159 KB in één bestand → opsplitsen), geen theme-impact buiten de app block. |
 
+
+### Besluit vooraf bij 0.1: App Pricing of Billing API (manual pricing)
+
+- **Standaard: Shopify App Pricing.** Aanbevolen route, minder code, Shopify host de plankeuze-pagina en regelt proration. Beperkingen: prijzen alleen in USD, maximaal 8 publieke plannen, geen eenmalige aankopen, geen usage caps.
+- **Billing API (manual pricing)** alleen kiezen als we losse credit-packs (eenmalige aankopen, bv. extra AI-credits), usage caps of volledige controle over kortingen nodig hebben. App Pricing en Billing API kunnen niet gemixt worden: bij App Pricing worden alle Billing API-charges geweigerd, ook eenmalige.
+- **Besloten prijzen (USD):** Starter 60 dollar per maand, Professional 199 dollar per maand, Business 299 dollar per maand. Dit past bij App Pricing (prijzen in USD, Shopify rekent om naar de valuta van de merchant) en de featureset wijkt toch af van de WordPress-versie, dus een aparte prijsstelling is logisch. Het eurobedrag voor de merchant schommelt licht mee met de wisselkoers. Drie publieke plannen, ruim binnen de limiet van acht. Agency/enterprise blijft buiten de App Store om (private plannen of handmatige licentie).
+- **Tier-gating (0.3) wordt apart opgepakt:** de featureverdeling per tier (Starter, Professional, Business) wordt in een aparte sessie in de IDE gebouwd. Claude Code bouwt die niet opnieuw, maar leest de resulterende tierdefinities uit de code en koppelt de Shopify-plannen daaraan.
+- **Te verifieren in de Shopify-docs voor de start:** kortingen en extra trials per merchant via het Dev Dashboard (forumberichten melden dat dit ontbrak), en hoe Agency/enterprise-prijzen als private plannen werken.
+- Bronnen: shopify.dev/docs/apps/launch/billing/managed-pricing en de aankondiging "Shopify App Pricing: the next generation of app billing" op community.shopify.dev.
+
 ---
 
-## Fase 1 — Kern-SEO die merchants verwachten (pariteit met Plug in SEO, StoreSEO, Smart SEO, Booster)
+## Fase 1 - Kern-SEO die merchants verwachten (pariteit met Plug in SEO, StoreSEO, Smart SEO, Booster)
 
 | # | Feature | Waarom belangrijk |
 |---|---------|-------------------|
@@ -79,7 +46,7 @@ De basis is breed. De grootste gaten zitten in **(1) wat de App Store vereist**,
 
 ---
 
-## Fase 2 — Onderscheidend (hier wint Fyndable)
+## Fase 2 - Onderscheidend (hier wint Fyndable)
 
 | # | Feature | Waarom onderscheidend |
 |---|---------|----------------------|
@@ -97,11 +64,11 @@ De basis is breed. De grootste gaten zitten in **(1) wat de App Store vereist**,
 
 ## Voorgestelde volgorde
 
-1. **Sprint 1–2:** 0.1 Billing, 0.2 onboarding/trial, 0.3 tier-gating
+1. **Sprint 1-2:** 0.1 Billing, 0.2 onboarding/trial, 0.3 tier-gating
 2. **Sprint 3:** 0.4 tests + library, 0.5 opsplitsen dashboard / Built for Shopify
-3. **Sprint 4–5:** 1.1 SEO-score + audit, 1.2 redirects/404, 1.4 winkelbreed schema
+3. **Sprint 4-5:** 1.1 SEO-score + audit, 1.2 redirects/404, 1.4 winkelbreed schema
 4. **Sprint 6:** 1.3 bulk-uitbreiding + templates, 1.5 GSC, 1.7 rapportage
-5. **Sprint 7–9:** 2.1 AI-commerce readiness, 2.2 AI-crawlers, 2.3 AI-vertalingen
+5. **Sprint 7-9:** 2.1 AI-commerce readiness, 2.2 AI-crawlers, 2.3 AI-vertalingen
 6. **Daarna:** 2.4 ApexFlow, 2.8 AI-omzetmeting, 2.5/2.6/2.7/2.9, 1.6 beeld-SEO
 
 **Positionering:** "De enige Shopify SEO-app die je producten vindbaar maakt in ChatGPT, Perplexity en Google AI." Fase 2.1, 2.2 en 2.8 maken die claim waar. Fase 0 en 1 zijn nodig om überhaupt mee te kunnen doen.
