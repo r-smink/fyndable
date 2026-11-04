@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AiTrackerController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BlogWriterController;
 use App\Http\Controllers\BulkOptimizerController;
 use App\Http\Controllers\CompetitorController;
@@ -40,6 +41,10 @@ Route::middleware(['shopify.session'])->group(function () {
     // Dashboard
     Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
 
+    // Billing (Shopify App Pricing)
+    Route::get('/billing/status', [BillingController::class, 'status']);
+    Route::post('/billing/confirm', [BillingController::class, 'confirm']);
+
     // License
     Route::get('/license/status', [LicenseController::class, 'status']);
     Route::post('/license/activate', [LicenseController::class, 'activate']);
@@ -59,11 +64,11 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::get('/content/{type}/{id}', [ContentController::class, 'show'])
         ->whereIn('type', ['product', 'collection', 'page', 'article'])
         ->where('id', '.+');
-    Route::post('/content/{type}/{id}/generate-meta', [ContentController::class, 'generateMeta'])->middleware('shopify.tier:content_meta')
+    Route::post('/content/{type}/{id}/generate-meta', [ContentController::class, 'generateMeta'])->middleware('shopify.tier:content_meta')->middleware('shopify.trial')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
-    Route::post('/content/{type}/{id}/generate-description', [ContentController::class, 'generateDescription'])->middleware('shopify.tier:content_description')
+    Route::post('/content/{type}/{id}/generate-description', [ContentController::class, 'generateDescription'])->middleware('shopify.tier:content_description')->middleware('shopify.trial')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
-    Route::post('/content/{type}/{id}/generate-schema', [ContentController::class, 'generateSchema'])->middleware('shopify.tier:schema')
+    Route::post('/content/{type}/{id}/generate-schema', [ContentController::class, 'generateSchema'])->middleware('shopify.tier:schema')->middleware('shopify.trial')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
 
     // Content writes check the matching Shopify scope per type inside the
@@ -74,15 +79,15 @@ Route::middleware(['shopify.session'])->group(function () {
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
     Route::post('/content/{type}/{id}/save-schema', [ContentController::class, 'saveSchema'])->middleware('shopify.tier:schema')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
-    Route::post('/content/{type}/{id}/generate-faq', [ContentController::class, 'generateFaq'])->middleware('shopify.tier:faq')
+    Route::post('/content/{type}/{id}/generate-faq', [ContentController::class, 'generateFaq'])->middleware('shopify.tier:faq')->middleware('shopify.trial')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
     Route::post('/content/{type}/{id}/save-faq', [ContentController::class, 'saveFaq'])->middleware('shopify.tier:faq')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
-    Route::post('/content/{type}/{id}/link-suggestions', [ContentController::class, 'linkSuggestions'])->middleware('shopify.tier:link_suggestions')
+    Route::post('/content/{type}/{id}/link-suggestions', [ContentController::class, 'linkSuggestions'])->middleware('shopify.tier:link_suggestions')->middleware('shopify.trial')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
     Route::post('/content/{type}/{id}/apply-link', [ContentController::class, 'applyLink'])->middleware('shopify.tier:link_suggestions')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
-    Route::post('/content/{type}/{id}/generate-image', [ContentController::class, 'generateImage'])->middleware('shopify.tier:ai_image')
+    Route::post('/content/{type}/{id}/generate-image', [ContentController::class, 'generateImage'])->middleware('shopify.tier:ai_image')->middleware('shopify.trial')
         ->whereIn('type', ['product', 'collection', 'page', 'article'])->where('id', '.+');
 
     // Blog writer
@@ -102,12 +107,12 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::post('/indexnow/submit', [IndexNowController::class, 'submit'])->middleware('shopify.tier:indexnow');
 
     // Products
-    Route::post('/products/{productId}/generate-description', [ProductController::class, 'generateDescription'])->middleware('shopify.tier:content_description');
+    Route::post('/products/{productId}/generate-description', [ProductController::class, 'generateDescription'])->middleware('shopify.tier:content_description')->middleware('shopify.trial');
     Route::post('/products/{productId}/save-description', [ProductController::class, 'saveDescription'])->middleware('shopify.tier:content_description')->middleware('shopify.scope:write_products');
-    Route::post('/products/{productId}/generate-meta', [ProductController::class, 'generateMeta'])->middleware('shopify.tier:content_meta');
-    Route::post('/products/{productId}/generate-alt-text', [ProductController::class, 'generateAltText'])->middleware('shopify.tier:alt_text');
+    Route::post('/products/{productId}/generate-meta', [ProductController::class, 'generateMeta'])->middleware('shopify.tier:content_meta')->middleware('shopify.trial');
+    Route::post('/products/{productId}/generate-alt-text', [ProductController::class, 'generateAltText'])->middleware('shopify.tier:alt_text')->middleware('shopify.trial');
     Route::post('/products/{productId}/save-meta', [ProductController::class, 'saveMeta'])->middleware('shopify.tier:content_meta')->middleware('shopify.scope:write_products');
-    Route::post('/products/{productId}/generate-schema', [ProductController::class, 'generateSchema'])->middleware('shopify.tier:schema');
+    Route::post('/products/{productId}/generate-schema', [ProductController::class, 'generateSchema'])->middleware('shopify.tier:schema')->middleware('shopify.trial');
     Route::post('/products/{productId}/save-schema', [ProductController::class, 'saveSchema'])->middleware('shopify.tier:schema')->middleware('shopify.scope:write_products');
     Route::post('/products/{productId}/push-description', [ProductController::class, 'pushDescription'])->middleware('shopify.tier:content_description')->middleware('shopify.scope:write_products');
     Route::post('/products/{productId}/push-title', [ProductController::class, 'pushTitle'])->middleware('shopify.tier:content_meta')->middleware('shopify.scope:write_products');
@@ -157,7 +162,7 @@ Route::middleware(['shopify.session'])->group(function () {
 
     // Product Variant SEO
     Route::get('/products/{productId}/variants', [ProductController::class, 'variants'])->middleware('shopify.tier:variant_descriptions');
-    Route::post('/products/{productId}/variants/{variantId}/generate-description', [ProductController::class, 'generateVariantDescription'])->middleware('shopify.tier:variant_descriptions');
+    Route::post('/products/{productId}/variants/{variantId}/generate-description', [ProductController::class, 'generateVariantDescription'])->middleware('shopify.tier:variant_descriptions')->middleware('shopify.trial');
     Route::post('/products/{productId}/variants/{variantId}/save-description', [ProductController::class, 'saveVariantDescription'])->middleware('shopify.tier:variant_descriptions')->middleware('shopify.scope:write_products');
 
     // Product Review Schema

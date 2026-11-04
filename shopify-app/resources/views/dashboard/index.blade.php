@@ -370,7 +370,7 @@
             <!-- Standalone tabs -->
             <button class="tab" data-tab="llmstxt" onclick="showTab('llmstxt')"><span class="dashicons dashicons-media-code"></span>llms.txt</button>
             <button class="tab" data-tab="tools" onclick="showTab('tools')"><span class="dashicons dashicons-admin-tools"></span>Tools</button>
-            <button class="tab" data-tab="license" onclick="showTab('license')"><span class="dashicons dashicons-admin-network"></span>License</button>
+            <button class="tab" data-tab="license" onclick="showTab('license')"><span class="dashicons dashicons-admin-network"></span><span data-i18n="plan_tab">Plan</span></button>
         </nav>
     </header>
 
@@ -1140,13 +1140,17 @@
         <div id="license" class="tab-content">
             <div class="page-head">
                 <div>
-                    <h1>License</h1>
-                    <p>Manage your Fyndable license.</p>
+                    <h1 data-i18n="plan_title">Plan</h1>
+                    <p data-i18n="plan_intro">Your Fyndable plan is billed through Shopify.</p>
                 </div>
             </div>
             <div class="grid side-r">
                 <div class="card" style="padding: 26px;">
-                    <div id="license-status"><div class="loading">Loading...</div></div>
+                    <div id="billing-card"><div class="loading">Loading...</div></div>
+                    <details id="agency-license" style="margin-top: 22px;">
+                    <summary class="muted" style="cursor:pointer;" data-i18n="agency_toggle">I have an agency or enterprise license</summary>
+                    <div style="margin-top: 16px;">
+                    <div id="license-status"></div>
                     <div id="license-form">
                         <div class="form-group">
                             <label for="license-key">Fyndable License Key</label>
@@ -1157,6 +1161,8 @@
                     <div id="license-active" style="display:none;">
                         <button class="btn danger" onclick="deactivateLicense()">Deactivate License</button>
                     </div>
+                    </div>
+                    </details>
                 </div>
                 <div class="card">
                     <div class="card-head"><span class="dashicons dashicons-star-filled"></span><h3>Fyndable SEO modules</h3></div>
@@ -1277,6 +1283,140 @@
             document.getElementById('hdr-license').classList.toggle('active', !!valid);
         }
 
+        // i18n for the billing / plan UI (Dutch + English). Shopify passes the
+        // admin language as ?locale=nl-NL; falls back to the browser language.
+        const I18N = {
+            en: {
+                plan_tab: 'Plan',
+                plan_title: 'Plan',
+                plan_intro: 'Your Fyndable plan is billed through Shopify.',
+                agency_toggle: 'I have an agency or enterprise license',
+                choose_plan: 'Choose a plan',
+                change_plan: 'Change plan',
+                plan_active: 'Plan active',
+                plan_label: 'Plan',
+                renews_on: 'Next billing date',
+                trial_until: 'Shopify trial until',
+                cancels_on: 'Cancelled, access until',
+                trial_title: 'Free trial',
+                trial_text: 'Optimize up to {max} products with AI for free. {used} of {max} used.',
+                trial_full: 'You have used all {max} trial products. Choose a plan to optimize more products.',
+                required_title: 'Choose a plan to continue',
+                required_text: 'Your free trial has ended or your subscription is no longer active. Choose a plan in Shopify to keep using Fyndable.',
+                trial_exhausted: 'Your free trial covers {max} products. Choose a plan to continue.',
+                manual_title: 'Agency license active',
+                manual_text: 'This store uses an agency or enterprise license outside Shopify billing.',
+                unknown_title: 'Plan status unavailable',
+                unknown_text: 'We could not check your subscription right now. Please try again in a few minutes.',
+                plan_confirmed: 'Thank you! Your plan is active.',
+            },
+            nl: {
+                plan_tab: 'Abonnement',
+                plan_title: 'Abonnement',
+                plan_intro: 'Je Fyndable-abonnement wordt via Shopify afgerekend.',
+                agency_toggle: 'Ik heb een agency- of enterprise-licentie',
+                choose_plan: 'Kies een abonnement',
+                change_plan: 'Abonnement wijzigen',
+                plan_active: 'Abonnement actief',
+                plan_label: 'Abonnement',
+                renews_on: 'Volgende factuurdatum',
+                trial_until: 'Shopify-proefperiode tot',
+                cancels_on: 'Opgezegd, toegang tot',
+                trial_title: 'Gratis proefperiode',
+                trial_text: 'Optimaliseer gratis tot {max} producten met AI. {used} van {max} gebruikt.',
+                trial_full: 'Je hebt alle {max} proefproducten gebruikt. Kies een abonnement om meer producten te optimaliseren.',
+                required_title: 'Kies een abonnement om verder te gaan',
+                required_text: 'Je gratis proefperiode is afgelopen of je abonnement is niet meer actief. Kies een abonnement in Shopify om Fyndable te blijven gebruiken.',
+                trial_exhausted: 'Je gratis proefperiode geldt voor {max} producten. Kies een abonnement om verder te gaan.',
+                manual_title: 'Agency-licentie actief',
+                manual_text: 'Deze winkel gebruikt een agency- of enterprise-licentie buiten Shopify-facturering om.',
+                unknown_title: 'Abonnementsstatus niet beschikbaar',
+                unknown_text: 'We konden je abonnement nu niet controleren. Probeer het over een paar minuten opnieuw.',
+                plan_confirmed: 'Bedankt! Je abonnement is actief.',
+            },
+        };
+        const LANG = ((new URLSearchParams(location.search).get('locale') || navigator.language || 'en').toLowerCase().startsWith('nl')) ? 'nl' : 'en';
+        function t(key, vars = {}) {
+            const text = (I18N[LANG] && I18N[LANG][key]) || I18N.en[key] || key;
+            return text.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? ''));
+        }
+        function applyI18n() {
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+        }
+
+        let billingState = null;
+
+        function openPricing(url) {
+            if (url) window.open(url, '_top');
+        }
+
+        function fmtDate(iso) {
+            return iso ? new Date(iso).toLocaleDateString(LANG === 'nl' ? 'nl-NL' : 'en-US') : '';
+        }
+
+        // Plan card (Plan tab) + banner (Dashboard) from /billing/status or
+        // the `billing` block of /dashboard/overview.
+        function renderBilling(b) {
+            if (!b || !b.enabled) return;
+            billingState = b;
+            const btn = (label, primary = true) => `<button class="btn${primary ? '' : ' secondary'}" onclick="openPricing(billingState.pricing_url)">${escHtml(label)}</button>`;
+            const block = (icon, ok, title, text, action = '') => `<div style="display:flex;align-items:flex-start;gap:12px;">
+                    <div class="icon-chip lg" style="background: var(${ok ? '--fyn-success-light' : '--fyn-danger-light'});"><span class="dashicons dashicons-${icon}" style="color: var(${ok ? '--fyn-success' : '--fyn-danger'});"></span></div>
+                    <div style="flex:1;"><div style="font-size:17px;font-weight:700;color:var(--text-h);">${escHtml(title)}</div><div class="muted" style="margin:4px 0 14px;">${text}</div>${action}</div></div>`;
+
+            let html = '';
+            let banner = '';
+            if (b.state === 'active') {
+                const lines = [`${escHtml(t('plan_label'))}: <strong style="text-transform:capitalize;">${escHtml(b.plan || b.tier || '')}</strong>`];
+                if (b.trial_ends_at) lines.push(`${escHtml(t('trial_until'))}: ${fmtDate(b.trial_ends_at)}`);
+                if (b.cycle_ends_at) lines.push(`${escHtml(t(b.cancel_at_cycle_end ? 'cancels_on' : 'renews_on'))}: ${fmtDate(b.cycle_ends_at)}`);
+                html = block('yes-alt', true, t('plan_active'), lines.join('<br>'), btn(t('change_plan'), false));
+            } else if (b.state === 'trial') {
+                const vars = { used: b.trial.used, max: b.trial.max };
+                const full = b.trial.used >= b.trial.max;
+                html = block('clock', true, t('trial_title'), escHtml(t(full ? 'trial_full' : 'trial_text', vars)), btn(t('choose_plan')));
+                banner = `<div class="alert ${full ? 'error' : 'info'}" style="grid-column: 1 / -1;">${escHtml(t(full ? 'trial_full' : 'trial_text', vars))} <a href="#" onclick="openPricing(billingState.pricing_url);return false;" style="font-weight:600;">${escHtml(t('choose_plan'))}</a></div>`;
+            } else if (b.state === 'manual') {
+                html = block('admin-network', true, t('manual_title'), escHtml(t('manual_text')));
+            } else if (b.state === 'unknown') {
+                html = block('warning', false, t('unknown_title'), escHtml(t('unknown_text')));
+            } else {
+                html = block('lock', false, t('required_title'), escHtml(t('required_text')), btn(t('choose_plan')));
+                banner = `<div class="alert error" style="grid-column: 1 / -1;"><strong>${escHtml(t('required_title'))}</strong> ${escHtml(t('required_text'))} <a href="#" onclick="openPricing(billingState.pricing_url);return false;" style="font-weight:600;">${escHtml(t('choose_plan'))}</a></div>`;
+            }
+
+            const card = document.getElementById('billing-card');
+            if (card) card.innerHTML = html;
+            const stats = document.getElementById('overview-stats');
+            if (stats && banner) stats.insertAdjacentHTML('afterbegin', banner);
+
+            // No plan and no trial left: send the merchant to the Shopify plan
+            // page once per session (App Store requirement for paid apps).
+            if (b.required && !sessionStorage.getItem('fyn-pricing-redirected')) {
+                sessionStorage.setItem('fyn-pricing-redirected', '1');
+                openPricing(b.pricing_url);
+            }
+        }
+
+        async function loadBilling() {
+            const data = await api('/billing/status');
+            if (!data.error) renderBilling(data);
+        }
+
+        // Back from the Shopify plan page: ?plan_handle=... is only a hint,
+        // the server re-reads the subscription from the Partner API.
+        async function confirmPlanFromRedirect() {
+            const planHandle = new URLSearchParams(location.search).get('plan_handle');
+            if (!planHandle) return;
+            sessionStorage.removeItem('fyn-pricing-redirected');
+            const data = await api('/billing/confirm', { method: 'POST', body: JSON.stringify({ plan_handle: planHandle }) });
+            if (!data.error) {
+                renderBilling(data);
+                if (data.plan_confirmed) alert(t('plan_confirmed'));
+                loadOverview();
+            }
+        }
+
         // App Bridge v4 (loaded via cdn.shopify.com/shopifycloud/app-bridge.js)
         // automatically intercepts the global fetch() function and adds the
         // Authorization: Bearer <id-token> header for requests to the app's
@@ -1310,7 +1450,7 @@
             if (tabId === 'ranktracker') { loadRankStats(); loadKeywords(); }
             if (tabId === 'blogwriter') loadBlogs();
             if (tabId === 'tools') loadIndexNowStatus();
-            if (tabId === 'license') loadLicenseStatus();
+            if (tabId === 'license') { loadBilling(); loadLicenseStatus(); }
             if (tabId === 'geoscan') loadGeoRecent();
             if (tabId === 'aitracker') loadAiTrackerOverview();
             if (tabId === 'calendar') loadCalendar();
@@ -1327,6 +1467,15 @@
                     headers: { 'Content-Type': 'application/json', ...options.headers },
                 });
                 // Handle non-JSON responses (e.g. 500 HTML error pages)
+                // In-app trial used up: send the merchant to the Shopify plan page.
+                if (response.status === 402) {
+                    const body = await response.json().catch(() => ({}));
+                    if (body.error === 'trial_exhausted') {
+                        alert(t('trial_exhausted', { max: body.trial_limit }));
+                        openPricing(body.pricing_url);
+                    }
+                    return body;
+                }
                 const contentType = response.headers.get('content-type') || '';
                 if (!contentType.includes('application/json')) {
                     const text = await response.text();
@@ -1364,6 +1513,7 @@
                 + statusRow('media-text', '/llms-full.txt', 'Full content for AI crawlers', on(data.llms_txt_full_enabled, 'Enabled', 'Disabled'))
                 + statusRow('lock', 'App permissions', data.missing_scopes?.length ? `Missing: ${data.missing_scopes.join(', ')}` : 'All required scopes granted',
                     data.missing_scopes?.length ? '<span class="badge red">Action needed</span>' : '<span class="badge green">OK</span>');
+            renderBilling(data.billing);
             if (data.missing_scopes && data.missing_scopes.length) {
                 document.getElementById('overview-stats').insertAdjacentHTML('beforeend', `
                     <div class="alert error" style="grid-column: 1 / -1;">
@@ -1829,6 +1979,9 @@
             const data = await api('/license/status');
             if (data.error) return;
             setLicensePill(data.tier, data.valid);
+            // App Pricing licenses are managed in Shopify (plan card above).
+            document.getElementById('agency-license').style.display = data.source === 'app_pricing' ? 'none' : '';
+            if (data.source === 'app_pricing') return;
             const head = (ok, title, sub) => `<div style="display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--divide);margin-bottom:20px;">
                     <div class="icon-chip lg" style="background: var(${ok ? '--fyn-success-light' : '--fyn-danger-light'});"><span class="dashicons dashicons-${ok ? 'yes-alt' : 'warning'}" style="color: var(${ok ? '--fyn-success' : '--fyn-danger'});"></span></div>
                     <div><div style="font-size:17px;font-weight:700;color:var(--text-h);">${title}</div><div class="muted">${sub}</div></div></div>`;
@@ -2543,7 +2696,9 @@
         }
 
         // Load overview on page load
+        applyI18n();
         loadOverview();
+        confirmPlanFromRedirect();
     </script>
 </body>
 </html>

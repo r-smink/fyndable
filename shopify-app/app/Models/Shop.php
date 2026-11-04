@@ -20,7 +20,16 @@ class Shop extends Model
         'license_key',
         'tenant_key',
         'license_tier',
+        'license_source',
         'license_validated_at',
+        'shopify_shop_gid',
+        'billing_state',
+        'billing_plan',
+        'billing_trial_ends_at',
+        'billing_cycle_ends_at',
+        'billing_cancel_at_cycle_end',
+        'billing_checked_at',
+        'trial_ended_at',
         'is_installed',
         'is_uninstalled',
         'shop_name',
@@ -39,6 +48,11 @@ class Shop extends Model
         'is_uninstalled' => 'boolean',
         'license_validated_at' => 'datetime',
         'token_expires_at' => 'datetime',
+        'billing_trial_ends_at' => 'datetime',
+        'billing_cycle_ends_at' => 'datetime',
+        'billing_cancel_at_cycle_end' => 'boolean',
+        'billing_checked_at' => 'datetime',
+        'trial_ended_at' => 'datetime',
     ];
 
     public function trackedKeywords(): HasMany

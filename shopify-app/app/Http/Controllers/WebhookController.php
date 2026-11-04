@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncShopBillingJob;
 use App\Models\RankHistory;
 use App\Models\Shop;
 use App\Services\LlmsTxtGenerator;
@@ -111,6 +112,10 @@ class WebhookController extends Controller
         $shop->is_uninstalled = true;
         $shop->access_token = null;
         $shop->save();
+
+        // Shopify cancels the App Pricing subscription on uninstall; suspend
+        // the SaaS tenant outside the webhook request (5 second budget).
+        SyncShopBillingJob::dispatch($shop->id, true);
 
         Log::info('Shop uninstalled', ['shop' => $shop->shop_domain]);
     }

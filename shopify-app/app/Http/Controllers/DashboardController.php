@@ -6,10 +6,12 @@ use App\Models\LlmsTxtSettings;
 use App\Models\Shop;
 use App\Models\TrackedKeyword;
 use App\Services\LicenseService;
+use App\Services\ShopifyBillingService;
 use App\Services\ShopifyContentFetcher;
 use App\Services\ShopifySignature;
 use App\Services\UsageLimiter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * DashboardController
@@ -22,7 +24,8 @@ class DashboardController extends Controller
     public function __construct(
         private LicenseService $license,
         private ShopifyContentFetcher $fetcher,
-        private UsageLimiter $usage
+        private UsageLimiter $usage,
+        private ShopifyBillingService $billing
     ) {}
 
     /**
@@ -62,6 +65,10 @@ class DashboardController extends Controller
         }
 
         try {
+            // App Pricing sends no webhooks: check the subscription on every
+            // app load (cached, see ShopifyBillingService::refresh).
+            $billing = $this->billing->refresh($shop);
+
             $licenseStatus = $this->license->validate($shop);
 
             // Get product count
@@ -84,6 +91,7 @@ class DashboardController extends Controller
                     'currency' => $shop->currency,
                 ],
                 'license' => $licenseStatus,
+                'billing' => $billing,
                 'product_count' => $productCount,
                 'tracked_keywords' => $keywordCount,
                 'top_10_keywords' => $top10,
@@ -99,7 +107,7 @@ class DashboardController extends Controller
                 ],
             ];
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('DashboardController::overview failed', [
+            Log::error('DashboardController::overview failed', [
                 'shop_id' => $shop->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),

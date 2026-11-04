@@ -69,6 +69,93 @@ class SaasProxyClient
     }
 
     /**
+     * Look up a license key without activating it (used to restrict manual
+     * keys to agency/enterprise tiers before activation).
+     *
+     * @return array{valid: bool, tier?: string}|array{error: string}
+     */
+    public function checkLicense(string $licenseKey, string $shopDomain): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/license/validate";
+
+        try {
+            $response = Http::timeout(30)->post($endpoint, [
+                'license_key' => strtoupper(trim($licenseKey)),
+                'site_url' => "https://{$shopDomain}",
+            ]);
+        } catch (ConnectionException $e) {
+            Log::warning('SaasProxyClient: license check failed (network)', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        $body = $response->json();
+        if (! is_array($body) || ! ($body['valid'] ?? false)) {
+            return ['valid' => false, 'error' => is_array($body) ? ($body['error'] ?? 'invalid_key') : 'invalid_key'];
+        }
+
+        return ['valid' => true, 'tier' => (string) ($body['license']['tier'] ?? '')];
+    }
+
+    /**
+     * Push a shop's Shopify App Pricing state to the SaaS dashboard, which
+     * creates or updates the shop's tenant + license (platform=shopify).
+     *
+     * Signed with HMAC-SHA256 over "{timestamp}.{body}" using the shared
+     * secret (X-Fyndable-Timestamp / X-Fyndable-Signature).
+     *
+     * @param  array  $payload  shop_domain, shop_name, shop_email, state, tier, plan_handle, trial_ends_at, cycle_ends_at, cancel_at_end_of_cycle
+     * @return array{success: true, tenant_key: ?string, license_key: ?string, tier: ?string, status: string}|array{error: string}
+     */
+    public function syncShopifySubscription(array $payload): array
+    {
+        $secret = (string) config('shopify.billing.sync_secret');
+        if ($secret === '') {
+            return ['error' => 'sync_not_configured'];
+        }
+
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/shopify/subscription";
+        $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $timestamp = (string) time();
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders(self::signatureHeaders($body, $timestamp, $secret))
+                ->withBody($body, 'application/json')
+                ->post($endpoint);
+        } catch (ConnectionException $e) {
+            Log::warning('SaasProxyClient: subscription sync failed (network)', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        $json = $response->json();
+        if ($response->failed() || ! is_array($json) || ! ($json['success'] ?? false)) {
+            Log::warning('SaasProxyClient: subscription sync rejected', [
+                'status' => $response->status(),
+                'error' => is_array($json) ? ($json['error'] ?? null) : null,
+            ]);
+
+            return ['error' => is_array($json) ? ($json['error'] ?? 'sync_failed') : 'sync_failed'];
+        }
+
+        return $json;
+    }
+
+    /**
+     * Signature headers for server-to-server calls to the SaaS dashboard.
+     *
+     * @return array{X-Fyndable-Timestamp: string, X-Fyndable-Signature: string}
+     */
+    public static function signatureHeaders(string $body, string $timestamp, string $secret): array
+    {
+        return [
+            'X-Fyndable-Timestamp' => $timestamp,
+            'X-Fyndable-Signature' => hash_hmac('sha256', $timestamp.'.'.$body, $secret),
+        ];
+    }
+
+    /**
      * Validate a tenant's license status (cached 1h by caller).
      *
      * @param  string  $licenseKey

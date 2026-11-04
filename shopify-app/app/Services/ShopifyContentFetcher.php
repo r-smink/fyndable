@@ -370,7 +370,9 @@ class ShopifyContentFetcher
         $query = <<<'GRAPHQL'
         query {
           shop {
+            id
             name
+            email
             primaryDomain { url }
             myshopifyDomain
             currencyCode
@@ -387,6 +389,8 @@ class ShopifyContentFetcher
                 'domain' => "https://{$shop->shop_domain}",
                 'currency' => 'USD',
                 'country' => '',
+                'gid' => '',
+                'email' => '',
             ];
         }
 
@@ -397,6 +401,8 @@ class ShopifyContentFetcher
             'domain' => $shopData['primaryDomain']['url'] ?? "https://{$shop->shop_domain}",
             'currency' => $shopData['currencyCode'] ?? 'USD',
             'country' => $shopData['shopAddress']['country'] ?? '',
+            'gid' => $shopData['id'] ?? '',
+            'email' => $shopData['email'] ?? '',
         ];
     }
 
