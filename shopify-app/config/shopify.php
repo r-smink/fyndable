@@ -13,6 +13,11 @@ return [
 
     // Shopify App Pricing. Plans live in the Partner Dashboard; the app reads
     // the active subscription via the Partner API (no billing webhooks).
+    // Store-wide SEO audit (1.1, SeoAuditJob): max items fetched per type.
+    'audit' => [
+        'max_items_per_type' => (int) env('SHOPIFY_AUDIT_MAX_ITEMS', 1000),
+    ],
+
     'billing' => [
         'partner_id' => env('SHOPIFY_PARTNER_ID', ''),
         'partner_api_token' => env('SHOPIFY_PARTNER_API_TOKEN', ''),

@@ -54,5 +54,9 @@
         }
     };
 
-    Fyn.page(async () => {});
+    Fyn.page(async () => {
+        // Deep link from the SEO audit "fix" buttons: ?action=meta
+        const action = new URLSearchParams(location.search).get('action');
+        if (['meta', 'titles', 'alt_text', 'descriptions'].includes(action)) Fyn.setVal('bulk-action', action);
+    });
 })();

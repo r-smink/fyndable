@@ -12,6 +12,7 @@
 return [
     'nav' => [
         'home' => 'Home',
+        'seoaudit' => 'SEO audit',
         'content' => 'Content optimizer',
         'bulk' => 'Bulk optimizer',
         'blogwriter' => 'Blog writer',
@@ -35,6 +36,8 @@ return [
         'refresh' => 'Refresh',
         'status' => 'Store status',
         'quick_actions' => 'Quick actions',
+        'qa_audit' => 'Run the SEO audit',
+        'qa_audit_sub' => 'Store score and what to fix first',
         'qa_bulk' => 'Start bulk optimization',
         'qa_bulk_sub' => 'Meta, titles, alt text or descriptions',
         'qa_llms' => 'Refresh llms.txt',
@@ -160,6 +163,29 @@ return [
         'license_deactivated' => 'License deactivated',
 
         // Settings
+        // SEO audit (shared: home, content optimizer, SEO audit page)
+        'seo_score' => 'SEO score',
+        'stat_seo_none' => 'Run the SEO audit',
+        'issue_hidden_from_search' => 'Hidden from search engines',
+        'issue_not_published' => 'Active but not on the online store',
+        'issue_empty_collection' => 'Empty collection',
+        'issue_broken_links' => 'Broken internal links',
+        'issue_meta_desc_missing' => 'Meta description missing',
+        'issue_thin_content' => 'Thin content',
+        'issue_duplicate_title' => 'Duplicate meta title',
+        'issue_duplicate_description' => 'Duplicate meta description',
+        'issue_missing_alt' => 'Images without alt text',
+        'issue_meta_title_missing' => 'No custom meta title',
+        'issue_meta_title_long' => 'Meta title too long',
+        'issue_meta_title_short' => 'Meta title too short',
+        'issue_meta_desc_long' => 'Meta description too long',
+        'issue_meta_desc_short' => 'Meta description too short',
+        'issue_multiple_h1' => 'Extra H1 heading in the text',
+        'severity_critical' => 'Critical',
+        'severity_warning' => 'Warning',
+        'severity_info' => 'Tip',
+        'no_issues' => 'No issues found',
+
         'settings_saved' => 'Settings saved',
 
         // Onboarding wizard

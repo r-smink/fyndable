@@ -58,7 +58,7 @@
             return;
         }
         Fyn.html('content-list', `<s-stack gap="small-200">${data.items.map(i => `
-            <s-button variant="tertiary" data-id="${esc(i.id)}" onclick="selectContent(this.dataset.id)">${esc(i.title)}${i.subtitle ? ' - ' + esc(i.subtitle) : ''}</s-button>`).join('')}
+            <s-button variant="tertiary" data-id="${esc(i.id)}" onclick="selectContent(this.dataset.id)">${esc(i.title)}${i.subtitle ? ' - ' + esc(i.subtitle) : ''}${i.score != null ? ` (${esc(t('seo_score'))} ${i.score})` : ''}</s-button>`).join('')}
         </s-stack>`);
     }
 
@@ -82,6 +82,7 @@
         }
         const item = data.item;
         Fyn.$('content-selected').textContent = item.title + (item.url ? ' - ' + item.url : '');
+        renderSeo(item.seo);
         Fyn.setVal('edit-meta-title', item.seo_title || '');
         Fyn.setVal('edit-meta-desc', item.seo_description || '');
         Fyn.setVal('edit-description', item.body || '');
@@ -97,6 +98,20 @@
         showEditor(true);
         result('');
     };
+
+    // Live SEO score of the open item (SeoAuditor item checks, 1.1).
+    function renderSeo(seo) {
+        if (!seo) {
+            Fyn.html('content-seo', '');
+            return;
+        }
+        const issues = seo.issues.length
+            ? `<s-unordered-list>${seo.issues.map(i => `<s-list-item>${esc(Fyn.issueLabel(i))}</s-list-item>`).join('')}</s-unordered-list>`
+            : `<s-text color="subdued">${esc(t('no_issues'))}</s-text>`;
+        Fyn.html('content-seo', `<s-stack gap="small-200">
+                <s-stack direction="inline" gap="small-200" alignItems="center"><s-text type="strong">${esc(t('seo_score'))}</s-text>${Fyn.scoreBadge(seo.score)}</s-stack>
+                ${issues}</s-stack>`);
+    }
 
     function selectedImageUrl() {
         const id = Fyn.val('edit-image');
@@ -313,6 +328,18 @@
     };
 
     Fyn.page(async () => {
+        // Deep link from the SEO audit: ?type=product&id=123
+        const params = new URLSearchParams(location.search);
+        const type = params.get('type');
+        const id = params.get('id');
+        if (['product', 'collection', 'page', 'article'].includes(type)) {
+            Fyn.setVal('content-type', type);
+            currentType = type;
+        }
         await searchContent();
+        if (id && /^\d+$/.test(id)) {
+            const typeName = currentType.charAt(0).toUpperCase() + currentType.slice(1);
+            await window.selectContent(`gid://shopify/${typeName}/${id}`);
+        }
     });
 })();

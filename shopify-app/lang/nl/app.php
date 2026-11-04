@@ -7,6 +7,7 @@
 return [
     'nav' => [
         'home' => 'Home',
+        'seoaudit' => 'SEO-audit',
         'content' => 'Content optimizer',
         'bulk' => 'Bulk optimizer',
         'blogwriter' => 'Blogschrijver',
@@ -30,6 +31,8 @@ return [
         'refresh' => 'Vernieuwen',
         'status' => 'Winkelstatus',
         'quick_actions' => 'Snelle acties',
+        'qa_audit' => 'SEO-audit starten',
+        'qa_audit_sub' => 'Winkelscore en wat je eerst oplost',
         'qa_bulk' => 'Bulkoptimalisatie starten',
         'qa_bulk_sub' => 'Meta, titels, alt-teksten of beschrijvingen',
         'qa_llms' => 'llms.txt vernieuwen',
@@ -149,6 +152,29 @@ return [
         'license_failed' => 'Activeren mislukt: {message}',
         'license_deactivate_confirm' => 'De licentie voor deze winkel deactiveren?',
         'license_deactivated' => 'Licentie gedeactiveerd',
+
+        // SEO audit (shared: home, content optimizer, SEO audit page)
+        'seo_score' => 'SEO-score',
+        'stat_seo_none' => 'Start de SEO-audit',
+        'issue_hidden_from_search' => 'Verborgen voor zoekmachines',
+        'issue_not_published' => 'Actief maar niet in de onlinewinkel',
+        'issue_empty_collection' => 'Lege collectie',
+        'issue_broken_links' => 'Gebroken interne links',
+        'issue_meta_desc_missing' => 'Metabeschrijving ontbreekt',
+        'issue_thin_content' => 'Te weinig tekst',
+        'issue_duplicate_title' => 'Dubbele metatitel',
+        'issue_duplicate_description' => 'Dubbele metabeschrijving',
+        'issue_missing_alt' => 'Afbeeldingen zonder alt-tekst',
+        'issue_meta_title_missing' => 'Geen eigen metatitel',
+        'issue_meta_title_long' => 'Metatitel te lang',
+        'issue_meta_title_short' => 'Metatitel te kort',
+        'issue_meta_desc_long' => 'Metabeschrijving te lang',
+        'issue_meta_desc_short' => 'Metabeschrijving te kort',
+        'issue_multiple_h1' => 'Extra H1-kop in de tekst',
+        'severity_critical' => 'Kritiek',
+        'severity_warning' => 'Waarschuwing',
+        'severity_info' => 'Tip',
+        'no_issues' => 'Geen problemen gevonden',
 
         'settings_saved' => 'Instellingen opgeslagen',
 

@@ -6,6 +6,8 @@ use App\Jobs\GdprDeleteTenantJob;
 use App\Jobs\SyncShopBillingJob;
 use App\Models\RankHistory;
 use App\Models\ScheduledArticle;
+use App\Models\SeoAudit;
+use App\Models\SeoAuditItem;
 use App\Models\Shop;
 use App\Services\LlmsTxtGenerator;
 use App\Services\ShopifySignature;
@@ -127,7 +129,7 @@ class WebhookController extends Controller
      * shop/redact — erase shop data after uninstall grace period.
      *
      * Removes tracked keywords, rank history, llms.txt settings, the store
-     * profile (onboarding), scheduled articles and usage counters, and deletes the App Pricing tenant on the
+     * profile (onboarding), scheduled articles, SEO audits and usage counters, and deletes the App Pricing tenant on the
      * SaaS (queued). The shop row is kept without credentials, license or
      * contact data. trial_products and trial_ended_at stay (product IDs only)
      * so a reinstall cannot restart the free trial.
@@ -142,6 +144,8 @@ class WebhookController extends Controller
         $shop->llmsTxtSettings()->delete();
         $shop->profile()->delete();
         ScheduledArticle::where('shop_id', $shop->id)->delete();
+        SeoAuditItem::where('shop_id', $shop->id)->delete();
+        SeoAudit::where('shop_id', $shop->id)->delete();
         DB::table('shop_usage')->where('shop_id', $shop->id)->delete();
 
         // The App Pricing tenant belongs to this shop: delete it on the SaaS.

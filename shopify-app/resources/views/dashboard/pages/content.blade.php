@@ -22,6 +22,7 @@
     <s-section id="content-editor-head" hidden>
         <s-stack gap="base">
             <s-heading id="content-selected"></s-heading>
+            <div id="content-seo"></div>
             <s-text color="subdued">{{ __('content.editor_sub') }}</s-text>
             <s-text-area id="product-context" label="{{ __('content.context') }}" details="{{ __('content.context_details') }}" rows="2" placeholder="{{ __('content.context_ph') }}"></s-text-area>
             <s-stack direction="inline" gap="base">

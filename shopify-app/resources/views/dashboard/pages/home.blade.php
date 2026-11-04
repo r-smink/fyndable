@@ -34,7 +34,7 @@
 
     <s-section slot="aside" heading="{{ __('app.home.quick_actions') }}">
         <s-stack gap="base">
-            @foreach ([['bulk', 'qa_bulk'], ['llmstxt', 'qa_llms'], ['ranktracker', 'qa_rank'], ['blogwriter', 'qa_blog']] as [$target, $key])
+            @foreach ([['seoaudit', 'qa_audit'], ['bulk', 'qa_bulk'], ['llmstxt', 'qa_llms'], ['ranktracker', 'qa_rank'], ['blogwriter', 'qa_blog']] as [$target, $key])
                 <s-stack gap="small-500">
                     <s-link href="/dashboard/{{ $target }}{{ $navQuery !== '' ? '?'.$navQuery : '' }}">{{ __('app.home.'.$key) }}</s-link>
                     <s-text color="subdued">{{ __('app.home.'.$key.'_sub') }}</s-text>

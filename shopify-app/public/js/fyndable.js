@@ -197,6 +197,20 @@
             return `<s-badge tone="${esc(tone)}">${esc(text)}</s-badge>`;
         },
 
+        /** SEO score badge (1.1): green from 80, orange from 50, red below. */
+        scoreBadge(score) {
+            if (score === null || score === undefined) return '';
+            return Fyn.badge(score >= 80 ? 'success' : score >= 50 ? 'warning' : 'critical', `${score}/100`);
+        },
+
+        /** Label for a SeoAuditor issue code (lang/{locale}/app.php issue_*). */
+        issueLabel(issue) {
+            const code = typeof issue === 'string' ? issue : issue.code;
+            let label = t('issue_' + code);
+            if (issue && typeof issue === 'object' && typeof issue.detail === 'number') label += ` (${issue.detail})`;
+            return label;
+        },
+
         /** Raw JSON output (insights endpoints without a structured view yet). */
         json(data) {
             return `<pre class="fyn-code">${esc(JSON.stringify(data, null, 2))}</pre>`;

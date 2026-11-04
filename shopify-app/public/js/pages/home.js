@@ -29,11 +29,11 @@
         const valid = !!data.license?.valid;
         const tier = data.plan?.tier || data.license?.tier || 'free';
         Fyn.html('home-stats', Fyn.stats([
+            { label: t('seo_score'), value: data.seo_score == null ? '-' : `${data.seo_score}/100`, sub: data.seo_score == null ? t('stat_seo_none') : '', tone: data.seo_score == null ? '' : data.seo_score >= 80 ? 'success' : data.seo_score >= 50 ? 'warning' : 'critical' },
             { label: t('stat_plan'), value: Fyn.tierLabel(tier), sub: valid ? t('active') : t('inactive') },
             { label: t('stat_products'), value: data.product_count ?? 0, sub: t('stat_products_sub') },
             { label: t('stat_keywords'), value: data.tracked_keywords ?? 0, sub: t('stat_keywords_sub') },
             { label: t('stat_top10'), value: data.top_10_keywords ?? 0, sub: t('stat_top10_sub'), tone: 'success' },
-            { label: t('stat_llms'), value: data.llms_txt_enabled ? t('enabled') : t('disabled'), tone: data.llms_txt_enabled ? 'success' : 'critical' },
         ]));
 
         const on = ok => Fyn.badge(ok ? 'success' : 'neutral', ok ? t('enabled') : t('disabled'));

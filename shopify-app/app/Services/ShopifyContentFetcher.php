@@ -214,6 +214,48 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Items for the SEO audit (SeoAuditor::normalize), one content type at a
+     * time. Lean fields and small pages keep each query under Shopify's
+     * 1000-point cost limit. Draft/archived products and unpublished pages
+     * and articles are skipped: they are not indexed.
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getAuditItems(Shop $shop, string $type, int $limit = 1000): array
+    {
+        $hidden = 'hidden: metafield(namespace: "seo", key: "hidden") { value }';
+        $tags = 'titleTag: metafield(namespace: "global", key: "title_tag") { value } '
+            .'descriptionTag: metafield(namespace: "global", key: "description_tag") { value }';
+
+        [$connection, $filter, $fields, $pageSize] = match ($type) {
+            'product' => ['products', 'status:active', "id handle title onlineStoreUrl descriptionHtml seo { title description } media(first: 10) { nodes { alt mediaContentType } } {$hidden}", 40],
+            'collection' => ['collections', null, "id handle title descriptionHtml seo { title description } productsCount { count } image { altText } {$hidden}", 100],
+            'page' => ['pages', 'published_status:published', "id handle title body {$tags} {$hidden}", 50],
+            'article' => ['articles', 'published_status:published', "id handle title body blog { handle } image { altText } {$tags} {$hidden}", 50],
+            default => [null, null, null, 0],
+        };
+        if ($connection === null) {
+            return ['error' => 'invalid_type'];
+        }
+
+        $queryArg = $filter !== null ? ', query: "'.$filter.'"' : '';
+        $query = <<<GRAPHQL
+        query auditItems(\$first: Int!, \$after: String) {
+          {$connection}(first: \$first, after: \$after{$queryArg}) {
+            pageInfo { hasNextPage endCursor }
+            edges { node { {$fields} } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $items = $this->paginate($shop, $query, $connection, $limit, $pageSize, $error);
+
+        // A partial catalog would give a misleading score: report the error.
+        return $error !== null ? ['error' => $error] : $items;
+    }
+
+    /**
      * Search a single content type by title.
      *
      * Uses Shopify's search `query` argument; an empty search returns the first
@@ -305,6 +347,7 @@ class ShopifyContentFetcher
               descriptionHtml
               seo { title description }
               image { url altText }
+              productsCount { count }
               metafields(first: 25) { edges { node { namespace key value } } }
             }
             ... on Page {
@@ -558,11 +601,11 @@ class ShopifyContentFetcher
      * @param  int  $limit  Max items to fetch.
      * @return array<int, array>
      */
-    private function paginate(Shop $shop, string $query, string $connectionKey, int $limit): array
+    private function paginate(Shop $shop, string $query, string $connectionKey, int $limit, int $maxPageSize = 250, ?string &$error = null): array
     {
         $items = [];
         $cursor = null;
-        $pageSize = min($limit, 250);
+        $pageSize = min($limit, $maxPageSize);
 
         do {
             $variables = ['first' => $pageSize, 'after' => $cursor];
@@ -573,6 +616,7 @@ class ShopifyContentFetcher
                     'connection' => $connectionKey,
                     'error' => $response['error'],
                 ]);
+                $error = (string) $response['error'];
                 break;
             }
 

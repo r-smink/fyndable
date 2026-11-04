@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LlmsTxtSettings;
+use App\Models\SeoAudit;
 use App\Models\Shop;
 use App\Models\TrackedKeyword;
 use App\Services\LicenseService;
@@ -34,7 +35,7 @@ class DashboardController extends Controller
      * cacheable script (public/js/pages/{page}.js).
      */
     public const PAGES = [
-        'home', 'content', 'bulk', 'blogwriter', 'calendar',
+        'home', 'seoaudit', 'content', 'bulk', 'blogwriter', 'calendar',
         'ranktracker', 'kwexplorer', 'competitor', 'backlinks', 'markets',
         'aivisibility', 'geoscan', 'aitracker', 'llmstxt', 'tools',
         'settings', 'plan',
@@ -172,6 +173,7 @@ class DashboardController extends Controller
                 'product_count' => $productCount,
                 'tracked_keywords' => $keywordCount,
                 'top_10_keywords' => $top10,
+                'seo_score' => SeoAudit::latestCompleted($shop->id)?->score,
                 'llms_txt_enabled' => $llmsSettings->enabled,
                 'llms_txt_full_enabled' => $llmsSettings->full_enabled,
                 'missing_scopes' => $shop->missingScopes(),

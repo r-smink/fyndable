@@ -18,6 +18,7 @@ use App\Http\Controllers\MarketsController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
+use App\Http\Controllers\SeoAuditController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,6 +57,11 @@ Route::middleware(['shopify.session'])->group(function () {
     // Settings: store language, market and brand voice (same profile as onboarding)
     Route::get('/settings/profile', [OnboardingController::class, 'settings']);
     Route::post('/settings/profile', [OnboardingController::class, 'saveProfile']);
+
+    // Store-wide SEO audit (1.1)
+    Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
+    Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
+    Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
 
     // License
     Route::get('/license/status', [LicenseController::class, 'status']);
