@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\BrandVoice;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
@@ -174,7 +175,7 @@ class BulkOptimizeJob implements ShouldQueue
             ['role' => 'user', 'content' => $prompt],
         ];
 
-        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, $messages, 'openai/gpt-4o-mini', 100, 0.5, 'bulk_title');
+        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, app(BrandVoice::class)->apply($shop, $messages), 'openai/gpt-4o-mini', 100, 0.5, 'bulk_title');
         if (isset($result['error']) || empty($result['text'])) {
             return false;
         }
@@ -204,7 +205,7 @@ class BulkOptimizeJob implements ShouldQueue
             ['role' => 'user', 'content' => $prompt],
         ];
 
-        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, $messages, 'openai/gpt-4o-mini', 200, 0.5, 'bulk_meta');
+        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, app(BrandVoice::class)->apply($shop, $messages), 'openai/gpt-4o-mini', 200, 0.5, 'bulk_meta');
         if (isset($result['error']) || empty($result['text'])) {
             return false;
         }
@@ -249,7 +250,7 @@ class BulkOptimizeJob implements ShouldQueue
             ]],
         ];
 
-        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, $messages, 'openai/gpt-4o-mini', 100, 0.3, 'bulk_alt_text');
+        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, app(BrandVoice::class)->apply($shop, $messages, false), 'openai/gpt-4o-mini', 100, 0.3, 'bulk_alt_text');
         if (isset($result['error']) || empty($result['text'])) {
             return false;
         }
@@ -284,7 +285,7 @@ class BulkOptimizeJob implements ShouldQueue
             ['role' => 'user', 'content' => $prompt],
         ];
 
-        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, $messages, 'openai/gpt-4o-mini', 1000, 0.7, 'bulk_description');
+        $result = $saas->aiGenerate($shop->license_key, $shop->tenant_key, app(BrandVoice::class)->apply($shop, $messages), 'openai/gpt-4o-mini', 1000, 0.7, 'bulk_description');
         if (isset($result['error']) || empty($result['text'])) {
             return false;
         }

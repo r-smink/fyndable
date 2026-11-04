@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BrandVoice;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
@@ -45,20 +46,7 @@ class BlogWriterController extends Controller
     /**
      * Supported output languages for generated content.
      */
-    private const LANGUAGES = [
-        'en' => 'English',
-        'nl' => 'Dutch',
-        'de' => 'German',
-        'fr' => 'French',
-        'es' => 'Spanish',
-        'it' => 'Italian',
-        'pt' => 'Portuguese',
-        'da' => 'Danish',
-        'sv' => 'Swedish',
-        'no' => 'Norwegian',
-        'fi' => 'Finnish',
-        'pl' => 'Polish',
-    ];
+    private const LANGUAGES = BrandVoice::LANGUAGES;
 
     /**
      * Generate an article draft.
@@ -87,7 +75,9 @@ class BlogWriterController extends Controller
         $keywords = trim((string) $request->input('keywords', ''));
         $tone = trim((string) $request->input('tone', 'informative'));
         $wordCount = max(200, min((int) $request->input('word_count', 800), 2500));
-        $language = self::LANGUAGES[strtolower((string) $request->input('language', 'en'))] ?? 'English';
+        // Default: the store content language from onboarding.
+        $defaultLanguage = app(BrandVoice::class)->languageCode($shop) ?? 'en';
+        $language = self::LANGUAGES[strtolower((string) $request->input('language', $defaultLanguage))] ?? 'English';
 
         $details = $this->fetcher->getShopDetails($shop);
         $shopName = $details['name'] ?? $shop->shop_domain;

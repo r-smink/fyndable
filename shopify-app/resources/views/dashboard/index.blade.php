@@ -318,6 +318,18 @@
             .band-inner { padding: 0 16px; }
             .form-cols, .action-grid { grid-template-columns: 1fr; }
         }
+        /* Onboarding wizard */
+        .onb-overlay { position: fixed; inset: 0; background: rgba(15, 10, 25, .55); display: none; align-items: flex-start; justify-content: center; padding: 48px 16px; z-index: 1000; overflow-y: auto; }
+        .onb-overlay.open { display: flex; }
+        .onb-modal { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow); width: 100%; max-width: 620px; padding: 28px; }
+        .onb-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+        .onb-head h1 { margin: 2px 0 0; font-size: 22px; color: var(--text-h); }
+        .onb-kicker { font-size: 12px; font-weight: 700; color: var(--fyn-purple); text-transform: uppercase; letter-spacing: .5px; }
+        .onb-modal h2 { margin: 0 0 6px; font-size: 17px; color: var(--text-h); }
+        .onb-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+        .onb-product { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+        .onb-product img, .onb-noimg { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--well); flex-shrink: 0; }
+        .onb-product .grow { flex: 1; }
     </style>
 </head>
 <body>
@@ -1147,6 +1159,7 @@
             <div class="grid side-r">
                 <div class="card" style="padding: 26px;">
                     <div id="billing-card"><div class="loading">Loading...</div></div>
+                    <button class="btn secondary" style="margin-top: 18px;" onclick="openOnboarding()" data-i18n="onb_reopen">Store profile and onboarding</button>
                     <details id="agency-license" style="margin-top: 22px;">
                     <summary class="muted" style="cursor:pointer;" data-i18n="agency_toggle">I have an agency or enterprise license</summary>
                     <div style="margin-top: 16px;">
@@ -1511,6 +1524,16 @@
                 + statusRow('lock', 'App permissions', data.missing_scopes?.length ? `Missing: ${data.missing_scopes.join(', ')}` : 'All required scopes granted',
                     data.missing_scopes?.length ? '<span class="badge red">Action needed</span>' : '<span class="badge green">OK</span>');
             renderBilling(data.billing);
+            // Store language from onboarding preselects the Blog Writer language.
+            if (data.onboarding?.language && document.querySelector(`#bw-lang option[value="${data.onboarding.language}"]`)) {
+                document.getElementById('bw-lang').value = data.onboarding.language;
+            }
+            // First visit: open the onboarding wizard once per session (not
+            // when a plan is required; the merchant goes to the plan page first).
+            if (data.onboarding && !data.onboarding.done && !['none', 'unknown'].includes(data.billing?.state) && !sessionStorage.getItem('fyn-onboarding-shown')) {
+                sessionStorage.setItem('fyn-onboarding-shown', '1');
+                openOnboarding();
+            }
             if (data.missing_scopes && data.missing_scopes.length) {
                 document.getElementById('overview-stats').insertAdjacentHTML('beforeend', `
                     <div class="alert error" style="grid-column: 1 / -1;">
@@ -2692,10 +2715,197 @@
             }).join('');
         }
 
+        // Onboarding wizard (0.2): store profile + first products. The trial
+        // tenant already exists (created on the first app load).
+        const ONB_I18N = {
+            en: {
+                onb_title: 'Welcome to Fyndable', onb_step: 'Step {n} of 3', onb_skip: 'Skip for now', onb_next: 'Next', onb_back: 'Back',
+                onb_lang_title: 'Your store', onb_lang_intro: 'AI texts are written in this language for this market.',
+                onb_language: 'Content language', onb_country: 'Main country (2 letters, e.g. NL)',
+                onb_voice_title: 'Brand voice', onb_voice_intro: 'How should your texts sound? You can change this later.',
+                onb_tone: 'Tone', onb_audience: 'Target audience', onb_audience_ph: 'e.g. young parents who value sustainable products',
+                onb_brand: 'About your brand (optional)', onb_brand_ph: 'What makes your store unique?',
+                tone_professional: 'Professional', tone_friendly: 'Friendly', tone_playful: 'Playful', tone_luxury: 'Premium', tone_technical: 'Technical', tone_informative: 'Informative',
+                onb_products_title: 'Optimize your first products', onb_products_intro: 'Fyndable writes an SEO title and meta description for these products. Products without SEO data come first.',
+                onb_trial_note: 'Your trial includes {max} products ({used} used).', onb_optimize: 'Optimize selected products', onb_no_products: 'No products found yet. Add products in Shopify and come back.',
+                onb_working: 'Optimizing...', onb_ok: 'Done', onb_failed: 'Failed', onb_finish: 'Go to dashboard', onb_done_title: 'All set!',
+                onb_done_text: '{ok} of {total} products optimized. Find more tools in the menu above.', onb_save_failed: 'Could not save your settings. Please check the fields.',
+                onb_reopen: 'Store profile and onboarding',
+            },
+            nl: {
+                onb_title: 'Welkom bij Fyndable', onb_step: 'Stap {n} van 3', onb_skip: 'Later doen', onb_next: 'Volgende', onb_back: 'Terug',
+                onb_lang_title: 'Je winkel', onb_lang_intro: 'AI-teksten worden in deze taal voor deze markt geschreven.',
+                onb_language: 'Taal van je content', onb_country: 'Belangrijkste land (2 letters, bv. NL)',
+                onb_voice_title: 'Merkstem', onb_voice_intro: 'Hoe moeten je teksten klinken? Je kunt dit later aanpassen.',
+                onb_tone: 'Toon', onb_audience: 'Doelgroep', onb_audience_ph: 'bv. jonge ouders die duurzame producten belangrijk vinden',
+                onb_brand: 'Over je merk (optioneel)', onb_brand_ph: 'Wat maakt je winkel uniek?',
+                tone_professional: 'Professioneel', tone_friendly: 'Vriendelijk', tone_playful: 'Speels', tone_luxury: 'Premium', tone_technical: 'Technisch', tone_informative: 'Informatief',
+                onb_products_title: 'Optimaliseer je eerste producten', onb_products_intro: 'Fyndable schrijft een SEO-titel en metabeschrijving voor deze producten. Producten zonder SEO-gegevens staan bovenaan.',
+                onb_trial_note: 'Je proefperiode omvat {max} producten ({used} gebruikt).', onb_optimize: 'Geselecteerde producten optimaliseren', onb_no_products: 'Nog geen producten gevonden. Voeg producten toe in Shopify en kom terug.',
+                onb_working: 'Bezig...', onb_ok: 'Klaar', onb_failed: 'Mislukt', onb_finish: 'Naar het dashboard', onb_done_title: 'Helemaal klaar!',
+                onb_done_text: '{ok} van {total} producten geoptimaliseerd. Meer tools vind je in het menu hierboven.', onb_save_failed: 'Je instellingen konden niet worden opgeslagen. Controleer de velden.',
+                onb_reopen: 'Winkelprofiel en onboarding',
+            },
+        };
+        Object.keys(ONB_I18N).forEach(lang => Object.assign(I18N[lang], ONB_I18N[lang]));
+
+        let onb = null;
+
+        async function openOnboarding() {
+            const data = await api('/onboarding' + (new URLSearchParams(location.search).get('locale') ? `?locale=${encodeURIComponent(new URLSearchParams(location.search).get('locale'))}` : ''));
+            if (data.error) return;
+            const p = data.profile || {};
+            onb = {
+                step: 1,
+                data,
+                profile: {
+                    content_language: p.content_language || data.suggestions?.content_language || LANG,
+                    target_country: p.target_country || data.suggestions?.target_country || '',
+                    brand_tone: p.brand_tone || 'friendly',
+                    brand_audience: p.brand_audience || '',
+                    brand_description: p.brand_description || '',
+                },
+                results: {},
+            };
+            document.getElementById('onboarding').classList.add('open');
+            applyI18n();
+            renderOnboarding();
+        }
+
+        function closeOnboarding() {
+            document.getElementById('onboarding').classList.remove('open');
+        }
+
+        async function skipOnboarding() {
+            await api('/onboarding/skip', { method: 'POST' });
+            closeOnboarding();
+        }
+
+        function onbField(id) { return document.getElementById(id); }
+
+        function readOnboardingForm() {
+            if (onb.step === 1) {
+                onb.profile.content_language = onbField('onb-lang').value;
+                onb.profile.target_country = onbField('onb-country').value.trim().toUpperCase();
+            }
+            if (onb.step === 2) {
+                onb.profile.brand_tone = onbField('onb-tone').value;
+                onb.profile.brand_audience = onbField('onb-audience').value.trim();
+                onb.profile.brand_description = onbField('onb-brand').value.trim();
+            }
+        }
+
+        async function onboardingNext() {
+            readOnboardingForm();
+            if (onb.step === 2) {
+                const saved = await api('/onboarding/profile', { method: 'POST', body: JSON.stringify(onb.profile) });
+                if (saved.error) { alert(t('onb_save_failed')); return; }
+            }
+            onb.step++;
+            renderOnboarding();
+        }
+
+        function onboardingBack() {
+            readOnboardingForm();
+            onb.step = Math.max(1, onb.step - 1);
+            renderOnboarding();
+        }
+
+        // Step 3: generate + save SEO meta per product with the regular
+        // product endpoints (tier gating and the trial cap apply as usual).
+        async function optimizeOnboardingProducts() {
+            const ids = [...document.querySelectorAll('.onb-product input:checked')].map(el => el.value);
+            if (!ids.length) return;
+            onbField('onb-optimize').disabled = true;
+            let ok = 0;
+            for (const gid of ids) {
+                const num = gid.split('/').pop();
+                const row = document.querySelector(`.onb-product[data-id="${CSS.escape(gid)}"] .onb-status`);
+                row.textContent = t('onb_working');
+                const meta = await api(`/products/${num}/generate-meta`, { method: 'POST', body: '{}' });
+                if (meta.error) {
+                    row.textContent = t('onb_failed');
+                    // Trial used up or expired: api() already sent the merchant to the plan page.
+                    if (meta.error === 'trial_exhausted' || meta.error === 'trial_expired') break;
+                    continue;
+                }
+                const saved = await api(`/products/${num}/save-meta`, { method: 'POST', body: JSON.stringify({ title: meta.title, description: meta.description }) });
+                row.textContent = saved.success ? t('onb_ok') : t('onb_failed');
+                if (saved.success) ok++;
+            }
+            onb.results = { ok, total: ids.length };
+            await api('/onboarding/complete', { method: 'POST' });
+            onb.step = 4;
+            renderOnboarding();
+        }
+
+        function renderOnboarding() {
+            const d = onb.data;
+            const body = onbField('onb-body');
+            const opt = (value, label, selected) => `<option value="${escHtml(value)}"${selected ? ' selected' : ''}>${escHtml(label)}</option>`;
+            let html = '';
+            let actions = '';
+
+            if (onb.step === 1) {
+                html = `<h2>${escHtml(t('onb_lang_title'))}</h2><p class="muted">${escHtml(t('onb_lang_intro'))}</p>
+                    <div class="form-group"><label for="onb-lang">${escHtml(t('onb_language'))}</label><select id="onb-lang">
+                    ${Object.entries(d.languages).map(([code, name]) => opt(code, name, code === onb.profile.content_language)).join('')}</select></div>
+                    <div class="form-group"><label for="onb-country">${escHtml(t('onb_country'))}</label>
+                    <input id="onb-country" maxlength="2" value="${escHtml(onb.profile.target_country)}"></div>`;
+                actions = `<button class="btn" onclick="onboardingNext()">${escHtml(t('onb_next'))}</button>`;
+            } else if (onb.step === 2) {
+                html = `<h2>${escHtml(t('onb_voice_title'))}</h2><p class="muted">${escHtml(t('onb_voice_intro'))}</p>
+                    <div class="form-group"><label for="onb-tone">${escHtml(t('onb_tone'))}</label><select id="onb-tone">
+                    ${d.tones.map(tone => opt(tone, t('tone_' + tone), tone === onb.profile.brand_tone)).join('')}</select></div>
+                    <div class="form-group"><label for="onb-audience">${escHtml(t('onb_audience'))}</label>
+                    <input id="onb-audience" maxlength="255" placeholder="${escHtml(t('onb_audience_ph'))}" value="${escHtml(onb.profile.brand_audience)}"></div>
+                    <div class="form-group"><label for="onb-brand">${escHtml(t('onb_brand'))}</label>
+                    <textarea id="onb-brand" rows="3" maxlength="1000" placeholder="${escHtml(t('onb_brand_ph'))}">${escHtml(onb.profile.brand_description)}</textarea></div>`;
+                actions = `<button class="btn secondary" onclick="onboardingBack()">${escHtml(t('onb_back'))}</button><button class="btn" onclick="onboardingNext()">${escHtml(t('onb_next'))}</button>`;
+            } else if (onb.step === 3) {
+                const products = d.products || [];
+                const trialNote = billingState && billingState.state === 'trial'
+                    ? `<div class="alert info">${escHtml(t('onb_trial_note', { max: d.trial.max, used: d.trial.used }))}</div>` : '';
+                html = `<h2>${escHtml(t('onb_products_title'))}</h2><p class="muted">${escHtml(t('onb_products_intro'))}</p>${trialNote}`
+                    + (products.length
+                        ? products.map(pr => `<label class="onb-product" data-id="${escHtml(pr.id)}"><input type="checkbox" value="${escHtml(pr.id)}" checked>`
+                            + (pr.image ? `<img src="${escHtml(pr.image)}" alt="">` : '<span class="onb-noimg"></span>')
+                            + `<span class="grow">${escHtml(pr.title)}</span><span class="onb-status muted"></span></label>`).join('')
+                        : `<div class="empty">${escHtml(t('onb_no_products'))}</div>`);
+                actions = `<button class="btn secondary" onclick="onboardingBack()">${escHtml(t('onb_back'))}</button>`
+                    + (products.length ? `<button class="btn" id="onb-optimize" onclick="optimizeOnboardingProducts()">${escHtml(t('onb_optimize'))}</button>`
+                        : `<button class="btn" onclick="finishOnboarding()">${escHtml(t('onb_finish'))}</button>`);
+            } else {
+                html = `<h2>${escHtml(t('onb_done_title'))}</h2><p>${escHtml(t('onb_done_text', onb.results))}</p>`;
+                actions = `<button class="btn" onclick="closeOnboarding(); loadOverview();">${escHtml(t('onb_finish'))}</button>`;
+            }
+
+            onbField('onb-steplabel').textContent = onb.step <= 3 ? t('onb_step', { n: onb.step }) : '';
+            onbField('onb-skip').style.display = onb.step <= 3 ? '' : 'none';
+            body.innerHTML = html;
+            onbField('onb-actions').innerHTML = actions;
+        }
+
+        async function finishOnboarding() {
+            await api('/onboarding/complete', { method: 'POST' });
+            closeOnboarding();
+        }
+
         // Load overview on page load
         applyI18n();
         loadOverview();
         confirmPlanFromRedirect();
     </script>
+
+    <div id="onboarding" class="onb-overlay" role="dialog" aria-modal="true" aria-labelledby="onb-title">
+        <div class="onb-modal">
+            <div class="onb-head">
+                <div><div class="onb-kicker" id="onb-steplabel"></div><h1 id="onb-title" data-i18n="onb_title">Welcome to Fyndable</h1></div>
+                <button class="btn secondary" id="onb-skip" onclick="skipOnboarding()" data-i18n="onb_skip">Skip for now</button>
+            </div>
+            <div id="onb-body"></div>
+            <div class="onb-actions" id="onb-actions"></div>
+        </div>
+    </div>
 </body>
 </html>

@@ -67,6 +67,11 @@ class Shop extends Model
         return $this->hasOne(LlmsTxtSettings::class);
     }
 
+    public function profile(): HasOne
+    {
+        return $this->hasOne(ShopProfile::class);
+    }
+
     /**
      * Find a shop by its Shopify domain (e.g. "store.myshopify.com").
      */

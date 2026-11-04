@@ -36,11 +36,13 @@ it('erases shop data on shop/redact and queues the SaaS tenant deletion', functi
     ScheduledArticle::create(['shop_id' => $shop->id, 'blog_id' => 'gid://shopify/Blog/1', 'title' => 'T', 'body_html' => '<p>x</p>', 'scheduled_at' => now(), 'status' => 'scheduled']);
     DB::table('shop_usage')->insert(['shop_id' => $shop->id, 'metric' => 'geo_scans', 'period' => '2026-11', 'count' => 3]);
     DB::table('trial_products')->insert(['shop_id' => $shop->id, 'product_id' => '1']);
+    App\Models\ShopProfile::create(['shop_id' => $shop->id, 'brand_description' => 'Familiebedrijf van Jan']);
 
     sendWebhook('shop/redact')->assertOk();
 
     $shop->refresh();
     expect($shop->trackedKeywords()->count())->toBe(0)
+        ->and($shop->profile()->count())->toBe(0)
         ->and(ScheduledArticle::where('shop_id', $shop->id)->count())->toBe(0)
         ->and(DB::table('shop_usage')->where('shop_id', $shop->id)->count())->toBe(0)
         ->and($shop->shop_email)->toBeNull()

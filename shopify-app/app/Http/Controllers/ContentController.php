@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BrandVoice;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
@@ -138,10 +139,10 @@ class ContentController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                [
+                app(BrandVoice::class)->apply($shop, [
                     ['role' => 'system', 'content' => 'You are an SEO expert. Respond only in JSON: {"title": "...", "description": "..."}'],
                     ['role' => 'user', 'content' => $prompt],
-                ],
+                ]),
                 'openai/gpt-4o-mini',
                 300,
                 0.5,
@@ -252,10 +253,10 @@ class ContentController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                [
+                app(BrandVoice::class)->apply($shop, [
                     ['role' => 'system', 'content' => 'You are an expert copywriter who writes SEO-optimized website content.'],
                     ['role' => 'user', 'content' => $prompt],
-                ],
+                ]),
                 'openai/gpt-4o-mini',
                 $variant === 'short' ? 300 : 1000,
                 0.7,
@@ -423,10 +424,10 @@ class ContentController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                [
+                app(BrandVoice::class)->apply($shop, [
                     ['role' => 'system', 'content' => 'You are an SEO expert. Respond only in JSON: [{"question": "...", "answer": "..."}]'],
                     ['role' => 'user', 'content' => $prompt],
-                ],
+                ]),
                 'openai/gpt-4o-mini',
                 800,
                 0.6,
@@ -760,6 +761,10 @@ class ContentController extends Controller
                 default => '',
             },
             'image' => $item['featuredImage']['url'] ?? $item['image']['url'] ?? null,
+            // Products only: no custom SEO title or description yet.
+            'seo_missing' => $type === 'product'
+                ? (empty($item['seo']['title'] ?? null) || empty($item['seo']['description'] ?? null))
+                : null,
         ];
     }
 

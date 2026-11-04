@@ -15,6 +15,7 @@ use App\Http\Controllers\KeywordExplorerController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MarketsController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,12 @@ Route::middleware(['shopify.session'])->group(function () {
     // Billing (Shopify App Pricing)
     Route::get('/billing/status', [BillingController::class, 'status']);
     Route::post('/billing/confirm', [BillingController::class, 'confirm']);
+
+    // Onboarding wizard (store profile + first products)
+    Route::get('/onboarding', [OnboardingController::class, 'show']);
+    Route::post('/onboarding/profile', [OnboardingController::class, 'saveProfile']);
+    Route::post('/onboarding/complete', [OnboardingController::class, 'complete']);
+    Route::post('/onboarding/skip', [OnboardingController::class, 'skip']);
 
     // License
     Route::get('/license/status', [LicenseController::class, 'status']);

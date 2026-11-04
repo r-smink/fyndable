@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BrandVoice;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
@@ -67,7 +68,7 @@ class ProductController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                $messages,
+                app(BrandVoice::class)->apply($shop, $messages),
                 'openai/gpt-4o-mini',
                 $type === 'short' ? 300 : 1000,
                 0.7,
@@ -125,7 +126,7 @@ class ProductController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                $messages,
+                app(BrandVoice::class)->apply($shop, $messages),
                 'openai/gpt-4o-mini',
                 300,
                 0.5,
@@ -200,7 +201,8 @@ class ProductController extends Controller
         $result = $this->saas->aiGenerate(
             $shop->license_key,
             $shop->tenant_key,
-            $messages,
+            // Alt text: store language only, no brand voice.
+            app(BrandVoice::class)->apply($shop, $messages, false),
             'openai/gpt-4o-mini',
             100,
             0.3,
@@ -611,10 +613,10 @@ class ProductController extends Controller
         $result = $this->saas->aiGenerate(
             $shop->license_key,
             $shop->tenant_key,
-            [
+            app(BrandVoice::class)->apply($shop, [
                 ['role' => 'system', 'content' => 'You are an expert e-commerce copywriter specializing in product variant descriptions.'],
                 ['role' => 'user', 'content' => $prompt],
-            ],
+            ]),
             'openai/gpt-4o-mini',
             300,
             0.7,

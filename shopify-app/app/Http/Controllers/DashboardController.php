@@ -68,6 +68,7 @@ class DashboardController extends Controller
             // App Pricing sends no webhooks: check the subscription on every
             // app load (cached, see ShopifyBillingService::refresh).
             $billing = $this->billing->refresh($shop);
+            $profile = $shop->profile()->first();
 
             $licenseStatus = $this->license->validate($shop);
 
@@ -92,6 +93,10 @@ class DashboardController extends Controller
                 ],
                 'license' => $licenseStatus,
                 'billing' => $billing,
+                'onboarding' => [
+                    'done' => (bool) $profile?->onboardingDone(),
+                    'language' => $profile?->content_language,
+                ],
                 'product_count' => $productCount,
                 'tracked_keywords' => $keywordCount,
                 'top_10_keywords' => $top10,

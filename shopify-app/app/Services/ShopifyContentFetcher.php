@@ -226,7 +226,7 @@ class ShopifyContentFetcher
         $limit = max(1, min($limit, 250));
 
         $fields = match ($type) {
-            'product' => 'id title handle status productType onlineStoreUrl featuredImage { url altText }',
+            'product' => 'id title handle status productType onlineStoreUrl featuredImage { url altText } seo { title description }',
             'collection' => 'id title handle image { url altText }',
             'page' => 'id title handle',
             'article' => 'id title handle publishedAt image { url altText } blog { handle title }',
@@ -360,6 +360,36 @@ class ShopifyContentFetcher
         }
 
         return (int) ($response['data']['productsCount']['count'] ?? 0);
+    }
+
+    /**
+     * Suggested store profile for onboarding: primary store language and
+     * billing country (ISO codes). Null when not available.
+     *
+     * @return array{language: ?string, country: ?string}
+     */
+    public function getLocaleDefaults(Shop $shop): array
+    {
+        $defaults = ['language' => null, 'country' => null];
+
+        $response = $this->graphql($shop, '{ shop { billingAddress { countryCodeV2 } } }');
+        if (! isset($response['error'])) {
+            $code = $response['data']['shop']['billingAddress']['countryCodeV2'] ?? null;
+            $defaults['country'] = is_string($code) && strlen($code) === 2 ? strtoupper($code) : null;
+        }
+
+        // shopLocales needs read_locales; without it the language stays null.
+        $response = $this->graphql($shop, '{ shopLocales { locale primary } }');
+        if (! isset($response['error'])) {
+            foreach ($response['data']['shopLocales'] ?? [] as $locale) {
+                if (! empty($locale['primary']) && is_string($locale['locale'] ?? null)) {
+                    $defaults['language'] = strtolower(substr($locale['locale'], 0, 2));
+                    break;
+                }
+            }
+        }
+
+        return $defaults;
     }
 
     /**
