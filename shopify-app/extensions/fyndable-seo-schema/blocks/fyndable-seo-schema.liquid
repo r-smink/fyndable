@@ -56,6 +56,8 @@
 <script type="application/ld+json" data-fyndable="store">{{ fyndable_block | json }}</script>
     {%- endfor -%}
     {%- if fyndable_cfg.website -%}
+    {%- comment -%} A closing brace inside an output tag string ends the tag, so build the URL template with capture. {%- endcomment -%}
+    {%- capture fyndable_search_template -%}{{ fyndable_shop_url }}{{ routes.search_url }}?q={search_term_string}{%- endcapture -%}
 <script type="application/ld+json" data-fyndable="website">
 {
   "@context": "https://schema.org",
@@ -68,7 +70,7 @@
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": {{ fyndable_shop_url | append: routes.search_url | append: '?q={search_term_string}' | json }}
+      "urlTemplate": {{ fyndable_search_template | json }}
     },
     "query-input": "required name=search_term_string"
   }
