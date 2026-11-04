@@ -15,7 +15,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 1.2 404-monitor + redirectmanager (zie "Stand 1.2")
 - [x] 1.3 Bulk optimizer uitbreiden (zie "Stand 1.3")
 - [x] 1.4 Winkelbreed schema via app embed (zie "Stand 1.4")
-- [ ] 1.5 Google Search Console-koppeling
+- [x] 1.5 Google Search Console-koppeling (zie "Stand 1.5")
 - [ ] 1.6 Beeld-SEO
 - [ ] 1.7 Rapportage
 - [ ] 2.1 t/m 2.9 (fase 2)
@@ -123,6 +123,23 @@ Gevonden en opgelost:
 Open:
 - Pagina- en artikelteksten herschrijven zit er bewust niet in (te riskant voor lange content); kan later met een voorbeeldstap.
 - De queue worker moet draaien (zie "Stand 0.1").
+
+### Stand 1.5 (2026-11-04)
+
+Gebouwd: pagina "Search Console" met koppelen/ontkoppelen, keuze van de property (voorstel op basis van het winkeldomein), 28-dagentotalen (klikken, vertoningen, CTR, positie), "bijna op pagina 1" (zoekopdrachten op positie 8-20 met minstens 10 vertoningen, met link naar de Content optimizer voor bekende producten/collecties) en toppagina's. De Rank tracker toont per gevolgd zoekwoord de Search Console-positie (gewogen naar vertoningen) en klikken; de Content optimizer toont klikken/vertoningen/positie van het open item. Dagelijkse import (`search-console-sync`, 05:00), tier Professional (rij 35 in de spreadsheet, WP: GSC Dashboard).
+
+Hergebruik van de WP-OAuth-proxy, met twee aanpassingen op de SaaS (`licenseapi.php`):
+- De bestaande popup stuurt tokens naar het domein van de tenant; voor Shopify is dat `*.myshopify.com`, niet de app (`shopify.fyndable.ai`), en de licentiesleutel stond in de popup-URL. Nieuw: `POST /google/oauth-session` (server-to-server, alleen `platform=shopify`) geeft een eenmalige popup-URL (10 min, `?session=`). In sessiemodus stuurt de popup alleen de auth-code naar de app-origin (`FYNDABLE_SHOPIFY_APP_ORIGIN` of optie `sseo_ai_saas_shopify_app_origin`, standaard `https://shopify.fyndable.ai`); de app wisselt de code server-side in via `/google/exchange`. Google-tokens komen zo nooit in de browser en staan versleuteld (APP_KEY) in `google_connections`. De WordPress-flow is ongewijzigd.
+- Verversen via `/google/refresh`; een ingetrokken toegang (`invalid_grant`) zet de koppeling op "opnieuw koppelen". Gebruik wordt gemeld via `/google/report-usage` (service `gsc`).
+
+Voor livegang:
+- [ ] SaaS deployen (`licenseapi.php`).
+- [ ] Controleren dat de Google OAuth-client de portal als JavaScript-origin heeft (al zo voor WordPress) en dat de app gepubliceerd/geverifieerd is (anders verlopen refresh tokens na 7 dagen, zie AGENTS.md).
+- [ ] In een development store testen: popup, property kiezen, eerste import.
+
+Open:
+- Alleen producten en collecties krijgen een bewerk-link (via `resource_handles` uit 1.2); pagina's en artikelen nog niet.
+- GA4 zit al in de OAuth-scopes maar wordt nog niet gebruikt (kan bij 1.7 rapportage).
 
 ## Wat er al staat (uitgangspunt)
 
