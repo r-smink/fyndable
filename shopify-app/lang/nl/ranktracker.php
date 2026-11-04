@@ -1,0 +1,38 @@
+<?php
+
+return [
+    'intro' => 'Volg de Google-posities van zoekwoorden voor je product- en collectiepagina\'s.',
+    'check_now' => 'Posities nu controleren',
+    'add_title' => 'Zoekwoord toevoegen',
+    'keyword' => 'Zoekwoord',
+    'keyword_ph' => 'bv. blauwe sneakers',
+    'url' => 'URL om te volgen',
+    'url_details' => 'Optioneel',
+    'add' => 'Zoekwoord toevoegen',
+    'tracked' => 'Gevolgde zoekwoorden',
+
+    'js' => [
+        'rt_total' => 'Zoekwoorden',
+        'rt_total_sub' => 'gevolgd',
+        'rt_top3' => 'Top 3',
+        'rt_top3_sub' => 'posities 1-3',
+        'rt_top10' => 'Top 10',
+        'rt_top10_sub' => 'posities 1-10',
+        'rt_top100' => 'Top 100',
+        'rt_top100_sub' => 'posities 1-100',
+        'rt_not_ranked' => 'Niet gevonden',
+        'rt_not_ranked_sub' => 'buiten de top 100',
+        'rt_empty' => 'Je volgt nog geen zoekwoorden.',
+        'rt_col_keyword' => 'Zoekwoord',
+        'rt_col_url' => 'URL',
+        'rt_col_last' => 'Laatste positie',
+        'rt_col_gsc' => 'Search Console',
+        'rt_gsc_clicks' => '{clicks} klikken',
+        'rt_col_best' => 'Beste',
+        'rt_col_checked' => 'Laatst gecontroleerd',
+        'rt_delete' => 'Verwijderen',
+        'rt_delete_confirm' => 'Dit zoekwoord niet meer volgen?',
+        'rt_enter_keyword' => 'Vul een zoekwoord in',
+        'rt_check_started' => 'Positiecontrole gestart. De resultaten verschijnen na verwerking.',
+    ],
+];

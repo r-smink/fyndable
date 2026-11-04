@@ -325,7 +325,12 @@ class ChatbotAdmin
 
         ?>
         <div class="wrap sseo-ai-license-admin sseo-ai-chatbot-admin">
-            <h1><?php echo esc_html__('Chatbot Settings', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Chatbot', 'sseo-ai-saas'),
+            __('Chatbot', 'sseo-ai-saas'),
+            __('The support assistant shown in the client plugin: model, knowledge and escalation.', 'sseo-ai-saas')
+        ); ?>
             <p><?php echo esc_html__('Configureer de support-chatbot die aan client-sites wordt gesynchroniseerd.', 'sseo-ai-saas'); ?></p>
 
             <?php if (isset($_GET['avatar'])): ?>

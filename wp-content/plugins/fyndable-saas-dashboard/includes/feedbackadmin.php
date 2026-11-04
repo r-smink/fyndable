@@ -96,7 +96,12 @@ class FeedbackAdmin
 
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Feedback', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Feedback', 'sseo-ai-saas'),
+            __('Feedback', 'sseo-ai-saas'),
+            __('What customers report from inside the client plugin.', 'sseo-ai-saas')
+        ); ?>
 
             <div class="sseo-ai-card">
                 <form method="get" style="margin-bottom: 0;">

@@ -67,101 +67,98 @@ class InternationalSEO
         $targetLanguages = get_option('sseo_ai_target_languages', []);
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('International SEO Management', 'ai-seo-client'); ?></h1>
-            
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('International SEO', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('International SEO Management', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage target markets, track rankings per country and find international keyword variations.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
             <!-- Target Markets Configuration -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Target Markets', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-site-alt3"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Target Markets', 'ai-seo-client'); ?></h3>
+                </div>
                 <form method="post" action="options.php">
                     <?php settings_fields('sseo_ai_international'); ?>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row">
-                                <label><?php esc_html_e('Target Countries', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <?php
-                                $countries = $this->getCountryList();
-                                foreach ($countries as $code => $name):
-                                ?>
-                                <label style="display: inline-block; width: 200px; margin: 5px 0;">
-                                    <input type="checkbox" name="sseo_ai_target_countries[]" 
-                                           value="<?php echo esc_attr($code); ?>"
-                                           <?php checked(in_array($code, $targetCountries)); ?>>
-                                    <?php echo esc_html($name); ?> (<?php echo esc_html($code); ?>)
-                                </label>
-                                <?php endforeach; ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">
-                                <label><?php esc_html_e('Target Languages', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <?php
-                                $languages = $this->getLanguageList();
-                                foreach ($languages as $code => $name):
-                                ?>
-                                <label style="display: inline-block; width: 200px; margin: 5px 0;">
-                                    <input type="checkbox" name="sseo_ai_target_languages[]" 
-                                           value="<?php echo esc_attr($code); ?>"
-                                           <?php checked(in_array($code, $targetLanguages)); ?>>
-                                    <?php echo esc_html($name); ?>
-                                </label>
-                                <?php endforeach; ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">
-                                <label for="default_currency"><?php esc_html_e('Default Currency', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <select id="default_currency" name="sseo_ai_default_currency">
-                                    <?php
-                                    $currencies = ['USD' => 'US Dollar', 'EUR' => 'Euro', 'GBP' => 'British Pound', 'JPY' => 'Japanese Yen'];
-                                    foreach ($currencies as $code => $name):
-                                    ?>
-                                    <option value="<?php echo esc_attr($code); ?>" 
-                                            <?php selected(get_option('sseo_ai_default_currency'), $code); ?>>
-                                        <?php echo esc_html($name); ?> (<?php echo esc_html($code); ?>)
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <?php submit_button(__('Save Target Markets', 'ai-seo-client')); ?>
+                    <div style="margin-bottom:16px;">
+                        <label style="font-size:13px;font-weight:700;color:var(--text-h);display:block;margin-bottom:8px;"><?php esc_html_e('Target Countries', 'ai-seo-client'); ?></label>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px 0;">
+                            <?php
+                            $countries = $this->getCountryList();
+                            foreach ($countries as $code => $name):
+                            ?>
+                            <label style="display:inline-block;width:200px;margin:4px 0;font-size:13px;color:var(--text-b);">
+                                <input type="checkbox" name="sseo_ai_target_countries[]"
+                                       value="<?php echo esc_attr($code); ?>"
+                                       <?php checked(in_array($code, $targetCountries)); ?>>
+                                <?php echo esc_html($name); ?> (<?php echo esc_html($code); ?>)
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label style="font-size:13px;font-weight:700;color:var(--text-h);display:block;margin-bottom:8px;"><?php esc_html_e('Target Languages', 'ai-seo-client'); ?></label>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px 0;">
+                            <?php
+                            $languages = $this->getLanguageList();
+                            foreach ($languages as $code => $name):
+                            ?>
+                            <label style="display:inline-block;width:200px;margin:4px 0;font-size:13px;color:var(--text-b);">
+                                <input type="checkbox" name="sseo_ai_target_languages[]"
+                                       value="<?php echo esc_attr($code); ?>"
+                                       <?php checked(in_array($code, $targetLanguages)); ?>>
+                                <?php echo esc_html($name); ?>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label for="default_currency" style="font-size:13px;font-weight:700;color:var(--text-h);display:block;margin-bottom:6px;"><?php esc_html_e('Default Currency', 'ai-seo-client'); ?></label>
+                        <select id="default_currency" name="sseo_ai_default_currency" class="fyn-input" style="width:auto;">
+                            <?php
+                            $currencies = ['USD' => 'US Dollar', 'EUR' => 'Euro', 'GBP' => 'British Pound', 'JPY' => 'Japanese Yen'];
+                            foreach ($currencies as $code => $name):
+                            ?>
+                            <option value="<?php echo esc_attr($code); ?>"
+                                    <?php selected(get_option('sseo_ai_default_currency'), $code); ?>>
+                                <?php echo esc_html($name); ?> (<?php echo esc_html($code); ?>)
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php submit_button(__('Save Target Markets', 'ai-seo-client'), 'fyn-btn fyn-btn-primary'); ?>
                 </form>
             </div>
-            
+
             <!-- Multi-Country Rank Tracking -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Multi-Country Rank Tracking', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-flag"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Multi-Country Rank Tracking', 'ai-seo-client'); ?></h3>
+                </div>
                 <?php if (empty($targetCountries)): ?>
-                <p><?php esc_html_e('Configure target countries above to start tracking rankings.', 'ai-seo-client'); ?></p>
+                <p style="color:var(--text-m);"><?php esc_html_e('Configure target countries above to start tracking rankings.', 'ai-seo-client'); ?></p>
                 <?php else: ?>
-                
-                <div style="margin-bottom: 15px;">
-                    <label for="keyword-to-track">
-                        <strong><?php esc_html_e('Track Keyword Across Countries:', 'ai-seo-client'); ?></strong>
-                    </label><br>
-                    <input type="text" id="keyword-to-track" class="regular-text" 
-                           placeholder="<?php esc_attr_e('Enter keyword', 'ai-seo-client'); ?>">
-                    <button type="button" class="button button-primary" onclick="sseoTrackInternationalKeyword()">
+                <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <label for="keyword-to-track" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Track Keyword Across Countries:', 'ai-seo-client'); ?></label>
+                        <input type="text" id="keyword-to-track" class="fyn-input" style="min-width:260px;"
+                               placeholder="<?php esc_attr_e('Enter keyword', 'ai-seo-client'); ?>">
+                    </div>
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoTrackInternationalKeyword()">
                         <?php esc_html_e('Track', 'ai-seo-client'); ?>
                     </button>
                 </div>
-                
                 <?php
                 $internationalRankings = $this->getInternationalRankings();
                 if (!empty($internationalRankings)):
                 ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
@@ -177,17 +174,17 @@ class InternationalSEO
                             <td><strong><?php echo esc_html($keyword); ?></strong></td>
                             <?php foreach ($targetCountries as $country): ?>
                             <td>
-                                <?php 
+                                <?php
                                 $rank = $rankings[$country] ?? 'N/A';
-                                $color = is_numeric($rank) && $rank <= 10 ? '#00a32a' : '#666';
+                                $color = is_numeric($rank) && $rank <= 10 ? 'var(--fyn-success)' : 'var(--text-m)';
                                 ?>
-                                <span style="color: <?php echo $color; ?>;">
+                                <span style="color:<?php echo $color; ?>;font-weight:600;">
                                     <?php echo esc_html($rank); ?>
                                 </span>
                             </td>
                             <?php endforeach; ?>
                             <td>
-                                <button type="button" class="button button-small" 
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;"
                                         onclick="sseoViewGeoSERP('<?php echo esc_js($keyword); ?>')">
                                     <?php esc_html_e('View SERP', 'ai-seo-client'); ?>
                                 </button>
@@ -199,36 +196,39 @@ class InternationalSEO
                 <?php endif; ?>
                 <?php endif; ?>
             </div>
-            
+
             <!-- International Keyword Research -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('International Keyword Research', 'ai-seo-client'); ?></h2>
-                
-                <div style="margin-bottom: 15px;">
-                    <label for="base-keyword">
-                        <strong><?php esc_html_e('Base Keyword:', 'ai-seo-client'); ?></strong>
-                    </label><br>
-                    <input type="text" id="base-keyword" class="regular-text" 
-                           placeholder="<?php esc_attr_e('e.g., running shoes', 'ai-seo-client'); ?>">
-                    <button type="button" class="button button-primary" onclick="sseoResearchInternationalKeywords()">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-search"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('International Keyword Research', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <label for="base-keyword" style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Base Keyword:', 'ai-seo-client'); ?></label>
+                        <input type="text" id="base-keyword" class="fyn-input" style="min-width:260px;"
+                               placeholder="<?php esc_attr_e('e.g., running shoes', 'ai-seo-client'); ?>">
+                    </div>
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoResearchInternationalKeywords()">
                         <?php esc_html_e('Research Variations', 'ai-seo-client'); ?>
                     </button>
                 </div>
-                
                 <div id="keyword-variations-results"></div>
             </div>
-            
+
             <!-- International Link Building -->
-            <div class="card">
-                <h2><?php esc_html_e('International Link Building Suggestions', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-links"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('International Link Building Suggestions', 'ai-seo-client'); ?></h3>
+                </div>
                 <?php
                 $linkSuggestions = $this->getInternationalLinkSuggestions();
                 if (empty($linkSuggestions)):
                 ?>
-                <p><?php esc_html_e('No link building suggestions available yet.', 'ai-seo-client'); ?></p>
+                <p style="color:var(--text-m);"><?php esc_html_e('No link building suggestions available yet.', 'ai-seo-client'); ?></p>
                 <?php else: ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Country', 'ai-seo-client'); ?></th>
@@ -290,7 +290,7 @@ class InternationalSEO
                 nonce: '<?php echo wp_create_nonce('sseo_international'); ?>'
             }, function(response) {
                 if (response.success) {
-                    let html = '<table class="wp-list-table widefat fixed striped"><thead><tr>';
+                    let html = '<table class="fyn-table"><thead><tr>';
                     html += '<th><?php esc_html_e('Country', 'ai-seo-client'); ?></th>';
                     html += '<th><?php esc_html_e('Keyword Variation', 'ai-seo-client'); ?></th>';
                     html += '<th><?php esc_html_e('Search Volume', 'ai-seo-client'); ?></th>';

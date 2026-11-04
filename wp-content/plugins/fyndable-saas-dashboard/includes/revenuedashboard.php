@@ -36,8 +36,9 @@ class RevenueDashboard
 
     public function enqueueAssets(string $hook): void
     {
-        $isRevenuePage = $hook === 'saaS-ai_page_sseo-ai-revenue';
-        $isRevenueTab = isset($_GET['page']) && $_GET['page'] === 'sseo-ai-costs' && isset($_GET['tab']) && $_GET['tab'] === 'revenue';
+        $page = $_GET['page'] ?? '';
+        $isRevenuePage = $page === 'sseo-ai-revenue' || str_ends_with($hook, 'sseo-ai-revenue');
+        $isRevenueTab = $page === 'sseo-ai-costs' && ($_GET['tab'] ?? '') === 'revenue';
         if (!$isRevenuePage && !$isRevenueTab) {
             return;
         }
@@ -146,7 +147,12 @@ class RevenueDashboard
     {
         ?>
         <div class="wrap fyndable-revenue-wrap">
-            <h1>💰 Revenue Dashboard</h1>
+            <?php ShellUi::pageHeader(
+                __('Provider', 'sseo-ai-saas'),
+                __('Revenue', 'sseo-ai-saas'),
+                __('Revenue', 'sseo-ai-saas'),
+                __('MRR, ARR, new customers and churn, broken down per tier.', 'sseo-ai-saas')
+            ); ?>
             <?php $this->renderContent(); ?>
         </div>
         <?php

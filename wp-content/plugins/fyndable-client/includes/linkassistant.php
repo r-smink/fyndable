@@ -485,9 +485,16 @@ class LinkAssistant
         $allPostTypes = get_post_types(['public' => true], 'objects');
         $internalTypes = ['attachment', 'aiseo_note', 'aiseo_prompt', 'aiseo_calendar'];
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Link Genius', 'ai-seo-client'); ?></h1>
-            <p><?php esc_html_e('Automatically add internal links to your content based on custom rules and AI-powered suggestions.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Link Genius', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Link Genius', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Automatically add internal links to your content based on custom rules and AI-powered suggestions.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
 
             <?php if (isset($_GET['settings_saved'])): ?>
                 <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Settings saved.', 'ai-seo-client'); ?></p></div>
@@ -500,140 +507,157 @@ class LinkAssistant
             <?php endif; ?>
 
             <!-- Stats -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:20px 0;">
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#2271b1;"><?php echo esc_html($stats['posts_with_links']); ?></div>
-                    <div><?php esc_html_e('Posts with Links', 'ai-seo-client'); ?></div>
+            <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($stats['posts_with_links']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Posts with Links', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#00a32a;"><?php echo esc_html($stats['total_posts']); ?></div>
-                    <div><?php esc_html_e('Total Posts', 'ai-seo-client'); ?></div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($stats['total_posts']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Total Posts', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#d63638;"><?php echo esc_html($stats['orphan_pages']); ?></div>
-                    <div><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html($stats['orphan_pages']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></div>
                 </div>
-                <div style="background:#fff;border:1px solid #ccd0d4;padding:15px;border-radius:4px;text-align:center;">
-                    <div style="font-size:28px;font-weight:bold;color:#f0b400;"><?php echo esc_html($stats['coverage_percent']); ?>%</div>
-                    <div><?php esc_html_e('Coverage', 'ai-seo-client'); ?></div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($stats['coverage_percent']); ?>%</div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Coverage', 'ai-seo-client'); ?></div>
                 </div>
             </div>
 
             <!-- General Settings -->
-            <h2><?php esc_html_e('General Settings', 'ai-seo-client'); ?></h2>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <?php wp_nonce_field('sseo_link_genius_settings'); ?>
-                <input type="hidden" name="action" value="sseo_link_genius_settings">
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Enable Auto-Linking', 'ai-seo-client'); ?></th>
-                        <td><label><input type="checkbox" name="enabled" value="1" <?php checked($enabled); ?>> <?php esc_html_e('Automatically insert internal links on post content', 'ai-seo-client'); ?></label></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="max_links"><?php esc_html_e('Max Links Per Post', 'ai-seo-client'); ?></label></th>
-                        <td><input type="number" name="max_links" id="max_links" value="<?php echo esc_attr($maxLinks); ?>" min="1" max="20" style="width:80px;"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Post Types', 'ai-seo-client'); ?></th>
-                        <td>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-generic"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('General Settings', 'ai-seo-client'); ?></h3>
+                </div>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('sseo_link_genius_settings'); ?>
+                    <input type="hidden" name="action" value="sseo_link_genius_settings">
+                    <div style="display:grid;grid-template-columns:160px 1fr;gap:12px 20px;align-items:center;">
+                        <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Enable Auto-Linking', 'ai-seo-client'); ?></label>
+                        <div><label style="font-size:13px;color:var(--text-b);"><input type="checkbox" name="enabled" value="1" <?php checked($enabled); ?>> <?php esc_html_e('Automatically insert internal links on post content', 'ai-seo-client'); ?></label></div>
+
+                        <label for="max_links" style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Max Links Per Post', 'ai-seo-client'); ?></label>
+                        <div><input type="number" name="max_links" id="max_links" class="fyn-input" value="<?php echo esc_attr($maxLinks); ?>" min="1" max="20" style="width:80px;"></div>
+
+                        <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Post Types', 'ai-seo-client'); ?></label>
+                        <div>
                             <?php foreach ($allPostTypes as $pt): ?>
                                 <?php if (in_array($pt->name, $internalTypes)) continue; ?>
-                                <label style="margin-right:15px;"><input type="checkbox" name="post_types[]" value="<?php echo esc_attr($pt->name); ?>" <?php checked(in_array($pt->name, $allowedTypes)); ?>> <?php echo esc_html($pt->label); ?></label>
+                                <label style="margin-right:15px;font-size:13px;color:var(--text-b);"><input type="checkbox" name="post_types[]" value="<?php echo esc_attr($pt->name); ?>" <?php checked(in_array($pt->name, $allowedTypes)); ?>> <?php echo esc_html($pt->label); ?></label>
                             <?php endforeach; ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Link Attributes', 'ai-seo-client'); ?></th>
-                        <td>
-                            <label style="margin-right:15px;"><input type="checkbox" name="open_new_tab" value="1" <?php checked($openNewTab); ?>> <?php esc_html_e('Open in new tab', 'ai-seo-client'); ?></label>
-                            <label><input type="checkbox" name="nofollow" value="1" <?php checked($nofollow); ?>> <?php esc_html_e('Add nofollow', 'ai-seo-client'); ?></label>
-                        </td>
-                    </tr>
-                </table>
-                <?php submit_button(__('Save Settings', 'ai-seo-client')); ?>
-            </form>
+                        </div>
+
+                        <label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Link Attributes', 'ai-seo-client'); ?></label>
+                        <div>
+                            <label style="margin-right:15px;font-size:13px;color:var(--text-b);"><input type="checkbox" name="open_new_tab" value="1" <?php checked($openNewTab); ?>> <?php esc_html_e('Open in new tab', 'ai-seo-client'); ?></label>
+                            <label style="font-size:13px;color:var(--text-b);"><input type="checkbox" name="nofollow" value="1" <?php checked($nofollow); ?>> <?php esc_html_e('Add nofollow', 'ai-seo-client'); ?></label>
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <button type="submit" class="fyn-btn fyn-btn-primary"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+                    </div>
+                </form>
+            </div>
 
             <!-- Custom Auto-Link Rules -->
-            <h2><?php esc_html_e('Custom Auto-Link Rules', 'ai-seo-client'); ?></h2>
-            <p><?php esc_html_e('Define keywords that should automatically be linked to specific URLs. These rules are applied before AI suggestions.', 'ai-seo-client'); ?></p>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-links"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Custom Auto-Link Rules', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin:0 0 14px;"><?php esc_html_e('Define keywords that should automatically be linked to specific URLs. These rules are applied before AI suggestions.', 'ai-seo-client'); ?></p>
 
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom:20px;">
-                <?php wp_nonce_field('sseo_link_genius_add_rule'); ?>
-                <input type="hidden" name="action" value="sseo_link_genius_add_rule">
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="keyword"><?php esc_html_e('Keyword', 'ai-seo-client'); ?></label></th>
-                        <td><input type="text" name="keyword" id="keyword" class="regular-text" placeholder="<?php esc_attr_e('e.g. WordPress SEO', 'ai-seo-client'); ?>"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="url"><?php esc_html_e('Target URL', 'ai-seo-client'); ?></label></th>
-                        <td><input type="text" name="url" id="url" class="regular-text" placeholder="<?php esc_attr_e('https://example.com/wordpress-seo-guide', 'ai-seo-client'); ?>"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Case Sensitive', 'ai-seo-client'); ?></th>
-                        <td><label><input type="checkbox" name="case_sensitive" value="1"> <?php esc_html_e('Match keyword case exactly', 'ai-seo-client'); ?></label></td>
-                    </tr>
-                </table>
-                <?php submit_button(__('Add Rule', 'ai-seo-client'), 'secondary'); ?>
-            </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom:20px;">
+                    <?php wp_nonce_field('sseo_link_genius_add_rule'); ?>
+                    <input type="hidden" name="action" value="sseo_link_genius_add_rule">
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Keyword', 'ai-seo-client'); ?></label>
+                            <input type="text" name="keyword" id="keyword" class="fyn-input" placeholder="<?php esc_attr_e('e.g. WordPress SEO', 'ai-seo-client'); ?>" style="min-width:200px;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Target URL', 'ai-seo-client'); ?></label>
+                            <input type="text" name="url" id="url" class="fyn-input" placeholder="<?php esc_attr_e('https://example.com/wordpress-seo-guide', 'ai-seo-client'); ?>" style="min-width:300px;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:var(--text-b);"><input type="checkbox" name="case_sensitive" value="1"> <?php esc_html_e('Case Sensitive', 'ai-seo-client'); ?></label>
+                        </div>
+                        <button type="submit" class="fyn-btn fyn-btn-outline"><?php esc_html_e('Add Rule', 'ai-seo-client'); ?></button>
+                    </div>
+                </form>
 
-            <?php if (!empty($rules)): ?>
-                <table class="widefat striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Case Sensitive', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($rules as $index => $rule): ?>
+                <?php if (!empty($rules)): ?>
+                    <table class="fyn-table">
+                        <thead>
                             <tr>
-                                <td><strong><?php echo esc_html($rule['keyword']); ?></strong></td>
-                                <td><code><?php echo esc_html($rule['url']); ?></code></td>
-                                <td><?php echo !empty($rule['case_sensitive']) ? __('Yes', 'ai-seo-client') : __('No', 'ai-seo-client'); ?></td>
-                                <td>
-                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php esc_attr_e('Delete this rule?', 'ai-seo-client'); ?>')">
-                                        <?php wp_nonce_field('sseo_link_genius_delete_rule_' . $index); ?>
-                                        <input type="hidden" name="action" value="sseo_link_genius_delete_rule">
-                                        <input type="hidden" name="rule_index" value="<?php echo esc_attr($index); ?>">
-                                        <button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'ai-seo-client'); ?></button>
-                                    </form>
-                                </td>
+                                <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Target URL', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Case Sensitive', 'ai-seo-client'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <p><?php esc_html_e('No custom rules yet. Add one above to automatically link specific keywords.', 'ai-seo-client'); ?></p>
-            <?php endif; ?>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($rules as $index => $rule): ?>
+                                <tr>
+                                    <td><strong style="color:var(--text-h);"><?php echo esc_html($rule['keyword']); ?></strong></td>
+                                    <td><code style="font-size:12px;color:var(--fyn-purple);"><?php echo esc_html($rule['url']); ?></code></td>
+                                    <td>
+                                        <?php if (!empty($rule['case_sensitive'])): ?>
+                                            <span class="fyn-badge fyn-badge--info"><?php esc_html_e('Yes', 'ai-seo-client'); ?></span>
+                                        <?php else: ?>
+                                            <span class="fyn-badge"><?php esc_html_e('No', 'ai-seo-client'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php esc_attr_e('Delete this rule?', 'ai-seo-client'); ?>')">
+                                            <?php wp_nonce_field('sseo_link_genius_delete_rule_' . $index); ?>
+                                            <input type="hidden" name="action" value="sseo_link_genius_delete_rule">
+                                            <input type="hidden" name="rule_index" value="<?php echo esc_attr($index); ?>">
+                                            <button type="submit" class="fyn-btn fyn-btn-danger" style="padding:5px 12px;font-size:12px;"><?php esc_html_e('Delete', 'ai-seo-client'); ?></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('No custom rules yet. Add one above to automatically link specific keywords.', 'ai-seo-client'); ?></p>
+                <?php endif; ?>
+            </div>
 
             <!-- Orphan Pages -->
-            <h2><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></h2>
-            <p><?php esc_html_e('Pages with no internal links pointing to them. Consider adding links from other posts.', 'ai-seo-client'); ?></p>
-            <?php
-            $orphans = $this->getOrphanPages();
-            if (empty($orphans)): ?>
-                <p><?php esc_html_e('No orphan pages found.', 'ai-seo-client'); ?></p>
-            <?php else: ?>
-                <table class="widefat striped">
-                    <thead><tr><th><?php esc_html_e('Title', 'ai-seo-client'); ?></th><th><?php esc_html_e('Type', 'ai-seo-client'); ?></th><th><?php esc_html_e('URL', 'ai-seo-client'); ?></th><th><?php esc_html_e('Published', 'ai-seo-client'); ?></th></tr></thead>
-                    <tbody>
-                        <?php foreach (array_slice($orphans, 0, 20) as $orphan): ?>
-                            <tr>
-                                <td><strong><?php echo esc_html($orphan['title']); ?></strong></td>
-                                <td><?php echo esc_html($orphan['type']); ?></td>
-                                <td><a href="<?php echo esc_url($orphan['url']); ?>" target="_blank"><?php echo esc_html($orphan['url']); ?></a></td>
-                                <td><?php echo esc_html($orphan['published']); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php if (count($orphans) > 20): ?>
-                    <p><?php echo esc_html(sprintf(__('Showing 20 of %d orphan pages.', 'ai-seo-client'), count($orphans))); ?></p>
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-warning"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Orphan Pages', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin:0 0 14px;"><?php esc_html_e('Pages with no internal links pointing to them. Consider adding links from other posts.', 'ai-seo-client'); ?></p>
+                <?php
+                $orphans = $this->getOrphanPages();
+                if (empty($orphans)): ?>
+                    <p><span class="fyn-badge fyn-badge--success"><?php esc_html_e('No orphan pages found.', 'ai-seo-client'); ?></span></p>
+                <?php else: ?>
+                    <table class="fyn-table">
+                        <thead><tr><th><?php esc_html_e('Title', 'ai-seo-client'); ?></th><th><?php esc_html_e('Type', 'ai-seo-client'); ?></th><th><?php esc_html_e('URL', 'ai-seo-client'); ?></th><th><?php esc_html_e('Published', 'ai-seo-client'); ?></th></tr></thead>
+                        <tbody>
+                            <?php foreach (array_slice($orphans, 0, 20) as $orphan): ?>
+                                <tr>
+                                    <td><strong style="color:var(--text-h);"><?php echo esc_html($orphan['title']); ?></strong></td>
+                                    <td><?php echo esc_html($orphan['type']); ?></td>
+                                    <td><a href="<?php echo esc_url($orphan['url']); ?>" target="_blank" style="color:var(--fyn-purple);"><?php echo esc_html($orphan['url']); ?></a></td>
+                                    <td><?php echo esc_html($orphan['published']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php if (count($orphans) > 20): ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php echo esc_html(sprintf(__('Showing 20 of %d orphan pages.', 'ai-seo-client'), count($orphans))); ?></p>
+                    <?php endif; ?>
                 <?php endif; ?>
-            <?php endif; ?>
+            </div>
         </div>
         <?php
     }

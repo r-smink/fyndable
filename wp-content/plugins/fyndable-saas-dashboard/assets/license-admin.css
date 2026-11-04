@@ -61,6 +61,1599 @@ body[class*="sseo-ai"] {
 }
 
 /* ================================================
+   1b. FYNDABLE SHELL THEME TOKENS
+   Light is default; `fyndable-dark` on the body flips it.
+   Mirrors the client plugin (client-admin.css section 1b).
+   ================================================ */
+body.fyndable-ui {
+    --fyn-purple: #8F39AC;
+    --fyn-blue: #379FD3;
+    --fyn-ink: #333333;
+    --fyn-mist: #E6E7E8;
+    --fyn-purple-tint: #F4E9F8;
+    --fyn-blue-tint: #E6F3FB;
+    --fyn-gradient: linear-gradient(135deg, #8F39AC 0%, #379FD3 100%);
+    --fyn-gradient-flat: linear-gradient(90deg, #8F39AC, #379FD3);
+    --fyn-topbar: linear-gradient(135deg, #2A1533 0%, #132A38 100%);
+    --fyn-success: #10b981;
+    --fyn-success-light: #d1fae5;
+    --fyn-success-text: #047857;
+    --fyn-warning: #f59e0b;
+    --fyn-warning-light: #fef3c7;
+    --fyn-warning-text: #92700a;
+    --fyn-danger: #ef4444;
+    --fyn-danger-light: #fee2e2;
+    --fyn-danger-text: #b91c1c;
+    --fyn-info: #3b82f6;
+    --fyn-info-light: #dbeafe;
+    --fyn-info-text: #1d4ed8;
+    --fyn-accent: #a855f7;
+    --fyn-accent-light: #f3e8ff;
+    --fyn-accent-text: #9333ea;
+
+    /* Light theme (default) */
+    --shell-page: #f4f5f8;
+    --shell-sidebar: #ffffff;
+    --shell-sb-border: #e9eaef;
+    --nav-fg: #5a5568;
+    --nav-section: #9a95a8;
+    --nav-hover: #f5f2fb;
+    --card: #ffffff;
+    --card-border: #e2e1ea;
+    --card-shadow: 0 2px 8px rgba(20,14,30,.08), 0 1px 3px rgba(20,14,30,.06);
+    --card-shadow-lg: 0 10px 24px -8px rgba(20,14,30,.18);
+    --text-h: #1a1430;
+    --text-b: #413b52;
+    --text-m: #746e82;
+    --text-s: #a39dae;
+    --well: #f7f6fa;
+    --well-border: #edecf2;
+    --row-hover: #faf7fe;
+    --divide: #efeef4;
+    --input-bg: #ffffff;
+    --input-border: #dcdae4;
+    --sev-track: #e9e7f0;
+}
+
+/* Dark theme overrides */
+body.fyndable-ui.fyndable-dark {
+    --shell-page: #120c1c;
+    --shell-sidebar: #19122a;
+    --shell-sb-border: rgba(255,255,255,.06);
+    --nav-fg: #b4adc6;
+    --nav-section: #726a86;
+    --nav-hover: rgba(143,57,172,.16);
+    --card: #1d1630;
+    --card-border: rgba(255,255,255,.07);
+    --card-shadow: 0 1px 3px rgba(0,0,0,.45);
+    --card-shadow-lg: 0 14px 30px -10px rgba(0,0,0,.6);
+    --text-h: #f4f1fa;
+    --text-b: #cdc6dd;
+    --text-m: #958da7;
+    --text-s: #6f6784;
+    --well: rgba(23,17,36,.25);
+    --well-border: rgba(255,255,255,.07);
+    --row-hover: rgba(143,57,172,.12);
+    --divide: rgba(255,255,255,.06);
+    --input-bg: #211a35;
+    --input-border: rgba(255,255,255,.1);
+    --sev-track: rgba(255,255,255,.1);
+}
+
+/* Base surface + type. The legacy brand gradient page background (section 0)
+   is replaced by the flat --shell-page surface once the shell theme is on. */
+body.fyndable-ui,
+body.fyndable-ui #wpcontent,
+body.fyndable-ui #wpbody,
+body.fyndable-ui #wpbody-content,
+body.fyndable-ui .wrap.sseo-ai-license-admin,
+body.fyndable-ui .wrap.sseo-ai-license-admin > h1 {
+    background: var(--shell-page) !important;
+}
+body.fyndable-ui {
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color: var(--text-b);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+body.fyndable-ui h1,
+body.fyndable-ui h2,
+body.fyndable-ui h3,
+body.fyndable-ui h4 {
+    font-family: inherit;
+    color: var(--text-h);
+}
+body.fyndable-ui .wrap {
+    background: transparent !important;
+}
+/* Dense, full-width content: 28px 32px 48px with a centred 1460px column. */
+body.fyndable-ui .fyn-main {
+    padding: 28px 32px 48px;
+}
+body.fyndable-ui .fyn-main-inner {
+    max-width: 1460px;
+    margin: 0 auto;
+}
+
+/* ================================================
+   1c. FYNDABLE SHELL COMPONENT STYLES
+   ================================================ */
+
+/* --- Page header (inside main, per screen) --- */
+.fyn-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 24px;
+}
+.fyn-page-header .fyn-breadcrumb {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-m);
+    margin-bottom: 4px;
+}
+.fyn-page-header .fyn-breadcrumb .fyn-crumb {
+    color: var(--fyn-purple);
+}
+.fyn-page-header h1 {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    color: var(--text-h);
+    margin: 0 0 4px;
+    line-height: 1.2;
+    padding: 0;
+}
+.fyn-page-header .fyn-page-desc {
+    font-size: 14px;
+    color: var(--text-m);
+    max-width: 640px;
+    margin: 0;
+    line-height: 1.5;
+}
+.fyn-page-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+/* --- Cards --- */
+.fyn-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    padding: 22px 26px;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.fyn-card:hover {
+    box-shadow: var(--card-shadow-lg);
+}
+/* Table card: header and footer keep the inset, the table runs edge to edge. */
+.fyn-card--flush {
+    padding: 0;
+    overflow: hidden;
+}
+.fyn-card--flush > .fyn-card-header {
+    padding: 18px 22px;
+    margin-bottom: 0;
+}
+.fyn-card--flush > .fyn-card-footer {
+    padding: 14px 22px;
+    margin-top: 0;
+}
+.fyn-card-link {
+    margin-left: auto;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--fyn-purple);
+    text-decoration: none;
+}
+.fyn-card-link:hover {
+    color: var(--fyn-purple);
+    text-decoration: underline;
+}
+/* Horizontal scroll for dense tables on narrow viewports */
+.fyn-table-scroll {
+    overflow-x: auto;
+}
+.fyn-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--divide);
+}
+.fyn-card-header .dashicons {
+    color: var(--fyn-purple);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+.fyn-card-header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fyn-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-h);
+    margin: 0;
+}
+.fyn-card-sub {
+    font-size: 12.5px;
+    color: var(--text-m);
+    margin: 2px 0 0;
+}
+.fyn-card-footer {
+    border-top: 1px solid var(--divide);
+    padding-top: 14px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* --- Stat tiles (4-up grid) --- */
+.fyn-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (max-width: 1200px) {
+    .fyn-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+    .fyn-stats-grid { grid-template-columns: 1fr; }
+}
+.fyn-stat-tile {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 13px;
+    box-shadow: var(--card-shadow);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+}
+.fyn-stat-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--fyn-gradient-flat);
+}
+.fyn-stat-tile-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+.fyn-stat-tile-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-m);
+}
+.fyn-stat-tile-top .dashicons {
+    color: var(--fyn-purple);
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+.fyn-stat-tile-value {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text-h);
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+.fyn-stat-tile-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-m);
+}
+
+/* --- Delta pills (semantic) --- */
+.fyn-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.fyn-delta--success { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+.fyn-delta--warning { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+.fyn-delta--danger  { background: var(--fyn-danger-light);  color: var(--fyn-danger-text); }
+.fyn-delta--info    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+.fyn-delta--accent  { background: var(--fyn-accent-light);  color: var(--fyn-accent-text); }
+
+/* --- Tables --- */
+.fyn-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.fyn-table thead th {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-m);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--divide);
+    background: transparent;
+}
+.fyn-table tbody td {
+    font-size: 13px;
+    color: var(--text-b);
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--divide);
+    vertical-align: middle;
+}
+.fyn-table tbody tr {
+    transition: background .2s ease;
+}
+.fyn-table tbody tr:hover {
+    background: var(--row-hover);
+}
+.fyn-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.fyn-table .fyn-td-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.fyn-table .fyn-td-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+/* Edge-to-edge table inside a .fyn-card--flush */
+.fyn-card--flush .fyn-table thead th { padding: 11px 12px; }
+.fyn-card--flush .fyn-table tbody td { padding: 13px 12px; }
+.fyn-card--flush .fyn-table thead th:first-child,
+.fyn-card--flush .fyn-table tbody td:first-child { padding-left: 22px; }
+.fyn-card--flush .fyn-table thead th:last-child,
+.fyn-card--flush .fyn-table tbody td:last-child { padding-right: 22px; }
+
+/* Cell composites: icon chip + two-line label */
+.fyn-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.fyn-cell-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-h);
+    line-height: 1.3;
+}
+.fyn-cell-sub {
+    font-size: 11.5px;
+    color: var(--text-m);
+    line-height: 1.3;
+}
+
+/* --- Monospace field (licence keys, model IDs, endpoints) --- */
+.fyn-mono {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: .5px;
+    background: var(--well);
+    border: 1px solid var(--well-border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--text-b);
+}
+
+/* --- Buttons --- */
+.fyn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+    transition: all .2s ease;
+    text-decoration: none;
+    border: none;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.fyn-btn:hover {
+    transform: translateY(-2px);
+}
+.fyn-btn-primary {
+    background: var(--fyn-gradient);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(143,57,172,.2);
+}
+.fyn-btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(143,57,172,.3);
+    color: #fff;
+}
+.fyn-btn-outline {
+    background: transparent;
+    color: var(--text-b);
+    border: 1px solid var(--card-border);
+}
+.fyn-btn-outline:hover {
+    border-color: var(--fyn-purple);
+    color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyn-btn-danger {
+    background: transparent;
+    color: var(--fyn-danger);
+    border: 1px solid var(--fyn-danger-light);
+}
+.fyn-btn-danger:hover {
+    background: var(--fyn-danger-light);
+}
+.fyn-btn-sm {
+    padding: 5px 12px;
+    font-size: 12.5px;
+    border-radius: 8px;
+}
+.fyn-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* WP native button override inside the fyndable shell */
+body.fyndable-ui .button.button-primary,
+body.fyndable-ui input[type="submit"].button-primary,
+body.fyndable-ui .wrap .button.button-primary {
+    background: var(--fyn-gradient) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 9px !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    box-shadow: 0 4px 12px rgba(143,57,172,.2) !important;
+    text-shadow: none !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+body.fyndable-ui .button.button-primary:hover,
+body.fyndable-ui input[type="submit"].button-primary:hover {
+    box-shadow: 0 6px 20px rgba(143,57,172,.3) !important;
+    transform: translateY(-2px);
+}
+body.fyndable-ui .button:not(.button-primary):not(.button-link),
+body.fyndable-ui .wrap .button:not(.button-primary):not(.button-link) {
+    background: var(--card) !important;
+    color: var(--text-b) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 9px !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+body.fyndable-ui .button:not(.button-primary):not(.button-link):hover {
+    border-color: var(--fyn-purple) !important;
+    color: var(--fyn-purple) !important;
+    background: var(--fyn-purple-tint) !important;
+    transform: translateY(-2px);
+}
+body.fyndable-ui .button.button-small {
+    padding: 5px 12px !important;
+    font-size: 12.5px !important;
+}
+
+/* --- Badges / pills --- */
+.fyn-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+.fyn-badge--success { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+.fyn-badge--warning { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+.fyn-badge--danger  { background: var(--fyn-danger-light);  color: var(--fyn-danger-text); }
+.fyn-badge--info    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+.fyn-badge--accent  { background: var(--fyn-accent-light);  color: var(--fyn-accent-text); }
+.fyn-badge--muted   { background: var(--well);              color: var(--text-m); }
+
+/* Tier badges — Trial/Starter info, Professional accent, Business brand,
+   Agency success, Free neutral, Lifetime warning. */
+.fyn-tier {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+.fyn-tier--trial,
+.fyn-tier--starter      { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+.fyn-tier--professional { background: var(--fyn-accent-light);  color: var(--fyn-accent-text); }
+.fyn-tier--business     { background: var(--fyn-purple-tint);   color: var(--fyn-purple); }
+.fyn-tier--agency       { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+.fyn-tier--free         { background: var(--well);              color: var(--text-m); }
+.fyn-tier--lifetime     { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+
+/* Status dot (breakdown cards / legends) */
+.fyn-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--fyn-purple);
+    flex-shrink: 0;
+}
+.fyn-dot--success { background: var(--fyn-success); }
+.fyn-dot--warning { background: var(--fyn-warning); }
+.fyn-dot--danger  { background: var(--fyn-danger); }
+.fyn-dot--info    { background: var(--fyn-info); }
+.fyn-dot--accent  { background: var(--fyn-accent); }
+.fyn-dot--muted   { background: var(--text-s); }
+
+/* Breakdown row: dot + label + count */
+.fyn-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.fyn-breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 2px;
+    border-bottom: 1px solid var(--divide);
+    font-size: 13px;
+}
+.fyn-breakdown-row:last-child { border-bottom: none; }
+.fyn-breakdown-label {
+    color: var(--text-b);
+    font-weight: 600;
+}
+.fyn-breakdown-count {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--text-h);
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- Progress bar (gradient fill) --- */
+.fyn-progress {
+    height: 8px;
+    background: var(--sev-track);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.fyn-progress--thin { height: 6px; }
+.fyn-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--fyn-gradient-flat);
+    transition: width .3s ease;
+}
+.fyn-progress-bar--success { background: var(--fyn-success); }
+.fyn-progress-bar--warning { background: var(--fyn-warning); }
+.fyn-progress-bar--danger  { background: var(--fyn-danger); }
+.fyn-progress-bar--full    { background: var(--fyn-gradient-flat) !important; }
+/* Usage bar with a value caption above */
+.fyn-usage {
+    min-width: 120px;
+}
+.fyn-usage-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-m);
+    margin-bottom: 5px;
+    gap: 8px;
+}
+
+/* --- Tabs (underlined) --- */
+.fyn-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--divide);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.fyn-tab {
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-m);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all .2s ease;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    text-decoration: none;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.fyn-tab:hover {
+    color: var(--fyn-purple);
+}
+.fyn-tab.active {
+    color: var(--fyn-purple);
+    border-bottom-color: var(--fyn-purple);
+}
+.fyn-tab .fyn-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--well);
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+    color: var(--text-m);
+}
+.fyn-tab.active .fyn-tab-count {
+    background: var(--fyn-accent-light);
+    color: var(--fyn-accent-text);
+}
+
+/* WP native .nav-tab bars restyled to the same underline pattern */
+body.fyndable-ui .nav-tab-wrapper,
+body.fyndable-ui h2.nav-tab-wrapper {
+    border-bottom: 2px solid var(--divide);
+    margin: 0 0 20px;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    background: transparent;
+}
+body.fyndable-ui .nav-tab {
+    background: none !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    margin: 0 0 -2px !important;
+    padding: 10px 18px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: var(--text-m) !important;
+    border-radius: 0 !important;
+    transition: all .2s ease;
+}
+body.fyndable-ui .nav-tab:hover {
+    color: var(--fyn-purple) !important;
+}
+body.fyndable-ui .nav-tab.nav-tab-active {
+    color: var(--fyn-purple) !important;
+    border-bottom-color: var(--fyn-purple) !important;
+    background: none !important;
+}
+
+/* --- Well (inset surface) --- */
+.fyn-well {
+    background: var(--well);
+    border: 1px solid var(--well-border);
+    border-radius: 9px;
+    padding: 14px 16px;
+}
+
+/* --- Inputs --- */
+.fyn-input,
+.fyn-select {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 9px;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    color: var(--text-b);
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: border-color .2s ease, box-shadow .2s ease;
+    outline: none;
+    max-width: 100%;
+}
+.fyn-input:focus,
+.fyn-select:focus {
+    border-color: var(--fyn-purple);
+    box-shadow: 0 0 0 3px rgba(143,57,172,.12);
+}
+.fyn-input--mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    letter-spacing: .5px;
+    background: var(--well);
+}
+.fyn-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+.fyn-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-m);
+}
+.fyn-help {
+    font-size: 12px;
+    color: var(--text-m);
+    line-height: 1.5;
+}
+
+/* WP native form controls inside the shell */
+body.fyndable-ui input[type="text"],
+body.fyndable-ui input[type="email"],
+body.fyndable-ui input[type="url"],
+body.fyndable-ui input[type="number"],
+body.fyndable-ui input[type="password"],
+body.fyndable-ui input[type="search"],
+body.fyndable-ui input[type="date"],
+body.fyndable-ui select,
+body.fyndable-ui textarea {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 9px !important;
+    color: var(--text-b) !important;
+    font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 13.5px !important;
+    padding: 8px 12px !important;
+    box-shadow: none !important;
+    min-height: 0;
+    line-height: 1.4;
+}
+body.fyndable-ui select {
+    padding-right: 28px !important;
+}
+body.fyndable-ui input[type="text"]:focus,
+body.fyndable-ui input[type="email"]:focus,
+body.fyndable-ui input[type="url"]:focus,
+body.fyndable-ui input[type="number"]:focus,
+body.fyndable-ui input[type="password"]:focus,
+body.fyndable-ui input[type="search"]:focus,
+body.fyndable-ui select:focus,
+body.fyndable-ui textarea:focus {
+    border-color: var(--fyn-purple) !important;
+    box-shadow: 0 0 0 3px rgba(143,57,172,.12) !important;
+    outline: none !important;
+}
+body.fyndable-ui input[type="checkbox"],
+body.fyndable-ui input[type="radio"] {
+    border-color: var(--input-border);
+}
+body.fyndable-ui input[type="checkbox"]:checked::before {
+    color: var(--fyn-purple);
+}
+
+/* --- Toggle switch --- */
+.fyn-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+.fyn-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0 !important;
+}
+.fyn-toggle-track {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--sev-track);
+    transition: background .2s ease;
+    flex-shrink: 0;
+}
+.fyn-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(20,14,30,.25);
+    transition: transform .2s ease;
+}
+.fyn-toggle input:checked + .fyn-toggle-track {
+    background: var(--fyn-gradient-flat);
+}
+.fyn-toggle input:checked + .fyn-toggle-track::after {
+    transform: translateX(18px);
+}
+.fyn-toggle input:focus-visible + .fyn-toggle-track {
+    box-shadow: 0 0 0 3px rgba(143,57,172,.2);
+}
+.fyn-toggle-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-b);
+}
+
+/* --- Icon chip (48px gradient) --- */
+.fyn-icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--fyn-gradient);
+    color: #fff;
+    flex-shrink: 0;
+}
+.fyn-icon-chip .dashicons {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+.fyn-icon-chip--sm {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+}
+.fyn-icon-chip--sm .dashicons {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+}
+
+/* --- Filter / action bar above a table --- */
+.fyn-filterbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.fyn-filterbar .fyn-search {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 340px;
+}
+.fyn-filterbar .fyn-search input {
+    width: 100%;
+    padding-left: 34px !important;
+}
+.fyn-filterbar .fyn-search .dashicons {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-s);
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+}
+.fyn-filterbar-spacer { flex: 1; }
+
+/* --- Pager --- */
+.fyn-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 14px;
+    margin-top: 4px;
+    border-top: 1px solid var(--divide);
+}
+.fyn-pager-info {
+    font-size: 12.5px;
+    color: var(--text-m);
+}
+.fyn-pager-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.fyn-pager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 9px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text-b);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+}
+.fyn-pager-btn:hover {
+    border-color: var(--fyn-purple);
+    color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyn-pager-btn.active {
+    background: var(--fyn-gradient);
+    border-color: transparent;
+    color: #fff;
+}
+.fyn-pager-btn.disabled {
+    opacity: .45;
+    pointer-events: none;
+}
+/* paginate_links() output inside a .fyn-pager */
+.fyn-pager-nav .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 9px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text-b);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    margin: 0 2px;
+    transition: all .2s ease;
+}
+.fyn-pager-nav a.page-numbers:hover {
+    border-color: var(--fyn-purple);
+    color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyn-pager-nav .page-numbers.current {
+    background: var(--fyn-gradient);
+    border-color: transparent;
+    color: #fff;
+}
+.fyn-pager-nav .page-numbers.dots {
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-s);
+}
+
+/* --- Dashed drop zone (version upload) --- */
+.fyn-dropzone {
+    border: 2px dashed var(--input-border);
+    border-radius: 13px;
+    padding: 28px 20px;
+    text-align: center;
+    background: var(--well);
+    transition: all .2s ease;
+}
+.fyn-dropzone:hover {
+    border-color: var(--fyn-purple);
+    background: var(--fyn-purple-tint);
+}
+.fyn-dropzone .dashicons {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--fyn-purple);
+    margin-bottom: 8px;
+}
+.fyn-dropzone-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-h);
+    margin-bottom: 4px;
+}
+.fyn-dropzone-hint {
+    font-size: 12px;
+    color: var(--text-m);
+}
+
+/* --- Bar chart (plain CSS bars) --- */
+.fyn-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.fyn-bar-row {
+    display: grid;
+    grid-template-columns: 110px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    font-size: 12.5px;
+}
+.fyn-bar-label {
+    color: var(--text-b);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.fyn-bar-value {
+    color: var(--text-h);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.fyn-bar-track {
+    height: 10px;
+    background: var(--sev-track);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.fyn-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--fyn-gradient-flat);
+    transition: width .3s ease;
+}
+/* Vertical column chart (MRR per month) */
+.fyn-columns {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 180px;
+    padding-top: 8px;
+}
+.fyn-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+}
+.fyn-column-fill {
+    width: 100%;
+    border-radius: 7px 7px 0 0;
+    background: var(--fyn-gradient);
+    min-height: 3px;
+    transition: height .3s ease;
+}
+.fyn-column-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-m);
+}
+
+/* Chart legend */
+.fyn-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-m);
+}
+.fyn-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.fyn-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--fyn-purple);
+}
+
+/* --- Empty state --- */
+.fyn-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-m);
+}
+.fyn-empty .dashicons {
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+    color: var(--text-s);
+    margin-bottom: 10px;
+}
+.fyn-empty-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-h);
+    margin-bottom: 4px;
+}
+
+/* --- Content fade-in animation --- */
+@keyframes fyn-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fyn-animate-in {
+    animation: fyn-fade-in .3s ease both;
+}
+
+/* --- Grid layouts --- */
+.fyn-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.fyn-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.fyn-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+/* Main + side column (form left, reference card right) */
+.fyn-grid-main-side { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.fyn-grid-side-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); gap: 20px; align-items: start; }
+.fyn-stack { display: flex; flex-direction: column; gap: 20px; }
+@media (max-width: 1200px) {
+    .fyn-grid-3, .fyn-grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+    .fyn-grid-2, .fyn-grid-3, .fyn-grid-4,
+    .fyn-grid-main-side, .fyn-grid-side-main { grid-template-columns: 1fr; }
+}
+
+/* --- WP notices inside the shell --- */
+body.fyndable-ui .notice,
+body.fyndable-ui div.updated,
+body.fyndable-ui div.error {
+    background: var(--card) !important;
+    border: 1px solid var(--card-border) !important;
+    border-left-width: 4px !important;
+    border-radius: 11px !important;
+    box-shadow: var(--card-shadow) !important;
+    color: var(--text-b) !important;
+    margin: 0 0 20px !important;
+    padding: 12px 16px !important;
+}
+body.fyndable-ui .notice-success { border-left-color: var(--fyn-success) !important; }
+body.fyndable-ui .notice-warning { border-left-color: var(--fyn-warning) !important; }
+body.fyndable-ui .notice-error   { border-left-color: var(--fyn-danger) !important; }
+body.fyndable-ui .notice-info    { border-left-color: var(--fyn-info) !important; }
+
+/* ================================================
+   1d. LEGACY MARKUP BRIDGE
+   The screens share a small set of legacy classes
+   (.sseo-ai-card, .stat-card, .wp-list-table, .form-table, .badge-*).
+   Mapping those onto the shell tokens restyles every screen that has
+   not been converted to the .fyn-* components yet, so the console is
+   visually consistent regardless of conversion order.
+   ================================================ */
+
+/* --- Page shell: dense, full-width, centred column --- */
+body.fyndable-ui .wrap,
+body.fyndable-ui .wrap.sseo-ai-license-admin {
+    padding: 28px 32px 48px;
+    margin: 0 auto;
+    max-width: 1524px; /* 1460 content + 2x32 gutter */
+    box-sizing: border-box;
+}
+/* Screens already converted to .fyn-main provide their own inner column. */
+body.fyndable-ui .fyn-main {
+    padding: 0;
+}
+body.fyndable-ui .fyn-main-inner {
+    max-width: none;
+}
+/* Legacy screens open with a bare <h1>; give it the page-title treatment. */
+body.fyndable-ui .wrap > h1,
+body.fyndable-ui .wrap.sseo-ai-license-admin > h1 {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    color: var(--text-h);
+    margin: 0 0 22px;
+    padding: 0;
+    line-height: 1.2;
+}
+body.fyndable-ui .wrap > h1 .dashicons {
+    color: var(--fyn-purple);
+}
+
+/* --- Cards --- */
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-card,
+body.fyndable-ui .wrap .sseo-ai-card,
+body.fyndable-ui .wrap.sseo-ai-license-admin .card,
+body.fyndable-ui .wrap .card {
+    background: var(--card);
+    backdrop-filter: none;
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    padding: 22px 26px;
+    margin: 0 0 20px;
+    max-width: none;
+    transition: box-shadow .2s ease;
+}
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-card:hover,
+body.fyndable-ui .wrap .card:hover {
+    box-shadow: var(--card-shadow-lg);
+}
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-card h2,
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-card h3,
+body.fyndable-ui .wrap .sseo-ai-card h2,
+body.fyndable-ui .wrap .sseo-ai-card h3,
+body.fyndable-ui .wrap.sseo-ai-license-admin .card h2,
+body.fyndable-ui .wrap.sseo-ai-license-admin .card h3,
+body.fyndable-ui .wrap .card h2,
+body.fyndable-ui .wrap .card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-h);
+    margin: 0 0 16px;
+    padding: 0 0 14px;
+    border-bottom: 1px solid var(--divide);
+    line-height: 1.3;
+}
+
+/* --- Stat cards → stat tiles --- */
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-stats-grid,
+body.fyndable-ui .wrap .sseo-ai-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 24px;
+}
+@media (max-width: 1200px) {
+    body.fyndable-ui .wrap .sseo-ai-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1024px) {
+    body.fyndable-ui .wrap .sseo-ai-stats-grid { grid-template-columns: 1fr; }
+}
+body.fyndable-ui .sseo-ai-license-admin .stat-card,
+body.fyndable-ui .wrap .stat-card {
+    background: var(--card);
+    backdrop-filter: none;
+    border: 1px solid var(--card-border);
+    border-radius: 13px;
+    box-shadow: var(--card-shadow);
+    padding: 16px 18px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+body.fyndable-ui .sseo-ai-license-admin .stat-card::before,
+body.fyndable-ui .wrap .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--fyn-gradient-flat);
+}
+body.fyndable-ui .sseo-ai-license-admin .stat-card:hover,
+body.fyndable-ui .wrap .stat-card:hover {
+    transform: none;
+    box-shadow: var(--card-shadow-lg);
+}
+/* The legacy rule paints the value with gradient-clipped text; the shell
+   uses a solid heading colour, so the clip has to be undone explicitly. */
+body.fyndable-ui .sseo-ai-license-admin .stat-value,
+body.fyndable-ui .wrap .stat-value {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    -webkit-text-fill-color: currentColor;
+    color: var(--text-h);
+}
+body.fyndable-ui .sseo-ai-license-admin .stat-label,
+body.fyndable-ui .wrap .stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-m);
+    margin-top: 6px;
+}
+
+/* --- Grid layouts --- */
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-grid-2,
+body.fyndable-ui .wrap .sseo-ai-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin: 0 0 20px;
+}
+body.fyndable-ui .sseo-ai-license-admin .sseo-ai-grid-3,
+body.fyndable-ui .wrap .sseo-ai-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin: 0 0 20px;
+}
+@media (max-width: 1200px) {
+    body.fyndable-ui .wrap .sseo-ai-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1024px) {
+    body.fyndable-ui .wrap .sseo-ai-grid-2,
+    body.fyndable-ui .wrap .sseo-ai-grid-3 { grid-template-columns: 1fr; }
+}
+/* Cards inside a grid cell must not add their own bottom gap. */
+body.fyndable-ui .wrap .sseo-ai-grid-2 > .sseo-ai-card,
+body.fyndable-ui .wrap .sseo-ai-grid-3 > .sseo-ai-card,
+body.fyndable-ui .wrap .sseo-ai-grid-2 > .card,
+body.fyndable-ui .wrap .sseo-ai-grid-3 > .card {
+    margin: 0;
+}
+
+/* --- WP list tables → shell table --- */
+body.fyndable-ui .sseo-ai-license-admin .wp-list-table,
+body.fyndable-ui .wrap .wp-list-table {
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    border-collapse: collapse;
+}
+body.fyndable-ui .sseo-ai-license-admin .wp-list-table thead th,
+body.fyndable-ui .wrap .wp-list-table thead th,
+body.fyndable-ui .wrap .wp-list-table thead td {
+    background: transparent;
+    color: var(--text-m);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--divide);
+}
+body.fyndable-ui .sseo-ai-license-admin .wp-list-table tbody td,
+body.fyndable-ui .wrap .wp-list-table tbody td,
+body.fyndable-ui .wrap .wp-list-table tbody th {
+    padding: 11px 12px;
+    font-size: 13px;
+    color: var(--text-b);
+    border-bottom: 1px solid var(--divide);
+    background: transparent;
+}
+body.fyndable-ui .wrap .wp-list-table tbody tr:last-child td {
+    border-bottom: none;
+}
+body.fyndable-ui .sseo-ai-license-admin .wp-list-table tbody tr:hover,
+body.fyndable-ui .wrap .wp-list-table tbody tr:hover,
+body.fyndable-ui .wrap .wp-list-table.striped > tbody > :nth-child(odd):hover {
+    background: var(--row-hover);
+}
+/* Kill the zebra striping — the shell separates rows with hairlines. */
+body.fyndable-ui .wrap .wp-list-table.striped > tbody > :nth-child(odd),
+body.fyndable-ui .wrap .striped > tbody > :nth-child(odd) {
+    background: transparent;
+}
+body.fyndable-ui .wrap .wp-list-table code,
+body.fyndable-ui .wrap .sseo-ai-card code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: .5px;
+    background: var(--well);
+    border: 1px solid var(--well-border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--text-b);
+}
+
+/* --- Table nav / filter bars --- */
+body.fyndable-ui .sseo-ai-license-admin .tablenav,
+body.fyndable-ui .wrap .tablenav {
+    background: transparent;
+    border-radius: 0;
+    margin: 0 0 16px;
+    padding: 0;
+    box-shadow: none;
+    height: auto;
+}
+body.fyndable-ui .wrap .tablenav .tablenav-pages {
+    float: none;
+    margin: 0;
+}
+body.fyndable-ui .wrap .tablenav-pages .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 9px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text-b);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    margin: 0 2px;
+}
+body.fyndable-ui .wrap .tablenav-pages .page-numbers.current {
+    background: var(--fyn-gradient);
+    border-color: transparent;
+    color: #fff;
+}
+
+/* --- WP form tables --- */
+body.fyndable-ui .wrap .form-table {
+    margin: 0;
+}
+body.fyndable-ui .wrap .form-table > tbody > tr > th {
+    width: 220px;
+    padding: 14px 16px 14px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-h);
+    vertical-align: top;
+    line-height: 1.5;
+}
+body.fyndable-ui .wrap .form-table > tbody > tr > td {
+    padding: 12px 0;
+    font-size: 13.5px;
+    color: var(--text-b);
+}
+body.fyndable-ui .wrap .form-table > tbody > tr {
+    border-bottom: 1px solid var(--divide);
+}
+body.fyndable-ui .wrap .form-table > tbody > tr:last-child {
+    border-bottom: none;
+}
+body.fyndable-ui .wrap .form-table p.description,
+body.fyndable-ui .wrap p.description,
+body.fyndable-ui .wrap .description {
+    font-size: 12px;
+    color: var(--text-m);
+    line-height: 1.5;
+    margin: 6px 0 0;
+    font-style: normal;
+}
+body.fyndable-ui .wrap .form-table input[type="text"],
+body.fyndable-ui .wrap .form-table input[type="email"],
+body.fyndable-ui .wrap .form-table input[type="url"],
+body.fyndable-ui .wrap .form-table input[type="password"],
+body.fyndable-ui .wrap .form-table select {
+    max-width: 100%;
+}
+body.fyndable-ui .wrap .regular-text,
+body.fyndable-ui .wrap .large-text {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* --- Badges: tiers, statuses, platforms --- */
+body.fyndable-ui .wrap .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+    line-height: 1.5;
+}
+/* Tier tints (artifact: trial/starter info, professional accent,
+   business brand purple, agency success, free neutral, lifetime warning) */
+body.fyndable-ui .wrap .badge-trial,
+body.fyndable-ui .wrap .badge-starter   { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+body.fyndable-ui .wrap .badge-professional { background: var(--fyn-accent-light); color: var(--fyn-accent-text); }
+body.fyndable-ui .wrap .badge-business  { background: var(--fyn-purple-tint);   color: var(--fyn-purple); }
+body.fyndable-ui .wrap .badge-agency    { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+body.fyndable-ui .wrap .badge-lifetime  { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+body.fyndable-ui .wrap .badge-free,
+body.fyndable-ui .wrap .badge-basic,
+body.fyndable-ui .wrap .badge-user      { background: var(--well);              color: var(--text-m); }
+/* Status tints */
+body.fyndable-ui .wrap .badge-active    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+body.fyndable-ui .wrap .badge-connected,
+body.fyndable-ui .wrap .badge-used,
+body.fyndable-ui .wrap .badge-paid,
+body.fyndable-ui .wrap .badge-completed,
+body.fyndable-ui .wrap .badge-resolved,
+body.fyndable-ui .wrap .badge-closed    { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+body.fyndable-ui .wrap .badge-pending,
+body.fyndable-ui .wrap .badge-open,
+body.fyndable-ui .wrap .badge-new,
+body.fyndable-ui .wrap .badge-queued,
+body.fyndable-ui .wrap .badge-running   { background: var(--fyn-warning-light); color: var(--fyn-warning-text); }
+body.fyndable-ui .wrap .badge-revoked,
+body.fyndable-ui .wrap .badge-failed,
+body.fyndable-ui .wrap .badge-cancelled,
+body.fyndable-ui .wrap .badge-urgent,
+body.fyndable-ui .wrap .badge-high      { background: var(--fyn-danger-light);  color: var(--fyn-danger-text); }
+body.fyndable-ui .wrap .badge-expired,
+body.fyndable-ui .wrap .badge-inactive,
+body.fyndable-ui .wrap .badge-unknown,
+body.fyndable-ui .wrap .badge-low       { background: var(--well);              color: var(--text-m); }
+body.fyndable-ui .wrap .badge-medium,
+body.fyndable-ui .wrap .badge-normal    { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+body.fyndable-ui .wrap .badge-administrator,
+body.fyndable-ui .wrap .badge-editor {
+    background: var(--fyn-gradient);
+    color: #fff;
+}
+/* Platform badges */
+body.fyndable-ui .wrap .badge-platform-wordpress { background: var(--fyn-purple-tint);   color: var(--fyn-purple); }
+body.fyndable-ui .wrap .badge-platform-shopify   { background: var(--fyn-success-light); color: var(--fyn-success-text); }
+body.fyndable-ui .wrap .badge-platform-webflow   { background: var(--fyn-info-light);    color: var(--fyn-info-text); }
+body.fyndable-ui .wrap .badge-platform-unknown   { background: var(--well);              color: var(--text-m); }
+
+/* --- Usage bars --- */
+body.fyndable-ui .wrap .sseo-ai-usage-bar {
+    height: 8px;
+    background: var(--sev-track);
+    border-radius: 999px;
+    overflow: hidden;
+}
+body.fyndable-ui .wrap .sseo-ai-usage-bar__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--fyn-gradient-flat);
+    transition: width .3s ease;
+}
+body.fyndable-ui .wrap .sseo-ai-usage-bar__fill--warning { background: var(--fyn-warning); }
+body.fyndable-ui .wrap .sseo-ai-usage-bar__fill--danger,
+body.fyndable-ui .wrap .sseo-ai-usage-bar__fill--critical { background: var(--fyn-danger); }
+body.fyndable-ui .wrap .sseo-ai-usage-bar__fill--ok,
+body.fyndable-ui .wrap .sseo-ai-usage-bar__fill--safe { background: var(--fyn-success); }
+
+/* --- Misc surfaces that assume a white page --- */
+body.fyndable-ui .wrap .sseo-ai-tab-panel {
+    background: transparent;
+}
+body.fyndable-ui .wrap hr,
+body.fyndable-ui .wrap .sseo-ai-card hr {
+    border: none;
+    border-top: 1px solid var(--divide);
+    margin: 18px 0;
+}
+body.fyndable-ui .wrap table.widefat {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+body.fyndable-ui .wrap .submit {
+    margin: 18px 0 0;
+    padding: 0;
+}
+/* Legacy upgrade CTA keeps the brand gradient but adopts the shell radius. */
+body.fyndable-ui .wrap .sseo-ai-upgrade-cta {
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+}
+
+/* ================================================
    2. MODERN LAYOUT
    ================================================ */
 .wrap.sseo-ai-license-admin {

@@ -18,20 +18,23 @@ class CompetitorResearch
     private Settings $settings;
     private LLMClient $llm;
     private DashboardAPI $dashboardAPI;
-    
-    public function __construct(Settings $settings, LLMClient $llm, DashboardAPI $dashboardAPI)
+    private ?BacklinkAnalyzer $backlinkAnalyzer;
+
+    public function __construct(Settings $settings, LLMClient $llm, DashboardAPI $dashboardAPI, ?BacklinkAnalyzer $backlinkAnalyzer = null)
     {
         $this->settings = $settings;
         $this->llm = $llm;
         $this->dashboardAPI = $dashboardAPI;
+        $this->backlinkAnalyzer = $backlinkAnalyzer;
     }
-    
+
     public function register(): void
     {
         // Menu registration moved to Client class
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_ajax_sseo_ai_analyze_competitor', [$this, 'ajaxAnalyzeCompetitor']);
         add_action('wp_ajax_sseo_ai_detect_ai_content', [$this, 'ajaxDetectAIContent']);
+        add_action('wp_ajax_sseo_ai_get_backlink_strategy', [$this, 'ajaxGetBacklinkStrategy']);
     }
     
     public function addMenu(): void
@@ -56,73 +59,76 @@ class CompetitorResearch
         
         ?>
         <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: 0; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-ai-dashboard-card .button-primary { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; }
-            .sseo-ai-dashboard-card .nav-tab-wrapper { border-bottom: 1px solid #e2e8f0; }
-            .sseo-ai-dashboard-card .nav-tab { background: #f1f5f9; border: 1px solid #e2e8f0; border-bottom: none; }
-            .sseo-ai-dashboard-card .nav-tab-active { background: #fff; border-bottom: 1px solid #fff; }
-            .sseo-ai-dashboard-card .tab-content { padding: 20px; background: #fff; border: 1px solid #e2e8f0; margin-top: -1px; }
-            .sseo-ai-dashboard-card table.widefat { border: 1px solid #e2e8f0; }
-            .sseo-ai-dashboard-card table.widefat thead th { background: #f8fafc; color: #334155; }
+            .cr-tab-content { display: none; padding: 20px 0 0; }
+            .cr-tab-content.cr-active { display: block; }
         </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('AI-Powered Competitor Research', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Competitor Research', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Competitor Research', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('AI-powered analysis of competitors, keywords and content strategy.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
 
-            <div class="sseo-ai-content">
             <!-- Add Competitor -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h2>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="align-self: flex-start;">
-                        <label for="competitor-domain">
-                            <strong><?php esc_html_e('Competitor Domain:', 'ai-seo-client'); ?></strong>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-plus-alt"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Track Competitor', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+                    <div>
+                        <label for="competitor-domain" style="font-size:12px;font-weight:700;color:var(--text-m);">
+                            <?php esc_html_e('Competitor Domain', 'ai-seo-client'); ?>
                         </label><br>
-                        <input type="text" id="competitor-domain" class="regular-text"
-                               placeholder="competitor.com">
+                        <input type="text" id="competitor-domain" class="fyn-input" style="min-width:200px;"
+                               placeholder="concurrent.nl">
                     </div>
-                    <div style="align-self: flex-start;">
-                        <label for="competitor-sitemap">
-                            <strong><?php esc_html_e('Sitemap URL (optional):', 'ai-seo-client'); ?></strong>
+                    <div>
+                        <label for="competitor-sitemap" style="font-size:12px;font-weight:700;color:var(--text-m);">
+                            <?php esc_html_e('Sitemap URL (optional)', 'ai-seo-client'); ?>
                         </label><br>
-                        <input type="text" id="competitor-sitemap" class="regular-text"
-                               placeholder="https://competitor.com/sitemap_index.xml" style="width:300px;">
-                        <p class="description" style="margin-top:2px;font-size:11px;color:#666;">
+                        <input type="text" id="competitor-sitemap" class="fyn-input" style="min-width:300px;"
+                               placeholder="https://competitor.com/sitemap_index.xml">
+                        <p style="margin-top:2px;font-size:11px;color:var(--text-m);">
                             <?php esc_html_e('Leave empty to auto-detect. Use a sitemap index URL for a full-site check.', 'ai-seo-client'); ?>
                         </p>
                     </div>
-                    <div style="display:flex;align-items:center;gap:5px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding-top:18px;">
                         <input type="checkbox" id="competitor-fullsite" value="1">
-                        <label for="competitor-fullsite" style="white-space:nowrap;">
-                            <strong><?php esc_html_e('Full site', 'ai-seo-client'); ?></strong>
+                        <label for="competitor-fullsite" style="white-space:nowrap;font-size:13px;color:var(--text-b);">
+                            <?php esc_html_e('Full Site', 'ai-seo-client'); ?>
                         </label>
-                        <span style="font-size:11px;color:#666;" title="<?php esc_attr_e('Follow all sub-sitemaps in a sitemap index for a complete check', 'ai-seo-client'); ?>">ⓘ</span>
+                        <span style="font-size:11px;color:var(--text-m);cursor:help;" title="<?php esc_attr_e('Follow all sub-sitemaps in a sitemap index for a complete scan', 'ai-seo-client'); ?>">&#9432;</span>
                     </div>
-                    <button type="button" class="button button-primary" onclick="sseoAddCompetitorTracking()">
-                        <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
-                    </button>
+                    <div style="padding-top:18px;">
+                        <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoAddCompetitorTracking()">
+                            <span class="dashicons dashicons-plus-alt2"></span>
+                            <?php esc_html_e('Add & Analyze', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
+
             <!-- Competitor Overview -->
             <?php if (!empty($competitors)): ?>
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Tracked Competitors', 'ai-seo-client'); ?></h2>
-                
-                <table class="wp-list-table widefat fixed striped">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-groups"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Tracked Competitors', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Competitor', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Keywords', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Content Strategy', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('AI Content %', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Last Updated', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('AI-content %', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Updated', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
                         </tr>
                     </thead>
@@ -130,36 +136,36 @@ class CompetitorResearch
                         <?php foreach ($competitors as $comp): ?>
                         <tr>
                             <td>
-                                <strong><?php echo esc_html($comp['domain']); ?></strong>
+                                <strong style="color:var(--text-h);"><?php echo esc_html($comp['domain']); ?></strong>
                             </td>
                             <td>
                                 <?php echo esc_html(number_format($comp['keyword_count'] ?? 0)); ?> keywords
                             </td>
                             <td>
-                                <?php 
-                                $strategy = $comp['content_strategy'] ?? 'Unknown';
+                                <?php
+                                $strategy = $comp['content_strategy'] ?? 'Onbekend';
                                 echo esc_html($strategy);
                                 ?>
                             </td>
                             <td>
-                                <span style="color: <?php echo ($comp['ai_content_percentage'] ?? 0) > 50 ? '#d63638' : '#00a32a'; ?>;">
+                                <span class="fyn-badge fyn-badge--<?php echo ($comp['ai_content_percentage'] ?? 0) > 50 ? 'danger' : 'success'; ?>">
                                     <?php echo esc_html(($comp['ai_content_percentage'] ?? 0)); ?>%
                                 </span>
                             </td>
-                            <td>
-                                <?php 
+                            <td style="color:var(--text-m);font-size:12px;">
+                                <?php
                                 $lastUpdated = $comp['last_updated'] ?? '';
-                                echo $lastUpdated ? esc_html(human_time_diff(strtotime($lastUpdated))) . ' ago' : 'Never';
+                                echo $lastUpdated ? esc_html(human_time_diff(strtotime($lastUpdated))) . ' ' . esc_html__('ago', 'ai-seo-client') : esc_html__('Never', 'ai-seo-client');
                                 ?>
                             </td>
                             <td>
-                                <button type="button" class="button button-small"
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;"
                                         onclick="sseoViewCompetitorDetails('<?php echo esc_js($comp['domain']); ?>')">
-                                    <?php esc_html_e('View Details', 'ai-seo-client'); ?>
+                                    <?php esc_html_e('Details', 'ai-seo-client'); ?>
                                 </button>
-                                <button type="button" class="button button-small"
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="font-size:12px;"
                                         onclick="sseoRefreshCompetitor('<?php echo esc_js($comp['domain']); ?>', '<?php echo esc_js($comp['sitemap_url'] ?? ''); ?>', <?php echo !empty($comp['full_site']) ? 'true' : 'false'; ?>)">
-                                    <?php esc_html_e('Refresh', 'ai-seo-client'); ?>
+                                    <span class="dashicons dashicons-update" style="font-size:14px;width:14px;height:14px;"></span>
                                 </button>
                             </td>
                         </tr>
@@ -167,73 +173,76 @@ class CompetitorResearch
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Detailed Analysis Tabs -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Competitor Analysis', 'ai-seo-client'); ?></h2>
-                
-                <div id="competitor-tabs" style="margin-top: 15px;">
-                    <nav class="nav-tab-wrapper">
-                        <a href="#keyword-strategy" class="nav-tab nav-tab-active" onclick="sseoSwitchTab(event, 'keyword-strategy')">
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-bar"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Competitor Analysis', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <div id="competitor-tabs">
+                    <div class="fyn-tabs" style="margin-bottom:0;">
+                        <button type="button" class="fyn-tab cr-tab-btn active" onclick="sseoSwitchTab(event, 'keyword-strategy')">
                             <?php esc_html_e('Keyword Strategy', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#content-calendar" class="nav-tab" onclick="sseoSwitchTab(event, 'content-calendar')">
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'content-calendar')">
                             <?php esc_html_e('Content Calendar', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#win-loss" class="nav-tab" onclick="sseoSwitchTab(event, 'win-loss')">
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'win-loss')">
                             <?php esc_html_e('Win/Loss Analysis', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#backlink-strategy" class="nav-tab" onclick="sseoSwitchTab(event, 'backlink-strategy')">
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'backlink-strategy')">
                             <?php esc_html_e('Backlink Strategy', 'ai-seo-client'); ?>
-                        </a>
-                        <a href="#ad-copy" class="nav-tab" onclick="sseoSwitchTab(event, 'ad-copy')">
-                            <?php esc_html_e('Ad Copy Analysis', 'ai-seo-client'); ?>
-                        </a>
-                    </nav>
-                    
+                        </button>
+                        <button type="button" class="fyn-tab cr-tab-btn" onclick="sseoSwitchTab(event, 'ad-copy')">
+                            <?php esc_html_e('Ad Copy', 'ai-seo-client'); ?>
+                        </button>
+                    </div>
+
                     <!-- Keyword Strategy Tab -->
-                    <div id="keyword-strategy" class="tab-content" style="display: block;">
-                        <h3><?php esc_html_e('Competitor Keyword Strategy', 'ai-seo-client'); ?></h3>
+                    <div id="keyword-strategy" class="cr-tab-content cr-active">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Competitor Keyword Strategy', 'ai-seo-client'); ?></h4>
                         <div id="keyword-strategy-content">
-                            <p><?php esc_html_e('Select a competitor to view their keyword strategy.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their keyword strategy.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Content Calendar Tab -->
-                    <div id="content-calendar" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Content Publishing Calendar', 'ai-seo-client'); ?></h3>
+                    <div id="content-calendar" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Content Publishing Calendar', 'ai-seo-client'); ?></h4>
                         <div id="content-calendar-content">
-                            <p><?php esc_html_e('Select a competitor to view their content calendar.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their content calendar.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Win/Loss Tab -->
-                    <div id="win-loss" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Win/Loss Analysis', 'ai-seo-client'); ?></h3>
+                    <div id="win-loss" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Win/Loss Analysis', 'ai-seo-client'); ?></h4>
                         <div id="win-loss-content">
-                            <p><?php esc_html_e('Select a competitor to compare rankings.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to compare rankings.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Backlink Strategy Tab -->
-                    <div id="backlink-strategy" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Backlink Strategy', 'ai-seo-client'); ?></h3>
+                    <div id="backlink-strategy" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Backlink Strategy', 'ai-seo-client'); ?></h4>
                         <div id="backlink-strategy-content">
-                            <p><?php esc_html_e('Select a competitor to view their backlink strategy.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their backlink strategy.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    
+
                     <!-- Ad Copy Tab -->
-                    <div id="ad-copy" class="tab-content" style="display: none;">
-                        <h3><?php esc_html_e('Ad Copy Analysis', 'ai-seo-client'); ?></h3>
+                    <div id="ad-copy" class="cr-tab-content">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 8px;"><?php esc_html_e('Ad Copy', 'ai-seo-client'); ?></h4>
                         <div id="ad-copy-content">
-                            <p><?php esc_html_e('Select a competitor to view their ad copy.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Select a competitor to view their ad copy.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
-            </div>
+
         </div>
         
         <script>
@@ -293,14 +302,12 @@ class CompetitorResearch
         
         function sseoSwitchTab(event, tabId) {
             event.preventDefault();
-            
-            // Hide all tabs
-            jQuery('.tab-content').hide();
-            jQuery('.nav-tab').removeClass('nav-tab-active');
-            
-            // Show selected tab
-            jQuery('#' + tabId).show();
-            jQuery(event.target).addClass('nav-tab-active');
+
+            jQuery('.cr-tab-content').removeClass('cr-active');
+            jQuery('.cr-tab-btn').removeClass('active');
+
+            jQuery('#' + tabId).addClass('cr-active');
+            jQuery(event.target).closest('.cr-tab-btn').addBack().filter('.cr-tab-btn').addClass('active');
         }
         
         function sseoLoadKeywordStrategy(domain) {
@@ -535,7 +542,8 @@ Provide a concise analysis (3-4 sentences):";
             }
             $visitedUrls[$url] = true;
 
-            $response = wp_remote_get($url, ['timeout' => 20]);
+            // URLs are user/competitor-supplied — safeRemoteGet blocks non-public hosts (SSRF).
+            $response = $this->safeRemoteGet($url, ['timeout' => 20]);
             if (is_wp_error($response)) {
                 continue;
             }
@@ -622,7 +630,7 @@ Provide a brief analysis (2-3 sentences):";
                     $visited[$subLoc] = true;
                     $subSitemapCount++;
 
-                    $subResponse = wp_remote_get($subLoc, ['timeout' => 20]);
+                    $subResponse = $this->safeRemoteGet($subLoc, ['timeout' => 20]);
                     if (is_wp_error($subResponse)) {
                         continue;
                     }
@@ -790,7 +798,7 @@ Respond in JSON format:
     private function getCompetitorPosts(string $domain, int $limit = 10): array
     {
         $sitemapUrl = "https://{$domain}/sitemap.xml";
-        $response = wp_remote_get($sitemapUrl, ['timeout' => 15]);
+        $response = $this->safeRemoteGet($sitemapUrl, ['timeout' => 15]);
         
         if (is_wp_error($response)) {
             return [];
@@ -801,13 +809,92 @@ Respond in JSON format:
         
         return array_slice($posts, 0, $limit);
     }
-    
+
+    /**
+     * SSRF-safe GET for user/competitor-supplied URLs.
+     *
+     * wp_safe_remote_get() alone is not enough: core's wp_http_validate_url()
+     * doesn't block link-local 169.254.0.0/16 (cloud metadata) or IPv6, and
+     * redirect targets are only checked against that same weak list. So every
+     * hop is validated here and redirects are followed manually.
+     */
+    private function safeRemoteGet(string $url, array $args = []): array|\WP_Error
+    {
+        $args['redirection'] = 0;
+
+        for ($hop = 0; $hop <= 3; $hop++) {
+            if (!$this->isPublicUrl($url)) {
+                return new \WP_Error('unsafe_url', __('URL is not allowed', 'ai-seo-client'));
+            }
+
+            $response = wp_safe_remote_get($url, $args);
+            if (is_wp_error($response)) {
+                return $response;
+            }
+
+            $code = (int) wp_remote_retrieve_response_code($response);
+            $location = wp_remote_retrieve_header($response, 'location');
+            if ($code < 300 || $code >= 400 || empty($location)) {
+                return $response;
+            }
+
+            $url = \WP_Http::make_absolute_url(is_array($location) ? end($location) : $location, $url);
+        }
+
+        return new \WP_Error('too_many_redirects', __('Too many redirects', 'ai-seo-client'));
+    }
+
+    /**
+     * True when the URL is http(s) and every resolved IP of its host is public.
+     */
+    private function isPublicUrl(string $url): bool
+    {
+        $parts = wp_parse_url($url);
+        $scheme = strtolower($parts['scheme'] ?? '');
+        $host = strtolower(trim($parts['host'] ?? '', '[]'));
+        if (!in_array($scheme, ['http', 'https'], true) || $host === '' || $host === 'localhost') {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            $ips = [$host];
+        } else {
+            $ips = [];
+            foreach (@dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $record) {
+                if (!empty($record['ip'])) {
+                    $ips[] = $record['ip'];
+                } elseif (!empty($record['ipv6'])) {
+                    $ips[] = $record['ipv6'];
+                }
+            }
+            if (!$ips) {
+                $ip = gethostbyname($host);
+                if ($ip !== $host) {
+                    $ips[] = $ip;
+                }
+            }
+        }
+
+        if (!$ips) {
+            return false;
+        }
+        foreach ($ips as $ip) {
+            // NO_RES_RANGE covers 0/8, 127/8, 169.254/16, ::1, fe80::/10; NO_PRIV covers 10/8, 172.16/12, 192.168/16, fc00::/7.
+            // 100.64/10 (CGNAT) is not covered by either flag.
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+                || (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && (ip2long($ip) & 0xFFC00000) === (ip2long('100.64.0.0') & 0xFFC00000))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Scrape post content
      */
     private function scrapePostContent(string $url): string
     {
-        $response = wp_remote_get($url, [
+        $response = $this->safeRemoteGet($url, [
             'timeout' => 20,
             'user-agent' => 'Mozilla/5.0 (compatible; SSEOBot/1.0)',
         ]);
@@ -915,33 +1002,36 @@ Respond in JSON format:
      */
     private function analyzeBacklinkStrategy(string $domain): array
     {
-        // Get competitor backlinks from Ahrefs/Semrush
         $backlinks = $this->getCompetitorBacklinks($domain);
-        
+
         // Analyze patterns
         $linkTypes = $this->categorizeBacklinks($backlinks);
         $topSources = $this->getTopBacklinkSources($backlinks);
-        $anchorStrategy = $this->analyzeAnchorTextStrategy($backlinks);
-        
+        $anchorStrategy = $this->analyzeAnchorTextStrategy($backlinks, $domain);
+        $dofollow = count(array_filter($backlinks, fn($link) => $link['link_type'] === 'dofollow'));
+
         return [
             'total_backlinks' => count($backlinks),
+            'dofollow_percentage' => $backlinks ? round($dofollow / count($backlinks) * 100, 1) : 0,
             'link_types' => $linkTypes,
             'top_sources' => $topSources,
             'anchor_strategy' => $anchorStrategy,
-            'strategy_summary' => $this->summarizeBacklinkStrategy($linkTypes, $topSources),
+            'strategy_summary' => $this->summarizeBacklinkStrategy($backlinks, $linkTypes, $topSources),
         ];
     }
-    
+
     /**
-     * Get competitor backlinks
+     * Get competitor backlinks (normalized items, see BacklinkAnalyzer::getBacklinkItems)
      */
     private function getCompetitorBacklinks(string $domain): array
     {
-        // This would use Ahrefs or Semrush API
-        // Placeholder implementation
-        return [];
+        if (!$this->backlinkAnalyzer) {
+            return [];
+        }
+
+        return $this->backlinkAnalyzer->getBacklinkItems($domain);
     }
-    
+
     /**
      * Categorize backlinks
      */
@@ -955,63 +1045,207 @@ Respond in JSON format:
             'editorial' => 0,
             'other' => 0,
         ];
-        
-        // Categorization logic would go here
-        
+
+        if (!$this->backlinkAnalyzer) {
+            return $categories;
+        }
+
+        foreach ($backlinks as $link) {
+            $categories[$this->backlinkAnalyzer->classifyLink($link)]++;
+        }
+
         return $categories;
     }
-    
+
     /**
-     * Get top backlink sources
+     * Get top backlink sources: [{domain, links, domain_rating}]
      */
     private function getTopBacklinkSources(array $backlinks): array
     {
         $sources = [];
-        
+
         foreach ($backlinks as $link) {
-            $domain = parse_url($link['source_url'] ?? '', PHP_URL_HOST);
-            if (!isset($sources[$domain])) {
-                $sources[$domain] = 0;
+            $domain = $link['source_domain'] ?? '';
+            if ($domain === '') {
+                continue;
             }
-            $sources[$domain]++;
+            if (!isset($sources[$domain])) {
+                $sources[$domain] = ['domain' => $domain, 'links' => 0, 'domain_rating' => 0];
+            }
+            $sources[$domain]['links']++;
+            $sources[$domain]['domain_rating'] = max($sources[$domain]['domain_rating'], (int) $link['domain_rating']);
         }
-        
-        arsort($sources);
-        return array_slice($sources, 0, 10, true);
+
+        usort($sources, fn($a, $b) => [$b['domain_rating'], $b['links']] <=> [$a['domain_rating'], $a['links']]);
+        return array_slice($sources, 0, 10);
     }
-    
+
     /**
      * Analyze anchor text strategy
      */
-    private function analyzeAnchorTextStrategy(array $backlinks): array
+    private function analyzeAnchorTextStrategy(array $backlinks, string $domain = ''): array
     {
         $anchors = [];
-        
+        $total = 0;
+        $branded = 0;
+        $generic = 0;
+        $keywordRich = 0;
+
+        $brandLabel = strtolower(explode('.', $domain)[0] ?? '');
+        $genericPattern = '/^(click here|read more|here|website|link|visit|more info|klik hier|lees meer|hier|bekijk|meer info|deze website)$/i';
+
         foreach ($backlinks as $link) {
             $anchor = $link['anchor_text'] ?? '';
-            if (empty($anchor)) continue;
-            
-            if (!isset($anchors[$anchor])) {
-                $anchors[$anchor] = 0;
+            if ($anchor === '') continue;
+
+            $total++;
+            $lower = mb_strtolower($anchor);
+            if (($brandLabel !== '' && str_contains($lower, $brandLabel)) || preg_match('#^(https?://|www\.)#', $lower)) {
+                $branded++;
+            } elseif (preg_match($genericPattern, trim($lower))) {
+                $generic++;
+            } else {
+                $keywordRich++;
             }
-            $anchors[$anchor]++;
+
+            $anchors[$anchor] = ($anchors[$anchor] ?? 0) + 1;
         }
-        
+
         arsort($anchors);
-        
+
         return [
             'top_anchors' => array_slice($anchors, 0, 10, true),
-            'branded_percentage' => 0, // Would calculate
-            'exact_match_percentage' => 0, // Would calculate
+            'branded_percentage' => $total ? round($branded / $total * 100, 1) : 0,
+            // Non-branded, non-generic anchors — the competitor's keyword targeting
+            'exact_match_percentage' => $total ? round($keywordRich / $total * 100, 1) : 0,
+            'generic_percentage' => $total ? round($generic / $total * 100, 1) : 0,
         ];
     }
-    
+
     /**
      * Summarize backlink strategy
      */
-    private function summarizeBacklinkStrategy(array $linkTypes, array $topSources): string
+    private function summarizeBacklinkStrategy(array $backlinks, array $linkTypes, array $topSources): string
     {
-        return 'Competitor focuses on guest posting and editorial links from high-authority domains.';
+        if (empty($backlinks)) {
+            return __('No backlink data available for this competitor.', 'ai-seo-client');
+        }
+
+        $labels = $this->getLinkTypeLabels();
+        $classified = $linkTypes;
+        unset($classified['other']);
+        arsort($classified);
+        $mainType = (string) array_key_first($classified);
+        $mainShare = round(($classified[$mainType] ?? 0) / count($backlinks) * 100);
+
+        $dofollow = count(array_filter($backlinks, fn($link) => $link['link_type'] === 'dofollow'));
+        $parts = [];
+
+        if ($mainShare > 0) {
+            $parts[] = sprintf(
+                __('Most recognizable link type: %1$s (%2$d%% of analyzed links).', 'ai-seo-client'),
+                $labels[$mainType] ?? $mainType,
+                $mainShare
+            );
+        }
+        $parts[] = sprintf(__('%d%% of the links are dofollow.', 'ai-seo-client'), round($dofollow / count($backlinks) * 100));
+
+        $strong = array_filter($topSources, fn($source) => $source['domain_rating'] >= 50);
+        if ($strong) {
+            $parts[] = sprintf(
+                __('Strongest sources: %s.', 'ai-seo-client'),
+                implode(', ', array_map(fn($source) => $source['domain'] . ' (DR ' . $source['domain_rating'] . ')', array_slice($strong, 0, 3)))
+            );
+        }
+
+        return implode(' ', $parts);
+    }
+
+    private function getLinkTypeLabels(): array
+    {
+        return [
+            'guest_posts' => __('Guest posts', 'ai-seo-client'),
+            'directories' => __('Directories', 'ai-seo-client'),
+            'forums' => __('Forums', 'ai-seo-client'),
+            'social' => __('Social', 'ai-seo-client'),
+            'editorial' => __('Editorial', 'ai-seo-client'),
+            'other' => __('Other', 'ai-seo-client'),
+        ];
+    }
+
+    /**
+     * AJAX: Backlink strategy tab (HTML fragment)
+     */
+    public function ajaxGetBacklinkStrategy(): void
+    {
+        check_ajax_referer('sseo_competitor', 'nonce');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+
+        $domain = sanitize_text_field(wp_unslash($_GET['domain'] ?? ''));
+        if ($domain === '') {
+            wp_send_json_error(['message' => 'Domain required']);
+        }
+
+        $tracked = get_option('sseo_ai_tracked_competitors', []);
+        $strategy = $tracked[$domain]['backlink_strategy'] ?? null;
+        if (empty($strategy['total_backlinks']) || !isset($strategy['dofollow_percentage'])) {
+            $strategy = $this->analyzeBacklinkStrategy($domain);
+            if (isset($tracked[$domain])) {
+                $tracked[$domain]['backlink_strategy'] = $strategy;
+                update_option('sseo_ai_tracked_competitors', $tracked);
+            }
+        }
+
+        wp_send_json_success(['html' => $this->renderBacklinkStrategy($strategy)]);
+    }
+
+    private function renderBacklinkStrategy(array $strategy): string
+    {
+        if (empty($strategy['total_backlinks'])) {
+            return '<p>' . esc_html__('No backlink data available for this competitor. Check your backlink provider under Integrations.', 'ai-seo-client') . '</p>';
+        }
+
+        $labels = $this->getLinkTypeLabels();
+        ob_start();
+        ?>
+        <p><?php echo esc_html($strategy['strategy_summary']); ?></p>
+        <p>
+            <?php echo esc_html(sprintf(__('Analyzed links: %d', 'ai-seo-client'), $strategy['total_backlinks'])); ?> ·
+            <?php echo esc_html(sprintf(__('Dofollow: %s%%', 'ai-seo-client'), $strategy['dofollow_percentage'])); ?> ·
+            <?php echo esc_html(sprintf(__('Branded anchors: %s%%', 'ai-seo-client'), $strategy['anchor_strategy']['branded_percentage'] ?? 0)); ?> ·
+            <?php echo esc_html(sprintf(__('Keyword anchors: %s%%', 'ai-seo-client'), $strategy['anchor_strategy']['exact_match_percentage'] ?? 0)); ?>
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+            <table class="fyn-table">
+                <thead><tr><th><?php esc_html_e('Link Type', 'ai-seo-client'); ?></th><th><?php esc_html_e('Links', 'ai-seo-client'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach ($strategy['link_types'] as $type => $count): ?>
+                    <tr><td><?php echo esc_html($labels[$type] ?? $type); ?></td><td><?php echo esc_html(number_format((int) $count)); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <table class="fyn-table">
+                <thead><tr><th><?php esc_html_e('Top Sources', 'ai-seo-client'); ?></th><th><?php esc_html_e('DR', 'ai-seo-client'); ?></th><th><?php esc_html_e('Links', 'ai-seo-client'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach ($strategy['top_sources'] as $source): ?>
+                    <tr><td><?php echo esc_html($source['domain']); ?></td><td><?php echo esc_html($source['domain_rating']); ?></td><td><?php echo esc_html($source['links']); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <table class="fyn-table">
+                <thead><tr><th><?php esc_html_e('Anchor Text', 'ai-seo-client'); ?></th><th><?php esc_html_e('Count', 'ai-seo-client'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach (($strategy['anchor_strategy']['top_anchors'] ?? []) as $anchor => $count): ?>
+                    <tr><td><?php echo esc_html((string) $anchor); ?></td><td><?php echo esc_html($count); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        return (string) ob_get_clean();
     }
     
     /**

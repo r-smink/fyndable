@@ -148,7 +148,12 @@ class WhiteLabelAdmin
         $supportUrl = get_option('sseo_ai_saas_wl_support_url', '');
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('White-Label Settings', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('White-Label', 'sseo-ai-saas'),
+            __('White-Label', 'sseo-ai-saas'),
+            __('Brand name, menu label, support email and the client header colours.', 'sseo-ai-saas')
+        ); ?>
             
             <!-- Stats Cards -->
             <div class="sseo-ai-stats-grid">
@@ -301,7 +306,12 @@ class WhiteLabelAdmin
         $currentPeriod = current_time('Y-m');
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Client Portal', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Customers', 'sseo-ai-saas'),
+            __('Client Portal', 'sseo-ai-saas'),
+            __('Customer-facing portal accounts and what each client can see.', 'sseo-ai-saas')
+        ); ?>
             
             <!-- Stats Cards -->
             <div class="sseo-ai-stats-grid">
@@ -504,7 +514,7 @@ class WhiteLabelAdmin
                         <?php else: ?>
                             <span style="color: #d63638;">● <?php echo esc_html(ucfirst($tenant['status'])); ?></span>
                             <?php if ($suspendReason): ?>
-                                <div style="margin-top: 6px; padding: 8px 10px; background: #fff; border-left: 4px solid #d63638; font-size: 13px;">
+                                <div style="margin-top: 6px; padding: 8px 10px; background: var(--well, #fff); border-left: 4px solid var(--fyn-danger, #d63638); border-radius: 8px; font-size: 13px;">
                                     <strong><?php esc_html_e('Reden:', 'sseo-ai-saas'); ?></strong> <?php echo esc_html($suspendReason); ?>
                                     <?php if ($suspendedAt): ?>
                                         <br><small style="color: #666;"><?php esc_html_e('Geschorst op:', 'sseo-ai-saas'); ?> <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($suspendedAt))); ?></small>
@@ -844,7 +854,12 @@ class WhiteLabelAdmin
         $editorCount = count($users) - $adminCount;
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Team Management', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+            __('Provider', 'sseo-ai-saas'),
+            __('Customers', 'sseo-ai-saas'),
+            __('Team', 'sseo-ai-saas'),
+            __('Staff accounts with access to this provider console.', 'sseo-ai-saas')
+        ); ?>
             
             <!-- Stats Cards -->
             <div class="sseo-ai-stats-grid">

@@ -471,7 +471,12 @@ class WebhookHandler
                 || ($tenant['status'] ?? '') !== 'active'
                 || ($tenant['payment_status'] ?? '') !== 'active';
 
-            if ($isFirst) {
+            // A custom-plan tenant is created by an admin together with its WP
+            // user and agency account — never delete it on a failed payment,
+            // just record the status so it can retry or be activated again.
+            $isCustomPlan = (new CustomPlan($this->tenants))->getPlan($tenantKey) !== null;
+
+            if ($isFirst && !$isCustomPlan) {
                 $this->cleanupPendingSignup($tenant);
                 error_log("SSEO AI SaaS: Deleted pending tenant {$tenantKey} due to Mollie payment status: {$status}");
                 return ['received' => true, 'processed' => true, 'tenant_key' => $tenantKey, 'status' => $status, 'cleanup' => true];

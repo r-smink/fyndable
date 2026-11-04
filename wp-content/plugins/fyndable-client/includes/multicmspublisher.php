@@ -306,76 +306,81 @@ class MultiCMSPublisher
         $settings = $this->getSettings();
         ?>
         <style>
-            .mcms-wrap { max-width: 800px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .mcms-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .mcms-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
-            .mcms-header h1 { margin: 0; font-size: 22px; }
-            .mcms-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
             .mcms-field { margin-bottom: 15px; }
-            .mcms-field label { font-weight: 600; display: block; margin-bottom: 4px; }
+            .mcms-field label { font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-h); font-size: 13px; }
             .mcms-field input { width: 100%; }
-            .mcms-platform { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-            .mcms-platform h3 { margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+            .mcms-platform { border: 1px solid var(--card-border); border-radius: 9px; padding: 20px; margin-bottom: 20px; background: var(--well); }
+            .mcms-platform h3 { margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; color: var(--text-h); font-size: 15px; }
         </style>
-        <div class="wrap mcms-wrap">
-            <div class="mcms-card">
-                <div class="mcms-header">
-                    <h1>🌐 <?php esc_html_e('Multi-CMS Publishing', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Publish AI-generated content to Webflow, Shopify, and other CMS platforms.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:900px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Multi-CMS Publisher', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Multi-CMS Publishing', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Publish AI-generated content to Webflow, Shopify, and other CMS platforms.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-multisite"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Platform Configuration', 'ai-seo-client'); ?></h3>
                 </div>
 
-                <!-- Webflow -->
                 <div class="mcms-platform">
-                    <h3>🔵 Webflow CMS</h3>
+                    <h3><span class="dashicons dashicons-cloud" style="color:var(--fyn-blue);"></span> Webflow CMS</h3>
                     <div class="mcms-field">
                         <label><input type="checkbox" id="mcms-wf-enabled" <?php checked($settings['webflow']['enabled']); ?>> <?php esc_html_e('Enable Webflow publishing', 'ai-seo-client'); ?></label>
                     </div>
                     <div class="mcms-field">
                         <label><?php esc_html_e('API Token', 'ai-seo-client'); ?></label>
-                        <input type="password" id="mcms-wf-token" value="<?php echo esc_attr($settings['webflow']['api_token']); ?>" placeholder="Webflow API token">
+                        <input type="password" class="fyn-input" id="mcms-wf-token" value="<?php echo esc_attr($settings['webflow']['api_token']); ?>" placeholder="Webflow API token">
                     </div>
                     <div class="mcms-field">
                         <label><?php esc_html_e('Site ID', 'ai-seo-client'); ?></label>
-                        <input type="text" id="mcms-wf-site" value="<?php echo esc_attr($settings['webflow']['site_id']); ?>" placeholder="e.g. 62c1a3b5...">
+                        <input type="text" class="fyn-input" id="mcms-wf-site" value="<?php echo esc_attr($settings['webflow']['site_id']); ?>" placeholder="e.g. 62c1a3b5...">
                     </div>
                     <div class="mcms-field">
                         <label><?php esc_html_e('Collection ID', 'ai-seo-client'); ?></label>
-                        <input type="text" id="mcms-wf-collection" value="<?php echo esc_attr($settings['webflow']['collection_id']); ?>" placeholder="e.g. 62c1a3b5...">
+                        <input type="text" class="fyn-input" id="mcms-wf-collection" value="<?php echo esc_attr($settings['webflow']['collection_id']); ?>" placeholder="e.g. 62c1a3b5...">
                     </div>
                 </div>
 
                 <!-- Shopify -->
                 <div class="mcms-platform">
-                    <h3>🟢 Shopify Blog</h3>
+                    <h3><span class="dashicons dashicons-cart" style="color:var(--fyn-success);"></span> Shopify Blog</h3>
                     <div class="mcms-field">
                         <label><input type="checkbox" id="mcms-sh-enabled" <?php checked($settings['shopify']['enabled']); ?>> <?php esc_html_e('Enable Shopify publishing', 'ai-seo-client'); ?></label>
                     </div>
                     <div class="mcms-field">
                         <label><?php esc_html_e('Shop Domain', 'ai-seo-client'); ?></label>
-                        <input type="text" id="mcms-sh-domain" value="<?php echo esc_attr($settings['shopify']['shop_domain']); ?>" placeholder="your-store.myshopify.com">
+                        <input type="text" class="fyn-input" id="mcms-sh-domain" value="<?php echo esc_attr($settings['shopify']['shop_domain']); ?>" placeholder="your-store.myshopify.com">
                     </div>
                     <div class="mcms-field">
                         <label><?php esc_html_e('Access Token', 'ai-seo-client'); ?></label>
-                        <input type="password" id="mcms-sh-token" value="<?php echo esc_attr($settings['shopify']['access_token']); ?>" placeholder="Shopify Admin API token">
+                        <input type="password" class="fyn-input" id="mcms-sh-token" value="<?php echo esc_attr($settings['shopify']['access_token']); ?>" placeholder="Shopify Admin API token">
                     </div>
                     <div class="mcms-field">
                         <label><?php esc_html_e('Blog ID (optional)', 'ai-seo-client'); ?></label>
-                        <input type="text" id="mcms-sh-blog" value="<?php echo esc_attr($settings['shopify']['blog_id']); ?>" placeholder="e.g. 123456789">
+                        <input type="text" class="fyn-input" id="mcms-sh-blog" value="<?php echo esc_attr($settings['shopify']['blog_id']); ?>" placeholder="e.g. 123456789">
                     </div>
                 </div>
 
-                <button class="button button-primary" id="mcms-save"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
-                <div id="mcms-saved" style="display:none;color:#16a34a;margin-top:10px;">✅ <?php esc_html_e('Saved!', 'ai-seo-client'); ?></div>
+                <button class="fyn-btn fyn-btn-primary" id="mcms-save"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+                <div id="mcms-saved" style="display:none;color:var(--fyn-success);margin-top:10px;font-weight:600;"><?php esc_html_e('Saved!', 'ai-seo-client'); ?></div>
             </div>
 
-            <!-- Publish Panel -->
-            <div class="mcms-card">
-                <h3><?php esc_html_e('Publish a Post', 'ai-seo-client'); ?></h3>
-                <p><?php esc_html_e('Select a post and platform to publish externally.', 'ai-seo-client'); ?></p>
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-share"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Publish a Post', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="font-size:13px;color:var(--text-m);margin:0 0 14px;"><?php esc_html_e('Select a post and platform to publish externally.', 'ai-seo-client'); ?></p>
                 <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
                     <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Post', 'ai-seo-client'); ?></label>
-                        <select id="mcms-post-select" style="min-width:300px;">
+                        <label style="font-weight:600;display:block;margin-bottom:4px;color:var(--text-h);font-size:13px;"><?php esc_html_e('Post', 'ai-seo-client'); ?></label>
+                        <select id="mcms-post-select" class="fyn-input" style="min-width:300px;">
                             <option value=""><?php esc_html_e('— Select —', 'ai-seo-client'); ?></option>
                             <?php
                             $posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'draft'], 'posts_per_page' => 100]);
@@ -386,13 +391,13 @@ class MultiCMSPublisher
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;"><?php esc_html_e('Platform', 'ai-seo-client'); ?></label>
-                        <select id="mcms-platform-select">
+                        <label style="font-weight:600;display:block;margin-bottom:4px;color:var(--text-h);font-size:13px;"><?php esc_html_e('Platform', 'ai-seo-client'); ?></label>
+                        <select id="mcms-platform-select" class="fyn-input">
                             <option value="webflow">Webflow</option>
                             <option value="shopify">Shopify</option>
                         </select>
                     </div>
-                    <button class="button button-primary" id="mcms-publish-btn"><?php esc_html_e('Publish', 'ai-seo-client'); ?></button>
+                    <button class="fyn-btn fyn-btn-primary" id="mcms-publish-btn"><?php esc_html_e('Publish', 'ai-seo-client'); ?></button>
                 </div>
                 <div id="mcms-publish-result" style="margin-top:15px;"></div>
             </div>
@@ -434,9 +439,9 @@ class MultiCMSPublisher
                     method: 'POST',
                     data: { post_id: postId, platform: platform }
                 }).then(function(res) {
-                    $('#mcms-publish-result').html('<div style="background:#dcfce7;padding:15px;border-radius:8px;">✅ <?php echo esc_js(__("Published to", "ai-seo-client")); ?> ' + platform + '!<br><?php echo esc_js(__("Item ID:", "ai-seo-client")); ?> ' + (res.result.item_id || res.result.article_id || '—') + '</div>');
+                    $('#mcms-publish-result').html('<div style="background:color-mix(in srgb, var(--fyn-success) 12%, transparent);padding:15px;border-radius:9px;color:var(--fyn-success);font-weight:600;"><?php echo esc_js(__("Published to", "ai-seo-client")); ?> ' + platform + '!<br><span style="font-weight:400;font-size:13px;">Item ID: ' + (res.result.item_id || res.result.article_id || '—') + '</span></div>');
                 }).catch(function(err) {
-                    $('#mcms-publish-result').html('<div style="background:#fee2e2;padding:15px;border-radius:8px;color:#dc2626;">❌ ' + (err.message || 'Publish failed') + '</div>');
+                    $('#mcms-publish-result').html('<div style="background:color-mix(in srgb, var(--fyn-danger) 12%, transparent);padding:15px;border-radius:9px;color:var(--fyn-danger);font-weight:600;">' + (err.message || 'Publishing failed') + '</div>');
                 }).finally(function() {
                     btn.prop('disabled', false).text('<?php echo esc_js(__("Publish", "ai-seo-client")); ?>');
                 });

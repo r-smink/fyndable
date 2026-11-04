@@ -214,6 +214,275 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Items for the SEO audit (SeoAuditor::normalize) and the bulk optimizer,
+     * one content type at a time. Lean fields and small pages keep each query under Shopify's
+     * 1000-point cost limit. Draft/archived products and unpublished pages
+     * and articles are skipped: they are not indexed.
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getAuditItems(Shop $shop, string $type, int $limit = 1000): array
+    {
+        $hidden = 'hidden: metafield(namespace: "seo", key: "hidden") { value }';
+        $tags = 'titleTag: metafield(namespace: "global", key: "title_tag") { value } '
+            .'descriptionTag: metafield(namespace: "global", key: "description_tag") { value }';
+
+        [$connection, $filter, $fields, $pageSize] = match ($type) {
+            'product' => ['products', 'status:active', "id handle title vendor productType onlineStoreUrl descriptionHtml seo { title description } priceRangeV2 { minVariantPrice { amount currencyCode } } media(first: 10) { nodes { id alt mediaContentType preview { image { url } } } } aiAttributes: metafield(namespace: \"fyndable\", key: \"ai_attributes\") { value } {$hidden}", 40],
+            'collection' => ['collections', null, "id handle title descriptionHtml seo { title description } productsCount { count } image { altText } {$hidden}", 100],
+            'page' => ['pages', 'published_status:published', "id handle title body {$tags} {$hidden}", 50],
+            'article' => ['articles', 'published_status:published', "id handle title body blog { handle title } image { altText } {$tags} {$hidden}", 50],
+            default => [null, null, null, 0],
+        };
+        if ($connection === null) {
+            return ['error' => 'invalid_type'];
+        }
+
+        $queryArg = $filter !== null ? ', query: "'.$filter.'"' : '';
+        $query = <<<GRAPHQL
+        query auditItems(\$first: Int!, \$after: String) {
+          {$connection}(first: \$first, after: \$after{$queryArg}) {
+            pageInfo { hasNextPage endCursor }
+            edges { node { {$fields} } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $items = $this->paginate($shop, $query, $connection, $limit, $pageSize, $error);
+
+        // A partial catalog would give a misleading score: report the error.
+        return $error !== null ? ['error' => $error] : $items;
+    }
+
+    /**
+     * Handle of the product's first collection (redirect target when the
+     * product is deleted, 1.2). null = in no collection, false = request failed.
+     */
+    public function getProductCollectionHandle(Shop $shop, string $productGid): string|null|false
+    {
+        $response = $this->graphql($shop, <<<'GRAPHQL'
+        query productCollection($id: ID!) {
+          product(id: $id) { collections(first: 1) { nodes { handle } } }
+        }
+        GRAPHQL, ['id' => $productGid]);
+
+        if (isset($response['error'])) {
+            return false;
+        }
+
+        return $response['data']['product']['collections']['nodes'][0]['handle'] ?? null;
+    }
+
+    /**
+     * Liquid files of the published (main) theme, for the duplicate schema
+     * check (1.4). Requires read_themes.
+     *
+     * @return array{theme:string, files:array<int,array{filename:string, content:string}>}|array{error:string}
+     */
+    public function getMainThemeFiles(Shop $shop, array $patterns, int $max = 1000): array
+    {
+        $query = <<<'GRAPHQL'
+        query themeFiles($patterns: [String!]!, $after: String) {
+          themes(first: 1, roles: [MAIN]) {
+            nodes {
+              name
+              files(filenames: $patterns, first: 100, after: $after) {
+                pageInfo { hasNextPage endCursor }
+                nodes {
+                  filename
+                  body { ... on OnlineStoreThemeFileBodyText { content } }
+                }
+              }
+            }
+          }
+        }
+        GRAPHQL;
+
+        $files = [];
+        $theme = '';
+        $after = null;
+        do {
+            $response = $this->graphql($shop, $query, ['patterns' => array_values($patterns), 'after' => $after]);
+            if (isset($response['error'])) {
+                return ['error' => (string) $response['error']];
+            }
+            $node = $response['data']['themes']['nodes'][0] ?? null;
+            if ($node === null) {
+                return ['error' => 'no_main_theme'];
+            }
+            $theme = (string) ($node['name'] ?? '');
+            foreach ($node['files']['nodes'] ?? [] as $file) {
+                $files[] = ['filename' => (string) $file['filename'], 'content' => (string) ($file['body']['content'] ?? '')];
+            }
+            $pageInfo = $node['files']['pageInfo'] ?? [];
+            $after = ($pageInfo['hasNextPage'] ?? false) ? ($pageInfo['endCursor'] ?? null) : null;
+        } while ($after !== null && count($files) < $max);
+
+        return ['theme' => $theme, 'files' => $files];
+    }
+
+    /**
+     * All variants with their product data for the product feed and the
+     * AI-ready score (2.1). Variant pages of 50 keep the query cost low;
+     * the product fields repeat per variant. Draft and archived products are
+     * filtered by the caller (status).
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getFeedVariants(Shop $shop, int $max = 20000): array
+    {
+        $query = <<<'GRAPHQL'
+        query feedVariants($first: Int!, $after: String) {
+          productVariants(first: $first, after: $after) {
+            pageInfo { hasNextPage endCursor }
+            edges { node {
+              id sku barcode price compareAtPrice availableForSale title
+              selectedOptions { name value }
+              image { url }
+              product {
+                id handle title vendor productType status onlineStoreUrl descriptionHtml totalVariants
+                category { fullName }
+                seo { description }
+                media(first: 6) { nodes { ... on MediaImage { image { url } alt } } }
+                aiAttributes: metafield(namespace: "fyndable", key: "ai_attributes") { value }
+                rating: metafield(namespace: "reviews", key: "rating") { value }
+                ratingCount: metafield(namespace: "reviews", key: "rating_count") { value }
+              }
+            } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $items = $this->paginate($shop, $query, 'productVariants', $max, 50, $error);
+
+        return $error !== null ? ['error' => $error] : $items;
+    }
+
+    /**
+     * Shop languages (2.3): [{locale, name, primary, published}].
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getShopLocales(Shop $shop): array
+    {
+        $response = $this->graphql($shop, '{ shopLocales { locale name primary published } }');
+
+        return isset($response['error']) ? ['error' => (string) $response['error']] : ($response['data']['shopLocales'] ?? []);
+    }
+
+    /**
+     * Translatable resources of one type with their source content (digest)
+     * and the translations for one locale (2.3).
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getTranslatableResources(Shop $shop, string $resourceType, string $locale, int $max = 250): array
+    {
+        $query = <<<'GRAPHQL'
+        query translatable($first: Int!, $after: String, $type: TranslatableResourceType!, $locale: String!) {
+          translatableResources(first: $first, after: $after, resourceType: $type) {
+            pageInfo { hasNextPage endCursor }
+            edges { node {
+              resourceId
+              translatableContent { key value digest locale }
+              translations(locale: $locale) { key value outdated }
+            } }
+          }
+        }
+        GRAPHQL;
+
+        $items = [];
+        $cursor = null;
+        do {
+            $response = $this->graphql($shop, $query, ['first' => 25, 'after' => $cursor, 'type' => $resourceType, 'locale' => $locale]);
+            if (isset($response['error'])) {
+                return ['error' => (string) $response['error']];
+            }
+            $connection = $response['data']['translatableResources'] ?? [];
+            foreach ($connection['edges'] ?? [] as $edge) {
+                $items[] = $edge['node'];
+            }
+            $cursor = ($connection['pageInfo']['hasNextPage'] ?? false) ? ($connection['pageInfo']['endCursor'] ?? null) : null;
+        } while ($cursor !== null && count($items) < $max);
+
+        return array_slice($items, 0, $max);
+    }
+
+    /**
+     * @return array|array{error: string}
+     */
+    public function getTranslatableResource(Shop $shop, string $resourceId, string $locale): array
+    {
+        $response = $this->graphql($shop, <<<'GRAPHQL'
+        query translatableOne($id: ID!, $locale: String!) {
+          translatableResource(resourceId: $id) {
+            resourceId
+            translatableContent { key value digest locale }
+            translations(locale: $locale) { key value outdated }
+          }
+        }
+        GRAPHQL, ['id' => $resourceId, 'locale' => $locale]);
+
+        if (isset($response['error'])) {
+            return ['error' => (string) $response['error']];
+        }
+
+        return $response['data']['translatableResource'] ?? ['error' => 'not_found'];
+    }
+
+    /**
+     * Collections with their landing content status (2.5).
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getCollectionsForLanding(Shop $shop, int $max = 250): array
+    {
+        $query = <<<'GRAPHQL'
+        query landingCollections($first: Int!, $after: String) {
+          collections(first: $first, after: $after, sortKey: TITLE) {
+            pageInfo { hasNextPage endCursor }
+            edges { node {
+              id title handle
+              productsCount { count }
+              landing: metafield(namespace: "fyndable", key: "collection_landing") { value updatedAt }
+            } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $items = $this->paginate($shop, $query, 'collections', $max, 100, $error);
+
+        return $error !== null ? ['error' => $error] : $items;
+    }
+
+    /**
+     * One collection with sample products and its landing content (2.5).
+     *
+     * @return array|array{error: string}
+     */
+    public function getCollectionForLanding(Shop $shop, string $collectionGid): array
+    {
+        $response = $this->graphql($shop, <<<'GRAPHQL'
+        query landingCollection($id: ID!) {
+          collection(id: $id) {
+            id title handle descriptionHtml
+            products(first: 20) { nodes { title productType vendor } }
+            landing: metafield(namespace: "fyndable", key: "collection_landing") { value }
+          }
+        }
+        GRAPHQL, ['id' => $collectionGid]);
+
+        if (isset($response['error'])) {
+            return ['error' => (string) $response['error']];
+        }
+
+        return $response['data']['collection'] ?? ['error' => 'not_found'];
+    }
+
+    /**
      * Search a single content type by title.
      *
      * Uses Shopify's search `query` argument; an empty search returns the first
@@ -226,7 +495,7 @@ class ShopifyContentFetcher
         $limit = max(1, min($limit, 250));
 
         $fields = match ($type) {
-            'product' => 'id title handle status productType onlineStoreUrl featuredImage { url altText }',
+            'product' => 'id title handle status productType onlineStoreUrl featuredImage { url altText } seo { title description }',
             'collection' => 'id title handle image { url altText }',
             'page' => 'id title handle',
             'article' => 'id title handle publishedAt image { url altText } blog { handle title }',
@@ -305,6 +574,7 @@ class ShopifyContentFetcher
               descriptionHtml
               seo { title description }
               image { url altText }
+              productsCount { count }
               metafields(first: 25) { edges { node { namespace key value } } }
             }
             ... on Page {
@@ -363,6 +633,36 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Suggested store profile for onboarding: primary store language and
+     * billing country (ISO codes). Null when not available.
+     *
+     * @return array{language: ?string, country: ?string}
+     */
+    public function getLocaleDefaults(Shop $shop): array
+    {
+        $defaults = ['language' => null, 'country' => null];
+
+        $response = $this->graphql($shop, '{ shop { billingAddress { countryCodeV2 } } }');
+        if (! isset($response['error'])) {
+            $code = $response['data']['shop']['billingAddress']['countryCodeV2'] ?? null;
+            $defaults['country'] = is_string($code) && strlen($code) === 2 ? strtoupper($code) : null;
+        }
+
+        // shopLocales needs read_locales; without it the language stays null.
+        $response = $this->graphql($shop, '{ shopLocales { locale primary } }');
+        if (! isset($response['error'])) {
+            foreach ($response['data']['shopLocales'] ?? [] as $locale) {
+                if (! empty($locale['primary']) && is_string($locale['locale'] ?? null)) {
+                    $defaults['language'] = strtolower(substr($locale['locale'], 0, 2));
+                    break;
+                }
+            }
+        }
+
+        return $defaults;
+    }
+
+    /**
      * Get shop details (name, currency, country, domain).
      */
     public function getShopDetails(Shop $shop): array
@@ -370,7 +670,9 @@ class ShopifyContentFetcher
         $query = <<<'GRAPHQL'
         query {
           shop {
+            id
             name
+            email
             primaryDomain { url }
             myshopifyDomain
             currencyCode
@@ -387,6 +689,8 @@ class ShopifyContentFetcher
                 'domain' => "https://{$shop->shop_domain}",
                 'currency' => 'USD',
                 'country' => '',
+                'gid' => '',
+                'email' => '',
             ];
         }
 
@@ -397,7 +701,122 @@ class ShopifyContentFetcher
             'domain' => $shopData['primaryDomain']['url'] ?? "https://{$shop->shop_domain}",
             'currency' => $shopData['currencyCode'] ?? 'USD',
             'country' => $shopData['shopAddress']['country'] ?? '',
+            'gid' => $shopData['id'] ?? '',
+            'email' => $shopData['email'] ?? '',
         ];
+    }
+
+    /**
+     * Fetch all markets with regions, web presences and locale data.
+     *
+     * Requires read_markets + read_locales scopes.
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getMarkets(Shop $shop): array
+    {
+        $query = <<<'GRAPHQL'
+        query getMarkets {
+          markets(first: 50) {
+            edges {
+              node {
+                id
+                name
+                enabled
+                primary
+                regions(first: 50) {
+                  edges {
+                    node {
+                      ... on Country {
+                        code
+                        name
+                        currency { isoCode }
+                      }
+                    }
+                  }
+                }
+                webPresences(first: 10) {
+                  edges {
+                    node {
+                      rootUrls { locale url }
+                      defaultLocale
+                      alternateLocales
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query);
+        if (isset($response['error'])) {
+            return $response;
+        }
+
+        $markets = [];
+        foreach ($response['data']['markets']['edges'] ?? [] as $edge) {
+            $node = $edge['node'] ?? [];
+
+            // Flatten regions
+            $regions = array_map(
+                fn ($re) => $re['node'] ?? [],
+                $node['regions']['edges'] ?? []
+            );
+
+            // Flatten web presences
+            $webPresences = array_map(
+                fn ($wpe) => $wpe['node'] ?? [],
+                $node['webPresences']['edges'] ?? []
+            );
+
+            $markets[] = [
+                'id' => $node['id'] ?? '',
+                'name' => $node['name'] ?? '',
+                'enabled' => $node['enabled'] ?? false,
+                'primary' => $node['primary'] ?? false,
+                'regions' => $regions,
+                'webPresences' => $webPresences,
+            ];
+        }
+
+        return $markets;
+    }
+
+    /**
+     * Fetch translations for a resource in a given locale.
+     *
+     * Requires read_translations scope.
+     *
+     * @param  string  $resourceGid  e.g. "gid://shopify/Product/123"
+     * @param  string  $locale  e.g. "nl", "de", "fr"
+     * @return array<int, array{key: string, value: string}>|array{error: string}
+     */
+    public function getTranslations(Shop $shop, string $resourceGid, string $locale): array
+    {
+        $query = <<<'GRAPHQL'
+        query getTranslations($resourceId: ID!, $locale: String!) {
+          translatableResource(resourceId: $resourceId) {
+            translations(locale: $locale) {
+              key
+              value
+              locale
+            }
+          }
+        }
+        GRAPHQL;
+
+        $response = $this->graphql($shop, $query, [
+            'resourceId' => $resourceGid,
+            'locale' => $locale,
+        ]);
+
+        if (isset($response['error'])) {
+            return $response;
+        }
+
+        return $response['data']['translatableResource']['translations'] ?? [];
     }
 
     /**
@@ -409,11 +828,11 @@ class ShopifyContentFetcher
      * @param  int  $limit  Max items to fetch.
      * @return array<int, array>
      */
-    private function paginate(Shop $shop, string $query, string $connectionKey, int $limit): array
+    private function paginate(Shop $shop, string $query, string $connectionKey, int $limit, int $maxPageSize = 250, ?string &$error = null): array
     {
         $items = [];
         $cursor = null;
-        $pageSize = min($limit, 250);
+        $pageSize = min($limit, $maxPageSize);
 
         do {
             $variables = ['first' => $pageSize, 'after' => $cursor];
@@ -424,6 +843,7 @@ class ShopifyContentFetcher
                     'connection' => $connectionKey,
                     'error' => $response['error'],
                 ]);
+                $error = (string) $response['error'];
                 break;
             }
 

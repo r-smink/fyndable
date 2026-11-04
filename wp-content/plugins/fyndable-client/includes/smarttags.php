@@ -43,62 +43,70 @@ class SmartTags
         $currentTagNames = $currentTags ? wp_list_pluck($currentTags, 'name') : [];
         ?>
         <div class="aiseo-smart-tags-box">
-            <p><?php esc_html_e('AI-suggested tags based on your content:', 'ai-seo-client'); ?></p>
-            
-            <button type="button" class="button" id="aiseo-generate-tags" data-post="<?php echo $post->ID; ?>">
-                <?php esc_html_e('Generate Smart Tags', 'ai-seo-client'); ?>
-            </button>
-            
-            <div id="aiseo-tags-suggestions" style="margin-top:15px;">
+            <p class="fyn-row-intro"><?php esc_html_e('AI-suggested tags based on your content:', 'ai-seo-client'); ?></p>
+
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary" id="aiseo-generate-tags" data-post="<?php echo $post->ID; ?>">
+                    <span class="dashicons dashicons-superhero-alt"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Generate Smart Tags', 'ai-seo-client'); ?></span>
+                </button>
+            </div>
+
+            <div id="aiseo-tags-suggestions">
                 <?php if ($suggested) : ?>
-                <p><strong><?php esc_html_e('Suggested:', 'ai-seo-client'); ?></strong></p>
-                <div class="aiseo-tags-cloud">
-                    <?php foreach ($suggested as $tag) : 
+                <label class="fyn-lbl"><?php esc_html_e('Suggested:', 'ai-seo-client'); ?></label>
+                <div class="fyn-chips aiseo-tags-cloud">
+                    <?php foreach ($suggested as $tag) :
                         $isApplied = in_array($tag, $currentTagNames);
                     ?>
-                    <span class="aiseo-tag-suggestion <?php echo $isApplied ? 'applied' : ''; ?>" 
-                          data-tag="<?php echo esc_attr($tag); ?>"
-                          style="display:inline-block; padding:4px 8px; margin:2px; border-radius:3px; cursor:pointer; font-size:12px; <?php echo $isApplied ? 'background:#00a32a; color:white;' : 'background:#f0f0f0; color:#333;'; ?>">
-                        <?php echo esc_html($tag); ?> <?php echo $isApplied ? '✓' : '+'; ?>
-                    </span>
+                    <button type="button"
+                            class="fyn-chip aiseo-tag-suggestion<?php echo $isApplied ? ' fyn-chip--on applied' : ''; ?>"
+                            data-tag="<?php echo esc_attr($tag); ?>">
+                        <span class="fyn-chip-label"><?php echo esc_html($tag); ?></span>
+                        <span class="dashicons <?php echo $isApplied ? 'dashicons-yes' : 'dashicons-plus-alt2'; ?>"></span>
+                    </button>
                     <?php endforeach; ?>
                 </div>
                 <?php else : ?>
-                <p class="description"><em><?php esc_html_e('Click "Generate Smart Tags" to analyze your content and suggest relevant tags.', 'ai-seo-client'); ?></em></p>
+                <p class="fyn-empty"><?php esc_html_e('Click "Generate Smart Tags" to analyze your content and suggest relevant tags.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
             </div>
         </div>
-        
+
         <script>
         jQuery(document).ready(function($) {
             $('#aiseo-generate-tags').on('click', function() {
                 var btn = $(this);
                 var postId = btn.data('post');
-                
-                btn.prop('disabled', true).text('<?php esc_html_e('Analyzing...', 'ai-seo-client'); ?>');
-                
+
+                btn.prop('disabled', true).find('.fyn-btn-label').text('<?php echo esc_js(__('Analyzing...', 'ai-seo-client')); ?>');
+
                 wp.apiFetch({
                     path: 'sseo-ai/v1/generate-tags',
                     method: 'POST',
                     data: { post_id: postId }
                 }).then(function(response) {
-                    var html = '<p><strong><?php echo esc_js(__('Suggested:', 'ai-seo-client')); ?></strong></p>';
-                    html += '<div class="aiseo-tags-cloud">';
+                    var html = '<label class="fyn-lbl"><?php echo esc_js(__('Suggested:', 'ai-seo-client')); ?></label>';
+                    html += '<div class="fyn-chips aiseo-tags-cloud">';
                     response.tags.forEach(function(tag) {
-                        html += '<span class="aiseo-tag-suggestion" data-tag="' + tag + '" style="display:inline-block; padding:4px 8px; margin:2px; border-radius:3px; cursor:pointer; font-size:12px; background:#f0f0f0; color:#333;">' + tag + ' +</span>';
+                        html += '<button type="button" class="fyn-chip aiseo-tag-suggestion" data-tag="' + tag + '">';
+                        html += '<span class="fyn-chip-label">' + tag + '</span>';
+                        html += '<span class="dashicons dashicons-plus-alt2"></span></button>';
                     });
                     html += '</div>';
                     $('#aiseo-tags-suggestions').html(html);
-                    btn.prop('disabled', false).text('<?php esc_html_e('Generate Smart Tags', 'ai-seo-client'); ?>');
+                    btn.prop('disabled', false).find('.fyn-btn-label').text('<?php echo esc_js(__('Generate Smart Tags', 'ai-seo-client')); ?>');
                 });
             });
-            
+
             $(document).on('click', '.aiseo-tag-suggestion:not(.applied)', function() {
-                var tag = $(this).data('tag');
+                var chip = $(this);
+                var tag = chip.data('tag');
                 var existingTags = $('#new-tag-post_tag').val();
                 var newValue = existingTags ? existingTags + ', ' + tag : tag;
                 $('#new-tag-post_tag').val(newValue);
-                $(this).addClass('applied').css({background: '#00a32a', color: 'white'}).text(tag + ' ✓');
+                chip.addClass('applied fyn-chip--on')
+                    .find('.dashicons').attr('class', 'dashicons dashicons-yes');
             });
         });
         </script>

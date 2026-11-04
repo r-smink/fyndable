@@ -229,97 +229,97 @@ class GscDashboard
     public function renderPage(): void
     {
         ?>
-        <style>
-            #wpcontent { padding-left: 0 !important; }
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Performance data from Google Search Console. Connect via AI SEO → Settings to enable.', 'ai-seo-client'); ?></p>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-            <div id="aiseo-gsc-app" style="max-width: 1400px;">
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <select id="gsc-period" class="regular-text">
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Google Search Console', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Performance data from Google Search Console. Connect via Settings to enable.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <!-- Controls card -->
+            <div class="fyn-card" style="margin-bottom:20px;padding:16px 20px;">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <select id="gsc-period" class="fyn-input" style="max-width:180px;padding:9px 10px;">
                         <option value="7"><?php esc_html_e('Last 7 days', 'ai-seo-client'); ?></option>
                         <option value="28" selected><?php esc_html_e('Last 28 days', 'ai-seo-client'); ?></option>
                         <option value="90"><?php esc_html_e('Last 3 months', 'ai-seo-client'); ?></option>
                     </select>
-                    <button type="button" class="button button-primary" id="gsc-refresh">
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="gsc-refresh">
+                        <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Load Data', 'ai-seo-client'); ?>
                     </button>
                     <span class="spinner" id="gsc-spinner" style="float:none;"></span>
                 </div>
+            </div>
 
-                <div id="gsc-error" class="notice notice-error" style="display:none;"><p></p></div>
+            <div id="gsc-error" class="notice notice-error" style="display:none;"><p></p></div>
 
-                <!-- Totals -->
-                <div id="gsc-totals" style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
-                    <div class="aiseo-stat-card">
-                        <div class="stat-value" style="color: var(--aiseo-primary);" id="gsc-clicks">-</div>
-                        <div class="stat-label"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></div>
-                    </div>
-                    <div class="aiseo-stat-card">
-                        <div class="stat-value" style="color: var(--aiseo-purple);" id="gsc-impressions">-</div>
-                        <div class="stat-label"><?php esc_html_e('Impressions', 'ai-seo-client'); ?></div>
-                    </div>
-                    <div class="aiseo-stat-card">
-                        <div class="stat-value" style="color: var(--aiseo-success);" id="gsc-ctr">-</div>
-                        <div class="stat-label"><?php esc_html_e('Avg CTR', 'ai-seo-client'); ?></div>
-                    </div>
-                    <div class="aiseo-stat-card">
-                        <div class="stat-value" style="color: var(--aiseo-warning);" id="gsc-position">-</div>
-                        <div class="stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
-                    </div>
+            <!-- Totals -->
+            <div id="gsc-totals" class="fyn-stats-grid" style="margin-bottom:20px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" id="gsc-clicks">-</div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></div>
                 </div>
-
-                <!-- Tabs -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="postbox" style="padding: 20px;">
-                        <h3><?php esc_html_e('Top Queries', 'ai-seo-client'); ?></h3>
-                        <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
-                                    <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
-                                    <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
-                                    <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
-                                    <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody id="gsc-queries-body">
-                                <tr><td colspan="5"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="postbox" style="padding: 20px;">
-                        <h3><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h3>
-                        <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Page', 'ai-seo-client'); ?></th>
-                                    <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
-                                    <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
-                                    <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
-                                    <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody id="gsc-pages-body">
-                                <tr><td colspan="5"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" id="gsc-impressions">-</div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Impressions', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" id="gsc-ctr">-</div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Avg CTR', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" id="gsc-position">-</div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Avg Position', 'ai-seo-client'); ?></div>
                 </div>
             </div>
+
+            <!-- Queries & Pages -->
+            <div class="fyn-grid-2">
+                <div class="fyn-card">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-search"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Top Queries', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <table class="fyn-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Query', 'ai-seo-client'); ?></th>
+                                <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
+                                <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
+                                <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
+                                <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="gsc-queries-body">
+                            <tr><td colspan="5" style="color:var(--text-m);"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="fyn-card">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-admin-page"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Top Pages', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <table class="fyn-table" style="font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Page', 'ai-seo-client'); ?></th>
+                                <th style="width:60px"><?php esc_html_e('Clicks', 'ai-seo-client'); ?></th>
+                                <th style="width:80px"><?php esc_html_e('Impr.', 'ai-seo-client'); ?></th>
+                                <th style="width:55px"><?php esc_html_e('CTR', 'ai-seo-client'); ?></th>
+                                <th style="width:45px"><?php esc_html_e('Pos', 'ai-seo-client'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="gsc-pages-body">
+                            <tr><td colspan="5" style="color:var(--text-m);"><?php esc_html_e('Click "Load Data" to fetch.', 'ai-seo-client'); ?></td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

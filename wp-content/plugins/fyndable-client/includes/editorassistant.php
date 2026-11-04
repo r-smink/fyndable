@@ -10,10 +10,12 @@ namespace SSEOAIClient;
 class EditorAssistant
 {
     private LlmClient $llm;
+    private ?BackgroundTasks $backgroundTasks;
 
-    public function __construct(LlmClient $llm)
+    public function __construct(LlmClient $llm, ?BackgroundTasks $backgroundTasks = null)
     {
         $this->llm = $llm;
+        $this->backgroundTasks = $backgroundTasks;
     }
 
     public function register(): void
@@ -98,20 +100,33 @@ class EditorAssistant
                 $prompt = "Help with: {$topic}\nTone: {$tone}\n{$contextPart}\n{$preset}";
         }
 
-        $result = $this->llm->generateText($prompt, [
-            'max_tokens' => 2000,
-            'use_case' => 'content_generation',
-            'track_extra' => [
-                'endpoint' => 'editor_action.' . $action,
-                'context' => $topic,
-            ],
-        ]);
+        $doWork = function () use ($prompt, $action, $topic) {
+            $result = $this->llm->generateText($prompt, [
+                'max_tokens' => 2000,
+                'use_case' => 'content_generation',
+                'track_extra' => [
+                    'endpoint' => 'editor_action.' . $action,
+                    'context' => $topic,
+                ],
+            ]);
 
-        if (is_wp_error($result)) {
-            return $result;
+            if (is_wp_error($result)) {
+                return $result;
+            }
+
+            return ['text' => $result];
+        };
+
+        if ($this->backgroundTasks) {
+            return $this->backgroundTasks->wrap(
+                'editor_action',
+                sprintf(__('Editor: %s', 'ai-seo-client'), $action),
+                ['action' => $action, 'topic' => $topic],
+                $doWork
+            );
         }
 
-        return ['text' => $result];
+        return $doWork();
     }
 
     public function restEditorImage(\WP_REST_Request $request): array|\WP_Error
@@ -124,21 +139,31 @@ class EditorAssistant
         $imageApi = get_option('sseo_ai_client_image_api', []);
         $provider = $imageApi['provider'] ?? '';
         $apiKey = $imageApi['key'] ?? '';
-        $model = $imageApi['model'] ?? 'dall-e-3';
 
         if (empty($provider) || empty($apiKey)) {
             return new \WP_Error('no_image_api', __('Image API not configured in dashboard', 'ai-seo-client'));
         }
 
-        // Delegate to existing image generation logic via LLM or direct API
-        // For now, return a placeholder or use a generic approach
-        $generator = new AIImageGenerator(new Settings(), $this->llm);
-        $url = $generator->generateImageFromPrompt($prompt);
+        $doWork = function () use ($prompt) {
+            $generator = new AIImageGenerator(new Settings(), $this->llm);
+            $url = $generator->generateImageFromPrompt($prompt);
 
-        if (!$url) {
-            return new \WP_Error('image_failed', __('Failed to generate image', 'ai-seo-client'));
+            if (!$url) {
+                return new \WP_Error('image_failed', __('Failed to generate image', 'ai-seo-client'));
+            }
+
+            return ['url' => $url];
+        };
+
+        if ($this->backgroundTasks) {
+            return $this->backgroundTasks->wrap(
+                'editor_image',
+                __('Image generation', 'ai-seo-client'),
+                ['prompt' => $prompt],
+                $doWork
+            );
         }
 
-        return ['url' => $url];
+        return $doWork();
     }
 }

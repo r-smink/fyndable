@@ -90,17 +90,13 @@ class PublicApi
             return $err;
         }
 
-        // Idempotent submit: an earlier scan for this email may still be
-        // running or already completed — hand its id back so the visitor can
-        // pick up progress/result instead of paying for a duplicate scan.
+        // One active scan per email (no duplicate cost). SECURITY: do NOT hand
+        // back the existing scan id/token — anyone could submit a victim's email
+        // and read their result. The original visitor resumes via the token in
+        // their own browser (localStorage); the widget shows a 409 message.
         $existingId = $this->geoScanRepository->findActiveWebsiteScanId($email);
         if ($existingId !== null) {
-            return new \WP_REST_Response([
-                'success'    => true,
-                'scan_id'    => $existingId,
-                'scan_token' => $this->geoScanRepository->getPublicToken($existingId),
-                'duplicate'  => true,
-            ], 200);
+            return $this->error('already_scanned', __('A scan has already been requested for this email address.', 'sseo-ai-saas'), 409);
         }
 
         $publicToken = wp_generate_password(32, false, false);
@@ -275,8 +271,26 @@ class PublicApi
         return null;
     }
 
+    /**
+     * Determine the client IP for rate limiting.
+     *
+     * When the request comes through the fyndable.ai widget proxy, all
+     * visitors share the proxy server's REMOTE_ADDR. To rate-limit per
+     * actual visitor, the proxy may send the visitor's IP in the
+     * X-Fyndable-Visitor-IP header. We only trust this header when a
+     * valid X-Fyndable-Scan-Key is present (already verified by
+     * checkKey() before this method is called).
+     */
     private function clientIp(): string
     {
+        $visitorIp = $_SERVER['HTTP_X_FYNDABLE_VISITOR_IP'] ?? '';
+        if ($visitorIp !== '') {
+            $visitorIp = sanitize_text_field($visitorIp);
+            if (filter_var($visitorIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return $visitorIp;
+            }
+        }
+
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         return sanitize_text_field((string)$ip);
     }

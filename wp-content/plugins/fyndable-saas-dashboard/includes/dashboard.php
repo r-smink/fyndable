@@ -10,6 +10,8 @@ namespace SSEOAISaaS;
  */
 class Dashboard
 {
+    private const DB_VERSION_OPTION = 'sseo_ai_saas_db_version';
+
     private string $pluginFile;
     private TenantRepository $tenants;
     private LicenseKeyGenerator $licenseGenerator;
@@ -61,8 +63,6 @@ class Dashboard
     {
         // Initialize core services
         $this->tenants = new TenantRepository();
-        $this->tenants->maybeCreateTables();
-        $this->tenants->migrateExistingTables();
 
         // Force currency to EUR; all prices, invoices and cost caps are shown in Euro.
         if (get_option('sseo_ai_saas_currency') !== 'EUR') {
@@ -73,16 +73,13 @@ class Dashboard
         $this->licenseAdmin = new LicenseAdmin($this->pluginFile, $this->licenseGenerator, $this->tenants);
         $this->licenseAPI = new LicenseAPI($this->licenseGenerator, $this->tenants);
         $this->saasSettings = new SaaSSettings();
-        add_action('phpmailer_init', [$this->saasSettings, 'configureMailer']);
-        add_filter('wp_mail_from', [$this->saasSettings, 'getSmtpFromEmail']);
-        add_filter('wp_mail_from_name', [$this->saasSettings, 'getSmtpFromName']);
+        (new SmtpConfigurator())->register();
         $this->providerRouter = new ProviderRouter($this->saasSettings);
         $this->dataForSeoClient = new DataForSeoClient($this->saasSettings);
         $this->apiGateway = new ApiGateway($this->tenants, $this->saasSettings, $this->providerRouter, $this->dataForSeoClient);
         $this->paymentProcessor = new PaymentProcessor($this->tenants);
         $this->webhookHandler = new WebhookHandler($this->paymentProcessor, $this->tenants);
         $this->emailTemplateRepository = new EmailTemplateRepository();
-        $this->emailTemplateRepository->maybeCreateTables();
         add_action('init', [$this->emailTemplateRepository, 'seedDefaults'], 20);
 
         $this->supportTickets = new SupportTickets($this->tenants, $this->emailTemplateRepository);
@@ -145,6 +142,7 @@ class Dashboard
             $this->dataForSeoClient
         );
         $this->geoScanQueue = new GeoScanQueue($this->geoScanner, $this->geoScanRepository, $this->saasSettings);
+        $this->apiGateway->setGeoScan($this->geoScanRepository, $this->geoScanQueue);
         $this->geoScanReport = new GeoScanReport($this->geoScanRepository);
         $this->geoScanPdf = new GeoScanPdf($this->geoScanRepository);
         $this->geoScanAdmin = new GeoScanAdmin(
@@ -175,7 +173,9 @@ class Dashboard
 
         // Register dashboard shell (top-level menu)
         add_action('admin_menu', [$this, 'registerShellMenu']);
-        add_action('admin_head', [$this->dashboardShell, 'hideWpChrome']);
+        // Shell: WP-chrome hiding, the fyndable-ui/fyndable-dark body class and
+        // the light/dark theme toggle handler.
+        $this->dashboardShell->register();
         add_action('admin_head', function (): void {
             echo '<style>
             #toplevel_page_sseo-ai-shell .wp-menu-image img {
@@ -194,6 +194,7 @@ class Dashboard
         add_action('admin_menu', [$this->feedbackAdmin, 'register']);
         add_action('admin_menu', [$this->emailTemplateAdmin, 'addMenu']);
         add_action('admin_menu', [$this->geoScanAdmin, 'register']);
+        add_action('admin_menu', [$this->revenueDashboard, 'addMenu']);
         add_action('admin_enqueue_scripts', [$this->licenseAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->whiteLabelAdmin, 'enqueueAssets']);
         add_action('admin_enqueue_scripts', [$this->emailTemplateAdmin, 'enqueueAssets']);
@@ -207,6 +208,7 @@ class Dashboard
         add_action('rest_api_init', [$this->updateServer, 'register']);
         add_action('rest_api_init', [$this->adminApi, 'register']);
         add_action('rest_api_init', [$this->publicApi, 'register']);
+        add_action('rest_api_init', [new ShopifyBillingApi($this->licenseGenerator, $this->tenants), 'register']);
 
         // Async GEO scan queue (WP-Cron worker + sweep).
         $this->geoScanQueue->register();
@@ -234,7 +236,6 @@ class Dashboard
         add_action('admin_init', [$this->saasSettings, 'registerSettings']);
         add_action('admin_init', [$this->whiteLabelAdmin, 'registerSettings']);
         add_action('admin_init', [$this->emailTemplateAdmin, 'registerSettings']);
-        add_action('admin_init', [$this->geoScanRepository, 'maybeCreateTables']);
 
         // Register email automation
         $this->emailAutomation->register();
@@ -244,16 +245,31 @@ class Dashboard
 
         // Register activation hook for table creation
         register_activation_hook($this->pluginFile, [$this, 'activate']);
+
+        // Plugin updates via the update server don't fire the activation hook,
+        // so schema work runs once whenever the stored version differs.
+        if (get_option(self::DB_VERSION_OPTION) !== SSEO_AI_SAAS_VERSION) {
+            $this->upgradeSchema();
+        }
     }
 
     public function activate(): void
+    {
+        $this->upgradeSchema();
+        $this->emailTemplateRepository->seedDefaults();
+    }
+
+    /**
+     * Create/migrate all plugin tables and record the schema version.
+     */
+    private function upgradeSchema(): void
     {
         $this->tenants->maybeCreateTables();
         $this->tenants->migrateExistingTables();
         $this->geoScanRepository->maybeCreateTables();
         $this->emailTemplateRepository->maybeCreateTables();
-        $this->emailTemplateRepository->seedDefaults();
         $this->feedback->maybeCreateTable();
+        update_option(self::DB_VERSION_OPTION, SSEO_AI_SAAS_VERSION, true);
     }
 
     /**

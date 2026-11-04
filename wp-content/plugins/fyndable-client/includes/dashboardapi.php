@@ -111,6 +111,19 @@ class DashboardAPI
             if (in_array($statusCode, [301, 302, 307, 308])) {
                 $headers = wp_remote_retrieve_headers($response);
                 $location = $headers['location'] ?? '';
+                if (is_array($location)) {
+                    $location = (string) end($location);
+                }
+                // SECURITY: only follow redirects that stay on the dashboard host
+                // (e.g. http→https or www normalisation). Following any Location
+                // would POST the license key to whatever host the response names.
+                if ($location && !$this->isSameDashboardHost($location, $dashboardUrl)) {
+                    return new \WP_Error('redirect_blocked', __('The dashboard redirected to a different host. Check the dashboard URL.', 'ai-seo-client'));
+                }
+                if ($location && !wp_parse_url($location, PHP_URL_HOST)) {
+                    $base = wp_parse_url($dashboardUrl);
+                    $location = ($base['scheme'] ?? 'https') . '://' . ($base['host'] ?? '') . (isset($base['port']) ? ':' . $base['port'] : '') . '/' . ltrim($location, '/');
+                }
                 if ($location) {
                     if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Following redirect to: ' . $location);
                     $response = wp_remote_post(
@@ -187,6 +200,29 @@ class DashboardAPI
     /**
      * Native curl POST request fallback when WordPress HTTP API fails
      */
+    /**
+     * Whether a redirect target stays on the configured dashboard host
+     * (relative URLs, http↔https and a leading "www." are allowed).
+     */
+    private function isSameDashboardHost(string $location, string $dashboardUrl): bool
+    {
+        $target = wp_parse_url($location);
+        if ($target === false) {
+            return false;
+        }
+        if (empty($target['host'])) {
+            return true; // relative redirect
+        }
+        if (!in_array(strtolower($target['scheme'] ?? ''), ['http', 'https'], true)) {
+            return false;
+        }
+
+        $normalize = fn(string $host): string => preg_replace('/^www\./', '', strtolower($host));
+        $dashboardHost = (string) wp_parse_url($dashboardUrl, PHP_URL_HOST);
+
+        return $dashboardHost !== '' && $normalize($target['host']) === $normalize($dashboardHost);
+    }
+
     private function curlPost(string $url, array $data): array|\WP_Error
     {
         if (!function_exists('curl_init')) {
@@ -207,8 +243,9 @@ class DashboardAPI
             CURLOPT_CONNECTTIMEOUT => 30,
             CURLOPT_SSL_VERIFYPEER => $sslVerify,
             CURLOPT_SSL_VERIFYHOST => $sslVerify ? 2 : 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 5,
+            // Never follow redirects: a 307/308 would re-POST the license key to the target host.
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/x-www-form-urlencoded',
                 'User-Agent: WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
@@ -820,7 +857,7 @@ class DashboardAPI
             // Get tenant-specific white-label settings
             $whiteLabel = $this->getTenantWhiteLabelData($tenants, $tenantKey);
 
-            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Direct activation successful, tenant_key: ' . $tenantKey);
+            if (defined('WP_DEBUG') && WP_DEBUG) error_log('Fyndable: Direct activation successful');
 
             return [
                 'success' => true,

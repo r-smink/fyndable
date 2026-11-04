@@ -83,9 +83,9 @@ class DashboardSorter
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                 transition: background .15s, border-color .15s;
             }
-            .sseo-reorder-toggle:hover { border-color: #379fd3; color: #379fd3; }
+            .sseo-reorder-toggle:hover { border-color: var(--fyn-blue, #379fd3); color: var(--fyn-blue, #379fd3); }
             .sseo-reorder-toggle.active {
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                background: var(--fyn-gradient, linear-gradient(135deg, #379fd3 0%, #8f39ac 100%));
                 color: #fff;
                 border-color: transparent;
             }
@@ -103,7 +103,7 @@ class DashboardSorter
                 height: 26px;
                 padding: 0 8px;
                 border-radius: 13px;
-                background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%);
+                background: var(--fyn-gradient, linear-gradient(135deg, #379fd3 0%, #8f39ac 100%));
                 color: #fff;
                 font-size: 13px;
                 font-weight: 700;
@@ -146,7 +146,7 @@ class DashboardSorter
         </style>
         <button type="button" class="sseo-reorder-toggle" id="sseo-reorder-toggle" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            <span class="sseo-reorder-label"><?php echo esc_js(__('Herschikken', 'ai-seo-client')); ?></span>
+            <span class="sseo-reorder-label"><?php echo esc_js(__('Reorder', 'ai-seo-client')); ?></span>
         </button>
         <script>
         (function() {
@@ -204,7 +204,7 @@ class DashboardSorter
                     var up = document.createElement('button');
                     up.type = 'button';
                     up.innerHTML = '&uarr;';
-                    up.title = <?php echo json_encode(__('Omhoog', 'ai-seo-client')); ?>;
+                    up.title = <?php echo json_encode(__('Move Up', 'ai-seo-client')); ?>;
                     up.disabled = index === 0;
                     up.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -214,7 +214,7 @@ class DashboardSorter
                     var down = document.createElement('button');
                     down.type = 'button';
                     down.innerHTML = '&darr;';
-                    down.title = <?php echo json_encode(__('Omlaag', 'ai-seo-client')); ?>;
+                    down.title = <?php echo json_encode(__('Move Down', 'ai-seo-client')); ?>;
                     down.disabled = index === cards.length - 1;
                     down.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -269,8 +269,8 @@ class DashboardSorter
                     var label = toggle.querySelector('.sseo-reorder-label');
                     if (label) {
                         label.textContent = on
-                            ? <?php echo json_encode(__('Klaar', 'ai-seo-client')); ?>
-                            : <?php echo json_encode(__('Herschikken', 'ai-seo-client')); ?>;
+                            ? <?php echo json_encode(__('Done', 'ai-seo-client')); ?>
+                            : <?php echo json_encode(__('Reorder', 'ai-seo-client')); ?>;
                     }
                 }
                 if (on) { buildCardChrome(); } else { clearCardChrome(); }

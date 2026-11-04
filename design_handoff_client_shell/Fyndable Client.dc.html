@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/colors.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/typography.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/assets/dashicons/css/dashicons.css">
+<link rel="stylesheet" href="_ds/fyndable-design-system-229a7a30-6c0f-4026-8cef-5d274871d71f/tokens/base.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Outfit',system-ui,sans-serif;background:#0a0710}
+a{color:var(--fyn-purple);text-decoration:none}
+a:hover{color:var(--fyn-blue)}
+.fyn-root{
+  --shell-page:#f4f5f8; --shell-sidebar:#ffffff; --shell-sb-border:#e9eaef;
+  --nav-fg:#5a5568; --nav-section:#9a95a8; --nav-hover:#f5f2fb;
+  --card:#ffffff; --card-border:#ececf1; --card-shadow:0 1px 3px rgba(20,14,30,.07),0 1px 2px rgba(20,14,30,.04);
+  --card-shadow-lg:0 10px 24px -8px rgba(20,14,30,.14);
+  --text-h:#1a1430; --text-b:#413b52; --text-m:#746e82; --text-s:#a39dae;
+  --well:#f7f6fa; --well-border:#edecf2; --row-hover:#faf7fe; --divide:#efeef4;
+  --input-bg:#ffffff; --input-border:#dcdae4;
+  --sev-track:#e9e7f0;
+}
+.fyn-root.fyn-dark{
+  --shell-page:#120c1c; --shell-sidebar:#19122a; --shell-sb-border:rgba(255,255,255,.06);
+  --nav-fg:#b4adc6; --nav-section:#726a86; --nav-hover:rgba(143,57,172,.16);
+  --card:#1d1630; --card-border:rgba(255,255,255,.07); --card-shadow:0 1px 3px rgba(0,0,0,.45);
+  --card-shadow-lg:0 14px 30px -10px rgba(0,0,0,.6);
+  --text-h:#f4f1fa; --text-b:#cdc6dd; --text-m:#958da7; --text-s:#6f6784;
+  --well:#17112440; --well-border:rgba(255,255,255,.07); --row-hover:rgba(143,57,172,.12); --divide:rgba(255,255,255,.06);
+  --input-bg:#211a35; --input-border:rgba(255,255,255,.1);
+  --sev-track:rgba(255,255,255,.1);
+}
+@keyframes fynFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fyn-scroll::-webkit-scrollbar{width:9px}
+.fyn-scroll::-webkit-scrollbar-thumb{background:rgba(143,57,172,.35);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+.fyn-scroll::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+<div class="fyn-root {{themeClass}}" style="min-height:100vh;background:var(--shell-page);color:var(--text-b);display:flex;flex-direction:column">
+
+  <header style="flex:none;display:flex;align-items:center;gap:20px;height:58px;padding:0 22px;background:linear-gradient(135deg,#2A1533 0%,#132A38 100%);color:#fff;position:relative;z-index:10;box-shadow:0 1px 0 rgba(0,0,0,.2)">
+    <div style="display:flex;align-items:center;gap:12px;min-width:224px">
+      <img src="uploads/FYN-LOGO-DIA-LONG300ppi.png" alt="Fyndable Smart SEO" style="height:26px;width:auto;display:block" />
+      <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.05em;text-transform:uppercase;border-left:1px solid rgba(255,255,255,.2);padding-left:12px">Client</span>
+    </div>
+    <div style="flex:1;max-width:460px;display:flex;align-items:center;gap:9px;height:36px;padding:0 13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:9px">
+      <span class="dashicons dashicons-search" style="font-size:16px;width:16px;height:16px;color:rgba(255,255,255,.6)"></span>
+      <input placeholder="Zoek in zoekwoorden, berichten, instellingen…" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:13px" />
+      <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 6px">⌘K</span>
+    </div>
+    <div style="flex:1"></div>
+    <button type="button" onClick="{{toggleTheme}}" title="Wissel thema" style="display:flex;align-items:center;gap:6px;height:34px;padding:3px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);border-radius:999px;cursor:pointer">
+      <span style="{{sunStyle}}"><span class="dashicons dashicons-sticky" style="display:none"></span>☀</span>
+      <span style="{{moonStyle}}">☾</span>
+    </button>
+    <button type="button" title="Meldingen" style="position:relative;width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(255,255,255,.2)"><span class="dashicons dashicons-bell" style="font-size:16px;width:16px;height:16px"></span><span style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid #20122a"></span></button>
+    <button type="button" title="Help" style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(255,255,255,.2)"><span class="dashicons dashicons-editor-help" style="font-size:16px;width:16px;height:16px"></span></button>
+    <div style="width:1px;height:26px;background:rgba(255,255,255,.16)"></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8F39AC,#379FD3);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#fff">RS</div>
+      <button type="button" style="display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:9px;color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,.22)"><span class="dashicons dashicons-exit" style="font-size:15px;width:15px;height:15px"></span>Afsluiten</button>
+    </div>
+  </header>
+
+  <div style="flex:1;display:flex;min-height:0">
+    <nav class="fyn-scroll" style="flex:none;width:248px;background:var(--shell-sidebar);border-right:1px solid var(--shell-sb-border);padding:16px 14px 28px;overflow-y:auto">
+      <sc-for list="{{nav}}" as="grp" hint-placeholder-count="6">
+        <div style="padding:14px 10px 6px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--nav-section)">{{grp.label}}</div>
+        <sc-for list="{{grp.items}}" as="it" hint-placeholder-count="4">
+          <button type="button" onClick="{{it.go}}" style="{{it.style}}" style-hover="{{it.hover}}">
+            <span class="{{it.iconCls}}" style="font-size:17px;width:17px;height:17px;flex:none"></span>
+            <span style="flex:1;text-align:left">{{it.label}}</span>
+            <sc-if value="{{it.badge}}" hint-placeholder-val=""><span style="{{it.badgeStyle}}">{{it.badge}}</span></sc-if>
+          </button>
+        </sc-for>
+      </sc-for>
+      <div style="margin-top:22px;padding:14px;border-radius:12px;background:linear-gradient(135deg,rgba(143,57,172,.12),rgba(55,159,211,.12));border:1px solid var(--card-border)">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text-h)"><span class="dashicons dashicons-star-filled" style="font-size:15px;width:15px;height:15px;color:var(--fyn-purple)"></span>Agency-plan</div>
+        <div style="font-size:11.5px;color:var(--text-m);margin-top:5px;line-height:1.45">Alle 40+ functies actief. API-verbruik 62% deze maand.</div>
+        <div style="height:6px;border-radius:999px;background:var(--sev-track);margin-top:9px;overflow:hidden"><div style="height:100%;width:62%;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div>
+      </div>
+    </nav>
+
+    <main class="fyn-scroll" style="flex:1;min-width:0;overflow-y:auto;padding:28px 32px 48px">
+      <div style="max-width:1440px;margin:0 auto;animation:fynFade .3s ease" key="{{screen}}">
+
+        <!-- page header -->
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px">
+          <div>
+            <div style="display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;color:var(--text-s);margin-bottom:7px"><span>Fyndable</span><span class="dashicons dashicons-arrow-right-alt2" style="font-size:12px;width:12px;height:12px"></span><span style="color:var(--fyn-purple)">{{head.crumb}}</span></div>
+            <h1 style="margin:0;font-size:27px;font-weight:700;letter-spacing:-.025em;color:var(--text-h)">{{head.title}}</h1>
+            <p style="margin:7px 0 0;font-size:14px;color:var(--text-m);max-width:640px;line-height:1.5">{{head.desc}}</p>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="button" style="display:flex;align-items:center;gap:7px;height:42px;padding:0 17px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:var(--fyn-purple);color:var(--fyn-purple)"><span class="dashicons dashicons-update" style="font-size:16px;width:16px;height:16px"></span>Ververs</button>
+            <button type="button" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(143,57,172,.35)" style-hover="transform:translateY(-2px);box-shadow:0 7px 20px rgba(143,57,172,.45)"><span class="{{head.actionIcon}}" style="font-size:16px;width:16px;height:16px"></span>{{head.action}}</button>
+          </div>
+        </div>
+
+        <!-- ===================== DASHBOARD ===================== -->
+        <sc-if value="{{isDash}}" hint-placeholder-val="{{true}}">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px">
+            <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+              <div style="position:relative;background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:20px 20px 18px;overflow:hidden">
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:12px;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em">{{s.label}}</span>
+                  <span class="{{s.iconCls}}" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span>
+                </div>
+                <div style="font-size:34px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;margin-top:10px;line-height:1">{{s.value}}</div>
+                <div style="display:flex;align-items:center;gap:7px;margin-top:9px"><span style="{{s.deltaStyle}}">{{s.delta}}</span><span style="font-size:12px;color:var(--text-m)">{{s.sub}}</span></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;margin-bottom:18px">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:26px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="position:relative;width:188px;height:188px">
+                <svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--sev-track)" stroke-width="11"></circle>
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="url(#ringg)" stroke-width="11" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="6.5"></circle>
+                  <defs><linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8F39AC"></stop><stop offset="1" stop-color="#379FD3"></stop></linearGradient></defs>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:48px;font-weight:700;color:var(--text-h);line-height:1">98</span><span style="font-size:12px;font-weight:600;color:var(--text-m)">/ 100</span></div>
+              </div>
+              <div style="margin-top:16px;padding:5px 16px;border-radius:999px;background:var(--fyn-success-light);color:#047857;font-size:13px;font-weight:700">Great</div>
+              <div style="font-size:12.5px;color:var(--text-m);margin-top:9px">14 berichten geanalyseerd</div>
+            </div>
+
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px 26px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:18px"><span class="dashicons dashicons-chart-bar" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:17px;font-weight:700;color:var(--text-h)">SEO Breakdown</h3></div>
+              <sc-for list="{{breakdown}}" as="b" hint-placeholder-count="6">
+                <div style="margin-bottom:15px">
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="font-weight:600;color:var(--text-b)">{{b.label}}</span><span style="font-weight:700;color:{{b.col}}">{{b.val}}</span></div>
+                  <div style="height:9px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{b.pct}};background:{{b.bar}};border-radius:999px"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px 26px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-warning" style="font-size:18px;width:18px;height:18px;color:var(--fyn-warning)"></span><h3 style="margin:0;font-size:17px;font-weight:700;color:var(--text-h)">Problemen gevonden</h3></div>
+              <sc-for list="{{problems}}" as="p" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:10px;background:var(--well);border:1px solid var(--well-border);border-left:3px solid {{p.col}};margin-bottom:10px">
+                  <span class="{{p.iconCls}}" style="font-size:17px;width:17px;height:17px;color:{{p.col}}"></span>
+                  <span style="flex:1;font-size:13.5px;color:var(--text-b)">{{p.text}}</span>
+                  <a href="#" style="font-size:12.5px;font-weight:600;color:var(--fyn-purple)">Bekijk →</a>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px 26px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-awards" style="font-size:18px;width:18px;height:18px;color:var(--fyn-success)"></span><h3 style="margin:0;font-size:17px;font-weight:700;color:var(--text-h)">Quick Wins</h3></div>
+              <p style="margin:0 0 14px;font-size:13px;color:var(--text-m)">Berichten met goede content maar ontbrekende SEO-meta — eenvoudig op te lossen met AI.</p>
+              <sc-for list="{{wins}}" as="w" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:10px;background:var(--well);border:1px solid var(--well-border);margin-bottom:10px">
+                  <span class="dashicons dashicons-edit" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span>
+                  <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600;color:var(--text-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{w.title}}</div><div style="font-size:11.5px;color:var(--text-m)">{{w.meta}}</div></div>
+                  <button type="button" style="flex:none;height:30px;padding:0 13px;border-radius:7px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Fix met AI</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== ZOEKWOORDEN ===================== -->
+        <sc-if value="{{isKw}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:260px;height:42px;padding:0 14px;background:var(--card);border:1.5px solid var(--input-border);border-radius:9px">
+              <span class="dashicons dashicons-search" style="font-size:16px;width:16px;height:16px;color:var(--text-s)"></span>
+              <input placeholder="Voer een zoekwoord in…" style="flex:1;background:transparent;border:none;outline:none;color:var(--text-b);font-family:inherit;font-size:13.5px" />
+            </div>
+            <button type="button" style="height:42px;padding:0 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="transform:translateY(-2px)"><span class="dashicons dashicons-lightbulb" style="font-size:15px;width:15px;height:15px"></span>Genereer ideeën</button>
+            <button type="button" style="height:42px;padding:0 15px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--fyn-purple);color:var(--fyn-purple)">Clusters</button>
+            <button type="button" style="height:42px;padding:0 15px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:var(--fyn-purple);color:var(--fyn-purple)">Keywords explorer</button>
+            <button type="button" style="width:42px;height:42px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-m);cursor:pointer;display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-trash" style="font-size:16px;width:16px;height:16px;color:var(--fyn-danger)"></span></button>
+          </div>
+
+          <div style="display:flex;gap:4px;border-bottom:1px solid var(--divide);margin-bottom:0">
+            <sc-for list="{{kwTabs}}" as="t" hint-placeholder-count="5">
+              <button type="button" onClick="{{t.go}}" style="{{t.style}}">{{t.label}}<span style="{{t.countStyle}}">{{t.count}}</span></button>
+            </sc-for>
+          </div>
+
+          <div style="background:var(--card);border:1px solid var(--card-border);border-top:none;border-radius:0 0 14px 14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--divide);gap:14px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:40px;height:22px;border-radius:999px;background:var(--fyn-purple);position:relative;cursor:pointer"><div style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div>
+                <span style="font-size:13px;font-weight:600;color:var(--text-b)">Geselecteerd: 3</span>
+                <span style="font-size:13px;color:var(--text-m)">· 24 zoekwoorden</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 13px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);font-size:12.5px;font-weight:600;color:var(--text-b);cursor:pointer">Alle clusters<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div>
+                <button type="button" style="height:36px;padding:0 14px;border-radius:8px;border:none;background:var(--fyn-success-light);color:#047857;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ Volg geselecteerde</button>
+              </div>
+            </div>
+            <div style="overflow-x:auto" class="fyn-scroll">
+              <table style="width:100%;border-collapse:collapse;min-width:980px">
+                <thead><tr style="border-bottom:2px solid var(--divide)">
+                  <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th>
+                  <th style="padding:12px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Cluster</th>
+                  <th style="padding:12px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Volume</th>
+                  <th style="padding:12px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Moeilijkheid</th>
+                  <th style="padding:12px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">CPC</th>
+                  <th style="padding:12px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Rank</th>
+                  <th style="padding:12px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Intentie</th>
+                  <th style="padding:12px 20px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Acties</th>
+                </tr></thead>
+                <tbody>
+                  <sc-for list="{{kwRows}}" as="k" hint-placeholder-count="8">
+                    <tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)">
+                      <td style="padding:13px 20px"><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{k.kw}}</div><div style="font-size:11px;color:var(--text-s);margin-top:2px">{{k.url}}</div></td>
+                      <td style="padding:13px 14px"><sc-if value="{{k.cluster}}" hint-placeholder-val=""><span style="display:inline-block;padding:3px 10px;border-radius:999px;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-size:11.5px;font-weight:600">{{k.cluster}}</span></sc-if></td>
+                      <td style="padding:13px 14px;text-align:right;font-size:13px;font-weight:600;color:var(--text-b)">{{k.vol}}</td>
+                      <td style="padding:13px 14px"><div style="display:flex;align-items:center;gap:8px"><div style="width:52px;height:6px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{k.diffPct}};background:{{k.diffCol}}"></div></div><span style="font-size:12px;font-weight:600;color:{{k.diffCol}}">{{k.diff}}</span></div></td>
+                      <td style="padding:13px 14px;text-align:right;font-size:13px;color:var(--text-b)">{{k.cpc}}</td>
+                      <td style="padding:13px 14px;text-align:center"><span style="{{k.rankStyle}}">{{k.rank}}</span></td>
+                      <td style="padding:13px 14px"><span style="{{k.intentStyle}}">{{k.intent}}</span></td>
+                      <td style="padding:13px 20px"><div style="display:flex;gap:5px;justify-content:flex-end">
+                        <span class="dashicons dashicons-edit" style="font-size:15px;width:15px;height:15px;color:var(--text-m);cursor:pointer"></span>
+                        <span class="dashicons dashicons-chart-line" style="font-size:15px;width:15px;height:15px;color:var(--fyn-purple);cursor:pointer"></span>
+                        <span class="dashicons dashicons-trash" style="font-size:15px;width:15px;height:15px;color:var(--fyn-danger);cursor:pointer"></span>
+                      </div></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--divide)">
+              <span style="font-size:12.5px;color:var(--text-m)">1–8 van 24 zoekwoorden</span>
+              <div style="display:flex;gap:6px"><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-m);cursor:pointer">‹</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:none;background:var(--fyn-purple);color:#fff;cursor:pointer">1</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-b);cursor:pointer">2</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-b);cursor:pointer">3</button><button type="button" style="width:32px;height:32px;border-radius:7px;border:1px solid var(--input-border);background:var(--card);color:var(--text-m);cursor:pointer">›</button></div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== CONTENTKALENDER ===================== -->
+        <sc-if value="{{isCal}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;background:var(--card);border:1px solid var(--card-border);border-radius:12px;box-shadow:var(--card-shadow);margin-bottom:18px">
+            <button type="button" style="height:36px;padding:0 15px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">← Vorige</button>
+            <h3 style="margin:0;font-size:18px;font-weight:700;color:var(--text-h)">Oktober 2026</h3>
+            <button type="button" style="height:36px;padding:0 15px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Volgende →</button>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-calendar-alt" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Publicatiekalender</h3></div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+                <sc-for list="{{calDows}}" as="d" hint-placeholder-count="7"><div style="text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);padding:4px 0">{{d}}</div></sc-for>
+                <sc-for list="{{calDays}}" as="c" hint-placeholder-count="35">
+                  <div style="{{c.cellStyle}}">
+                    <span style="{{c.numStyle}}">{{c.n}}</span>
+                    <sc-if value="{{c.chip}}" hint-placeholder-val=""><div style="{{c.chipStyle}}">{{c.chip}}</div></sc-if>
+                    <sc-if value="{{c.gap}}" hint-placeholder-val=""><div style="display:flex;align-items:center;gap:3px;margin-top:4px;font-size:10px;font-weight:700;color:var(--fyn-warning)"><span class="dashicons dashicons-warning" style="font-size:11px;width:11px;height:11px"></span>Gap</div></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:18px">
+                <button type="button" style="height:40px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px"><span class="dashicons dashicons-plus-alt2" style="font-size:15px;width:15px;height:15px"></span>Plan nieuwe content</button>
+                <button type="button" style="height:40px;padding:0 16px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Optimaliseer planning</button>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px"><span class="dashicons dashicons-calendar" style="font-size:17px;width:17px;height:17px;color:var(--fyn-warning)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Content Gap Kalender</h3></div>
+                <p style="margin:0 0 14px;font-size:12px;color:var(--text-m)">Gevonden gaten in je contentplanning:</p>
+                <sc-for list="{{gaps}}" as="g" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--divide)">
+                    <div><div style="font-size:12.5px;font-weight:600;color:var(--text-b)">{{g.date}}</div><div style="font-size:11px;color:var(--text-s)">Geen content gepland</div></div>
+                    <button type="button" style="height:30px;padding:0 13px;border-radius:7px;border:1.5px solid var(--fyn-purple);background:transparent;color:var(--fyn-purple);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:var(--fyn-purple);color:#fff">Vul gap</button>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span class="dashicons dashicons-chart-pie" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Workflow-status</h3></div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+                  <sc-for list="{{workflow}}" as="w" hint-placeholder-count="4">
+                    <div style="padding:14px;border-radius:11px;background:{{w.bg}};border:1px solid {{w.border}}"><div style="font-size:26px;font-weight:700;color:{{w.fg}};line-height:1">{{w.n}}</div><div style="font-size:12px;font-weight:600;color:var(--text-m);margin-top:5px">{{w.label}}</div></div>
+                  </sc-for>
+                </div>
+                <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--divide);font-size:12.5px;color:var(--text-m)"><span style="font-weight:700;color:var(--text-b)">Wachtend op goedkeuring:</span> geen openstaande items.</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px;margin-top:18px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-clock" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Zoekwoord-kansen tijdlijn</h3></div>
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr style="border-bottom:2px solid var(--divide)">
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th>
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Type kans</th>
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Voorgestelde datum</th>
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Prioriteit</th>
+                <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{opps}}" as="o" hint-placeholder-count="3">
+                  <tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)">
+                    <td style="padding:13px 12px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{o.kw}}</td>
+                    <td style="padding:13px 12px;font-size:13px;color:var(--text-b)">{{o.type}}</td>
+                    <td style="padding:13px 12px;font-size:13px;color:var(--text-b)">{{o.date}}</td>
+                    <td style="padding:13px 12px"><span style="{{o.prioStyle}}">{{o.prio}}</span></td>
+                    <td style="padding:13px 12px;text-align:right"><button type="button" style="height:30px;padding:0 13px;border-radius:7px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Maak content</button></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AANGEMAAKTE BERICHTEN ===================== -->
+        <sc-if value="{{isPosts}}" hint-placeholder-val="">
+        <div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px;margin-bottom:18px">
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px">
+              <div><label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:6px">Zoeken</label><input placeholder="Titel-zoekwoorden" style="width:100%;height:40px;padding:0 13px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-b);font-family:inherit;font-size:13px;outline:none" /></div>
+              <div><label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:6px">Cluster</label><div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);font-size:13px;color:var(--text-b)">Alle clusters<span class="dashicons dashicons-arrow-down-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-m)"></span></div></div>
+              <div><label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:6px">Woorden: 0 – 3000</label><div style="height:40px;display:flex;align-items:center"><div style="flex:1;height:6px;border-radius:999px;background:var(--sev-track);position:relative"><div style="position:absolute;left:12%;right:28%;height:100%;border-radius:999px;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div><div style="position:absolute;left:12%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--fyn-purple)"></div><div style="position:absolute;right:28%;top:50%;transform:translate(50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--fyn-blue)"></div></div></div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);width:140px">Mass-edit status</span><sc-for list="{{pf1}}" as="f" hint-placeholder-count="4"><span style="{{f.style}}">{{f.label}}<span style="{{f.cStyle}}">{{f.n}}</span></span></sc-for></div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);width:140px">Review-status</span><sc-for list="{{pf2}}" as="f" hint-placeholder-count="5"><span style="{{f.style}}">{{f.label}}<span style="{{f.cStyle}}">{{f.n}}</span></span></sc-for></div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);width:140px">Status</span><sc-for list="{{pf3}}" as="f" hint-placeholder-count="4"><span style="{{f.style}}">{{f.label}}<span style="{{f.cStyle}}">{{f.n}}</span></span></sc-for></div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--divide)">
+              <div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:22px;border-radius:999px;background:var(--fyn-purple);position:relative;cursor:pointer"><div style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div><span style="font-size:13px;font-weight:600;color:var(--text-b)">Alle berichten: 18</span></div>
+              <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--text-m)">Per pagina<span style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);font-weight:600;color:var(--text-b)">10<span class="dashicons dashicons-arrow-down-alt2" style="font-size:12px;width:12px;height:12px"></span></span></div>
+            </div>
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:900px">
+              <thead><tr style="border-bottom:2px solid var(--divide)">
+                <th style="padding:11px 20px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bericht</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Datum</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zichtbaarheid</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th>
+                <th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Mass-edit</th>
+                <th style="padding:11px 20px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Review</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{posts}}" as="p" hint-placeholder-count="6">
+                  <tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)">
+                    <td style="padding:13px 20px"><div style="display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:9px;background:linear-gradient(135deg,rgba(143,57,172,.18),rgba(55,159,211,.18));display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-{{p.icon}}" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span></div><div style="min-width:0"><div style="font-size:13.5px;font-weight:600;color:var(--text-h);max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{p.title}}</div><div style="font-size:11px;color:var(--text-s)">#{{p.id}} · {{p.words}} woorden</div></div></div></td>
+                    <td style="padding:13px 12px;font-size:12.5px;color:var(--text-b)">{{p.date}}</td>
+                    <td style="padding:13px 12px;font-size:12.5px;color:var(--text-b)">{{p.vis}}</td>
+                    <td style="padding:13px 12px"><span style="{{p.statusStyle}}">{{p.status}}</span></td>
+                    <td style="padding:13px 12px"><span style="{{p.meStyle}}">{{p.me}}</span></td>
+                    <td style="padding:13px 20px"><span style="{{p.revStyle}}"><span class="dashicons dashicons-{{p.revIcon}}" style="font-size:13px;width:13px;height:13px"></span>{{p.rev}}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== VERBINDING ===================== -->
+        <sc-if value="{{isConn}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{connStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:28px">
+              <div style="display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--divide);margin-bottom:20px"><div style="width:46px;height:46px;border-radius:12px;background:var(--fyn-success-light);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-yes-alt" style="font-size:22px;width:22px;height:22px;color:#10b981"></span></div><div><div style="font-size:17px;font-weight:700;color:var(--text-h)">Licentie actief</div><div style="font-size:13px;color:var(--text-m)">Verbonden met het Fyndable-dashboard · Agency-plan</div></div></div>
+              <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:7px">Licentiesleutel</label>
+              <div style="display:flex;align-items:center;gap:10px;height:46px;padding:0 15px;border-radius:9px;background:var(--well);border:1px solid var(--well-border);font-family:ui-monospace,Menlo,monospace;font-size:13.5px;letter-spacing:1px;color:var(--text-b);margin-bottom:18px"><span style="flex:1">SSEO-A4F9-7K2P-XR81-9MQ2</span><span class="dashicons dashicons-admin-page" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple);cursor:pointer"></span></div>
+              <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:7px">Dashboard-URL</label>
+              <div style="display:flex;align-items:center;gap:10px;height:46px;padding:0 15px;border-radius:9px;background:var(--well);border:1px solid var(--well-border);font-family:ui-monospace,Menlo,monospace;font-size:13.5px;color:var(--text-b);margin-bottom:24px">https://app.fyndable.nl</div>
+              <div style="display:flex;gap:10px"><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Valideer opnieuw</button><button type="button" style="height:42px;padding:0 18px;border-radius:9px;border:1.5px solid var(--fyn-danger);background:transparent;color:var(--fyn-danger);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Deactiveer licentie</button></div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-star-filled" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Inbegrepen in Agency</h3></div>
+              <sc-for list="{{planFeatures}}" as="f" hint-placeholder-count="10"><div style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text-b)"><span style="color:#10b981;font-weight:700">✓</span>{{f}}</div></sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== IDEEËN ===================== -->
+        <sc-if value="{{isIdeas}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+          <sc-for list="{{ideaCards}}" as="i" hint-placeholder-count="6">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,rgba(143,57,172,.16),rgba(55,159,211,.16));display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-lightbulb" style="font-size:19px;width:19px;height:19px;color:var(--fyn-purple)"></span></div><span style="{{i.sStyle}}">{{i.score}}</span></div>
+              <h3 style="margin:0 0 12px;font-size:15.5px;font-weight:700;color:var(--text-h);line-height:1.35">{{i.title}}</h3>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--text-m)">{{i.kw}}</span><span style="font-size:12px;color:var(--text-s)">· {{i.vol}}/mnd</span><span style="{{i.iStyle}}">{{i.intent}}</span></div>
+              <div style="display:flex;gap:8px;margin-top:auto"><button type="button" style="flex:1;height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Schrijf met AI</button><button type="button" style="height:36px;padding:0 13px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Brief</button></div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== ONDERWERPGROEPEN ===================== -->
+        <sc-if value="{{isClusters}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+          <sc-for list="{{clusterCards}}" as="c" hint-placeholder-count="3">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:10px"><span class="dashicons dashicons-admin-site-alt3" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">{{c.name}}</h3></div>
+                <div style="position:relative;width:48px;height:48px"><svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--sev-track)" stroke-width="4"></circle><circle cx="18" cy="18" r="15" fill="none" stroke="#8F39AC" stroke-width="4" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="20"></circle></svg><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-h)">{{c.pct}}</div></div>
+              </div>
+              <div style="padding:12px 14px;border-radius:10px;background:var(--fyn-purple-tint);margin-bottom:14px"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8F39AC;margin-bottom:4px">Pillar</div><div style="font-size:13.5px;font-weight:600;color:var(--text-h);line-height:1.35">{{c.pillar}}</div></div>
+              <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:8px">Ondersteunend ({{c.done}}/{{c.pages}})</div>
+              <sc-for list="{{c.sub}}" as="p" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:9px;padding:6px 0;font-size:12.5px;color:var(--text-b)"><span class="dashicons dashicons-media-document" style="font-size:14px;width:14px;height:14px;color:var(--text-s)"></span>{{p}}</div></sc-for>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== APEXFLOW ===================== -->
+        <sc-if value="{{isApex}}" hint-placeholder-val="">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:linear-gradient(135deg,#8F39AC,#379FD3);border-radius:14px;margin-bottom:18px;box-shadow:0 8px 22px rgba(143,57,172,.3)">
+            <div style="display:flex;align-items:center;gap:14px"><div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-controls-play" style="font-size:22px;width:22px;height:22px;color:#fff"></span></div><div><div style="font-size:16px;font-weight:700;color:#fff">Autopilot is actief</div><div style="font-size:13px;color:rgba(255,255,255,.8)">Produceert automatisch 3 artikelen per week uit je zoekwoord-wachtrij.</div></div></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:12.5px;font-weight:600;color:#fff">Aan</span><div style="width:46px;height:26px;border-radius:999px;background:rgba(255,255,255,.3);position:relative;cursor:pointer"><div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px;margin-bottom:18px">
+            <div style="display:flex;align-items:stretch;gap:0;position:relative">
+              <sc-for list="{{flowSteps}}" as="f" hint-placeholder-count="5">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative"><div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(143,57,172,.14),rgba(55,159,211,.14));display:flex;align-items:center;justify-content:center;margin-bottom:10px"><span class="{{f.iconCls}}" style="font-size:22px;width:22px;height:22px;color:var(--fyn-purple)"></span></div><div style="font-size:24px;font-weight:700;color:var(--text-h);line-height:1">{{f.n}}</div><div style="font-size:12px;font-weight:600;color:var(--text-m);margin-top:3px">{{f.label}}</div></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-update" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Wachtrij</h3></div>
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Fase</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Voortgang</th><th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Verwacht</th></tr></thead>
+              <tbody><sc-for list="{{flowQueue}}" as="q" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 12px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{q.kw}}</td><td style="padding:14px 12px"><span style="{{q.stStyle}}">{{q.stage}}</span></td><td style="padding:14px 12px"><div style="width:140px;height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{q.prog}};background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div></td><td style="padding:14px 12px;text-align:right;font-size:12.5px;color:var(--text-m)">{{q.eta}}</td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== BULKOPTIMALISATIE ===================== -->
+        <sc-if value="{{isBulk}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m);margin-bottom:12px">Kies een taak</div>
+            <sc-for list="{{bulkTasks}}" as="t" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;padding:13px;border-radius:10px;border:2px solid var(--input-border);margin-bottom:10px;cursor:pointer" style-hover="border-color:var(--fyn-purple);background:var(--fyn-purple-tint)"><div style="width:36px;height:36px;border-radius:9px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="{{t.iconCls}}" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text-h)">{{t.label}}</div><div style="font-size:11.5px;color:var(--text-m)">{{t.count}} berichten</div></div></div>
+            </sc-for>
+            <button type="button" style="width:100%;height:42px;margin-top:8px;border-radius:9px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Start bulk-run</button>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:20px 22px;border-bottom:1px solid var(--divide)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:var(--text-h)">Lopende run — meta-descriptions</div><span style="font-size:12.5px;font-weight:600;color:var(--fyn-purple)">2 / 4 voltooid</span></div><div style="height:9px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:50%;background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bericht</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Taak</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th></tr></thead>
+              <tbody><sc-for list="{{bulkRows}}" as="r" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.title}}</td><td style="padding:14px 12px;font-size:12.5px;color:var(--text-m)">{{r.task}}</td><td style="padding:14px 22px;text-align:right"><span style="{{r.stStyle}}">{{r.status}}</span></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== RANKTRACKER ===================== -->
+        <sc-if value="{{isRank}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{rankStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px;margin-bottom:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-chart-line" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Gemiddelde positie — 30 dagen</h3></div><span style="font-size:12.5px;color:var(--text-m)">lager = beter</span></div>
+            <svg viewBox="0 0 800 160" preserveAspectRatio="none" style="width:100%;height:150px"><defs><linearGradient id="rankfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F39AC" stop-opacity=".25"></stop><stop offset="1" stop-color="#379FD3" stop-opacity="0"></stop></linearGradient></defs><path d="M0,96 L0,96 C80,100 120,120 200,110 C280,100 320,70 400,74 C480,78 520,60 600,50 C680,40 740,36 800,30 L800,160 L0,160 Z" fill="url(#rankfill)"></path><path d="M0,96 C80,100 120,120 200,110 C280,100 320,70 400,74 C480,78 520,60 600,50 C680,40 740,36 800,30" fill="none" stroke="url(#ringg)" stroke-width="3"></path></svg>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:12px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th><th style="padding:12px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Volume</th><th style="padding:12px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Positie</th><th style="padding:12px 22px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Wijziging</th></tr></thead>
+              <tbody><sc-for list="{{rankRows}}" as="r" hint-placeholder-count="6"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px"><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.kw}}</div><div style="font-size:11px;color:var(--text-s)">{{r.url}}</div></td><td style="padding:13px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{r.vol}}</td><td style="padding:13px 12px;text-align:center"><span style="{{r.posStyle}}">{{r.pos}}</span></td><td style="padding:13px 22px;text-align:center"><span style="{{r.chgStyle}}">{{r.chg}}</span></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== CONCURRENTEN ===================== -->
+        <sc-if value="{{isComp}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{compStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{compCards}}" as="c" hint-placeholder-count="3">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:20px">
+              <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px"><div style="width:40px;height:40px;border-radius:10px;background:var(--well);border:1px solid var(--well-border);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-admin-site" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span></div><div style="font-size:14.5px;font-weight:700;color:var(--text-h)">{{c.domain}}</div></div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px"><div><div style="font-size:18px;font-weight:700;color:var(--text-h)">{{c.dr}}</div><div style="font-size:10.5px;color:var(--text-m)">DR</div></div><div><div style="font-size:18px;font-weight:700;color:var(--text-h)">{{c.traffic}}</div><div style="font-size:10.5px;color:var(--text-m)">Verkeer</div></div><div><div style="font-size:18px;font-weight:700;color:var(--text-h)">{{c.kw}}</div><div style="font-size:10.5px;color:var(--text-m)">Zoekw.</div></div></div>
+              <div style="font-size:11px;font-weight:600;color:var(--text-m);margin-bottom:5px">Zoekwoord-overlap {{c.overlap}}</div><div style="height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{c.overlap}};background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div>
+            </div>
+          </sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-warning" style="font-size:18px;width:18px;height:18px;color:var(--fyn-warning)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Content-gaten — zij ranken, jij niet</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th><th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Volume</th><th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Hun positie</th><th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Jouw positie</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Moeilijkheid</th><th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+              <tbody><sc-for list="{{compGap}}" as="g" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 12px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{g.kw}}</td><td style="padding:13px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{g.vol}}</td><td style="padding:13px 12px;text-align:center;font-size:13px;font-weight:700;color:#10b981">{{g.theirPos}}</td><td style="padding:13px 12px;text-align:center;font-size:13px;color:var(--text-s)">{{g.yourPos}}</td><td style="padding:13px 12px"><span style="{{g.diff}}">{{g.diffL}}</span></td><td style="padding:13px 12px;text-align:right"><button type="button" style="height:30px;padding:0 13px;border-radius:7px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Maak content</button></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== A/B-TESTEN ===================== -->
+        <sc-if value="{{isAb}}" hint-placeholder-val="">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <sc-for list="{{abTests}}" as="t" hint-placeholder-count="3">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:10px"><span class="dashicons dashicons-randomize" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15.5px;font-weight:700;color:var(--text-h)">{{t.title}}</h3></div><span style="{{t.stStyle}}">{{t.status}}</span></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+                <div style="padding:15px;border-radius:11px;border:2px solid var(--input-border);background:var(--well)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;color:var(--text-m)">VARIANT A</span><span style="font-size:15px;font-weight:700;color:var(--text-h)">{{t.aCtr}}</span></div><div style="font-size:13px;color:var(--text-b);line-height:1.4">{{t.a}}</div></div>
+                <div style="padding:15px;border-radius:11px;border:2px solid var(--fyn-purple);background:var(--fyn-purple-tint)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;color:#8F39AC">VARIANT B</span><span style="font-size:15px;font-weight:700;color:#8F39AC">{{t.bCtr}}</span></div><div style="font-size:13px;color:var(--text-b);line-height:1.4">{{t.b}}</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px"><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-m);margin-bottom:5px"><span>Betrouwbaarheid</span><span style="font-weight:700;color:var(--text-b)">{{t.conf}}</span></div><div style="height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="height:100%;width:{{t.conf}};background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div></div><div style="font-size:12.5px;color:var(--text-m)">Winnaar: <span style="font-weight:700;color:var(--text-h)">{{t.win}}</span></div></div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== LINKBEHEER ===================== -->
+        <sc-if value="{{isLinks}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{linkStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-admin-links" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Orphan pages</h3></div><button type="button" style="height:36px;padding:0 15px;border-radius:8px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Scan opnieuw</button></div>
+            <p style="margin:0 0 16px;font-size:13px;color:var(--text-m)">Pagina's zonder inkomende interne links.</p>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Pagina</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Type</th><th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Prioriteit</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bronnen</th><th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Acties</th></tr></thead>
+              <tbody><sc-for list="{{orphanRows}}" as="o" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 12px;font-size:13.5px;font-weight:600;color:var(--fyn-purple);max-width:360px">{{o.page}}</td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-m)">{{o.type}}</td><td style="padding:13px 12px;text-align:center;font-size:13px"><span style="{{o.scoreStyle}}">{{o.score}}/100</span></td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-b)">{{o.srcs}}</td><td style="padding:13px 12px"><div style="display:flex;gap:7px;justify-content:flex-end"><button type="button" style="height:30px;padding:0 12px;border-radius:7px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Auto-fix</button><button type="button" style="height:30px;padding:0 12px;border-radius:7px;border:1.5px solid var(--input-border);background:var(--card);color:var(--text-b);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Bekijk</button></div></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== BACKLINKS ===================== -->
+        <sc-if value="{{isBacklinks}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{blStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-admin-links" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Recente backlinks</h3></div>
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:820px"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bron</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">DR</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Ankertekst</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Type</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Eerst gezien</th></tr></thead>
+              <tbody><sc-for list="{{blRows}}" as="r" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 22px;font-size:13px;font-weight:600;color:var(--fyn-purple)">{{r.src}}</td><td style="padding:13px 12px;text-align:center"><span style="display:inline-block;min-width:30px;padding:3px 8px;border-radius:7px;background:var(--well);border:1px solid var(--well-border);font-size:12.5px;font-weight:700;color:var(--text-h)">{{r.dr}}</span></td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-b)">{{r.anchor}}</td><td style="padding:13px 12px"><span style="{{r.tStyle}}">{{r.type}}</span></td><td style="padding:13px 22px;text-align:right;font-size:12.5px;color:var(--text-m)">{{r.seen}}</td></tr></sc-for></tbody>
+            </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== ADV. BACKLINKS ===================== -->
+        <sc-if value="{{isAdv}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{toxStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-warning" style="font-size:18px;width:18px;height:18px;color:var(--fyn-danger)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Toxische links — te beoordelen</h3></div><button type="button" style="height:36px;padding:0 15px;border-radius:8px;border:1.5px solid var(--fyn-danger);background:transparent;color:var(--fyn-danger);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Exporteer disavow-bestand</button></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bron</th><th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">DR</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Reden</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Toxiciteit</th><th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Actie</th></tr></thead>
+              <tbody><sc-for list="{{toxRows}}" as="r" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:13px 12px;font-size:13px;font-weight:600;color:var(--text-h)">{{r.src}}</td><td style="padding:13px 12px;text-align:center;font-size:12.5px;color:var(--text-m)">{{r.dr}}</td><td style="padding:13px 12px;font-size:12.5px;color:var(--text-b)">{{r.reason}}</td><td style="padding:13px 12px"><div style="display:flex;align-items:center;gap:9px"><div style="width:70px;height:7px;border-radius:999px;background:var(--sev-track);overflow:hidden"><div style="{{r.toxStyle}}"></div></div><span style="font-size:12px;font-weight:700;color:{{r.toxCol}}">{{r.tox}}</span></div></td><td style="padding:13px 12px;text-align:right"><button type="button" style="height:30px;padding:0 13px;border-radius:7px;border:1.5px solid var(--fyn-danger);background:transparent;color:var(--fyn-danger);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Disavow</button></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== SITE AUDIT ===================== -->
+        <sc-if value="{{isAudit}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:26px;display:flex;flex-direction:column;align-items:center">
+              <div style="position:relative;width:150px;height:150px"><svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--sev-track)" stroke-width="11"></circle><circle cx="60" cy="60" r="52" fill="none" stroke="url(#ringg)" stroke-width="11" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="62"></circle></svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:40px;font-weight:700;color:var(--text-h);line-height:1">81</span><span style="font-size:11px;font-weight:600;color:var(--text-m)">gezondheid</span></div></div>
+              <div style="margin-top:14px;padding:5px 15px;border-radius:999px;background:var(--fyn-warning-light);color:#92700a;font-size:12.5px;font-weight:700">Needs Work</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:18px"><sc-for list="{{auditCats}}" as="c" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:11px;padding:9px 0"><div style="width:32px;height:32px;border-radius:8px;background:{{c.bg}};display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-{{c.icon}}" style="font-size:16px;width:16px;height:16px;color:{{c.col}}"></span></div><span style="flex:1;font-size:13px;color:var(--text-b)">{{c.label}}</span><span style="font-size:16px;font-weight:700;color:var(--text-h)">{{c.n}}</span></div></sc-for></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:24px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-clipboard" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Gevonden problemen</h3></div>
+            <sc-for list="{{auditIssues}}" as="i" hint-placeholder-count="4">
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:11px;background:var(--well);border:1px solid var(--well-border);border-left:3px solid {{i.col}};margin-bottom:12px">
+                <div style="width:36px;height:36px;border-radius:9px;background:var(--card);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-{{i.icon}}" style="font-size:17px;width:17px;height:17px;color:{{i.col}}"></span></div>
+                <div style="flex:1;min-width:0"><div style="margin-bottom:5px"><span style="{{i.sStyle}}">{{i.sev}}</span> <span style="font-size:14px;font-weight:700;color:var(--text-h)">{{i.title}}</span></div><div style="font-size:13px;color:var(--text-m)">{{i.detail}}</div></div>
+                <button type="button" style="flex:none;height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--fyn-purple-tint);color:var(--fyn-purple);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Los op</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== SITEMAPS ===================== -->
+        <sc-if value="{{isSitemaps}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-networking" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Sitemaps</h3></div><a href="#" style="font-size:12.5px;font-weight:600;color:var(--fyn-purple)">Bekijk /sitemap_index.xml →</a></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Sitemap</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">URL's</th><th style="padding:11px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Bijgewerkt</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Status</th></tr></thead>
+              <tbody><sc-for list="{{smRows}}" as="r" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.name}}</td><td style="padding:14px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{r.urls}}</td><td style="padding:14px 12px;font-size:12.5px;color:var(--text-m)">{{r.updated}}</td><td style="padding:14px 22px;text-align:right"><span style="{{r.stStyle}}">{{r.status}}</span></td></tr></sc-for></tbody>
+            </table>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span class="dashicons dashicons-admin-settings" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Instellingen</h3></div>
+            <sc-for list="{{smToggles}}" as="t" hint-placeholder-count="6"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--divide)"><span style="font-size:13px;color:var(--text-b)">{{t.label}}</span><div style="{{t.track}}"><div style="{{t.knob}}"></div></div></div></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== SEO-DATA ===================== -->
+        <sc-if value="{{isSeodata}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{sdStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{sdSources}}" as="s" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:18px"><div style="width:42px;height:42px;border-radius:11px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-{{s.icon}}" style="font-size:19px;width:19px;height:19px;color:var(--fyn-purple)"></span></div><div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text-h)">{{s.name}}</div><div style="font-size:12px;color:var(--text-m)">{{s.status}}</div></div><span style="{{s.okStyle}}">{{s.okText}}</span></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-chart-area" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Best presterende zoekwoorden</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekwoord</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Positie</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Volume</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Verkeer/mnd</th></tr></thead>
+              <tbody><sc-for list="{{sdRows}}" as="r" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.kw}}</td><td style="padding:14px 12px;text-align:center;font-size:13px;font-weight:700;color:var(--fyn-purple)">{{r.pos}}</td><td style="padding:14px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{r.vol}}</td><td style="padding:14px 22px;text-align:right;font-size:13px;font-weight:600;color:var(--text-b)">{{r.traffic}}</td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== GOOGLE-DATA ===================== -->
+        <sc-if value="{{isGoogledata}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{gdStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{gdSources}}" as="s" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:18px"><div style="width:42px;height:42px;border-radius:11px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center"><span class="dashicons dashicons-{{s.icon}}" style="font-size:19px;width:19px;height:19px;color:var(--fyn-purple)"></span></div><div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text-h)">{{s.name}}</div><div style="font-size:12px;color:var(--text-m)">{{s.status}}</div></div></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-search" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Top zoekopdrachten — Search Console</h3></div>
+            <div style="overflow-x:auto" class="fyn-scroll"><table style="width:100%;border-collapse:collapse;min-width:720px"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Zoekopdracht</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Klikken</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Vertoningen</th><th style="padding:11px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">CTR</th><th style="padding:11px 22px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Positie</th></tr></thead>
+              <tbody><sc-for list="{{gdQueries}}" as="r" hint-placeholder-count="5"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.q}}</td><td style="padding:14px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--text-b)">{{r.clicks}}</td><td style="padding:14px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{r.impr}}</td><td style="padding:14px 12px;text-align:right;font-size:13px;color:var(--text-b)">{{r.ctr}}</td><td style="padding:14px 22px;text-align:right;font-size:13px;color:var(--text-b)">{{r.pos}}</td></tr></sc-for></tbody>
+            </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== LLM-TRACKER ===================== -->
+        <sc-if value="{{isLlm}}" hint-placeholder-val="">
+        <div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{llmStats}}" as="s" hint-placeholder-count="4"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:16px 18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-m)">{{s.label}}</span><span class="{{s.iconCls}}" style="font-size:16px;width:16px;height:16px;color:var(--fyn-purple)"></span></div><div style="font-size:27px;font-weight:700;color:var(--text-h);letter-spacing:-.02em;line-height:1">{{s.value}}</div><div style="margin-top:7px;font-size:12px;color:var(--text-m);display:flex;align-items:center;gap:6px"><span style="{{s.deltaStyle}}">{{s.delta}}</span>{{s.sub}}</div></div></sc-for></div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px"><sc-for list="{{llmPlatforms}}" as="p" hint-placeholder-count="3"><div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:15px;font-weight:700;color:var(--text-h)">{{p.name}}</span><span style="font-size:22px;font-weight:700;color:var(--fyn-purple)">{{p.pct}}</span></div><div style="height:9px;border-radius:999px;background:var(--sev-track);overflow:hidden;margin-bottom:9px"><div style="height:100%;width:{{p.pct}};background:linear-gradient(90deg,#8F39AC,#379FD3)"></div></div><div style="font-size:12px;color:var(--text-m)">{{p.note}}</div></div></sc-for></div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-visibility" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Gevolgde prompts</h3></div>
+            <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--divide)"><th style="padding:11px 22px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Prompt</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">ChatGPT</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Gemini</th><th style="padding:11px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Perplexity</th><th style="padding:11px 22px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-m)">Positie</th></tr></thead>
+              <tbody><sc-for list="{{llmPrompts}}" as="r" hint-placeholder-count="4"><tr style="border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><td style="padding:14px 22px;font-size:13.5px;font-weight:600;color:var(--text-h)">{{r.prompt}}</td><td style="padding:14px 12px;text-align:center"><span style="{{r.cgS}}">{{r.cg}}</span></td><td style="padding:14px 12px;text-align:center"><span style="{{r.gmS}}">{{r.gm}}</span></td><td style="padding:14px 12px;text-align:center"><span style="{{r.pxS}}">{{r.px}}</span></td><td style="padding:14px 22px;text-align:center"><span style="{{r.posStyle}}">{{r.pos}}</span></td></tr></sc-for></tbody>
+            </table>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===================== AI-HULPMIDDELEN ===================== -->
+        <sc-if value="{{isAitools}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+          <sc-for list="{{toolCards}}" as="t" hint-placeholder-count="8">
+            <div style="background:var(--card);border:2px solid var(--card-border);border-radius:12px;padding:22px;cursor:pointer;display:flex;flex-direction:column" style-hover="border-color:var(--fyn-purple);box-shadow:0 8px 20px rgba(143,57,172,.18);transform:translateY(-4px)">
+              <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#8F39AC,#379FD3);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 4px 12px rgba(143,57,172,.3)"><span class="{{t.iconCls}}" style="font-size:22px;width:22px;height:22px;color:#fff"></span></div>
+              <h3 style="margin:0 0 7px;font-size:15px;font-weight:700;color:var(--text-h)">{{t.title}}</h3>
+              <p style="margin:0;font-size:12.5px;color:var(--text-m);line-height:1.5">{{t.desc}}</p>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== INTEGRATIES ===================== -->
+        <sc-if value="{{isIntegrations}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+          <sc-for list="{{integ}}" as="i" hint-placeholder-count="8">
+            <div style="display:flex;align-items:center;gap:15px;background:var(--card);border:1px solid var(--card-border);border-radius:13px;box-shadow:var(--card-shadow);padding:20px">
+              <div style="width:48px;height:48px;border-radius:12px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="{{i.iconCls}}" style="font-size:22px;width:22px;height:22px;color:var(--fyn-purple)"></span></div>
+              <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:var(--text-h)">{{i.title}}</div><div style="font-size:12.5px;color:var(--text-m)">{{i.desc}}</div></div>
+              <button type="button" style="flex:none;height:34px;padding:0 15px;border-radius:8px;border:none;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--fyn-purple-tint);color:var(--fyn-purple)"><span style="{{i.statusStyle}}">{{i.statusText}}</span></button>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ===================== ONDERSTEUNING ===================== -->
+        <sc-if value="{{isSupport}}" hint-placeholder-val="">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden">
+            <div style="padding:18px 22px;border-bottom:1px solid var(--divide);display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px"><span class="dashicons dashicons-sos" style="font-size:18px;width:18px;height:18px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-h)">Jouw tickets</h3></div><button type="button" style="height:34px;padding:0 15px;border-radius:8px;border:none;background:linear-gradient(135deg,#8F39AC,#379FD3);color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Nieuw ticket</button></div>
+            <sc-for list="{{tickets}}" as="t" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--divide)" style-hover="background:var(--row-hover)"><div style="width:38px;height:38px;border-radius:10px;background:var(--fyn-purple-tint);display:flex;align-items:center;justify-content:center;flex:none"><span class="dashicons dashicons-format-chat" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600;color:var(--text-h)">{{t.subj}}</div><div style="font-size:11.5px;color:var(--text-s)">{{t.id}} · laatste reactie {{t.reply}}</div></div><span style="{{t.stStyle}}">{{t.status}}</span></div></sc-for>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--card-shadow);padding:22px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span class="dashicons dashicons-book" style="font-size:17px;width:17px;height:17px;color:var(--fyn-purple)"></span><h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-h)">Kennisbank</h3></div>
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 13px;background:var(--well);border:1px solid var(--well-border);border-radius:9px;margin-bottom:14px"><span class="dashicons dashicons-search" style="font-size:15px;width:15px;height:15px;color:var(--text-s)"></span><input placeholder="Doorzoek artikelen…" style="flex:1;background:transparent;border:none;outline:none;color:var(--text-b);font-family:inherit;font-size:13px" /></div>
+            <sc-for list="{{kbArticles}}" as="a" hint-placeholder-count="6"><a href="#" style="display:flex;align-items:center;gap:10px;padding:9px 0;font-size:13px;color:var(--text-b)"><span class="{{a.iconCls}}" style="font-size:15px;width:15px;height:15px;color:var(--text-s)"></span><span style="flex:1">{{a.title}}</span><span class="dashicons dashicons-arrow-right-alt2" style="font-size:13px;width:13px;height:13px;color:var(--text-s)"></span></a></sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: 'light', screen: 'dashboard', kwTab: 'all' };
+
+  groups() {
+    return [
+      { label: 'Overzicht', items: [
+        ['dashboard','Dashboard','chart-bar'],
+        ['connection','Verbinding','admin-links'],
+      ]},
+      { label: 'Content', items: [
+        ['ideas','Ideeën','lightbulb'],
+        ['calendar','Contentkalender','calendar-alt'],
+        ['posts','Aangemaakte berichten','edit-page'],
+        ['clusters','Onderwerpgroepen','admin-site-alt3'],
+        ['apexflow','ApexFlow','controls-play'],
+        ['bulk','Bulkoptimalisatie','yes-alt'],
+      ]},
+      { label: 'Zoekwoorden & ranking', items: [
+        ['keywords','Zoekwoorden','search'],
+        ['rank','Ranktracker','chart-line'],
+        ['competitors','Concurrenten','groups'],
+        ['abtest','A/B-testen','randomize'],
+      ]},
+      { label: 'Links & techniek', items: [
+        ['links','Linkbeheer','admin-links'],
+        ['backlinks','Backlinks','admin-links'],
+        ['advbacklinks','Adv. Backlinks','admin-links'],
+        ['audit','Site Audit','clipboard'],
+        ['sitemaps','Sitemaps','networking'],
+      ]},
+      { label: 'Data & inzichten', items: [
+        ['seodata','SEO-data','chart-area'],
+        ['googledata','Google-data','google'],
+        ['llm','LLM-tracker','visibility'],
+      ]},
+      { label: 'Systeem', items: [
+        ['aitools','AI-hulpmiddelen','superhero-alt'],
+        ['integrations','Integraties','admin-plugins'],
+        ['support','Ondersteuning','sos'],
+      ]},
+    ];
+  }
+
+  heads() {
+    return {
+      dashboard: ['Statistieken','Dashboard','Een overzicht van je SEO-prestaties op basis van je laatste site-analyse.','Analyseer site','dashicons dashicons-chart-line'],
+      connection: ['Verbinding','Verbinding','Koppel deze site aan je Fyndable-licentie om alle functies te activeren.','Verbind site','dashicons dashicons-admin-links'],
+      ideas: ['Content-ideeën','Ideeën','AI-gegenereerde content-ideeën op basis van je zoekwoorden en clusters.','Genereer ideeën','dashicons dashicons-lightbulb'],
+      calendar: ['Contentkalender & workflow','Contentkalender','Plan, bewaak en vul gaten in je publicatieschema.','Plan content','dashicons dashicons-calendar-alt'],
+      posts: ['Door AI aangemaakte berichten','Aangemaakte berichten','Alle door Fyndable gegenereerde berichten met status, review en mass-edit.','Nieuw bericht','dashicons dashicons-edit-page'],
+      clusters: ['Onderwerpgroepen','Onderwerpgroepen','Bouw topic clusters met pillar- en supportpagina\u2019s voor topicale autoriteit.','Nieuwe cluster','dashicons dashicons-admin-site-alt3'],
+      apexflow: ['ApexFlow — content autopilot','ApexFlow','Volautomatische contentproductie van zoekwoord tot gepubliceerd bericht.','Start autopilot','dashicons dashicons-controls-play'],
+      bulk: ['Bulkoptimalisatie','Bulkoptimalisatie','Optimaliseer meta, alt-tekst en interne links voor vele berichten tegelijk.','Start bulk-run','dashicons dashicons-yes-alt'],
+      keywords: ['Zoekwoorden','Zoekwoorden','Elk zoekwoord dat je volgt, met volume, moeilijkheid en intentie.','Genereer zoekwoorden','dashicons dashicons-plus-alt2'],
+      rank: ['Ranktracker','Ranktracker','Volg dagelijkse posities voor je zoekwoorden in Google.','Voeg zoekwoord toe','dashicons dashicons-chart-line'],
+      competitors: ['Concurrentieonderzoek','Concurrenten','Analyseer de SEO-strategie en content-gaten van je concurrenten.','Analyseer concurrent','dashicons dashicons-groups'],
+      abtest: ['A/B-testen','A/B-testen','Test titel- en meta-varianten en meet het effect op CTR.','Nieuwe test','dashicons dashicons-randomize'],
+      links: ['Smart Internal Linking','Linkbeheer','Vind orphan pages en AI-gerangschikte interne linkkansen.','Scan site','dashicons dashicons-admin-links'],
+      backlinks: ['Backlink-analyse','Backlinks','Bewaak je backlinkprofiel, verwijzende domeinen en autoriteit.','Ververs backlinks','dashicons dashicons-admin-links'],
+      advbacklinks: ['Geavanceerde backlinks','Adv. Backlinks','Diepgaande backlink-intelligence met toxiciteits- en kansenscores.','Nieuwe analyse','dashicons dashicons-admin-links'],
+      audit: ['Site Audit','Site Audit','Technische SEO-audit: crawlbaarheid, snelheid, schema en meer.','Start audit','dashicons dashicons-clipboard'],
+      sitemaps: ['Sitemaps','Sitemaps','Beheer XML-sitemaps, hreflang en indexering.','Genereer sitemap','dashicons dashicons-networking'],
+      seodata: ['SEO-data dashboard','SEO-data','Gecombineerde data uit SE Ranking en Ahrefs.','Ververs data','dashicons dashicons-chart-area'],
+      googledata: ['Google-data','Google-data','Search Console, GA4 en Google Ads samengebracht in één dashboard.','Verbind Google','dashicons dashicons-google'],
+      llm: ['AI-zoekzichtbaarheid','LLM-tracker','Volg hoe vaak je merk wordt genoemd in ChatGPT, Gemini en Perplexity.','Nieuwe check','dashicons dashicons-visibility'],
+      aitools: ['AI-hulpmiddelen','AI-hulpmiddelen','Alle AI-tools: content writer, optimizer, image generator en meer.','Open tool','dashicons dashicons-superhero-alt'],
+      integrations: ['Integraties','Integraties','Verbind Google, analytics-tools en externe CMS\u2019en.','Voeg integratie toe','dashicons dashicons-admin-plugins'],
+      support: ['Ondersteuning','Ondersteuning','Doorzoek de kennisbank of open een supportticket.','Nieuw ticket','dashicons dashicons-sos'],
+    };
+  }
+
+  renderVals() {
+    const theme = this.state.theme;
+    const screen = this.state.screen;
+    const H = this.heads();
+    const h = H[screen] || H.dashboard;
+    const base = { display:'flex', alignItems:'center', gap:'11px', width:'100%', padding:'9px 11px', margin:'1px 0', border:'none', borderRadius:'9px', background:'transparent', color:'var(--nav-fg)', fontFamily:'Outfit,sans-serif', fontSize:'13.5px', fontWeight:600, cursor:'pointer', lineHeight:1 };
+    const activeStyle = { ...base, background:'linear-gradient(135deg,#8F39AC,#379FD3)', color:'#fff', boxShadow:'0 5px 14px rgba(143,57,172,.32)' };
+    const hoverStyle = { background:'var(--nav-hover)', color:'var(--text-h)' };
+
+    const nav = this.groups().map(g => ({
+      label: g.label,
+      items: g.items.map(([id,label,icon]) => {
+        const active = id === screen;
+        return {
+          id, label, iconCls: 'dashicons dashicons-' + icon,
+          go: () => this.setState({ screen: id }),
+          style: active ? activeStyle : base,
+          hover: active ? activeStyle : hoverStyle,
+          badge: id === 'support' ? '2' : '',
+          badgeStyle: { flex:'none', minWidth:'18px', height:'18px', padding:'0 5px', borderRadius:'999px', background: active ? 'rgba(255,255,255,.25)' : 'var(--fyn-danger)', color:'#fff', fontSize:'10.5px', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' },
+        };
+      }),
+    }));
+
+    // dashboard data
+    const stats = [
+      { label:'SEO-score', value:'98', delta:'+6', deltaStyle:this.deltaUp(), sub:'t.o.v. vorige maand', iconCls:'dashicons dashicons-chart-line' },
+      { label:'Geanalyseerd', value:'14', delta:'100%', deltaStyle:this.deltaNeutral(), sub:'berichten', iconCls:'dashicons dashicons-media-document' },
+      { label:'Problemen', value:'3', delta:'−2', deltaStyle:this.deltaUp(), sub:'deze week', iconCls:'dashicons dashicons-warning' },
+      { label:'Quick wins', value:'5', delta:'nieuw', deltaStyle:this.deltaInfo(), sub:'op te lossen', iconCls:'dashicons dashicons-awards' },
+    ];
+    const G = 'linear-gradient(90deg,#8F39AC,#379FD3)';
+    const OK = '#10b981';
+    const breakdown = [
+      ['SEO-titels','14/14 (100%)','100%',OK,G],
+      ['Meta-descriptions','14/14 (100%)','100%',OK,G],
+      ['Focus-zoekwoorden','14/14 (100%)','100%',OK,G],
+      ['Open Graph-tags','13/14 (93%)','93%','#f59e0b','linear-gradient(90deg,#f59e0b,#fbbf24)'],
+      ['Interne links','14/14 (100%)','100%',OK,G],
+      ['Content-lengte','12/14 (86%)','86%','#f59e0b','linear-gradient(90deg,#f59e0b,#fbbf24)'],
+    ].map(b => ({ label:b[0], val:b[1], pct:b[2], col:b[3], bar:b[4] }));
+    const problems = [
+      { text:'1 bericht mist Open Graph-tags', col:'#f59e0b', iconCls:'dashicons dashicons-warning' },
+      { text:'2 berichten hebben dunne content (<300 woorden)', col:'#3b82f6', iconCls:'dashicons dashicons-info' },
+      { text:'1 bericht mist een focus-zoekwoord', col:'#3b82f6', iconCls:'dashicons dashicons-info' },
+    ];
+    const wins = [
+      { title:'AEO en GEO: wat is het verschil en waarom heb je beide nodig?', meta:'Goede content · meta ontbreekt' },
+      { title:'SEO en GEO in Nederland: zo word je gevonden', meta:'Goede content · OG-afbeelding ontbreekt' },
+      { title:'Fyndable vs. de concurrentie — AI SEO tools vergeleken', meta:'Dunne content · breid uit met AI' },
+    ];
+
+    // keywords
+    const badge = (bg,fg) => ({ display:'inline-block', padding:'3px 11px', borderRadius:'999px', background:bg, color:fg, fontSize:'11.5px', fontWeight:700 });
+    const diffMap = { Laag:['24%','#10b981'], Gemiddeld:['55%','#f59e0b'], Hoog:['84%','#ef4444'] };
+    const intentMap = { Commercieel:badge('var(--fyn-accent-light)','#9333ea'), Transactioneel:badge('var(--fyn-success-light)','#047857'), Informatief:badge('var(--fyn-info-light)','#1d4ed8') };
+    const kwSeed = [
+      ['seo plugin wordpress','/seo-plugin-wordpress','Smart SEO','2.400','Gemiddeld','€4,10',3,'Commercieel'],
+      ['ai meta description generator','/ai-meta-generator','AI content','1.300','Laag','€6,80',1,'Transactioneel'],
+      ['seo plugin white label','/white-label-seo','White label','880','Hoog','€11,50',7,'Commercieel'],
+      ['topic cluster tool','/topic-clusters','Clusters','590','Laag','€9,20',4,'Informatief'],
+      ['interne links automatiseren','/interne-links',null,'430','Laag','€7,70',null,'Informatief'],
+      ['schema markup generator','/schema-generator','Schema','3.600','Hoog','€18,40',12,'Transactioneel'],
+      ['content optimizer ai','/content-optimizer','AI content','1.100','Gemiddeld','€5,30',2,'Commercieel'],
+      ['aeo vs geo','/aeo-geo',null,'720','Laag','€3,10',null,'Informatief'],
+    ];
+    const kwRows = kwSeed.map(k => {
+      const [p,c] = diffMap[k[4]];
+      return { kw:k[0], url:k[1], cluster:k[2]||'', vol:k[3], diff:k[4], diffPct:p, diffCol:c, cpc:k[5],
+        rank: k[6]==null ? '—' : k[6],
+        rankStyle: k[6]==null ? { fontSize:'13px', color:'var(--text-s)' } : badge(k[6]<=3?'var(--fyn-success-light)':'var(--fyn-info-light)', k[6]<=3?'#047857':'#1d4ed8'),
+        intent:k[7], intentStyle:intentMap[k[7]] };
+    });
+    const kwTabs = [['all','Alle',24],['tracked','Gevolgd',12],['ranked','Gerankt',9],['pos','Positiewijzigingen',4],['new','Nieuw gerankt',2]].map(t => ({
+      label:t[0]===this.state.kwTab?t[1]:t[1], count:t[2],
+      go:()=>this.setState({kwTab:t[0]}),
+      style:{ display:'flex', alignItems:'center', gap:'7px', padding:'11px 15px', border:'none', background:'transparent', fontFamily:'Outfit,sans-serif', fontSize:'13px', fontWeight:600, cursor:'pointer', color: t[0]===this.state.kwTab?'var(--fyn-purple)':'var(--text-m)', borderBottom: t[0]===this.state.kwTab?'2px solid var(--fyn-purple)':'2px solid transparent', marginBottom:'-1px' },
+      countStyle:{ minWidth:'20px', height:'18px', padding:'0 6px', borderRadius:'999px', background: t[0]===this.state.kwTab?'var(--fyn-purple-tint)':'var(--sev-track)', color: t[0]===this.state.kwTab?'var(--fyn-purple)':'var(--text-m)', fontSize:'10.5px', fontWeight:700, display:'inline-flex', alignItems:'center', justifyContent:'center' },
+    }));
+
+    // calendar
+    const calDows = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+    const chipP = { marginTop:'5px', padding:'3px 7px', borderRadius:'6px', background:'var(--fyn-purple-tint)', color:'var(--fyn-purple)', fontSize:'10.5px', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' };
+    const chipY = { ...chipP, background:'var(--fyn-warning-light)', color:'#92700a' };
+    const cellBase = { minHeight:'86px', padding:'7px 8px', borderRadius:'9px', border:'1px solid var(--divide)', background:'var(--well)', display:'flex', flexDirection:'column' };
+    const numBase = { fontSize:'12px', fontWeight:700, color:'var(--text-m)' };
+    const mk = (n, opt={}) => ({ n: n===0?'':String(n), cellStyle: n===0?{...cellBase, background:'transparent', border:'1px solid transparent'}:(opt.gap?{...cellBase, background:'var(--fyn-warning-light)', borderColor:'rgba(245,158,11,.3)'}:cellBase), numStyle: n===0?{...numBase, opacity:0}:numBase, chip:opt.chip||'', chipStyle: opt.chipY?chipY:chipP, gap: !!opt.gap });
+    const calDays = [
+      mk(0),mk(0),mk(0),mk(1),mk(2),mk(3),mk(4),
+      mk(5),mk(6),mk(7),mk(8),mk(9),mk(10),mk(11),
+      mk(12),mk(13),mk(14),mk(15),mk(16),mk(17),mk(18),
+      mk(19),mk(20),mk(21),mk(22),mk(23,{chip:'AEO en GEO: wat is het verschil…'}),mk(24),mk(25),
+      mk(26,{chip:'SEO en GEO in Nederland…',chipY:true}),mk(27,{gap:true}),mk(28),mk(29),mk(30),mk(31),mk(0),
+    ];
+    const gaps = [
+      { date:'27 oktober 2026' },{ date:'3 november 2026' },{ date:'10 november 2026' },{ date:'17 november 2026' },{ date:'24 november 2026' },
+    ];
+    const workflow = [
+      { n:'4', label:'Concepten', bg:'var(--fyn-warning-light)', border:'rgba(245,158,11,.25)', fg:'#92700a' },
+      { n:'0', label:'In review', bg:'var(--fyn-info-light)', border:'rgba(59,130,246,.25)', fg:'#1d4ed8' },
+      { n:'0', label:'Gepland', bg:'var(--fyn-success-light)', border:'rgba(16,185,129,.25)', fg:'#047857' },
+      { n:'1', label:'Gepubliceerd (30d)', bg:'var(--fyn-purple-tint)', border:'rgba(143,57,172,.25)', fg:'#8F39AC' },
+    ];
+    const prio = (t)=> t==='Hoog'?badge('var(--fyn-danger-light)','#b91c1c'):t==='Gemiddeld'?badge('var(--fyn-warning-light)','#92700a'):badge('var(--fyn-success-light)','#047857');
+    const opps = [
+      { kw:'SEO-strategie', type:'Content gap (categorie)', date:'30 okt 2026', prio:'Gemiddeld', prioStyle:prio('Gemiddeld') },
+      { kw:'AI & content', type:'Content gap (categorie)', date:'8 nov 2026', prio:'Gemiddeld', prioStyle:prio('Gemiddeld') },
+      { kw:'Lokale SEO Nederland', type:'Nieuw zoekwoord', date:'15 nov 2026', prio:'Hoog', prioStyle:prio('Hoog') },
+    ];
+
+    // posts
+    const pill = (active, bg, fg) => ({ display:'inline-flex', alignItems:'center', gap:'7px', padding:'5px 12px', borderRadius:'999px', border: active?'none':'1.5px solid var(--input-border)', background: active?(bg||'var(--fyn-purple)'):'transparent', color: active?'#fff':'var(--text-m)', fontSize:'12px', fontWeight:600, cursor:'pointer' });
+    const pc = (active) => ({ minWidth:'18px', height:'17px', padding:'0 5px', borderRadius:'999px', background: active?'rgba(255,255,255,.25)':'var(--sev-track)', color: active?'#fff':'var(--text-m)', fontSize:'10px', fontWeight:700, display:'inline-flex', alignItems:'center', justifyContent:'center' });
+    const mkf = (arr, act) => arr.map((f,i)=>({ label:f[0], n:f[1], style:pill(i===act), cStyle:pc(i===act) }));
+    const pf1 = mkf([['Alle',18],['Voltooid',11],['In behandeling',5],['Mislukt',2]], 0);
+    const pf2 = mkf([['Ja',9],['Nee',3],['Aandacht nodig',4],['In review',1],['Mislukt',1]], -1);
+    const pf3 = mkf([['Gepubliceerd',6],['Concepten',9],['Gepland',2],['Privé',1]], -1);
+    const sBadge = (bg,fg)=>({ display:'inline-block', padding:'3px 11px', borderRadius:'999px', background:bg, color:fg, fontSize:'11.5px', fontWeight:700 });
+    const rBadge = (bg,fg)=>({ display:'inline-flex', alignItems:'center', gap:'5px', padding:'3px 11px', borderRadius:'999px', background:bg, color:fg, fontSize:'11.5px', fontWeight:700 });
+    const postSeed = [
+      ['AEO en GEO: wat is het verschil en waarom heb je beide nodig?',284,'1.840','14 okt 2026','Openbaar','Gepubliceerd','ok','Voltooid','me-ok','Ja','yes-alt'],
+      ['SEO en GEO in Nederland: zo word je gevonden',285,'2.110','16 okt 2026','Openbaar','Concept','draft','Voltooid','me-ok','Aandacht','warning'],
+      ['Fyndable vs. de concurrentie — AI SEO tools vergeleken',286,'1.290','18 okt 2026','Openbaar','Concept','draft','In behandeling','me-pending','In review','clock'],
+      ['Interne links automatiseren met AI',287,'960','20 okt 2026','Privé','Concept','draft','Voltooid','me-ok','Ja','yes-alt'],
+      ['Schema markup: complete gids voor WordPress',288,'2.640','22 okt 2026','Openbaar','Gepland','sched','Voltooid','me-ok','Ja','yes-alt'],
+      ['Content decay: zo houd je oude posts actueel',289,'1.510','24 okt 2026','Openbaar','Concept','draft','Mislukt','me-fail','Nee','no'],
+    ];
+    const statusStyleMap = { ok:sBadge('var(--fyn-success-light)','#047857'), draft:sBadge('var(--sev-track)','var(--text-m)'), sched:sBadge('var(--fyn-info-light)','#1d4ed8') };
+    const statusLabel = { ok:'Gepubliceerd', draft:'Concept', sched:'Gepland' };
+    const meStyleMap = { 'me-ok':sBadge('var(--fyn-success-light)','#047857'), 'me-pending':sBadge('var(--fyn-warning-light)','#92700a'), 'me-fail':sBadge('var(--fyn-danger-light)','#b91c1c') };
+    const revColor = { 'Ja':rBadge('var(--fyn-success-light)','#047857'), 'Nee':rBadge('var(--fyn-danger-light)','#b91c1c'), 'Aandacht':rBadge('var(--fyn-warning-light)','#92700a'), 'In review':rBadge('var(--fyn-info-light)','#1d4ed8') };
+    const posts = postSeed.map(p => ({
+      title:p[0], id:p[1], words:p[2], date:p[3], vis:p[4],
+      status:statusLabel[p[6]], statusStyle:statusStyleMap[p[6]],
+      me:p[7], meStyle:meStyleMap[p[8]],
+      rev:p[9], revStyle:revColor[p[9]], revIcon:p[10],
+      icon: p[4]==='Privé'?'lock':'media-text',
+    }));
+
+    const toggleOn = { display:'flex', alignItems:'center', justifyContent:'center', width:'28px', height:'28px', borderRadius:'50%', fontSize:'14px' };
+    return {
+      themeClass: theme==='dark' ? 'fyn-dark' : '',
+      toggleTheme: () => this.setState({ theme: theme==='dark'?'light':'dark' }),
+      sunStyle: { ...toggleOn, background: theme==='light'?'rgba(255,255,255,.9)':'transparent', color: theme==='light'?'#8F39AC':'rgba(255,255,255,.6)' },
+      moonStyle: { ...toggleOn, background: theme==='dark'?'rgba(255,255,255,.18)':'transparent', color: theme==='dark'?'#fff':'rgba(255,255,255,.6)' },
+      nav, screen,
+      head: { title:h[0], crumb:h[1], desc:h[2], action:h[3], actionIcon:h[4] },
+      isDash: screen==='dashboard', isKw: screen==='keywords', isCal: screen==='calendar', isPosts: screen==='posts',
+      isStub: false,
+      goDash: () => this.setState({ screen:'dashboard' }),
+      stats, breakdown, problems, wins,
+      kwRows, kwTabs,
+      calDows, calDays, gaps, workflow, opps,
+      pf1, pf2, pf3, posts,
+      ...this.screenData(screen),
+    };
+  }
+
+  screenData(screen) {
+    const b = (bg,fg)=>({display:'inline-block',padding:'3px 11px',borderRadius:'999px',background:bg,color:fg,fontSize:'11.5px',fontWeight:700});
+    const rb = (bg,fg)=>({...b(bg,fg),display:'inline-flex',alignItems:'center',gap:'5px'});
+    const T = {
+      up:{padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-success-light)',color:'#047857',fontSize:'11.5px',fontWeight:700},
+      down:{padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-danger-light)',color:'#b91c1c',fontSize:'11.5px',fontWeight:700},
+      info:{padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-info-light)',color:'#1d4ed8',fontSize:'11.5px',fontWeight:700},
+      warn:{padding:'2px 8px',borderRadius:'6px',background:'var(--fyn-warning-light)',color:'#92700a',fontSize:'11.5px',fontWeight:700},
+    };
+    const tile = (label,value,delta,tone,sub,icon)=>({label,value,delta:delta||'',deltaStyle:tone?T[tone]:{display:'none'},sub:sub||'',iconCls:'dashicons dashicons-'+icon});
+    const S = { ok:b('var(--fyn-success-light)','#047857'), warn:b('var(--fyn-warning-light)','#92700a'), danger:b('var(--fyn-danger-light)','#b91c1c'), info:b('var(--fyn-info-light)','#1d4ed8'), purple:b('var(--fyn-purple-tint)','#8F39AC'), neutral:b('var(--sev-track)','var(--text-m)') };
+
+    // CONNECTION
+    const connStats = [ tile('Status','Actief','Geldig','up','licentie','yes-alt'), tile('Plan','Agency','€499/mnd','info','','star-filled'), tile('API-verbruik','62%','12.4k calls','warn','deze maand','cloud'), tile('Verlenging','14 nov','over 18 dagen',null,'','calendar-alt') ];
+    const planFeatures = ['AI Content Writer','Content Optimizer','Rank Tracker','Topic Clusters','Search Console + GA4','A/B Testing','Content Decay Monitor','White-label','Onbeperkte API-calls','Multi-site beheer'];
+
+    // IDEAS
+    const ideaCards = [
+      { title:'Hoe kies je de juiste SEO-plugin voor WordPress', kw:'seo plugin wordpress', vol:'2.400', intent:'Commercieel', iStyle:S.purple, score:'Hoog potentieel', sStyle:S.ok },
+      { title:'AEO vs GEO: de complete gids voor 2026', kw:'aeo vs geo', vol:'720', intent:'Informatief', iStyle:S.info, score:'Trending', sStyle:S.warn },
+      { title:'Interne links automatiseren zonder developer', kw:'interne links automatiseren', vol:'430', intent:'Informatief', iStyle:S.info, score:'Quick win', sStyle:S.ok },
+      { title:'White-label SEO: zo start je je eigen SEO-dienst', kw:'white label seo', vol:'880', intent:'Commercieel', iStyle:S.purple, score:'Hoog potentieel', sStyle:S.ok },
+      { title:'Schema markup voor WooCommerce producten', kw:'schema markup woocommerce', vol:'1.100', intent:'Transactioneel', iStyle:S.ok, score:'Medium', sStyle:S.neutral },
+      { title:'Content decay: oude posts weer laten ranken', kw:'content decay', vol:'590', intent:'Informatief', iStyle:S.info, score:'Quick win', sStyle:S.ok },
+    ];
+
+    // CLUSTERS
+    const clusterCards = [
+      { name:'AI SEO & content', pages:9, done:7, pct:'78%', pillar:'De complete gids voor AI-gedreven SEO', sub:['AEO en GEO uitgelegd','AI content writer workflow','GEO content score optimaliseren'] },
+      { name:'Technische SEO', pages:6, done:6, pct:'100%', pillar:'Technische SEO checklist voor WordPress', sub:['Schema markup gids','Sitemaps & indexering','Core Web Vitals verbeteren'] },
+      { name:'Linkbuilding', pages:5, done:2, pct:'40%', pillar:'Linkbuilding strategie in 2026', sub:['Interne links automatiseren','Backlink-analyse basics','Orphan pages oplossen'] },
+    ];
+
+    // APEXFLOW
+    const flowSteps = [ ['Zoekwoord',12,'search'], ['Brief',8,'media-document'], ['Concept',4,'edit'], ['Review',2,'visibility'], ['Gepubliceerd',1,'yes-alt'] ].map(s=>({label:s[0],n:s[1],iconCls:'dashicons dashicons-'+s[2]}));
+    const flowQueue = [
+      { kw:'seo plugin wordpress', stage:'Concept', stStyle:S.warn, eta:'Vandaag 16:00', prog:'65%' },
+      { kw:'aeo vs geo', stage:'Review', stStyle:S.info, eta:'Morgen 09:00', prog:'85%' },
+      { kw:'white label seo', stage:'Brief', stStyle:S.purple, eta:'29 okt', prog:'30%' },
+      { kw:'interne links automatiseren', stage:'Zoekwoord', stStyle:S.neutral, eta:'In wachtrij', prog:'10%' },
+    ];
+
+    // BULK
+    const bulkTasks = [ ['Meta-descriptions genereren','media-document',42], ['Alt-tekst voor afbeeldingen','format-image',118], ['Interne links voorstellen','admin-links',31], ['Focus-zoekwoorden toewijzen','search',14] ].map(t=>({label:t[0],iconCls:'dashicons dashicons-'+t[1],count:t[2]}));
+    const bulkRows = [
+      { title:'AEO en GEO: wat is het verschil', task:'Meta + alt-tekst', status:'Voltooid', stStyle:S.ok, icon:'yes-alt', iconCol:'#10b981' },
+      { title:'SEO en GEO in Nederland', task:'Meta-description', status:'Bezig', stStyle:S.info, icon:'update', iconCol:'#3b82f6' },
+      { title:'Fyndable vs. de concurrentie', task:'Interne links', status:'In wachtrij', stStyle:S.neutral, icon:'clock', iconCol:'var(--text-m)' },
+      { title:'Schema markup gids voor WordPress', task:'Alt-tekst (8)', status:'Voltooid', stStyle:S.ok, icon:'yes-alt', iconCol:'#10b981' },
+    ];
+
+    // RANK
+    const rankStats = [ tile('Gem. positie','8,4','+1,2','up','laatste 30d','chart-line'), tile('Gestegen','7','zoekwoorden','up','','arrow-up-alt'), tile('Gedaald','2','zoekwoorden','down','','arrow-down-alt'), tile('Top 3','3','van 24','info','','awards') ];
+    const rankRows = [
+      { kw:'ai meta description generator', pos:1, prev:2, up:true, vol:'1.300', url:'/ai-meta-generator' },
+      { kw:'topic cluster tool', pos:4, prev:6, up:true, vol:'590', url:'/topic-clusters' },
+      { kw:'seo plugin wordpress', pos:3, prev:3, up:null, vol:'2.400', url:'/seo-plugin-wordpress' },
+      { kw:'schema markup generator', pos:12, prev:9, up:false, vol:'3.600', url:'/schema-generator' },
+      { kw:'content optimizer ai', pos:2, prev:5, up:true, vol:'1.100', url:'/content-optimizer' },
+      { kw:'seo plugin white label', pos:7, prev:8, up:true, vol:'880', url:'/white-label-seo' },
+    ].map(r=>({ ...r, posStyle:b(r.pos<=3?'var(--fyn-success-light)':r.pos<=10?'var(--fyn-info-light)':'var(--fyn-warning-light)', r.pos<=3?'#047857':r.pos<=10?'#1d4ed8':'#92700a'),
+      chg: r.up===null?'—':(r.up?'▲ '+Math.abs(r.prev-r.pos):'▼ '+Math.abs(r.prev-r.pos)),
+      chgStyle:{fontSize:'12px',fontWeight:700,color:r.up===null?'var(--text-s)':(r.up?'#10b981':'#ef4444')} }));
+
+    // COMPETITORS
+    const compStats = [ tile('Gevolgd','4','concurrenten',null,'','groups'), tile('Gedeelde kw','142','overlap','info','','search'), tile('Content-gaten','28','kansen','warn','','warning'), tile('Gem. DR','56','van concurrenten',null,'','chart-bar') ];
+    const compCards = [
+      { domain:'rankmath.com', dr:72, traffic:'1,2M', kw:'48.200', overlap:'38%', ov:38 },
+      { domain:'yoast.com', dr:84, traffic:'3,4M', kw:'112.000', overlap:'52%', ov:52 },
+      { domain:'surferseo.com', dr:61, traffic:'640K', kw:'22.800', overlap:'24%', ov:24 },
+    ];
+    const compGap = [
+      { kw:'ai content detector', vol:'4.800', theirPos:3, yourPos:'—', diff:S.warn, diffL:'Hoog' },
+      { kw:'seo audit gratis', vol:'2.900', theirPos:5, yourPos:'—', diff:S.ok, diffL:'Laag' },
+      { kw:'keyword clustering tool', vol:'1.600', theirPos:2, yourPos:14, diff:S.info, diffL:'Medium' },
+      { kw:'serp tracker nederland', vol:'880', theirPos:7, yourPos:'—', diff:S.ok, diffL:'Laag' },
+    ];
+
+    // AB TESTING
+    const abTests = [
+      { title:'Homepage title tag', metric:'CTR', status:'Winnaar', stStyle:S.ok, a:'Smart SEO voor WordPress — Fyndable', b:'Fyndable: AI SEO plugin voor WordPress', aCtr:'3,2%', bCtr:'4,8%', win:'B', conf:'96%', confN:96 },
+      { title:'Blog meta description', metric:'CTR', status:'Loopt', stStyle:S.info, a:'Leer alles over AI SEO in onze gids.', b:'Ontdek hoe AI jouw SEO verdubbelt →', aCtr:'2,1%', bCtr:'2,4%', win:'—', conf:'61%', confN:61 },
+      { title:'Product page H1', metric:'CTR', status:'Loopt', stStyle:S.info, a:'SEO-plugin met 40+ functies', b:'De slimste SEO-plugin voor WordPress', aCtr:'5,0%', bCtr:'4,6%', win:'—', conf:'44%', confN:44 },
+    ];
+
+    // LINKS
+    const linkStats = [ tile('Totaal pagina\u2019s','14',null,null,'geïndexeerd','media-default'), tile('Orphan pages','5','aandacht','warn','geen inkomende links','warning'), tile('Gem. interne links','2','per pagina','info','','admin-links'), tile('Link-kansen','18','gevonden','up','','lightbulb') ];
+    const orphanRows = [
+      { page:'Fyndable vs. de concurrentie — AI SEO tools vergeleken', type:'page', score:70, srcs:'10 pagina\u2019s' },
+      { page:'AEO en GEO: wat is het verschil en waarom heb je beide nodig?', type:'post', score:70, srcs:'10 pagina\u2019s' },
+      { page:'SEO-tips, AI-inzichten en productupdates', type:'page', score:50, srcs:'10 pagina\u2019s' },
+      { page:'Privacybeleid', type:'page', score:20, srcs:'10 pagina\u2019s' },
+      { page:'Algemene voorwaarden', type:'page', score:20, srcs:'10 pagina\u2019s' },
+    ].map(o=>({ ...o, scoreStyle:{fontSize:'13px',fontWeight:700,color:o.score>=60?'#ef4444':o.score>=40?'#f59e0b':'#10b981'} }));
+
+    // BACKLINKS
+    const blStats = [ tile('Backlinks','1.284','+42','up','deze maand','admin-links'), tile('Verwijzende domeinen','312','+8','up','','admin-site'), tile('Domain Rating','48','+2','up','','chart-bar'), tile('Verloren','17','deze maand','down','','dismiss') ];
+    const blRows = [
+      { src:'techradar.com/best-seo-plugins', dr:91, anchor:'Fyndable Smart SEO', type:'Dofollow', tStyle:S.ok, seen:'12 okt 2026' },
+      { src:'wpbeginner.com/seo-tools-2026', dr:84, anchor:'AI SEO plugin', type:'Dofollow', tStyle:S.ok, seen:'8 okt 2026' },
+      { src:'reddit.com/r/wordpress', dr:94, anchor:'fyndable.com', type:'Nofollow', tStyle:S.neutral, seen:'3 okt 2026' },
+      { src:'seoblog.nl/beste-seo-plugins', dr:52, anchor:'slimme SEO-plugin', type:'Dofollow', tStyle:S.ok, seen:'1 okt 2026' },
+      { src:'marketingfacts.nl/ai-seo', dr:67, anchor:'Fyndable', type:'Dofollow', tStyle:S.ok, seen:'28 sep 2026' },
+    ];
+
+    // ADV BACKLINKS
+    const toxStats = [ tile('Toxiciteitsscore','14','laag','up','gezond profiel','shield'), tile('Toxische links','9','te beoordelen','warn','','warning'), tile('Link-snelheid','+6%','groei/mnd','up','','chart-line'), tile('Gedisavowed','3','dit kwartaal',null,'','dismiss') ];
+    const toxRows = [
+      { src:'spammy-directory.ru', dr:4, tox:88, anchor:'cheap seo backlinks', reason:'PBN-netwerk' },
+      { src:'link-farm-seo.biz', dr:7, tox:76, anchor:'wordpress seo', reason:'Lage kwaliteit' },
+      { src:'casino-links.net', dr:12, tox:72, anchor:'best seo tool', reason:'Irrelevant niche' },
+      { src:'auto-blog-99.com', dr:3, tox:64, anchor:'seo plugin', reason:'Gegenereerde content' },
+    ].map(t=>({ ...t, toxStyle:{height:'100%',width:t.tox+'%',background:t.tox>=75?'#ef4444':t.tox>=50?'#f59e0b':'#10b981'}, toxCol:t.tox>=75?'#ef4444':'#f59e0b' }));
+
+    // AUDIT
+    const auditCats = [ { label:'Fouten', n:3, col:'#ef4444', bg:'var(--fyn-danger-light)', icon:'dismiss' }, { label:'Waarschuwingen', n:11, col:'#f59e0b', bg:'var(--fyn-warning-light)', icon:'warning' }, { label:'Opmerkingen', n:24, col:'#3b82f6', bg:'var(--fyn-info-light)', icon:'info' }, { label:'Geslaagd', n:86, col:'#10b981', bg:'var(--fyn-success-light)', icon:'yes-alt' } ];
+    const auditIssues = [
+      { sev:'Fout', sStyle:S.danger, title:'3 pagina\u2019s geven een 404-status', detail:'Interne links verwijzen naar verwijderde pagina\u2019s.', icon:'dismiss', col:'#ef4444' },
+      { sev:'Waarschuwing', sStyle:S.warn, title:'11 afbeeldingen missen alt-tekst', detail:'Genereer alt-tekst automatisch met AI.', icon:'format-image', col:'#f59e0b' },
+      { sev:'Waarschuwing', sStyle:S.warn, title:'Core Web Vitals: LCP boven 2,5s op 4 pagina\u2019s', detail:'Optimaliseer grote afbeeldingen en render-blocking scripts.', icon:'performance', col:'#f59e0b' },
+      { sev:'Opmerking', sStyle:S.info, title:'6 titels zijn langer dan 60 tekens', detail:'Kort titels in zodat ze niet worden afgekapt in de SERP.', icon:'editor-cut', col:'#3b82f6' },
+    ];
+
+    // SITEMAPS
+    const smRows = [
+      { name:'Berichten-sitemap', urls:'142', updated:'Vandaag 04:00', status:'Actief', stStyle:S.ok },
+      { name:'Pagina\u2019s-sitemap', urls:'18', updated:'Vandaag 04:00', status:'Actief', stStyle:S.ok },
+      { name:'Afbeeldingen-sitemap', urls:'306', updated:'Vandaag 04:00', status:'Actief', stStyle:S.ok },
+      { name:'Categorie-sitemap', urls:'12', updated:'Gisteren 04:00', status:'Actief', stStyle:S.ok },
+      { name:'Video-sitemap', urls:'0', updated:'—', status:'Leeg', stStyle:S.neutral },
+    ];
+    const smToggles = [ ['Berichten opnemen',true], ['Pagina\u2019s opnemen',true], ['Afbeeldingen opnemen',true], ['Categorieën opnemen',true], ['IndexNow ping bij publicatie',true], ['Hreflang-annotaties',false] ].map(t=>({label:t[0],on:t[1], knob:{position:'absolute',top:'2px',[t[1]?'right':'left']:'2px',width:'18px',height:'18px',borderRadius:'50%',background:'#fff'}, track:{width:'40px',height:'22px',borderRadius:'999px',background:t[1]?'var(--fyn-purple)':'var(--sev-track)',position:'relative',cursor:'pointer',flex:'none'}}));
+
+    // SEO DATA
+    const sdStats = [ tile('Organisch verkeer','24,8k','+12%','up','per maand','chart-area'), tile('Zoekwoorden','1.842','+96','up','gerankt','search'), tile('Domain Rating','48','+2','up','Ahrefs','chart-bar'), tile('Zichtbaarheid','34%','+4%','up','SE Ranking','visibility') ];
+    const sdSources = [ { name:'SE Ranking', status:'Verbonden', ok:true, icon:'chart-line' }, { name:'Ahrefs', status:'Verbonden', ok:true, icon:'admin-links' }, { name:'DataForSEO', status:'Niet verbonden', ok:false, icon:'cloud' } ].map(s=>({ ...s, okStyle:s.ok?{...b('var(--fyn-success-light)','#047857')}:{...b('var(--sev-track)','var(--text-m)')}, okText:s.ok?'✓':'Verbind' }));
+    const sdRows = [
+      { kw:'seo plugin wordpress', pos:3, vol:'2.400', traffic:'1.240', dr:'—' },
+      { kw:'ai content writer', pos:5, vol:'3.100', traffic:'980', dr:'—' },
+      { kw:'topic cluster tool', pos:4, vol:'590', traffic:'410', dr:'—' },
+      { kw:'schema markup generator', pos:12, vol:'3.600', traffic:'220', dr:'—' },
+    ];
+
+    // GOOGLE DATA
+    const gdStats = [ tile('Klikken','18,4k','+9%','up','GSC · 28d','chart-line'), tile('Vertoningen','412k','+14%','up','GSC · 28d','visibility'), tile('Gem. CTR','4,5%','+0,3%','up','','chart-pie'), tile('Gem. positie','8,4','+1,2','up','','awards') ];
+    const gdQueries = [
+      { q:'fyndable seo', clicks:'2.140', impr:'18.400', ctr:'11,6%', pos:'1,2' },
+      { q:'ai seo plugin wordpress', clicks:'1.620', impr:'42.100', ctr:'3,8%', pos:'4,1' },
+      { q:'content optimizer', clicks:'980', impr:'22.800', ctr:'4,3%', pos:'6,0' },
+      { q:'topic cluster tool', clicks:'540', impr:'9.200', ctr:'5,9%', pos:'3,8' },
+      { q:'schema markup wordpress', clicks:'410', impr:'31.600', ctr:'1,3%', pos:'12,4' },
+    ];
+    const gdSources = [ { name:'Search Console', status:'Verbonden', ok:true, icon:'google' }, { name:'Google Analytics 4', status:'Verbonden', ok:true, icon:'chart-area' }, { name:'Google Ads', status:'Niet verbonden', ok:false, icon:'megaphone' } ];
+
+    // LLM
+    const llmStats = [ tile('Vermeldingsratio','42%','+8%','up','van 50 prompts','visibility'), tile('Share of voice','18%','+3%','up','vs concurrenten','chart-pie'), tile('Gem. positie','2,4','in antwoorden','up','','awards'), tile('Sentiment','Positief','91%','up','','smiley') ];
+    const llmPlatforms = [ { name:'ChatGPT', pct:'48%', n:48, note:'24 van 50 prompts' }, { name:'Gemini', pct:'38%', n:38, note:'19 van 50 prompts' }, { name:'Perplexity', pct:'40%', n:40, note:'20 van 50 prompts' } ];
+    const llmPrompts = [
+      { prompt:'beste AI SEO plugin voor WordPress', chatgpt:true, gemini:true, perplexity:true, pos:1 },
+      { prompt:'hoe automatiseer ik interne links', chatgpt:true, gemini:false, perplexity:true, pos:2 },
+      { prompt:'white-label SEO tools vergelijken', chatgpt:false, gemini:true, perplexity:false, pos:4 },
+      { prompt:'topic cluster software nederland', chatgpt:true, gemini:true, perplexity:true, pos:1 },
+    ].map(p=>({ ...p, cg:p.chatgpt?'✓':'✕', cgS:{color:p.chatgpt?'#10b981':'var(--text-s)',fontWeight:700}, gm:p.gemini?'✓':'✕', gmS:{color:p.gemini?'#10b981':'var(--text-s)',fontWeight:700}, px:p.perplexity?'✓':'✕', pxS:{color:p.perplexity?'#10b981':'var(--text-s)',fontWeight:700}, posStyle:b('var(--fyn-purple-tint)','#8F39AC') }));
+
+    // AI TOOLS
+    const toolCards = [
+      ['Content Writer','Schrijf complete SEO-geoptimaliseerde artikelen met AI.','edit-page'],
+      ['Content Optimizer','Verbeter bestaande content op basis van SERP-analyse.','chart-line'],
+      ['AI Image Generator','Genereer unieke afbeeldingen en alt-tekst.','format-image'],
+      ['Content Repurposer','Zet één artikel om in social posts en nieuwsbrieven.','share'],
+      ['Content Brief','Genereer een gedetailleerde brief voor elk zoekwoord.','media-document'],
+      ['FAQ Schema','Maak FAQ-blokken met schema markup via AI.','editor-help'],
+      ['Meta Generator','Genereer titels en meta-descriptions in bulk.','tag'],
+      ['E-E-A-T Validator','Controleer content op expertise en betrouwbaarheid.','awards'],
+    ].map(t=>({title:t[0],desc:t[1],iconCls:'dashicons dashicons-'+t[2]}));
+
+    // INTEGRATIONS
+    const integ = [
+      ['Google Search Console','Importeer klikken, vertoningen en posities.','google',true],
+      ['Google Analytics 4','Verkeer- en conversiedata koppelen.','chart-area',true],
+      ['Google Ads','Advertentie- en zoekwoorddata.','megaphone',false],
+      ['Ahrefs','Backlink- en autoriteitsdata.','admin-links',true],
+      ['SE Ranking','Rank-tracking en zichtbaarheid.','chart-line',true],
+      ['Webflow','Publiceer content naar Webflow CMS.','cloud',false],
+      ['Shopify','Synchroniseer product-SEO.','cart',false],
+      ['Zapier','Automatiseer workflows met 5000+ apps.','randomize',false],
+    ].map(i=>({ title:i[0], desc:i[1], iconCls:'dashicons dashicons-'+i[2], on:i[3], statusText:i[3]?'Verbonden':'Verbinden', statusStyle:i[3]?b('var(--fyn-success-light)','#047857'):b('var(--fyn-purple-tint)','#8F39AC') }));
+
+    // SUPPORT
+    const tickets = [
+      { subj:'Rank tracker werkt deze week niet', id:'#4821', status:'Open', stStyle:S.info, reply:'2 uur geleden' },
+      { subj:'White-label logo verschijnt niet', id:'#4810', status:'Wacht op jou', stStyle:S.warn, reply:'1 dag geleden' },
+      { subj:'Vraag over API-limieten Agency-plan', id:'#4795', status:'Opgelost', stStyle:S.ok, reply:'3 dagen geleden' },
+    ];
+    const kbArticles = [ ['Aan de slag met Fyndable','book'], ['Je licentie activeren','admin-network'], ['Content Writer gebruiken','edit'], ['Google-integraties koppelen','google'], ['Rank tracker instellen','chart-line'], ['Veelgestelde vragen','editor-help'] ].map(a=>({title:a[0],iconCls:'dashicons dashicons-'+a[1]}));
+
+    return {
+      isConn:screen==='connection', isIdeas:screen==='ideas', isClusters:screen==='clusters', isApex:screen==='apexflow', isBulk:screen==='bulk',
+      isRank:screen==='rank', isComp:screen==='competitors', isAb:screen==='abtest', isLinks:screen==='links', isBacklinks:screen==='backlinks',
+      isAdv:screen==='advbacklinks', isAudit:screen==='audit', isSitemaps:screen==='sitemaps', isSeodata:screen==='seodata', isGoogledata:screen==='googledata',
+      isLlm:screen==='llm', isAitools:screen==='aitools', isIntegrations:screen==='integrations', isSupport:screen==='support',
+      connStats, planFeatures, ideaCards, clusterCards, flowSteps, flowQueue, bulkTasks, bulkRows,
+      rankStats, rankRows, compStats, compCards, compGap, abTests, linkStats, orphanRows,
+      blStats, blRows, toxStats, toxRows, auditCats, auditIssues, smRows, smToggles,
+      sdStats, sdSources, sdRows, gdStats, gdQueries, gdSources, llmStats, llmPlatforms, llmPrompts,
+      toolCards, integ, tickets, kbArticles,
+    };
+  }
+
+  deltaUp(){ return { padding:'2px 8px', borderRadius:'6px', background:'var(--fyn-success-light)', color:'#047857', fontSize:'11.5px', fontWeight:700 }; }
+  deltaNeutral(){ return { padding:'2px 8px', borderRadius:'6px', background:'var(--fyn-success-light)', color:'#047857', fontSize:'11.5px', fontWeight:700 }; }
+  deltaInfo(){ return { padding:'2px 8px', borderRadius:'6px', background:'var(--fyn-info-light)', color:'#1d4ed8', fontSize:'11.5px', fontWeight:700 }; }
+}
+</script>
+</body>
+</html>

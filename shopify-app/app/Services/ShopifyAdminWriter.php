@@ -205,8 +205,12 @@ class ShopifyAdminWriter
         }
         GRAPHQL;
 
-        // Shopify GIDs use the case-sensitive resource type (e.g. "Product")
-        $gid = $this->gid(ucfirst($ownerType), $ownerId);
+        // Shopify GIDs use the case-sensitive resource type (e.g. "Product", "ProductVariant")
+        $gidType = match (strtolower($ownerType)) {
+            'productvariant' => 'ProductVariant',
+            default => ucfirst($ownerType),
+        };
+        $gid = $this->gid($gidType, $ownerId);
 
         $metafields = array_map(
             fn (array $metafield) => ['ownerId' => $gid] + $metafield,
@@ -219,6 +223,36 @@ class ShopifyAdminWriter
     /**
      * Build a metafield input array for the metafieldsSet mutation.
      */
+    /**
+     * GID of this app's installation on the shop (owner of app-data
+     * metafields that theme app extensions read via `app.metafields`).
+     */
+    public function currentAppInstallationId(Shop $shop): ?string
+    {
+        $body = $this->graphql($shop, 'query { currentAppInstallation { id } }');
+
+        return $body['data']['currentAppInstallation']['id'] ?? null;
+    }
+
+    /**
+     * Register translations for one resource (2.3, write_translations).
+     *
+     * @param  array<int, array{locale:string, key:string, value:string, translatableContentDigest:string}>  $translations
+     */
+    public function registerTranslations(Shop $shop, string $resourceId, array $translations): ?string
+    {
+        $mutation = <<<'GRAPHQL'
+        mutation register($resourceId: ID!, $translations: [TranslationInput!]!) {
+          translationsRegister(resourceId: $resourceId, translations: $translations) {
+            translations { key locale }
+            userErrors { field message }
+          }
+        }
+        GRAPHQL;
+
+        return $this->runMutation($shop, $mutation, ['resourceId' => $resourceId, 'translations' => array_values($translations)], 'translationsRegister');
+    }
+
     public function metafieldInput(string $namespace, string $key, string $value, string $type): array
     {
         return [

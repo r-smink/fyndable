@@ -390,79 +390,103 @@ PROMPT;
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('SERP Competitor Analysis', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Analyze the competitive landscape for any keyword. See what top-ranking pages cover, identify gaps, and find winning patterns.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-            <div style="max-width:1400px; margin-top:20px;">
-                <div class="postbox" style="padding:20px;">
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="serp-keyword" class="regular-text" style="flex:1;" placeholder="<?php esc_attr_e('Enter target keyword...', 'ai-seo-client'); ?>">
-                        <button type="button" class="button button-primary" id="serp-analyze-btn"><?php esc_html_e('Analyze SERP', 'ai-seo-client'); ?></button>
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('SERP Analysis', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('SERP Competitor Analysis', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Analyze the competitive landscape for any keyword. See what top-ranking pages cover, identify gaps, and find winning patterns.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
+            <!-- Search card -->
+            <div class="fyn-card" style="margin-bottom:20px;padding:16px 20px;">
+                <div style="display:flex;gap:10px;">
+                    <input type="text" id="serp-keyword" class="fyn-input" style="flex:1;" placeholder="<?php esc_attr_e('Enter target keyword...', 'ai-seo-client'); ?>">
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="serp-analyze-btn">
+                        <span class="dashicons dashicons-search"></span>
+                        <?php esc_html_e('Analyze SERP', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+
+            <div id="serp-results" style="display:none;">
+                <!-- Overview stat tiles -->
+                <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="serp-avg-words">&mdash;</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Avg Word Count', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="serp-avg-headings">&mdash;</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Avg Headings', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="serp-format" style="font-size:18px;">&mdash;</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Dominant Format', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="serp-features" style="font-size:14px;">&mdash;</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('SERP Features', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
 
-                <div id="serp-results" style="display:none; margin-top:20px;">
-                    <!-- Overview Cards -->
-                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:20px;">
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="serp-avg-words" style="font-size:28px;font-weight:bold;color:#379fd3;">—</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Avg Word Count', 'ai-seo-client'); ?></div>
+                <div class="fyn-grid-2" style="margin-bottom:20px;">
+                    <!-- Competitor Profiles -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-groups"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Competitor Profiles', 'ai-seo-client'); ?></h3>
                         </div>
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="serp-avg-headings" style="font-size:28px;font-weight:bold;color:#059669;">—</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Avg Headings', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="serp-format" style="font-size:20px;font-weight:bold;color:#7c3aed;">—</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('Dominant Format', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding:15px;text-align:center;">
-                            <div id="serp-features" style="font-size:14px;font-weight:bold;color:#d97706;">—</div>
-                            <div style="font-size:12px;color:#666;"><?php esc_html_e('SERP Features', 'ai-seo-client'); ?></div>
-                        </div>
+                        <div id="serp-competitors" style="max-height:500px;overflow-y:auto;"></div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                        <!-- Competitor Profiles -->
-                        <div class="postbox" style="padding:15px;">
-                            <h3 style="margin-top:0;"><?php esc_html_e('Competitor Profiles', 'ai-seo-client'); ?></h3>
-                            <div id="serp-competitors" style="max-height:500px;overflow-y:auto;"></div>
+                    <!-- Topic Heatmap -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-chart-area"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Topic Heatmap', 'ai-seo-client'); ?></h3>
                         </div>
+                        <p style="font-size:12px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('How thoroughly the top results cover each subtopic', 'ai-seo-client'); ?></p>
+                        <div id="serp-heatmap" style="max-height:500px;overflow-y:auto;"></div>
+                    </div>
+                </div>
 
-                        <!-- Topic Heatmap -->
-                        <div class="postbox" style="padding:15px;">
-                            <h3 style="margin-top:0;"><?php esc_html_e('Topic Heatmap', 'ai-seo-client'); ?></h3>
-                            <p style="font-size:12px;color:#666;"><?php esc_html_e('How thoroughly the top results cover each subtopic', 'ai-seo-client'); ?></p>
-                            <div id="serp-heatmap" style="max-height:500px;overflow-y:auto;"></div>
+                <div class="fyn-grid-2" style="margin-bottom:20px;">
+                    <!-- Winning Patterns -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Winning Patterns', 'ai-seo-client'); ?></h3>
                         </div>
+                        <ul id="serp-patterns" style="list-style:none;padding:0;margin:0;"></ul>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;">
-                        <!-- Winning Patterns -->
-                        <div class="postbox" style="padding:15px;">
-                            <h3 style="margin-top:0;"><?php esc_html_e('Winning Patterns', 'ai-seo-client'); ?></h3>
-                            <ul id="serp-patterns" style="list-style:none;padding:0;"></ul>
+                    <!-- Content Gaps / Opportunities -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-flag"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Content Gaps & Opportunities', 'ai-seo-client'); ?></h3>
                         </div>
-
-                        <!-- Content Gaps / Opportunities -->
-                        <div class="postbox" style="padding:15px;">
-                            <h3 style="margin-top:0;"><?php esc_html_e('Content Gaps & Opportunities', 'ai-seo-client'); ?></h3>
-                            <ul id="serp-gaps" style="list-style:none;padding:0;"></ul>
-                        </div>
+                        <ul id="serp-gaps" style="list-style:none;padding:0;margin:0;"></ul>
                     </div>
+                </div>
 
-                    <!-- Compare Your Content -->
-                    <div class="postbox" style="padding:20px; margin-top:20px;">
-                        <h3 style="margin-top:0;"><?php esc_html_e('Compare Your Content', 'ai-seo-client'); ?></h3>
-                        <p class="description"><?php esc_html_e('Paste your content to see how it stacks up against the competition.', 'ai-seo-client'); ?></p>
-                        <textarea id="serp-content" rows="8" class="large-text" placeholder="<?php esc_attr_e('Paste your content here...', 'ai-seo-client'); ?>"></textarea>
-                        <div style="display:flex;gap:10px;margin-top:10px;">
-                            <button type="button" class="button button-primary" id="serp-compare-btn"><?php esc_html_e('Compare', 'ai-seo-client'); ?></button>
-                            <button type="button" class="button" id="serp-gap-btn"><?php esc_html_e('Deep Gap Analysis', 'ai-seo-client'); ?></button>
-                        </div>
-                        <div id="serp-compare-result" style="margin-top:15px;display:none;"></div>
+                <!-- Compare Your Content -->
+                <div class="fyn-card">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-editor-code"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Compare Your Content', 'ai-seo-client'); ?></h3>
                     </div>
+                    <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('Paste your content to see how it stacks up against the competition.', 'ai-seo-client'); ?></p>
+                    <textarea id="serp-content" rows="8" class="fyn-input" style="width:100%;resize:vertical;font-family:inherit;" placeholder="<?php esc_attr_e('Paste your content here...', 'ai-seo-client'); ?>"></textarea>
+                    <div style="display:flex;gap:10px;margin-top:12px;">
+                        <button type="button" class="fyn-btn fyn-btn-primary" id="serp-compare-btn"><?php esc_html_e('Compare', 'ai-seo-client'); ?></button>
+                        <button type="button" class="fyn-btn fyn-btn-outline" id="serp-gap-btn"><?php esc_html_e('Deep Gap Analysis', 'ai-seo-client'); ?></button>
+                    </div>
+                    <div id="serp-compare-result" style="margin-top:15px;display:none;"></div>
                 </div>
             </div>
         </div>
@@ -502,13 +526,13 @@ PROMPT;
                 // Competitors
                 var compHtml = '';
                 (data.competitor_profiles || []).slice(0, 10).forEach(function(c) {
-                    var typeColors = {guide:'#379fd3',listicle:'#059669',comparison:'#7c3aed',tutorial:'#d97706',product:'#dc2626',review:'#0891b2'};
-                    compHtml += '<div style="padding:10px;margin-bottom:8px;background:#f9f9f9;border-radius:4px;border-left:3px solid ' + (typeColors[c.content_type]||'#999') + ';">' +
-                        '<div style="display:flex;justify-content:space-between;"><strong>#' + c.position + ' ' + (c.domain || '') + '</strong>' +
-                        '<span style="font-size:11px;padding:2px 6px;background:' + (typeColors[c.content_type]||'#e0e0e0') + ';color:#fff;border-radius:3px;">' + (c.content_type || '') + '</span></div>' +
-                        '<div style="font-size:13px;color:#333;margin:4px 0;">' + (c.title || '') + '</div>' +
-                        '<div style="font-size:11px;color:#666;">~' + (c.estimated_word_count || '?') + ' words</div>' +
-                        (c.unique_angle ? '<div style="font-size:11px;color:#059669;margin-top:4px;">💡 ' + c.unique_angle + '</div>' : '') +
+                    var typeColors = {guide:'var(--fyn-blue)',listicle:'var(--fyn-success)',comparison:'var(--fyn-purple)',tutorial:'var(--fyn-warning)',product:'var(--fyn-danger)',review:'var(--fyn-info)'};
+                    compHtml += '<div style="padding:10px;margin-bottom:8px;background:var(--well);border-radius:9px;border-left:3px solid ' + (typeColors[c.content_type]||'var(--text-m)') + ';">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;"><strong style="color:var(--text-h);">#' + c.position + ' ' + (c.domain || '') + '</strong>' +
+                        '<span class="fyn-badge" style="font-size:10px;">' + (c.content_type || '') + '</span></div>' +
+                        '<div style="font-size:13px;color:var(--text-b);margin:4px 0;">' + (c.title || '') + '</div>' +
+                        '<div style="font-size:11px;color:var(--text-m);">~' + (c.estimated_word_count || '?') + ' woorden</div>' +
+                        (c.unique_angle ? '<div style="font-size:11px;color:var(--fyn-success);margin-top:4px;">' + c.unique_angle + '</div>' : '') +
                         '</div>';
                 });
                 $('#serp-competitors').html(compHtml);
@@ -517,12 +541,11 @@ PROMPT;
                 var heatHtml = '';
                 (data.topic_heatmap || []).forEach(function(t) {
                     var pct = t.coverage_pct || 0;
-                    var impColors = {high:'#dc2626',medium:'#d97706',low:'#059669'};
-                    heatHtml += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f0f0f0;">' +
-                        '<span style="flex:1;font-size:12px;">' + t.topic + '</span>' +
-                        '<div style="width:120px;background:#e0e0e0;border-radius:3px;height:8px;">' +
-                        '<div style="width:' + pct + '%;background:' + (impColors[t.importance]||'#999') + ';height:8px;border-radius:3px;"></div></div>' +
-                        '<span style="font-size:11px;width:35px;text-align:right;color:#666;">' + pct + '%</span>' +
+                    var impColors = {high:'var(--fyn-danger)',medium:'var(--fyn-warning)',low:'var(--fyn-success)'};
+                    heatHtml += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--divide);">' +
+                        '<span style="flex:1;font-size:12px;color:var(--text-b);">' + t.topic + '</span>' +
+                        '<div class="fyn-progress" style="width:120px;"><div class="fyn-progress-bar" style="width:' + pct + '%;background:' + (impColors[t.importance]||'var(--text-m)') + ';"></div></div>' +
+                        '<span style="font-size:11px;width:35px;text-align:right;color:var(--text-m);">' + pct + '%</span>' +
                         '</div>';
                 });
                 $('#serp-heatmap').html(heatHtml);
@@ -530,14 +553,14 @@ PROMPT;
                 // Patterns
                 var patHtml = '';
                 (data.winning_patterns || []).forEach(function(p) {
-                    patHtml += '<li style="padding:6px 10px;margin:3px 0;background:#ecfdf5;border-left:3px solid #059669;border-radius:0 4px 4px 0;font-size:13px;">✓ ' + p + '</li>';
+                    patHtml += '<li style="padding:8px 12px;margin:4px 0;background:var(--fyn-success-light);border-left:3px solid var(--fyn-success);border-radius:0 9px 9px 0;font-size:13px;color:var(--text-b);">' + p + '</li>';
                 });
                 $('#serp-patterns').html(patHtml);
 
                 // Gaps
                 var gapHtml = '';
                 (data.content_gaps || []).forEach(function(g) {
-                    gapHtml += '<li style="padding:6px 10px;margin:3px 0;background:#fef3c7;border-left:3px solid #d97706;border-radius:0 4px 4px 0;font-size:13px;">🎯 ' + g + '</li>';
+                    gapHtml += '<li style="padding:8px 12px;margin:4px 0;background:var(--fyn-warning-light);border-left:3px solid var(--fyn-warning);border-radius:0 9px 9px 0;font-size:13px;color:var(--text-b);">' + g + '</li>';
                 });
                 $('#serp-gaps').html(gapHtml);
             }
@@ -556,26 +579,22 @@ PROMPT;
                     data: { keyword: kw, content: content }
                 }).then(function(res) {
                     var sc = res.competitive_score;
-                    var color = sc >= 80 ? '#00a32a' : (sc >= 60 ? '#059669' : (sc >= 40 ? '#dba617' : '#d63638'));
-                    var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">' +
-                        '<div style="text-align:center;padding:15px;background:#f9f9f9;border-radius:8px;">' +
-                        '<div style="font-size:36px;font-weight:bold;color:' + color + ';">' + sc + '</div>' +
-                        '<div style="font-size:12px;color:#666;">Competitive Score</div></div>' +
-                        '<div style="text-align:center;padding:15px;background:#f9f9f9;border-radius:8px;">' +
-                        '<div style="font-size:18px;font-weight:bold;">' + res.your_stats.word_count + ' <span style="color:#999;font-weight:normal;">/ ' + res.competitor_avg.word_count + '</span></div>' +
-                        '<div style="font-size:12px;color:#666;">Your Words / Avg</div></div>' +
-                        '<div style="text-align:center;padding:15px;background:#f9f9f9;border-radius:8px;">' +
-                        '<div style="font-size:18px;font-weight:bold;">' + res.coverage_ratio + '%</div>' +
-                        '<div style="font-size:12px;color:#666;">Topic Coverage</div></div></div>';
+                    var color = sc >= 80 ? 'var(--fyn-success)' : (sc >= 60 ? 'var(--fyn-success)' : (sc >= 40 ? 'var(--fyn-warning)' : 'var(--fyn-danger)'));
+                    var html = '<div class="fyn-stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">' +
+                        '<div class="fyn-stat-tile"><div class="fyn-stat-value" style="color:' + color + ';">' + sc + '</div>' +
+                        '<div class="fyn-stat-label">Competition Score</div></div>' +
+                        '<div class="fyn-stat-tile"><div class="fyn-stat-value" style="font-size:18px;">' + res.your_stats.word_count + ' <span style="color:var(--text-m);font-weight:normal;font-size:14px;">/ ' + res.competitor_avg.word_count + '</span></div>' +
+                        '<div class="fyn-stat-label">Your Words / Avg.</div></div>' +
+                        '<div class="fyn-stat-tile"><div class="fyn-stat-value">' + res.coverage_ratio + '%</div>' +
+                        '<div class="fyn-stat-label">Topic Coverage</div></div></div>';
 
-                    // Topic coverage detail
-                    html += '<h4 style="margin-top:15px;">Topic Coverage</h4>';
+                    html += '<h4 style="margin-top:16px;font-size:14px;font-weight:700;color:var(--text-h);">Topic Coverage</h4>';
                     (res.topic_coverage || []).forEach(function(t) {
                         var covered = t.your_coverage;
-                        html += '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;">' +
-                            '<span style="color:' + (covered ? '#00a32a' : '#d63638') + ';width:16px;">' + (covered ? '✓' : '✕') + '</span>' +
-                            '<span style="flex:1;">' + t.topic + '</span>' +
-                            '<span style="color:#999;">' + t.competitor_coverage + '% competitors</span></div>';
+                        html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--divide);">' +
+                            '<span style="color:' + (covered ? 'var(--fyn-success)' : 'var(--fyn-danger)') + ';width:16px;font-weight:700;">' + (covered ? '✓' : '✕') + '</span>' +
+                            '<span style="flex:1;color:var(--text-b);">' + t.topic + '</span>' +
+                            '<span style="color:var(--text-m);">' + t.competitor_coverage + '% competitors</span></div>';
                     });
 
                     $('#serp-compare-result').html(html).show();

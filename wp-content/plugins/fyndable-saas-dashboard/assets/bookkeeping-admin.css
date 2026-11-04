@@ -33,8 +33,8 @@
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--card, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
     border-radius: 12px;
     box-shadow: var(--sseo-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
 }
@@ -45,11 +45,11 @@
 .sseo-ai-bk-filters input[type="date"] {
     min-width: 150px;
     padding: 8px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--input-border, #d1d5db);
     border-radius: 6px;
-    background: #fff;
+    background: var(--card, #fff);
     font-size: 13px;
-    color: #374151;
+    color: var(--text-b, #374151);
     height: 38px;
 }
 
@@ -66,8 +66,8 @@
 
 /* Invoice table */
 .sseo-ai-bk-table {
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--card, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
     border-radius: 12px;
     box-shadow: var(--sseo-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
     overflow: hidden;
@@ -78,15 +78,15 @@
 .sseo-ai-bk-table td {
     padding: 14px 16px;
     font-size: 13px;
-    color: #374151;
+    color: var(--text-b, #374151);
     vertical-align: middle;
 }
 
 .sseo-ai-bk-table th {
-    background: #f9fafb;
+    background: var(--well, #f9fafb);
     font-weight: 600;
-    color: #111827;
-    border-bottom: 1px solid #e5e7eb;
+    color: var(--text-h, #111827);
+    border-bottom: 1px solid var(--card-border, #e5e7eb);
 }
 
 .sseo-ai-bk-table .num {
@@ -99,7 +99,7 @@
 
 .sseo-ai-bk-sub {
     font-size: 11px;
-    color: #6b7280;
+    color: var(--text-m, #6b7280);
     margin-top: 3px;
 }
 
@@ -131,8 +131,8 @@
 }
 
 .sseo-ai-bk-stat {
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--card, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
     border-radius: 12px;
     padding: 20px;
     box-shadow: var(--sseo-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
@@ -147,14 +147,14 @@
     font-size: 12px;
     
     letter-spacing: 0.6px;
-    color: #6b7280;
+    color: var(--text-m, #6b7280);
     margin-bottom: 8px;
 }
 
 .sseo-ai-bk-stat .value {
     font-size: 24px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-h, #111827);
     line-height: 1.2;
 }
 
@@ -178,8 +178,8 @@
 
 .sseo-ai-bk-template-form,
 .sseo-ai-bk-template-preview {
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--card, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
     border-radius: 12px;
     box-shadow: var(--sseo-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
 }
@@ -187,10 +187,10 @@
 .sseo-ai-bk-template-form h3 {
     font-size: 15px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-h, #111827);
     margin: 24px 0 14px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--card-border, #e5e7eb);
 }
 
 .sseo-ai-bk-template-form h3:first-of-type {
@@ -207,7 +207,7 @@
     padding: 10px 10px 10px 0;
     vertical-align: top;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-b, #374151);
 }
 
 .sseo-ai-bk-template-form .form-table td {
@@ -221,10 +221,10 @@
     width: 100%;
     max-width: 100%;
     padding: 8px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--input-border, #d1d5db);
     border-radius: 6px;
     font-size: 13px;
-    color: #374151;
+    color: var(--text-b, #374151);
 }
 
 .sseo-ai-bk-template-form .form-table input[type="text"]:focus,
@@ -237,7 +237,7 @@
 
 .sseo-ai-bk-template-form .form-table .description {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-m, #6b7280);
     margin-top: 5px;
 }
 
@@ -259,9 +259,9 @@
 .sseo-ai-bk-media-preview {
     width: 120px;
     height: 64px;
-    border: 1px dashed #d1d5db;
+    border: 1px dashed var(--input-border, #d1d5db);
     border-radius: 6px;
-    background: #f9fafb;
+    background: var(--well, #f9fafb);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -276,7 +276,7 @@
 
 .sseo-ai-bk-media-preview:empty::before {
     content: "No image";
-    color: #9ca3af;
+    color: var(--text-s, #9ca3af);
     font-size: 11px;
 }
 
@@ -295,16 +295,16 @@
 .sseo-ai-bk-template-preview h3 {
     font-size: 15px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-h, #111827);
     margin: 0 0 14px;
 }
 
 .sseo-ai-bk-template-preview iframe {
     width: 100%;
     min-height: 900px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--card-border, #e5e7eb);
     border-radius: 8px;
-    background: #fff;
+    background: var(--card, #fff);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 

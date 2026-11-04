@@ -1,0 +1,22 @@
+{% comment %}
+  Fyndable collection intro (2.5): SEO intro text above the products,
+  written in Fyndable (metafield fyndable.collection_landing). Renders
+  nothing when the collection has no intro yet.
+{% endcomment %}
+{%- assign fyndable_landing = collection.metafields.fyndable.collection_landing.value -%}
+{%- if fyndable_landing.intro_html != blank -%}
+<div class="fyndable-collection-intro page-width rte" style="margin-top: {{ block.settings.spacing }}px; margin-bottom: {{ block.settings.spacing }}px;">
+  {{ fyndable_landing.intro_html }}
+</div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Fyndable collection intro",
+  "target": "section",
+  "enabled_on": { "templates": ["collection"] },
+  "settings": [
+    { "type": "range", "id": "spacing", "label": "Spacing", "min": 0, "max": 64, "step": 4, "unit": "px", "default": 16 }
+  ]
+}
+{% endschema %}

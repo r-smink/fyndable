@@ -389,6 +389,31 @@ class TenantRepository
 
         return $row;
     }
+
+    /**
+     * Find all tenants with an email address (direct WHERE lookup, no row cap).
+     */
+    public function findTenantsByEmail(string $email): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TENANTS_TABLE;
+
+        if ($email === '') {
+            return [];
+        }
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE email = %s ORDER BY id DESC",
+            $email
+        ), ARRAY_A) ?: [];
+
+        foreach ($rows as &$row) {
+            $row['metadata'] = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+        }
+        unset($row);
+
+        return $rows;
+    }
     
     /**
      * Update tenant
@@ -938,7 +963,9 @@ class TenantRepository
         $usage = $this->getTenantUsage($tenantKey);
         
         // Get limits from tier settings or use defaults
-        $apiLimit = $tierLimits['api_calls'] ?? (int)$tenant['api_calls_limit'];
+        $apiLimit = $tierLimits['api_calls'] ?? (($tenant['platform'] ?? '') === 'shopify'
+            ? SaaSSettings::shopifyApiLimit((string)$tenant['tier'])
+            : (int)$tenant['api_calls_limit']);
         $costLimit = $tierLimits['api_cost'] ?? 100; // Default $100 cost limit
         $currentCost = (float)($usage['api_cost'] ?? 0);
         

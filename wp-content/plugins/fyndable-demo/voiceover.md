@@ -9,7 +9,7 @@ Nederlandse voiceover-teksten voor de begeleide salesdemo-tour van de Fyndable D
 - **Snelheid:** ~0,95× — iets rustiger dan normaal, de kijker moet mee kunnen klikken.
 - **Formaat:** MP3, 44.1 kHz, 128 kbps, mono of stereo.
 - **Bestandsnamen:** exact zoals hieronder per stap vermeld. Plaats de bestanden in `wp-content/plugins/fyndable-demo/assets/audio/`. De tour speelt het bestand automatisch af bij de bijbehorende popup; ontbreekt een bestand, dan valt de tour geruisloos terug op tekst.
-- **Timing:** autoplay wacht tot de voiceover klaar is (+1,2 s pauze) voordat de volgende stap verschijnt.
+- **Timing:** autoplay wacht tot de voiceover klaar is (+2,5 s pauze) voordat de volgende stap verschijnt.
 
 ## Overzicht stappen
 

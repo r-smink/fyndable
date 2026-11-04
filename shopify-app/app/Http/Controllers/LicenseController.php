@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Shop;
 use App\Services\LicenseService;
+use App\Services\SaasProxyClient;
 use Illuminate\Http\Request;
 
 /**
@@ -16,7 +17,8 @@ use Illuminate\Http\Request;
 class LicenseController extends Controller
 {
     public function __construct(
-        private LicenseService $license
+        private LicenseService $license,
+        private SaasProxyClient $proxy
     ) {}
 
     /**
@@ -35,6 +37,7 @@ class LicenseController extends Controller
 
         return [
             'has_license' => $shop->hasLicense(),
+            'source' => $shop->license_source,
             'license_key' => $shop->license_key ? (substr($shop->license_key, 0, 8).'...'.substr($shop->license_key, -4)) : null,
             'tier' => $validation['tier'] ?? 'free',
             'valid' => $validation['valid'] ?? false,
@@ -60,7 +63,27 @@ class LicenseController extends Controller
             return ['error' => 'license_key_required'];
         }
 
+        // Regular plans are billed through Shopify App Pricing. A manually
+        // entered key is only accepted for agency/enterprise licenses, checked
+        // before activation so other keys are never bound to this shop.
+        $allowed = config('shopify.billing.manual_license_tiers', ['agency', 'dev']);
+        $check = $this->proxy->checkLicense($licenseKey, $shop->shop_domain);
+        if (! ($check['valid'] ?? false)) {
+            return ['success' => false, 'error' => $check['error'] ?? 'invalid_key'];
+        }
+        if (! in_array($check['tier'] ?? '', $allowed, true)) {
+            return [
+                'success' => false,
+                'error' => 'license_tier_not_allowed',
+                'message' => 'Only agency and enterprise license keys can be entered here. Choose a plan via Shopify instead.',
+            ];
+        }
+
         $result = $this->license->activate($shop, $licenseKey);
+        if ($result['success'] ?? false) {
+            $shop->license_source = 'manual';
+            $shop->save();
+        }
 
         return $result;
     }
@@ -77,7 +100,17 @@ class LicenseController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
+        // App Pricing licenses follow the Shopify subscription; the merchant
+        // changes or cancels the plan in Shopify, not here.
+        if ($shop->license_source === 'app_pricing') {
+            return ['success' => false, 'error' => 'managed_by_shopify'];
+        }
+
         $this->license->deactivate($shop);
+        $shop->license_source = null;
+        $shop->billing_state = null;
+        $shop->billing_checked_at = null;
+        $shop->save();
 
         return ['success' => true];
     }

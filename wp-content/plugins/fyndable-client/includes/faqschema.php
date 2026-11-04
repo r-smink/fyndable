@@ -110,50 +110,50 @@ class FAQSchema
         $recentFAQs = $this->getRecentFAQPosts();
         
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('FAQ Schema Generator', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('FAQ Schema', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('FAQ Schema Generator', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage and generate FAQ schema markup for your posts.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
-                <!-- FAQ Statistics -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('FAQ Schema Overview', 'ai-seo-client'); ?></h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #2271b1;">
-                            <?php echo esc_html($stats['total_posts']); ?>
-                        </div>
-                        <div><?php esc_html_e('Posts with FAQs', 'ai-seo-client'); ?></div>
+
+            <!-- FAQ Statistics -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-editor-help"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('FAQ Schema Overview', 'ai-seo-client'); ?></h3>
+                </div>
+                <div class="fyn-stats-grid">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value"><?php echo esc_html($stats['total_posts']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Posts with FAQs', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #00a32a;">
-                            <?php echo esc_html($stats['total_faqs']); ?>
-                        </div>
-                        <div><?php esc_html_e('Total FAQ Items', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html($stats['total_faqs']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Total FAQ Items', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #856404;">
-                            <?php echo esc_html($stats['avg_faqs']); ?>
-                        </div>
-                        <div><?php esc_html_e('Avg FAQs per Post', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-warning);"><?php echo esc_html($stats['avg_faqs']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Avg FAQs per Post', 'ai-seo-client'); ?></div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 4px;">
-                        <div style="font-size: 36px; font-weight: bold; color: #d63638;">
-                            <?php echo esc_html($stats['missing_schema']); ?>
-                        </div>
-                        <div><?php esc_html_e('Missing Schema', 'ai-seo-client'); ?></div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html($stats['missing_schema']); ?></div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Missing Schema', 'ai-seo-client'); ?></div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Recent FAQ Posts -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Recent Posts with FAQs', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-list-view"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Recent Posts with FAQs', 'ai-seo-client'); ?></h3>
+                </div>
+
                 <?php if (!empty($recentFAQs)): ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Post', 'ai-seo-client'); ?></th>
@@ -174,14 +174,14 @@ class FAQSchema
                             <td><?php echo esc_html($faq['faq_count']); ?></td>
                             <td>
                                 <?php if ($faq['has_schema']): ?>
-                                <span style="color: #00a32a;">✓ Active</span>
+                                <span class="fyn-badge fyn-badge--success"><?php esc_html_e('Active', 'ai-seo-client'); ?></span>
                                 <?php else: ?>
-                                <span style="color: #d63638;">✗ Missing</span>
+                                <span class="fyn-badge fyn-badge--danger"><?php esc_html_e('Missing', 'ai-seo-client'); ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo esc_html(human_time_diff(strtotime($faq['updated']))); ?> ago</td>
+                            <td><?php echo esc_html(human_time_diff(strtotime($faq['updated']))); ?> <?php esc_html_e('ago', 'ai-seo-client'); ?></td>
                             <td>
-                                <a href="<?php echo get_edit_post_link($faq['post_id']); ?>#sseo-faq-schema" class="button button-small">
+                                <a href="<?php echo get_edit_post_link($faq['post_id']); ?>#sseo-faq-schema" class="fyn-btn fyn-btn-outline" style="font-size:12px;padding:4px 10px;">
                                     <?php esc_html_e('Edit FAQs', 'ai-seo-client'); ?>
                                 </a>
                             </td>
@@ -190,9 +190,8 @@ class FAQSchema
                     </tbody>
                 </table>
                 <?php else: ?>
-                <p><?php esc_html_e('No FAQ posts found. Add FAQs to your posts to see them here.', 'ai-seo-client'); ?></p>
+                <p style="color:var(--text-m);"><?php esc_html_e('No FAQ posts found. Add FAQs to your posts to see them here.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
-            </div>
             </div>
         </div>
         <?php

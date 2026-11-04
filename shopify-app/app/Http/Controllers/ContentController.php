@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SeoAudit;
+use App\Models\SeoAuditItem;
 use App\Models\Shop;
+use App\Services\BrandVoice;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
+use App\Services\SearchConsoleService;
+use App\Services\SeoAuditor;
 use App\Services\ShopifyAdminWriter;
 use App\Services\ShopifyContentFetcher;
 use Illuminate\Http\Request;
@@ -74,6 +79,16 @@ class ContentController extends Controller
             $this->fetcher->search($shop, $type, $search, $limit)
         );
 
+        // SEO score per item from the last completed audit (1.1), if any.
+        $audit = SeoAudit::latestCompleted($shop->id);
+        $scores = $audit
+            ? SeoAuditItem::where('seo_audit_id', $audit->id)->whereIn('resource_id', array_column($items, 'id'))->pluck('score', 'resource_id')
+            : collect();
+        foreach ($items as &$item) {
+            $item['score'] = $scores[$item['id']] ?? null;
+        }
+        unset($item);
+
         return ['success' => true, 'type' => $type, 'items' => $items];
     }
 
@@ -96,7 +111,24 @@ class ContentController extends Controller
             return $node;
         }
 
-        return ['success' => true, 'item' => $this->normalizeDetail($type, $node, $shop)];
+        $item = $this->normalizeDetail($type, $node, $shop);
+
+        // Live SEO score for the editor (item checks only; duplicates and
+        // broken links need the store-wide audit).
+        $item['seo'] = app(SeoAuditor::class)->scoreItem([
+            'type' => $type,
+            'title' => $item['title'],
+            'seo_title' => trim($item['seo_title']) !== '' ? trim($item['seo_title']) : null,
+            'seo_description' => trim($item['seo_description']) !== '' ? trim($item['seo_description']) : null,
+            'body_html' => $item['body'],
+            'images' => array_map(fn ($image) => trim((string) $image['alt']) !== '' ? $image['alt'] : null, $item['images']),
+            'products_count' => $type === 'collection' ? ($node['productsCount']['count'] ?? null) : null,
+        ]);
+
+        // Search Console (1.5), last 28 days, when connected.
+        $item['gsc'] = $item['url'] !== '' ? app(SearchConsoleService::class)->pageStats($shop, $item['url']) : null;
+
+        return ['success' => true, 'item' => $item];
     }
 
     /**
@@ -138,10 +170,10 @@ class ContentController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                [
+                app(BrandVoice::class)->apply($shop, [
                     ['role' => 'system', 'content' => 'You are an SEO expert. Respond only in JSON: {"title": "...", "description": "..."}'],
                     ['role' => 'user', 'content' => $prompt],
-                ],
+                ]),
                 'openai/gpt-4o-mini',
                 300,
                 0.5,
@@ -252,10 +284,10 @@ class ContentController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                [
+                app(BrandVoice::class)->apply($shop, [
                     ['role' => 'system', 'content' => 'You are an expert copywriter who writes SEO-optimized website content.'],
                     ['role' => 'user', 'content' => $prompt],
-                ],
+                ]),
                 'openai/gpt-4o-mini',
                 $variant === 'short' ? 300 : 1000,
                 0.7,
@@ -423,10 +455,10 @@ class ContentController extends Controller
             $result = $this->saas->aiGenerate(
                 $shop->license_key,
                 $shop->tenant_key,
-                [
+                app(BrandVoice::class)->apply($shop, [
                     ['role' => 'system', 'content' => 'You are an SEO expert. Respond only in JSON: [{"question": "...", "answer": "..."}]'],
                     ['role' => 'user', 'content' => $prompt],
-                ],
+                ]),
                 'openai/gpt-4o-mini',
                 800,
                 0.6,
@@ -760,6 +792,10 @@ class ContentController extends Controller
                 default => '',
             },
             'image' => $item['featuredImage']['url'] ?? $item['image']['url'] ?? null,
+            // Products only: no custom SEO title or description yet.
+            'seo_missing' => $type === 'product'
+                ? (empty($item['seo']['title'] ?? null) || empty($item['seo']['description'] ?? null))
+                : null,
         ];
     }
 

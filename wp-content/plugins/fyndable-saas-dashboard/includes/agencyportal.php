@@ -56,6 +56,7 @@ class AgencyPortal
         add_action('admin_post_sseo_ai_agency_save_wl', [$this, 'handleSaveWhiteLabel']);
         add_action('admin_post_sseo_ai_agency_download_wl_client', [$this, 'handleDownloadWhiteLabelClient']);
         add_action('admin_post_sseo_ai_agency_add_licenses', [$this, 'handleAddLicenses']);
+        add_action('admin_post_sseo_ai_agency_activate_plan', [$this, 'handleActivatePlan']);
         add_action('admin_post_sseo_ai_agency_print_invoice', [$this, 'handlePrintInvoice']);
     }
 
@@ -75,33 +76,27 @@ class AgencyPortal
         $primary = sanitize_hex_color($wl['primary_color'] ?? '') ?: '#379fd3';
         $secondary = sanitize_hex_color($wl['secondary_color'] ?? '') ?: '#8f39ac';
 
+        // White-label colours drive the brand accents only. The page surface
+        // and headings come from the shell tokens, so the agency portal reads
+        // the same as the provider console in both themes.
+        $gradient = 'linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%)';
+
         $css = ':root {
             --sseo-primary: ' . $primary . ';
             --sseo-blue: ' . $primary . ';
         }
-        body[class*="sseo-ai"] {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
-        }
-        .wrap.sseo-ai-license-admin {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
-        }
-        .wrap.sseo-ai-license-admin h1 {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
-            color: #fff !important;
-            margin: 0 20px !important;
-            padding: 24px 30px !important;
-            border-radius: 12px !important;
-        }
-        .fyndable-agency-content > h1 + *,
-        .wrap.sseo-ai-license-admin > h1 + * {
-            margin-top: 0 !important;
+        body.fyndable-ui {
+            --fyn-purple: ' . $secondary . ';
+            --fyn-blue: ' . $primary . ';
+            --fyn-gradient: ' . $gradient . ';
+            --fyn-gradient-flat: linear-gradient(90deg, ' . $secondary . ', ' . $primary . ');
         }
         .sseo-ai-license-admin .button-primary,
         .sseo-ai-license-admin .button-primary:hover,
         .sseo-ai-upgrade-cta,
         .tenant-login-btn,
         .tenant-login-btn:hover {
-            background: linear-gradient(135deg, ' . $primary . ' 0%, ' . $secondary . ' 100%) !important;
+            background: ' . $gradient . ' !important;
         }';
 
         wp_add_inline_style('sseo-ai-license-admin', $css);
@@ -172,6 +167,7 @@ class AgencyPortal
         add_submenu_page('sseo-ai-agency', __('My Account', 'sseo-ai-saas'), __('My Account', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-account', [$this, 'renderAccountPage']);
         add_submenu_page('sseo-ai-agency', __('Invoices', 'sseo-ai-saas'), __('Invoices', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-invoices', [$this, 'renderInvoicesPage']);
         add_submenu_page('sseo-ai-agency', __('Extra Licenses', 'sseo-ai-saas'), __('Extra Licenses', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-add-licenses', [$this, 'renderAddLicensesPage']);
+        add_submenu_page('sseo-ai-agency', __('Download Plugin', 'sseo-ai-saas'), __('Download Plugin', 'sseo-ai-saas'), 'agency_view_dashboard', 'sseo-ai-agency-download', [$this, 'renderDownloadPage']);
     }
 
     private function getAgencyContext(): array
@@ -198,6 +194,31 @@ class AgencyPortal
         $account = $ctx['account'];
         $agencyTenantId = (int)$account['tenant_id'];
         $maxSubLicenses = (int)$account['max_sub_licenses'];
+
+        // Custom plan: handle the Mollie return and resolve plan state.
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($ctx['tenant']['tenant_key'] ?? '');
+        $planPaymentDone = false;
+        if ($plan !== null && ($_GET['plan_payment'] ?? '') === 'done') {
+            $planPaymentDone = true;
+            // The webhook normally creates the subscription; if it lagged,
+            // create it here from the last paid first payment.
+            // Same guard as the add-licenses page: never re-create a subscription that
+            // already exists (a failed monthly debit would otherwise yield a free month
+            // plus a duplicate subscription).
+            $hasSubscription = $this->tenants->getTenantSetting($ctx['tenant']['tenant_key'] ?? '', 'mollie_subscription_id', '') !== '';
+            if (($ctx['tenant']['payment_status'] ?? '') !== 'active' && !$hasSubscription) {
+                $result = $this->paymentProcessor->createMollieSubscriptionFromLastPayment($ctx['tenant']['tenant_key']);
+                if (is_wp_error($result)) {
+                    error_log('SSEO AI SaaS: Custom plan return — subscription fallback failed for ' . $ctx['tenant']['tenant_key'] . ': ' . $result->get_error_message());
+                }
+                $fresh = $this->tenants->getTenantById($agencyTenantId);
+                if ($fresh) {
+                    $ctx['tenant'] = $fresh;
+                }
+            }
+        }
+        $planPending = $plan !== null && ($ctx['tenant']['payment_status'] ?? '') !== 'active';
 
         $licenseCount = $this->licenseGenerator->countLicensesByAgency($agencyTenantId);
         $activeTenants = $this->tenants->countSubTenants($agencyTenantId, ['status' => 'active']);
@@ -228,7 +249,28 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Agency Dashboard', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Dashboard', 'sseo-ai-saas'),
+                __('Agency Dashboard', 'sseo-ai-saas'),
+                __('Your resold licenses, client sites and revenue in one overview.', 'sseo-ai-saas')
+            ); ?>
+
+            <?php if ($planPaymentDone): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('Payment received. Your subscription is being activated — it will be ready within a few moments.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+
+            <?php if ($planPending): ?>
+                <div class="notice notice-warning" style="margin: 16px 20px;">
+                    <p>
+                        <strong><?php esc_html_e('Your plan is not active yet.', 'sseo-ai-saas'); ?></strong>
+                        <?php esc_html_e('Activate your subscription to start generating licenses.', 'sseo-ai-saas'); ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-add-licenses')); ?>" class="button button-primary" style="margin-left: 10px;">
+                            <?php esc_html_e('Activate Subscription', 'sseo-ai-saas'); ?>
+                        </a>
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <!-- Stats Grid -->
             <div class="sseo-ai-stats-grid" style="margin-top:20px;">
@@ -292,6 +334,9 @@ class AgencyPortal
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-support')); ?>" class="button button-secondary button-hero">
                         <?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?>
+                    </a>
+                    <a href="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_download_wl_client&_wpnonce=' . wp_create_nonce('sseo_ai_agency_wl_download'))); ?>" class="button button-secondary button-hero">
+                        <?php esc_html_e('Download Client Plugin', 'sseo-ai-saas'); ?>
                     </a>
                 </div>
             </div>
@@ -516,7 +561,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Generate Sub-License', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Generate Licenses', 'sseo-ai-saas'),
+                __('Generate Licenses', 'sseo-ai-saas'),
+                __('Issue a license from your own quota and assign it to a client.', 'sseo-ai-saas')
+            ); ?>
 
             <?php if ($error): ?>
                 <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
@@ -558,8 +608,17 @@ class AgencyPortal
                     ?>
                 </p>
 
-                <?php if ($remaining <= 0): ?>
+                <?php if ($remaining <= 0):
+                    $customPlanCheck = new CustomPlan($this->tenants);
+                    if ($customPlanCheck->getPlan($ctx['tenant']['tenant_key'] ?? '') !== null): ?>
+                    <div class="notice notice-warning"><p>
+                        <?php esc_html_e('You have used all your paid licenses.', 'sseo-ai-saas'); ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-add-licenses')); ?>"><?php esc_html_e('Add a license', 'sseo-ai-saas'); ?></a>
+                        <?php esc_html_e('to raise your quota — the cost is added to your next direct debit.', 'sseo-ai-saas'); ?>
+                    </p></div>
+                    <?php else: ?>
                     <div class="notice notice-warning"><p><?php esc_html_e('You have reached your sub-license quota. Contact the administrator to increase your limit.', 'sseo-ai-saas'); ?></p></div>
+                    <?php endif; ?>
                 <?php else: ?>
                 <form method="post">
                     <?php wp_nonce_field('agency_generate_license'); ?>
@@ -665,7 +724,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('All Sub-Licenses', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('All Licenses', 'sseo-ai-saas'),
+                __('All Licenses', 'sseo-ai-saas'),
+                __('Every license you issued, its tier and current status.', 'sseo-ai-saas')
+            ); ?>
             <div class="sseo-ai-card">
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -717,7 +781,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Sub-Tenants', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Tenants', 'sseo-ai-saas'),
+                __('Tenants', 'sseo-ai-saas'),
+                __('The client sites running on your licenses.', 'sseo-ai-saas')
+            ); ?>
             <div class="sseo-ai-card">
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -811,12 +880,20 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php echo esc_html($tenant['name']); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Tenants', 'sseo-ai-saas'),
+                $tenant['name'],
+                __('Usage, licenses and support history for this client site.', 'sseo-ai-saas'),
+                [[
+                    'label' => __('Login as Tenant', 'sseo-ai-saas'),
+                    'url' => $this->getTenantLoginUrl($tenantId),
+                    'icon' => 'dashicons-external',
+                    'primary' => true,
+                ]]
+            ); ?>
             <p>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-tenants')); ?>">&larr; <?php esc_html_e('Back to Tenants', 'sseo-ai-saas'); ?></a>
-                <a href="<?php echo esc_url($this->getTenantLoginUrl($tenantId)); ?>" class="tenant-login-btn" target="_blank" style="margin-left:15px;">
-                    <?php esc_html_e('Login as Tenant', 'sseo-ai-saas'); ?>
-                </a>
             </p>
 
             <div class="sseo-ai-stats-grid">
@@ -966,6 +1043,19 @@ class AgencyPortal
             }
         }
 
+        // Handle new ticket creation by agency
+        if (isset($_POST['agency_create_ticket']) && isset($_POST['agency_ticket_nonce'])) {
+            if (wp_verify_nonce($_POST['agency_ticket_nonce'], 'agency_create_ticket')) {
+                $ticketSubject = sanitize_text_field($_POST['ticket_subject'] ?? '');
+                $ticketMessage = sanitize_textarea_field($_POST['ticket_message'] ?? '');
+                $ticketPriority = sanitize_text_field($_POST['ticket_priority'] ?? 'middle');
+                if ($ticketSubject && $ticketMessage) {
+                    $this->supportTickets->insertTicket($agencyTenantId, $ticketSubject, $ticketMessage, $ticketPriority);
+                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Support ticket created.', 'sseo-ai-saas') . '</p></div>';
+                }
+            }
+        }
+
         $filters = [];
         if (!empty($_GET['status'])) {
             $filters['status'] = sanitize_text_field($_GET['status']);
@@ -974,12 +1064,48 @@ class AgencyPortal
             $filters['priority'] = sanitize_text_field($_GET['priority']);
         }
 
-        $tickets = $this->supportTickets->getTicketsForTenants($subTenantIds, $filters);
+        // Include agency's own tickets + sub-tenant tickets
+        $allTenantIds = array_merge([$agencyTenantId], $subTenantIds);
+        $tickets = $this->supportTickets->getTicketsForTenants($allTenantIds, $filters);
         ?>
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Support Tickets', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Support', 'sseo-ai-saas'),
+                __('Support Tickets', 'sseo-ai-saas'),
+                __('Create and manage support tickets for your agency and sub-tenants.', 'sseo-ai-saas')
+            ); ?>
+
+            <!-- New Ticket Form -->
+            <div class="sseo-ai-card" style="margin-bottom:20px;">
+                <h3 style="margin-top:0;"><?php esc_html_e('Create Support Ticket', 'sseo-ai-saas'); ?></h3>
+                <form method="post">
+                    <?php wp_nonce_field('agency_create_ticket', 'agency_ticket_nonce'); ?>
+                    <table class="form-table" style="margin:0;">
+                        <tr>
+                            <th><label for="ticket_subject"><?php esc_html_e('Subject', 'sseo-ai-saas'); ?></label></th>
+                            <td><input type="text" id="ticket_subject" name="ticket_subject" class="regular-text" required style="width:100%;"></td>
+                        </tr>
+                        <tr>
+                            <th><label for="ticket_priority"><?php esc_html_e('Priority', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <select id="ticket_priority" name="ticket_priority">
+                                    <option value="low"><?php esc_html_e('Low', 'sseo-ai-saas'); ?></option>
+                                    <option value="middle" selected><?php esc_html_e('Middle', 'sseo-ai-saas'); ?></option>
+                                    <option value="high"><?php esc_html_e('High', 'sseo-ai-saas'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="ticket_message"><?php esc_html_e('Message', 'sseo-ai-saas'); ?></label></th>
+                            <td><textarea id="ticket_message" name="ticket_message" rows="5" class="large-text" required></textarea></td>
+                        </tr>
+                    </table>
+                    <p><button type="submit" name="agency_create_ticket" class="button button-primary"><?php esc_html_e('Submit Ticket', 'sseo-ai-saas'); ?></button></p>
+                </form>
+            </div>
 
             <div class="sseo-ai-card">
                 <form method="get" style="margin-bottom: 15px;">
@@ -1172,7 +1298,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('Usage & Costs', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Usage & Costs', 'sseo-ai-saas'),
+                __('Usage &amp; Costs', 'sseo-ai-saas'),
+                __('API consumption and cost per client site.', 'sseo-ai-saas')
+            ); ?>
 
             <div class="sseo-ai-card" style="margin-bottom: 20px;">
                 <form method="get" class="sseo-ai-inline-form" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -1327,7 +1458,12 @@ class AgencyPortal
         <div class="wrap sseo-ai-license-admin">
             <?php $this->renderAgencyHeader(); ?>
             <div class="fyndable-agency-content">
-            <h1><?php esc_html_e('White-Label Settings', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('White-Label', 'sseo-ai-saas'),
+                __('White-Label', 'sseo-ai-saas'),
+                __('Your brand name, logo and colours on the client plugin.', 'sseo-ai-saas')
+            ); ?>
 
             <?php if ($message === 'saved'): ?>
                 <div class="notice notice-success"><p><?php esc_html_e('White-label settings saved.', 'sseo-ai-saas'); ?></p></div>
@@ -1693,7 +1829,12 @@ class AgencyPortal
         }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('My Account', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('My Account', 'sseo-ai-saas'),
+                __('My Account', 'sseo-ai-saas'),
+                __('Company details and the team members on your agency account.', 'sseo-ai-saas')
+            ); ?>
             <?php if ($message): ?>
                 <div class="notice notice-success"><p><?php echo esc_html($message); ?></p></div>
             <?php endif; ?>
@@ -1780,7 +1921,12 @@ class AgencyPortal
         $viewInvoiceId = isset($_GET['view']) ? (int) $_GET['view'] : 0;
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Invoices', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Invoices', 'sseo-ai-saas'),
+                __('Invoices', 'sseo-ai-saas'),
+                __('Your invoices from Fyndable.', 'sseo-ai-saas')
+            ); ?>
             <div class="sseo-ai-card">
                 <?php if (empty($invoices)): ?>
                     <p><?php esc_html_e('No invoices found.', 'sseo-ai-saas'); ?></p>
@@ -1869,13 +2015,28 @@ class AgencyPortal
 
         $account = $ctx['account'];
         $agencyTenantId = (int) $account['tenant_id'];
+
+        // Custom plan tenants get a different page: activation for unpaid
+        // plans, and a consent-based add-license flow for active ones.
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($ctx['tenant']['tenant_key'] ?? '');
+        if ($plan !== null) {
+            $this->renderCustomPlanAddLicensesPage($ctx, $plan);
+            return;
+        }
+
         $maxSubLicenses = (int) $account['max_sub_licenses'];
         $licenseCount = $this->licenseGenerator->countLicensesByAgency($agencyTenantId);
         $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
         $success = isset($_GET['success']) ? sanitize_text_field($_GET['success']) : '';
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Extra Licenses', 'sseo-ai-saas'); ?></h1>
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Extra Licenses', 'sseo-ai-saas'),
+                __('Extra Licenses', 'sseo-ai-saas'),
+                __('Buy additional licenses to grow your quota.', 'sseo-ai-saas')
+            ); ?>
             <p class="description" style="margin: 0 20px; color: #fff;">
                 <?php
                 printf(
@@ -1935,7 +2096,8 @@ class AgencyPortal
         }
 
         $quantity = (int) ($_POST['extra_licenses'] ?? 0);
-        if ($quantity < 1) {
+        // Server-side cap (the HTML max="100" is client-side only).
+        if ($quantity < 1 || $quantity > 100) {
             wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&error=invalid_quantity'));
             exit;
         }
@@ -1947,6 +2109,15 @@ class AgencyPortal
         }
 
         $tenant = $ctx['tenant'];
+
+        // Custom plan: quantity + consent → PATCH the Mollie subscription to
+        // the new absolute monthly total, then raise the paid-license quota.
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($tenant['tenant_key']);
+        if ($plan !== null) {
+            $this->handleCustomPlanAddLicenses($tenant, $account, $customPlan, $plan, $quantity);
+            return;
+        }
 
         // Add the extra licenses to the next direct debit for this agency account.
         $newMax = (int) $account['max_sub_licenses'] + $quantity;
@@ -1967,5 +2138,404 @@ class AgencyPortal
 
         wp_safe_redirect(admin_url('admin.php?page=sseo-ai-agency-add-licenses&success=scheduled'));
         exit;
+    }
+
+    /**
+     * Custom-plan variant of the add-licenses page.
+     *
+     * Pending plans show an "Activate subscription" card (first Mollie
+     * payment → mandate → monthly direct debit). Active plans show a
+     * consent-based add-license card that PATCHes the subscription
+     * amount on the next direct debit.
+     */
+    private function renderCustomPlanAddLicensesPage(array $ctx, array $plan): void
+    {
+        $tenant = $ctx['tenant'];
+        $account = $ctx['account'];
+        $agencyTenantId = (int) $account['tenant_id'];
+        $customPlan = new CustomPlan($this->tenants);
+
+        // Handle the Mollie return — create the subscription here when the
+        // webhook lagged behind the redirect. The stored subscription ID
+        // guard prevents creating a duplicate when the webhook already ran.
+        $planDone = ($_GET['plan_payment'] ?? '') === 'done';
+        $hasSubscription = $this->tenants->getTenantSetting($tenant['tenant_key'], 'mollie_subscription_id', '') !== '';
+        if ($planDone && ($tenant['payment_status'] ?? '') !== 'active' && !$hasSubscription) {
+            $result = $this->paymentProcessor->createMollieSubscriptionFromLastPayment($tenant['tenant_key']);
+            if (is_wp_error($result)) {
+                error_log('SSEO AI SaaS: Custom plan return — subscription fallback failed for ' . $tenant['tenant_key'] . ': ' . $result->get_error_message());
+            } else {
+                $fresh = $this->tenants->getTenantById($agencyTenantId);
+                if ($fresh) {
+                    $tenant = $fresh;
+                }
+            }
+        }
+
+        $paidCount = $customPlan->paidLicenseCount($tenant);
+        $generatedCount = $this->licenseGenerator->countLicensesByAgency($agencyTenantId);
+        $isActive = ($tenant['payment_status'] ?? '') === 'active';
+        $monthly = $customPlan->monthlyAmount($plan, $paidCount);
+
+        $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
+        $success = isset($_GET['success']) ? sanitize_text_field($_GET['success']) : '';
+
+        $nextPaymentDate = '';
+        if ($isActive) {
+            $sub = $this->paymentProcessor->fetchMollieSubscription($tenant['tenant_key']);
+            if (!is_wp_error($sub)) {
+                $nextPaymentDate = (string) ($sub['nextPaymentDate'] ?? '');
+            }
+        }
+
+        $activateCount = max(1, $paidCount ?: $plan['initial_licenses']);
+        $activateAmount = $customPlan->monthlyAmount($plan, $activateCount);
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Extra Licenses', 'sseo-ai-saas'),
+                __('Your Plan &amp; Licenses', 'sseo-ai-saas'),
+                __('Your custom plan, its pricing tiers and how to add licenses.', 'sseo-ai-saas')
+            ); ?>
+            <?php if ($error): ?>
+                <div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div>
+            <?php endif; ?>
+            <?php if ($planDone): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('Payment received. Your subscription is being activated — licenses become available within a few moments.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+            <?php if ($success === 'scheduled'): ?>
+                <div class="notice notice-success"><p><?php esc_html_e('Licenses added. The new monthly amount will be charged on the next direct debit.', 'sseo-ai-saas'); ?></p></div>
+            <?php endif; ?>
+
+            <?php if (!$isActive): ?>
+                <div class="sseo-ai-card" style="margin-top: 20px;">
+                    <h2><?php esc_html_e('Activate your subscription', 'sseo-ai-saas'); ?></h2>
+                    <p style="color:#1d2327;font-size:14px;">
+                        <?php
+                        printf(
+                            esc_html__('Your custom plan: €%s per license per month. First payment: %d license(s) = €%s.', 'sseo-ai-saas'),
+                            esc_html(number_format($plan['price_per_license'], 2, ',', '')),
+                            (int) $activateCount,
+                            esc_html(number_format($activateAmount, 2, ',', ''))
+                        );
+                        ?>
+                    </p>
+                    <p style="color:#646970;">
+                        <?php esc_html_e('Pay via iDEAL, credit card or Bancontact. This first payment authorizes a monthly SEPA direct debit — subsequent payments are collected automatically. Additional licenses you add later are included in the next direct debit.', 'sseo-ai-saas'); ?>
+                    </p>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_activate_plan')); ?>">
+                        <?php wp_nonce_field('sseo_ai_agency_activate_plan'); ?>
+                        <?php submit_button(sprintf(__('Activate Subscription — €%s', 'sseo-ai-saas'), number_format($activateAmount, 2, ',', '')), 'primary', 'activate_plan', false); ?>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div class="sseo-ai-card" style="margin-top: 20px;">
+                    <h2><?php esc_html_e('Plan status', 'sseo-ai-saas'); ?></h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Paid licenses', 'sseo-ai-saas'); ?></th>
+                            <td><?php echo esc_html($paidCount . ($plan['max_licenses'] > 0 ? ' / ' . $plan['max_licenses'] : '')); ?>
+                                <span style="color:#646970;">(<?php printf(esc_html__('%d generated', 'sseo-ai-saas'), (int) $generatedCount); ?>)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Price per license', 'sseo-ai-saas'); ?></th>
+                            <td>&euro;<?php echo esc_html(number_format($plan['price_per_license'], 2, ',', '')); ?> / <?php esc_html_e('month', 'sseo-ai-saas'); ?></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Current monthly debit', 'sseo-ai-saas'); ?></th>
+                            <td><strong>&euro;<?php echo esc_html(number_format($monthly, 2, ',', '')); ?></strong></td>
+                        </tr>
+                        <?php if ($nextPaymentDate): ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Next debit date', 'sseo-ai-saas'); ?></th>
+                            <td><?php echo esc_html($nextPaymentDate); ?></td>
+                        </tr>
+                        <?php endif; ?>
+                        <?php if (!empty($plan['discounts'])): ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Volume discounts', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <?php foreach ($plan['discounts'] as $d): ?>
+                                    <span class="badge" style="background:#e7f5ee;color:#0a6b3d;padding:3px 8px;border-radius:4px;margin-right:6px;">
+                                        <?php printf(esc_html__('%1$d+ licenses → %2$s%% off', 'sseo-ai-saas'), (int)$d['min'], esc_html(rtrim(rtrim(number_format((float)$d['pct'], 1), '0'), '.'))); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                    </table>
+                </div>
+
+                <div class="sseo-ai-card">
+                    <h2><?php esc_html_e('Add licenses', 'sseo-ai-saas'); ?></h2>
+                    <p style="color:#646970;">
+                        <?php
+                        printf(
+                            esc_html__('Each additional license costs €%s per month and is charged on your next direct debit. You can generate the license immediately.', 'sseo-ai-saas'),
+                            esc_html(number_format($plan['price_per_license'], 2, ',', ''))
+                        );
+                        ?>
+                    </p>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=sseo_ai_agency_add_licenses')); ?>">
+                        <?php wp_nonce_field('sseo_ai_agency_add_licenses'); ?>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label for="extra_licenses"><?php esc_html_e('Licenses to add', 'sseo-ai-saas'); ?></label></th>
+                                <td>
+                                    <input type="number" name="extra_licenses" id="cp_quantity" value="1" min="1" max="100" class="small-text" required>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('New monthly amount', 'sseo-ai-saas'); ?></th>
+                                <td>
+                                    <strong id="cp_new_amount">&euro;<?php echo esc_html(number_format($monthly, 2, ',', '')); ?></strong>
+                                    <span id="cp_discount_note" style="color:#0a6b3d;margin-left:8px;"></span>
+                                    <p class="description" id="cp_effective_note">
+                                        <?php
+                                        if ($nextPaymentDate) {
+                                            printf(esc_html__('Effective from your next debit on %s.', 'sseo-ai-saas'), esc_html($nextPaymentDate));
+                                        } else {
+                                            esc_html_e('Effective from your next direct debit.', 'sseo-ai-saas');
+                                        }
+                                        ?>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Confirmation', 'sseo-ai-saas'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="cp_consent" id="cp_consent" value="1" required>
+                                        <span id="cp_consent_text"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                        <?php submit_button(__('Add licenses', 'sseo-ai-saas'), 'primary', 'agency_add_licenses'); ?>
+                    </form>
+                    <script>
+                    (function() {
+                        var cfg = <?php echo wp_json_encode([
+                            'price' => $plan['price_per_license'],
+                            'discounts' => $plan['discounts'],
+                            'paidCount' => $paidCount,
+                            'maxLicenses' => $plan['max_licenses'],
+                            'nextPaymentDate' => $nextPaymentDate,
+                        ]); ?>;
+                        var qty = document.getElementById('cp_quantity');
+                        var amountEl = document.getElementById('cp_new_amount');
+                        var discountEl = document.getElementById('cp_discount_note');
+                        var consentEl = document.getElementById('cp_consent_text');
+                        function fmt(n) {
+                            return '€' + n.toFixed(2).replace('.', ',');
+                        }
+                        function discountFor(count) {
+                            var pct = 0;
+                            (cfg.discounts || []).forEach(function(d) {
+                                if (count >= parseInt(d.min, 10) && parseFloat(d.pct) > pct) { pct = parseFloat(d.pct); }
+                            });
+                            return pct;
+                        }
+                        function update() {
+                            var n = Math.max(1, parseInt(qty.value || '1', 10));
+                            var newCount = cfg.paidCount + n;
+                            var pct = discountFor(newCount);
+                            var total = newCount * cfg.price * (1 - pct / 100);
+                            amountEl.textContent = fmt(total);
+                            discountEl.textContent = pct > 0
+                                ? '(<?php echo esc_js(__('volume discount applied', 'sseo-ai-saas')); ?>: ' + pct + '%)'
+                                : '';
+                            consentEl.textContent = <?php echo wp_json_encode(__('I agree that my monthly direct debit changes to the amount shown, effective from the next debit date.', 'sseo-ai-saas')); ?>;
+                        }
+                        qty.addEventListener('input', update);
+                        update();
+                    })();
+                    </script>
+                </div>
+                <div class="sseo-ai-card">
+                    <p style="color: #646970;">
+                        <?php esc_html_e('To reduce the number of licenses, please contact support.', 'sseo-ai-saas'); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Start the first Mollie payment for a custom plan.
+     * Redirects the customer to the Mollie checkout; the return URL points
+     * back to the agency portal.
+     */
+    public function handleActivatePlan(): void
+    {
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'sseo_ai_agency_activate_plan')) {
+            wp_die(__('Security check failed.', 'sseo-ai-saas'));
+        }
+        if (!$this->roleManager->isAgencyUser()) {
+            wp_die(__('You do not have permission to manage this plan.', 'sseo-ai-saas'));
+        }
+
+        $redirect = function (array $args): void {
+            wp_safe_redirect(add_query_arg(
+                array_merge(['page' => 'sseo-ai-agency-add-licenses'], $args),
+                admin_url('admin.php')
+            ));
+            exit;
+        };
+
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            $redirect(['error' => __('Account not found.', 'sseo-ai-saas')]);
+        }
+
+        $tenant = $ctx['tenant'];
+        $customPlan = new CustomPlan($this->tenants);
+        $plan = $customPlan->getPlan($tenant['tenant_key'] ?? '');
+        if ($plan === null) {
+            $redirect(['error' => __('No custom plan found for this account.', 'sseo-ai-saas')]);
+        }
+
+        $hasSubscription = $this->tenants->getTenantSetting($tenant['tenant_key'], 'mollie_subscription_id', '') !== '';
+        if (($tenant['payment_status'] ?? '') === 'active' && $hasSubscription) {
+            $redirect(['error' => __('Your subscription is already active.', 'sseo-ai-saas')]);
+        }
+
+        $licenseCount = max(1, $customPlan->paidLicenseCount($tenant) ?: $plan['initial_licenses']);
+        $result = $this->paymentProcessor->createCustomPlanCheckout($tenant, $licenseCount);
+        if (is_wp_error($result)) {
+            $redirect(['error' => $result->get_error_message()]);
+        }
+
+        wp_redirect($result['checkout_url']);
+        exit;
+    }
+
+    /**
+     * Custom-plan branch of the add-licenses POST handler.
+     * Requires explicit consent, PATCHes the Mollie subscription to the
+     * new absolute monthly total, then raises the paid-license quota and
+     * writes a consent-log entry (SEPA dispute evidence).
+     */
+    private function handleCustomPlanAddLicenses(array $tenant, array $account, CustomPlan $customPlan, array $plan, int $quantity): void
+    {
+        $redirect = function (array $args): void {
+            wp_safe_redirect(add_query_arg(
+                array_merge(['page' => 'sseo-ai-agency-add-licenses'], $args),
+                admin_url('admin.php')
+            ));
+            exit;
+        };
+
+        if (empty($_POST['cp_consent'])) {
+            $redirect(['error' => __('You must agree to the monthly debit increase before adding licenses.', 'sseo-ai-saas')]);
+        }
+
+        $hasSubscription = $this->tenants->getTenantSetting($tenant['tenant_key'], 'mollie_subscription_id', '') !== '';
+        if (($tenant['payment_status'] ?? '') !== 'active' || !$hasSubscription) {
+            $redirect(['error' => __('Activate your subscription before adding licenses.', 'sseo-ai-saas')]);
+        }
+
+        // SECURITY: serialize read → Mollie PATCH → quota write per tenant.
+        // Without a lock two concurrent requests both read the same count and
+        // the last DB write can exceed what Mollie bills (unpaid licenses).
+        // The named lock is released explicitly and, as a fallback, when the
+        // DB connection closes at the end of the request (every $redirect exits).
+        global $wpdb;
+        $lockName = 'sseo_cp_' . md5((string) $tenant['tenant_key']);
+        if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 10)', $lockName)) !== 1) {
+            $redirect(['error' => __('Another license change is in progress. Please try again in a moment.', 'sseo-ai-saas')]);
+        }
+        register_shutdown_function(static function () use ($wpdb, $lockName): void {
+            $wpdb->query($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lockName));
+        });
+
+        // Read the count inside the lock.
+        $oldCount = $customPlan->paidLicenseCount($tenant);
+        $newCount = $oldCount + $quantity;
+        if ($plan['max_licenses'] > 0 && $newCount > $plan['max_licenses']) {
+            $redirect(['error' => sprintf(__('This plan allows at most %d licenses.', 'sseo-ai-saas'), (int) $plan['max_licenses'])]);
+        }
+
+        $oldAmount = $customPlan->monthlyAmount($plan, $oldCount);
+        $newAmount = $customPlan->monthlyAmount($plan, $newCount);
+
+        // PATCH the Mollie subscription first; only raise the quota once the
+        // new amount is accepted — a failed PATCH leaves nothing half-applied.
+        $subscription = $this->paymentProcessor->setMollieSubscriptionAmount($tenant['tenant_key'], $newAmount);
+        if (is_wp_error($subscription)) {
+            $redirect(['error' => $subscription->get_error_message()]);
+        }
+
+        $this->tenants->updateAgencyAccount((int) $account['id'], [
+            'max_sub_licenses' => $newCount,
+        ]);
+
+        $customPlan->appendConsentLog($tenant['tenant_key'], [
+            'qty' => $quantity,
+            'licenses_before' => $oldCount,
+            'licenses_after' => $newCount,
+            'old_amount' => $oldAmount,
+            'new_amount' => $newAmount,
+            'next_payment_date' => (string) ($subscription['nextPaymentDate'] ?? ''),
+        ]);
+
+        $redirect(['success' => 'scheduled']);
+    }
+
+    /**
+     * Render the Download Plugin page — a simple page with download link for the latest client ZIP.
+     */
+    public function renderDownloadPage(): void
+    {
+        $ctx = $this->getAgencyContext();
+        if (isset($ctx['error'])) {
+            echo '<div class="wrap"><div class="notice notice-error"><p>' . esc_html__('Agency account not found.', 'sseo-ai-saas') . '</p></div></div>';
+            return;
+        }
+
+        $wl = get_user_meta(get_current_user_id(), 'sseo_ai_agency_wl', true);
+        $hasWl = is_array($wl) && !empty($wl['company_name']);
+        $downloadUrl = admin_url('admin-post.php?action=sseo_ai_agency_download_wl_client&_wpnonce=' . wp_create_nonce('sseo_ai_agency_wl_download'));
+
+        ?>
+        <div class="wrap sseo-ai-license-admin">
+            <?php $this->renderAgencyHeader(); ?>
+            <div class="fyndable-agency-content">
+            <?php ShellUi::pageHeader(
+                __('Agency', 'sseo-ai-saas'),
+                __('Download Plugin', 'sseo-ai-saas'),
+                __('Download Client Plugin', 'sseo-ai-saas'),
+                __('Download the latest version of the Fyndable client plugin for your customers.', 'sseo-ai-saas')
+            ); ?>
+
+            <div class="sseo-ai-card" style="max-width:600px;">
+                <?php if ($hasWl): ?>
+                    <h3 style="margin-top:0;"><?php echo esc_html(sprintf(__('White-Label: %s', 'sseo-ai-saas'), $wl['company_name'])); ?></h3>
+                    <p><?php esc_html_e('Download the client plugin with your white-label branding applied.', 'sseo-ai-saas'); ?></p>
+                    <a href="<?php echo esc_url($downloadUrl); ?>" class="button button-primary button-hero" style="margin-top:10px;">
+                        <span class="dashicons dashicons-download" style="margin-top:5px;"></span>
+                        <?php esc_html_e('Download White-Label Client (.zip)', 'sseo-ai-saas'); ?>
+                    </a>
+                    <p class="description" style="margin-top:12px;"><?php echo esc_html(sprintf(__('Version: %s', 'sseo-ai-saas'), defined('SSEO_AI_CLIENT_VERSION') ? SSEO_AI_CLIENT_VERSION : 'latest')); ?></p>
+                <?php else: ?>
+                    <h3 style="margin-top:0;"><?php esc_html_e('Fyndable Client Plugin', 'sseo-ai-saas'); ?></h3>
+                    <p><?php esc_html_e('Set up your White-Label branding first to download a branded version of the plugin.', 'sseo-ai-saas'); ?></p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sseo-ai-agency-wl')); ?>" class="button button-primary">
+                        <?php esc_html_e('Set up White-Label', 'sseo-ai-saas'); ?>
+                    </a>
+                    <hr style="margin:20px 0;">
+                    <p><?php esc_html_e('Or download the standard (unbranded) Fyndable client plugin:', 'sseo-ai-saas'); ?></p>
+                    <a href="<?php echo esc_url($downloadUrl); ?>" class="button button-secondary button-hero" style="margin-top:10px;">
+                        <span class="dashicons dashicons-download" style="margin-top:5px;"></span>
+                        <?php esc_html_e('Download Fyndable Client (.zip)', 'sseo-ai-saas'); ?>
+                    </a>
+                <?php endif; ?>
+            </div>
+            </div>
+        </div>
+        <?php
     }
 }

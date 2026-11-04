@@ -257,59 +257,67 @@ class SeoImporter
     {
         $detected = $this->detectPlugins();
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Import SEO Data', 'ai-seo-client'); ?></h1>
-            </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card" style="max-width: 800px; margin: 0 auto;">
-                    <h2><?php esc_html_e('Migrate from another SEO plugin', 'ai-seo-client'); ?></h2>
-                    <p style="color: #6b7280; margin-bottom: 30px;">
-                        <?php esc_html_e('Import SEO titles, descriptions, focus keywords, canonical URLs, and social meta from Yoast, Rank Math, or AIOSEO into Fyndable.', 'ai-seo-client'); ?>
-                    </p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-                    <?php foreach ($detected as $pluginKey => $info): ?>
-                        <div class="import-plugin-card" data-plugin="<?php echo esc_attr($pluginKey); ?>" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <div>
-                                    <strong style="font-size: 16px;"><?php echo esc_html($info['name']); ?></strong>
-                                    <?php if ($info['installed']): ?>
-                                        <span style="color: #10b981; margin-left: 8px;">● Installed</span>
-                                    <?php else: ?>
-                                        <span style="color: #9ca3af; margin-left: 8px;">○ Not active</span>
-                                    <?php endif; ?>
-                                </div>
-                                <div style="color: #6b7280; font-size: 14px;">
-                                    <?php echo esc_html(sprintf(_n('%s post with data', '%s posts with data', $info['post_count'], 'ai-seo-client'), number_format_i18n($info['post_count']))); ?>
-                                </div>
-                            </div>
-
-                            <?php if ($info['has_data']): ?>
-                                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <input type="checkbox" class="import-overwrite" data-plugin="<?php echo esc_attr($pluginKey); ?>">
-                                    <span><?php esc_html_e('Overwrite existing Fyndable SEO data', 'ai-seo-client'); ?></span>
-                                </label>
-                                <button class="button button-primary sseo-import-btn" data-plugin="<?php echo esc_attr($pluginKey); ?>">
-                                    <?php esc_html_e('Import', 'ai-seo-client'); ?>
-                                </button>
-                                <div class="import-progress" data-plugin="<?php echo esc_attr($pluginKey); ?>" style="display: none; margin-top: 16px;">
-                                    <div style="background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden;">
-                                        <div class="import-progress-bar" style="background: #379fd3; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                                    </div>
-                                    <p class="import-progress-text" style="font-size: 13px; color: #6b7280; margin-top: 8px;"></p>
-                                </div>
-                            <?php else: ?>
-                                <p style="color: #9ca3af; margin: 0;"><?php esc_html_e('No SEO data found from this plugin.', 'ai-seo-client'); ?></p>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <?php if (empty(array_filter($detected, fn($p) => $p['has_data']))): ?>
-                        <div style="text-align: center; padding: 40px; color: #9ca3af;">
-                            <p><?php esc_html_e('No compatible SEO plugins detected. Install Yoast, Rank Math, or AIOSEO first, then return here to import.', 'ai-seo-client'); ?></p>
-                        </div>
-                    <?php endif; ?>
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('SEO Importer', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Import SEO Data', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Migrate SEO data from another plugin to Fyndable.', 'ai-seo-client'); ?></p>
                 </div>
+            </div>
+
+            <div class="fyn-card" style="max-width:800px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-download"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Migrate from another SEO plugin', 'ai-seo-client'); ?></h3>
+                </div>
+                <p style="color:var(--text-m);margin:0 0 24px;font-size:13px;">
+                    <?php esc_html_e('Import SEO titles, descriptions, focus keywords, canonical URLs, and social meta from Yoast, Rank Math, or AIOSEO into Fyndable.', 'ai-seo-client'); ?>
+                </p>
+
+                <?php foreach ($detected as $pluginKey => $info): ?>
+                    <div class="import-plugin-card" data-plugin="<?php echo esc_attr($pluginKey); ?>" style="border:1px solid var(--card-border);border-radius:10px;padding:24px;margin-bottom:20px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div>
+                                <strong style="font-size:15px;color:var(--text-h);"><?php echo esc_html($info['name']); ?></strong>
+                                <?php if ($info['installed']): ?>
+                                    <span class="fyn-badge fyn-badge--success" style="margin-left:8px;"><?php esc_html_e('Installed', 'ai-seo-client'); ?></span>
+                                <?php else: ?>
+                                    <span class="fyn-badge fyn-badge--info" style="margin-left:8px;"><?php esc_html_e('Not active', 'ai-seo-client'); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div style="color:var(--text-m);font-size:13px;">
+                                <?php echo esc_html(sprintf(_n('%s post with data', '%s posts with data', $info['post_count'], 'ai-seo-client'), number_format_i18n($info['post_count']))); ?>
+                            </div>
+                        </div>
+
+                        <?php if ($info['has_data']): ?>
+                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--text-b);">
+                                <input type="checkbox" class="import-overwrite" data-plugin="<?php echo esc_attr($pluginKey); ?>">
+                                <span><?php esc_html_e('Overwrite existing Fyndable SEO data', 'ai-seo-client'); ?></span>
+                            </label>
+                            <button class="fyn-btn fyn-btn-primary sseo-import-btn" data-plugin="<?php echo esc_attr($pluginKey); ?>">
+                                <?php esc_html_e('Import', 'ai-seo-client'); ?>
+                            </button>
+                            <div class="import-progress" data-plugin="<?php echo esc_attr($pluginKey); ?>" style="display:none;margin-top:16px;">
+                                <div class="fyn-progress">
+                                    <div class="fyn-progress-bar import-progress-bar" style="width:0%;"></div>
+                                </div>
+                                <p class="import-progress-text" style="font-size:13px;color:var(--text-m);margin-top:8px;"></p>
+                            </div>
+                        <?php else: ?>
+                            <p style="color:var(--text-m);margin:0;font-size:13px;"><?php esc_html_e('No SEO data found from this plugin.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+
+                <?php if (empty(array_filter($detected, fn($p) => $p['has_data']))): ?>
+                    <div style="text-align:center;padding:40px;color:var(--text-m);">
+                        <p><?php esc_html_e('No compatible SEO plugins detected. Install Yoast, Rank Math, or AIOSEO first, then return here to import.', 'ai-seo-client'); ?></p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 

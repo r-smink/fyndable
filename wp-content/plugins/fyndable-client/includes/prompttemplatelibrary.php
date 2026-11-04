@@ -284,12 +284,17 @@ class PromptTemplateLibrary
     {
         $types = ['section' => __('Section', 'ai-seo-client'), 'title' => __('Title', 'ai-seo-client'), 'intro' => __('Introduction', 'ai-seo-client'), 'conclusion' => __('Conclusion', 'ai-seo-client'), 'headings' => __('Headings', 'ai-seo-client'), 'meta' => __('Meta Description', 'ai-seo-client'), 'faq' => __('FAQ', 'ai-seo-client')];
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('Prompt Template Library', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Manage reusable AI prompt templates for content generation.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Prompt Templates', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Prompt Template Library', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Manage reusable AI prompt templates for content generation.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
 
-            <div id="sseo-prompt-templates-app" style="margin-top:20px;">
-                <p><?php esc_html_e('Loading templates...', 'ai-seo-client'); ?></p>
+            <div id="sseo-prompt-templates-app" class="fyn-card">
+                <p style="color:var(--text-m);"><?php esc_html_e('Loading templates...', 'ai-seo-client'); ?></p>
             </div>
 
             <script>
@@ -302,32 +307,32 @@ class PromptTemplateLibrary
                     })
                     .then(r => r.json())
                     .then(templates => {
-                        let html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th><?php echo esc_js(__('Name', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Type', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Description', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Actions', 'ai-seo-client')); ?></th></tr></thead><tbody>';
+                        let html = '<table class="fyn-table"><thead><tr><th><?php echo esc_js(__('Name', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Type', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Description', 'ai-seo-client')); ?></th><th><?php echo esc_js(__('Actions', 'ai-seo-client')); ?></th></tr></thead><tbody>';
                         templates.forEach(t => {
                             const isDefault = !t.is_custom;
                             html += '<tr>' +
-                                '<td><strong>' + (t.name || t.id) + '</strong>' + (isDefault ? ' <span class="notice notice-success" style="padding:2px 6px;font-size:10px;"><?php echo esc_js(__('Default', 'ai-seo-client')); ?></span>' : '') + '</td>' +
+                                '<td><strong>' + (t.name || t.id) + '</strong>' + (isDefault ? ' <span class="fyn-badge fyn-badge--success"><?php echo esc_js(__('Default', 'ai-seo-client')); ?></span>' : '') + '</td>' +
                                 '<td>' + (types[t.type] || t.type) + '</td>' +
                                 '<td>' + (t.description || '') + '</td>' +
                                 '<td>' +
-                                    '<button type="button" class="button" onclick="editTemplate(\'' + t.id + '\')"><?php echo esc_js(__('Edit', 'ai-seo-client')); ?></button> ' +
-                                    (isDefault ? '' : '<button type="button" class="button" onclick="deleteTemplate(\'' + t.id + '\')"><?php echo esc_js(__('Delete', 'ai-seo-client')); ?></button>') +
+                                    '<button type="button" class="fyn-btn fyn-btn-outline" onclick="editTemplate(\'' + t.id + '\')"><?php echo esc_js(__('Edit', 'ai-seo-client')); ?></button> ' +
+                                    (isDefault ? '' : '<button type="button" class="fyn-btn fyn-btn-outline" style="color:var(--fyn-danger);border-color:var(--fyn-danger);" onclick="deleteTemplate(\'' + t.id + '\')"><?php echo esc_js(__('Delete', 'ai-seo-client')); ?></button>') +
                                 '</td>' +
                             '</tr>';
                         });
                         html += '</tbody></table>';
-                        html += '<h2 style="margin-top:30px;"><?php echo esc_js(__('Add / Edit Template', 'ai-seo-client')); ?></h2>' +
+                        html += '<div class="fyn-card" style="margin-top:24px;"><div class="fyn-card-header"><span class="dashicons dashicons-edit"></span><h3 class="fyn-card-title"><?php echo esc_js(__('Add / Edit Template', 'ai-seo-client')); ?></h3></div>' +
                             '<form id="sseo-prompt-form" style="max-width:700px;">' +
                             '<input type="hidden" id="tpl-id" value="">' +
-                            '<p><label><?php echo esc_js(__('Name', 'ai-seo-client')); ?></label><br><input type="text" id="tpl-name" class="regular-text" required></p>' +
-                            '<p><label><?php echo esc_js(__('Type', 'ai-seo-client')); ?></label><br><select id="tpl-type">' +
+                            '<p><label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php echo esc_js(__('Name', 'ai-seo-client')); ?></label><br><input type="text" id="tpl-name" class="fyn-input" style="width:100%;" required></p>' +
+                            '<p><label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php echo esc_js(__('Type', 'ai-seo-client')); ?></label><br><select id="tpl-type" class="fyn-input">' +
                             Object.keys(types).map(k => '<option value="' + k + '">' + types[k] + '</option>').join('') +
                             '</select></p>' +
-                            '<p><label><?php echo esc_js(__('Description', 'ai-seo-client')); ?></label><br><input type="text" id="tpl-desc" class="large-text"></p>' +
-                            '<p><label><?php echo esc_js(__('Prompt', 'ai-seo-client')); ?></label><br><textarea id="tpl-prompt" rows="12" class="large-text" required></textarea></p>' +
-                            '<p class="description"><?php echo esc_js(__('Use placeholders like {keyword}, {heading}, {tone}, {word_count}, {context}, {title}, {intent}, {questions}, {serp_titles}.', 'ai-seo-client')); ?></p>' +
-                            '<p><button type="submit" class="button button-primary"><?php echo esc_js(__('Save Template', 'ai-seo-client')); ?></button></p>' +
-                            '</form>';
+                            '<p><label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php echo esc_js(__('Description', 'ai-seo-client')); ?></label><br><input type="text" id="tpl-desc" class="fyn-input" style="width:100%;"></p>' +
+                            '<p><label style="font-size:13px;font-weight:600;color:var(--text-h);"><?php echo esc_js(__('Prompt', 'ai-seo-client')); ?></label><br><textarea id="tpl-prompt" rows="12" class="fyn-input" style="width:100%;resize:vertical;" required></textarea></p>' +
+                            '<p style="font-size:12px;color:var(--text-m);"><?php echo esc_js(__('Use placeholders like {keyword}, {heading}, {tone}, {word_count}, {context}, {title}, {intent}, {questions}, {serp_titles}.', 'ai-seo-client')); ?></p>' +
+                            '<p><button type="submit" class="fyn-btn fyn-btn-primary"><?php echo esc_js(__('Save Template', 'ai-seo-client')); ?></button></p>' +
+                            '</form></div>';
                         document.getElementById('sseo-prompt-templates-app').innerHTML = html;
 
                         document.getElementById('sseo-prompt-form').addEventListener('submit', saveTemplate);

@@ -69,6 +69,107 @@ class SaasProxyClient
     }
 
     /**
+     * Look up a license key without activating it (used to restrict manual
+     * keys to agency/enterprise tiers before activation).
+     *
+     * @return array{valid: bool, tier?: string}|array{error: string}
+     */
+    public function checkLicense(string $licenseKey, string $shopDomain): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/license/validate";
+
+        try {
+            $response = Http::timeout(30)->post($endpoint, [
+                'license_key' => strtoupper(trim($licenseKey)),
+                'site_url' => "https://{$shopDomain}",
+            ]);
+        } catch (ConnectionException $e) {
+            Log::warning('SaasProxyClient: license check failed (network)', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        $body = $response->json();
+        if (! is_array($body) || ! ($body['valid'] ?? false)) {
+            return ['valid' => false, 'error' => is_array($body) ? ($body['error'] ?? 'invalid_key') : 'invalid_key'];
+        }
+
+        return ['valid' => true, 'tier' => (string) ($body['license']['tier'] ?? '')];
+    }
+
+    /**
+     * Push a shop's Shopify App Pricing state to the SaaS dashboard, which
+     * creates or updates the shop's tenant + license (platform=shopify).
+     *
+     * Signed with HMAC-SHA256 over "{timestamp}.{body}" using the shared
+     * secret (X-Fyndable-Timestamp / X-Fyndable-Signature).
+     *
+     * @param  array  $payload  shop_domain, shop_name, shop_email, state, tier, plan_handle, trial_ends_at, cycle_ends_at, cancel_at_end_of_cycle
+     * @return array{success: true, tenant_key: ?string, license_key: ?string, tier: ?string, status: string}|array{error: string}
+     */
+    public function syncShopifySubscription(array $payload): array
+    {
+        $secret = (string) config('shopify.billing.sync_secret');
+        if ($secret === '') {
+            return ['error' => 'sync_not_configured'];
+        }
+
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/shopify/subscription";
+        $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $timestamp = (string) time();
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders(self::signatureHeaders($body, $timestamp, $secret))
+                ->withBody($body, 'application/json')
+                ->post($endpoint);
+        } catch (ConnectionException $e) {
+            Log::warning('SaasProxyClient: subscription sync failed (network)', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        $json = $response->json();
+        if ($response->failed() || ! is_array($json) || ! ($json['success'] ?? false)) {
+            Log::warning('SaasProxyClient: subscription sync rejected', [
+                'status' => $response->status(),
+                'error' => is_array($json) ? ($json['error'] ?? null) : null,
+            ]);
+
+            return ['error' => is_array($json) ? ($json['error'] ?? 'sync_failed') : 'sync_failed'];
+        }
+
+        return $json;
+    }
+
+    /**
+     * GDPR: delete/anonymize the tenant on the SaaS dashboard (shop/redact).
+     *
+     * @return array{success?: bool, error?: string}
+     */
+    public function gdprDelete(string $licenseKey, string $tenantKey): array
+    {
+        return $this->post('gdpr/delete', $licenseKey, $tenantKey, [
+            'license_key' => $licenseKey,
+            'tenant_key' => $tenantKey,
+            'confirm' => 'DELETE',
+        ], 30);
+    }
+
+    /**
+     * Signature headers for server-to-server calls to the SaaS dashboard.
+     *
+     * @return array{X-Fyndable-Timestamp: string, X-Fyndable-Signature: string}
+     */
+    public static function signatureHeaders(string $body, string $timestamp, string $secret): array
+    {
+        return [
+            'X-Fyndable-Timestamp' => $timestamp,
+            'X-Fyndable-Signature' => hash_hmac('sha256', $timestamp.'.'.$body, $secret),
+        ];
+    }
+
+    /**
      * Validate a tenant's license status (cached 1h by caller).
      *
      * @param  string  $licenseKey
@@ -384,9 +485,148 @@ class SaasProxyClient
         ], 180);
     }
 
+    // -----------------------------------------------------------------------
+    //  GEO Scan (AI Visibility)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Start an async GEO scan via the SaaS dashboard.
+     *
+     * @param  string  $url  The shop's URL to scan.
+     * @param  string  $keywords  Comma-separated keywords (1-2).
+     * @return array{success?: bool, scan_id?: int}|array{error: string}
+     */
+    public function geoScan(string $licenseKey, string $tenantKey, string $url, string $keywords): array
+    {
+        return $this->post('geo-scan/start', $licenseKey, $tenantKey, [
+            'url' => $url,
+            'keywords' => $keywords,
+        ], 90);
+    }
+
+    /**
+     * Poll GEO scan status / results.
+     */
+    public function geoScanStatus(string $licenseKey, string $tenantKey, int $scanId): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/geo-scan/{$scanId}/status";
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ])
+                ->get($endpoint);
+        } catch (ConnectionException $e) {
+            Log::error('SaasProxyClient: GEO scan status failed', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        if ($response->failed()) {
+            return ['error' => 'geo_scan_status_failed', 'status' => $response->status()];
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
+     * Get recent GEO scans for a tenant.
+     */
+    public function geoScanRecent(string $licenseKey, string $tenantKey, int $limit = 10): array
+    {
+        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/geo-scan/recent";
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'X-License-Key' => $licenseKey,
+                    'X-Tenant-Key' => $tenantKey,
+                ])
+                ->get($endpoint, ['limit' => $limit]);
+        } catch (ConnectionException $e) {
+            Log::error('SaasProxyClient: GEO scan recent failed', ['error' => $e->getMessage()]);
+
+            return ['error' => 'connection_failed'];
+        }
+
+        if ($response->failed()) {
+            return ['error' => 'geo_scan_recent_failed', 'status' => $response->status()];
+        }
+
+        return $response->json() ?? [];
+    }
+
+    // -----------------------------------------------------------------------
+    //  Keyword Explorer
+    // -----------------------------------------------------------------------
+
+    /**
+     * Expand a seed keyword into related keywords via the SaaS keyword expand endpoint.
+     *
+     * @return array{keywords?: array, ...}|array{error: string}
+     */
+    public function keywordExpand(string $licenseKey, string $tenantKey, string $seed, string $country = 'us', string $language = 'en'): array
+    {
+        return $this->post('keywords/expand', $licenseKey, $tenantKey, [
+            'seed' => $seed,
+            'country' => $country,
+            'language' => $language,
+        ], 90);
+    }
+
+    /**
+     * Cluster a list of keywords by SERP similarity.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    public function keywordCluster(string $licenseKey, string $tenantKey, array $keywords): array
+    {
+        return $this->post('keywords/cluster', $licenseKey, $tenantKey, [
+            'keywords' => array_values($keywords),
+        ], 90);
+    }
+
+    /**
+     * Google Trends data for keywords.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    public function googleTrends(string $licenseKey, string $tenantKey, array $keywords): array
+    {
+        return $this->post('keywords/google-trends', $licenseKey, $tenantKey, [
+            'keywords' => array_values($keywords),
+        ]);
+    }
+
     /**
      * Shared POST helper for SaaS endpoints.
      */
+    /**
+     * Google OAuth for Search Console (1.5). The SaaS keeps the Google client
+     * secret; these calls never log tokens.
+     */
+    public function googleOAuthSession(string $licenseKey, string $tenantKey): array
+    {
+        return $this->post('google/oauth-session', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey], 20);
+    }
+
+    public function googleExchange(string $licenseKey, string $tenantKey, string $code): array
+    {
+        return $this->post('google/exchange', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey, 'code' => $code], 20);
+    }
+
+    public function googleRefresh(string $licenseKey, string $tenantKey, string $refreshToken): array
+    {
+        return $this->post('google/refresh', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey, 'refresh_token' => $refreshToken], 20);
+    }
+
+    public function googleReportUsage(string $licenseKey, string $tenantKey, string $service, int $calls): array
+    {
+        return $this->post('google/report-usage', $licenseKey, $tenantKey, ['license_key' => $licenseKey, 'tenant_key' => $tenantKey, 'service' => $service, 'calls' => $calls], 10);
+    }
+
     private function post(string $route, string $licenseKey, string $tenantKey, array $body, int $timeout = 60): array
     {
         $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/{$route}";
@@ -416,6 +656,7 @@ class SaasProxyClient
                 'error' => 'saas_request_failed',
                 'status' => $response->status(),
                 'message' => $json['message'] ?? $json['error'] ?? null,
+                'details' => $json['details'] ?? null,
             ];
         }
 

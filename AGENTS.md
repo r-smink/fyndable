@@ -2,6 +2,18 @@
 
 This file captures project-specific information discovered during implementation.
 
+> **Documentation note (2026-10-16):** all user/architecture/setup docs were merged into `FYNDABLE.md` (repo root, Dutch). The old `ARCHITECTURE.md`, `SETUP.md`, `AUDIT-REPORT.md`, `GEBRUIKERSHANDLEIDING.md`, `analyse.md`, `report-claude.md`, `fyndable-faq-homepage-pricing.md` and `tools/UPDATES-SERVER.md` were removed; `README.md` is now just a pointer to `FYNDABLE.md`. This file remains the running technical log.
+
+## Security fixes (2026-10-16 audit round)
+
+- `whitelabelpackagebuilder.php` — `sanitizeCompanyName()` whitelist before injecting agency `company_name` into PHP source (was: raw `str_replace` of a `sanitize_text_field` value → PHP code injection into distributed zips). `extractClientZip()` now rejects `..`/absolute/drive-letter entry paths (zip-slip).
+- `licenseapi.php` — `startTrial()` no longer returns the existing `license_key` in its 409 `trial_exists` response (email-only credential leak). `getClientIp()` now uses `REMOTE_ADDR` only (XFF spoofing bypassed all license rate limits). Activation log uses an md5 fingerprint instead of the first 15 key chars.
+- `signupcheckout.php` — `restRegister` got an IP rate limit (10/h). `handlePaymentReturn` verifies the stored `mollie_payment_id` with Mollie before `cleanupPendingSignup` on cancel/failed/expired; `cleanupPendingSignup` re-reads the tenant row and refuses to delete tenants with `paid`/`trial`/`active` payment_status.
+- `bookkeepingadmin.php` — CSV export cells pass through `csvSafe()` (formula-injection guard for `=+-@` and tab/CR prefixes).
+- `licensevalidator.php` — cURL fallback no longer follows redirects (credentials could leak to a redirect target).
+- `seoreportexport.php` — fixed two fatals: `gatherReportData()` → `getReportData()`, `AISEO_CLIENT_VERSION` → `SSEO_AI_CLIENT_VERSION`.
+- `redirectionmanager.php` — registered the missing `admin_post_sseo_ai_redirect_export` handler (nonce + `manage_options`) for the previously dead Export CSV link.
+
 ## New SaaS endpoints
 
 `fyndable-saas-dashboard/includes/apigateway.php`
@@ -60,7 +72,7 @@ When enabled, the GEO scan runs the same page through multiple AI models sequent
 
 `publicapi.php` — class `PublicApi`, key managed via GEO Scan admin page (integratiekaart, `SaaSSettings::getWebsiteScanKey()` / `regenerateWebsiteScanKey()`, option `sseo_ai_saas_website_scan_key`):
 
-- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; idempotent per email: an existing non-expired non-failed website scan returns `200 {scan_id, duplicate:true}` instead of a new scan; IP rate limit 10/h → `201 {scan_id}` for new scans
+- `POST /ai-seo-saas/v1/public/geo-scan` — body `{url, keywords[1-3], email, consent:true}`; one active scan per email: an existing non-expired non-failed website scan returns `409 already_scanned` (no id/token — security-patch-1 N7); IP rate limit 10/h → `201 {scan_id}` for new scans
 - `GET /ai-seo-saas/v1/public/geo-scan/{id}/status` — `{status, progress, progress_label}` + `teaser` (score, top-3 strengths/weaknesses/findings, keyword flags) when completed — full report stays internal
 - `POST /admin/geo-scan` (AdminApi) is now async too: returns `202 {scan_id, status:'queued'}` — poll `GET /admin/geo-scan/{id}`
 
@@ -408,3 +420,166 @@ The SaaS GEO scan now tests up to the first 3 keywords via DataForSEO LLM Respon
 `GeoScanPdf` (`includes/geoscanpdf.php`) renders the completed scan on demand with Dompdf 3.1.6, bundled under the plugin-local `vendor/` directory. The protected `admin-post.php?action=sseo_geo_scan_download_pdf` action requires `agency_geo_scan`/`manage_options` plus a scan-specific nonce. The report/download pages open a cover-selection dialog with `cover=light|dark`; both versions contain the same prospect-safe scan data and exclude lead details, consent, API errors, usage and cost.
 
 New scans may take longer because of up to 9 additional live platform requests. `GeoScanQueue` lock/stale-running limits are 20 minutes. Verification commands: `php -l` on changed PHP files, `node --check assets/geo-scan-admin.js`, and plugin-local Composer validation through the available Composer PHAR or a system Composer installation.
+
+## Custom plans (per-klant agency-tier pricing, 2026-10-16)
+
+`fyndable-saas-dashboard/includes/customplan.php` — class `CustomPlan`: per-tenant pricing config in `tenant_settings.custom_plan` (`price_per_license`, `discounts[{min,pct}]`, `max_licenses`, `initial_licenses`, `name`). Monthly amount = `paid_licenses × price × (1 − hoogste toepasselijke korting)`; the linked agency account's `max_sub_licenses` doubles as the paid-license count. Consent log in `tenant_settings.custom_plan_consent_log` (max 200 entries, incl. user/IP/bedragen/nextPaymentDate).
+
+- Admin UI: License Admin → Agency Accounts → "Create Custom Plan" + per-plan Edit / Payment Link / Sync Subscription / Consent log (`licenseadmin.php`, `admin_post_sseo_ai_custom_plan_*`, `manage_options` + nonces).
+- Mollie: `PaymentProcessor::createCustomPlanCheckout()` (sequenceType=first, metadata `type=custom_plan`, `license_count`) → mandate; `createMollieSubscription()` computes the plan amount **before** `getTierPricing` (custom plans don't depend on agency tier pricing) and sets `max_sub_licenses`. `setMollieSubscriptionAmount()` is the absolute PATCH variant of the existing additive `updateMollieSubscriptionAmount()`.
+- Portal: Agency Portal → "Extra Licenses" (`sseo-ai-agency-add-licenses`) branches to the custom-plan page: activation card when `payment_status != 'active'`, otherwise price table + add-licenses form with **verplichte consent-checkbox** + live JS herberekening (nieuw maandbedrag + korting). `handleAddLicenses` → `handleCustomPlanAddLicenses`: consent → PATCH absoluut bedrag → quota omhoog → consent-log.
+- Webhook (`webhookhandler.php`): `type=custom_plan` loopt via de generieke `sequenceType=first` → `createMollieSubscription`; bij niet-`paid` status wordt `cleanupPendingSignup` **overgeslagen** voor custom-plan tenants (anders verdwijnen tenant + plan bij een mislukte eerste betaling).
+- Vertalingen: `generate_nl_translations.ps1` scant nu ook `esc_html_e`/`esc_attr_e`/`_e` (1176 extra strings) en merge't bestaande `.po`-vertalingen als fallback; `$finalTranslations` is een case-sensitive `Dictionary` ('Licenses' vs 'licenses' zijn aparte msgids). Let op: msgids met `%1$d`-placeholders MOETEN single-quoted in de dictionary (`$d` interpoleert anders als variabele).
+- Verificatie: `C:\Devtools\php\php.exe -l` (PHP binary staat niet op PATH maar bestaat wel).
+
+## Backlinks — echte data voor Advanced Backlinks / Competitor Research (2026-10-23)
+
+- **DataForSEO-pad gefixt** (SaaS `dataforseoclient.php` + client `dataforseobacklinksclient.php`): target zat in het URL-pad (`/backlinks/{domain}/backlinks/live`) → nu `/v3/backlinks/backlinks/live` en `/v3/backlinks/summary/live` met `target` in de body, `rank_scale: one_hundred` (DR 0-100). Summary-DR komt uit `rank` (was `domain_rank`). De backlinkcalls gaven daarvoor geen data. **Portal moet gedeployed worden** voordat de proxy werkt.
+- `apigateway.php` `handleBacklinksLive` laat nu ook `mode` (as_is|one_per_domain|one_per_anchor), `backlinks_status_type` en `order_by[]` (array) door; limit/offset worden begrensd.
+- `BacklinkAnalyzer` is de gedeelde databron: `getBacklinkItems($domain, $query)` levert genormaliseerde links (source_url/domain, target_url, anchor_text, domain_rating, link_type, item_type, attributes, page_title, spam_score, is_broken, target_status, first_seen), met DataForSEO-filtering wanneer `$query` gezet is (cache 24u, negatief 15 min). Daarnaast `getLinkGap()` (one_per_domain vs. eigen domein, spam ≥50 eruit), `classifyLink()`, `getCompetitorDomains()`, `normalizeDomain()`. Ahrefs/SE Ranking-profielen lopen via dezelfde `normalizeLink()`/`buildProfile()`.
+- Concurrenten: `sseo_ai_add_competitor` / `sseo_ai_remove_competitor` (max 5, option `sseo_ai_competitor_domains` = `[{domain, added_at}]`; legacy strings worden ook gelezen). Voorheen bestond geen handler, dus de option bleef altijd leeg.
+- Toxic: score = `backlink_spam_score` + 50 voor spam-ankers (casino/porn/viagra…) + 15 bij DR<5; toxic vanaf 50. Output bevat nu `toxicity` + `reason` (de UI verwachtte die al).
+- `POST /sseo-ai/v1/backlinks/analyze` (`restAnalyzeBacklinks`) bestaat nu; `GET /backlinks/opportunities` geeft de link gap (optioneel `competitor`, `keyword`).
+- `AdvancedBacklinks` (krijgt `BacklinkAnalyzer` geïnjecteerd): broken links via DataForSEO-filter `is_broken = true` (geen HEAD-requests meer), competitor targets = link gap over alle concurrenten, ankeranalyse op eigen links met merktermen (sitenaam/domein) + doelkeywords uit actieve getrackte keywords + `_sseo_ai_focus_keyphrase` (was hardcoded), AI-aanbevelingen gecachet (1 week). Nieuwe handler `sseo_ai_generate_outreach` (LLM; e-mail via `.val()` in de textarea gezet).
+- `CompetitorResearch` (krijgt `BacklinkAnalyzer`): echte categorisering, topbronnen met DR, ankerverdeling, samenvatting op basis van data; nieuwe handler `sseo_ai_get_backlink_strategy` (HTML-fragment). Andere tab-handlers (`sseo_ai_get_keyword_strategy`, `_content_calendar`, `_win_loss`, `_ad_copy`) bestaan nog steeds niet.
+- Nog open: `sseo_ai_disavow_link` heeft geen handler; geen historie of tracking over tijd (punt 2/3 van het backlinkplan).
+
+## Security patch 1 (2026-10-23)
+
+Volledig verslag: `security-patch-1.md` (repo root). Kort:
+- `/license/trial` en `/signup/activate` geven geen `license_key`/`tenant_key` meer in de response; de key gaat alleen via de welkomstmail. Trial-respons is identiek voor nieuwe/bestaande e-mails. Duplicaatchecks via `TenantRepository::findTenantsByEmail()` (geen `getAllTenants(500)`-loop meer).
+- `getImageApiData()` stuurt `sseo_ai_saas_openrouter_image_api_key` (Settings → Image, aparte gelimiteerde key) mee als die gezet is, anders nog de centrale OpenRouter-key — **centrale key roteren + image-proxy bouwen staat open**.
+- Client-activatie volgt alleen redirects binnen de dashboard-host (`DashboardAPI::isSameDashboardHost()`); cURL-fallback volgt geen redirects.
+- Custom plans: `GET_LOCK` rond add-licenses, qty 1-100 server-side, `createMollieSubscription()` idempotent per first payment (`mollie_subscription_source_payment`), dashboard-return maakt geen tweede abonnement.
+- `HtmlFetcher::isUrlSafe()`: alleen http(s), volledige IPv6-check + AAAA. Competitor-sitemap-fetches via `wp_safe_remote_get`. SerpAPI/Places-query-args via `rawurlencode_deep()`. Support-screenshots alleen afbeeldingen. OAuth-popup: geen `'*'`-fallback meer.
+
+## Audit-ronde 2026-10-29
+
+- **Image-API key** (`licenseapi.php`): `getTenantStatus` stuurt `image_api` alleen nog mee bij een actieve, niet-verlopen tenant met een niet-ingetrokken licentie (anders `[]`). `activateLicense` vereist alleen een geldige `license_key` (geen tenant_key) — comments gecorrigeerd. Client wist een eerder opgeslagen key niet bij een lege waarde; rotatie + image-proxy staan nog open.
+- **SSRF competitor research** (`fyndable-client/includes/competitorresearch.php`): alle fetches via `safeRemoteGet()` → `isPublicUrl()` (http(s), alle A/AAAA-records publiek; blokkeert ook 169.254/16, IPv6-lokaal, 100.64/10 die core's `wp_http_validate_url` doorlaat). Redirects handmatig gevolgd (max 3), elke hop gecontroleerd. Capability blijft `edit_posts`. DNS-rebinding (TOCTOU) niet afgedekt.
+- **Schema-migraties version-gated** (`dashboard.php`): `Dashboard::upgradeSchema()` draait alleen bij activatie of wanneer option `sseo_ai_saas_db_version` ≠ `SSEO_AI_SAAS_VERSION` (update-server-updates vuren geen activation hook). Onvoorwaardelijke `maybeCreateTables`/`migrateExistingTables` uit `init()` en de `admin_init`-hooks van GeoScanRepository/Feedback verwijderd. **Nieuwe migratie toevoegen = pluginversie bumpen.**
+- **Tier-limieten één bron**: maandelijkse API-limieten komen uit de billing-opties (`SaaSSettings::getApiLimitForTier`, `ai_seo_saas_{tier}_api_calls`); `LicenseKeyGenerator::getDefaultApiLimit()` delegeert daarheen (`TIER_API_LIMITS` verwijderd). Rate limits: alleen `LicenseKeyGenerator::TIER_RATE_LIMITS`. `SignupCheckout::getTierLimits()` gebruikt beide; alleen `max_sites` is checkout-specifiek (ongebruikte `geo_scan_limit` verwijderd). Bestaande tenants houden hun opgeslagen limieten.
+- **SMTP** verplaatst naar `SmtpConfigurator` (zelfde hooks/opties), geregistreerd in `Dashboard::init()`.
+
+## Brand Style References — type, edit policy, image mode (2026-10-29)
+
+- Settings → Brand Style References (`client.php`): per afbeelding `type` (logo|person|environment|product|style) én `policy` (free|minimal|locked = Vrij/Beperkt/Beschermd, zelfde instructies als FynnAI `EDIT_POLICIES`) in option `sseo_ai_client_photo_portfolio`. Bugfix: type werd nooit opgeslagen (JS zocht hidden field op een ontbrekend `data-idx`) — selects posten nu zelf; nieuwe items via `<template id="photo-portfolio-template">`.
+- Option `sseo_ai_client_brand_ref_mode`: `describe` (default — vision-beschrijving per afbeelding in de prompt; locked/minimal krijgen een gedetailleerde beschrijving) of `images` (geen vision-calls; afbeeldingen gaan als `input_references` mee naar OpenRouter `/api/v1/images`, base64 data-URL uit de 'large'-size, ≤4 MB, anders publieke URL; SVG overgeslagen; max 6, locked→minimal→free). Per afbeelding een regel "Reference image N (type) <policy>" achter de prompt. Faalt het model met referenties → één retry zonder. Andere providers (OpenAI/Stability/OpenArt) krijgen geen afbeeldingen.
+- Alleen `generateFeaturedImage`/`generateSocialImages` geven referenties mee (`generateImageFromPrompt($prompt, true)`); editor assistant en topiccluster niet.
+
+## Shopify tier-gating (2026-11-04)
+
+Indeling vastgelegd in `shopify-tier-indeling.xlsx` (repo root). Eén bron: `shopify-app/config/tiers.php`.
+
+- `features` → minimale tier per feature; route-middleware `shopify.tier:{feature}` (`RequireTier`) op alle routes in `routes/api.php` behalve dashboard/license/content-list/show. 403 `tier_too_low` (of `license_inactive` bij geen geldige licentie) met `required_tier`/`current_tier`. Trial = Professional-niveau. Oude hardcoded `hasTier()` in RankTrackerController verwijderd.
+- Starter: llms.txt, IndexNow, meta/beschrijving/alt-tekst/schema. Professional: FAQ, linksuggesties, AI-afbeelding, varianten, rank tracker, keyword explorer, competitor, GEO, AI tracker, insights, markets. Business: blog writer, content calendar, bulk optimizer.
+- `limits` → maandlimieten alleen voor Shopify, lokaal geteld in tabel `shop_usage` (`UsageLimiter`): GEO-scans Pro 10 / Business 30 / Agency onbeperkt; blogartikelen (generaties) Business 50 / Agency onbeperkt. Fout `limit_reached`.
+- API-calls/maand: SaaS `SaaSSettings::getEffectiveApiLimit($tenant)` — tenants met `platform=shopify` gebruiken `ai_seo_saas_shopify_{tier}_api_calls` (default Starter 500 / Pro+trial 2.000 / Business 5.000 / Agency 20.000; kolom "Shopify API Calls/mo" op Tier Pricing & Limits) i.p.v. de opgeslagen `api_calls_limit`. WordPress ongewijzigd.
+- `/dashboard/overview` geeft `plan {tier, features, required, usage}`; de blade zet een slotje op tabs + upgrade-kaart (`TAB_FEATURES` wordt gerenderd uit `config/tiers.php` `tabs`).
+- Queue-jobs (`CheckRankingsJob`, `BulkOptimizeJob`) gaan niet door de middleware en checken de tier daarom zelf.
+
+## Shopify App Pricing (0.1, 2026-11-04)
+
+Billing loopt via **Shopify App Pricing** (voorheen Managed Pricing). Geen Billing API (`appSubscriptionCreate` wordt geweigerd) en geen `app_subscriptions/update`-webhook (App Pricing stuurt sinds 28-04-2026 geen abonnementswebhooks meer).
+
+- Plannen in het Partner Dashboard: `starter` (60 USD), `professional` (199 USD), `business` (299 USD). Mapping plan_handle -> tier in `config/shopify.php` `billing.plans`; tiers zelf in `config/tiers.php`. Agency/enterprise blijft buiten de App Store (handmatige sleutel, alleen tier `agency`/`dev`, gecheckt via `/license/validate` voor activatie).
+- `PartnerApiClient`: `activeSubscription(appId, shopId)` op `https://partners.shopify.com/{partner_id}/api/2026-10/graphql.json` (header `X-Shopify-Access-Token`, Partner API client met "Manage apps", 4 req/s). Geen statusveld: `null` = geen actief abonnement (nooit, opgezegd of bevroren). Plan = `items[].handle`.
+- `ShopifyBillingService::refresh()`: bij elke app-load (overview + `GET /api/billing/status`, cache `check_ttl` 600s), na de plankeuze-redirect (`POST /api/billing/confirm`, `plan_handle` is alleen een hint) en elk uur via `SyncShopBillingJob` (scheduler `shopify-billing-sync`, alleen `billing_state=active`, 3 shops/s). Partner API-fout = laatst bekende status houden.
+- Staten (`shops.billing_state`): `trial` (in-app trial), `active`, `none` (plan vereist, dashboard stuurt 1x per sessie naar `https://admin.shopify.com/store/{handle}/charges/fyndable-smart-seo/pricing_plans`). Elke wijziging gaat signed naar de SaaS (`POST /ai-seo-saas/v1/shopify/subscription`, `ShopifyBillingApi`), die de tenant + licentie maakt/bijwerkt (`platform=shopify`, mapping in `tenant_settings.shopify_shop_domain`) of bij none/uninstall op `suspended` zet. Gating blijft via `tenant/status` -> `LicenseService` -> `RequireTier`.
+- In-app trial (geen Shopify-trialdagen): `billing.trial_days` (7) dagen vanaf `trial_started_at` of AI-optimalisatie van max. `billing.trial_products` (5) verschillende producten, wat het eerst komt. Na 7 dagen: 402 `trial_expired`, uur-sync pakt verlopen trials op, SaaS-tenant krijgt de einddatum als `expires_at`. Producten geteld in `trial_products` via middleware `shopify.trial` (`TrialProductGuard`) op alle product-AI-routes. Product 6 -> 402 `trial_exhausted` + `trial_ended_at`, state `none`. Een betaald plan zet `trial_ended_at` ook, dus geen nieuwe trial na opzeggen. Trial-tier = `trial` (Professional-niveau in `config/tiers.php`).
+- Signing: HMAC-SHA256 over `"{timestamp}.{body}"`, headers `X-Fyndable-Timestamp`/`X-Fyndable-Signature`, 5 min venster. Secret: app `.env` `FYNDABLE_SHOPIFY_SYNC_SECRET` = SaaS `wp-config.php` `FYNDABLE_SHOPIFY_SYNC_SECRET` (of optie `sseo_ai_saas_shopify_sync_secret`).
+- `.env` (productie): `SHOPIFY_BILLING_ENABLED=true`, `SHOPIFY_PARTNER_ID=5185442`, `SHOPIFY_APP_ID=423617626113`, `SHOPIFY_APP_HANDLE=fyndable-smart-seo`, `SHOPIFY_PARTNER_API_TOKEN`, `FYNDABLE_SHOPIFY_SYNC_SECRET`. Queue worker + scheduler zijn nodig voor de uur-sync en de uninstall-sync.
+- Tests: Pest (`vendor/bin/pest`, PHP-ini via `PHP_INI_SCAN_DIR=C:/Devtools/composer/conf.d`). `composer.json` pint `platform.php` op 8.2.29.
+- Geen Shopify-SDK: `shopify/shopify-app-php` is verwijderd (werd nooit gebruikt); `firebase/php-jwt ^7.0` is een directe dependency (sessietokens). `/auth/callback` verifieert alleen de HMAC en stuurt door naar `/dashboard` (managed install, geen code-exchange).
+- GDPR `shop/redact`: wist keywords, rank history, llms-instellingen, `scheduled_articles`, `shop_usage`, naam/e-mail/licentie/billing en queuet `GdprDeleteTenantJob` (SaaS `/gdpr/delete`, alleen voor App Pricing-tenants; agency-licenties worden alleen ontkoppeld). `trial_products`/`trial_ended_at` blijven (trial-misbruik). SaaS `/gdpr/delete` verwijdert nu ook `tenant_settings` en gebruikt `tenant_id` voor usage/tickets.
+- Queue-jobs (`BulkOptimizeJob`, `CheckRankingsJob`) checken de tier zelf via `LicenseService::canUse`. Tab -> feature-map voor het dashboard staat in `config/tiers.php` `tabs`.
+
+## Shopify onboarding + merkstem (0.2, 2026-11-05)
+
+- Trial-tenant ontstaat bij de eerste app-load (`ShopifyBillingService::refresh`, zie App Pricing). De homepage toont een setup-kaart zolang `shop_profiles.onboarding_completed_at`/`onboarding_skipped_at` leeg is en er geen plan vereist is; de wizard opent alleen na een klik (Built for Shopify 4.3.6: geen modals die vanzelf openen; 4.2.2: onboarding-UI verdwijnt na afronden). Heropenen via de Plan-tab.
+- `OnboardingController`: `GET /api/onboarding` (profiel, suggesties uit `shopLocales` primary + `billingAddress.countryCodeV2`, fallback `?locale=`; 5 productvoorstellen, zonder SEO eerst), `POST /api/onboarding/profile|complete|skip`. Stap 3 roept de gewone `/products/{id}/generate-meta` + `save-meta` aan, dus tier-gating en trial-limiet gelden ongewijzigd.
+- `BrandVoice::apply($shop, $messages, $voice = true)` voegt taal, land, toon, doelgroep en merkomschrijving toe aan de system prompt. Gebruikt in ProductController, ContentController en BulkOptimizeJob (alt-tekst: alleen taal/land). Blog Writer: standaardtaal uit het profiel, talenlijst = `BrandVoice::LANGUAGES`. Nieuwe AI-tekstgenerator = altijd via `BrandVoice::apply`.
+- `shop/redact` verwijdert ook `shop_profiles`.
+
+## Shopify embedded UI op Polaris (0.5, 2026-11-04)
+
+- Geen single-page blade meer. `GET /dashboard/{page?}` (`DashboardController::PAGES`, volgorde = `s-app-nav`) rendert `resources/views/dashboard/pages/{page}.blade.php` op `layouts/app.blade.php` (App Bridge + `https://cdn.shopify.com/shopifycloud/polaris-2.js`). Navigatielinks geven `shop`, `host`, `locale`, `embedded` door (gevalideerd).
+- JS: `public/js/fyndable.js` (`Fyn.api/post`, `Fyn.toast` (App Bridge), `Fyn.confirm` (s-modal, alleen vanuit een klik), `Fyn.errorBanner`, `Fyn.stats/row/table/badge/json`, `Fyn.val/setVal/checked`, `Fyn.busy`), pagina-scripts `public/js/pages/{page}.js` registreren met `Fyn.page(async ctx => ...)`. Die draait na `GET /api/dashboard/context` (billing, plan, onboarding) en niet als de pagina-feature (`config/tiers.php` `tabs`) buiten het plan valt. Home gebruikt `/dashboard/overview` (`Fyn.customContext = true`). Gedeelde extra scripts via `@php($scripts = ['onboarding'])` in de pagina-view.
+- i18n: `lang/{en,nl}/app.php` (nav, gedeeld, home, instellingen, plan, onboarding) + `lang/{en,nl}/{page}.php`; de `js`-groep gaat als `window.FYN.i18n` naar de browser. Sleutels moeten in beide talen bestaan en er mogen geen em-/en-dashes in staan (`tests/Feature/DashboardPagesTest.php`). UI-taal = Shopify-admintaal (`?locale=`), AI-contenttaal = `shop_profiles.content_language` (pagina Instellingen, `GET|POST /api/settings/profile`).
+- Geen eigen kleuren/dark mode/dashicons meer (`public/vendor/dashicons` verwijderd). `public/css/fyndable.css` bevat alleen `[hidden]`-fix voor custom elements en code/preview-blokken.
+- Nieuwe pagina = view + script + `lang/en|nl/{page}.php` + entry in `DashboardController::PAGES` (+ `config/tiers.php` `tabs` als hij gegated is).
+
+## Shopify SEO-audit (1.1, 2026-11-04)
+
+- `App\Services\SeoAuditor`: pure scoring. `normalize($type, $node, $host)` (nodes uit `ShopifyContentFetcher::getAuditItems`), `scoreItem()` (itemchecks), `audit($items, $hosts)` (plus dubbele titels/beschrijvingen en gebroken interne links). Checks, ernst en strafpunten in `SeoAuditor::ISSUES`; bulk-acties per issue in `BULK_FIXES`.
+- `getAuditItems()` gebruikt slanke queries met kleine pagina's (producten 40, cost < 1000) en geeft `['error' => ...]` terug als een pagina faalt (geen misleidende score op een halve catalogus). Producten met `status:active`, pagina's/artikelen `published_status:published`.
+- `SeoAuditJob` (queue, 1 poging, 15 min) schrijft voortgang naar `seo_audits` en items naar `seo_audit_items`; houdt `KEEP` (5) audits per shop. Checkt zelf de tier (`seo_audit`, Starter).
+- API: `POST /api/audit/start` (een tegelijk, na 30 min als vastgelopen beschouwd), `GET /api/audit/latest`, `GET /api/audit/items?issue=&type=&page=`. `ContentController::show` geeft `item.seo` (live itemscore), `index` geeft `score` uit de laatste audit; overview geeft `seo_score`.
+- UI: pagina `seoaudit`; deep links `/dashboard/bulk?action=meta` en `/dashboard/content?type=product&id=123`. Issue-labels staan gedeeld in `lang/*/app.php` (`issue_*`, `severity_*`).
+- GDPR `shop/redact` verwijdert ook `seo_audits`/`seo_audit_items`.
+
+## Shopify redirects + 404-monitor (1.2, 2026-11-04)
+
+- `ShopifyUrlRedirect` is nu GraphQL (`urlRedirects`, `urlRedirectCreate/Update/Delete`), scope `write_online_store_navigation` (ook voor de llms.txt- en IndexNow-redirects; route-middleware `shopify.scope:write_online_store_navigation`). `ensure()` maakt aan of zet een bestaande redirect om.
+- `RedirectManager`: instellingen (kolommen op `shop_profiles`: `redirect_on_handle_change`, `redirect_on_delete`, `deleted_redirect_target` collection|all|home|search, `not_found_monitor`), `resourceUpdated()/resourceDeleted()` (handles in `resource_handles`, eerste collectie van een product max. 24 uur gecachet), `redirect()` (logt in `redirect_events` en lost een bijbehorende 404 op), `recordNotFound()` (max. 2000 open 404's per shop, referrer zonder query).
+- Webhooks `products/*` en `collections/*` -> `TrackHandleChangeJob` (queue, checkt tier `redirects`). `shopify.app.toml` registreert nu `app/uninstalled`, `products/*`, `collections/*` (voorheen alleen GDPR-topics).
+- 404-beacon: theme app embed `extensions/fyndable-seo-schema/blocks/fyndable-404-monitor.liquid` -> `POST /apps/fyndable/404` -> `NotFoundController` (app proxy-handtekening via `ShopifySignature::verifyAppProxy`, Shopify-spec: gedecodeerd, gesorteerd, zonder scheidingsteken; 120/min per shop).
+- API onder `/api/redirects` (tier `redirects`, schrijfacties ook scope): lijst/zoeken, aanmaken, bewerken, verwijderen, `export` (CSV met formula-guard), `import` (`ImportRedirectsJob`, voortgang in cache `redirect_import:{shop_id}`), `not-found` (+ `fix`/`ignore`), `settings`.
+- Tests: `tests/Pest.php` zet `shopify.scopes` vast (los van de lokale `.env`) en bevat nu `sendWebhook()`.
+
+### Tier-indeling nieuwe Shopify-functies (2026-11-04)
+
+Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier uit `LicenseFeatureManager` als basis): `seo_audit` professional, itemscore iedereen (niet gegated), `redirects` starter, `not_found_monitor` professional (404-routes en de beacon checken deze feature apart). Nieuwe Shopify-functie = eerst een rij in de spreadsheet, dan `config/tiers.php`.
+
+## Shopify winkelbreed schema (1.4, 2026-11-04)
+
+- App embed `extensions/fyndable-seo-schema/blocks/fyndable-seo-schema.liquid`: handmatig itemschema (metafields `fyndable.*_schema`, `fyndable.faq_schema`) gaat voor; daarna, als `app.metafields.fyndable.schema_config.value` bestaat: `home`-blokken (Organization/LocalBusiness, door de app gebouwd) + WebSite/SearchAction op `request.page_type == 'index'`, BreadcrumbList, automatisch Product en BlogPosting uit Liquid. Alle strings via `| json`, geen JavaScript.
+- `StoreSchemaService`: instellingen in `store_schema_settings` (flags, organization, local_business), `buildConfig()` (gating: `schema` starter, `local_business_schema` professional), `publish()` (metafieldsSet op `currentAppInstallation`, type json), `themeCheck()` (`ShopifyContentFetcher::getMainThemeFiles`, patterns `layout|sections|snippets|templates|blocks/*.liquid`).
+- API: `GET|POST /api/schema`, `POST /api/schema/theme-check` (scope `read_themes`). Dagelijks `SyncStoreSchemaJob` via scheduler `store-schema-sync`.
+- JS: `Fyn.embedStatus(handle)` (App Bridge `shopify.app.extensions()`, null als onbekend) en `Fyn.embedEditorUrl(handle)` (deeplink `shopify://admin/themes/current/editor?context=apps&activateAppId={apiKey}/{handle}`); `window.FYN.apiKey` is de publieke client-id.
+
+## Shopify bulk optimizer (1.3, 2026-11-04)
+
+- `BulkOptimizer`: `ACTIONS` per type (product: meta_title, meta, titles, alt_text, descriptions; collection: meta_title, meta, descriptions; page/article: meta_title, meta), `TEMPLATE_ACTIONS` (meta_title, meta), `select()` (via `getAuditItems`, met "alleen nodig" op basis van `SeoAuditor`-issues), `render()` (placeholders, scheidingstekens opruimen, woordgrens), `process()` (AI of sjabloon, opslaan per type).
+- `BulkOptimizeJob(shopId, type, action, mode, template, items)` draait in de queue; voortgang in cache `bulk:{shop_id}` (status queued|running|completed|cancelled|failed, errors[]). Na elk item wordt eerst gecontroleerd op "cancelled" voordat de voortgang wordt weggeschreven.
+- API: `POST /api/bulk/optimize|preview|cancel`, `GET /api/bulk/progress` (tier `bulk_optimizer`; pagina's/artikelen checken `write_content` in de controller). Deep link `/dashboard/bulk?type=product&action=meta`.
+- JS `t()` laat onbekende `{naam}`-placeholders staan (nodig voor `{{title}}` in helpteksten).
+
+## Shopify Search Console (1.5, 2026-11-04)
+
+- SaaS `licenseapi.php`: nieuw `POST /google/oauth-session` (license+tenant, alleen `platform=shopify`) -> eenmalige `oauth-start?session=...` (transient `sseo_google_oauth_{session}`, 10 min, single use). In sessiemodus postMessaget de popup `{type: 'fyndable_google_code', code}` naar de Shopify-app-origin (`FYNDABLE_SHOPIFY_APP_ORIGIN` / optie `sseo_ai_saas_shopify_app_origin`, default `https://shopify.fyndable.ai`) en wisselt niet zelf in. WordPress (license_key/tenant_key in de URL, tokens via postMessage) is ongewijzigd.
+- App: `SearchConsoleService` (session, connect via SaaS `/google/exchange`, `accessToken()` met refresh via SaaS, `sites()`, `suggestSite()`, `sync()` -> `gsc_page_stats`/`gsc_query_stats` (laatste 28 dagen tot 3 dagen geleden), `pageStats()`, `resourceForPath()`). Tokens in `google_connections` met `encrypted` casts, nooit in API-responses. `SaasProxyClient::post` geeft bij fouten nu ook `details` terug.
+- API `/api/gsc/*` (tier `search_console`, professional). JS opent de popup leeg binnen de klik (popup-blockers) en controleert `event.origin` tegen de origin van de sessie-URL.
+- Koppelingen: `RankTrackerController::listKeywords` voegt `gsc {clicks, impressions, position}` toe; `ContentController::show` voegt `item.gsc` toe. Uninstall verwijdert de Google-koppeling, `shop/redact` ook de statistieken.
+
+## Shopify rapportage (1.7, 2026-11-04)
+
+- Activiteitenlog: middleware `shopify.activity` (`RecordActivity`) op de hele `shopify.session`-API-groep; mapt de route-URI naar een soort (meta, description, schema, alt_text, product, internal_link, image, article) en logt alleen geslaagde POSTs (`success: true`). `BulkOptimizeJob` logt per geslaagd item. Nieuwe opslaan-route = patroon toevoegen in `RecordActivity::ROUTES`.
+- `ReportBuilder::create($shop, $end)` maakt een `seo_reports`-snapshot van de 7 dagen tot `$end` (seo, rankings, search_console met vorige klikken, geo, activity). `ReportMailer::createAndSend()` mailt `WeeklyReportMail` (view `reports/email`, gedeelde partial `reports/_content` met inline styles) in `report_language` (anders contenttaal, anders en). Instellingen op `shop_profiles` (`report_enabled`, `report_email`, `report_language`).
+- Signed web-routes: `report.show` (`/report/{report}`, printbaar, noindex) en `report.unsubscribe` (`/report/unsubscribe/{shop}`). Scheduler `weekly-seo-report` (maandag 07:00), job `SendSeoReportJob($shopId, $manual)`.
+- API `/api/reports`, `/api/reports/settings`, `/api/reports/send` (tier `reports`, professional). `shop/redact` verwijdert rapporten en het activiteitenlog.
+
+## Shopify AI-shopping (2.1, 2026-11-04)
+
+- `AiCommerce` (puur): `group()` (varianten -> producten, alleen ACTIVE + online), `score()` (`CHECKS`, totaal 100), `openAiRow()` / `googleItem()` (OpenAI Product Feed Spec / Merchant Center), `validGtin()` (GTIN-8/12/13/14 controlecijfer), `attributes()` (metafield `fyndable.ai_attributes`).
+- `ShopifyContentFetcher::getFeedVariants()` (productVariants, 50 per pagina, productvelden per variant). `FeedBuilder::build()` schrijft `storage/app/private/feeds/{shop_id}/google.xml|openai.jsonl`, vult `ai_readiness_items` en `product_feeds` (status, tellingen, gemiddelde, issue-samenvatting).
+- `AiAttributes`: `generate()` (AI, JSON, normaliseert enums), `save()` (metafieldsSet json). Bulkactie `ai_attributes` in `BulkOptimizer` ("alleen nodig" = metafield leeg).
+- API `/api/ai-ready/*` (tier `ai_readiness`; attributen `ai_attributes`, met `shopify.trial`). Publiek: `GET /feeds/{token}/{google.xml|openai.jsonl}` (`FeedController`, 404 als uit, geen plan of niet geinstalleerd). Scheduler `product-feed-build` 02:00.
+
+## Shopify AI-crawlers (2.2, 2026-11-04)
+
+- `AiCrawlers`: `BOTS` (user agent => [bedrijf, search|user|training]), keuzes in `shop_profiles.ai_crawlers` (standaard allow), `block()` (alleen `Disallow: /` voor geblokkeerde bots, tussen `# Fyndable AI crawlers - begin/end`), `fullTemplate()` (Shopify `robots.default_groups`-loop + blok), `themeStatus()` (`templates/robots.txt.liquid` via `getMainThemeFiles`), `liveStatus()` + `parse()`/`isBlocked()` (eigen groep, anders `*`; `Allow: /` wint).
+- API `GET|POST /api/ai-crawlers`, `POST /api/ai-crawlers/check` (tier `ai_crawlers`, starter; check vraagt `read_themes`). Geen `write_themes`: de merchant plakt de code zelf.
+
+## Shopify AI-vertalingen (2.3, 2026-11-04)
+
+- `AiTranslator`: `TYPES` (type => [TranslatableResourceType, keys]), `locales()`, `gaps()` (ontbrekend/verouderd per resource), `translate()` (AI, JSON met dezelfde keys, lengtelimieten), `register()` (`ShopifyAdminWriter::registerTranslations`, met `translatableContentDigest`). Fetcher: `getShopLocales()`, `getTranslatableResources()` (25 per pagina), `getTranslatableResource()`.
+- `BrandVoice::apply($shop, $messages, $voice, $market)`: `$market = false` laat contenttaal en land weg (nodig bij vertalen naar een andere taal).
+- API `/api/translations/*` (tier `translations`, professional; save/run vragen `write_translations`). `TranslateJob` (cache `translate:{shop_id}`), activiteitensoort `translation`. Gaten worden 5 minuten gecachet (`translation_gaps:{shop}:{type}:{locale}`).
+
+## Shopify collectiepagina's (2.5, 2026-11-04)
+
+- `CollectionLanding`: `keywords()` (AI-ideeen + volume via `SaasProxyClient::keywordData`, defensief geparsed), `draft()` (intro_html + faq), `current()`, `save()` (metafields `fyndable.collection_landing` json + `fyndable.faq_schema` FAQPage), `clean()`/`sanitize()` (toegestane tags p, br, strong, b, em, i, ul, ol, li, h2, h3, a[href http(s) of /]).
+- Fetcher: `getCollectionsForLanding()`, `getCollectionForLanding()`. API `/api/collection-pages/*` (tier `collection_pages`, professional; save vraagt `write_products`). Activiteitensoort `collection_page`.
+- Theme app blocks (`target: section`, `enabled_on: collection`): `fyndable-collection-intro.liquid`, `fyndable-collection-faq.liquid`.
+- 2.4 ApexFlow vervalt voor Shopify; 2.8 (AI-omzet) staat op later (vraagt `read_orders` + protected customer data).

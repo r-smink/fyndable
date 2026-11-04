@@ -1,0 +1,49 @@
+/*
+ * Fyndable embedded app. Layout and look come from Polaris web components
+ * (Built for Shopify 4.1.1); this file only covers what Polaris has no
+ * component for. No custom colors: AI features must not use Shopify's
+ * magic purple (4.3.5) and the app follows the admin palette.
+ */
+
+/* Custom elements set display on :host, which beats the UA [hidden] rule. */
+[hidden] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+}
+
+/* Raw JSON output (insights endpoints) */
+.fyn-code {
+    margin: 0;
+    max-height: 420px;
+    overflow: auto;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f7f7f7;
+    border: 1px solid #e3e3e3;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Long text (llms.txt preview) */
+.fyn-preview {
+    margin: 0;
+    max-height: 520px;
+    overflow: auto;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Onboarding product rows */
+.fyn-product-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #f1f1f1;
+    flex: none;
+}

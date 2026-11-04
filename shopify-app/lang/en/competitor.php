@@ -1,0 +1,30 @@
+<?php
+
+return [
+    'intro' => 'See who ranks for your target keywords, with backlink metrics and competitive insights.',
+    'analyze_title' => 'Analyze competitors',
+    'keyword' => 'Target keyword',
+    'keyword_ph' => 'e.g. best running shoes',
+    'your_url' => 'Your URL',
+    'your_url_details' => 'Optional, defaults to your store',
+    'country' => 'Country',
+    'language' => 'Language',
+    'analyze' => 'Analyze SERP',
+    'results' => 'SERP results',
+    'compare_title' => 'Compare domains',
+    'domain_a' => 'Domain A',
+    'domain_b' => 'Domain B',
+    'compare' => 'Compare',
+
+    'js' => [
+        'comp_enter_keyword' => 'Enter a target keyword',
+        'comp_enter_domains' => 'Enter both domains',
+        'comp_your_position' => 'Your position: {position}',
+        'comp_not_found' => 'not found in the top results',
+        'comp_col_domain' => 'Domain',
+        'comp_col_title' => 'Title',
+        'comp_col_backlinks' => 'Backlinks',
+        'comp_col_refdomains' => 'Ref. domains',
+        'comp_serp_features' => 'SERP features:',
+    ],
+];

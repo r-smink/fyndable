@@ -1,7 +1,15 @@
 <?php
 
+use App\Jobs\BuildProductFeedJob;
 use App\Jobs\CheckRankingsJob;
+use App\Jobs\SendSeoReportJob;
+use App\Jobs\SyncSearchConsoleJob;
+use App\Jobs\SyncShopBillingJob;
+use App\Jobs\SyncStoreSchemaJob;
+use App\Models\GoogleConnection;
+use App\Models\ProductFeed;
 use App\Models\Shop;
+use App\Models\StoreSchemaSetting;
 use App\Services\LlmsTxtGenerator;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -30,6 +38,45 @@ Schedule::call(function () {
     }
 })->dailyAt('06:00')->name('daily-rank-check')->withoutOverlapping();
 
+// Publish scheduled blog articles every 15 minutes
+Schedule::command('app:publish-scheduled-articles')
+    ->everyFifteenMinutes()
+    ->name('publish-scheduled-articles')
+    ->withoutOverlapping();
+
+// Daily re-publish of the store-wide schema config (1.4), so plan changes
+// also switch off structured data that is no longer included.
+Schedule::call(function () {
+    StoreSchemaSetting::whereHas('shop', fn ($q) => $q->where('is_installed', true)->where('is_uninstalled', false))
+        ->pluck('shop_id')
+        ->each(fn (int $shopId, int $i) => SyncStoreSchemaJob::dispatch($shopId)->delay(now()->addSeconds(intdiv($i, 3))));
+})->dailyAt('04:00')->name('store-schema-sync')->withoutOverlapping();
+
+// Daily Search Console snapshot (1.5) for connected shops with a property.
+Schedule::call(function () {
+    GoogleConnection::where('status', 'connected')->whereNotNull('site_url')
+        ->whereHas('shop', fn ($q) => $q->where('is_installed', true)->where('is_uninstalled', false))
+        ->pluck('shop_id')
+        ->each(fn (int $shopId, int $i) => SyncSearchConsoleJob::dispatch($shopId)->delay(now()->addSeconds($i * 2)));
+})->dailyAt('05:00')->name('search-console-sync')->withoutOverlapping();
+
+// Weekly SEO report email (1.7), Monday morning, for shops that turned it on.
+Schedule::call(function () {
+    Shop::where('is_installed', true)->where('is_uninstalled', false)
+        ->whereHas('profile', fn ($q) => $q->where('report_enabled', true))
+        ->pluck('id')
+        ->each(fn (int $shopId, int $i) => SendSeoReportJob::dispatch($shopId)->delay(now()->addSeconds($i * 2)));
+})->weeklyOn(1, '07:00')->name('weekly-seo-report')->withoutOverlapping();
+
+// Daily product feed + AI-ready score rebuild (2.1) for enabled feeds, so
+// prices and stock in the feeds stay current.
+Schedule::call(function () {
+    ProductFeed::where('enabled', true)
+        ->whereHas('shop', fn ($q) => $q->where('is_installed', true)->where('is_uninstalled', false))
+        ->pluck('shop_id')
+        ->each(fn (int $shopId, int $i) => BuildProductFeedJob::dispatch($shopId)->delay(now()->addSeconds($i * 5)));
+})->dailyAt('02:00')->name('product-feed-build')->withoutOverlapping();
+
 // Daily llms.txt cache refresh (prevents stale cache from building up)
 Schedule::call(function () {
     $shops = Shop::where('is_installed', true)
@@ -41,3 +88,27 @@ Schedule::call(function () {
         $generator->invalidate($shop);
     }
 })->dailyAt('03:00')->name('daily-llmstxt-refresh');
+
+// Hourly Shopify App Pricing sync: App Pricing sends no webhooks for
+// cancellations or freezes, so re-read every paying shop from the
+// Partner API. Trial shops whose trial window has passed are checked too,
+// so their SaaS tenant is suspended even when the merchant never returns.
+// Spread at 3 shops per second (Partner API limit is 4/s, shared with
+// app-load checks).
+Schedule::call(function () {
+    if (! config('shopify.billing_enabled')) {
+        return;
+    }
+
+    $shopIds = Shop::where('is_installed', true)
+        ->where('is_uninstalled', false)
+        ->where(fn ($q) => $q->whereNull('license_source')->orWhere('license_source', 'app_pricing'))
+        ->where(fn ($q) => $q->where('billing_state', 'active')
+            ->orWhere(fn ($t) => $t->where('billing_state', 'trial')
+                ->where('trial_started_at', '<=', now()->subDays((int) config('shopify.billing.trial_days', 7)))))
+        ->pluck('id');
+
+    foreach ($shopIds->values() as $i => $shopId) {
+        SyncShopBillingJob::dispatch($shopId)->delay(now()->addSeconds(intdiv($i, 3)));
+    }
+})->hourly()->name('shopify-billing-sync')->withoutOverlapping();

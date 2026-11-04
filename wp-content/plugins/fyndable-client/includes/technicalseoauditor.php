@@ -57,329 +57,263 @@ class TechnicalSEOAuditor
         $lastAuditDate = get_option('sseo_ai_last_audit_date', '');
         
         ?>
-        <style>
-            /* Page-specific styles — base layout uses shared client-admin.css */
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-            /* Grid Layouts */
-            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
-
-            .sseo-top-section { 
-                display: grid; 
-                grid-template-columns: 1fr 2fr; 
-                gap: 24px; 
-                margin-bottom: 24px; 
-                align-items: start;
-            }
-            @media (max-width: 1200px) { .sseo-top-section { grid-template-columns: 1fr; } }
-            
-            /* Score Cards */
-            .audit-scores-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-            @media (max-width: 768px) { .audit-scores-grid { grid-template-columns: repeat(2, 1fr); } }
-            
-            .score-card { 
-                text-align: center; 
-                padding: 24px 16px; 
-                background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
-                border-radius: 10px; 
-                border: 1px solid #cbd5e1;
-            }
-            .score-value { font-size: 40px; font-weight: 800; line-height: 1; }
-            .score-label { 
-                margin-top: 10px; 
-                font-size: 12px; 
-                font-weight: 600; 
-                color: #64748b; 
-                 
-                letter-spacing: 0.5px; 
-            }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Technical SEO Audit', 'ai-seo-client'); ?></h1>
-            </div>
-            
-            <div class="sseo-ai-content">
-                <?php DashboardSorter::begin('ai-seo-site-audit'); ?>
-                <!-- Top Section: Overview + Scores side by side -->
-                <div class="sseo-top-section">
-                    <!-- Audit Overview -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Audit Overview', 'ai-seo-client'); ?></h2>
-                        
-                        <?php if ($lastAuditDate): ?>
-                        <p style="margin-bottom: 20px;">
-                            <strong><?php esc_html_e('Last Audit:', 'ai-seo-client'); ?></strong><br>
-                            <?php echo esc_html(human_time_diff(strtotime($lastAuditDate))); ?> ago
-                        </p>
-                        <?php endif; ?>
-                        
-                        <button type="button" class="button button-primary button-hero" onclick="sseoRunTechnicalAudit()" style="width: 100%;">
-                            <?php esc_html_e('Run Full Technical Audit', 'ai-seo-client'); ?>
-                        </button>
-                    </div>
-                    
-                    <!-- Audit Scores -->
-                    <?php if (!empty($lastAudit)): ?>
-                    <div class="sseo-ai-dashboard-card">
-                        <h3 style="margin: 0 0 25px 0; font-size: 18px; font-weight: 600; color: #1d2327;"><?php esc_html_e('Audit Scores', 'ai-seo-client'); ?></h3>
-                        <div class="audit-scores-grid">
-                            <div class="score-card">
-                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['crawlability_score'] ?? 0); ?>">
-                                    <?php echo esc_html($lastAudit['crawlability_score'] ?? 0); ?>
-                                </div>
-                                <div class="score-label"><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div class="score-card">
-                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['performance_score'] ?? 0); ?>">
-                                    <?php echo esc_html($lastAudit['performance_score'] ?? 0); ?>
-                                </div>
-                                <div class="score-label"><?php esc_html_e('Performance', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div class="score-card">
-                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['structure_score'] ?? 0); ?>">
-                                    <?php echo esc_html($lastAudit['structure_score'] ?? 0); ?>
-                                </div>
-                                <div class="score-label"><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></div>
-                            </div>
-                            <div class="score-card">
-                                <div class="score-value" style="color: <?php echo $this->getScoreColor($lastAudit['sitemap_score'] ?? 0); ?>">
-                                    <?php echo esc_html($lastAudit['sitemap_score'] ?? 0); ?>
-                                </div>
-                                <div class="score-label"><?php esc_html_e('Sitemap Health', 'ai-seo-client'); ?></div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php else: ?>
-                    <div class="sseo-ai-dashboard-card" style="display: flex; align-items: center; justify-content: center;">
-                        <p style="color: #64748b; font-style: italic;"><?php esc_html_e('Run an audit to see your scores', 'ai-seo-client'); ?></p>
-                    </div>
-                    <?php endif; ?>
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Site Audit', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Technical SEO Audit', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Full technical analysis of your website.', 'ai-seo-client'); ?></p>
                 </div>
-            
-            <div class="sseo-two-columns">
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-primary" onclick="sseoRunTechnicalAudit()">
+                        <span class="dashicons dashicons-clipboard"></span>
+                        <?php esc_html_e('Run Full Audit', 'ai-seo-client'); ?>
+                    </button>
+                </div>
+            </div>
+
+            <?php DashboardSorter::begin('ai-seo-site-audit'); ?>
+
+            <!-- Audit scores -->
+            <?php if (!empty($lastAudit)): ?>
+            <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:<?php echo $this->getScoreColor($lastAudit['crawlability_score'] ?? 0); ?>">
+                        <?php echo esc_html($lastAudit['crawlability_score'] ?? 0); ?>
+                    </div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:<?php echo $this->getScoreColor($lastAudit['performance_score'] ?? 0); ?>">
+                        <?php echo esc_html($lastAudit['performance_score'] ?? 0); ?>
+                    </div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Performance', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:<?php echo $this->getScoreColor($lastAudit['structure_score'] ?? 0); ?>">
+                        <?php echo esc_html($lastAudit['structure_score'] ?? 0); ?>
+                    </div>
+                    <div class="fyn-stat-label"><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:<?php echo $this->getScoreColor($lastAudit['sitemap_score'] ?? 0); ?>">
+                        <?php echo esc_html($lastAudit['sitemap_score'] ?? 0); ?>
+                    </div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Sitemap Health', 'ai-seo-client'); ?></div>
+                </div>
+            </div>
+            <?php else: ?>
+            <div class="fyn-card" style="margin-bottom:20px;text-align:center;padding:32px;">
+                <p style="color:var(--text-m);font-style:italic;"><?php esc_html_e('Run an audit to see your scores', 'ai-seo-client'); ?></p>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($lastAuditDate): ?>
+            <p style="font-size:12px;color:var(--text-m);margin-bottom:16px;">
+                <strong><?php esc_html_e('Last audit:', 'ai-seo-client'); ?></strong>
+                <?php echo esc_html(human_time_diff(strtotime($lastAuditDate))); ?> <?php esc_html_e('ago', 'ai-seo-client'); ?>
+            </p>
+            <?php endif; ?>
+
+            <div class="fyn-grid-2">
                 <!-- Left Column -->
-                <div>
+                <div style="display:flex;flex-direction:column;gap:20px;">
                     <!-- Crawlability Audit -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Crawlability Audit', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($lastAudit['crawlability'])): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Check', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Details', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Action', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($lastAudit['crawlability'] as $check): ?>
-                        <tr>
-                            <td><strong><?php echo esc_html($check['name']); ?></strong></td>
-                            <td>
-                                <?php 
-                                $status = $check['status'];
-                                $color = $status === 'pass' ? '#00a32a' : ($status === 'warning' ? '#dba617' : '#d63638');
-                                ?>
-                                <span style="color: <?php echo $color; ?>;">
-                                    <?php echo $status === 'pass' ? '✓' : ($status === 'warning' ? '⚠' : '✗'); ?>
-                                    <?php echo esc_html(ucfirst($status)); ?>
-                                </span>
-                            </td>
-                            <td><?php echo esc_html($check['details']); ?></td>
-                            <td>
-                                <?php if (!empty($check['fix_url'])): ?>
-                                <a href="<?php echo esc_url($check['fix_url']); ?>" class="button button-small">
-                                    <?php esc_html_e('Fix', 'ai-seo-client'); ?>
-                                </a>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-visibility"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Crawlability', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <?php if (!empty($lastAudit['crawlability'])): ?>
+                        <table class="fyn-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Check', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Details', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Action', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($lastAudit['crawlability'] as $check): ?>
+                                <tr>
+                                    <td><strong style="color:var(--text-h);"><?php echo esc_html($check['name']); ?></strong></td>
+                                    <td>
+                                        <?php
+                                        $status = $check['status'];
+                                        $badgeClass = $status === 'pass' ? 'success' : ($status === 'warning' ? 'warning' : 'danger');
+                                        ?>
+                                        <span class="fyn-badge fyn-badge--<?php echo $badgeClass; ?>"><?php echo esc_html(ucfirst($status)); ?></span>
+                                    </td>
+                                    <td style="font-size:12px;color:var(--text-m);"><?php echo esc_html($check['details']); ?></td>
+                                    <td>
+                                        <?php if (!empty($check['fix_url'])): ?>
+                                        <a href="<?php echo esc_url($check['fix_url']); ?>" class="fyn-btn fyn-btn-outline" style="padding:4px 10px;font-size:11px;">
+                                            <?php esc_html_e('Fix', 'ai-seo-client'); ?>
+                                        </a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <?php else: ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Run an audit to check crawlability.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Crawl Budget Analysis -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-performance"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Crawl Budget Analysis', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <?php if (!empty($lastAudit['crawl_budget'])): ?>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+                            <div style="font-size:13px;"><strong style="color:var(--text-h);"><?php esc_html_e('Total Pages:', 'ai-seo-client'); ?></strong> <?php echo esc_html(number_format($lastAudit['crawl_budget']['total_pages'] ?? 0)); ?></div>
+                            <div style="font-size:13px;"><strong style="color:var(--text-h);"><?php esc_html_e('Crawlable:', 'ai-seo-client'); ?></strong> <?php echo esc_html(number_format($lastAudit['crawl_budget']['crawlable_pages'] ?? 0)); ?></div>
+                            <div style="font-size:13px;"><strong style="color:var(--fyn-danger);"><?php esc_html_e('Wasted:', 'ai-seo-client'); ?></strong> <?php echo esc_html(number_format($lastAudit['crawl_budget']['wasted_budget'] ?? 0)); ?> <?php esc_html_e('pages', 'ai-seo-client'); ?></div>
+                        </div>
+                        <h4 style="font-size:13px;font-weight:700;color:var(--text-h);margin:12px 0 8px;"><?php esc_html_e('Crawl Budget Wasters', 'ai-seo-client'); ?></h4>
+                        <?php foreach ($lastAudit['crawl_budget']['wasters'] ?? [] as $waster): ?>
+                        <div style="padding:8px 0;border-bottom:1px solid var(--divide);font-size:13px;">
+                            <strong style="color:var(--text-h);"><?php echo esc_html($waster['type']); ?>:</strong>
+                            <?php echo esc_html($waster['count']); ?> <?php esc_html_e('pages', 'ai-seo-client'); ?> &mdash;
+                            <span style="color:var(--text-m);"><?php echo esc_html($waster['recommendation']); ?></span>
+                        </div>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('Run an audit to see crawlability results.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
-            </div>
-            
-            <!-- Crawl Budget Analysis -->
-            <div class="sseo-ai-dashboard-card">
-                <h2><?php esc_html_e('Crawl Budget Analysis', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($lastAudit['crawl_budget'])): ?>
-                <div style="margin-bottom: 15px;">
-                    <p>
-                        <strong><?php esc_html_e('Total Pages:', 'ai-seo-client'); ?></strong>
-                        <?php echo esc_html(number_format($lastAudit['crawl_budget']['total_pages'] ?? 0)); ?>
-                    </p>
-                    <p>
-                        <strong><?php esc_html_e('Crawlable Pages:', 'ai-seo-client'); ?></strong>
-                        <?php echo esc_html(number_format($lastAudit['crawl_budget']['crawlable_pages'] ?? 0)); ?>
-                    </p>
-                    <p>
-                        <strong><?php esc_html_e('Wasted Crawl Budget:', 'ai-seo-client'); ?></strong>
-                        <?php echo esc_html(number_format($lastAudit['crawl_budget']['wasted_budget'] ?? 0)); ?> pages
-                    </p>
-                </div>
-                
-                <h3><?php esc_html_e('Crawl Budget Wasters', 'ai-seo-client'); ?></h3>
-                <ul>
-                    <?php foreach ($lastAudit['crawl_budget']['wasters'] ?? [] as $waster): ?>
-                    <li>
-                        <strong><?php echo esc_html($waster['type']); ?>:</strong>
-                        <?php echo esc_html($waster['count']); ?> pages -
-                        <?php echo esc_html($waster['recommendation']); ?>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-                <?php else: ?>
-                <p><?php esc_html_e('Run an audit to analyze crawl budget.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
+                        <?php else: ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Run an audit to analyze the crawl budget.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
-                
+
                 <!-- Right Column -->
-                <div>
+                <div style="display:flex;flex-direction:column;gap:20px;">
                     <!-- URL Structure Optimization -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('URL Structure Optimization', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($lastAudit['url_structure'])): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Issue', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Count', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Recommendation', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($lastAudit['url_structure'] as $issue): ?>
-                        <tr>
-                            <td><?php echo esc_html($issue['issue']); ?></td>
-                            <td><?php echo esc_html($issue['count']); ?></td>
-                            <td><?php echo esc_html($issue['recommendation']); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('Run an audit to check URL structure.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-admin-links"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('URL Structure', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <?php if (!empty($lastAudit['url_structure'])): ?>
+                        <table class="fyn-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Issue', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Count', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Recommendation', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($lastAudit['url_structure'] as $issue): ?>
+                                <tr>
+                                    <td style="color:var(--text-h);"><?php echo esc_html($issue['issue']); ?></td>
+                                    <td><?php echo esc_html($issue['count']); ?></td>
+                                    <td style="font-size:12px;color:var(--text-m);"><?php echo esc_html($issue['recommendation']); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <?php else: ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Run an audit to check URL structure.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
                     </div>
-                    
+
                     <!-- Sitemap Health -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('XML Sitemap Health Check', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($lastAudit['sitemap'])): ?>
-                <div style="margin-bottom: 15px;">
-                    <p>
-                        <strong><?php esc_html_e('Sitemap URL:', 'ai-seo-client'); ?></strong>
-                        <a href="<?php echo esc_url($lastAudit['sitemap']['url']); ?>" target="_blank">
-                            <?php echo esc_html($lastAudit['sitemap']['url']); ?>
-                        </a>
-                    </p>
-                    <p>
-                        <strong><?php esc_html_e('Total URLs:', 'ai-seo-client'); ?></strong>
-                        <?php echo esc_html(number_format($lastAudit['sitemap']['total_urls'] ?? 0)); ?>
-                    </p>
-                    <p>
-                        <strong><?php esc_html_e('Valid URLs:', 'ai-seo-client'); ?></strong>
-                        <?php echo esc_html(number_format($lastAudit['sitemap']['valid_urls'] ?? 0)); ?>
-                    </p>
-                    <p>
-                        <strong><?php esc_html_e('Invalid URLs:', 'ai-seo-client'); ?></strong>
-                        <span style="color: <?php echo ($lastAudit['sitemap']['invalid_urls'] ?? 0) > 0 ? '#d63638' : '#00a32a'; ?>;">
-                            <?php echo esc_html(number_format($lastAudit['sitemap']['invalid_urls'] ?? 0)); ?>
-                        </span>
-                    </p>
-                </div>
-                
-                <?php if (!empty($lastAudit['sitemap']['issues'])): ?>
-                <h3><?php esc_html_e('Sitemap Issues', 'ai-seo-client'); ?></h3>
-                <ul>
-                    <?php foreach ($lastAudit['sitemap']['issues'] as $issue): ?>
-                    <li style="color: #d63638;">
-                        <strong><?php echo esc_html($issue['type']); ?>:</strong>
-                        <?php echo esc_html($issue['description']); ?>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-                <?php endif; ?>
-                <?php else: ?>
-                <p><?php esc_html_e('Run an audit to check sitemap health.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
-                    </div>
-                    
-                    <!-- Robots.txt Optimization -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Robots.txt Optimization', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($lastAudit['robots_txt'])): ?>
-                <div style="margin-bottom: 15px;">
-                    <p>
-                        <strong><?php esc_html_e('Status:', 'ai-seo-client'); ?></strong>
-                        <span style="color: <?php echo $lastAudit['robots_txt']['exists'] ? '#00a32a' : '#d63638'; ?>;">
-                            <?php echo $lastAudit['robots_txt']['exists'] ? '✓ Found' : '✗ Not Found'; ?>
-                        </span>
-                    </p>
-                </div>
-                
-                <?php if (!empty($lastAudit['robots_txt']['suggestions'])): ?>
-                <h3><?php esc_html_e('Optimization Suggestions', 'ai-seo-client'); ?></h3>
-                <ul>
-                    <?php foreach ($lastAudit['robots_txt']['suggestions'] as $suggestion): ?>
-                    <li><?php echo esc_html($suggestion); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-                <?php endif; ?>
-                
-                <?php else: ?>
-                <p><?php esc_html_e('Run an audit to check robots.txt.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
-                    </div>
-                    
-                    <!-- Performance Analysis -->
-                    <div class="sseo-ai-dashboard-card">
-                        <h2><?php esc_html_e('Server & CDN Performance', 'ai-seo-client'); ?></h2>
-                
-                <?php if (!empty($lastAudit['performance'])): ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Metric', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Value', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Recommendation', 'ai-seo-client'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($lastAudit['performance'] as $metric): ?>
-                        <tr>
-                            <td><strong><?php echo esc_html($metric['name']); ?></strong></td>
-                            <td><?php echo esc_html($metric['value']); ?></td>
-                            <td>
-                                <span style="color: <?php echo $this->getStatusColor($metric['status']); ?>;">
-                                    <?php echo esc_html(ucfirst($metric['status'])); ?>
-                                </span>
-                            </td>
-                            <td><?php echo esc_html($metric['recommendation']); ?></td>
-                        </tr>
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-networking"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('XML Sitemap Health', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <?php if (!empty($lastAudit['sitemap'])): ?>
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:13px;">
+                            <div><strong style="color:var(--text-h);">URL:</strong> <a href="<?php echo esc_url($lastAudit['sitemap']['url']); ?>" target="_blank" style="color:var(--fyn-purple);"><?php echo esc_html($lastAudit['sitemap']['url']); ?></a></div>
+                            <div><strong style="color:var(--text-h);"><?php esc_html_e('Total:', 'ai-seo-client'); ?></strong> <?php echo esc_html(number_format($lastAudit['sitemap']['total_urls'] ?? 0)); ?></div>
+                            <div><strong style="color:var(--fyn-success);"><?php esc_html_e('Valid:', 'ai-seo-client'); ?></strong> <?php echo esc_html(number_format($lastAudit['sitemap']['valid_urls'] ?? 0)); ?></div>
+                            <div><strong style="color:<?php echo ($lastAudit['sitemap']['invalid_urls'] ?? 0) > 0 ? 'var(--fyn-danger)' : 'var(--fyn-success)'; ?>;"><?php esc_html_e('Invalid:', 'ai-seo-client'); ?></strong> <?php echo esc_html(number_format($lastAudit['sitemap']['invalid_urls'] ?? 0)); ?></div>
+                        </div>
+                        <?php if (!empty($lastAudit['sitemap']['issues'])): ?>
+                        <h4 style="font-size:13px;font-weight:700;color:var(--text-h);margin:12px 0 8px;"><?php esc_html_e('Sitemap Issues', 'ai-seo-client'); ?></h4>
+                        <?php foreach ($lastAudit['sitemap']['issues'] as $issue): ?>
+                        <div style="padding:6px 10px;margin:4px 0;background:var(--fyn-danger-light);border-left:3px solid var(--fyn-danger);border-radius:0 9px 9px 0;font-size:13px;color:var(--text-b);">
+                            <strong><?php echo esc_html($issue['type']); ?>:</strong> <?php echo esc_html($issue['description']); ?>
+                        </div>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                <p><?php esc_html_e('Run an audit to analyze performance.', 'ai-seo-client'); ?></p>
-                <?php endif; ?>
+                        <?php endif; ?>
+                        <?php else: ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Run an audit to check the sitemap.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Robots.txt Optimization -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-lock"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Robots.txt', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <?php if (!empty($lastAudit['robots_txt'])): ?>
+                        <p style="font-size:13px;margin:0 0 10px;">
+                            <strong style="color:var(--text-h);"><?php esc_html_e('Status:', 'ai-seo-client'); ?></strong>
+                            <span class="fyn-badge fyn-badge--<?php echo $lastAudit['robots_txt']['exists'] ? 'success' : 'danger'; ?>">
+                                <?php echo $lastAudit['robots_txt']['exists'] ? esc_html__('Found', 'ai-seo-client') : esc_html__('Not Found', 'ai-seo-client'); ?>
+                            </span>
+                        </p>
+                        <?php if (!empty($lastAudit['robots_txt']['suggestions'])): ?>
+                        <h4 style="font-size:13px;font-weight:700;color:var(--text-h);margin:12px 0 8px;"><?php esc_html_e('Suggestions', 'ai-seo-client'); ?></h4>
+                        <?php foreach ($lastAudit['robots_txt']['suggestions'] as $suggestion): ?>
+                        <div style="padding:6px 10px;margin:4px 0;background:var(--fyn-warning-light);border-left:3px solid var(--fyn-warning);border-radius:0 9px 9px 0;font-size:13px;color:var(--text-b);">
+                            <?php echo esc_html($suggestion); ?>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                        <?php else: ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Run an audit to check robots.txt.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Performance Analysis -->
+                    <div class="fyn-card">
+                        <div class="fyn-card-header">
+                            <span class="dashicons dashicons-dashboard"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Server &amp; CDN Performance', 'ai-seo-client'); ?></h3>
+                        </div>
+                        <?php if (!empty($lastAudit['performance'])): ?>
+                        <table class="fyn-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Metric', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Value', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Status', 'ai-seo-client'); ?></th>
+                                    <th><?php esc_html_e('Recommendation', 'ai-seo-client'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($lastAudit['performance'] as $metric): ?>
+                                <tr>
+                                    <td><strong style="color:var(--text-h);"><?php echo esc_html($metric['name']); ?></strong></td>
+                                    <td><?php echo esc_html($metric['value']); ?></td>
+                                    <td>
+                                        <?php
+                                        $perfStatus = $metric['status'];
+                                        $perfBadge = $perfStatus === 'good' ? 'success' : ($perfStatus === 'warning' ? 'warning' : 'danger');
+                                        ?>
+                                        <span class="fyn-badge fyn-badge--<?php echo $perfBadge; ?>"><?php echo esc_html(ucfirst($perfStatus)); ?></span>
+                                    </td>
+                                    <td style="font-size:12px;color:var(--text-m);"><?php echo esc_html($metric['recommendation']); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <?php else: ?>
+                        <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Run an audit to analyze performance.', 'ai-seo-client'); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
             <?php DashboardSorter::end('ai-seo-site-audit'); ?>
-            </div>
         </div>
         
         <script>

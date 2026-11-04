@@ -701,118 +701,124 @@ class ContentDecay
         $stats = $this->getDecayStats();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Content Decay Detection', 'ai-seo-client'); ?></h1>
-            
-            <div class="aiseo-decay-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 20px 0;">
-                <div class="postbox" style="padding: 20px; text-align: center;">
-                    <div style="font-size: 32px; font-weight: bold; color: #dc3545;"><?php echo esc_html($stats['critical']); ?></div>
-                    <div><?php esc_html_e('Critical', 'ai-seo-client'); ?></div>
-                </div>
-                <div class="postbox" style="padding: 20px; text-align: center;">
-                    <div style="font-size: 32px; font-weight: bold; color: #fd7e14;"><?php echo esc_html($stats['high']); ?></div>
-                    <div><?php esc_html_e('High', 'ai-seo-client'); ?></div>
-                </div>
-                <div class="postbox" style="padding: 20px; text-align: center;">
-                    <div style="font-size: 32px; font-weight: bold; color: #ffc107;"><?php echo esc_html($stats['medium']); ?></div>
-                    <div><?php esc_html_e('Medium', 'ai-seo-client'); ?></div>
-                </div>
-                <div class="postbox" style="padding: 20px; text-align: center;">
-                    <div style="font-size: 32px; font-weight: bold; color: #28a745;"><?php echo esc_html($stats['total_traffic_loss']); ?>%</div>
-                    <div><?php esc_html_e('Est. Traffic Loss', 'ai-seo-client'); ?></div>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Content Decay', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Content Decay Detection', 'ai-seo-client'); ?></h1>
                 </div>
             </div>
-            
-            <div class="tablenav top">
-                <div class="alignleft actions">
-                    <select id="filter-severity">
+
+            <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:var(--fyn-danger);"><?php echo esc_html($stats['critical']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Critical', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:var(--fyn-warning);"><?php echo esc_html($stats['high']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('High', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value"><?php echo esc_html($stats['medium']); ?></div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Medium', 'ai-seo-client'); ?></div>
+                </div>
+                <div class="fyn-stat-tile">
+                    <div class="fyn-stat-value" style="color:var(--fyn-success);"><?php echo esc_html($stats['total_traffic_loss']); ?>%</div>
+                    <div class="fyn-stat-label"><?php esc_html_e('Est. Traffic Loss', 'ai-seo-client'); ?></div>
+                </div>
+            </div>
+
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-line"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Decay Alerts', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+                    <select id="filter-severity" class="fyn-input" style="min-width:140px;">
                         <option value=""><?php esc_html_e('All Severities', 'ai-seo-client'); ?></option>
                         <option value="critical"><?php esc_html_e('Critical', 'ai-seo-client'); ?></option>
                         <option value="high"><?php esc_html_e('High', 'ai-seo-client'); ?></option>
                         <option value="medium"><?php esc_html_e('Medium', 'ai-seo-client'); ?></option>
                         <option value="low"><?php esc_html_e('Low', 'ai-seo-client'); ?></option>
                     </select>
-                    <select id="filter-status">
+                    <select id="filter-status" class="fyn-input" style="min-width:140px;">
                         <option value="active"><?php esc_html_e('Active', 'ai-seo-client'); ?></option>
                         <option value="acknowledged"><?php esc_html_e('Acknowledged', 'ai-seo-client'); ?></option>
                         <option value="fixed"><?php esc_html_e('Fixed', 'ai-seo-client'); ?></option>
                     </select>
-                    <button type="button" class="button" onclick="filterDecayAlerts()"><?php esc_html_e('Filter', 'ai-seo-client'); ?></button>
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="filterDecayAlerts()"><?php esc_html_e('Filter', 'ai-seo-client'); ?></button>
                 </div>
+
+                <table class="fyn-table">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Post', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Position Change', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Traffic Impact', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Severity', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Detected', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($alerts as $alert):
+                            $post = get_post($alert['post_id']);
+                            if (!$post) continue;
+                        ?>
+                        <tr data-severity="<?php echo esc_attr($alert['severity']); ?>" data-status="<?php echo esc_attr($alert['status']); ?>">
+                            <td>
+                                <strong style="color:var(--text-h);"><a href="<?php echo esc_url(get_edit_post_link($post->ID)); ?>" style="color:var(--fyn-purple);"><?php echo esc_html($post->post_title); ?></a></strong>
+                                <br><small style="color:var(--text-m);"><?php echo esc_html(get_the_category_list(', ', '', $post->ID)); ?></small>
+                            </td>
+                            <td><code style="font-size:12px;color:var(--fyn-purple);"><?php echo esc_html($alert['keyword']); ?></code></td>
+                            <td>
+                                <span style="color:var(--fyn-danger);font-weight:600;">-<?php echo esc_html($alert['position_change']); ?></span>
+                                <br><small style="color:var(--text-m);"><?php echo esc_html($alert['baseline_position']); ?> &rarr; <?php echo esc_html($alert['current_position']); ?></small>
+                            </td>
+                            <td>
+                                <span style="color:<?php echo $alert['traffic_change'] < -30 ? 'var(--fyn-danger)' : 'var(--fyn-warning)'; ?>;font-weight:600;">
+                                    <?php echo esc_html($alert['traffic_change']); ?>%
+                                </span>
+                            </td>
+                            <td>
+                                <?php
+                                $sevClass = '';
+                                if ($alert['severity'] === 'critical') $sevClass = 'fyn-badge--danger';
+                                elseif ($alert['severity'] === 'high') $sevClass = 'fyn-badge--warning';
+                                elseif ($alert['severity'] === 'medium') $sevClass = 'fyn-badge--info';
+                                ?>
+                                <span class="fyn-badge <?php echo $sevClass; ?>"><?php echo esc_html(ucfirst($alert['severity'])); ?></span>
+                            </td>
+                            <td style="font-size:12px;color:var(--text-m);"><?php echo esc_html(human_time_diff(strtotime($alert['detected_at']), current_time('timestamp')) . ' ago'); ?></td>
+                            <td style="white-space:nowrap;">
+                                <a href="<?php echo esc_url(get_edit_post_link($post->ID)); ?>" class="fyn-btn fyn-btn-outline" style="padding:5px 10px;font-size:12px;"><?php esc_html_e('Edit Post', 'ai-seo-client'); ?></a>
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="padding:5px 10px;font-size:12px;" onclick="showSuggestions(<?php echo esc_js($alert['id']); ?>)"><?php esc_html_e('Suggestions', 'ai-seo-client'); ?></button>
+                                <button type="button" class="fyn-btn fyn-btn-outline" style="padding:5px 10px;font-size:12px;" onclick="acknowledgeAlert(<?php echo esc_js($alert['id']); ?>)"><?php esc_html_e('Ack', 'ai-seo-client'); ?></button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+
+                        <?php if (empty($alerts)): ?>
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:40px;">
+                                <p style="font-size:15px;color:var(--text-h);"><?php esc_html_e('No content decay detected! Your content is performing well.', 'ai-seo-client'); ?></p>
+                                <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('We\'ll check daily and alert you when content starts losing rankings.', 'ai-seo-client'); ?></p>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-            
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e('Post', 'ai-seo-client'); ?></th>
-                        <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
-                        <th><?php esc_html_e('Position Change', 'ai-seo-client'); ?></th>
-                        <th><?php esc_html_e('Traffic Impact', 'ai-seo-client'); ?></th>
-                        <th><?php esc_html_e('Severity', 'ai-seo-client'); ?></th>
-                        <th><?php esc_html_e('Detected', 'ai-seo-client'); ?></th>
-                        <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($alerts as $alert): 
-                        $post = get_post($alert['post_id']);
-                        if (!$post) continue;
-                    ?>
-                    <tr data-severity="<?php echo esc_attr($alert['severity']); ?>" data-status="<?php echo esc_attr($alert['status']); ?>">
-                        <td>
-                            <strong><a href="<?php echo esc_url(get_edit_post_link($post->ID)); ?>"><?php echo esc_html($post->post_title); ?></a></strong>
-                            <br><small><?php echo esc_html(get_the_category_list(', ', '', $post->ID)); ?></small>
-                        </td>
-                        <td><code><?php echo esc_html($alert['keyword']); ?></code></td>
-                        <td>
-                            <span style="color: #dc3545; font-weight: bold;">-<?php echo esc_html($alert['position_change']); ?></span>
-                            <br><small><?php echo esc_html($alert['baseline_position']); ?> → <?php echo esc_html($alert['current_position']); ?></small>
-                        </td>
-                        <td>
-                            <span style="color: <?php echo $alert['traffic_change'] < -30 ? '#dc3545' : '#fd7e14'; ?>;">
-                                <?php echo esc_html($alert['traffic_change']); ?>%
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge" style="
-                                display: inline-block;
-                                padding: 4px 8px;
-                                border-radius: 4px;
-                                font-size: 12px;
-                                font-weight: bold;
-                                
-                                <?php echo $this->getSeverityStyle($alert['severity']); ?>
-                            ">
-                                <?php echo esc_html($alert['severity']); ?>
-                            </span>
-                        </td>
-                        <td><?php echo esc_html(human_time_diff(strtotime($alert['detected_at']), current_time('timestamp')) . ' ago'); ?></td>
-                        <td>
-                            <a href="<?php echo esc_url(get_edit_post_link($post->ID)); ?>" class="button button-small"><?php esc_html_e('Edit Post', 'ai-seo-client'); ?></a>
-                            <button type="button" class="button button-small" onclick="showSuggestions(<?php echo esc_js($alert['id']); ?>)"><?php esc_html_e('Suggestions', 'ai-seo-client'); ?></button>
-                            <button type="button" class="button button-small" onclick="acknowledgeAlert(<?php echo esc_js($alert['id']); ?>)"><?php esc_html_e('Ack', 'ai-seo-client'); ?></button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                    
-                    <?php if (empty($alerts)): ?>
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px;">
-                            <p style="font-size: 16px; color: #666;">🎉 <?php esc_html_e('No content decay detected! Your content is performing well.', 'ai-seo-client'); ?></p>
-                            <p class="description"><?php esc_html_e('We\'ll check daily and alert you when content starts losing rankings.', 'ai-seo-client'); ?></p>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
         </div>
 
         <!-- Decay Suggestions Modal -->
-        <div id="decay-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;justify-content:center;align-items:center;">
-            <div style="background:#fff;border-radius:12px;padding:0;max-width:700px;width:90%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
-                <div style="padding:15px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="margin:0;">🔧 <?php esc_html_e('Content Decay Fix', 'ai-seo-client'); ?></h3>
-                    <button type="button" onclick="closeDecayModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#64748b;">&times;</button>
+        <div id="decay-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;justify-content:center;align-items:center;">
+            <div style="background:var(--card);border-radius:14px;padding:0;max-width:700px;width:90%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);">
+                <div style="padding:15px 20px;border-bottom:1px solid var(--divide);display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="margin:0;color:var(--text-h);font-size:15px;"><?php esc_html_e('Content Decay Fix', 'ai-seo-client'); ?></h3>
+                    <button type="button" onclick="closeDecayModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-m);">&times;</button>
                 </div>
                 <div id="decay-modal-body" style="padding:20px;overflow-y:auto;flex:1;"></div>
             </div>

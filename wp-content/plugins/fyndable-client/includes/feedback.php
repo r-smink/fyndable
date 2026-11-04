@@ -28,8 +28,8 @@ class FeedbackPage
             'bug' => __('Bug', 'ai-seo-client'),
             'feature_request' => __('Feature request', 'ai-seo-client'),
             'compliment' => __('Compliment', 'ai-seo-client'),
-            'question' => __('Vraag', 'ai-seo-client'),
-            'general' => __('Algemeen', 'ai-seo-client'),
+            'question' => __('Question', 'ai-seo-client'),
+            'general' => __('General', 'ai-seo-client'),
         ];
     }
 
@@ -40,13 +40,15 @@ class FeedbackPage
     {
         $this->processPostActions();
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Feedback', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Feedback', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Feedback', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Send us your feedback or view previous submissions.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <?php $this->renderFeedbackList(); ?>
-            </div>
+            <?php $this->renderFeedbackList(); ?>
         </div>
         <?php
     }
@@ -192,84 +194,77 @@ class FeedbackPage
         $currentPageLabel = $this->getCurrentPortalPage();
         ?>
         <style>
-            .sseo-feedback-grid { display: grid; grid-template-columns: 1fr 380px; gap: 30px; }
-            .sseo-feedback-card { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-            .sseo-feedback-card h2 { margin-top: 0; font-size: 20px; }
+            .sseo-feedback-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
             .sseo-form-field { margin-bottom: 18px; }
-            .sseo-form-field label { display: block; font-weight: 600; margin-bottom: 6px; color: #374151; }
+            .sseo-form-field label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-h); }
             .sseo-form-field input[type="text"],
             .sseo-form-field textarea,
-            .sseo-form-field select { width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; }
+            .sseo-form-field select { width: 100%; padding: 10px 14px; border: 1px solid var(--input-border); border-radius: 9px; font-size: 14px; background: var(--input-bg); color: var(--text-b); }
             .sseo-form-field input:focus,
             .sseo-form-field textarea:focus,
-            .sseo-form-field select:focus { border-color: #379fd3; outline: none; box-shadow: 0 0 0 3px rgba(55,159,211,.1); }
+            .sseo-form-field select:focus { border-color: var(--fyn-blue); outline: none; box-shadow: 0 0 0 3px rgba(55,159,211,.1); }
             .sseo-feedback-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
-            .sseo-feedback-item { border: 2px solid #e5e7eb; border-radius: 10px; padding: 20px 24px; transition: all .2s ease; }
-            .sseo-feedback-item:hover { border-color: #379fd3; box-shadow: 0 4px 12px rgba(55,159,211,.1); transform: translateY(-1px); }
+            .sseo-feedback-item { border: 1px solid var(--card-border); border-radius: 10px; padding: 20px 24px; transition: all .2s ease; background: var(--card); }
+            .sseo-feedback-item:hover { border-color: var(--fyn-blue); box-shadow: var(--card-shadow); transform: translateY(-1px); }
             .sseo-feedback-meta { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
-            .sseo-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-            .sseo-badge.cat-bug { background: #fee2e2; color: #991b1b; }
-            .sseo-badge.cat-feature_request { background: #e8f4fa; color: #1e40af; }
-            .sseo-badge.cat-compliment { background: #d1fae5; color: #065f46; }
-            .sseo-badge.cat-question { background: #fef3c7; color: #92400e; }
-            .sseo-badge.cat-general { background: #f3f4f6; color: #374151; }
-            .sseo-badge.status-new { background: #dbeafe; color: #1e40af; }
-            .sseo-badge.status-reviewed { background: #f3f4f6; color: #6b7280; }
-            .sseo-feedback-page { font-size: 12px; color: #6b7280; margin-top: 6px; }
-            .sseo-feedback-message { color: #374151; line-height: 1.6; font-size: 14px; margin-top: 8px; }
+            .sseo-feedback-page { font-size: 12px; color: var(--text-m); margin-top: 6px; }
+            .sseo-feedback-message { color: var(--text-b); line-height: 1.6; font-size: 14px; margin-top: 8px; }
             .sseo-screenshots { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-            .sseo-screenshots a { display: inline-block; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+            .sseo-screenshots a { display: inline-block; border: 1px solid var(--card-border); border-radius: 6px; overflow: hidden; }
             .sseo-screenshots img { max-width: 150px; max-height: 150px; display: block; }
-            .sseo-file-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
-            .sseo-file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; transition: all .2s ease; cursor: pointer; }
-            .sseo-file-drop:hover { border-color: #379fd3; background: #e8f4fa; }
+            .sseo-file-hint { font-size: 12px; color: var(--text-m); margin-top: 4px; }
+            .sseo-file-drop { border: 2px dashed var(--divide); border-radius: 8px; padding: 20px; text-align: center; transition: all .2s ease; cursor: pointer; }
+            .sseo-file-drop:hover { border-color: var(--fyn-blue); background: var(--well); }
             .sseo-file-drop input[type="file"] { width: 100%; }
-            .sseo-current-page-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+            .sseo-current-page-hint { font-size: 12px; color: var(--text-m); margin-top: 4px; }
             @media (max-width: 900px) { .sseo-feedback-grid { grid-template-columns: 1fr; } }
         </style>
 
         <?php if (isset($_GET['feedback_sent'])): ?>
-            <div class="sseo-feedback-card" style="margin-bottom: 30px; background: #d1fae5; color: #065f46;">
-                <strong><?php esc_html_e('Bedankt voor je feedback! Je feedback is succesvol verzonden.', 'ai-seo-client'); ?></strong>
+            <div class="fyn-card" style="margin-bottom:20px;background:var(--fyn-success-bg,#d1fae5);color:var(--fyn-success);">
+                <strong><?php esc_html_e('Thank you for your feedback! Your feedback has been submitted successfully.', 'ai-seo-client'); ?></strong>
             </div>
         <?php endif; ?>
 
         <?php if (isset($_GET['error'])): ?>
-            <div class="sseo-feedback-card" style="margin-bottom: 30px; background: #fee2e2; color: #991b1b;">
+            <div class="fyn-card" style="margin-bottom:20px;background:var(--fyn-danger-bg,#fee2e2);color:var(--fyn-danger);">
                 <strong><?php echo esc_html(urldecode($_GET['error'])); ?></strong>
             </div>
         <?php endif; ?>
 
         <?php if ($hasError): ?>
-            <div class="sseo-feedback-card" style="margin-bottom: 30px; background: #fee2e2; color: #991b1b;">
+            <div class="fyn-card" style="margin-bottom:20px;background:var(--fyn-danger-bg,#fee2e2);color:var(--fyn-danger);">
                 <strong><?php echo esc_html($errorMessage); ?></strong>
             </div>
         <?php endif; ?>
 
         <div class="sseo-feedback-grid">
-            <div class="sseo-feedback-card">
-                <h2><?php esc_html_e('Jouw feedback', 'ai-seo-client'); ?></h2>
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-format-chat"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Your Feedback', 'ai-seo-client'); ?></h3>
+                </div>
                 <?php if (empty($feedbackList) && !$hasError): ?>
-                    <p><?php esc_html_e('Je hebt nog geen feedback ingediend.', 'ai-seo-client'); ?></p>
+                    <p><?php esc_html_e('You have not submitted any feedback yet.', 'ai-seo-client'); ?></p>
                 <?php elseif (!empty($feedbackList)): ?>
                     <ul class="sseo-feedback-list">
                         <?php foreach ($feedbackList as $item): ?>
                             <li class="sseo-feedback-item">
                                 <div class="sseo-feedback-meta">
-                                    <span class="sseo-badge cat-<?php echo esc_attr($item['category']); ?>">
+                                    <span class="fyn-badge fyn-badge--<?php echo esc_attr($item['category'] === 'bug' ? 'danger' : ($item['category'] === 'compliment' ? 'success' : ($item['category'] === 'question' ? 'warning' : 'info'))); ?>">
                                         <?php echo esc_html($this->categoryLabels[$item['category']] ?? ucfirst($item['category'])); ?>
                                     </span>
-                                    <span class="sseo-badge status-<?php echo esc_attr($item['status']); ?>">
+                                    <span class="fyn-badge fyn-badge--<?php echo esc_attr($item['status'] === 'new' ? 'info' : 'default'); ?>">
                                         <?php echo esc_html(ucfirst($item['status'])); ?>
                                     </span>
-                                    <span style="color: #6b7280; font-size: 13px;">
-                                        <?php echo esc_html(human_time_diff(strtotime($item['created_at']), current_time('timestamp')) . ' ' . __('geleden', 'ai-seo-client')); ?>
+                                    <span style="color:var(--text-m);font-size:13px;">
+                                        <?php echo esc_html(human_time_diff(strtotime($item['created_at']), current_time('timestamp')) . ' ' . __('ago', 'ai-seo-client')); ?>
                                     </span>
                                 </div>
                                 <div class="sseo-feedback-message"><?php echo nl2br(esc_html($item['message'])); ?></div>
                                 <?php if (!empty($item['page_url'])): ?>
                                     <div class="sseo-feedback-page">
-                                        <?php echo esc_html(sprintf(__('Pagina: %s', 'ai-seo-client'), $item['page_url'])); ?>
+                                        <?php echo esc_html(sprintf(__('Page: %s', 'ai-seo-client'), $item['page_url'])); ?>
                                     </div>
                                 <?php endif; ?>
                                 <?php if (!empty($item['screenshots'])): ?>
@@ -287,40 +282,43 @@ class FeedbackPage
                 <?php endif; ?>
             </div>
 
-            <div class="sseo-feedback-card">
-                <h2><?php esc_html_e('Feedback geven', 'ai-seo-client'); ?></h2>
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-edit"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Submit Feedback', 'ai-seo-client'); ?></h3>
+                </div>
                 <form method="post" enctype="multipart/form-data">
                     <?php wp_nonce_field('submit_feedback', 'feedback_nonce'); ?>
                     <input type="hidden" name="feedback_page_url" value="<?php echo esc_attr($currentPageLabel); ?>">
                     <?php if ($currentPageLabel): ?>
                         <div class="sseo-form-field">
                             <p class="sseo-current-page-hint">
-                                <?php echo esc_html(sprintf(__('Huidige pagina: %s (wordt automatisch meegestuurd)', 'ai-seo-client'), $currentPageLabel)); ?>
+                                <?php echo esc_html(sprintf(__('Current page: %s (sent automatically)', 'ai-seo-client'), $currentPageLabel)); ?>
                             </p>
                         </div>
                     <?php endif; ?>
                     <div class="sseo-form-field">
-                        <label for="feedback_category"><?php esc_html_e('Categorie', 'ai-seo-client'); ?></label>
+                        <label for="feedback_category"><?php esc_html_e('Category', 'ai-seo-client'); ?></label>
                         <select name="feedback_category" id="feedback_category">
                             <option value="bug"><?php esc_html_e('Bug', 'ai-seo-client'); ?></option>
                             <option value="feature_request"><?php esc_html_e('Feature request', 'ai-seo-client'); ?></option>
                             <option value="compliment"><?php esc_html_e('Compliment', 'ai-seo-client'); ?></option>
-                            <option value="question"><?php esc_html_e('Vraag', 'ai-seo-client'); ?></option>
-                            <option value="general"><?php esc_html_e('Algemeen', 'ai-seo-client'); ?></option>
+                            <option value="question"><?php esc_html_e('Question', 'ai-seo-client'); ?></option>
+                            <option value="general"><?php esc_html_e('General', 'ai-seo-client'); ?></option>
                         </select>
                     </div>
                     <div class="sseo-form-field">
-                        <label for="feedback_message"><?php esc_html_e('Bericht', 'ai-seo-client'); ?></label>
-                        <textarea name="feedback_message" id="feedback_message" rows="6" required placeholder="<?php esc_attr_e('Deel je feedback hier...', 'ai-seo-client'); ?>"></textarea>
+                        <label for="feedback_message"><?php esc_html_e('Message', 'ai-seo-client'); ?></label>
+                        <textarea name="feedback_message" id="feedback_message" rows="6" required placeholder="<?php esc_attr_e('Share your feedback here...', 'ai-seo-client'); ?>"></textarea>
                     </div>
                     <div class="sseo-form-field">
-                        <label for="feedback_screenshots"><?php esc_html_e('Schermafbeeldingen', 'ai-seo-client'); ?></label>
+                        <label for="feedback_screenshots"><?php esc_html_e('Screenshots', 'ai-seo-client'); ?></label>
                         <div class="sseo-file-drop">
                             <input type="file" name="feedback_screenshots[]" id="feedback_screenshots" multiple accept="image/*">
-                            <p class="sseo-file-hint"><?php esc_html_e('Je kunt meerdere bestanden selecteren. Houd Ctrl/Cmd ingedrukt om er meer te kiezen.', 'ai-seo-client'); ?></p>
+                            <p class="sseo-file-hint"><?php esc_html_e('You can select multiple files. Hold Ctrl/Cmd to select more.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
-                    <?php submit_button(__('Feedback versturen', 'ai-seo-client'), 'primary', 'submit_feedback'); ?>
+                    <?php submit_button(__('Submit Feedback', 'ai-seo-client'), 'primary', 'submit_feedback'); ?>
                 </form>
             </div>
         </div>

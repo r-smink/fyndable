@@ -526,68 +526,90 @@ class ABTesting
     {
         $posts = get_posts(['post_type' => 'post', 'posts_per_page' => -1, 'post_status' => 'publish']);
         ?>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('A/B Testing', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Test page variants and track conversions.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('A/B Testing', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('A/B Testing', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Test page variants and track conversions.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            <div class="sseo-ai-content">
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Create New Test', 'ai-seo-client'); ?></h2>
-                    <form id="ab-test-form">
-                        <table class="form-table">
-                            <tr>
-                                <th><label for="ab-post"><?php esc_html_e('Post', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <select id="ab-post" required style="min-width: 300px;">
-                                        <option value=""><?php esc_html_e('Select a post...', 'ai-seo-client'); ?></option>
-                                        <?php foreach ($posts as $p): ?>
-                                            <option value="<?php echo esc_attr($p->ID); ?>"><?php echo esc_html($p->post_title); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th><label for="ab-name"><?php esc_html_e('Test Name', 'ai-seo-client'); ?></label></th>
-                                <td><input type="text" id="ab-name" required style="min-width: 300px;" placeholder="e.g. Headline Test March 2026"></td>
-                            </tr>
-                            <tr>
-                                <th><label for="ab-goal"><?php esc_html_e('Goal', 'ai-seo-client'); ?></label></th>
-                                <td>
-                                    <select id="ab-goal">
-                                        <option value="page_view"><?php esc_html_e('Page View', 'ai-seo-client'); ?></option>
-                                        <option value="click"><?php esc_html_e('Link/Button Click', 'ai-seo-client'); ?></option>
-                                        <option value="form_submit"><?php esc_html_e('Form Submit', 'ai-seo-client'); ?></option>
-                                        <option value="time_on_page"><?php esc_html_e('Time on Page (30s)', 'ai-seo-client'); ?></option>
-                                    </select>
-                                </td>
-                            </tr>
-                        </table>
 
-                        <h3><?php esc_html_e('Variant A (Control)', 'ai-seo-client'); ?></h3>
-                        <table class="form-table">
-                            <tr><th>Title</th><td><input type="text" id="ab-v0-title" style="width:100%" placeholder="Leave empty to use original"></td></tr>
-                            <tr><th>Meta Description</th><td><input type="text" id="ab-v0-meta" style="width:100%" placeholder="Leave empty to use original"></td></tr>
-                            <tr><th>Content Override</th><td><textarea id="ab-v0-content" rows="4" style="width:100%" placeholder="Leave empty to use original content"></textarea></td></tr>
-                            <tr><th>Traffic %</th><td><input type="number" id="ab-v0-split" value="50" min="1" max="99"></td></tr>
-                        </table>
-
-                        <h3><?php esc_html_e('Variant B', 'ai-seo-client'); ?></h3>
-                        <table class="form-table">
-                            <tr><th>Title</th><td><input type="text" id="ab-v1-title" style="width:100%" placeholder="e.g. New compelling headline"></td></tr>
-                            <tr><th>Meta Description</th><td><input type="text" id="ab-v1-meta" style="width:100%" placeholder="e.g. New meta description"></td></tr>
-                            <tr><th>Content Override</th><td><textarea id="ab-v1-content" rows="4" style="width:100%" placeholder="Override content for variant B"></textarea></td></tr>
-                            <tr><th>Traffic %</th><td><input type="number" id="ab-v1-split" value="50" min="1" max="99"></td></tr>
-                        </table>
-
-                        <p><button type="submit" class="button button-primary"><?php esc_html_e('Create Test', 'ai-seo-client'); ?></button></p>
-                    </form>
+            <!-- Create new test -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-randomize"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Create New Test', 'ai-seo-client'); ?></h3>
                 </div>
+                <form id="ab-test-form">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;" for="ab-post"><?php esc_html_e('Post', 'ai-seo-client'); ?></label>
+                            <select id="ab-post" required class="fyn-input" style="width:100%;padding:9px 10px;">
+                                <option value=""><?php esc_html_e('Select a post...', 'ai-seo-client'); ?></option>
+                                <?php foreach ($posts as $p): ?>
+                                    <option value="<?php echo esc_attr($p->ID); ?>"><?php echo esc_html($p->post_title); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;" for="ab-name"><?php esc_html_e('Test Name', 'ai-seo-client'); ?></label>
+                            <input type="text" id="ab-name" required class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('e.g. Headline Test March 2026', 'ai-seo-client'); ?>">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;" for="ab-goal"><?php esc_html_e('Goal', 'ai-seo-client'); ?></label>
+                            <select id="ab-goal" class="fyn-input" style="width:100%;padding:9px 10px;">
+                                <option value="page_view"><?php esc_html_e('Page View', 'ai-seo-client'); ?></option>
+                                <option value="click"><?php esc_html_e('Link/Button Click', 'ai-seo-client'); ?></option>
+                                <option value="form_submit"><?php esc_html_e('Form Submit', 'ai-seo-client'); ?></option>
+                                <option value="time_on_page"><?php esc_html_e('Time on Page (30s)', 'ai-seo-client'); ?></option>
+                            </select>
+                        </div>
+                    </div>
 
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Active & Past Tests', 'ai-seo-client'); ?></h2>
-                    <div id="ab-tests-list">Loading...</div>
+                    <div class="fyn-grid-2" style="margin-bottom:16px;">
+                        <div style="background:var(--well);border-radius:11px;padding:16px;">
+                            <h4 style="margin:0 0 12px;font-size:14px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Variant A (Control)', 'ai-seo-client'); ?></h4>
+                            <div style="display:flex;flex-direction:column;gap:10px;">
+                                <input type="text" id="ab-v0-title" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('Empty = original', 'ai-seo-client'); ?>">
+                                <input type="text" id="ab-v0-meta" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('Meta description (empty = original)', 'ai-seo-client'); ?>">
+                                <textarea id="ab-v0-content" rows="3" class="fyn-input" style="width:100%;resize:vertical;" placeholder="<?php esc_attr_e('Content override (empty = original)', 'ai-seo-client'); ?>"></textarea>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Traffic %', 'ai-seo-client'); ?></label>
+                                    <input type="number" id="ab-v0-split" value="50" min="1" max="99" class="fyn-input" style="width:80px;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background:var(--well);border-radius:11px;padding:16px;">
+                            <h4 style="margin:0 0 12px;font-size:14px;font-weight:700;color:var(--text-h);"><?php esc_html_e('Variant B', 'ai-seo-client'); ?></h4>
+                            <div style="display:flex;flex-direction:column;gap:10px;">
+                                <input type="text" id="ab-v1-title" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('e.g. New catchy headline', 'ai-seo-client'); ?>">
+                                <input type="text" id="ab-v1-meta" class="fyn-input" style="width:100%;" placeholder="<?php esc_attr_e('e.g. New meta description', 'ai-seo-client'); ?>">
+                                <textarea id="ab-v1-content" rows="3" class="fyn-input" style="width:100%;resize:vertical;" placeholder="<?php esc_attr_e('Content override for variant B', 'ai-seo-client'); ?>"></textarea>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-m);"><?php esc_html_e('Traffic %', 'ai-seo-client'); ?></label>
+                                    <input type="number" id="ab-v1-split" value="50" min="1" max="99" class="fyn-input" style="width:80px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="fyn-btn fyn-btn-primary">
+                        <span class="dashicons dashicons-plus-alt2"></span>
+                        <?php esc_html_e('Create Test', 'ai-seo-client'); ?>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active & past tests -->
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-list-view"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Active & Past Tests', 'ai-seo-client'); ?></h3>
                 </div>
+                <div id="ab-tests-list" style="color:var(--text-m);"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></div>
             </div>
         </div>
 
@@ -595,30 +617,31 @@ class ABTesting
         jQuery(document).ready(function($) {
             function loadTests() {
                 wp.apiFetch({ path: 'sseo-ai/v1/ab-tests' }).then(function(res) {
-                    var html = '<table class="wp-list-table widefat fixed striped"><thead><tr>' +
+                    var html = '<table class="fyn-table"><thead><tr>' +
                         '<th>Post</th><th>Test</th><th>Goal</th><th>Status</th><th>Variants</th><th>Actions</th>' +
                         '</tr></thead><tbody>';
                     if (!res.tests.length) {
-                        html += '<tr><td colspan="6" style="text-align:center;color:#999;">No tests yet.</td></tr>';
+                        html += '<tr><td colspan="6" style="text-align:center;color:var(--text-m);">No tests yet.</td></tr>';
                     } else {
                         res.tests.forEach(function(t) {
-                            var statusClass = t.status === 'active' ? 'background:#d1e7dd;color:#0f5132;' : 'background:#f8d7da;color:#842029;';
+                            var badgeClass = t.status === 'active' ? 'fyn-badge--success' : 'fyn-badge--danger';
+                            var statusLabel = t.status === 'active' ? 'Active' : 'Stopped';
                             var variantsHtml = '';
                             if (t.variants) {
                                 t.variants.forEach(function(v) {
-                                    variantsHtml += '<div style="margin-bottom:4px;"><strong>' + $('<span>').text(v.name).html() + '</strong> (' + v.traffic_split + '%)</div>';
+                                    variantsHtml += '<div style="margin-bottom:4px;"><strong style="color:var(--text-h);">' + $('<span>').text(v.name).html() + '</strong> (' + v.traffic_split + '%)</div>';
                                 });
                             }
                             html += '<tr>' +
                                 '<td>' + $('<span>').text(t.post_title).html() + '</td>' +
-                                '<td>' + $('<span>').text(t.test_name).html() + '</td>' +
+                                '<td style="font-weight:600;">' + $('<span>').text(t.test_name).html() + '</td>' +
                                 '<td>' + t.goal_type + '</td>' +
-                                '<td><span style="padding:2px 8px;border-radius:4px;font-size:12px;font-weight:bold;' + statusClass + '">' + t.status + '</span></td>' +
+                                '<td><span class="fyn-badge ' + badgeClass + '">' + statusLabel + '</span></td>' +
                                 '<td>' + variantsHtml + '</td>' +
-                                '<td>' +
-                                    '<button class="button ab-stats" data-id="' + t.id + '">Stats</button> ' +
-                                    (t.status === 'active' ? '<button class="button ab-end" data-id="' + t.id + '" style="color:#00a32a;">End</button> ' : '') +
-                                    '<button class="button ab-delete" data-id="' + t.id + '" style="color:#d63638;">Delete</button>' +
+                                '<td style="display:flex;gap:6px;">' +
+                                    '<button class="fyn-btn fyn-btn-outline ab-stats" style="padding:5px 10px;font-size:12px;" data-id="' + t.id + '">Stats</button>' +
+                                    (t.status === 'active' ? '<button class="fyn-btn fyn-btn-outline ab-end" style="padding:5px 10px;font-size:12px;color:var(--fyn-success);" data-id="' + t.id + '">Stop</button>' : '') +
+                                    '<button class="fyn-btn fyn-btn-danger ab-delete" style="padding:5px 10px;font-size:12px;" data-id="' + t.id + '">Delete</button>' +
                                 '</td>' +
                                 '</tr>';
                         });
@@ -685,21 +708,13 @@ class ABTesting
             $(document).on('click', '.ab-stats', function() {
                 var id = $(this).data('id');
                 wp.apiFetch({ path: 'sseo-ai/v1/ab-tests/' + id + '/stats' }).then(function(res) {
-                    var html = '<h3>Results</h3>';
-                    html += '<table class="wp-list-table widefat fixed striped"><thead><tr>' +
-                        '<th>Variant</th><th>Impressions</th><th>Conversions</th><th>Conversion Rate</th>' +
-                        '</tr></thead><tbody>';
+                    var parts = [];
+                    parts.push('Results:');
                     res.variants.forEach(function(v) {
-                        html += '<tr>' +
-                            '<td>' + $('<span>').text(v.name).html() + '</td>' +
-                            '<td>' + (v.impressions || 0) + '</td>' +
-                            '<td>' + (v.conversions || 0) + '</td>' +
-                            '<td><strong>' + (v.conversion_rate || 0) + '%</strong></td>' +
-                            '</tr>';
+                        parts.push(v.name + ': ' + (v.impressions||0) + ' impressions, ' + (v.conversions||0) + ' conversions, ' + (v.conversion_rate||0) + '%');
                     });
-                    html += '</tbody></table>';
-                    html += '<p><strong>Total impressions:</strong> ' + res.total_impressions + ' | <strong>Total conversions:</strong> ' + res.total_conversions + ' | <strong>Overall rate:</strong> ' + res.overall_rate + '%</p>';
-                    alert(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+                    parts.push('Total: ' + res.total_impressions + ' impressions, ' + res.total_conversions + ' conversions, ' + res.overall_rate + '%');
+                    alert(parts.join('\n'));
                 });
             });
 

@@ -4,145 +4,175 @@ namespace App\Http\Controllers;
 
 use App\Jobs\BulkOptimizeJob;
 use App\Models\Shop;
-use App\Services\LicenseService;
-use App\Services\ShopifyContentFetcher;
+use App\Services\BulkOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * BulkOptimizerController
+ * BulkOptimizerController (1.3)
  *
- * Bulk AI-powered SEO optimization for Shopify products:
- *  - Optimize product titles
- *  - Generate meta descriptions
- *  - Generate image alt text
- *  - Rewrite product descriptions
+ * POST /api/bulk/optimize  - start a run {type, action, mode, template, only_needed, limit}
+ * POST /api/bulk/preview   - first items with their current and new value (template mode)
+ * GET  /api/bulk/progress  - progress of the current/last run
+ * POST /api/bulk/cancel    - stop the run after the current item
  *
- * Uses queue-based processing (Laravel Jobs) for large catalogs.
- * Progress is tracked via cache and polled by the frontend.
+ * Types: product, collection, page, article. Actions per type in
+ * BulkOptimizer::ACTIONS; template mode only for meta_title and meta.
  */
 class BulkOptimizerController extends Controller
 {
-    public function __construct(
-        private ShopifyContentFetcher $fetcher,
-        private LicenseService $license
-    ) {}
+    public const MAX_ITEMS = 500;
 
-    /**
-     * Start a bulk optimization job.
-     *
-     * POST /api/bulk/optimize
-     * Body: { action: "titles"|"meta"|"alt_text"|"descriptions", limit: 100 }
-     */
+    private const PREVIEW_ITEMS = 5;
+
+    /** A run without progress for this long is considered stuck. */
+    private const STALE_MINUTES = 30;
+
+    public function __construct(private BulkOptimizer $optimizer) {}
+
     public function optimize(Request $request): array
     {
-        $shop = $request->attributes->get('shop');
-        if (! $shop instanceof Shop) {
-            return ['error' => 'shop_not_found'];
+        $shop = $this->shop($request);
+        [$params, $error] = $this->params($request);
+        if ($error) {
+            return $error;
         }
 
-        if (! $this->license->isActive($shop)) {
-            return ['error' => 'license_inactive'];
+        // The route checks write_products; pages and articles need write_content.
+        $scope = in_array($params['type'], ['page', 'article'], true) ? 'write_content' : 'write_products';
+        if (in_array($scope, $shop->missingScopes(), true)) {
+            return [
+                'error' => 'missing_scopes',
+                'missing_scopes' => $shop->missingScopes(),
+                'reauth_url' => '/install?shop='.urlencode($shop->shop_domain),
+            ];
         }
 
-        $action = $request->input('action', 'meta');
-        $limit = max(1, min((int) $request->input('limit', 100), 500));
-        $validActions = ['titles', 'meta', 'alt_text', 'descriptions'];
-
-        if (! in_array($action, $validActions, true)) {
-            return ['error' => 'invalid_action', 'valid_actions' => $validActions];
+        $key = BulkOptimizeJob::cacheKey($shop->id);
+        $current = Cache::get($key);
+        if ($current && in_array($current['status'] ?? null, ['queued', 'running'], true) && ! $this->stale($current)) {
+            return ['error' => 'job_running'];
         }
 
-        // Check if a job is already running
-        $jobKey = "bulk:{$shop->id}:{$action}";
-        if (Cache::has($jobKey)) {
-            return ['error' => 'job_running', 'message' => 'A bulk optimization job is already running for this action.'];
+        $items = $this->optimizer->select($shop, $params['type'], $params['action'], $params['only_needed'], $params['limit']);
+        if (isset($items['error'])) {
+            return ['error' => 'fetch_failed', 'message' => $items['error']];
+        }
+        if ($items === []) {
+            return ['error' => 'no_items'];
         }
 
-        // Fetch products to optimize
-        $products = $this->fetcher->getProducts($shop, $limit);
-        if (empty($products)) {
-            return ['error' => 'no_products'];
-        }
-
-        $productIds = array_map(fn ($p) => $p['id'], $products);
-
-        // Initialize progress tracking
-        Cache::put($jobKey, [
-            'action' => $action,
-            'total' => count($productIds),
+        Cache::put($key, [
+            'type' => $params['type'],
+            'action' => $params['action'],
+            'mode' => $params['mode'],
+            'total' => count($items),
             'processed' => 0,
             'succeeded' => 0,
             'failed' => 0,
+            'errors' => [],
+            'status' => 'queued',
             'started_at' => now()->toIso8601String(),
-            'status' => 'running',
-        ], 3600);
+            'updated_at' => now()->toIso8601String(),
+        ], now()->addDay());
 
-        // Run synchronously so no queue worker is needed
-        BulkOptimizeJob::dispatchSync($shop->id, $action, $productIds);
+        BulkOptimizeJob::dispatch($shop->id, $params['type'], $params['action'], $params['mode'], $params['template'], $items);
 
-        // Read the final progress from cache
-        $finalProgress = Cache::get($jobKey, ['status' => 'unknown']);
+        return ['success' => true, 'total' => count($items)];
+    }
+
+    public function preview(Request $request): array
+    {
+        $shop = $this->shop($request);
+        [$params, $error] = $this->params($request);
+        if ($error) {
+            return $error;
+        }
+        if ($params['mode'] !== 'template') {
+            return ['error' => 'preview_template_only'];
+        }
+
+        $items = $this->optimizer->select($shop, $params['type'], $params['action'], $params['only_needed'], self::PREVIEW_ITEMS);
+        if (isset($items['error'])) {
+            return ['error' => 'fetch_failed', 'message' => $items['error']];
+        }
+
+        $shopName = (string) ($shop->shop_name ?: str_replace('.myshopify.com', '', $shop->shop_domain));
+        $field = $params['action'] === 'meta_title' ? 'seo_title' : 'seo_description';
 
         return [
             'success' => true,
-            'job' => $action,
-            'total' => count($productIds),
-            'processed' => $finalProgress['processed'] ?? 0,
-            'succeeded' => $finalProgress['succeeded'] ?? 0,
-            'failed' => $finalProgress['failed'] ?? 0,
-            'status' => $finalProgress['status'] ?? 'completed',
-            'message' => 'Bulk optimization completed.',
+            'items' => array_map(fn (array $item) => [
+                'title' => $item['title'],
+                'current' => $item[$field],
+                'new' => $this->optimizer->render((string) $params['template'], $item, $shopName, $params['action']),
+            ], $items),
         ];
     }
 
-    /**
-     * Get the progress of a bulk optimization job.
-     *
-     * GET /api/bulk/progress?action=meta
-     */
     public function progress(Request $request): array
     {
-        $shop = $request->attributes->get('shop');
-        if (! $shop instanceof Shop) {
-            return ['error' => 'shop_not_found'];
-        }
+        $progress = Cache::get(BulkOptimizeJob::cacheKey($this->shop($request)->id));
 
-        $action = $request->input('action', 'meta');
-        $jobKey = "bulk:{$shop->id}:{$action}";
-
-        $progress = Cache::get($jobKey);
-        if (! $progress) {
-            return ['status' => 'idle', 'message' => 'No bulk job running.'];
-        }
-
-        return $progress;
+        return $progress ?: ['status' => 'idle'];
     }
 
-    /**
-     * Cancel a running bulk optimization job (by marking it as cancelled).
-     *
-     * POST /api/bulk/cancel
-     * Body: { action: "meta" }
-     */
     public function cancel(Request $request): array
     {
-        $shop = $request->attributes->get('shop');
-        if (! $shop instanceof Shop) {
-            return ['error' => 'shop_not_found'];
-        }
-
-        $action = $request->input('action', 'meta');
-        $jobKey = "bulk:{$shop->id}:{$action}";
-
-        $progress = Cache::get($jobKey);
-        if (! $progress) {
+        $key = BulkOptimizeJob::cacheKey($this->shop($request)->id);
+        $progress = Cache::get($key);
+        if (! $progress || ! in_array($progress['status'] ?? null, ['queued', 'running'], true)) {
             return ['error' => 'no_job_running'];
         }
 
         $progress['status'] = 'cancelled';
-        Cache::put($jobKey, $progress, 300);
+        Cache::put($key, $progress, now()->addDay());
 
-        return ['success' => true, 'message' => 'Job cancellation requested.'];
+        return ['success' => true];
+    }
+
+    /**
+     * @return array{0: ?array, 1: ?array}
+     */
+    private function params(Request $request): array
+    {
+        $type = (string) $request->input('type', 'product');
+        $action = (string) $request->input('action', 'meta');
+        $mode = (string) $request->input('mode', 'ai');
+        $template = trim((string) $request->input('template', ''));
+
+        if (! in_array($type, BulkOptimizer::TYPES, true)) {
+            return [null, ['error' => 'invalid_type', 'valid_types' => BulkOptimizer::TYPES]];
+        }
+        if (! BulkOptimizer::validAction($type, $action)) {
+            return [null, ['error' => 'invalid_action', 'valid_actions' => BulkOptimizer::ACTIONS[$type]]];
+        }
+        if (! in_array($mode, ['ai', 'template'], true) || ($mode === 'template' && ! in_array($action, BulkOptimizer::TEMPLATE_ACTIONS, true))) {
+            return [null, ['error' => 'invalid_mode']];
+        }
+        if ($mode === 'template' && ($template === '' || mb_strlen($template) > 500 || ! str_contains($template, '{{'))) {
+            return [null, ['error' => 'invalid_template']];
+        }
+
+        return [[
+            'type' => $type,
+            'action' => $action,
+            'mode' => $mode,
+            'template' => $mode === 'template' ? $template : null,
+            'only_needed' => $request->boolean('only_needed', true) && $action !== 'titles',
+            'limit' => max(1, min((int) $request->input('limit', 100), self::MAX_ITEMS)),
+        ], null];
+    }
+
+    private function stale(array $progress): bool
+    {
+        $updated = strtotime((string) ($progress['updated_at'] ?? $progress['started_at'] ?? ''));
+
+        return $updated !== false && $updated < now()->subMinutes(self::STALE_MINUTES)->getTimestamp();
+    }
+
+    private function shop(Request $request): Shop
+    {
+        return $request->attributes->get('shop');
     }
 }

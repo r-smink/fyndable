@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\RankHistory;
 use App\Models\Shop;
 use App\Models\TrackedKeyword;
+use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,6 +38,11 @@ class CheckRankingsJob implements ShouldQueue
     {
         $shop = Shop::find($this->shopId);
         if (! $shop || ! $shop->hasLicense()) {
+            return;
+        }
+
+        // Queued work bypasses the shopify.tier route middleware.
+        if (! app(LicenseService::class)->canUse($shop, 'rank_tracker')) {
             return;
         }
 

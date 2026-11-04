@@ -23,7 +23,7 @@ sub flush {
         my $v = $mstr;
         $k =~ s/\\(["\\])/$1/g;
         $v =~ s/\\(["\\])/$1/g;
-        if ($k ne '') {
+        if ($k ne '' && $v ne '') {
             push @order, $k unless exists $entries{$k};
             $entries{$k} = $v;
         }

@@ -9,6 +9,7 @@ use App\Models\TrackedKeyword;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * RankTrackerController
@@ -38,9 +39,27 @@ class RankTrackerController extends Controller
 
         $keywords = TrackedKeyword::where('shop_id', $shop->id)
             ->orderByDesc('updated_at')
-            ->get();
+            ->get()
+            ->toArray();
 
-        return ['keywords' => $keywords->toArray()];
+        // Search Console (1.5): impression-weighted position and clicks for
+        // the same query over the last 28 days, across all pages.
+        $gsc = DB::table('gsc_query_stats')->where('shop_id', $shop->id)
+            ->whereIn(DB::raw('lower(query)'), array_map(fn ($k) => mb_strtolower($k['keyword']), $keywords))
+            ->get()
+            ->groupBy(fn ($row) => mb_strtolower($row->query));
+        foreach ($keywords as &$keyword) {
+            $rows = $gsc->get(mb_strtolower($keyword['keyword']));
+            $impressions = $rows ? $rows->sum('impressions') : 0;
+            $keyword['gsc'] = $impressions > 0 ? [
+                'clicks' => (int) $rows->sum('clicks'),
+                'impressions' => (int) $impressions,
+                'position' => round($rows->sum(fn ($r) => $r->position * $r->impressions) / $impressions, 1),
+            ] : null;
+        }
+        unset($keyword);
+
+        return ['keywords' => $keywords];
     }
 
     /**
@@ -54,10 +73,6 @@ class RankTrackerController extends Controller
         $shop = $request->attributes->get('shop');
         if (! $shop instanceof Shop) {
             return ['error' => 'shop_not_found'];
-        }
-
-        if (! $this->license->hasTier($shop, ['professional', 'business', 'agency', 'trial', 'dev'])) {
-            return ['error' => 'tier_too_low', 'message' => 'Rank tracking requires Professional tier or higher.'];
         }
 
         $keyword = trim($request->input('keyword', ''));

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BrandVoice;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use App\Services\ShopifyAdminWriter;
 use App\Services\ShopifyContentFetcher;
+use App\Services\UsageLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -22,7 +24,8 @@ class BlogWriterController extends Controller
         private ShopifyContentFetcher $fetcher,
         private ShopifyAdminWriter $writer,
         private SaasProxyClient $saas,
-        private LicenseService $license
+        private LicenseService $license,
+        private UsageLimiter $usage
     ) {}
 
     /**
@@ -43,20 +46,7 @@ class BlogWriterController extends Controller
     /**
      * Supported output languages for generated content.
      */
-    private const LANGUAGES = [
-        'en' => 'English',
-        'nl' => 'Dutch',
-        'de' => 'German',
-        'fr' => 'French',
-        'es' => 'Spanish',
-        'it' => 'Italian',
-        'pt' => 'Portuguese',
-        'da' => 'Danish',
-        'sv' => 'Swedish',
-        'no' => 'Norwegian',
-        'fi' => 'Finnish',
-        'pl' => 'Polish',
-    ];
+    private const LANGUAGES = BrandVoice::LANGUAGES;
 
     /**
      * Generate an article draft.
@@ -77,10 +67,17 @@ class BlogWriterController extends Controller
             return ['error' => 'topic_required'];
         }
 
+        $limitError = $this->usage->guard($shop, 'blog_articles');
+        if ($limitError) {
+            return $limitError;
+        }
+
         $keywords = trim((string) $request->input('keywords', ''));
         $tone = trim((string) $request->input('tone', 'informative'));
         $wordCount = max(200, min((int) $request->input('word_count', 800), 2500));
-        $language = self::LANGUAGES[strtolower((string) $request->input('language', 'en'))] ?? 'English';
+        // Default: the store content language from onboarding.
+        $defaultLanguage = app(BrandVoice::class)->languageCode($shop) ?? 'en';
+        $language = self::LANGUAGES[strtolower((string) $request->input('language', $defaultLanguage))] ?? 'English';
 
         $details = $this->fetcher->getShopDetails($shop);
         $shopName = $details['name'] ?? $shop->shop_domain;
@@ -125,6 +122,8 @@ class BlogWriterController extends Controller
         if (empty($parsed['title']) || empty($parsed['body_html'])) {
             return ['error' => 'ai_parse_failed', 'raw' => $result['text'] ?? ''];
         }
+
+        $this->usage->increment($shop, 'blog_articles');
 
         return [
             'success' => true,

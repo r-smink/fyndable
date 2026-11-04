@@ -379,39 +379,47 @@ PROMPT;
     {
         ?>
         <style>
-            .sm-wrap { max-width: 900px; margin: 20px auto; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sm-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
-            .sm-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 20px 30px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px; }
-            .sm-header h1 { margin: 0; font-size: 22px; }
-            .sm-header p { margin: 5px 0 0 0; opacity: 0.7; font-size: 13px; }
-            .sm-change { padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-            .sm-change.new { background: #fee2e2; }
-            .sm-change.auto_updated { background: #d1e7dd; }
-            .sm-change.acknowledged { background: #f1f5f9; }
+            .sm-change { padding: 14px 16px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+            .sm-change.new { background: color-mix(in srgb, var(--fyn-danger) 12%, transparent); }
+            .sm-change.auto_updated { background: color-mix(in srgb, var(--fyn-success) 12%, transparent); }
+            .sm-change.acknowledged { background: var(--well); }
         </style>
-        <div class="wrap sm-wrap">
-            <div class="sm-card">
-                <div class="sm-header">
-                    <h1>📊 <?php esc_html_e('SERP Change Monitor', 'ai-seo-client'); ?></h1>
-                    <p><?php esc_html_e('Monitor ranking changes and auto-update content when positions drop.', 'ai-seo-client'); ?></p>
-                </div>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
 
-                <div id="sm-settings" style="margin-bottom:20px;padding:15px;background:#f8fafc;border-radius:8px;">
-                    <h4><?php esc_html_e('Settings', 'ai-seo-client'); ?></h4>
-                    <div style="display:flex;gap:20px;flex-wrap:wrap;">
-                        <label><input type="checkbox" id="sm-enabled"> <?php esc_html_e('Enable monitoring', 'ai-seo-client'); ?></label>
-                        <label><input type="checkbox" id="sm-auto-update"> <?php esc_html_e('Auto-update content on severe drops', 'ai-seo-client'); ?></label>
-                        <label><input type="checkbox" id="sm-email"> <?php esc_html_e('Email notifications', 'ai-seo-client'); ?></label>
-                    </div>
-                    <div style="display:flex;gap:15px;margin-top:10px;flex-wrap:wrap;">
-                        <label><?php esc_html_e('Drop threshold:', 'ai-seo-client'); ?> <input type="number" id="sm-threshold" value="5" min="1" style="width:60px;"> <?php esc_html_e('positions', 'ai-seo-client'); ?></label>
-                        <label><?php esc_html_e('Auto-update threshold:', 'ai-seo-client'); ?> <input type="number" id="sm-auto-threshold" value="10" min="1" style="width:60px;"> <?php esc_html_e('positions', 'ai-seo-client'); ?></label>
-                    </div>
-                    <button class="button button-primary" id="sm-save-settings" style="margin-top:10px;"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('SERP Monitor', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('SERP Change Monitor', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Monitor ranking changes and auto-update content when positions drop.', 'ai-seo-client'); ?></p>
                 </div>
+            </div>
 
-                <h3><?php esc_html_e('Recent Changes', 'ai-seo-client'); ?></h3>
-                <div id="sm-changes"><p style="color:#666;"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></p></div>
+            <!-- Settings card -->
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-admin-generic"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Settings', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--text-b);">
+                    <label><input type="checkbox" id="sm-enabled"> <?php esc_html_e('Enable monitoring', 'ai-seo-client'); ?></label>
+                    <label><input type="checkbox" id="sm-auto-update"> <?php esc_html_e('Auto-update content on severe drops', 'ai-seo-client'); ?></label>
+                    <label><input type="checkbox" id="sm-email"> <?php esc_html_e('Email notifications', 'ai-seo-client'); ?></label>
+                </div>
+                <div style="display:flex;gap:15px;margin-top:12px;flex-wrap:wrap;font-size:13px;color:var(--text-b);align-items:center;">
+                    <label><?php esc_html_e('Drop threshold:', 'ai-seo-client'); ?> <input type="number" id="sm-threshold" class="fyn-input" value="5" min="1" style="width:70px;padding:6px 10px;"> <?php esc_html_e('positions', 'ai-seo-client'); ?></label>
+                    <label><?php esc_html_e('Auto-update threshold:', 'ai-seo-client'); ?> <input type="number" id="sm-auto-threshold" class="fyn-input" value="10" min="1" style="width:70px;padding:6px 10px;"> <?php esc_html_e('positions', 'ai-seo-client'); ?></label>
+                </div>
+                <button class="fyn-btn fyn-btn-primary" id="sm-save-settings" style="margin-top:14px;"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+            </div>
+
+            <!-- Recent changes card -->
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-chart-line"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Recent Changes', 'ai-seo-client'); ?></h3>
+                </div>
+                <div id="sm-changes"><p style="color:var(--text-m);"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></p></div>
             </div>
         </div>
         <script>
@@ -427,23 +435,27 @@ PROMPT;
 
                     var html = '';
                     if (!data.changes.length) {
-                        html = '<p style="color:#666;">🎉 <?php echo esc_js(__("No significant changes detected.", "ai-seo-client")); ?></p>';
+                        html = '<p style="color:var(--text-m);"><?php echo esc_js(__("No significant changes detected.", "ai-seo-client")); ?></p>';
                     } else {
                         data.changes.forEach(function(c) {
-                            var statusLabel = c.status === 'auto_updated' ? '✅ <?php echo esc_js(__("Auto-updated", "ai-seo-client")); ?>' : (c.status === 'acknowledged' ? '👁️ Acknowledged' : '⚠️ New');
+                            var statusBadge = c.status === 'auto_updated'
+                                ? '<span class="fyn-badge fyn-badge--success"><?php echo esc_js(__("Auto-updated", "ai-seo-client")); ?></span>'
+                                : (c.status === 'acknowledged'
+                                    ? '<span class="fyn-badge fyn-badge--info"><?php echo esc_js(__("Acknowledged", "ai-seo-client")); ?></span>'
+                                    : '<span class="fyn-badge fyn-badge--danger"><?php echo esc_js(__("New", "ai-seo-client")); ?></span>');
                             html += '<div class="sm-change ' + c.status + '">';
-                            html += '<div><strong>' + c.keyword + '</strong><div style="font-size:12px;color:#64748b;">' + c.detected_at + '</div></div>';
-                            html += '<div style="text-align:center;"><span style="font-size:18px;font-weight:700;color:#dc2626;">#' + c.current_position + '</span> <span style="color:#64748b;">was #' + c.previous_position + '</span></div>';
-                            html += '<div>' + statusLabel;
+                            html += '<div><strong style="color:var(--text-h);">' + c.keyword + '</strong><div style="font-size:12px;color:var(--text-m);">' + c.detected_at + '</div></div>';
+                            html += '<div style="text-align:center;"><span style="font-size:18px;font-weight:700;color:var(--fyn-danger);">#' + c.current_position + '</span> <span style="color:var(--text-m);">was #' + c.previous_position + '</span></div>';
+                            html += '<div>' + statusBadge;
                             if (c.post_id && c.status === 'new') {
-                                html += '<br><button class="button button-small sm-update-btn" data-post-id="' + c.post_id + '" data-keyword="' + c.keyword + '" style="margin-top:5px;">' + '<?php echo esc_js(__("Auto-Update Now", "ai-seo-client")); ?>' + '</button>';
+                                html += '<br><button class="fyn-btn fyn-btn-outline sm-update-btn" data-post-id="' + c.post_id + '" data-keyword="' + c.keyword + '" style="margin-top:6px;font-size:12px;">' + '<?php echo esc_js(__("Auto-Update Now", "ai-seo-client")); ?>' + '</button>';
                             }
                             html += '</div>';
                             html += '</div>';
                         });
                     }
                     if (data.queue_count > 0) {
-                        html += '<p style="margin-top:10px;color:#d97706;">' + data.queue_count + ' <?php echo esc_js(__("updates queued for processing", "ai-seo-client")); ?></p>';
+                        html += '<p style="margin-top:12px;color:var(--fyn-warning);">' + data.queue_count + ' <?php echo esc_js(__("updates queued for processing", "ai-seo-client")); ?></p>';
                     }
                     $('#sm-changes').html(html);
                 });

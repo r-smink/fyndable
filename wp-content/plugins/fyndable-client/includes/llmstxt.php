@@ -575,115 +575,104 @@ class LlmsTxt
             'suppress_filters' => false,
         ]);
         ?>
-        <h3><?php esc_html_e('llms.txt Generator', 'ai-seo-client'); ?></h3>
-        <p class="description" style="margin-bottom: 15px;">
-            <?php
-            printf(
-                /* translators: 1: llms.txt URL, 2: llms-full.txt URL */
-                esc_html__('Serves a markdown overview at %1$s and a full-content version at %2$s for large language models (ChatGPT, Claude, Gemini, Perplexity).', 'ai-seo-client'),
-                '<code>' . esc_html($llmsUrl) . '</code>',
-                '<code>' . esc_html($fullUrl) . '</code>'
-            );
-            ?>
-        </p>
-        <table class="form-table" role="presentation">
-            <tr>
-                <th scope="row"><?php esc_html_e('Enable llms.txt', 'ai-seo-client'); ?></th>
-                <td>
-                    <label>
-                        <input type="checkbox" name="sseo_ai_client_llmstxt_enabled" value="1" <?php checked($enabled); ?>>
-                        <?php esc_html_e('Serve /llms.txt', 'ai-seo-client'); ?>
-                    </label>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Post types', 'ai-seo-client'); ?></th>
-                <td>
+        <div class="fyn-card" style="margin-bottom:20px;">
+            <div class="fyn-card-header">
+                <span class="dashicons dashicons-media-text"></span>
+                <h3 class="fyn-card-title"><?php esc_html_e('llms.txt Generator', 'ai-seo-client'); ?></h3>
+            </div>
+            <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;">
+                <?php
+                printf(
+                    esc_html__('Serves a markdown overview at %1$s and a full-content version at %2$s for large language models (ChatGPT, Claude, Gemini, Perplexity).', 'ai-seo-client'),
+                    '<code>' . esc_html($llmsUrl) . '</code>',
+                    '<code>' . esc_html($fullUrl) . '</code>'
+                );
+                ?>
+            </p>
+
+            <div style="display:grid;grid-template-columns:180px 1fr;gap:12px 20px;align-items:center;">
+                <span style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Enable llms.txt', 'ai-seo-client'); ?></span>
+                <label style="font-size:13px;color:var(--text-b);">
+                    <input type="checkbox" name="sseo_ai_client_llmstxt_enabled" value="1" <?php checked($enabled); ?>>
+                    <?php esc_html_e('Serve /llms.txt', 'ai-seo-client'); ?>
+                </label>
+
+                <span style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Post types', 'ai-seo-client'); ?></span>
+                <div style="display:flex;flex-wrap:wrap;gap:4px 16px;">
                     <?php foreach ($publicPostTypes as $pt): ?>
-                        <label style="display: inline-block; margin-right: 15px;">
+                        <label style="font-size:13px;color:var(--text-b);">
                             <input type="checkbox" name="sseo_ai_client_llmstxt_post_types[]" value="<?php echo esc_attr($pt->name); ?>" <?php checked(in_array($pt->name, $postTypes, true)); ?>>
                             <?php echo esc_html($pt->labels->name); ?>
                         </label>
                     <?php endforeach; ?>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Max items', 'ai-seo-client'); ?></th>
-                <td>
-                    <input type="number" name="sseo_ai_client_llmstxt_max_items" value="<?php echo esc_attr($maxItems); ?>" min="1" max="1000" class="small-text">
-                    <p class="description"><?php esc_html_e('Maximum number of posts to include.', 'ai-seo-client'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Site description', 'ai-seo-client'); ?></th>
-                <td>
-                    <input type="text" name="sseo_ai_client_llmstxt_description" value="<?php echo esc_attr($description); ?>" class="regular-text" placeholder="<?php esc_attr_e('Defaults to the site tagline', 'ai-seo-client'); ?>">
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Include excerpts', 'ai-seo-client'); ?></th>
-                <td>
-                    <label>
-                        <input type="checkbox" name="sseo_ai_client_llmstxt_include_excerpt" value="1" <?php checked($includeExcerpt); ?>>
-                        <?php esc_html_e('Append a short summary after each post link', 'ai-seo-client'); ?>
-                    </label>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Custom sections', 'ai-seo-client'); ?></th>
-                <td>
-                    <textarea name="sseo_ai_client_llmstxt_custom_sections" rows="5" class="large-text code" placeholder="<?php esc_attr_e('## Additional resources&#10;- [About](https://example.com/about): ...', 'ai-seo-client'); ?>"><?php echo esc_textarea($customSections); ?></textarea>
-                    <p class="description"><?php esc_html_e('Optional markdown appended after the post listings.', 'ai-seo-client'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Full-content version', 'ai-seo-client'); ?></th>
-                <td>
-                    <label>
+                </div>
+
+                <label for="sseo_llmstxt_max" style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Max items', 'ai-seo-client'); ?></label>
+                <div>
+                    <input type="number" id="sseo_llmstxt_max" name="sseo_ai_client_llmstxt_max_items" value="<?php echo esc_attr($maxItems); ?>" min="1" max="1000" class="fyn-input" style="width:100px;">
+                    <span style="font-size:12px;color:var(--text-m);margin-left:6px;"><?php esc_html_e('Maximum number of posts to include.', 'ai-seo-client'); ?></span>
+                </div>
+
+                <label for="sseo_llmstxt_desc" style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Site description', 'ai-seo-client'); ?></label>
+                <input type="text" id="sseo_llmstxt_desc" name="sseo_ai_client_llmstxt_description" value="<?php echo esc_attr($description); ?>" class="fyn-input" style="width:100%;max-width:400px;" placeholder="<?php esc_attr_e('Default: site tagline', 'ai-seo-client'); ?>">
+
+                <span style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Include excerpts', 'ai-seo-client'); ?></span>
+                <label style="font-size:13px;color:var(--text-b);">
+                    <input type="checkbox" name="sseo_ai_client_llmstxt_include_excerpt" value="1" <?php checked($includeExcerpt); ?>>
+                    <?php esc_html_e('Short summary after each post link', 'ai-seo-client'); ?>
+                </label>
+
+                <label for="sseo_llmstxt_custom" style="font-size:13px;font-weight:600;color:var(--text-h);align-self:start;padding-top:6px;"><?php esc_html_e('Custom sections', 'ai-seo-client'); ?></label>
+                <div>
+                    <textarea id="sseo_llmstxt_custom" name="sseo_ai_client_llmstxt_custom_sections" rows="4" class="fyn-input" style="width:100%;max-width:500px;font-family:monospace;font-size:12px;" placeholder="<?php esc_attr_e('## Additional resources&#10;- [About](https://example.com/about): ...', 'ai-seo-client'); ?>"><?php echo esc_textarea($customSections); ?></textarea>
+                    <p style="font-size:12px;color:var(--text-m);margin:4px 0 0;"><?php esc_html_e('Optional markdown appended after the post list.', 'ai-seo-client'); ?></p>
+                </div>
+
+                <span style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Full version', 'ai-seo-client'); ?></span>
+                <div>
+                    <label style="font-size:13px;color:var(--text-b);">
                         <input type="checkbox" name="sseo_ai_client_llmstxt_full_enabled" value="1" <?php checked($fullEnabled); ?>>
                         <?php
                         printf(
-                            /* translators: %s: llms-full.txt URL */
-                            esc_html__('Serve %s with the full body text of posts and selected pages', 'ai-seo-client'),
+                            esc_html__('Serve %s with full body text', 'ai-seo-client'),
                             '<code>/llms-full.txt</code>'
                         );
                         ?>
                     </label>
-                    <p class="description" style="margin-top:8px;">
+                    <p style="font-size:12px;color:var(--text-m);margin:6px 0 0;">
                         <label>
                             <?php esc_html_e('Max characters per item:', 'ai-seo-client'); ?>
-                            <input type="number" name="sseo_ai_client_llmstxt_full_max_chars" value="<?php echo esc_attr($fullMaxChars); ?>" min="100" max="500000" step="500" class="small-text">
+                            <input type="number" name="sseo_ai_client_llmstxt_full_max_chars" value="<?php echo esc_attr($fullMaxChars); ?>" min="100" max="500000" step="500" class="fyn-input" style="width:100px;margin-left:4px;">
                         </label>
                     </p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Pages to include', 'ai-seo-client'); ?></th>
-                <td>
-                    <p class="description" style="margin-top:0;margin-bottom:8px;">
-                        <?php esc_html_e('Select which pages appear in both /llms.txt (as links) and /llms-full.txt (full content). Leave all unchecked to include every published page.', 'ai-seo-client'); ?>
+                </div>
+
+                <span style="font-size:13px;font-weight:600;color:var(--text-h);align-self:start;padding-top:6px;"><?php esc_html_e('Include pages', 'ai-seo-client'); ?></span>
+                <div>
+                    <p style="font-size:12px;color:var(--text-m);margin:0 0 8px;">
+                        <?php esc_html_e('Select which pages appear in /llms.txt (as link) and /llms-full.txt (full text). Leave all unchecked to include all published pages.', 'ai-seo-client'); ?>
                     </p>
-                    <div style="max-height:240px;overflow:auto;border:1px solid #ddd;border-radius:4px;padding:10px;background:#fff;">
+                    <div style="max-height:200px;overflow:auto;border:1px solid var(--divide);border-radius:var(--fyn-radius);padding:10px;background:var(--well);">
                         <?php if (empty($allPages)): ?>
-                            <p class="description"><?php esc_html_e('No published pages found.', 'ai-seo-client'); ?></p>
+                            <p style="font-size:13px;color:var(--text-m);margin:0;"><?php esc_html_e('No published pages found.', 'ai-seo-client'); ?></p>
                         <?php else: ?>
                             <?php foreach ($allPages as $pg): ?>
-                                <label style="display:block;padding:3px 0;">
+                                <label style="display:block;padding:3px 0;font-size:13px;color:var(--text-b);">
                                     <input type="checkbox" name="sseo_ai_client_llmstxt_selected_pages[]" value="<?php echo esc_attr($pg->ID); ?>" <?php checked(in_array((int) $pg->ID, $selectedPages, true)); ?>>
                                     <?php echo esc_html($pg->post_title); ?>
-                                    <span style="color:#999;font-size:12px;">(<?php echo esc_html(get_permalink($pg)); ?>)</span>
+                                    <span style="color:var(--text-m);font-size:11px;">(<?php echo esc_html(get_permalink($pg)); ?>)</span>
                                 </label>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                     <?php if (count($allPages) >= 200): ?>
-                        <p class="description" style="margin-top:6px;color:#d63638;">
-                            <?php esc_html_e('Only the first 200 pages (by title) are shown. Use a lower selection or reduce page count to ensure all desired pages are listed.', 'ai-seo-client'); ?>
+                        <p style="font-size:12px;color:var(--fyn-danger);margin:6px 0 0;">
+                            <?php esc_html_e('Only the first 200 pages (by title) are shown.', 'ai-seo-client'); ?>
                         </p>
                     <?php endif; ?>
-                </td>
-            </tr>
-        </table>
+                </div>
+            </div>
+        </div>
         <?php
     }
 

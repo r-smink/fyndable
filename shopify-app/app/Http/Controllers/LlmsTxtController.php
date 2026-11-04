@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LlmsTxtSettings;
 use App\Models\Shop;
 use App\Services\LlmsTxtGenerator;
+use App\Services\ShopifySignature;
 use App\Services\ShopifyUrlRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -291,33 +292,7 @@ class LlmsTxtController extends Controller
      */
     private function verifyAppProxySignature(Request $request): bool
     {
-        $queryString = $request->server->get('QUERY_STRING', '');
-        if ($queryString === '') {
-            return false;
-        }
-
-        $signature = '';
-        $pairs = [];
-
-        foreach (explode('&', $queryString) as $part) {
-            $pos = strpos($part, '=');
-            $key = $pos === false ? $part : substr($part, 0, $pos);
-            $value = $pos === false ? '' : substr($part, $pos + 1);
-
-            if ($key === 'signature') {
-                $signature = $value;
-                continue;
-            }
-
-            $pairs[$key] = $key . '=' . $value;
-        }
-
-        ksort($pairs);
-        $message = implode('&', $pairs);
-
-        $calculated = hash_hmac('sha256', $message, config('shopify.api_secret'));
-
-        return $signature !== '' && hash_equals($signature, $calculated);
+        return (new ShopifySignature((string) config('shopify.api_secret')))->verifyAppProxy($request);
     }
 
     /**

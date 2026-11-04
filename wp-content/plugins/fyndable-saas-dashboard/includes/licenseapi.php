@@ -320,6 +320,20 @@ class LicenseAPI
             'callback' => [$this, 'googleOAuthStart'],
             'permission_callback' => '__return_true',
             'args' => [
+                // WordPress client: license credentials. Shopify app: one-time session.
+                'license_key' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'tenant_key' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                'session' => ['required' => false, 'type' => 'string', 'sanitize_callback' => 'sanitize_key'],
+            ],
+        ]);
+
+        // Google OAuth for the Shopify app: one-time popup session, created
+        // server-to-server so no license key ends up in a browser URL.
+        register_rest_route($this->namespace, '/google/oauth-session', [
+            'methods' => 'POST',
+            'callback' => [$this, 'createGoogleOAuthSession'],
+            'permission_callback' => '__return_true',
+            'args' => [
                 'license_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
                 'tenant_key' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
             ],
@@ -382,8 +396,8 @@ class LicenseAPI
         // NOTE: image_api credentials are intentionally NOT returned by validateLicense.
         // This endpoint only checks validity — returning central API keys here would leak
         // the operator's OpenArt/OpenRouter keys to anyone who knows any valid license key.
-        // Clients receive image_api credentials only via activateLicense / getTenantStatus,
-        // which require a valid license_key + tenant_key pair.
+        // Clients receive image_api credentials only via activateLicense (valid license_key)
+        // and getTenantStatus (license_key + tenant_key pair, active tenant).
 
         return new \WP_REST_Response([
             'success' => true,
@@ -412,8 +426,7 @@ class LicenseAPI
         $siteName = $request->get_param('site_name') ?: parse_url($siteUrl, PHP_URL_HOST);
         $platform = $request->get_param('platform') ?: 'wordpress';
 
-        error_log('SSEO AI Dashboard: License activation request received');
-        error_log('SSEO AI Dashboard: License Key: ' . substr($licenseKey, 0, 15) . '...');
+        error_log('SSEO AI Dashboard: License activation request received (key fp: ' . substr(md5((string) $licenseKey), 0, 8) . ')');
         error_log('SSEO AI Dashboard: Site URL: ' . $siteUrl);
         error_log('SSEO AI Dashboard: Platform: ' . $platform);
 
@@ -497,8 +510,10 @@ class LicenseAPI
     /**
      * Build the image_api credentials payload for a tenant.
      *
-     * SECURITY: Only call this from endpoints that have already verified a valid
-     * license_key + tenant_key pair (activateLicense, getTenantStatus). The central
+     * SECURITY: Only call this from endpoints that have already authenticated the
+     * caller: activateLicense (valid, non-revoked/expired license_key — the key is
+     * the bearer credential at activation time) and getTenantStatus (matching
+     * license_key + tenant_key pair, tenant active and not expired). The central
      * operator API keys (OpenArt/OpenRouter) are returned here so the client plugin
      * can call the image provider directly. Long-term this should be replaced by a
      * proxy architecture where the SaaS server makes the API call on behalf of the
@@ -507,11 +522,15 @@ class LicenseAPI
     private function getImageApiData(): array
     {
         $settings = new \SSEOAISaaS\SaaSSettings();
+        // Prefer a dedicated (credit-limited) OpenRouter image key so the
+        // central LLM key doesn't leave the server. Falls back to the central
+        // key for backward compatibility — see security-patch-1.md.
+        $openRouterImageKey = (string) get_option('sseo_ai_saas_openrouter_image_api_key', '');
         return [
             'provider' => $settings->getImageApiProvider(),
             'key' => match ($settings->getImageApiProvider()) {
                 'openart' => get_option('ai_seo_saas_openart_api_key', ''),
-                'openrouter' => get_option('sseo_ai_saas_openrouter_api_key', ''),
+                'openrouter' => $openRouterImageKey !== '' ? $openRouterImageKey : get_option('sseo_ai_saas_openrouter_api_key', ''),
                 default => $settings->getImageApiKey(),
             },
             'model' => $settings->getImageApiModel(),
@@ -542,21 +561,16 @@ class LicenseAPI
     }
 
     /**
-     * Get the client IP address, preferring forwarded headers.
+     * Get the client IP address for rate limiting.
+     *
+     * SECURITY: only REMOTE_ADDR is trusted. X-Forwarded-For / X-Real-IP are
+     * client-spoofable and would let an attacker bypass every IP-based rate
+     * limit on the license endpoints. When the site runs behind a reverse
+     * proxy, configure the proxy to overwrite REMOTE_ADDR instead.
      */
     private function getClientIp(): string
     {
-        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-        if (!empty($ip)) {
-            $parts = explode(',', $ip);
-            $ip = trim($parts[0]);
-        }
-        if (empty($ip)) {
-            $ip = $_SERVER['HTTP_X_REAL_IP'] ?? '';
-        }
-        if (empty($ip)) {
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        }
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
     }
 
@@ -680,6 +694,13 @@ class LicenseAPI
 
         $license = $this->licenseGenerator->getLicense($licenseKey);
 
+        // Only hand out image-API credentials to tenants that are actually entitled
+        // to use them — a suspended/revoked/expired tenant with a matching key pair
+        // must not keep receiving the operator key on every status sync.
+        $tenantEntitled = ($tenant['status'] ?? '') === 'active'
+            && (empty($tenant['expires_at']) || strtotime($tenant['expires_at']) >= time())
+            && ($license['status'] ?? '') !== 'revoked';
+
         return new \WP_REST_Response([
             'success' => true,
             'valid' => $limits['valid'],
@@ -690,14 +711,14 @@ class LicenseAPI
             'domain' => $tenant['domain'] ?? null,
             'limits' => $limits['checks'] ?? [],
             'rate_limit' => (int)($tenant['rate_limit'] ?: LicenseKeyGenerator::getDefaultRateLimit($tenant['tier'])),
-            'api_calls_limit' => (int)($tenant['api_calls_limit'] ?: LicenseKeyGenerator::getDefaultApiLimit($tenant['tier'])),
+            'api_calls_limit' => $settings->getEffectiveApiLimit($tenant),
             'monthly_auto_posts' => (int)$settings->getAutoPostLimitForTier($tenant['tier']),
             'monthly_geo_scans' => (int)$settings->getGeoScanLimitForTier($tenant['tier']),
             'expires_at' => $tenant['expires_at'],
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'chatbot_config' => $this->getChatbotConfig(),
             'model_routing' => $this->getModelRoutingForTenant($tenantKey, $tenant['tier']),
-            'image_api' => $this->getImageApiData(),
+            'image_api' => $tenantEntitled ? $this->getImageApiData() : [],
             'portal_url' => $this->getPortalUrl(),
         ], 200);
     }
@@ -811,29 +832,33 @@ class LicenseAPI
             ], 429);
         }
 
-        $email = $request->get_param('email');
+        $email = (string) $request->get_param('email');
         $name = $request->get_param('name');
         $siteUrl = $request->get_param('site_url');
 
-        // Check if email already has a tenant (prevent trial abuse)
-        $allTenants = $this->tenants->getAllTenants(500);
-        foreach ($allTenants as $existing) {
-            if (($existing['email'] ?? '') === $email) {
-                $tier = $existing['tier'] ?? '';
-                if ($tier === 'trial') {
-                    return new \WP_REST_Response([
-                        'success' => false,
-                        'error' => 'trial_exists',
-                        'message' => 'You already have a trial account. Use your existing license key or upgrade.',
-                        'license_key' => $existing['license_key'] ?? '',
-                    ], 409);
-                }
-                return new \WP_REST_Response([
-                    'success' => false,
-                    'error' => 'account_exists',
-                    'message' => 'An account with this email already exists.',
-                ], 409);
-            }
+        if (!is_email($email)) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'invalid_email',
+                'message' => 'Please provide a valid email address.',
+            ], 400);
+        }
+
+        // SECURITY: the license key is delivered only by email (welcome email
+        // via sseo_ai_license_activated), never in this response. Returning it
+        // let anyone create a trial with a fake address and use the
+        // credentials immediately (incl. getTenantStatus → image_api key).
+        // The response is identical for new and existing addresses so the
+        // endpoint can't be used to enumerate customer emails.
+        $genericResponse = new \WP_REST_Response([
+            'success' => true,
+            'email_sent' => true,
+            'message' => 'If this email address is eligible for a trial, the license key has been sent to it.',
+        ], 200);
+
+        // One account per email (prevent trial abuse) — direct lookup, no 500-row cap.
+        if (!empty($this->tenants->findTenantsByEmail($email))) {
+            return $genericResponse;
         }
 
         // Generate license key for trial
@@ -877,7 +902,7 @@ class LicenseAPI
 
         $tenantKey = $tenantResult['tenant_key'];
 
-        // Fire activation hook for welcome email
+        // Fire activation hook for welcome email (contains the license key)
         do_action('sseo_ai_license_activated', $tenantKey, [
             'email' => $email,
             'tier' => 'trial',
@@ -885,14 +910,7 @@ class LicenseAPI
             'expires_at' => $expiresAt,
         ]);
 
-        return new \WP_REST_Response([
-            'success' => true,
-            'license_key' => $licenseKey,
-            'tenant_key' => $tenantKey,
-            'tier' => 'trial',
-            'expires_at' => $expiresAt,
-            'trial_days' => $trialDays,
-        ], 200);
+        return $genericResponse;
     }
 
     /**
@@ -916,6 +934,7 @@ class LicenseAPI
         $currentPeriod = current_time('Y-m');
         $usage = $this->tenants->getTenantUsage($tenantKey, $currentPeriod);
         $limits = $this->tenants->checkTenantLimits($tenantKey);
+        $apiLimit = (new \SSEOAISaaS\SaaSSettings())->getEffectiveApiLimit($tenant);
 
         // Get effective features for this license/tenant
         $featureManager = $this->getFeatureManager();
@@ -933,18 +952,18 @@ class LicenseAPI
                 'expires_at' => $tenant['expires_at'],
                 'max_sites' => (int)$tenant['max_sites'],
                 'rate_limit' => (int)$tenant['rate_limit'],
-                'api_calls_limit' => (int)$tenant['api_calls_limit'],
+                'api_calls_limit' => $apiLimit,
             ],
             'usage' => [
                 'current_month' => [
                     'api_calls' => (int)($usage['api_calls'] ?? 0),
-                    'api_calls_limit' => (int)$tenant['api_calls_limit'],
+                    'api_calls_limit' => $apiLimit,
                     'content_generated' => (int)($usage['content_generated'] ?? 0),
                     'serp_requests' => (int)($usage['serp_requests'] ?? 0),
                     'keywords_tracked' => (int)($usage['keywords_tracked'] ?? 0),
                     'api_cost' => (float)($usage['api_cost'] ?? 0),
                 ],
-                'remaining_calls' => max(0, (int)$tenant['api_calls_limit'] - (int)($usage['api_calls'] ?? 0)),
+                'remaining_calls' => max(0, $apiLimit - (int)($usage['api_calls'] ?? 0)),
             ],
             'white_label' => $this->getWhiteLabelData($tenantKey),
             'limits' => $limits['checks'] ?? [],
@@ -1256,19 +1275,94 @@ class LicenseAPI
     }
 
     /**
+     * REST: One-time Google OAuth popup session for the Shopify app.
+     *
+     * The Shopify app calls this server-to-server and opens the returned
+     * URL in a popup. In session mode the popup does not exchange the code:
+     * it posts only the authorization code to the Shopify app origin, and the
+     * app exchanges it server-side via /google/exchange, so Google tokens
+     * never reach the browser. Sessions are single use and expire after
+     * 10 minutes.
+     */
+    public function createGoogleOAuthSession(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $tenant = $this->validateTenant($request);
+        if (is_wp_error($tenant)) {
+            return new \WP_REST_Response(['success' => false, 'error' => $tenant->get_error_code(), 'message' => $tenant->get_error_message()], 403);
+        }
+        if (($tenant['platform'] ?? '') !== 'shopify') {
+            return new \WP_REST_Response(['success' => false, 'error' => 'unsupported_platform', 'message' => 'OAuth sessions are only used by the Shopify app'], 400);
+        }
+
+        $settings = new SaaSSettings();
+        if (empty($settings->getGoogleClientId())) {
+            return new \WP_REST_Response(['success' => false, 'error' => 'not_configured', 'message' => 'Google OAuth is not configured on the SaaS dashboard'], 400);
+        }
+
+        $session = bin2hex(random_bytes(24));
+        set_transient('sseo_google_oauth_' . $session, ['tenant_key' => $tenant['tenant_key']], 10 * MINUTE_IN_SECONDS);
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'url' => add_query_arg('session', $session, rest_url($this->namespace . '/google/oauth-start')),
+            'origin' => $this->siteOrigin(home_url()),
+        ], 200);
+    }
+
+    /**
+     * Origin of the Shopify app (target of the popup postMessage). Constant
+     * FYNDABLE_SHOPIFY_APP_ORIGIN or option sseo_ai_saas_shopify_app_origin.
+     */
+    private function shopifyAppOrigin(): string
+    {
+        $origin = defined('FYNDABLE_SHOPIFY_APP_ORIGIN') && is_string(FYNDABLE_SHOPIFY_APP_ORIGIN)
+            ? FYNDABLE_SHOPIFY_APP_ORIGIN
+            : (string) get_option('sseo_ai_saas_shopify_app_origin', 'https://shopify.fyndable.ai');
+
+        return $this->siteOrigin($origin);
+    }
+
+    private function siteOrigin(string $url): string
+    {
+        $parsed = wp_parse_url($url);
+        if (empty($parsed['host'])) {
+            return '';
+        }
+        $origin = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+
+        return !empty($parsed['port']) ? $origin . ':' . $parsed['port'] : $origin;
+    }
+
+    /**
      * REST: Render Google OAuth start page (GIS popup runs on SaaS domain)
      * This page loads GIS, gets the auth code, exchanges it server-side,
      * and sends tokens back to the client site via postMessage.
      */
     public function googleOAuthStart(\WP_REST_Request $request): void
     {
-        $licenseKey = $request->get_param('license_key');
-        $tenantKey = $request->get_param('tenant_key');
+        $licenseKey = (string) $request->get_param('license_key');
+        $tenantKey = (string) $request->get_param('tenant_key');
+        $session = (string) $request->get_param('session');
+        $codeOnly = $session !== '';
 
-        // Validate tenant
-        $tenant = $this->tenants->getTenant($tenantKey);
-        if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
-            wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+        if ($codeOnly) {
+            // Shopify app: single-use session, the app exchanges the code itself.
+            $data = get_transient('sseo_google_oauth_' . $session);
+            delete_transient('sseo_google_oauth_' . $session);
+            if (!is_array($data) || empty($data['tenant_key'])) {
+                wp_die(__('This connection link has expired. Start again from the app.', 'sseo-ai-saas'), 403);
+            }
+            $tenantKey = (string) $data['tenant_key'];
+            $tenant = $this->tenants->getTenant($tenantKey);
+            $licenseKey = '';
+            if (!$tenant) {
+                wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+            }
+        } else {
+            $tenant = $this->tenants->getTenant($tenantKey);
+            if (!$tenant || !hash_equals((string)$tenant['license_key'], (string)$licenseKey)) {
+                wp_die(__('Invalid credentials.', 'sseo-ai-saas'), 403);
+            }
         }
         if ($tenant['status'] !== 'active') {
             wp_die(__('Tenant is not active.', 'sseo-ai-saas'), 403);
@@ -1290,9 +1384,11 @@ class LicenseAPI
 
         // SECURITY: restrict postMessage target origin to the tenant's registered
         // domain so OAuth tokens cannot be intercepted by an arbitrary opener.
-        // Falls back to '*' only when the domain cannot be parsed (never breaks flow).
-        $clientOrigin = '*';
-        if (!empty($tenant['domain'])) {
+        // No '*' fallback: without a parseable domain the flow stops.
+        $clientOrigin = '';
+        if ($codeOnly) {
+            $clientOrigin = $this->shopifyAppOrigin();
+        } elseif (!empty($tenant['domain'])) {
             $parsed = wp_parse_url($tenant['domain']);
             if (!empty($parsed['host'])) {
                 $clientOrigin = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
@@ -1300,6 +1396,9 @@ class LicenseAPI
                     $clientOrigin .= ':' . $parsed['port'];
                 }
             }
+        }
+        if ($clientOrigin === '') {
+            wp_die(__('No site domain is registered for this license. Re-activate the license on your site and try again.', 'sseo-ai-saas'), 400);
         }
 
         header('Content-Type: text/html; charset=utf-8');
@@ -1341,11 +1440,16 @@ class LicenseAPI
             var LICENSE_KEY = <?php echo wp_json_encode($licenseKey); ?>;
             var TENANT_KEY = <?php echo wp_json_encode($tenantKey); ?>;
             var TARGET_ORIGIN = <?php echo wp_json_encode($clientOrigin); ?>;
+            var CODE_ONLY = <?php echo $codeOnly ? 'true' : 'false'; ?>;
 
             var statusArea = document.getElementById('status-area');
 
             function setStatus(msg, isError) {
-                statusArea.innerHTML = '<p class="status' + (isError ? ' error' : '') + '">' + msg + '</p>';
+                // textContent: msg can contain provider error text.
+                var p = document.createElement('p');
+                p.className = 'status' + (isError ? ' error' : '');
+                p.textContent = msg;
+                statusArea.replaceChildren(p);
             }
 
             function closePopup() {
@@ -1365,6 +1469,19 @@ class LicenseAPI
                     scope: SCOPES,
                     ux_mode: 'popup',
                     callback: function(response) {
+                            if (CODE_ONLY) {
+                                // Shopify app: send only the code; the app exchanges it server-side.
+                                if (window.opener) {
+                                    window.opener.postMessage({
+                                        type: 'fyndable_google_code',
+                                        code: response.code,
+                                        success: true
+                                    }, TARGET_ORIGIN);
+                                }
+                                setStatus('Successfully connected! Closing...');
+                                closePopup();
+                                return;
+                            }
                             setStatus('Exchanging authorization code...');
 
                             fetch(EXCHANGE_URL, {
@@ -1416,7 +1533,7 @@ class LicenseAPI
                             var msg = error.message || error.type || 'Google login failed';
                             if (window.opener) {
                                 window.opener.postMessage({
-                                    type: 'fyndable_google_tokens',
+                                    type: CODE_ONLY ? 'fyndable_google_code' : 'fyndable_google_tokens',
                                     success: false,
                                     error: msg
                                 }, TARGET_ORIGIN);
@@ -1481,22 +1598,34 @@ class LicenseAPI
             'name' => '[deleted]',
             'email' => '[deleted]',
             'domain' => null,
-            'status' => 'deleted',
+            // status is an enum (active/inactive/suspended/cancelled); 'deleted'
+            // is not a member and broke the update under strict SQL mode.
+            'status' => 'cancelled',
             'license_key' => null,
             'metadata' => null,
         ], ['tenant_key' => $tenantKey]);
 
+        // Delete tenant settings (incl. the Shopify shop mapping, so a later
+        // reinstall creates a fresh tenant instead of reviving this one)
+        $wpdb->delete($wpdb->prefix . 'sseo_ai_tenant_settings', ['tenant_id' => (int)$tenant['id']]);
+
         // Delete usage records
         $usageTable = $wpdb->prefix . 'sseo_ai_tenant_usage';
-        $wpdb->delete($usageTable, ['tenant_key' => $tenantKey]);
+        $wpdb->delete($usageTable, ['tenant_id' => (int)$tenant['id']]);
 
         // Delete license key record
         $licenseTable = $wpdb->prefix . 'sseo_ai_license_keys';
         $wpdb->delete($licenseTable, ['license_key' => $licenseKey]);
 
-        // Delete support tickets
+        // Delete support tickets + replies (both keyed by tenant_id / ticket_id;
+        // the old tenant_key filter matched no column and deleted nothing)
         $ticketsTable = $wpdb->prefix . 'sseo_ai_support_tickets';
-        $wpdb->delete($ticketsTable, ['tenant_key' => $tenantKey]);
+        $repliesTable = $wpdb->prefix . 'sseo_ai_support_replies';
+        $wpdb->query($wpdb->prepare(
+            "DELETE r FROM $repliesTable r INNER JOIN $ticketsTable t ON r.ticket_id = t.id WHERE t.tenant_id = %d",
+            (int)$tenant['id']
+        ));
+        $wpdb->delete($ticketsTable, ['tenant_id' => (int)$tenant['id']]);
 
         // Delete Google tokens if any
         delete_option('sseo_ai_google_tokens_' . $tenantKey);

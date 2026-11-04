@@ -59,70 +59,82 @@ class EEATValidator
         $trustSignals = $this->detectTrustSignals();
         
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('E-E-A-T Validator', 'ai-seo-client'); ?></h1>
-            <p><?php esc_html_e('Validate your content against Google\'s Experience, Expertise, Authoritativeness, and Trustworthiness guidelines.', 'ai-seo-client'); ?></p>
-            
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('E-E-A-T Validator', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('E-E-A-T Validator', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Validate your content against Google\'s Experience, Expertise, Authoritativeness and Trustworthiness guidelines.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
+
             <!-- Site-wide E-E-A-T Score -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Site E-E-A-T Score', 'ai-seo-client'); ?></h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 15px;">
-                    <div style="text-align: center; padding: 20px; background: #e7f3ff; border-radius: 4px;">
-                        <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($siteEEAT['experience']); ?>;">
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-awards"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Site E-E-A-T Score', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <div class="fyn-stats-grid">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="font-size:36px;color:<?php echo $this->getScoreColor($siteEEAT['experience']); ?>;">
                             <?php echo esc_html($siteEEAT['experience']); ?>
                         </div>
-                        <div style="font-weight: bold; margin-top: 10px;"><?php esc_html_e('Experience', 'ai-seo-client'); ?></div>
-                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        <div class="fyn-stat-label"><?php esc_html_e('Experience', 'ai-seo-client'); ?></div>
+                        <div style="font-size:11px;color:var(--text-m);margin-top:4px;">
                             <?php echo esc_html($siteEEAT['experience_note']); ?>
                         </div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1ecf1; border-radius: 4px;">
-                        <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($siteEEAT['expertise']); ?>;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="font-size:36px;color:<?php echo $this->getScoreColor($siteEEAT['expertise']); ?>;">
                             <?php echo esc_html($siteEEAT['expertise']); ?>
                         </div>
-                        <div style="font-weight: bold; margin-top: 10px;"><?php esc_html_e('Expertise', 'ai-seo-client'); ?></div>
-                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        <div class="fyn-stat-label"><?php esc_html_e('Expertise', 'ai-seo-client'); ?></div>
+                        <div style="font-size:11px;color:var(--text-m);margin-top:4px;">
                             <?php echo esc_html($siteEEAT['expertise_note']); ?>
                         </div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #d1e7dd; border-radius: 4px;">
-                        <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($siteEEAT['authoritativeness']); ?>;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="font-size:36px;color:<?php echo $this->getScoreColor($siteEEAT['authoritativeness']); ?>;">
                             <?php echo esc_html($siteEEAT['authoritativeness']); ?>
                         </div>
-                        <div style="font-weight: bold; margin-top: 10px;"><?php esc_html_e('Authoritativeness', 'ai-seo-client'); ?></div>
-                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        <div class="fyn-stat-label"><?php esc_html_e('Authoritativeness', 'ai-seo-client'); ?></div>
+                        <div style="font-size:11px;color:var(--text-m);margin-top:4px;">
                             <?php echo esc_html($siteEEAT['authoritativeness_note']); ?>
                         </div>
                     </div>
-                    <div style="text-align: center; padding: 20px; background: #fff3cd; border-radius: 4px;">
-                        <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($siteEEAT['trustworthiness']); ?>;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" style="font-size:36px;color:<?php echo $this->getScoreColor($siteEEAT['trustworthiness']); ?>;">
                             <?php echo esc_html($siteEEAT['trustworthiness']); ?>
                         </div>
-                        <div style="font-weight: bold; margin-top: 10px;"><?php esc_html_e('Trustworthiness', 'ai-seo-client'); ?></div>
-                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        <div class="fyn-stat-label"><?php esc_html_e('Trustworthiness', 'ai-seo-client'); ?></div>
+                        <div style="font-size:11px;color:var(--text-m);margin-top:4px;">
                             <?php echo esc_html($siteEEAT['trustworthiness_note']); ?>
                         </div>
                     </div>
                 </div>
-                
-                <div style="margin-top: 20px; padding: 15px; background: #f0f6fc; border-left: 4px solid #2271b1;">
-                    <h4 style="margin-top: 0;"><?php esc_html_e('Overall Assessment', 'ai-seo-client'); ?></h4>
-                    <p><?php echo wp_kses_post($siteEEAT['overall_assessment']); ?></p>
+
+                <div class="fyn-well" style="margin-top:20px;padding:15px;border-left:4px solid var(--fyn-blue);border-radius:9px;">
+                    <h4 style="margin-top:0;color:var(--text-h);"><?php esc_html_e('Overall Assessment', 'ai-seo-client'); ?></h4>
+                    <p style="color:var(--text-b);margin:0;"><?php echo wp_kses_post($siteEEAT['overall_assessment']); ?></p>
                 </div>
             </div>
-            
+
             <!-- Author Expertise Scores -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h2><?php esc_html_e('Author Expertise', 'ai-seo-client'); ?></h2>
-                
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-groups"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Author Expertise', 'ai-seo-client'); ?></h3>
+                </div>
+
                 <?php if (!empty($authorScores)): ?>
-                <table class="wp-list-table widefat fixed striped">
+                <table class="fyn-table">
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Author', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Bio Completeness', 'ai-seo-client'); ?></th>
-                            <th><?php esc_html_e('Credentials', 'ai-seo-client'); ?></th>
+                            <th><?php esc_html_e('References', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Published Posts', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('E-E-A-T Score', 'ai-seo-client'); ?></th>
                             <th><?php esc_html_e('Actions', 'ai-seo-client'); ?></th>
@@ -135,25 +147,25 @@ class EEATValidator
                                 <strong><?php echo esc_html($author['name']); ?></strong>
                             </td>
                             <td>
-                                <span style="color: <?php echo $this->getScoreColor($author['bio_completeness']); ?>;">
+                                <span style="color:<?php echo $this->getScoreColor($author['bio_completeness']); ?>;">
                                     <?php echo esc_html($author['bio_completeness']); ?>%
                                 </span>
                             </td>
                             <td>
                                 <?php if (!empty($author['credentials'])): ?>
-                                <span style="color: #00a32a;">✓ <?php echo esc_html(count($author['credentials'])); ?> credentials</span>
+                                <span class="fyn-badge fyn-badge--success"><?php echo esc_html(count($author['credentials'])); ?> credentials</span>
                                 <?php else: ?>
-                                <span style="color: #d63638;">✗ No credentials</span>
+                                <span class="fyn-badge fyn-badge--danger">No credentials</span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo esc_html($author['post_count']); ?></td>
                             <td>
-                                <strong style="color: <?php echo $this->getScoreColor($author['eeat_score']); ?>;">
+                                <strong style="color:<?php echo $this->getScoreColor($author['eeat_score']); ?>;">
                                     <?php echo esc_html($author['eeat_score']); ?>/100
                                 </strong>
                             </td>
                             <td>
-                                <a href="<?php echo get_edit_user_link($author['id']); ?>" class="button button-small">
+                                <a href="<?php echo get_edit_user_link($author['id']); ?>" class="fyn-btn fyn-btn-outline" style="font-size:12px;">
                                     <?php esc_html_e('Edit Profile', 'ai-seo-client'); ?>
                                 </a>
                             </td>
@@ -162,42 +174,45 @@ class EEATValidator
                     </tbody>
                 </table>
                 <?php else: ?>
-                <p><?php esc_html_e('No authors found.', 'ai-seo-client'); ?></p>
+                <p style="color:var(--text-m);"><?php esc_html_e('No authors found.', 'ai-seo-client'); ?></p>
                 <?php endif; ?>
             </div>
-            
+
             <!-- Trust Signals -->
-            <div class="card">
-                <h2><?php esc_html_e('Trust Signals Detected', 'ai-seo-client'); ?></h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div class="fyn-card">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-shield"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Trust Signals Detected', 'ai-seo-client'); ?></h3>
+                </div>
+
+                <div class="fyn-grid-2">
                     <div>
-                        <h3><?php esc_html_e('Present Signals', 'ai-seo-client'); ?></h3>
-                        <ul style="list-style: none; padding: 0;">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 10px;"><?php esc_html_e('Present Signals', 'ai-seo-client'); ?></h4>
+                        <ul style="list-style:none;padding:0;margin:0;">
                             <?php foreach ($trustSignals['present'] as $signal): ?>
-                            <li style="padding: 8px; margin: 5px 0; background: #d1e7dd; border-left: 3px solid #00a32a;">
-                                ✓ <?php echo esc_html($signal); ?>
+                            <li style="padding:8px 12px;margin:5px 0;background:color-mix(in srgb, var(--fyn-success) 12%, transparent);border-left:3px solid var(--fyn-success);border-radius:0 7px 7px 0;color:var(--text-b);font-size:13px;">
+                                &#10003; <?php echo esc_html($signal); ?>
                             </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
                     <div>
-                        <h3><?php esc_html_e('Missing Signals', 'ai-seo-client'); ?></h3>
-                        <ul style="list-style: none; padding: 0;">
+                        <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 10px;"><?php esc_html_e('Missing Signals', 'ai-seo-client'); ?></h4>
+                        <ul style="list-style:none;padding:0;margin:0;">
                             <?php foreach ($trustSignals['missing'] as $signal): ?>
-                            <li style="padding: 8px; margin: 5px 0; background: #f8d7da; border-left: 3px solid #d63638;">
-                                ✗ <?php echo esc_html($signal); ?>
+                            <li style="padding:8px 12px;margin:5px 0;background:color-mix(in srgb, var(--fyn-danger) 12%, transparent);border-left:3px solid var(--fyn-danger);border-radius:0 7px 7px 0;color:var(--text-b);font-size:13px;">
+                                &#10007; <?php echo esc_html($signal); ?>
                             </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
                 </div>
-                
-                <div style="margin-top: 20px;">
-                    <h3><?php esc_html_e('Recommendations', 'ai-seo-client'); ?></h3>
-                    <ul>
+
+                <div style="margin-top:20px;">
+                    <h4 style="font-size:14px;font-weight:700;color:var(--text-h);margin:0 0 10px;"><?php esc_html_e('Recommendations', 'ai-seo-client'); ?></h4>
+                    <ul style="color:var(--text-b);font-size:13px;">
                         <?php foreach ($trustSignals['recommendations'] as $rec): ?>
-                        <li><?php echo esc_html($rec); ?></li>
+                        <li style="margin-bottom:6px;"><?php echo esc_html($rec); ?></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
@@ -231,63 +246,63 @@ class EEATValidator
     public function renderMetaBox(\WP_Post $post): void
     {
         $eeatScore = $this->analyzePostEEAT($post);
-        
+
+        // Same thresholds as getScoreColor(), expressed as design-token bands.
+        $band = static function ($score): string {
+            $score = (int) $score;
+            return $score >= 80 ? 'good' : ($score >= 60 ? 'ok' : 'bad');
+        };
+        $meters = [
+            'experience' => __('Experience:', 'ai-seo-client'),
+            'expertise' => __('Expertise:', 'ai-seo-client'),
+            'authoritativeness' => __('Authoritativeness:', 'ai-seo-client'),
+            'trustworthiness' => __('Trustworthiness:', 'ai-seo-client'),
+        ];
+
         wp_nonce_field('sseo_eeat_save', 'sseo_eeat_nonce');
         ?>
         <div class="sseo-eeat-box">
-            <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 4px; margin-bottom: 15px;">
-                <div style="font-size: 48px; font-weight: bold; color: <?php echo $this->getScoreColor($eeatScore['overall']); ?>;">
-                    <?php echo esc_html($eeatScore['overall']); ?>
+            <div class="fyn-score-head">
+                <div class="fyn-score-disc fyn-score-disc--<?php echo esc_attr($band($eeatScore['overall'])); ?>">
+                    <?php echo esc_html((string) $eeatScore['overall']); ?>
                 </div>
-                <div style="font-weight: bold;"><?php esc_html_e('Overall E-E-A-T Score', 'ai-seo-client'); ?></div>
-            </div>
-            
-            <div style="margin-bottom: 10px;">
-                <strong><?php esc_html_e('Experience:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['experience']); ?>; width: <?php echo $eeatScore['experience']; ?>%; height: 100%; border-radius: 4px;"></div>
+                <div>
+                    <h2><?php esc_html_e('Overall E-E-A-T Score', 'ai-seo-client'); ?></h2>
                 </div>
-                <small><?php echo esc_html($eeatScore['experience']); ?>/100</small>
             </div>
-            
-            <div style="margin-bottom: 10px;">
-                <strong><?php esc_html_e('Expertise:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['expertise']); ?>; width: <?php echo $eeatScore['expertise']; ?>%; height: 100%; border-radius: 4px;"></div>
+
+            <div class="fyn-meters">
+                <?php foreach ($meters as $key => $label) : ?>
+                <div class="fyn-meter">
+                    <div class="fyn-meter-head">
+                        <span class="fyn-meter-label"><?php echo esc_html($label); ?></span>
+                        <span class="fyn-meter-value"><?php echo esc_html($eeatScore[$key]); ?>/100</span>
+                    </div>
+                    <div class="fyn-meter-track">
+                        <div class="fyn-meter-fill fyn-meter-fill--<?php echo esc_attr($band($eeatScore[$key])); ?>"
+                             style="width: <?php echo esc_attr($eeatScore[$key]); ?>%"></div>
+                    </div>
                 </div>
-                <small><?php echo esc_html($eeatScore['expertise']); ?>/100</small>
+                <?php endforeach; ?>
             </div>
-            
-            <div style="margin-bottom: 10px;">
-                <strong><?php esc_html_e('Authoritativeness:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['authoritativeness']); ?>; width: <?php echo $eeatScore['authoritativeness']; ?>%; height: 100%; border-radius: 4px;"></div>
-                </div>
-                <small><?php echo esc_html($eeatScore['authoritativeness']); ?>/100</small>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <strong><?php esc_html_e('Trustworthiness:', 'ai-seo-client'); ?></strong>
-                <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-top: 5px;">
-                    <div style="background: <?php echo $this->getScoreColor($eeatScore['trustworthiness']); ?>; width: <?php echo $eeatScore['trustworthiness']; ?>%; height: 100%; border-radius: 4px;"></div>
-                </div>
-                <small><?php echo esc_html($eeatScore['trustworthiness']); ?>/100</small>
-            </div>
-            
-            <div style="padding: 10px; background: #f0f6fc; border-left: 3px solid #2271b1; margin-bottom: 15px;">
-                <strong><?php esc_html_e('Top Issues:', 'ai-seo-client'); ?></strong>
-                <ul style="margin: 5px 0 0; padding-left: 20px; font-size: 12px;">
+
+            <div class="fyn-note">
+                <h4><?php esc_html_e('Top Issues:', 'ai-seo-client'); ?></h4>
+                <ul>
                     <?php foreach (array_slice($eeatScore['issues'], 0, 3) as $issue): ?>
                     <li><?php echo esc_html($issue); ?></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
-            
-            <button type="button" class="button" style="width: 100%;" onclick="sseoGetEEATRecommendations(<?php echo $post->ID; ?>)">
-                <?php esc_html_e('Get AI Recommendations', 'ai-seo-client'); ?>
-            </button>
-            
-            <div id="eeat-recommendations" style="margin-top: 15px;"></div>
+
+            <div class="fyn-btnbar">
+                <button type="button" class="fyn-btn fyn-btn--primary fyn-btn--block" onclick="sseoGetEEATRecommendations(<?php echo $post->ID; ?>)">
+                    <span class="dashicons dashicons-superhero-alt"></span>
+                    <span class="fyn-btn-label"><?php esc_html_e('Get AI Recommendations', 'ai-seo-client'); ?></span>
+                </button>
+            </div>
+
+            <div id="eeat-recommendations"></div>
         </div>
         
         <script>

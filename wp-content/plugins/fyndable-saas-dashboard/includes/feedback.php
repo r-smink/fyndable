@@ -24,7 +24,7 @@ class Feedback
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'registerRoutes']);
-        add_action('admin_init', [$this, 'maybeCreateTable']);
+        // Table creation runs from Dashboard::upgradeSchema() (version-gated).
     }
 
     /**

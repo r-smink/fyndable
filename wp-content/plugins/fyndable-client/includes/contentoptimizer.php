@@ -636,79 +636,84 @@ For each missing term, suggest a specific sentence or phrase that naturally inco
     {
         $postId = (int) ($_GET['post_id'] ?? 0);
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Real-time NLP content scoring — like MarketMuse & SurferSEO. Enter a keyword to generate a topic model, then optimize your content for maximum coverage.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Content Optimizer', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Real-time NLP content scoring. Enter a keyword to generate a topic model, then optimize your content.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
 
-            <div style="display:grid; grid-template-columns:1fr 340px; gap:20px; max-width:1400px; margin-top:20px;">
+            <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;">
                 <!-- Left: Editor -->
                 <div>
-                    <div class="postbox" style="padding:20px;">
+                    <div class="fyn-card" style="margin-bottom:16px;">
                         <input type="hidden" id="opt-post-id" value="<?php echo esc_attr($postId); ?>">
-                        <div style="display:flex; gap:10px; margin-bottom:15px;">
-                            <input type="text" id="opt-keyword" class="regular-text" style="flex:1;" placeholder="<?php esc_attr_e('Target keyword...', 'ai-seo-client'); ?>">
-                            <button type="button" class="button button-primary" id="opt-analyze"><?php esc_html_e('Analyze', 'ai-seo-client'); ?></button>
+                        <div style="display:flex;gap:10px;margin-bottom:15px;">
+                            <input type="text" id="opt-keyword" class="fyn-input" style="flex:1;" placeholder="<?php esc_attr_e('Target keyword...', 'ai-seo-client'); ?>">
+                            <button type="button" class="fyn-btn fyn-btn-primary" id="opt-analyze"><?php esc_html_e('Analyze', 'ai-seo-client'); ?></button>
                         </div>
-                        <input type="text" id="opt-title" class="large-text" placeholder="<?php esc_attr_e('Content title...', 'ai-seo-client'); ?>" style="margin-bottom:10px;">
-                        <textarea id="opt-content" rows="25" class="large-text" placeholder="<?php esc_attr_e('Paste or write your content here...', 'ai-seo-client'); ?>" style="font-size:15px;line-height:1.7;"></textarea>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button type="button" class="button" id="opt-score-btn" disabled><?php esc_html_e('Score Content', 'ai-seo-client'); ?></button>
-                            <button type="button" class="button" id="opt-suggest-btn" disabled><?php esc_html_e('AI Suggest Missing Terms', 'ai-seo-client'); ?></button>
-                            <span id="opt-word-count" style="margin-left:auto;color:#666;line-height:30px;">0 words</span>
+                        <input type="text" id="opt-title" class="fyn-input" style="width:100%;margin-bottom:10px;" placeholder="<?php esc_attr_e('Content title...', 'ai-seo-client'); ?>">
+                        <textarea id="opt-content" rows="25" class="fyn-input" style="width:100%;font-size:15px;line-height:1.7;resize:vertical;" placeholder="<?php esc_attr_e('Paste or write your content here...', 'ai-seo-client'); ?>"></textarea>
+                        <div style="display:flex;gap:10px;margin-top:10px;">
+                            <button type="button" class="fyn-btn fyn-btn-outline" id="opt-score-btn" disabled><?php esc_html_e('Score Content', 'ai-seo-client'); ?></button>
+                            <button type="button" class="fyn-btn fyn-btn-outline" id="opt-suggest-btn" disabled><?php esc_html_e('AI Suggest Missing Terms', 'ai-seo-client'); ?></button>
+                            <span id="opt-word-count" style="margin-left:auto;color:var(--text-m);line-height:30px;">0 words</span>
                         </div>
                     </div>
-                    <div id="opt-suggestions" style="display:none;" class="postbox" style="padding:15px; margin-top:15px;"></div>
+                    <div id="opt-suggestions" class="fyn-card" style="display:none;margin-top:16px;"></div>
                 </div>
 
                 <!-- Right: Score Panel -->
                 <div>
-                    <div class="postbox" style="padding:20px; text-align:center;" id="opt-score-panel">
+                    <div class="fyn-card" style="text-align:center;margin-bottom:16px;" id="opt-score-panel">
                         <div id="opt-score-display" style="margin-bottom:15px;">
-                            <div style="font-size:12px;color:#666;letter-spacing:1px;"><?php esc_html_e('Content Score', 'ai-seo-client'); ?></div>
+                            <div style="font-size:12px;color:var(--text-m);letter-spacing:1px;"><?php esc_html_e('Content Score', 'ai-seo-client'); ?></div>
                             <div id="opt-score-circle" style="width:120px;height:120px;margin:15px auto;position:relative;">
                                 <svg viewBox="0 0 36 36" width="120" height="120" style="transform:rotate(-90deg);">
-                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e0e0e0" stroke-width="2.5"/>
-                                    <circle id="opt-score-arc" cx="18" cy="18" r="15.9" fill="none" stroke="#ccc" stroke-width="2.5" stroke-dasharray="0, 100" stroke-linecap="round" style="transition:all 0.8s ease;"/>
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--divide)" stroke-width="2.5"/>
+                                    <circle id="opt-score-arc" cx="18" cy="18" r="15.9" fill="none" stroke="var(--text-m)" stroke-width="2.5" stroke-dasharray="0, 100" stroke-linecap="round" style="transition:all 0.8s ease;"/>
                                 </svg>
-                                <div id="opt-score-num" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;font-weight:bold;color:#999;">—</div>
+                                <div id="opt-score-num" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;font-weight:bold;color:var(--text-m);">—</div>
                             </div>
-                            <div id="opt-score-grade" style="font-size:14px;color:#666;"></div>
+                            <div id="opt-score-grade" style="font-size:14px;color:var(--text-m);"></div>
                         </div>
                         <div id="opt-summary" style="text-align:left;font-size:13px;display:none;">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:15px;">
-                                <div style="background:#edfaef;padding:8px;border-radius:4px;text-align:center;">
-                                    <div id="opt-covered" style="font-size:20px;font-weight:bold;color:#00a32a;">0</div>
-                                    <div style="font-size:11px;color:#666;"><?php esc_html_e('Covered', 'ai-seo-client'); ?></div>
+                                <div style="background:var(--well);padding:8px;border-radius:9px;text-align:center;">
+                                    <div id="opt-covered" style="font-size:20px;font-weight:bold;color:var(--fyn-success);">0</div>
+                                    <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Covered', 'ai-seo-client'); ?></div>
                                 </div>
-                                <div style="background:#fcf0f1;padding:8px;border-radius:4px;text-align:center;">
-                                    <div id="opt-missing" style="font-size:20px;font-weight:bold;color:#d63638;">0</div>
-                                    <div style="font-size:11px;color:#666;"><?php esc_html_e('Missing', 'ai-seo-client'); ?></div>
+                                <div style="background:var(--well);padding:8px;border-radius:9px;text-align:center;">
+                                    <div id="opt-missing" style="font-size:20px;font-weight:bold;color:var(--fyn-danger);">0</div>
+                                    <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Missing', 'ai-seo-client'); ?></div>
                                 </div>
-                                <div style="background:#fcf9e8;padding:8px;border-radius:4px;text-align:center;">
-                                    <div id="opt-low" style="font-size:20px;font-weight:bold;color:#dba617;">0</div>
-                                    <div style="font-size:11px;color:#666;"><?php esc_html_e('Low', 'ai-seo-client'); ?></div>
+                                <div style="background:var(--well);padding:8px;border-radius:9px;text-align:center;">
+                                    <div id="opt-low" style="font-size:20px;font-weight:bold;color:var(--fyn-warning);">0</div>
+                                    <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Low', 'ai-seo-client'); ?></div>
                                 </div>
-                                <div style="background:#fff3cd;padding:8px;border-radius:4px;text-align:center;">
-                                    <div id="opt-overused" style="font-size:20px;font-weight:bold;color:#b45309;">0</div>
-                                    <div style="font-size:11px;color:#666;"><?php esc_html_e('Overused', 'ai-seo-client'); ?></div>
+                                <div style="background:var(--well);padding:8px;border-radius:9px;text-align:center;">
+                                    <div id="opt-overused" style="font-size:20px;font-weight:bold;color:var(--fyn-warning);">0</div>
+                                    <div style="font-size:11px;color:var(--text-m);"><?php esc_html_e('Overused', 'ai-seo-client'); ?></div>
                                 </div>
                             </div>
-                            <div id="opt-intent" style="padding:6px 10px;background:#f0f0f1;border-radius:4px;margin-bottom:10px;font-size:12px;"></div>
-                            <div id="opt-wordcount-target" style="padding:6px 10px;background:#f0f0f1;border-radius:4px;margin-bottom:10px;font-size:12px;"></div>
+                            <div id="opt-intent" style="padding:6px 10px;background:var(--well);border-radius:9px;margin-bottom:10px;font-size:12px;color:var(--text-b);"></div>
+                            <div id="opt-wordcount-target" style="padding:6px 10px;background:var(--well);border-radius:9px;margin-bottom:10px;font-size:12px;color:var(--text-b);"></div>
                         </div>
                     </div>
 
                     <!-- Term Heatmap -->
-                    <div class="postbox" style="padding:15px;margin-top:15px;max-height:500px;overflow-y:auto;" id="opt-terms-panel">
-                        <h3 style="margin-top:0;font-size:13px;"><?php esc_html_e('Topic Model Terms', 'ai-seo-client'); ?></h3>
+                    <div class="fyn-card" style="margin-bottom:16px;max-height:500px;overflow-y:auto;" id="opt-terms-panel">
+                        <div class="fyn-card-header"><span class="dashicons dashicons-chart-bar"></span><h3 class="fyn-card-title"><?php esc_html_e('Topic Model Terms', 'ai-seo-client'); ?></h3></div>
                         <div id="opt-terms-list" style="font-size:12px;">
-                            <p style="color:#999;"><?php esc_html_e('Enter a keyword and click Analyze to generate the topic model.', 'ai-seo-client'); ?></p>
+                            <p style="color:var(--text-m);"><?php esc_html_e('Enter a keyword and click Analyze to generate the topic model.', 'ai-seo-client'); ?></p>
                         </div>
                     </div>
 
                     <!-- Questions -->
-                    <div class="postbox" style="padding:15px;margin-top:15px;" id="opt-questions-panel" style="display:none;">
-                        <h3 style="margin-top:0;font-size:13px;"><?php esc_html_e('Questions to Answer', 'ai-seo-client'); ?></h3>
+                    <div class="fyn-card" id="opt-questions-panel" style="display:none;">
+                        <div class="fyn-card-header"><span class="dashicons dashicons-format-chat"></span><h3 class="fyn-card-title"><?php esc_html_e('Questions to Answer', 'ai-seo-client'); ?></h3></div>
                         <ul id="opt-questions" style="list-style:none;padding:0;font-size:12px;"></ul>
                     </div>
                 </div>

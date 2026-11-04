@@ -518,76 +518,90 @@ class SitemapGenerator
         $internalTypes = ['attachment', 'aiseo_note', 'aiseo_prompt', 'aiseo_calendar'];
         $allTaxonomies = get_taxonomies(['public' => true], 'objects');
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Sitemap Settings', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Sitemap', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Sitemap Settings', 'ai-seo-client'); ?></h1>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <a href="<?php echo esc_url(home_url('/sitemap.xml')); ?>" target="_blank" class="fyn-btn fyn-btn-outline" style="font-size:12px;">
+                        <span class="dashicons dashicons-external" style="font-size:14px;line-height:inherit;"></span>
+                        <?php esc_html_e('View Sitemap', 'ai-seo-client'); ?>
+                    </a>
+                </div>
+            </div>
+
             <form method="post" action="options.php">
                 <?php settings_fields('sseo_sitemap_settings'); ?>
 
-                <h2><?php esc_html_e('Post Types in Sitemap', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('Select which post types to include in the sitemap.', 'ai-seo-client'); ?></p>
-                <input type="hidden" name="sseo_sitemap_post_types[]" value="">
-                <table class="form-table">
-                    <?php foreach ($allPostTypes as $pt): ?>
-                        <?php if (in_array($pt->name, $internalTypes)) continue; ?>
-                        <tr>
-                            <th scope="row"><label for="pt-<?php echo esc_attr($pt->name); ?>"><?php echo esc_html($pt->label); ?></label></th>
-                            <td>
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-admin-post"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Post Types in Sitemap', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('Select which post types to include in the sitemap.', 'ai-seo-client'); ?></p>
+                    <input type="hidden" name="sseo_sitemap_post_types[]" value="">
+                    <div style="display:flex;flex-wrap:wrap;gap:4px 20px;">
+                        <?php foreach ($allPostTypes as $pt): ?>
+                            <?php if (in_array($pt->name, $internalTypes)) continue; ?>
+                            <label style="font-size:13px;color:var(--text-b);min-width:180px;">
                                 <input type="checkbox" name="sseo_sitemap_post_types[]" id="pt-<?php echo esc_attr($pt->name); ?>" value="<?php echo esc_attr($pt->name); ?>" <?php checked(in_array($pt->name, $enabledPostTypes) || ($postTypeDefaultsActive && !in_array($pt->name, ['attachment', 'aiseo_note', 'aiseo_prompt', 'aiseo_calendar']))); ?>>
-                                <code><?php echo esc_html($pt->name); ?></code>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
+                                <?php echo esc_html($pt->label); ?> <code style="font-size:11px;"><?php echo esc_html($pt->name); ?></code>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
-                <h2><?php esc_html_e('Taxonomies in Sitemap', 'ai-seo-client'); ?></h2>
-                <p><?php esc_html_e('Select which taxonomies to include as separate sitemaps.', 'ai-seo-client'); ?></p>
-                <input type="hidden" name="sseo_sitemap_taxonomies[]" value="">
-                <table class="form-table">
-                    <?php foreach ($allTaxonomies as $tax): ?>
-                        <tr>
-                            <th scope="row"><label for="tax-<?php echo esc_attr($tax->name); ?>"><?php echo esc_html($tax->label); ?></label></th>
-                            <td>
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-tag"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Taxonomies in Sitemap', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-m);margin:0 0 12px;"><?php esc_html_e('Select which taxonomies to include as separate sitemaps.', 'ai-seo-client'); ?></p>
+                    <input type="hidden" name="sseo_sitemap_taxonomies[]" value="">
+                    <div style="display:flex;flex-wrap:wrap;gap:4px 20px;">
+                        <?php foreach ($allTaxonomies as $tax): ?>
+                            <label style="font-size:13px;color:var(--text-b);min-width:180px;">
                                 <input type="checkbox" name="sseo_sitemap_taxonomies[]" id="tax-<?php echo esc_attr($tax->name); ?>" value="<?php echo esc_attr($tax->name); ?>" <?php checked(in_array($tax->name, $enabledTaxonomies) || ($taxonomyDefaultsActive && in_array($tax->name, ['category', 'post_tag']))); ?>>
-                                <code><?php echo esc_html($tax->name); ?></code>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
+                                <?php echo esc_html($tax->label); ?> <code style="font-size:11px;"><?php echo esc_html($tax->name); ?></code>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
-                <h2><?php esc_html_e('Sitemap Health Check URL', 'ai-seo-client'); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="sseo_sitemap_custom_url"><?php esc_html_e('Custom Sitemap URL', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <input type="url" name="sseo_sitemap_custom_url" id="sseo_sitemap_custom_url" value="<?php echo esc_attr($customSitemapUrl); ?>" class="regular-text" placeholder="https://example.com/sitemap.xml">
-                            <p class="description"><?php esc_html_e('Leave empty to use the Fyndable generated sitemap. Fill in your own sitemap URL if you use an external sitemap for health checks.', 'ai-seo-client'); ?></p>
-                        </td>
-                    </tr>
-                </table>
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-admin-settings"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Additional Settings', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <div style="display:grid;grid-template-columns:180px 1fr;gap:12px 20px;align-items:center;">
+                        <label for="sseo_sitemap_custom_url" style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Custom Sitemap URL', 'ai-seo-client'); ?></label>
+                        <div>
+                            <input type="url" name="sseo_sitemap_custom_url" id="sseo_sitemap_custom_url" class="fyn-input" value="<?php echo esc_attr($customSitemapUrl); ?>" placeholder="https://example.com/sitemap.xml" style="width:100%;max-width:400px;">
+                            <p style="font-size:12px;color:var(--text-m);margin:4px 0 0;"><?php esc_html_e('Leave empty to use the Fyndable generated sitemap. Fill in your own sitemap URL if you use an external sitemap for health checks.', 'ai-seo-client'); ?></p>
+                        </div>
 
-                <h2><?php esc_html_e('Exclude Posts/Pages', 'ai-seo-client'); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="sseo_sitemap_exclude_ids"><?php esc_html_e('Excluded IDs', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <input type="text" name="sseo_sitemap_exclude_ids" id="sseo_sitemap_exclude_ids" value="<?php echo esc_attr($excludeIds); ?>" class="regular-text">
-                            <p class="description"><?php esc_html_e('Comma-separated list of post/page IDs to exclude from the sitemap.', 'ai-seo-client'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="sseo_sitemap_ping_engines"><?php esc_html_e('Ping Search Engines', 'ai-seo-client'); ?></label></th>
-                        <td>
-                            <input type="checkbox" name="sseo_sitemap_ping_engines" id="sseo_sitemap_ping_engines" value="1" <?php checked($pingEngines, true); ?>>
-                            <p class="description"><?php esc_html_e('Automatically ping Google and Bing when sitemap is updated.', 'ai-seo-client'); ?></p>
-                        </td>
-                    </tr>
-                </table>
+                        <label for="sseo_sitemap_exclude_ids" style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Excluded IDs', 'ai-seo-client'); ?></label>
+                        <div>
+                            <input type="text" name="sseo_sitemap_exclude_ids" id="sseo_sitemap_exclude_ids" class="fyn-input" value="<?php echo esc_attr($excludeIds); ?>" style="width:100%;max-width:400px;">
+                            <p style="font-size:12px;color:var(--text-m);margin:4px 0 0;"><?php esc_html_e('Comma-separated list of post/page IDs to exclude from the sitemap.', 'ai-seo-client'); ?></p>
+                        </div>
 
-                <?php submit_button(); ?>
+                        <label for="sseo_sitemap_ping_engines" style="font-size:13px;font-weight:600;color:var(--text-h);"><?php esc_html_e('Ping Search Engines', 'ai-seo-client'); ?></label>
+                        <div>
+                            <label style="font-size:13px;color:var(--text-b);">
+                                <input type="checkbox" name="sseo_sitemap_ping_engines" id="sseo_sitemap_ping_engines" value="1" <?php checked($pingEngines, true); ?>>
+                                <?php esc_html_e('Automatically ping Google and Bing when sitemap is updated.', 'ai-seo-client'); ?>
+                            </label>
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <button type="submit" class="fyn-btn fyn-btn-primary"><?php esc_html_e('Save Settings', 'ai-seo-client'); ?></button>
+                    </div>
+                </div>
             </form>
-
-            <h2><?php esc_html_e('Sitemap URLs', 'ai-seo-client'); ?></h2>
-            <p><strong><?php esc_html_e('Main sitemap index:', 'ai-seo-client'); ?></strong> <a href="<?php echo esc_url(home_url('/sitemap.xml')); ?>" target="_blank"><?php echo esc_url(home_url('/sitemap.xml')); ?></a></p>
         </div>
         <?php
     }

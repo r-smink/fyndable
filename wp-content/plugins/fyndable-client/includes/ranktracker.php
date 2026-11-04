@@ -602,67 +602,68 @@ class RankTracker
     public function renderPage(): void
     {
         ?>
-        <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: 0; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-header p { margin: 10px 0 0 0; opacity: 0.8; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('Keyword Rank Tracker', 'ai-seo-client'); ?></h1>
-                <p><?php esc_html_e('Track your keyword positions in Google search results. Positions are checked daily.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+
+            <!-- Page header -->
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Keyword Rank Tracker', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Track your keyword positions in Google search results. Positions are checked daily.', 'ai-seo-client'); ?></p>
+                </div>
+                <div class="fyn-page-header-actions">
+                    <button type="button" class="fyn-btn fyn-btn-outline" id="rank-check-all">
+                        <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Check All Now', 'ai-seo-client'); ?>
+                    </button>
+                    <span class="spinner" id="rank-spinner" style="float:none;"></span>
+                </div>
             </div>
 
-            <div class="sseo-ai-content">
-                <div style="max-width:1100px;">
+            <!-- Tabs -->
+            <div class="fyn-tabs" style="margin-bottom:20px;">
+                <button type="button" class="fyn-tab rank-tab active" data-tab="rank-tracker-panel"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></button>
+                <?php if ($this->localSerp): ?>
+                    <button type="button" class="fyn-tab rank-tab" data-tab="rank-local-panel"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
+                <?php endif; ?>
+                <button type="button" class="fyn-tab rank-tab" data-tab="rank-cannibal-panel"><?php esc_html_e('Cannibalization', 'ai-seo-client'); ?></button>
+            </div>
 
-                <!-- Tabs -->
-                <div style="margin-bottom:20px;">
-                    <button type="button" class="button rank-tab active" data-tab="rank-tracker-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Rank Tracker', 'ai-seo-client'); ?></button>
-                    <?php if ($this->localSerp): ?>
-                        <button type="button" class="button rank-tab" data-tab="rank-local-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Local SERP', 'ai-seo-client'); ?></button>
-                    <?php endif; ?>
-                    <button type="button" class="button rank-tab" data-tab="rank-cannibal-panel" style="border-radius:6px 6px 0 0;border-bottom:none;"><?php esc_html_e('Cannibalization', 'ai-seo-client'); ?></button>
-                </div>
-
-                <div id="rank-tracker-panel" class="rank-panel" style="display:block;">
+            <div id="rank-tracker-panel" class="rank-panel" style="display:block;">
                 <!-- Add Keyword Form -->
-                <div class="sseo-ai-dashboard-card">
-                    <h2><?php esc_html_e('Add Keyword to Track', 'ai-seo-client'); ?></h2>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                        <div>
-                            <label><strong><?php esc_html_e('Keyword', 'ai-seo-client'); ?></strong></label><br>
-                            <input type="text" id="rank-keyword" placeholder="<?php esc_attr_e('e.g. best seo plugin', 'ai-seo-client'); ?>" style="width:250px;">
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-plus-alt2"></span>
+                        <h3 class="fyn-card-title"><?php esc_html_e('Add Keyword to Track', 'ai-seo-client'); ?></h3>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                        <div style="flex:1;min-width:200px;max-width:280px;">
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Keyword', 'ai-seo-client'); ?></label>
+                            <input type="text" id="rank-keyword" class="fyn-input" placeholder="<?php esc_attr_e('e.g. best seo plugin', 'ai-seo-client'); ?>">
                         </div>
-                        <div>
-                            <label><strong><?php esc_html_e('Target URL', 'ai-seo-client'); ?></strong></label><br>
-                            <input type="url" id="rank-url" placeholder="<?php echo esc_attr(home_url('/')); ?>" style="width:300px;">
+                        <div style="flex:1;min-width:200px;max-width:320px;">
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Target URL', 'ai-seo-client'); ?></label>
+                            <input type="url" id="rank-url" class="fyn-input" placeholder="<?php echo esc_attr(home_url('/')); ?>">
                         </div>
-                        <div>
-                            <label><strong><?php esc_html_e('Country', 'ai-seo-client'); ?></strong></label><br>
-                            <select id="rank-country">
-                                <option value="nl">🇳🇱 NL</option>
-                                <option value="be">🇧🇪 BE</option>
-                                <option value="us">🇺🇸 US</option>
-                                <option value="gb">🇬🇧 GB</option>
-                                <option value="de">🇩🇪 DE</option>
-                                <option value="fr">🇫🇷 FR</option>
-                                <option value="es">🇪🇸 ES</option>
+                        <div style="min-width:100px;">
+                            <label style="font-size:12px;font-weight:600;color:var(--text-m);display:block;margin-bottom:4px;"><?php esc_html_e('Country', 'ai-seo-client'); ?></label>
+                            <select id="rank-country" class="fyn-input" style="padding:9px 10px;">
+                                <option value="nl">NL</option>
+                                <option value="be">BE</option>
+                                <option value="us">US</option>
+                                <option value="gb">GB</option>
+                                <option value="de">DE</option>
+                                <option value="fr">FR</option>
+                                <option value="es">ES</option>
                             </select>
                         </div>
-                        <button type="button" class="button button-primary" id="rank-add"><?php esc_html_e('Add Keyword', 'ai-seo-client'); ?></button>
-                        <button type="button" class="button" id="rank-check-all"><?php esc_html_e('Check All Now', 'ai-seo-client'); ?></button>
-                        <span class="spinner" id="rank-spinner" style="float:none;"></span>
+                        <button type="button" class="fyn-btn fyn-btn-primary" id="rank-add"><?php esc_html_e('Add Keyword', 'ai-seo-client'); ?></button>
                     </div>
                 </div>
 
                 <!-- Keywords Table -->
-                <div class="sseo-ai-dashboard-card">
-                    <table class="wp-list-table widefat fixed striped" id="rank-table">
+                <div class="fyn-card" style="margin-bottom:20px;">
+                    <table class="fyn-table" id="rank-table">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Keyword', 'ai-seo-client'); ?></th>
@@ -677,44 +678,48 @@ class RankTracker
                             </tr>
                         </thead>
                         <tbody id="rank-table-body">
-                            <tr><td colspan="9" style="text-align:center;color:#999;"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></td></tr>
+                            <tr><td colspan="9" style="text-align:center;color:var(--text-m);"><?php esc_html_e('Loading...', 'ai-seo-client'); ?></td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- History Chart (shown when clicking a keyword) -->
-                <div id="rank-history-panel" class="sseo-ai-dashboard-card" style="display:none;">
-                    <h2 id="rank-history-title"></h2>
-                    <div id="rank-history-chart" style="height:250px; position:relative;"></div>
-                </div>
-                </div>
-
-                <?php if ($this->localSerp): ?>
-                    <div id="rank-local-panel" class="rank-panel" style="display:none;">
-                        <?php $this->localSerp->renderPanel(); ?>
+                <div id="rank-history-panel" class="fyn-card" style="display:none;margin-bottom:20px;">
+                    <div class="fyn-card-header">
+                        <span class="dashicons dashicons-chart-line"></span>
+                        <h3 class="fyn-card-title" id="rank-history-title"></h3>
                     </div>
-                <?php endif; ?>
+                    <div id="rank-history-chart" style="height:250px;position:relative;"></div>
+                </div>
+            </div>
 
-                <div id="rank-cannibal-panel" class="rank-panel" style="display:none;">
-                    <div class="sseo-ai-dashboard-card">
-                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                            <h2 style="margin:0;"><?php esc_html_e('Cannibalization Dashboard', 'ai-seo-client'); ?></h2>
-                            <div>
-                                <span class="spinner" id="cannibal-spinner" style="float:none;"></span>
-                                <button type="button" class="button button-primary" id="cannibal-rescan"><?php esc_html_e('Rescan', 'ai-seo-client'); ?></button>
-                            </div>
+            <?php if ($this->localSerp): ?>
+                <div id="rank-local-panel" class="rank-panel" style="display:none;">
+                    <?php $this->localSerp->renderPanel(); ?>
+                </div>
+            <?php endif; ?>
+
+            <div id="rank-cannibal-panel" class="rank-panel" style="display:none;">
+                <div class="fyn-card">
+                    <div class="fyn-card-header" style="justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="dashicons dashicons-warning"></span>
+                            <h3 class="fyn-card-title"><?php esc_html_e('Cannibalization Dashboard', 'ai-seo-client'); ?></h3>
                         </div>
-                        <p style="color:#6b7280;">
-                            <?php esc_html_e('Detects posts and pages competing for the same keyword — a shared focus keyphrase, or multiple titles matching a tracked keyword. Merge, differentiate or redirect to fix.', 'ai-seo-client'); ?>
-                        </p>
-                        <div id="cannibal-summary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
-                        <div id="cannibal-scanned-at" style="font-size:12px;color:#9ca3af;margin-bottom:16px;"></div>
-                        <div id="cannibal-groups"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="spinner" id="cannibal-spinner" style="float:none;"></span>
+                            <button type="button" class="fyn-btn fyn-btn-primary" id="cannibal-rescan"><?php esc_html_e('Rescan', 'ai-seo-client'); ?></button>
+                        </div>
                     </div>
+                    <p style="color:var(--text-m);font-size:13px;">
+                        <?php esc_html_e('Detects posts and pages competing for the same keyword — a shared focus keyphrase, or multiple titles matching a tracked keyword. Merge, differentiate or redirect to fix.', 'ai-seo-client'); ?>
+                    </p>
+                    <div id="cannibal-summary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
+                    <div id="cannibal-scanned-at" style="font-size:12px;color:var(--text-m);margin-bottom:16px;"></div>
+                    <div id="cannibal-groups"></div>
                 </div>
+            </div>
 
-            </div>
-            </div>
         </div>
 
         <script>

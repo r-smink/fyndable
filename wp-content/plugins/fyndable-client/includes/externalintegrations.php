@@ -119,6 +119,9 @@ class ExternalIntegrations
         // Ahrefs
         register_setting('sseo_ai_integrations', 'sseo_ai_ahrefs_api_key');
 
+        // Semrush
+        register_setting('sseo_ai_integrations', 'sseo_ai_semrush_api_key');
+
         // DataForSEO
         register_setting('sseo_ai_integrations', 'sseo_ai_dataforseo_api_key');
 
@@ -210,6 +213,9 @@ class ExternalIntegrations
         // Ahrefs
         $ahrefsApiKey = get_option('sseo_ai_ahrefs_api_key', '');
 
+        // Semrush
+        $semrushApiKey = get_option('sseo_ai_semrush_api_key', '');
+
         // DataForSEO
         $dataforseoApiKey = get_option('sseo_ai_dataforseo_api_key', '');
         $backlinkProvider = get_option('sseo_ai_backlink_provider', 'dataforseo');
@@ -238,28 +244,21 @@ class ExternalIntegrations
         $directIndexLog = array_slice($directIndex->getLog(), 0, 10);
         
         ?>
-        <style>
-            .wrap.sseo-ai-modern { margin: 0; padding: 0; font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .sseo-ai-header { background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); color: #fff; padding: 30px 40px; margin: -10px -20px 0 -20px; }
-            .sseo-ai-header h1 { font-size: 28px; font-weight: 700; color: #fff; margin: 0; }
-            .sseo-ai-content { padding: 40px; background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); min-height: calc(100vh - 150px); }
-            .sseo-ai-dashboard-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); margin-bottom: 30px; }
-            .sseo-ai-dashboard-card h2 { margin-top: 0; color: #111827; font-size: 20px; font-weight: 600; }
-            .sseo-two-columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
-            @media (max-width: 1024px) { .sseo-two-columns { grid-template-columns: 1fr; } }
-        </style>
-        <div class="wrap sseo-ai-modern">
-            <div class="sseo-ai-header">
-                <h1><?php esc_html_e('External Integrations', 'ai-seo-client'); ?></h1>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Integrations', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('External Integrations', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Connect external services and configure notifications.', 'ai-seo-client'); ?></p>
+                </div>
             </div>
-            
-            <div class="sseo-ai-content">
+            <div>
                 <form method="post" action="options.php">
                     <?php settings_fields('sseo_ai_integrations'); ?>
                     
-                    <div class="sseo-two-columns">
+                    <div class="fyn-grid-2">
                         <!-- Slack Integration -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Slack Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
@@ -318,16 +317,16 @@ class ExternalIntegrations
                         </tr>
                     </table>
                     
-                    <button type="button" class="button" onclick="sseoTestSlack()">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoTestSlack()">
                         <?php esc_html_e('Test Slack Connection', 'ai-seo-client'); ?>
                     </button>
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                     </div>
                         </div>
                         
                         <!-- Zapier / Make.com -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Zapier / Make.com Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
@@ -362,7 +361,7 @@ class ExternalIntegrations
                     
                     <div id="custom-webhooks">
                         <?php foreach ($customWebhooks as $index => $webhook): ?>
-                        <div style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #2271b1;">
+                        <div style="margin: 10px 0; padding: 10px; background: var(--well); border-left: 3px solid var(--fyn-purple); border-radius: 0 9px 9px 0;">
                             <input type="text" name="sseo_ai_custom_webhooks[<?php echo $index; ?>][name]" 
                                    value="<?php echo esc_attr($webhook['name']); ?>" 
                                    placeholder="<?php esc_attr_e('Webhook Name', 'ai-seo-client'); ?>" 
@@ -380,11 +379,11 @@ class ExternalIntegrations
                         <?php endforeach; ?>
                     </div>
                     
-                    <button type="button" class="button" onclick="sseoAddCustomWebhook()">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoAddCustomWebhook()">
                         <?php esc_html_e('Add Custom Webhook', 'ai-seo-client'); ?>
                     </button>
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                     </div>
                         </div>
                     </div>
@@ -392,7 +391,7 @@ class ExternalIntegrations
                     <!-- Right Column -->
                     <div>
                         <!-- Email Reports -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Email Reports', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
@@ -446,16 +445,16 @@ class ExternalIntegrations
                         </tr>
                     </table>
                     
-                    <button type="button" class="button" onclick="sseoSendTestReport()">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoSendTestReport()">
                         <?php esc_html_e('Send Test Report', 'ai-seo-client'); ?>
                     </button>
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                     </div>
                         </div>
                         
                         <!-- Google Drive Export -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Google Drive Export', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
@@ -483,16 +482,16 @@ class ExternalIntegrations
                         </tr>
                     </table>
                     
-                    <button type="button" class="button" onclick="sseoExportToGDrive()">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoExportToGDrive()">
                         <?php esc_html_e('Export Now', 'ai-seo-client'); ?>
                     </button>
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                     </div>
                         </div>
                         
                         <!-- Google Services (Search Console + Analytics 4) -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Google Services (Search Console & Analytics 4)', 'ai-seo-client'); ?></h2>
                             <p class="description">
                                 <?php esc_html_e('Connect your Google account once to access Search Console and Google Analytics 4 data. A single login grants access to all services.', 'ai-seo-client'); ?>
@@ -521,17 +520,17 @@ class ExternalIntegrations
                             <span class="notice notice-success inline" style="margin: 0; padding: 5px 10px;">
                                 ✓ <?php esc_html_e('Connected to Google', 'ai-seo-client'); ?>
                             </span>
-                            <button type="button" class="button" onclick="sseoDisconnectGSC()">
+                            <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoDisconnectGSC()">
                                 <?php esc_html_e('Disconnect', 'ai-seo-client'); ?>
                             </button>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="button">
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-gsc')); ?>" class="fyn-btn fyn-btn-outline">
                                 <?php esc_html_e('Search Console Dashboard', 'ai-seo-client'); ?>
                             </a>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-google-data')); ?>" class="button button-primary">
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-google-data')); ?>" class="fyn-btn fyn-btn-primary">
                                 <?php esc_html_e('Google Data Dashboard', 'ai-seo-client'); ?>
                             </a>
                         <?php else: ?>
-                            <button type="button" class="button button-primary" id="sseo-google-connect-btn" onclick="sseoConnectGoogle()">
+                            <button type="button" class="fyn-btn fyn-btn-primary" id="sseo-google-connect-btn" onclick="sseoConnectGoogle()">
                                 <?php esc_html_e('Connect with Google', 'ai-seo-client'); ?>
                             </button>
                         <?php endif; ?>
@@ -628,12 +627,12 @@ class ExternalIntegrations
                     <?php endif; ?>
 
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                     </div>
                         </div>
 
                         <!-- Direct Index (Google Indexing API) -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Direct Index', 'ai-seo-client'); ?></h2>
 
                             <?php if ($directIndexConnected && $directIndexHasScope): ?>
@@ -687,7 +686,7 @@ class ExternalIntegrations
 
                             <?php if (!empty($directIndexLog)): ?>
                                 <h3 style="margin-top: 25px;"><?php esc_html_e('Recent Submissions', 'ai-seo-client'); ?></h3>
-                                <table class="wp-list-table widefat fixed striped" style="font-size: 12px;">
+                                <table class="fyn-table">
                                     <thead>
                                         <tr>
                                             <th><?php esc_html_e('Time', 'ai-seo-client'); ?></th>
@@ -716,12 +715,12 @@ class ExternalIntegrations
                             <?php endif; ?>
 
                             <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                                <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                                <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                             </div>
                         </div>
 
                         <!-- Notion Integration -->
-                        <div class="sseo-ai-dashboard-card">
+                        <div class="fyn-card">
                             <h2><?php esc_html_e('Notion Integration', 'ai-seo-client'); ?></h2>
                     
                     <table class="form-table">
@@ -752,108 +751,114 @@ class ExternalIntegrations
                         </tr>
                     </table>
                     
-                    <button type="button" class="button" onclick="sseoSyncToNotion()">
+                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoSyncToNotion()">
                         <?php esc_html_e('Sync to Notion', 'ai-seo-client'); ?>
                     </button>
                     <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
+                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
                     </div>
                 </div>
 
-                        <!-- SE Ranking Integration -->
-                        <div class="sseo-ai-dashboard-card">
-                            <h2><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></h2>
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row">
-                                        <label for="seranking_api_key"><?php esc_html_e('SE Ranking API Key', 'ai-seo-client'); ?></label>
-                                    </th>
-                                    <td>
-                                        <input type="password" id="seranking_api_key" name="sseo_ai_seranking_api_key"
-                                               value="<?php echo esc_attr($seRankingApiKey); ?>" class="regular-text">
-                                        <p class="description">
-                                            <?php esc_html_e('Get your API key from SE Ranking > API.', 'ai-seo-client'); ?>
-                                            <a href="https://seranking.com/api.html" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php if ($seRankingApiKey): ?>
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-data-dashboard')); ?>" class="button button-primary">
-                                    <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
-                                </a>
-                            <?php endif; ?>
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
-                    </div>
-                        </div>
+                        <!-- SERP & Backlink APIs (tabbed) -->
+                        <div class="fyn-card" style="padding:0;">
+                            <div style="padding:20px 24px 0;">
+                                <h2 style="margin:0 0 4px;"><?php esc_html_e('SERP & Backlink APIs', 'ai-seo-client'); ?></h2>
+                                <p class="description" style="margin:0 0 16px;"><?php esc_html_e('Configure your preferred SERP data provider. Only one is needed.', 'ai-seo-client'); ?></p>
+                            </div>
+                            <div class="fyn-serp-tabs" style="display:flex;gap:0;border-bottom:2px solid var(--card-border,#e2e8f0);padding:0 24px;">
+                                <button type="button" class="fyn-serp-tab active" onclick="switchSerpTab('dataforseo')" data-tab="dataforseo" style="padding:10px 18px;border:none;background:none;font-weight:600;font-size:13px;cursor:pointer;border-bottom:2px solid var(--fyn-purple,#8F39AC);margin-bottom:-2px;color:var(--fyn-purple,#8F39AC);">DataForSEO</button>
+                                <button type="button" class="fyn-serp-tab" onclick="switchSerpTab('semrush')" data-tab="semrush" style="padding:10px 18px;border:none;background:none;font-weight:600;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-m,#6b7280);">Semrush</button>
+                                <button type="button" class="fyn-serp-tab" onclick="switchSerpTab('seranking')" data-tab="seranking" style="padding:10px 18px;border:none;background:none;font-weight:600;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-m,#6b7280);">SE Ranking</button>
+                                <button type="button" class="fyn-serp-tab" onclick="switchSerpTab('ahrefs')" data-tab="ahrefs" style="padding:10px 18px;border:none;background:none;font-weight:600;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-m,#6b7280);">Ahrefs</button>
+                            </div>
 
-                        <!-- Ahrefs Integration -->
-                        <div class="sseo-ai-dashboard-card">
-                            <h2><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></h2>
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row">
-                                        <label for="ahrefs_api_key"><?php esc_html_e('Ahrefs API Key', 'ai-seo-client'); ?></label>
-                                    </th>
-                                    <td>
-                                        <input type="password" id="ahrefs_api_key" name="sseo_ai_ahrefs_api_key"
-                                               value="<?php echo esc_attr($ahrefsApiKey); ?>" class="regular-text">
-                                        <p class="description">
-                                            <?php esc_html_e('Get your API key from Ahrefs APIv3 dashboard.', 'ai-seo-client'); ?>
-                                            <a href="https://ahrefs.com/api/" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <?php if ($ahrefsApiKey): ?>
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-data-dashboard')); ?>" class="button button-primary">
-                                    <?php esc_html_e('View Dashboard', 'ai-seo-client'); ?>
-                                </a>
-                            <?php endif; ?>
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
-                    </div>
-                        </div>
+                            <!-- DataForSEO tab -->
+                            <div class="fyn-serp-panel" data-panel="dataforseo" style="padding:24px;">
+                                <table class="form-table" style="margin:0;">
+                                    <tr>
+                                        <th scope="row"><?php esc_html_e('DataForSEO API', 'ai-seo-client'); ?></th>
+                                        <td>
+                                            <p style="margin:0;"><span class="dashicons dashicons-yes-alt" style="color:#00a32a;vertical-align:middle;"></span> <?php esc_html_e('Managed centrally via the Fyndable Portal.', 'ai-seo-client'); ?></p>
+                                            <p class="description"><?php esc_html_e('DataForSEO credentials are configured in the Portal settings. Backlink and SERP data is fetched automatically — no client-side API key required.', 'ai-seo-client'); ?></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
 
-                        <!-- DataForSEO Integration -->
-                        <div class="sseo-ai-dashboard-card">
-                            <h2><?php esc_html_e('DataForSEO Backlinks', 'ai-seo-client'); ?></h2>
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row">
-                                        <?php esc_html_e('DataForSEO API Credentials', 'ai-seo-client'); ?>
-                                    </th>
-                                    <td>
-                                        <p style="margin: 0;">
-                                            <span class="dashicons dashicons-yes-alt" style="color: #00a32a; vertical-align: middle;"></span>
-                                            <?php esc_html_e('Managed centrally via the Fyndable Portal.', 'ai-seo-client'); ?>
-                                        </p>
-                                        <p class="description">
-                                            <?php esc_html_e('DataForSEO credentials are configured in the Portal/SaaS Dashboard settings. Backlink data is fetched automatically through the Portal proxy — no client-side API key required.', 'ai-seo-client'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">
-                                        <label for="backlink_provider"><?php esc_html_e('Preferred Backlink Provider', 'ai-seo-client'); ?></label>
-                                    </th>
-                                    <td>
-                                        <select id="backlink_provider" name="sseo_ai_backlink_provider">
-                                            <option value="dataforseo" <?php selected($backlinkProvider, 'dataforseo'); ?>><?php esc_html_e('DataForSEO (via Portal)', 'ai-seo-client'); ?></option>
-                                            <option value="ahrefs" <?php selected($backlinkProvider, 'ahrefs'); ?>><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></option>
-                                            <option value="seranking" <?php selected($backlinkProvider, 'seranking'); ?>><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></option>
-                                            <option value="semrush" <?php selected($backlinkProvider, 'semrush'); ?>><?php esc_html_e('Semrush', 'ai-seo-client'); ?></option>
-                                        </select>
-                                        <p class="description">
-                                            <?php esc_html_e('DataForSEO runs through the Portal proxy. Ahrefs, SE Ranking and Semrush use your own API keys configured below.', 'ai-seo-client'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Integration Settings', 'ai-seo-client'), 'primary', 'submit', false, ['style' => 'background: linear-gradient(135deg, #379fd3 0%, #8f39ac 100%); border: none; color: #fff; padding: 8px 24px; font-weight: 600; border-radius: 6px;']); ?>
-                    </div>
+                            <!-- Semrush tab -->
+                            <div class="fyn-serp-panel" data-panel="semrush" style="padding:24px;display:none;">
+                                <table class="form-table" style="margin:0;">
+                                    <tr>
+                                        <th scope="row"><label for="semrush_api_key"><?php esc_html_e('Semrush API Key', 'ai-seo-client'); ?></label></th>
+                                        <td>
+                                            <input type="password" id="semrush_api_key" name="sseo_ai_semrush_api_key" value="<?php echo esc_attr($semrushApiKey); ?>" class="regular-text">
+                                            <p class="description"><?php esc_html_e('Get your API key from Semrush > Dashboard > API.', 'ai-seo-client'); ?> <a href="https://www.semrush.com/api/" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- SE Ranking tab -->
+                            <div class="fyn-serp-panel" data-panel="seranking" style="padding:24px;display:none;">
+                                <table class="form-table" style="margin:0;">
+                                    <tr>
+                                        <th scope="row"><label for="seranking_api_key"><?php esc_html_e('SE Ranking API Key', 'ai-seo-client'); ?></label></th>
+                                        <td>
+                                            <input type="password" id="seranking_api_key" name="sseo_ai_seranking_api_key" value="<?php echo esc_attr($seRankingApiKey); ?>" class="regular-text">
+                                            <p class="description"><?php esc_html_e('Get your API key from SE Ranking > API.', 'ai-seo-client'); ?> <a href="https://seranking.com/api.html" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Ahrefs tab -->
+                            <div class="fyn-serp-panel" data-panel="ahrefs" style="padding:24px;display:none;">
+                                <table class="form-table" style="margin:0;">
+                                    <tr>
+                                        <th scope="row"><label for="ahrefs_api_key"><?php esc_html_e('Ahrefs API Key', 'ai-seo-client'); ?></label></th>
+                                        <td>
+                                            <input type="password" id="ahrefs_api_key" name="sseo_ai_ahrefs_api_key" value="<?php echo esc_attr($ahrefsApiKey); ?>" class="regular-text">
+                                            <p class="description"><?php esc_html_e('Get your API key from Ahrefs APIv3 dashboard.', 'ai-seo-client'); ?> <a href="https://ahrefs.com/api/" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Preferred provider (shared across tabs) -->
+                            <div style="padding:0 24px 24px;border-top:1px solid var(--card-border,#e2e8f0);">
+                                <table class="form-table" style="margin:0;">
+                                    <tr>
+                                        <th scope="row"><label for="backlink_provider"><?php esc_html_e('Preferred Provider', 'ai-seo-client'); ?></label></th>
+                                        <td>
+                                            <select id="backlink_provider" name="sseo_ai_backlink_provider">
+                                                <option value="dataforseo" <?php selected($backlinkProvider, 'dataforseo'); ?>><?php esc_html_e('DataForSEO (via Portal)', 'ai-seo-client'); ?></option>
+                                                <option value="semrush" <?php selected($backlinkProvider, 'semrush'); ?>><?php esc_html_e('Semrush', 'ai-seo-client'); ?></option>
+                                                <option value="seranking" <?php selected($backlinkProvider, 'seranking'); ?>><?php esc_html_e('SE Ranking', 'ai-seo-client'); ?></option>
+                                                <option value="ahrefs" <?php selected($backlinkProvider, 'ahrefs'); ?>><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></option>
+                                            </select>
+                                            <p class="description"><?php esc_html_e('DataForSEO runs through the Portal proxy. Others use your own API keys configured above.', 'ai-seo-client'); ?></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div style="margin-top:20px;padding-top:20px;border-top:1px solid #e2e8f0;">
+                                    <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                        function switchSerpTab(tab) {
+                            document.querySelectorAll('.fyn-serp-tab').forEach(function(t) {
+                                t.classList.remove('active');
+                                t.style.borderBottomColor = 'transparent';
+                                t.style.color = 'var(--text-m, #6b7280)';
+                            });
+                            document.querySelectorAll('.fyn-serp-panel').forEach(function(p) { p.style.display = 'none'; });
+                            var btn = document.querySelector('.fyn-serp-tab[data-tab="' + tab + '"]');
+                            var panel = document.querySelector('.fyn-serp-panel[data-panel="' + tab + '"]');
+                            if (btn) { btn.classList.add('active'); btn.style.borderBottomColor = 'var(--fyn-purple, #8F39AC)'; btn.style.color = 'var(--fyn-purple, #8F39AC)'; }
+                            if (panel) { panel.style.display = 'block'; }
+                        }
+                        </script>
                         </div>
                 
                         </div>
@@ -869,7 +874,7 @@ class ExternalIntegrations
         function sseoAddCustomWebhook() {
             const container = document.getElementById('custom-webhooks');
             const div = document.createElement('div');
-            div.style.cssText = 'margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #2271b1;';
+            div.style.cssText = 'margin: 10px 0; padding: 10px; background: var(--well); border-left: 3px solid var(--fyn-purple); border-radius: 0 9px 9px 0;';
             div.innerHTML = `
                 <input type="text" name="sseo_ai_custom_webhooks[${webhookIndex}][name]" 
                        placeholder="<?php esc_attr_e('Webhook Name', 'ai-seo-client'); ?>" 

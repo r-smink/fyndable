@@ -20,10 +20,7 @@ class SaaSSettings
         add_action('admin_init', [$this, 'maybeMigrateClientVersions'], 5);
         add_action('admin_init', [$this, 'autoDetectClientVersion'], 6);
         add_action('admin_init', [$this, 'registerSettings']);
-
-        add_action('phpmailer_init', [$this, 'configureMailer']);
-        add_filter('wp_mail_from', [$this, 'getSmtpFromEmail']);
-        add_filter('wp_mail_from_name', [$this, 'getSmtpFromName']);
+        // SMTP hooks live in SmtpConfigurator.
     }
     
     /**
@@ -113,13 +110,24 @@ class SaaSSettings
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_image_api_model', ['default' => 'dall-e-3']);
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openart_api_key');
-        
+        // Dedicated, credit-limited OpenRouter key that is handed to client sites
+        // for image generation instead of the central LLM key.
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_openrouter_image_api_key', ['sanitize_callback' => 'sanitize_text_field']);
+
         // Usage limits per tier
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_starter_api_calls', ['default' => 200]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_early_adopters_api_calls', ['default' => 200]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_professional_api_calls', ['default' => 1000]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_business_api_calls', ['default' => 5000]);
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_agency_api_calls', ['default' => 20000]);
+
+        // Shopify tenants have their own API call limits per tier
+        foreach (array_keys(self::SHOPIFY_API_LIMITS) as $tier_slug) {
+            register_setting('sseo_ai_saas_billing', "ai_seo_saas_shopify_{$tier_slug}_api_calls", [
+                'default' => self::SHOPIFY_API_LIMITS[$tier_slug],
+                'sanitize_callback' => 'absint',
+            ]);
+        }
         
         // Cost limits per tier (in EUR)
         register_setting('sseo_ai_saas_billing', 'ai_seo_saas_starter_cost_limit', ['default' => 20]);
@@ -495,52 +503,6 @@ class SaaSSettings
     }
 
     /**
-     * Configure PHPMailer to use the configured SMTP server.
-     */
-    public function configureMailer($phpmailer): void
-    {
-        if (!get_option('sseo_ai_saas_smtp_enabled')) {
-            return;
-        }
-
-        $host = get_option('sseo_ai_saas_smtp_host', '');
-        if (empty($host)) {
-            return;
-        }
-
-        $phpmailer->isSMTP();
-        $phpmailer->Host = $host;
-        $phpmailer->Port = (int) get_option('sseo_ai_saas_smtp_port', 587);
-        $phpmailer->SMTPAuth = (bool) get_option('sseo_ai_saas_smtp_auth', true);
-
-        if ($phpmailer->SMTPAuth) {
-            $phpmailer->Username = get_option('sseo_ai_saas_smtp_username', '');
-            $phpmailer->Password = get_option('sseo_ai_saas_smtp_password', '');
-        }
-
-        $encryption = get_option('sseo_ai_saas_smtp_encryption', 'tls');
-        $phpmailer->SMTPSecure = in_array($encryption, ['ssl', 'tls'], true) ? $encryption : '';
-    }
-
-    /**
-     * Get the configured SMTP from email, if any.
-     */
-    public function getSmtpFromEmail(string $email): string
-    {
-        $configured = get_option('sseo_ai_saas_smtp_from_email', '');
-        return !empty($configured) ? $configured : $email;
-    }
-
-    /**
-     * Get the configured SMTP from name, if any.
-     */
-    public function getSmtpFromName(string $name): string
-    {
-        $configured = get_option('sseo_ai_saas_smtp_from_name', '');
-        return !empty($configured) ? $configured : $name;
-    }
-    
-    /**
      * Get API call limit for tier
      */
     public function getApiLimitForTier(string $tier): int
@@ -548,7 +510,44 @@ class SaaSSettings
         $optionName = "ai_seo_saas_{$tier}_api_calls";
         return (int)get_option($optionName, $this->getDefaultApiLimit($tier));
     }
-    
+
+    /**
+     * Default monthly API call limits for Shopify tenants (platform = shopify).
+     * Shopify has its own limits; trial mirrors Professional.
+     */
+    private const SHOPIFY_API_LIMITS = [
+        'starter'        => 500,
+        'early_adopters' => 500,
+        'trial'          => 2000,
+        'professional'   => 2000,
+        'business'       => 5000,
+        'agency'         => 20000,
+        'dev'            => 1000000,
+    ];
+
+    /**
+     * Monthly API call limit for a Shopify tenant of the given tier
+     * (option `ai_seo_saas_shopify_{tier}_api_calls`).
+     */
+    public static function shopifyApiLimit(string $tier): int
+    {
+        return (int)get_option("ai_seo_saas_shopify_{$tier}_api_calls", self::SHOPIFY_API_LIMITS[$tier] ?? 100);
+    }
+
+    /**
+     * Effective monthly API call limit for a tenant row. Shopify tenants follow
+     * the Shopify tier limit (so upgrades apply without touching the tenant row);
+     * other platforms keep the stored per-tenant limit with the tier option as fallback.
+     */
+    public function getEffectiveApiLimit(array $tenant): int
+    {
+        $tier = (string)($tenant['tier'] ?? '');
+        if (($tenant['platform'] ?? '') === 'shopify') {
+            return self::shopifyApiLimit($tier);
+        }
+        return (int)($tenant['api_calls_limit'] ?? 0) ?: $this->getApiLimitForTier($tier);
+    }
+
     /**
      * Get cost limit for tier (EUR)
      */
@@ -570,6 +569,7 @@ class SaaSSettings
             'professional' => 1000,
             'business' => 5000,
             'agency' => 20000,
+            'dev' => 1000000,
         ];
         return $defaults[$tier] ?? 100;
     }
@@ -715,7 +715,12 @@ class SaaSSettings
         $isOpenRouter = get_option('sseo_ai_saas_ai_provider', 'openrouter') === 'openrouter';
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('SSEO AI SaaS Settings', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Settings', 'sseo-ai-saas'),
+            __('SaaS Settings', 'sseo-ai-saas'),
+            __('API credentials, SERP providers, image generation, integrations and SMTP.', 'sseo-ai-saas')
+        ); ?>
 
             <style>
                 .sseo-ai-tab-panel { display: none; }
@@ -889,6 +894,17 @@ class SaaSSettings
                         <?php endif; ?>
                     </p>
                     <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="openrouter_image_api_key"><?php esc_html_e('OpenRouter Image Key (client-side)', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="password" name="sseo_ai_saas_openrouter_image_api_key" id="openrouter_image_api_key"
+                                       value="<?php echo esc_attr(get_option('sseo_ai_saas_openrouter_image_api_key', '')); ?>" class="regular-text" autocomplete="off"
+                                       placeholder="sk-or-...">
+                                <p class="description">
+                                    <?php esc_html_e('Security: client sites generate images themselves and receive an OpenRouter key on license activation. Without this field they receive the central OpenRouter key. Create a separate key with a credit limit in OpenRouter and enter it here.', 'sseo-ai-saas'); ?>
+                                </p>
+                            </td>
+                        </tr>
                         <tr class="sseo-ai-image-provider-row"<?php if ($isOpenRouter) echo ' style="display:none;"'; ?>>
                             <th scope="row"><label for="image_api_provider"><?php esc_html_e('Image API Provider', 'sseo-ai-saas'); ?></label></th>
                             <td>
@@ -1117,6 +1133,7 @@ class SaaSSettings
                 }
             });
             </script>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -1139,7 +1156,12 @@ class SaaSSettings
         ];
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Checkout', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Checkout', 'sseo-ai-saas'),
+            __('Checkout', 'sseo-ai-saas'),
+            __('Self-serve plans, trial settings, payment provider and VAT.', 'sseo-ai-saas')
+        ); ?>
 
             <!-- Stats Cards (moved from Billing page) -->
             <div class="sseo-ai-stats-grid">
@@ -1335,6 +1357,7 @@ class SaaSSettings
                             <th style="width: 120px;"><?php esc_html_e('Tier', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Price (EUR/mo)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('API Calls/mo', 'sseo-ai-saas'); ?></th>
+                            <th style="width: 150px;"><?php esc_html_e('Shopify API Calls/mo', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Cost Cap (EUR)', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('Auto Posts/mo', 'sseo-ai-saas'); ?></th>
                             <th style="width: 150px;"><?php esc_html_e('GEO Scans/mo', 'sseo-ai-saas'); ?></th>
@@ -1373,6 +1396,12 @@ class SaaSSettings
                                        style="width: 120px;">
                             </td>
                             <td>
+                                <input type="number" step="1" min="0"
+                                       name="ai_seo_saas_shopify_<?php echo esc_attr($tier); ?>_api_calls"
+                                       value="<?php echo esc_attr(self::shopifyApiLimit($tier)); ?>"
+                                       style="width: 120px;">
+                            </td>
+                            <td>
                                 <input type="number" step="0.01" min="0"
                                        name="ai_seo_saas_<?php echo esc_attr($tier); ?>_cost_limit"
                                        value="<?php echo esc_attr(number_format($cost, 2, '.', '')); ?>"
@@ -1408,7 +1437,7 @@ class SaaSSettings
 
                 <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
                     <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Stripe Webhook URL', 'sseo-ai-saas'); ?></h4>
-                    <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
+                    <code style="display: block; padding: 10px; background: var(--well, #fff); border: 1px solid var(--well-border, #edecf2); border-radius: 6px; word-break: break-all; font-size: 12px;">
                         <?php echo esc_url($webhookUrls['stripe']); ?>
                     </code>
                     <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
@@ -1419,7 +1448,7 @@ class SaaSSettings
 
                 <div style="background: #f6f7f7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
                     <h4 style="margin-top: 0;">🔗 <?php esc_html_e('Mollie Webhook URL', 'sseo-ai-saas'); ?></h4>
-                    <code style="display: block; padding: 10px; background: #fff; border-radius: 4px; word-break: break-all; font-size: 12px;">
+                    <code style="display: block; padding: 10px; background: var(--well, #fff); border: 1px solid var(--well-border, #edecf2); border-radius: 6px; word-break: break-all; font-size: 12px;">
                         <?php echo esc_url($webhookUrls['mollie']); ?>
                     </code>
                     <p style="margin: 10px 0 0; font-size: 12px; color: #646970;">
@@ -1453,6 +1482,7 @@ class SaaSSettings
                     </div>
                 </div>
             </div>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -1475,7 +1505,12 @@ class SaaSSettings
         $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'cost';
         ?>
         <div class="wrap sseo-ai-license-admin sseo-ai-cost-wrap">
-            <h1><?php esc_html_e('Cost Dashboard', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Cost Dashboard', 'sseo-ai-saas'),
+            __('Cost Dashboard', 'sseo-ai-saas'),
+            __('What the platform spends per AI model, provider and tier.', 'sseo-ai-saas')
+        ); ?>
             <?php $this->renderCostDashboardTabs($tab); ?>
             <div class="sseo-ai-cost-content">
                 <?php
@@ -1488,6 +1523,7 @@ class SaaSSettings
                 }
                 ?>
             </div>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -1952,11 +1988,13 @@ class SaaSSettings
         $liveCount = count($allModels) - count(\SSEOAISaaS\ProviderRouter::getAvailableModels());
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('AI Models', 'sseo-ai-saas'); ?></h1>
-            <p class="description" style="margin: 0 20px; color: #fff; font-size: 14px;">
-                <?php esc_html_e('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas'); ?>
-            </p>
-            <p class="description" style="margin: 0 20px; color: #fff; font-size: 14px;">
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('AI Models', 'sseo-ai-saas'),
+            __('AI Models', 'sseo-ai-saas'),
+            __('Choose the default AI model for each function per tier. Standard tier uses standard models; Professional, Business and Agency use premium models by default. Agencies can override the model tier when generating sub-licenses.', 'sseo-ai-saas')
+        ); ?>
+            <p class="description">
                 <?php
                 printf(
                     /* translators: 1: total model count, 2: live-fetched count */
@@ -1965,7 +2003,7 @@ class SaaSSettings
                     max(0, $liveCount)
                 );
                 ?>
-                <a style="color: #fff; text-decoration: underline;" href="<?php echo esc_url(wp_nonce_url(add_query_arg('refresh_models', '1', admin_url('admin.php?page=sseo-ai-ai-models')), 'sseo_ai_refresh_models')); ?>">
+                <a style="color: var(--fyn-purple); text-decoration: underline;" href="<?php echo esc_url(wp_nonce_url(add_query_arg('refresh_models', '1', admin_url('admin.php?page=sseo-ai-ai-models')), 'sseo_ai_refresh_models')); ?>">
                     <?php esc_html_e('Refresh model list', 'sseo-ai-saas'); ?>
                 </a>
             </p>
@@ -2017,6 +2055,7 @@ class SaaSSettings
 
                 <?php submit_button(__('Save AI Models', 'sseo-ai-saas')); ?>
             </form>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }
@@ -2190,7 +2229,12 @@ class SaaSSettings
         }
         ?>
         <div class="wrap sseo-ai-license-admin">
-            <h1><?php esc_html_e('Client Versions', 'sseo-ai-saas'); ?></h1>
+        <?php ShellUi::openScreen(
+            __('Provider', 'sseo-ai-saas'),
+            __('Client Versions', 'sseo-ai-saas'),
+            __('Client Versions', 'sseo-ai-saas'),
+            __('Published client-plugin builds and what the update server serves.', 'sseo-ai-saas')
+        ); ?>
             <?php settings_errors('sseo_ai_client_versions'); ?>
 
             <form method="post" enctype="multipart/form-data">
@@ -2310,6 +2354,7 @@ class SaaSSettings
                     </table>
                 <?php endif; ?>
             </div>
+        <?php ShellUi::closeScreen(); ?>
         </div>
         <?php
     }

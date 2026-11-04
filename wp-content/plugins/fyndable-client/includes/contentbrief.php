@@ -633,103 +633,109 @@ PROMPT;
     public function renderPage(): void
     {
         ?>
-        <div class="wrap aiseo-modern">
-            <h1><?php esc_html_e('Content Brief Generator', 'ai-seo-client'); ?></h1>
-            <p class="description"><?php esc_html_e('Generate data-driven content briefs by analyzing top-ranking pages. Like Surfer SEO, but built into WordPress.', 'ai-seo-client'); ?></p>
+        <div class="wrap fyn-animate-in" style="max-width:1440px;margin:0 auto;padding:28px 32px 48px;">
+            <div class="fyn-page-header">
+                <div class="fyn-page-header-left">
+                    <div class="fyn-breadcrumb">Fyndable &rsaquo; <span class="fyn-crumb"><?php esc_html_e('Content Brief', 'ai-seo-client'); ?></span></div>
+                    <h1><?php esc_html_e('Content Brief Generator', 'ai-seo-client'); ?></h1>
+                    <p class="fyn-page-desc"><?php esc_html_e('Generate data-driven content briefs by analyzing top-ranking pages.', 'ai-seo-client'); ?></p>
+                </div>
+            </div>
 
-            <div class="aiseo-brief-generator" style="max-width: 1200px;">
-                <div class="postbox" style="padding: 20px;">
-                    <h2><?php esc_html_e('Generate New Brief', 'ai-seo-client'); ?></h2>
-                    <p>
-                        <input type="text" id="aiseo-brief-keyword" class="regular-text" style="width: 400px;" placeholder="<?php esc_attr_e('Enter target keyword...', 'ai-seo-client'); ?>">
-                        <button type="button" class="button button-primary" id="aiseo-generate-brief">
-                            <?php esc_html_e('Generate Brief', 'ai-seo-client'); ?>
-                        </button>
-                        <span class="spinner" id="aiseo-brief-spinner" style="float:none;"></span>
-                    </p>
+            <div class="fyn-card" style="margin-bottom:20px;">
+                <div class="fyn-card-header">
+                    <span class="dashicons dashicons-media-document"></span>
+                    <h3 class="fyn-card-title"><?php esc_html_e('Generate New Brief', 'ai-seo-client'); ?></h3>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <input type="text" id="aiseo-brief-keyword" class="fyn-input" style="width:400px;" placeholder="<?php esc_attr_e('Enter keyword...', 'ai-seo-client'); ?>">
+                    <button type="button" class="fyn-btn fyn-btn-primary" id="aiseo-generate-brief">
+                        <?php esc_html_e('Generate Brief', 'ai-seo-client'); ?>
+                    </button>
+                    <span class="spinner" id="aiseo-brief-spinner" style="float:none;"></span>
+                </div>
+            </div>
+
+            <div id="aiseo-brief-result" style="display:none;">
+                <!-- Brief Overview -->
+                <div class="fyn-stats-grid" style="margin-bottom:20px;">
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="brief-difficulty">-</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Difficulty', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="brief-word-count">-</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Target Words', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="brief-intent">-</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Search Intent', 'ai-seo-client'); ?></div>
+                    </div>
+                    <div class="fyn-stat-tile">
+                        <div class="fyn-stat-value" id="brief-headings-count">-</div>
+                        <div class="fyn-stat-label"><?php esc_html_e('Recommended Headings', 'ai-seo-client'); ?></div>
+                    </div>
                 </div>
 
-                <div id="aiseo-brief-result" style="display:none; margin-top: 20px;">
-                    <!-- Brief Overview -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
-                        <div class="postbox" style="padding: 15px; text-align: center;">
-                            <div id="brief-difficulty" style="font-size: 28px; font-weight: bold;">-</div>
-                            <div><?php esc_html_e('Difficulty', 'ai-seo-client'); ?></div>
+                <div class="fyn-grid-2">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-list-view"></span><h3 class="fyn-card-title"><?php esc_html_e('Content Outline', 'ai-seo-client'); ?></h3></div>
+                            <div id="brief-outline" style="white-space:pre-wrap;font-family:monospace;font-size:13px;max-height:400px;overflow-y:auto;color:var(--text-b);"></div>
                         </div>
-                        <div class="postbox" style="padding: 15px; text-align: center;">
-                            <div id="brief-word-count" style="font-size: 28px; font-weight: bold;">-</div>
-                            <div><?php esc_html_e('Target Words', 'ai-seo-client'); ?></div>
+
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-heading"></span><h3 class="fyn-card-title"><?php esc_html_e('Recommended Headings', 'ai-seo-client'); ?></h3></div>
+                            <ul id="brief-headings" style="list-style:none;padding:0;"></ul>
                         </div>
-                        <div class="postbox" style="padding: 15px; text-align: center;">
-                            <div id="brief-intent" style="font-size: 28px; font-weight: bold;">-</div>
-                            <div><?php esc_html_e('Search Intent', 'ai-seo-client'); ?></div>
-                        </div>
-                        <div class="postbox" style="padding: 15px; text-align: center;">
-                            <div id="brief-headings-count" style="font-size: 28px; font-weight: bold;">-</div>
-                            <div><?php esc_html_e('Recommended Headings', 'ai-seo-client'); ?></div>
+
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-format-chat"></span><h3 class="fyn-card-title"><?php esc_html_e('Questions to Answer (FAQ)', 'ai-seo-client'); ?></h3></div>
+                            <ul id="brief-questions" style="list-style:disc;padding-left:20px;"></ul>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <!-- Left Column -->
-                        <div>
-                            <div class="postbox" style="padding: 15px;">
-                                <h3><?php esc_html_e('Content Outline', 'ai-seo-client'); ?></h3>
-                                <div id="brief-outline" style="white-space: pre-wrap; font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto;"></div>
-                            </div>
-
-                            <div class="postbox" style="padding: 15px; margin-top: 15px;">
-                                <h3><?php esc_html_e('Recommended Headings', 'ai-seo-client'); ?></h3>
-                                <ul id="brief-headings" style="list-style: none; padding: 0;"></ul>
-                            </div>
-
-                            <div class="postbox" style="padding: 15px; margin-top: 15px;">
-                                <h3><?php esc_html_e('Questions to Answer (FAQ)', 'ai-seo-client'); ?></h3>
-                                <ul id="brief-questions" style="list-style: disc; padding-left: 20px;"></ul>
-                            </div>
+                    <!-- Right Column -->
+                    <div>
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-search"></span><h3 class="fyn-card-title"><?php esc_html_e('SERP Overview', 'ai-seo-client'); ?></h3></div>
+                            <table class="fyn-table" style="font-size:12px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:30px;">#</th>
+                                        <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="brief-serp"></tbody>
+                            </table>
                         </div>
 
-                        <!-- Right Column -->
-                        <div>
-                            <div class="postbox" style="padding: 15px;">
-                                <h3><?php esc_html_e('SERP Overview', 'ai-seo-client'); ?></h3>
-                                <table class="wp-list-table widefat fixed striped" style="font-size: 12px;">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:30px;">#</th>
-                                            <th><?php esc_html_e('Title', 'ai-seo-client'); ?></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="brief-serp"></tbody>
-                                </table>
-                            </div>
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-tag"></span><h3 class="fyn-card-title"><?php esc_html_e('Entities & Topics', 'ai-seo-client'); ?></h3></div>
+                            <div id="brief-entities" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+                        </div>
 
-                            <div class="postbox" style="padding: 15px; margin-top: 15px;">
-                                <h3><?php esc_html_e('Entities & Topics to Cover', 'ai-seo-client'); ?></h3>
-                                <div id="brief-entities" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
-                            </div>
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-networking"></span><h3 class="fyn-card-title"><?php esc_html_e('LSI / Semantic Keywords', 'ai-seo-client'); ?></h3></div>
+                            <div id="brief-lsi" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+                        </div>
 
-                            <div class="postbox" style="padding: 15px; margin-top: 15px;">
-                                <h3><?php esc_html_e('LSI / Semantic Keywords', 'ai-seo-client'); ?></h3>
-                                <div id="brief-lsi" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
-                            </div>
-
-                            <div class="postbox" style="padding: 15px; margin-top: 15px;">
-                                <h3><?php esc_html_e('Internal Link Opportunities', 'ai-seo-client'); ?></h3>
-                                <ul id="brief-internal-links" style="list-style: none; padding: 0;"></ul>
-                            </div>
+                        <div class="fyn-card" style="margin-bottom:16px;">
+                            <div class="fyn-card-header"><span class="dashicons dashicons-admin-links"></span><h3 class="fyn-card-title"><?php esc_html_e('Internal Link Opportunities', 'ai-seo-client'); ?></h3></div>
+                            <ul id="brief-internal-links" style="list-style:none;padding:0;"></ul>
                         </div>
                     </div>
+                </div>
 
-                    <div class="postbox" style="padding: 15px; margin-top: 20px;">
-                        <h3><?php esc_html_e('Content Scoring', 'ai-seo-client'); ?></h3>
-                        <p class="description"><?php esc_html_e('Paste your content below to score it against this brief\'s recommendations.', 'ai-seo-client'); ?></p>
-                        <textarea id="aiseo-score-content" rows="8" class="large-text" placeholder="<?php esc_attr_e('Paste your article content here to get a score...', 'ai-seo-client'); ?>"></textarea>
-                        <p>
-                            <button type="button" class="button button-primary" id="aiseo-score-btn"><?php esc_html_e('Score Content', 'ai-seo-client'); ?></button>
-                        </p>
-                        <div id="aiseo-score-result" style="display:none; margin-top:15px;"></div>
-                    </div>
+                <div class="fyn-card" style="margin-top:4px;">
+                    <div class="fyn-card-header"><span class="dashicons dashicons-awards"></span><h3 class="fyn-card-title"><?php esc_html_e('Content Scoring', 'ai-seo-client'); ?></h3></div>
+                    <p style="font-size:13px;color:var(--text-m);"><?php esc_html_e('Paste your content below to score it against this brief\'s recommendations.', 'ai-seo-client'); ?></p>
+                    <textarea id="aiseo-score-content" rows="8" class="fyn-input" style="width:100%;resize:vertical;" placeholder="<?php esc_attr_e('Paste your article content here to get a score...', 'ai-seo-client'); ?>"></textarea>
+                    <p style="margin-top:10px;">
+                        <button type="button" class="fyn-btn fyn-btn-primary" id="aiseo-score-btn"><?php esc_html_e('Score Content', 'ai-seo-client'); ?></button>
+                    </p>
+                    <div id="aiseo-score-result" style="display:none;margin-top:15px;"></div>
                 </div>
             </div>
         </div>
@@ -841,7 +847,7 @@ PROMPT;
                 html += '<div><strong style="font-size:20px;">Grade: ' + result.grade + '</strong></div>';
                 html += '</div>';
 
-                html += '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Metric</th><th>Score</th><th>Details</th></tr></thead><tbody>';
+                html += '<table class="fyn-table"><thead><tr><th>Metric</th><th>Score</th><th>Details</th></tr></thead><tbody>';
                 var scores = result.scores || {};
                 var labels = {
                     word_count: '<?php echo esc_js(__('Word Count', 'ai-seo-client')); ?>',

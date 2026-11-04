@@ -4,8 +4,13 @@
 			"path": "."
 		},
 		{
-			"path": "../fyndable-admin-app"
+			"path": "../FYNAI"
 		}
 	],
-	"settings": {}
+	"settings": {},
+	"workbenchMode": "windsurf-agent-window",
+	"agentSourceFolders": [
+		"file:///c%3A/WorkSpace/Fyndable",
+		"file:///c%3A/WorkSpace/FYNAI"
+	]
 }

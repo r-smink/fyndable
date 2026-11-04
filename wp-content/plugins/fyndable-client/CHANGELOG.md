@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.0 (2026-10-27)
+
+### Changed
+- Major version bump.
+
 ## v2.4.0 (2026-10-09)
 
 ### Added

@@ -364,6 +364,157 @@
 	}
 
 	/* ------------------------------------------------------------------ */
+	/* Background Task Notifications                                       */
+	/* When AI calls complete after navigation, show a toast notification.  */
+	/* ------------------------------------------------------------------ */
+
+	var BG_POLL_INTERVAL = 10000; // 10 seconds
+	var bgPollTimer = null;
+	var bgToastContainer = null;
+
+	function injectBgStyles() {
+		var existing = document.getElementById('fyndable-bg-task-styles');
+		if (existing) return;
+		var s = document.createElement('style');
+		s.id = 'fyndable-bg-task-styles';
+		s.textContent =
+			'#fyn-bg-toasts{position:fixed;bottom:20px;right:20px;z-index:100002;display:flex;flex-direction:column-reverse;gap:10px;max-width:400px;pointer-events:none}' +
+			'.fyn-bg-toast{pointer-events:auto;background:#1e293b;color:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 8px 32px rgba(0,0,0,.3);' +
+			'font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px;line-height:1.5;display:flex;align-items:flex-start;gap:12px;' +
+			'animation:fynToastIn .3s ease-out;transition:opacity .3s,transform .3s}' +
+			'.fyn-bg-toast.leaving{opacity:0;transform:translateX(40px)}' +
+			'.fyn-bg-toast-icon{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:1px}' +
+			'.fyn-bg-toast-icon.success{background:#22c55e}' +
+			'.fyn-bg-toast-icon.failed{background:#ef4444}' +
+			'.fyn-bg-toast-icon.processing{background:#3b82f6}' +
+			'.fyn-bg-toast-body{flex:1;min-width:0}' +
+			'.fyn-bg-toast-label{font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+			'.fyn-bg-toast-status{color:#94a3b8;font-size:12px}' +
+			'.fyn-bg-toast-actions{display:flex;gap:8px;margin-top:8px}' +
+			'.fyn-bg-toast-btn{background:rgba(255,255,255,.1);border:none;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .15s}' +
+			'.fyn-bg-toast-btn:hover{background:rgba(255,255,255,.2)}' +
+			'.fyn-bg-toast-btn.primary{background:#34A9DD}' +
+			'.fyn-bg-toast-btn.primary:hover{background:#2898cc}' +
+			'@keyframes fynToastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}';
+		document.head.appendChild(s);
+	}
+
+	function ensureToastContainer() {
+		if (bgToastContainer && bgToastContainer.isConnected) return bgToastContainer;
+		bgToastContainer = document.getElementById('fyn-bg-toasts');
+		if (!bgToastContainer) {
+			bgToastContainer = document.createElement('div');
+			bgToastContainer.id = 'fyn-bg-toasts';
+			document.body.appendChild(bgToastContainer);
+		}
+		return bgToastContainer;
+	}
+
+	function showBgToast(task) {
+		injectBgStyles();
+		var container = ensureToastContainer();
+
+		// Don't show duplicate toast for same task
+		if (container.querySelector('[data-task-id="' + task.id + '"]')) return;
+
+		var isSuccess = task.status === 'completed';
+		var isFailed = task.status === 'failed';
+		var iconClass = isSuccess ? 'success' : (isFailed ? 'failed' : 'processing');
+		var iconChar = isSuccess ? '\u2713' : (isFailed ? '\u2717' : '\u2026');
+		var statusText = isSuccess
+			? 'Completed in the background'
+			: (isFailed ? (task.error || 'Failed') : 'Still processing\u2026');
+
+		var toast = document.createElement('div');
+		toast.className = 'fyn-bg-toast';
+		toast.setAttribute('data-task-id', task.id);
+		toast.innerHTML =
+			'<div class="fyn-bg-toast-icon ' + iconClass + '">' + iconChar + '</div>' +
+			'<div class="fyn-bg-toast-body">' +
+			'<div class="fyn-bg-toast-label">' + escHtml(task.label) + '</div>' +
+			'<div class="fyn-bg-toast-status">' + escHtml(statusText) + '</div>' +
+			(isSuccess && task.result && task.result.edit_url
+				? '<div class="fyn-bg-toast-actions"><a class="fyn-bg-toast-btn primary" href="' + escAttr(task.result.edit_url) + '">Open</a>' +
+				  '<button class="fyn-bg-toast-btn dismiss-btn">Dismiss</button></div>'
+				: '<div class="fyn-bg-toast-actions"><button class="fyn-bg-toast-btn dismiss-btn">OK</button></div>') +
+			'</div>';
+
+		// Dismiss handler
+		var dismissBtn = toast.querySelector('.dismiss-btn');
+		dismissBtn.addEventListener('click', function () {
+			dismissTask(task.id);
+			toast.classList.add('leaving');
+			setTimeout(function () { toast.remove(); }, 300);
+		});
+
+		container.appendChild(toast);
+
+		// Auto-dismiss after 30s for completed tasks
+		if (isSuccess || isFailed) {
+			setTimeout(function () {
+				if (toast.isConnected) {
+					dismissTask(task.id);
+					toast.classList.add('leaving');
+					setTimeout(function () { toast.remove(); }, 300);
+				}
+			}, 30000);
+		}
+	}
+
+	function dismissTask(taskId) {
+		var fetchFn = window.fetch && window.fetch.__fynWrapped ? Function.prototype : null;
+		// Use the original fetch if wrapped, otherwise use wp.apiFetch
+		if (typeof wp !== 'undefined' && wp.apiFetch) {
+			wp.apiFetch({
+				path: '/sseo-ai/v1/tasks/' + taskId + '/dismiss',
+				method: 'POST'
+			}).catch(function () {});
+		}
+	}
+
+	function pollBackgroundTasks() {
+		if (typeof wp === 'undefined' || !wp.apiFetch) return;
+
+		wp.apiFetch({ path: '/sseo-ai/v1/tasks/pending' }).then(function (res) {
+			var tasks = (res && res.tasks) || [];
+			var hasProcessing = false;
+
+			for (var i = 0; i < tasks.length; i++) {
+				var task = tasks[i];
+				if (task.status === 'completed' || task.status === 'failed') {
+					showBgToast(task);
+				} else if (task.status === 'processing') {
+					hasProcessing = true;
+				}
+			}
+
+			// Keep polling if there are still processing tasks
+			if (hasProcessing) {
+				bgPollTimer = setTimeout(pollBackgroundTasks, BG_POLL_INTERVAL);
+			}
+		}).catch(function () {
+			// Silently fail — non-critical
+		});
+	}
+
+	function startBgTaskPolling() {
+		// Initial check after a short delay (let the page settle)
+		setTimeout(function () {
+			pollBackgroundTasks();
+		}, 2000);
+	}
+
+	function escHtml(str) {
+		var div = document.createElement('div');
+		div.appendChild(document.createTextNode(str || ''));
+		return div.innerHTML;
+	}
+
+	function escAttr(str) {
+		return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	}
+
+	/* ------------------------------------------------------------------ */
 	/* Boot                                                                */
 	/* ------------------------------------------------------------------ */
 
@@ -372,6 +523,7 @@
 		wrapApiFetch();
 		wrapFetch();
 		startObserver();
+		startBgTaskPolling();
 	}
 
 	if (document.readyState === 'loading') {
