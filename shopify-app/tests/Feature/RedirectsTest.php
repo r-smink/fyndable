@@ -28,7 +28,7 @@ function redirectShop(array $attributes = []): Shop
 {
     return makeTestShop(array_merge([
         'scope' => config('shopify.scopes'),
-        'license_key' => 'K', 'tenant_key' => 'T', 'license_tier' => 'starter', 'license_source' => 'app_pricing',
+        'license_key' => 'K', 'tenant_key' => 'T', 'license_tier' => 'professional', 'license_source' => 'app_pricing',
         'billing_state' => 'active', 'billing_checked_at' => now(), 'trial_ended_at' => now(),
     ], $attributes));
 }
@@ -64,10 +64,10 @@ function proxyParams(): array
  * Fake Shopify (redirect GraphQL + product collection) and an active Starter tenant.
  * $existing: redirects that already exist, keyed by path.
  */
-function fakeRedirectApi(array $existing = [], ?string $collection = 'summer'): void
+function fakeRedirectApi(array $existing = [], ?string $collection = 'summer', string $tier = 'professional'): void
 {
     Http::fake([
-        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter']),
+        'portal.test/*' => Http::response(['status' => 'active', 'tier' => $tier]),
         'test-shop.myshopify.com/admin/api/*' => function (HttpRequest $request) use ($existing, $collection) {
             $query = $request['query'] ?? '';
             $vars = $request['variables'] ?? [];
@@ -161,7 +161,7 @@ it('rejects unsigned 404 reports', function () {
 it('does not record 404s without a plan or with the monitor turned off', function (array $shop, bool $monitor) {
     $model = redirectShop($shop);
     ShopProfile::create(['shop_id' => $model->id, 'not_found_monitor' => $monitor]);
-    Http::fake(['portal.test/*' => Http::response(['status' => $shop === [] ? 'active' : 'suspended', 'tier' => 'starter'])]);
+    Http::fake(['portal.test/*' => Http::response(['status' => $shop === [] ? 'active' : 'suspended', 'tier' => 'professional'])]);
 
     $this->call('POST', '/api/404?'.proxyQuery(proxyParams()), [], [], [], ['CONTENT_TYPE' => 'text/plain'], '{"path":"/products/x"}')->assertNoContent();
 
@@ -364,6 +364,17 @@ it('saves the automatic redirect settings', function () {
     expect(ShopProfile::where('shop_id', $shop->id)->first())
         ->redirect_on_delete->toBeFalse()
         ->not_found_monitor->toBeFalse();
+});
+
+it('keeps redirects on Starter and the 404 monitor on Professional', function () {
+    redirectShop(['license_tier' => 'starter']);
+    fakeRedirectApi([], 'summer', 'starter');
+
+    $this->postJson('/api/redirects', ['path' => '/old', 'target' => '/new'], redirectHeaders())->assertJson(['success' => true]);
+    $this->getJson('/api/redirects/not-found', redirectHeaders())->assertStatus(403)->assertJsonPath('required_tier', 'professional');
+    $this->call('POST', '/api/404?'.proxyQuery(proxyParams()), [], [], [], ['CONTENT_TYPE' => 'text/plain'], '{"path":"/products/x"}')->assertNoContent();
+
+    expect(NotFoundUrl::count())->toBe(0);
 });
 
 it('gates the redirect manager by plan', function () {

@@ -67,7 +67,7 @@ Open / nog te controleren:
 Gebouwd: `SeoAuditor` (score 0-100 per item, winkelscore = gemiddelde) met 15 checks: verborgen voor zoekmachines (`seo.hidden`), actief maar niet in de onlinewinkel, lege collectie, gebroken interne links (zonder HTTP-requests: links naar onbekende product-/collectie-/pagina-/artikelhandles), metabeschrijving ontbreekt/te kort/te lang, metatitel ontbreekt/te kort/te lang, dubbele metatitels en -beschrijvingen (over alle types), te weinig tekst (minimum per type), afbeeldingen zonder alt-tekst, extra H1. `SeoAuditJob` haalt actieve producten, collecties en gepubliceerde pagina's en artikelen op (max. 1000 per type, `SHOPIFY_AUDIT_MAX_ITEMS`), bewaart de laatste 5 audits. Nieuwe pagina "SEO-audit" met probleemgroepen, "Producten in bulk oplossen" (bulk optimizer, alleen als het plan die bevat) en een itemlijst met link naar de content optimizer. Score per item ook live in de content optimizer en in de itemlijst; winkelscore op Home.
 
 Afwijkingen / open:
-- Tier: de audit zit in **Starter** (alle concurrenten bieden dit gratis aan). Te bevestigen; aanpassen in `config/tiers.php` (`seo_audit`).
+- Tier volgens `shopify-tier-indeling.xlsx` (WordPress-tier als basis): winkelbrede audit **Professional** (WP: Technical SEO Auditor), score per item in de content optimizer voor iedereen (WP: TruSEO, base).
 - "Fix alles" kan alleen via de bulk optimizer (Business) en die doet alleen producten (metabeschrijving, alt-tekst, beschrijvingen). Metatitels, collecties, pagina's en artikelen: per item via de content optimizer. Uitbreiden hoort bij 1.3.
 - Gebroken links naar externe sites of niet-contentpaden worden niet gecontroleerd (zou HTTP-requests per link vragen).
 - Geen automatische periodieke audit; komt bij 1.7 (rapportage).
@@ -78,7 +78,7 @@ Gebouwd: pagina "Redirects en 404" met
 - **404-monitor:** nieuwe theme app embed "Fyndable 404 monitor" (alleen op de 404-pagina van het thema, één beacon naar `/apps/fyndable/404`, geen script op andere pagina's). Ondertekend via de app proxy, rate-limited, assets/app-paden genegeerd, referrer zonder querystring opgeslagen. Lijst met meeste bezoeken eerst, "Doorsturen" en "Negeren".
 - **Redirectmanager:** Shopify-redirects zoeken, toevoegen, bewerken, verwijderen; CSV-export (Shopify-formaat) en CSV-import (komma of puntkomma, kop optioneel, max. 5000 regels, op de achtergrond met voortgang).
 - **Automatische redirects:** bij een gewijzigde product- of collectie-URL (oude handle -> nieuwe) en bij verwijderen (naar de collectie van het product, alle producten, home of zoekresultaten; instelbaar). De app onthoudt handles in `resource_handles`, want `products/delete` stuurt alleen een id.
-- Tier: Starter (`redirects`). Te bevestigen, net als de audit.
+- Tier volgens `shopify-tier-indeling.xlsx`: redirectmanager + automatische redirects **Starter** (WP: Redirect Manager), 404-monitor **Professional** (WP: 404 Monitor, aparte feature `not_found_monitor`; op Starter toont de pagina dat deel vergrendeld met uitleg).
 
 Gevonden en opgelost tijdens 1.2:
 - **Webhooks werden nooit geregistreerd.** `shopify.app.toml` had alleen de GDPR-topics, dus `app/uninstalled` (billing-suspend bij verwijderen, 0.1) en de product-/collectiewebhooks (llms.txt-cache) kwamen nooit binnen. Nu in de TOML: `app/uninstalled`, `products/*`, `collections/*`. Pagina-/artikeltopics staan er niet in (niet bevestigd in de Shopify-docs).

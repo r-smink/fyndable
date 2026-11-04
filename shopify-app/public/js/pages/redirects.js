@@ -225,8 +225,26 @@
         Fyn.toast(t('settings_saved'));
     };
 
-    Fyn.page(async () => {
-        await Promise.all([loadNotFound(), loadRedirects(true), loadSettings()]);
+    // The 404 monitor is a separate, higher-tier feature (config/tiers.php).
+    function notFoundAllowed(ctx) {
+        return !(ctx && ctx.plan && ctx.plan.features && ctx.plan.features.not_found_monitor === false);
+    }
+
+    function lockNotFound(ctx) {
+        const required = ctx.plan.required ? ctx.plan.required.not_found_monitor : '';
+        Fyn.show('nf-body', false);
+        Fyn.html('nf-locked', `<s-banner tone="info" heading="${esc(t('lock_title', { tier: Fyn.tierLabel(required) }))}">
+                ${esc(t('lock_upgrade', { tier: Fyn.tierLabel(ctx.plan.tier) }))}
+                <s-button slot="secondary-actions" href="${esc(Fyn.url('plan'))}">${esc(t('lock_button'))}</s-button>
+            </s-banner>`);
+        Fyn.show('nf-locked', true);
+        Fyn.$('set-monitor').disabled = true;
+    }
+
+    Fyn.page(async (ctx) => {
+        const monitor = notFoundAllowed(ctx);
+        if (!monitor) lockNotFound(ctx);
+        await Promise.all([monitor ? loadNotFound() : Promise.resolve(), loadRedirects(true), loadSettings()]);
         const status = await Fyn.api('/redirects/import/status');
         if (status.import && ['queued', 'running'].includes(status.import.status)) pollImport();
     });

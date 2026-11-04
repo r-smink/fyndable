@@ -8,7 +8,9 @@ namespace App\Services;
  * Scores products, collections, pages and blog articles (0-100) and runs the
  * store-wide checks (duplicate titles/descriptions, broken internal links).
  * Pure logic: SeoAuditJob fetches the items, ContentController scores a
- * single item for the editor.
+ * single item for the editor. The item score is available on every plan
+ * (WordPress: TruSEO score, base); the store-wide audit is Professional
+ * (WordPress: Technical SEO Auditor).
  *
  * Item shape (see normalize()):
  *   type, id, title, handle, url, seo_title, seo_description, body_html,

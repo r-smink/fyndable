@@ -42,7 +42,7 @@ class NotFoundController extends Controller
         }
         RateLimiter::hit($key, 60);
 
-        if (! $license->canUse($shop, 'redirects')) {
+        if (! $license->canUse($shop, 'not_found_monitor')) {
             return response('', 204);
         }
 

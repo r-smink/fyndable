@@ -526,3 +526,7 @@ Billing loopt via **Shopify App Pricing** (voorheen Managed Pricing). Geen Billi
 - 404-beacon: theme app embed `extensions/fyndable-seo-schema/blocks/fyndable-404-monitor.liquid` -> `POST /apps/fyndable/404` -> `NotFoundController` (app proxy-handtekening via `ShopifySignature::verifyAppProxy`, Shopify-spec: gedecodeerd, gesorteerd, zonder scheidingsteken; 120/min per shop).
 - API onder `/api/redirects` (tier `redirects`, schrijfacties ook scope): lijst/zoeken, aanmaken, bewerken, verwijderen, `export` (CSV met formula-guard), `import` (`ImportRedirectsJob`, voortgang in cache `redirect_import:{shop_id}`), `not-found` (+ `fix`/`ignore`), `settings`.
 - Tests: `tests/Pest.php` zet `shopify.scopes` vast (los van de lokale `.env`) en bevat nu `sendWebhook()`.
+
+### Tier-indeling nieuwe Shopify-functies (2026-11-04)
+
+Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier uit `LicenseFeatureManager` als basis): `seo_audit` professional, itemscore iedereen (niet gegated), `redirects` starter, `not_found_monitor` professional (404-routes en de beacon checken deze feature apart). Nieuwe Shopify-functie = eerst een rij in de spreadsheet, dan `config/tiers.php`.

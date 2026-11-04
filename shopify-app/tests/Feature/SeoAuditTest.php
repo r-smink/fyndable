@@ -18,7 +18,7 @@ function auditHeaders(): array
     return ['Authorization' => 'Bearer '.sessionToken()];
 }
 
-function auditShop(string $tier = 'starter'): Shop
+function auditShop(string $tier = 'professional'): Shop
 {
     return makeTestShop([
         'license_key' => 'K', 'tenant_key' => 'T', 'license_tier' => $tier, 'license_source' => 'app_pricing',
@@ -174,7 +174,7 @@ it('normalizes Shopify nodes per content type', function () {
 function fakeShopifyCatalog(): void
 {
     Http::fake([
-        'portal.test/wp-json/ai-seo-saas/v1/tenant/status' => Http::response(['status' => 'active', 'tier' => 'starter']),
+        'portal.test/wp-json/ai-seo-saas/v1/tenant/status' => Http::response(['status' => 'active', 'tier' => 'professional']),
         'test-shop.myshopify.com/admin/api/*' => function (Request $request) {
             $query = $request['query'] ?? '';
             $page = fn (array $nodes) => ['pageInfo' => ['hasNextPage' => false, 'endCursor' => null], 'edges' => array_map(fn ($n) => ['node' => $n], $nodes)];
@@ -223,7 +223,7 @@ it('runs the audit, stores the items worst first and scores the store', function
 it('fails the audit when Shopify cannot be read', function () {
     $shop = auditShop();
     Http::fake([
-        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter']),
+        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional']),
         'test-shop.myshopify.com/*' => Http::response('down', 503),
     ]);
     $audit = SeoAudit::create(['shop_id' => $shop->id, 'status' => 'queued']);
@@ -236,7 +236,7 @@ it('fails the audit when Shopify cannot be read', function () {
 
 it('does not run the audit when the plan no longer allows it', function () {
     $shop = auditShop();
-    Http::fake(['portal.test/*' => Http::response(['status' => 'suspended', 'tier' => 'starter'])]);
+    Http::fake(['portal.test/*' => Http::response(['status' => 'suspended', 'tier' => 'professional'])]);
     $audit = SeoAudit::create(['shop_id' => $shop->id, 'status' => 'queued']);
 
     SeoAuditJob::dispatchSync($audit->id);
@@ -264,7 +264,7 @@ it('keeps only the last audits per shop', function () {
 it('queues one audit at a time', function () {
     Queue::fake();
     auditShop();
-    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter'])]);
+    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional'])]);
 
     $this->postJson('/api/audit/start', [], auditHeaders())->assertJsonPath('audit.status', 'queued');
     $this->postJson('/api/audit/start', [], auditHeaders())->assertJsonPath('already_running', true);
@@ -275,7 +275,7 @@ it('queues one audit at a time', function () {
 it('restarts an audit that is stuck', function () {
     Queue::fake();
     $shop = auditShop();
-    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter'])]);
+    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional'])]);
     $stuck = SeoAudit::create(['shop_id' => $shop->id, 'status' => 'running']);
     $stuck->forceFill(['created_at' => now()->subHour()])->save();
 
@@ -287,7 +287,7 @@ it('restarts an audit that is stuck', function () {
 
 it('returns the latest result with issue groups ordered by severity', function () {
     $shop = auditShop();
-    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter'])]);
+    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional'])]);
     SeoAudit::create(['shop_id' => $shop->id, 'status' => 'completed', 'score' => 72, 'items_count' => 10, 'finished_at' => now(),
         'summary' => ['meta_title_long' => 9, 'meta_desc_missing' => 4, 'empty_collection' => 1]]);
     SeoAudit::create(['shop_id' => $shop->id, 'status' => 'running', 'progress' => 30]);
@@ -302,7 +302,7 @@ it('returns the latest result with issue groups ordered by severity', function (
 
 it('lists audit items filtered by issue and type', function () {
     $shop = auditShop();
-    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter'])]);
+    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional'])]);
     $audit = SeoAudit::create(['shop_id' => $shop->id, 'status' => 'completed', 'score' => 70]);
     $add = fn ($type, $id, $score, $codes) => SeoAuditItem::create(['seo_audit_id' => $audit->id, 'shop_id' => $shop->id, 'type' => $type,
         'resource_id' => "gid://shopify/{$id}", 'title' => $id, 'url' => null, 'score' => $score,
@@ -320,10 +320,24 @@ it('lists audit items filtered by issue and type', function () {
         ->assertJsonPath('items.0.resource_id', 'gid://shopify/Product/1');
 });
 
-it('gates the audit by plan', function () {
-    makeTestShop();
+it('gates the store-wide audit to Professional', function () {
+    auditShop('starter');
+    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter'])]);
 
-    $this->postJson('/api/audit/start', [], auditHeaders())->assertStatus(403);
+    $this->postJson('/api/audit/start', [], auditHeaders())
+        ->assertStatus(403)
+        ->assertJsonPath('required_tier', 'professional');
+});
+
+it('keeps the live item score in the content editor on Starter', function () {
+    auditShop('starter');
+    Http::fake([
+        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter']),
+        'test-shop.myshopify.com/*' => Http::response(['data' => ['node' => ['__typename' => 'Product', 'id' => 'gid://shopify/Product/1', 'title' => 'Lamp', 'handle' => 'lamp',
+            'descriptionHtml' => '', 'seo' => ['title' => null, 'description' => null], 'images' => ['edges' => []], 'metafields' => ['edges' => []]]]]),
+    ]);
+
+    $this->getJson('/api/content/product/1', auditHeaders())->assertOk()->assertJsonPath('item.seo.score', 58);
 });
 
 // --- Integration with other pages -------------------------------------------
@@ -334,7 +348,7 @@ it('adds the live SEO score to the content editor and audit scores to the list',
     SeoAuditItem::create(['seo_audit_id' => $audit->id, 'shop_id' => $shop->id, 'type' => 'product', 'resource_id' => 'gid://shopify/Product/1',
         'title' => 'Lamp', 'score' => 64, 'issues' => []]);
     Http::fake([
-        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter']),
+        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional']),
         'test-shop.myshopify.com/*' => function (Request $request) {
             return str_contains($request['query'] ?? '', 'node(')
                 ? Http::response(['data' => ['node' => ['__typename' => 'Product', 'id' => 'gid://shopify/Product/1', 'title' => 'Lamp', 'handle' => 'lamp',
@@ -355,7 +369,7 @@ it('shows the store SEO score on the home overview', function () {
     SeoAudit::create(['shop_id' => $shop->id, 'status' => 'completed', 'score' => 81]);
     SeoAudit::create(['shop_id' => $shop->id, 'status' => 'failed']);
     Http::fake([
-        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter']),
+        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional']),
         'partners.shopify.com/*' => Http::response(partnerSubscription('starter')),
         'test-shop.myshopify.com/*' => Http::response(['data' => ['productsCount' => ['count' => 2]]]),
     ]);

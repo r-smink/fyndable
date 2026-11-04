@@ -73,14 +73,14 @@ Route::middleware(['shopify.session'])->group(function () {
         Route::get('/', [RedirectController::class, 'index']);
         Route::get('/export', [RedirectController::class, 'export']);
         Route::get('/import/status', [RedirectController::class, 'importStatus']);
-        Route::get('/not-found', [RedirectController::class, 'notFound']);
+        Route::get('/not-found', [RedirectController::class, 'notFound'])->middleware('shopify.tier:not_found_monitor');
         Route::get('/settings', [RedirectController::class, 'settings']);
         Route::post('/settings', [RedirectController::class, 'saveSettings']);
-        Route::post('/not-found/{id}/ignore', [RedirectController::class, 'ignoreNotFound'])->whereNumber('id');
+        Route::post('/not-found/{id}/ignore', [RedirectController::class, 'ignoreNotFound'])->whereNumber('id')->middleware('shopify.tier:not_found_monitor');
         Route::middleware('shopify.scope:write_online_store_navigation')->group(function () {
             Route::post('/', [RedirectController::class, 'store']);
             Route::post('/import', [RedirectController::class, 'import']);
-            Route::post('/not-found/{id}/fix', [RedirectController::class, 'fixNotFound'])->whereNumber('id');
+            Route::post('/not-found/{id}/fix', [RedirectController::class, 'fixNotFound'])->whereNumber('id')->middleware('shopify.tier:not_found_monitor');
             Route::post('/{id}', [RedirectController::class, 'update'])->whereNumber('id');
             Route::delete('/{id}', [RedirectController::class, 'destroy'])->whereNumber('id');
         });

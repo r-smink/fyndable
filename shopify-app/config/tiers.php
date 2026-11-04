@@ -32,7 +32,6 @@ return [
 
     'features' => [
         'llmstxt' => 'starter',
-        'seo_audit' => 'starter',
         'redirects' => 'starter',
         'indexnow' => 'starter',
         'content_meta' => 'starter',
@@ -52,6 +51,8 @@ return [
         'llm_insights' => 'professional',
         'keyword_data' => 'professional',
         'markets' => 'professional',
+        'seo_audit' => 'professional',
+        'not_found_monitor' => 'professional',
         'blog_writer' => 'business',
         'content_calendar' => 'business',
         'bulk_optimizer' => 'business',

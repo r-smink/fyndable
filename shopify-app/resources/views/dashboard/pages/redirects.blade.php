@@ -6,7 +6,8 @@
 
 @section('content')
     <s-section heading="{{ __('redirects.not_found_title') }}">
-        <s-stack gap="base">
+        <div id="nf-locked" hidden></div>
+        <s-stack gap="base" id="nf-body">
             <s-banner tone="info">
                 {{ __('redirects.embed_banner') }}
                 <s-button slot="secondary-actions" href="shopify://admin/themes/current/editor?context=apps&amp;activateAppId={{ $apiKey }}/fyndable-404-monitor" target="_top">{{ __('redirects.embed_open') }}</s-button>
