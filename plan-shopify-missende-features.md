@@ -19,7 +19,8 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [ ] 1.6 Beeld-SEO
 - [x] 1.7 Rapportage (zie "Stand 1.7"; PDF als printbare pagina, server-side PDF wacht op akkoord voor een dependency)
 - [x] 2.1 AI-commerce readiness + productfeeds (zie "Stand 2.1")
-- [ ] 2.2 t/m 2.9 (fase 2)
+- [x] 2.2 AI-crawlerbeheer (zie "Stand 2.2")
+- [ ] 2.3 t/m 2.9 (fase 2)
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
 
@@ -170,6 +171,16 @@ Open:
 - Feeds moeten de merchant zelf aanmelden (Merchant Center: geplande ophaal-URL; OpenAI: merchant-programma). Instant Checkout (`is_eligible_checkout`) staat uit.
 - Gewicht/afmetingen en voorraadaantallen ontbreken (vragen `read_inventory`).
 - Shopify-standaardcategorie-metafields (taxonomiewaarden) worden niet automatisch ingevuld; de score wijst ze aan.
+
+### Stand 2.2 (2026-11-04)
+
+Gebouwd: pagina "AI-crawlers" met 14 AI-bots per bedrijf en doel: AI-zoeken (OAI-SearchBot, Claude-SearchBot, PerplexityBot), bezoek op verzoek (ChatGPT-User, Claude-User, Perplexity-User) en modeltraining (GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, meta-externalagent, Amazonbot, CCBot, Bytespider), met uitleg over de gevolgen. Per bot toestaan/blokkeren (standaard alles toestaan), presets "alles toestaan" en "alleen training blokkeren". De app maakt de volledige `robots.txt.liquid` (Shopify-standaardgroepen + Fyndable-blok) en het losse Fyndable-blok met stappen om het in het thema te plakken, controleert het themabestand (`read_themes`: ontbreekt / zonder blok / verouderd / actueel) en leest de live `/robots.txt` om per bot te tonen of hij echt geblokkeerd is.
+
+Afwijking van het plan:
+- **Niet automatisch in het thema:** schrijven in themabestanden vraagt `write_themes`, waarvoor Shopify publieke apps een uitzondering moet geven. Daarom kopieren en plakken met controle. Als die scope later wordt aangevraagd, kan dezelfde `AiCrawlers::fullTemplate()` het bestand rechtstreeks schrijven.
+- Toegestane bots krijgen bewust geen eigen regels: een eigen `User-agent`-groep met `Allow: /` zou Shopify's standaardregels (cart, checkout, admin) voor die bot opheffen.
+- Bots "op verzoek" (ChatGPT-User e.d.) volgen robots.txt volgens de aanbieders niet altijd.
+- Tier Starter (rij 39 in de spreadsheet, WP: Robots.txt Editor = base).
 
 ## Wat er al staat (uitgangspunt)
 

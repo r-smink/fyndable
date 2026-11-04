@@ -565,3 +565,8 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - `ShopifyContentFetcher::getFeedVariants()` (productVariants, 50 per pagina, productvelden per variant). `FeedBuilder::build()` schrijft `storage/app/private/feeds/{shop_id}/google.xml|openai.jsonl`, vult `ai_readiness_items` en `product_feeds` (status, tellingen, gemiddelde, issue-samenvatting).
 - `AiAttributes`: `generate()` (AI, JSON, normaliseert enums), `save()` (metafieldsSet json). Bulkactie `ai_attributes` in `BulkOptimizer` ("alleen nodig" = metafield leeg).
 - API `/api/ai-ready/*` (tier `ai_readiness`; attributen `ai_attributes`, met `shopify.trial`). Publiek: `GET /feeds/{token}/{google.xml|openai.jsonl}` (`FeedController`, 404 als uit, geen plan of niet geinstalleerd). Scheduler `product-feed-build` 02:00.
+
+## Shopify AI-crawlers (2.2, 2026-11-04)
+
+- `AiCrawlers`: `BOTS` (user agent => [bedrijf, search|user|training]), keuzes in `shop_profiles.ai_crawlers` (standaard allow), `block()` (alleen `Disallow: /` voor geblokkeerde bots, tussen `# Fyndable AI crawlers - begin/end`), `fullTemplate()` (Shopify `robots.default_groups`-loop + blok), `themeStatus()` (`templates/robots.txt.liquid` via `getMainThemeFiles`), `liveStatus()` + `parse()`/`isBlocked()` (eigen groep, anders `*`; `Allow: /` wint).
+- API `GET|POST /api/ai-crawlers`, `POST /api/ai-crawlers/check` (tier `ai_crawlers`, starter; check vraagt `read_themes`). Geen `write_themes`: de merchant plakt de code zelf.
