@@ -31,7 +31,7 @@ return [
         'col_score' => 'Score',
         'col_issues' => 'Issues',
         'show_items' => 'Show items',
-        'fix_bulk' => 'Fix products in bulk',
+        'fix_bulk' => 'Fix in bulk',
         'edit' => 'Edit',
         'prev' => 'Previous',
         'next' => 'Next',

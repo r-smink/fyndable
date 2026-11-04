@@ -21,7 +21,8 @@
     /** Translate a key from lang/{locale}/app.php or the page file ('js' group). */
     function t(key, vars = {}) {
         const text = I18N[key] ?? key;
-        return String(text).replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? ''));
+        // Unknown names stay as written, so {{title}} in template help survives.
+        return String(text).replace(/\{(\w+)\}/g, (match, k) => (k in vars ? (vars[k] ?? '') : match));
     }
 
     function esc(s) {

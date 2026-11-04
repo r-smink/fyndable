@@ -168,6 +168,7 @@ Route::middleware(['shopify.session'])->group(function () {
 
     // Bulk optimizer
     Route::post('/bulk/optimize', [BulkOptimizerController::class, 'optimize'])->middleware('shopify.tier:bulk_optimizer')->middleware('shopify.scope:write_products');
+    Route::post('/bulk/preview', [BulkOptimizerController::class, 'preview'])->middleware('shopify.tier:bulk_optimizer');
     Route::get('/bulk/progress', [BulkOptimizerController::class, 'progress'])->middleware('shopify.tier:bulk_optimizer');
     Route::post('/bulk/cancel', [BulkOptimizerController::class, 'cancel'])->middleware('shopify.tier:bulk_optimizer');
 

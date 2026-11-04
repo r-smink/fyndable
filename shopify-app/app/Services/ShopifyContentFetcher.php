@@ -214,8 +214,8 @@ class ShopifyContentFetcher
     }
 
     /**
-     * Items for the SEO audit (SeoAuditor::normalize), one content type at a
-     * time. Lean fields and small pages keep each query under Shopify's
+     * Items for the SEO audit (SeoAuditor::normalize) and the bulk optimizer,
+     * one content type at a time. Lean fields and small pages keep each query under Shopify's
      * 1000-point cost limit. Draft/archived products and unpublished pages
      * and articles are skipped: they are not indexed.
      *
@@ -228,10 +228,10 @@ class ShopifyContentFetcher
             .'descriptionTag: metafield(namespace: "global", key: "description_tag") { value }';
 
         [$connection, $filter, $fields, $pageSize] = match ($type) {
-            'product' => ['products', 'status:active', "id handle title onlineStoreUrl descriptionHtml seo { title description } media(first: 10) { nodes { alt mediaContentType } } {$hidden}", 40],
+            'product' => ['products', 'status:active', "id handle title vendor productType onlineStoreUrl descriptionHtml seo { title description } priceRangeV2 { minVariantPrice { amount currencyCode } } media(first: 10) { nodes { id alt mediaContentType preview { image { url } } } } {$hidden}", 40],
             'collection' => ['collections', null, "id handle title descriptionHtml seo { title description } productsCount { count } image { altText } {$hidden}", 100],
             'page' => ['pages', 'published_status:published', "id handle title body {$tags} {$hidden}", 50],
-            'article' => ['articles', 'published_status:published', "id handle title body blog { handle } image { altText } {$tags} {$hidden}", 50],
+            'article' => ['articles', 'published_status:published', "id handle title body blog { handle title } image { altText } {$tags} {$hidden}", 50],
             default => [null, null, null, 0],
         };
         if ($connection === null) {

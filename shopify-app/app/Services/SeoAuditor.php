@@ -38,8 +38,11 @@ class SeoAuditor
         'multiple_h1' => ['severity' => 'info', 'penalty' => 5],
     ];
 
-    /** Bulk optimizer action that fixes an issue (products only). */
+    /** Bulk optimizer action that fixes an issue (BulkOptimizer::ACTIONS). */
     public const BULK_FIXES = [
+        'meta_title_missing' => 'meta_title',
+        'meta_title_long' => 'meta_title',
+        'meta_title_short' => 'meta_title',
         'meta_desc_missing' => 'meta',
         'meta_desc_short' => 'meta',
         'meta_desc_long' => 'meta',

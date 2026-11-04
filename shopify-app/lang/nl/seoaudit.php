@@ -31,7 +31,7 @@ return [
         'col_score' => 'Score',
         'col_issues' => 'Problemen',
         'show_items' => 'Items tonen',
-        'fix_bulk' => 'Producten in bulk oplossen',
+        'fix_bulk' => 'In bulk oplossen',
         'edit' => 'Bewerken',
         'prev' => 'Vorige',
         'next' => 'Volgende',
