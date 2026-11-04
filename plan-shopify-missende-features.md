@@ -21,7 +21,8 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [x] 2.1 AI-commerce readiness + productfeeds (zie "Stand 2.1")
 - [x] 2.2 AI-crawlerbeheer (zie "Stand 2.2")
 - [x] 2.3 AI-vertalingen voor Markets (zie "Stand 2.3")
-- [ ] 2.4 t/m 2.9 (fase 2)
+- [-] 2.4 ApexFlow voor Shopify: vervalt (besluit 2026-11-04: ApexFlow hoeft niet op Shopify)
+- [ ] 2.5 t/m 2.9 (fase 2)
 
 ### Afwijkingen en vervolgpunten (gecontroleerd 2026-11-04)
 
@@ -263,6 +264,6 @@ De basis is breed. De grootste gaten zitten in **(1) wat de App Store vereist**,
 3. **Sprint 4-5:** 1.1 SEO-score + audit, 1.2 redirects/404, 1.4 winkelbreed schema
 4. **Sprint 6:** 1.3 bulk-uitbreiding + templates, 1.5 GSC, 1.7 rapportage
 5. **Sprint 7-9:** 2.1 AI-commerce readiness, 2.2 AI-crawlers, 2.3 AI-vertalingen
-6. **Daarna:** 2.4 ApexFlow, 2.8 AI-omzetmeting, 2.5/2.6/2.7/2.9, 1.6 beeld-SEO
+6. **Daarna:** ~~2.4 ApexFlow~~ (vervalt voor Shopify), 2.8 AI-omzetmeting, 2.5/2.6/2.7/2.9, 1.6 beeld-SEO
 
 **Positionering:** "De enige Shopify SEO-app die je producten vindbaar maakt in ChatGPT, Perplexity en Google AI." Fase 2.1, 2.2 en 2.8 maken die claim waar. Fase 0 en 1 zijn nodig om überhaupt mee te kunnen doen.
