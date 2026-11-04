@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Jobs\GdprDeleteTenantJob;
 use App\Jobs\SyncShopBillingJob;
+use App\Jobs\TrackHandleChangeJob;
+use App\Models\NotFoundUrl;
 use App\Models\RankHistory;
+use App\Models\RedirectEvent;
+use App\Models\ResourceHandle;
 use App\Models\ScheduledArticle;
 use App\Models\SeoAudit;
 use App\Models\SeoAuditItem;
@@ -75,6 +79,10 @@ class WebhookController extends Controller
             case 'collections/create':
             case 'collections/update':
             case 'collections/delete':
+                $this->trackHandle($shop, $topic, $payload);
+                $this->handleContentChange($shop);
+                break;
+
             case 'pages/create':
             case 'pages/update':
             case 'pages/delete':
@@ -109,6 +117,26 @@ class WebhookController extends Controller
     }
 
     /**
+     * Remember product/collection handles and redirect changed or deleted
+     * URLs (1.2). products/delete only sends the id, so the job looks up the
+     * last known handle.
+     */
+    private function trackHandle(Shop $shop, string $topic, array $payload): void
+    {
+        $id = (string) ($payload['id'] ?? '');
+        if (! ctype_digit($id)) {
+            return;
+        }
+
+        [$resource, $action] = explode('/', $topic, 2);
+        $type = $resource === 'collections' ? 'collection' : 'product';
+
+        $action === 'delete'
+            ? TrackHandleChangeJob::dispatch($shop->id, $type, $id, null, null, true)
+            : TrackHandleChangeJob::dispatch($shop->id, $type, $id, (string) ($payload['handle'] ?? ''), $payload['title'] ?? null);
+    }
+
+    /**
      * Mark the shop as uninstalled.
      */
     private function handleUninstall(Shop $shop): void
@@ -129,7 +157,7 @@ class WebhookController extends Controller
      * shop/redact — erase shop data after uninstall grace period.
      *
      * Removes tracked keywords, rank history, llms.txt settings, the store
-     * profile (onboarding), scheduled articles, SEO audits and usage counters, and deletes the App Pricing tenant on the
+     * profile (onboarding), scheduled articles, SEO audits, redirect data (handles, 404s, log) and usage counters, and deletes the App Pricing tenant on the
      * SaaS (queued). The shop row is kept without credentials, license or
      * contact data. trial_products and trial_ended_at stay (product IDs only)
      * so a reinstall cannot restart the free trial.
@@ -146,6 +174,9 @@ class WebhookController extends Controller
         ScheduledArticle::where('shop_id', $shop->id)->delete();
         SeoAuditItem::where('shop_id', $shop->id)->delete();
         SeoAudit::where('shop_id', $shop->id)->delete();
+        ResourceHandle::where('shop_id', $shop->id)->delete();
+        NotFoundUrl::where('shop_id', $shop->id)->delete();
+        RedirectEvent::where('shop_id', $shop->id)->delete();
         DB::table('shop_usage')->where('shop_id', $shop->id)->delete();
 
         // The App Pricing tenant belongs to this shop: delete it on the SaaS.

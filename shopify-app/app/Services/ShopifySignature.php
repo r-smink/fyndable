@@ -59,6 +59,42 @@ class ShopifySignature
     }
 
     /**
+     * Verify the `signature` Shopify adds to App Proxy requests.
+     *
+     * Per Shopify: drop `signature`, URL-decode the params, join repeated
+     * params with a comma, build "key=value" strings, sort them and
+     * concatenate them without a separator.
+     */
+    public function verifyAppProxy(Request $request): bool
+    {
+        $queryString = (string) $request->server->get('QUERY_STRING', '');
+        $values = [];
+        foreach (explode('&', $queryString) as $part) {
+            if ($part === '') {
+                continue;
+            }
+            [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
+            $values[urldecode($key)][] = urldecode($value);
+        }
+
+        $signature = $values['signature'][0] ?? '';
+        unset($values['signature']);
+        if ($signature === '' || ! isset($values['shop'])) {
+            return false;
+        }
+
+        $pairs = [];
+        foreach ($values as $key => $list) {
+            $pairs[] = $key.'='.implode(',', $list);
+        }
+        sort($pairs, SORT_STRING);
+
+        $calculated = hash_hmac('sha256', implode('', $pairs), $this->apiSecret);
+
+        return hash_equals($calculated, $signature);
+    }
+
+    /**
      * Verify an App Bridge session token (JWT) issued by Shopify.
      *
      * Shopify signs session tokens with HS256 using the app's API secret.

@@ -15,9 +15,23 @@ api_version = "2026-07"
   uri = "https://shopify.fyndable.ai/webhooks"
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
+  # App lifecycle (billing suspend on uninstall) and catalog changes (llms.txt
+  # cache, automatic redirects on handle change or deletion, 1.2).
+  [[webhooks.subscriptions]]
+  uri = "https://shopify.fyndable.ai/webhooks"
+  topics = [
+    "app/uninstalled",
+    "products/create",
+    "products/update",
+    "products/delete",
+    "collections/create",
+    "collections/update",
+    "collections/delete"
+  ]
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_content,read_locales,read_markets,read_metaobjects,read_products,read_themes,read_translations,write_app_proxy,write_content,write_metaobjects,write_products"
+scopes = "read_content,read_locales,read_markets,read_metaobjects,read_products,read_themes,read_translations,write_app_proxy,write_content,write_metaobjects,write_online_store_navigation,write_products"
 
 [auth]
 redirect_urls = [ "https://shopify.fyndable.ai/auth/callback" ]

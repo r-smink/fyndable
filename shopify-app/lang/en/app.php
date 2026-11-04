@@ -12,6 +12,7 @@
 return [
     'nav' => [
         'home' => 'Home',
+        'redirects' => 'Redirects and 404s',
         'seoaudit' => 'SEO audit',
         'content' => 'Content optimizer',
         'bulk' => 'Bulk optimizer',

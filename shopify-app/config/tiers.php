@@ -33,6 +33,7 @@ return [
     'features' => [
         'llmstxt' => 'starter',
         'seo_audit' => 'starter',
+        'redirects' => 'starter',
         'indexnow' => 'starter',
         'content_meta' => 'starter',
         'content_description' => 'starter',
@@ -59,6 +60,7 @@ return [
     // Dashboard tab => feature key (locks the tab in the embedded app).
     'tabs' => [
         'seoaudit' => 'seo_audit',
+        'redirects' => 'redirects',
         'content' => 'content_meta',
         'bulk' => 'bulk_optimizer',
         'blogwriter' => 'blog_writer',

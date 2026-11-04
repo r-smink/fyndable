@@ -63,7 +63,7 @@ class IndexNowController extends Controller
             return ['error' => 'shop_not_found'];
         }
 
-        if (in_array('write_content', $shop->missingScopes(), true)) {
+        if (in_array('write_online_store_navigation', $shop->missingScopes(), true)) {
             return [
                 'error' => 'missing_scopes',
                 'missing_scopes' => $shop->missingScopes(),

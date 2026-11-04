@@ -3,6 +3,7 @@
 use App\Models\Shop;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /*
@@ -46,7 +47,24 @@ function configureShopifyTestApp(bool $billing = true): void
         'shopify.billing.sync_secret' => TEST_SYNC_SECRET,
         'shopify.billing.trial_products' => 5,
         'shopify.billing.check_ttl' => 600,
+        // Same list as shopify.app.toml, independent of the local .env.
+        'shopify.scopes' => 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy,write_online_store_navigation,read_markets,read_locales,read_translations',
     ]);
+}
+
+/**
+ * POST a signed Shopify webhook.
+ */
+function sendWebhook(string $topic, array $payload = []): TestResponse
+{
+    $body = json_encode($payload ?: ['shop_domain' => TEST_SHOP]);
+
+    return test()->call('POST', '/webhooks', [], [], [], [
+        'HTTP_X_SHOPIFY_TOPIC' => $topic,
+        'HTTP_X_SHOPIFY_SHOP_DOMAIN' => TEST_SHOP,
+        'HTTP_X_SHOPIFY_HMAC_SHA256' => base64_encode(hash_hmac('sha256', $body, TEST_API_SECRET, true)),
+        'CONTENT_TYPE' => 'application/json',
+    ], $body);
 }
 
 /**

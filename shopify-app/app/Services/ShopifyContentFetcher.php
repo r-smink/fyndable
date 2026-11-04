@@ -256,6 +256,25 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Handle of the product's first collection (redirect target when the
+     * product is deleted, 1.2). null = in no collection, false = request failed.
+     */
+    public function getProductCollectionHandle(Shop $shop, string $productGid): string|null|false
+    {
+        $response = $this->graphql($shop, <<<'GRAPHQL'
+        query productCollection($id: ID!) {
+          product(id: $id) { collections(first: 1) { nodes { handle } } }
+        }
+        GRAPHQL, ['id' => $productGid]);
+
+        if (isset($response['error'])) {
+            return false;
+        }
+
+        return $response['data']['product']['collections']['nodes'][0]['handle'] ?? null;
+    }
+
+    /**
      * Search a single content type by title.
      *
      * Uses Shopify's search `query` argument; an empty search returns the first

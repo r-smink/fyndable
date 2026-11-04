@@ -16,11 +16,18 @@ class ShopProfile extends Model
         'brand_description',
         'onboarding_completed_at',
         'onboarding_skipped_at',
+        'redirect_on_handle_change',
+        'redirect_on_delete',
+        'deleted_redirect_target',
+        'not_found_monitor',
     ];
 
     protected $casts = [
         'onboarding_completed_at' => 'datetime',
         'onboarding_skipped_at' => 'datetime',
+        'redirect_on_handle_change' => 'boolean',
+        'redirect_on_delete' => 'boolean',
+        'not_found_monitor' => 'boolean',
     ];
 
     public function shop(): BelongsTo

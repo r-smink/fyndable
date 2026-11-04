@@ -1,0 +1,28 @@
+{% comment %}
+  Fyndable 404 monitor (1.2). Only renders on the theme's 404 page and sends
+  one small beacon to the app proxy; no script on any other page, so no
+  storefront performance impact. Skipped in the theme editor.
+{% endcomment %}
+{% if request.page_type == '404' and request.design_mode == false %}
+<script>
+  (function () {
+    try {
+      var body = JSON.stringify({ path: location.pathname, ref: document.referrer || '' });
+      var url = '{{ routes.root_url | append: "/apps/fyndable/404" | replace: "//apps", "/apps" }}';
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }));
+      } else {
+        fetch(url, { method: 'POST', body: body, keepalive: true });
+      }
+    } catch (e) {}
+  })();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Fyndable 404 monitor",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}

@@ -11,23 +11,10 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Testing\TestResponse;
 
 beforeEach(function () {
     configureShopifyTestApp();
 });
-
-function sendWebhook(string $topic, array $payload = []): TestResponse
-{
-    $body = json_encode($payload ?: ['shop_domain' => TEST_SHOP]);
-
-    return test()->call('POST', '/webhooks', [], [], [], [
-        'HTTP_X_SHOPIFY_TOPIC' => $topic,
-        'HTTP_X_SHOPIFY_SHOP_DOMAIN' => TEST_SHOP,
-        'HTTP_X_SHOPIFY_HMAC_SHA256' => base64_encode(hash_hmac('sha256', $body, TEST_API_SECRET, true)),
-        'CONTENT_TYPE' => 'application/json',
-    ], $body);
-}
 
 it('erases shop data on shop/redact and queues the SaaS tenant deletion', function () {
     Queue::fake();

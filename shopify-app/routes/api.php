@@ -15,9 +15,11 @@ use App\Http\Controllers\KeywordExplorerController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MarketsController;
+use App\Http\Controllers\NotFoundController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RankTrackerController;
+use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\SeoAuditController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +39,9 @@ Route::get('/', [LlmsTxtController::class, 'proxy']);
 
 // IndexNow key file via app proxy (shop resolved from the ?shop= proxy param).
 Route::get('/indexnow-key.txt', [IndexNowController::class, 'keyFile']);
+
+// 404 monitor beacon from the theme app embed (/apps/fyndable/404, signed by the app proxy).
+Route::post('/404', [NotFoundController::class, 'report'])->middleware('throttle:600,1');
 
 Route::middleware(['shopify.session'])->group(function () {
 
@@ -63,6 +68,24 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
 
+    // Redirect manager + 404 monitor (1.2)
+    Route::middleware('shopify.tier:redirects')->prefix('redirects')->group(function () {
+        Route::get('/', [RedirectController::class, 'index']);
+        Route::get('/export', [RedirectController::class, 'export']);
+        Route::get('/import/status', [RedirectController::class, 'importStatus']);
+        Route::get('/not-found', [RedirectController::class, 'notFound']);
+        Route::get('/settings', [RedirectController::class, 'settings']);
+        Route::post('/settings', [RedirectController::class, 'saveSettings']);
+        Route::post('/not-found/{id}/ignore', [RedirectController::class, 'ignoreNotFound'])->whereNumber('id');
+        Route::middleware('shopify.scope:write_online_store_navigation')->group(function () {
+            Route::post('/', [RedirectController::class, 'store']);
+            Route::post('/import', [RedirectController::class, 'import']);
+            Route::post('/not-found/{id}/fix', [RedirectController::class, 'fixNotFound'])->whereNumber('id');
+            Route::post('/{id}', [RedirectController::class, 'update'])->whereNumber('id');
+            Route::delete('/{id}', [RedirectController::class, 'destroy'])->whereNumber('id');
+        });
+    });
+
     // License
     Route::get('/license/status', [LicenseController::class, 'status']);
     Route::post('/license/activate', [LicenseController::class, 'activate']);
@@ -72,7 +95,7 @@ Route::middleware(['shopify.session'])->group(function () {
     Route::get('/llmstxt/status', [LlmsTxtController::class, 'status'])->middleware('shopify.tier:llmstxt');
     Route::post('/llmstxt/settings', [LlmsTxtController::class, 'updateSettings'])->middleware('shopify.tier:llmstxt');
     Route::post('/llmstxt/regenerate', [LlmsTxtController::class, 'regenerate'])->middleware('shopify.tier:llmstxt');
-    Route::post('/llmstxt/setup-redirects', [LlmsTxtController::class, 'setupRedirects'])->middleware('shopify.tier:llmstxt')->middleware('shopify.scope:write_content');
+    Route::post('/llmstxt/setup-redirects', [LlmsTxtController::class, 'setupRedirects'])->middleware('shopify.tier:llmstxt')->middleware('shopify.scope:write_online_store_navigation');
     Route::get('/llmstxt/preview', [LlmsTxtController::class, 'preview'])->middleware('shopify.tier:llmstxt');
 
     // Content (products, collections, pages, articles) — generic surface.
@@ -121,7 +144,7 @@ Route::middleware(['shopify.session'])->group(function () {
 
     // IndexNow
     Route::get('/indexnow/status', [IndexNowController::class, 'status'])->middleware('shopify.tier:indexnow');
-    Route::post('/indexnow/setup', [IndexNowController::class, 'setup'])->middleware('shopify.tier:indexnow')->middleware('shopify.scope:write_content');
+    Route::post('/indexnow/setup', [IndexNowController::class, 'setup'])->middleware('shopify.tier:indexnow')->middleware('shopify.scope:write_online_store_navigation');
     Route::post('/indexnow/submit', [IndexNowController::class, 'submit'])->middleware('shopify.tier:indexnow');
 
     // Products
