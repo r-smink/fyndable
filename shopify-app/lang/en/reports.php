@@ -41,6 +41,7 @@ return [
     'kind_image' => 'AI product images',
     'kind_article' => 'Blog articles',
     'kind_translation' => 'Translations for other languages',
+    'kind_collection_page' => 'Collection landing pages',
     'kind_redirect' => 'Redirects',
     'kind_ai_attributes' => 'Shopping attributes for AI',
     'open_app' => 'Open Fyndable',

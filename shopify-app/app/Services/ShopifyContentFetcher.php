@@ -433,6 +433,56 @@ class ShopifyContentFetcher
     }
 
     /**
+     * Collections with their landing content status (2.5).
+     *
+     * @return array<int, array>|array{error: string}
+     */
+    public function getCollectionsForLanding(Shop $shop, int $max = 250): array
+    {
+        $query = <<<'GRAPHQL'
+        query landingCollections($first: Int!, $after: String) {
+          collections(first: $first, after: $after, sortKey: TITLE) {
+            pageInfo { hasNextPage endCursor }
+            edges { node {
+              id title handle
+              productsCount { count }
+              landing: metafield(namespace: "fyndable", key: "collection_landing") { value updatedAt }
+            } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $items = $this->paginate($shop, $query, 'collections', $max, 100, $error);
+
+        return $error !== null ? ['error' => $error] : $items;
+    }
+
+    /**
+     * One collection with sample products and its landing content (2.5).
+     *
+     * @return array|array{error: string}
+     */
+    public function getCollectionForLanding(Shop $shop, string $collectionGid): array
+    {
+        $response = $this->graphql($shop, <<<'GRAPHQL'
+        query landingCollection($id: ID!) {
+          collection(id: $id) {
+            id title handle descriptionHtml
+            products(first: 20) { nodes { title productType vendor } }
+            landing: metafield(namespace: "fyndable", key: "collection_landing") { value }
+          }
+        }
+        GRAPHQL, ['id' => $collectionGid]);
+
+        if (isset($response['error'])) {
+            return ['error' => (string) $response['error']];
+        }
+
+        return $response['data']['collection'] ?? ['error' => 'not_found'];
+    }
+
+    /**
      * Search a single content type by title.
      *
      * Uses Shopify's search `query` argument; an empty search returns the first

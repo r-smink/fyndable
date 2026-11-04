@@ -38,7 +38,7 @@ class DashboardController extends Controller
         'home', 'seoaudit', 'redirects', 'schema', 'content', 'bulk', 'blogwriter', 'calendar',
         'gsc', 'ranktracker', 'kwexplorer', 'competitor', 'backlinks', 'markets', 'translations',
         'aiready', 'aivisibility', 'geoscan', 'aitracker', 'llmstxt', 'aicrawlers', 'tools',
-        'reports', 'settings', 'plan',
+        'collections', 'reports', 'settings', 'plan',
     ];
 
     /** Admin UI languages (merchant-facing text: lang/{en,nl}). */

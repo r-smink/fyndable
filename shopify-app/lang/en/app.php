@@ -33,6 +33,7 @@ return [
         'llmstxt' => 'llms.txt',
         'aicrawlers' => 'AI crawlers',
         'tools' => 'Tools',
+        'collections' => 'Collection pages',
         'reports' => 'Reports',
         'settings' => 'Settings',
         'plan' => 'Plan',

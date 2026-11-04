@@ -28,6 +28,7 @@ class RecordActivity
         '#^api/calendar/schedule$#' => 'article',
         '#/attributes/save$#' => 'ai_attributes',
         '#^api/translations/save$#' => 'translation',
+        '#^api/collection-pages/[^/]+/save$#' => 'collection_page',
     ];
 
     public function handle(Request $request, Closure $next): Response

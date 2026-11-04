@@ -6,6 +6,7 @@ use App\Http\Controllers\AiTrackerController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BlogWriterController;
 use App\Http\Controllers\BulkOptimizerController;
+use App\Http\Controllers\CollectionLandingController;
 use App\Http\Controllers\CompetitorController;
 use App\Http\Controllers\ContentCalendarController;
 use App\Http\Controllers\ContentController;
@@ -73,6 +74,15 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
     Route::post('/audit/start', [SeoAuditController::class, 'start'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/latest', [SeoAuditController::class, 'latest'])->middleware('shopify.tier:seo_audit');
     Route::get('/audit/items', [SeoAuditController::class, 'items'])->middleware('shopify.tier:seo_audit');
+
+    // Collection pages as SEO landing pages (2.5)
+    Route::middleware('shopify.tier:collection_pages')->prefix('collection-pages')->group(function () {
+        Route::get('/', [CollectionLandingController::class, 'index']);
+        Route::get('/{id}', [CollectionLandingController::class, 'show'])->whereNumber('id');
+        Route::post('/{id}/keywords', [CollectionLandingController::class, 'keywords'])->whereNumber('id');
+        Route::post('/{id}/generate', [CollectionLandingController::class, 'generate'])->whereNumber('id');
+        Route::post('/{id}/save', [CollectionLandingController::class, 'save'])->whereNumber('id')->middleware('shopify.scope:write_products');
+    });
 
     // AI translations for Markets (2.3)
     Route::middleware('shopify.tier:translations')->prefix('translations')->group(function () {

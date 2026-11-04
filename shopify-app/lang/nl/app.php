@@ -28,6 +28,7 @@ return [
         'llmstxt' => 'llms.txt',
         'aicrawlers' => 'AI-crawlers',
         'tools' => 'Tools',
+        'collections' => 'Collectiepagina\'s',
         'reports' => 'Rapporten',
         'settings' => 'Instellingen',
         'plan' => 'Abonnement',
