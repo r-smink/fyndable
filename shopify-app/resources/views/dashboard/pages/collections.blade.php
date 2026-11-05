@@ -13,8 +13,9 @@
         <s-stack gap="base">
             <div id="cl-blocks"></div>
             <s-paragraph>{{ __('collections.blocks_text') }}</s-paragraph>
-            <s-stack direction="inline">
-                <s-button href="shopify://admin/themes/current/editor?template=collection" target="_top">{{ __('collections.open_editor') }}</s-button>
+            <s-stack direction="inline" gap="base">
+                <s-button href="shopify://admin/themes/current/editor?template=collection&amp;addAppBlockId={{ $apiKey }}/fyndable-collection-intro&amp;target=mainSection" target="_top">{{ __('collections.add_intro') }}</s-button>
+                <s-button href="shopify://admin/themes/current/editor?template=collection&amp;addAppBlockId={{ $apiKey }}/fyndable-collection-faq&amp;target=mainSection" target="_top">{{ __('collections.add_faq') }}</s-button>
             </s-stack>
         </s-stack>
     </s-section>

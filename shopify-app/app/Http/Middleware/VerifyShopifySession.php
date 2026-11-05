@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Models\Shop;
 use App\Services\ShopifySignature;
 use App\Services\ShopifyTokenService;
-use App\Services\ShopifyWebhookRegistrar;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -82,9 +81,8 @@ class VerifyShopifySession
             }
         }
 
-        if ($isNewInstall && $shop->exists) {
-            app(ShopifyWebhookRegistrar::class)->register($shop);
-        }
+        // Webhooks are app-specific subscriptions in shopify.app.toml; nothing
+        // to register per shop (the REST registration was removed, 2.2.4).
 
         $request->attributes->set('shop', $shop);
 

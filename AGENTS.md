@@ -593,3 +593,9 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 
 - App-domein is `https://smartseoapp.fyndable.ai` (Shopify staat "shopify" niet toe in de app-URL). Staat in `shopify.app.toml` (application_url, redirect_urls, webhook-URI's, app proxy) en als standaard in SaaS `licenseapi.php` (`sseo_ai_saas_shopify_app_origin`, postMessage-doel van de Google-popup).
 - Signed links (rapport, afmelden) zijn ondertekend op pad + query (`signed:relative`, `ReportMailer::absolute()`), zodat ze een domeinwissel overleven.
+
+## Shopify App Store-zelfreview (2026-11-05)
+
+- Shopify AI Toolkit (Claude Code-plugin `shopify-ai-toolkit`) gedraaid; eisen via `shopify doc fetch --url https://shopify.dev/docs/apps/launch/app-store-review/app-store-ai-self-review-requirements`.
+- Opgelost: `ShopifyWebhookRegistrar` (REST `webhooks.json` per winkel, 2.2.4; webhooks komen nu alleen uit `shopify.app.toml`, eerder kwamen ze dubbel binnen) en het oude installatieformulier met een myshopify-invoerveld (`/install/form`, 2.3.1) zijn verwijderd. Deeplinks die de collectieblokken toevoegen (`addAppBlockId`, 5.1.3). `tests/Feature/AppStoreComplianceTest.php` bewaakt GraphQL-only, geen winkel-URL-invoer en App Bridge als eerste script.
+- Open (productbeslissing): agency-licentiesleutels buiten Shopify-facturering (1.2.1) en de AI-crawlerpagina die vraagt code in het thema te plakken (5.1.1).

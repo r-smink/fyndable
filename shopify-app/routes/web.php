@@ -40,11 +40,6 @@ Route::get('/feeds/{token}/{file}', [FeedController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32,64}')->where('file', 'google\.xml|openai\.jsonl')
     ->middleware('throttle:60,1')->name('feeds.show');
 
-// Install form (for shops that need to enter their license key)
-Route::get('/install/form', function () {
-    return view('install');
-})->name('install.form');
-
 // Landing page
 Route::get('/', function () {
     return view('welcome');

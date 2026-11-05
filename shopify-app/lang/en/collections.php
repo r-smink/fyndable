@@ -4,6 +4,8 @@ return [
     'intro' => 'Collection pages often rank best for shopping searches, but most are just a product grid. Fyndable writes an intro above the products and an FAQ below them, based on what shoppers search for, in your brand voice. The FAQ is also added as FAQ schema.',
     'blocks_title' => 'Show it in your theme',
     'blocks_text' => 'Add the "Fyndable collection intro" block above and the "Fyndable collection FAQ" block below the product grid in your collection template (theme editor > Collection > Add block > Apps). Also turn on the "Fyndable SEO schema" app embed for the FAQ schema.',
+    'add_intro' => 'Add intro block',
+    'add_faq' => 'Add FAQ block',
     'open_editor' => 'Open theme editor',
     'list_title' => 'Collections',
     'modal_title' => 'Collection landing page',

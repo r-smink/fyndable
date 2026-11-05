@@ -4,6 +4,8 @@ return [
     'intro' => 'Collectiepagina\'s ranken vaak het best op shopping-zoekopdrachten, maar de meeste zijn alleen een productoverzicht. Fyndable schrijft een intro boven de producten en een FAQ eronder, op basis van waar shoppers op zoeken en in je merkstem. De FAQ wordt ook als FAQ-schema toegevoegd.',
     'blocks_title' => 'Tonen in je thema',
     'blocks_text' => 'Voeg in je collectietemplate het blok "Fyndable collection intro" toe boven en "Fyndable collection FAQ" onder het productoverzicht (thema-editor > Collectie > Blok toevoegen > Apps). Zet ook de app embed "Fyndable SEO schema" aan voor het FAQ-schema.',
+    'add_intro' => 'Introblok toevoegen',
+    'add_faq' => 'FAQ-blok toevoegen',
     'open_editor' => 'Thema-editor openen',
     'list_title' => 'Collecties',
     'modal_title' => 'Collectie als landingspagina',
