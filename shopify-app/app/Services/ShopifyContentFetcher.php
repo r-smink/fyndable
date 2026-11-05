@@ -252,7 +252,71 @@ class ShopifyContentFetcher
         $items = $this->paginate($shop, $query, $connection, $limit, $pageSize, $error);
 
         // A partial catalog would give a misleading score: report the error.
-        return $error !== null ? ['error' => $error] : $items;
+        if ($error !== null) {
+            return ['error' => $error];
+        }
+
+        return $type === 'product' ? $this->withOnlineStoreFlag($shop, $items) : $items;
+    }
+
+    /**
+     * GIDs of active products published to the Online Store sales channel.
+     *
+     * Product.onlineStoreUrl is null while the storefront is password
+     * protected (development stores, stores before launch), even for
+     * published products, so it cannot tell whether a product is published.
+     * The published_status search filter can.
+     *
+     * @return array<string, true>|array{error: string}
+     */
+    public function getOnlineStoreProductIds(Shop $shop, int $limit = 20000): array
+    {
+        $query = <<<'GRAPHQL'
+        query onlineStoreProducts($first: Int!, $after: String) {
+          products(first: $first, after: $after, query: "status:active published_status:online_store_channel") {
+            pageInfo { hasNextPage endCursor }
+            edges { node { id } }
+          }
+        }
+        GRAPHQL;
+
+        $error = null;
+        $nodes = $this->paginate($shop, $query, 'products', $limit, 250, $error);
+        if ($error !== null) {
+            return ['error' => $error];
+        }
+
+        $ids = [];
+        foreach ($nodes as $node) {
+            if (! empty($node['id'])) {
+                $ids[$node['id']] = true;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Mark each product with publishedOnline (Online Store sales channel).
+     *
+     * @param  array<int, array>  $products  product nodes with id
+     * @return array<int, array>|array{error: string}
+     */
+    private function withOnlineStoreFlag(Shop $shop, array $products): array
+    {
+        if ($products === []) {
+            return $products;
+        }
+        $ids = $this->getOnlineStoreProductIds($shop);
+        if (isset($ids['error'])) {
+            return ['error' => (string) $ids['error']];
+        }
+        foreach ($products as &$product) {
+            $product['publishedOnline'] = isset($ids[$product['id'] ?? '']);
+        }
+        unset($product);
+
+        return $products;
     }
 
     /**
@@ -308,8 +372,25 @@ class ShopifyContentFetcher
 
         $error = null;
         $items = $this->paginate($shop, $query, 'productVariants', $max, 50, $error);
+        if ($error !== null) {
+            return ['error' => $error];
+        }
+        if ($items === []) {
+            return $items;
+        }
 
-        return $error !== null ? ['error' => $error] : $items;
+        $ids = $this->getOnlineStoreProductIds($shop);
+        if (isset($ids['error'])) {
+            return ['error' => (string) $ids['error']];
+        }
+        foreach ($items as &$variant) {
+            if (isset($variant['product'])) {
+                $variant['product']['publishedOnline'] = isset($ids[$variant['product']['id'] ?? '']);
+            }
+        }
+        unset($variant);
+
+        return $items;
     }
 
     /**

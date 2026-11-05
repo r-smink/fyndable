@@ -43,7 +43,7 @@ class AiCommerce
         $products = [];
         foreach ($variants as $variant) {
             $product = $variant['product'] ?? null;
-            if (! $product || ($product['status'] ?? '') !== 'ACTIVE' || empty($product['onlineStoreUrl'])) {
+            if (! $product || ($product['status'] ?? '') !== 'ACTIVE' || ! ($product['publishedOnline'] ?? ! empty($product['onlineStoreUrl']))) {
                 continue;
             }
             $id = $product['id'];
@@ -239,7 +239,8 @@ class AiCommerce
             'has_variants' => $hasVariants,
             'title' => mb_substr($title, 0, 150),
             'description' => mb_substr($this->plainText((string) ($product['descriptionHtml'] ?? '')) ?: (string) $product['title'], 0, 5000),
-            'url' => $product['onlineStoreUrl'].($hasVariants ? '?variant='.$variantId : ''),
+            // onlineStoreUrl is null on password protected storefronts.
+            'url' => ($product['onlineStoreUrl'] ?? null ?: rtrim((string) $shop['url'], '/').'/products/'.$product['handle']).($hasVariants ? '?variant='.$variantId : ''),
             'brand' => trim((string) ($product['vendor'] ?? '')) ?: $shop['name'],
             'image' => $image,
             'additional_images' => array_values(array_filter(array_slice($images, 0, 10), fn ($url) => $url !== $image)),

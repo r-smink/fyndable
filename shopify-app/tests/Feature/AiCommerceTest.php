@@ -75,6 +75,12 @@ function fakeFeedShopify(array $variants, string $tier = 'professional', ?string
         'portal.test/wp-json/ai-seo-saas/v1/ai/generate' => Http::response(['success' => true, 'text' => $aiText ?? '{}']),
         'test-shop.myshopify.com/admin/api/*' => function (Request $request) use ($variants) {
             $query = $request['query'] ?? '';
+            if (str_contains($query, 'onlineStoreProducts')) {
+                // Published to the Online Store: the fixtures mark this with a storefront URL.
+                $ids = array_values(array_unique(array_filter(array_map(fn ($v) => ! empty($v['product']['onlineStoreUrl']) ? $v['product']['id'] : null, $variants))));
+
+                return Http::response(['data' => ['products' => ['pageInfo' => ['hasNextPage' => false, 'endCursor' => null], 'edges' => array_map(fn ($id) => ['node' => ['id' => $id]], $ids)]]]);
+            }
             if (str_contains($query, 'productVariants')) {
                 return Http::response(['data' => ['productVariants' => ['pageInfo' => ['hasNextPage' => false, 'endCursor' => null], 'edges' => array_map(fn ($v) => ['node' => $v], $variants)]]]);
             }
@@ -128,6 +134,17 @@ it('skips draft and unpublished products', function () {
     $live = arVariant(1) + ['product' => arProduct()];
 
     expect(array_keys(app(AiCommerce::class)->group([$draft, $hidden, $live])))->toBe(['gid://shopify/Product/10']);
+});
+
+it('treats products published to the Online Store as live on password protected stores', function () {
+    // onlineStoreUrl is null while the storefront has a password.
+    $published = arVariant(1) + ['product' => arProduct(['onlineStoreUrl' => null, 'publishedOnline' => true])];
+    $unpublished = arVariant(4) + ['product' => arProduct(['id' => 'gid://shopify/Product/12', 'onlineStoreUrl' => null, 'publishedOnline' => false])];
+
+    expect(array_keys(app(AiCommerce::class)->group([$published, $unpublished])))->toBe(['gid://shopify/Product/10']);
+
+    $row = app(AiCommerce::class)->openAiRow(arProduct(['onlineStoreUrl' => null]), arVariant(2), ['name' => 'Lamp Shop', 'url' => 'https://lamps.example/', 'currency' => 'EUR']);
+    expect($row['url'])->toBe('https://lamps.example/products/brass-lamp?variant=2');
 });
 
 it('builds OpenAI feed rows per variant following the spec', function () {

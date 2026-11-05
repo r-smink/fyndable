@@ -100,9 +100,10 @@ class SeoAuditor
             'images' => $images,
             'products_count' => $type === 'collection' ? (int) ($node['productsCount']['count'] ?? 0) : null,
             'hidden' => ($node['hidden']['value'] ?? null) === '1',
-            // Products are fetched with status:active: active but without a
-            // storefront URL means not published to the online store.
-            'published' => $type !== 'product' || ! empty($node['onlineStoreUrl']),
+            // Products are fetched with status:active. publishedOnline comes
+            // from the published_status filter; onlineStoreUrl alone is null
+            // on password protected storefronts, so it is only a fallback.
+            'published' => $type !== 'product' || ($node['publishedOnline'] ?? ! empty($node['onlineStoreUrl'])),
         ];
     }
 

@@ -169,6 +169,15 @@ it('normalizes Shopify nodes per content type', function () {
     ]);
 });
 
+it('uses the Online Store publication, not onlineStoreUrl, for published products', function () {
+    // onlineStoreUrl is null while the storefront is password protected.
+    $auditor = app(SeoAuditor::class);
+    $node = ['id' => 'gid://shopify/Product/1', 'handle' => 'romper', 'title' => 'Romper', 'onlineStoreUrl' => null, 'descriptionHtml' => '', 'seo' => []];
+
+    expect($auditor->normalize('product', $node + ['publishedOnline' => true], 'shop.example')['published'])->toBeTrue()
+        ->and($auditor->normalize('product', $node + ['publishedOnline' => false], 'shop.example')['published'])->toBeFalse();
+});
+
 // --- SeoAuditJob ------------------------------------------------------------
 
 function fakeShopifyCatalog(): void
