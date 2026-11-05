@@ -5,7 +5,7 @@ namespace SSEOAISaaS;
 /**
  * Shopify App Pricing sync endpoint
  *
- * The Shopify app (seosmartapp.fyndable.ai) reads the merchant's subscription
+ * The Shopify app (smartseoapp.fyndable.ai) reads the merchant's subscription
  * from the Shopify Partner API and pushes the result here. This endpoint
  * creates or updates the shop's tenant + license (platform = shopify) so all
  * feature gating keeps running through the normal tenant/status flow.

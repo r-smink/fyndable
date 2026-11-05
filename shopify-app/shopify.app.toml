@@ -2,7 +2,7 @@
 
 client_id = "a8c61aa96e7cfd0ac63fb005d272effb"
 name = "Fyndable Smart SEO"
-application_url = "https://seosmartapp.fyndable.ai/dashboard"
+application_url = "https://smartseoapp.fyndable.ai/dashboard"
 embedded = true
 
 [build]
@@ -12,13 +12,13 @@ automatically_update_urls_on_dev = false
 api_version = "2026-07"
 
   [[webhooks.subscriptions]]
-  uri = "https://seosmartapp.fyndable.ai/webhooks"
+  uri = "https://smartseoapp.fyndable.ai/webhooks"
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
   # App lifecycle (billing suspend on uninstall) and catalog changes (llms.txt
   # cache, automatic redirects on handle change or deletion, 1.2).
   [[webhooks.subscriptions]]
-  uri = "https://seosmartapp.fyndable.ai/webhooks"
+  uri = "https://smartseoapp.fyndable.ai/webhooks"
   topics = [
     "app/uninstalled",
     "products/create",
@@ -34,9 +34,9 @@ api_version = "2026-07"
 scopes = "read_content,read_locales,read_markets,read_metaobjects,read_products,read_themes,read_translations,write_app_proxy,write_content,write_metaobjects,write_online_store_navigation,write_products,write_translations"
 
 [auth]
-redirect_urls = [ "https://seosmartapp.fyndable.ai/auth/callback" ]
+redirect_urls = [ "https://smartseoapp.fyndable.ai/auth/callback" ]
 
 [app_proxy]
-url = "https://seosmartapp.fyndable.ai/api"
+url = "https://smartseoapp.fyndable.ai/api"
 subpath = "fyndable"
 prefix = "apps"

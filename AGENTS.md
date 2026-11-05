@@ -547,7 +547,7 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 
 ## Shopify Search Console (1.5, 2026-11-04)
 
-- SaaS `licenseapi.php`: nieuw `POST /google/oauth-session` (license+tenant, alleen `platform=shopify`) -> eenmalige `oauth-start?session=...` (transient `sseo_google_oauth_{session}`, 10 min, single use). In sessiemodus postMessaget de popup `{type: 'fyndable_google_code', code}` naar de Shopify-app-origin (`FYNDABLE_SHOPIFY_APP_ORIGIN` / optie `sseo_ai_saas_shopify_app_origin`, default `https://seosmartapp.fyndable.ai`) en wisselt niet zelf in. WordPress (license_key/tenant_key in de URL, tokens via postMessage) is ongewijzigd.
+- SaaS `licenseapi.php`: nieuw `POST /google/oauth-session` (license+tenant, alleen `platform=shopify`) -> eenmalige `oauth-start?session=...` (transient `sseo_google_oauth_{session}`, 10 min, single use). In sessiemodus postMessaget de popup `{type: 'fyndable_google_code', code}` naar de Shopify-app-origin (`FYNDABLE_SHOPIFY_APP_ORIGIN` / optie `sseo_ai_saas_shopify_app_origin`, default `https://smartseoapp.fyndable.ai`) en wisselt niet zelf in. WordPress (license_key/tenant_key in de URL, tokens via postMessage) is ongewijzigd.
 - App: `SearchConsoleService` (session, connect via SaaS `/google/exchange`, `accessToken()` met refresh via SaaS, `sites()`, `suggestSite()`, `sync()` -> `gsc_page_stats`/`gsc_query_stats` (laatste 28 dagen tot 3 dagen geleden), `pageStats()`, `resourceForPath()`). Tokens in `google_connections` met `encrypted` casts, nooit in API-responses. `SaasProxyClient::post` geeft bij fouten nu ook `details` terug.
 - API `/api/gsc/*` (tier `search_console`, professional). JS opent de popup leeg binnen de klik (popup-blockers) en controleert `event.origin` tegen de origin van de sessie-URL.
 - Koppelingen: `RankTrackerController::listKeywords` voegt `gsc {clicks, impressions, position}` toe; `ContentController::show` voegt `item.gsc` toe. Uninstall verwijdert de Google-koppeling, `shop/redact` ook de statistieken.
@@ -591,5 +591,5 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 
 ## Shopify app-domein (2026-11-05)
 
-- App-domein is `https://seosmartapp.fyndable.ai` (Shopify staat "shopify" niet toe in de app-URL). Staat in `shopify.app.toml` (application_url, redirect_urls, webhook-URI's, app proxy) en als standaard in SaaS `licenseapi.php` (`sseo_ai_saas_shopify_app_origin`, postMessage-doel van de Google-popup).
+- App-domein is `https://smartseoapp.fyndable.ai` (Shopify staat "shopify" niet toe in de app-URL). Staat in `shopify.app.toml` (application_url, redirect_urls, webhook-URI's, app proxy) en als standaard in SaaS `licenseapi.php` (`sseo_ai_saas_shopify_app_origin`, postMessage-doel van de Google-popup).
 - Signed links (rapport, afmelden) zijn ondertekend op pad + query (`signed:relative`, `ReportMailer::absolute()`), zodat ze een domeinwissel overleven.
