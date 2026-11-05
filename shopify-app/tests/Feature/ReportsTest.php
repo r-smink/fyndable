@@ -168,19 +168,19 @@ it('serves the printable report only with a valid signature', function () {
     $report = app(ReportBuilder::class)->create($shop, now());
     $other = app(ReportBuilder::class)->create($shop, now());
 
-    $url = URL::temporarySignedRoute('report.show', now()->addHour(), ['report' => $report->id]);
+    $url = URL::temporarySignedRoute('report.show', now()->addHour(), ['report' => $report->id], false);
     $this->get($url)->assertOk()->assertSee('Weekly SEO report')->assertSee('window.print()', false)->assertHeader('X-Robots-Tag', 'noindex, nofollow');
 
     $this->get(str_replace('report/'.$report->id, 'report/'.$other->id, $url))->assertForbidden();
     $this->get('/report/'.$report->id)->assertForbidden();
-    $this->get(URL::temporarySignedRoute('report.show', now()->subMinute(), ['report' => $report->id]))->assertForbidden();
+    $this->get(URL::temporarySignedRoute('report.show', now()->subMinute(), ['report' => $report->id], false))->assertForbidden();
 });
 
 it('turns the email off from the unsubscribe link', function () {
     $shop = reportShop();
     ShopProfile::create(['shop_id' => $shop->id, 'report_enabled' => true, 'report_email' => 'owner@lamps.example', 'report_language' => 'nl']);
 
-    $this->get(URL::signedRoute('report.unsubscribe', ['shop' => $shop->id]))->assertOk()->assertSee('Wekelijks rapport uitgezet');
+    $this->get(URL::signedRoute('report.unsubscribe', ['shop' => $shop->id], null, false))->assertOk()->assertSee('Wekelijks rapport uitgezet');
 
     expect(ShopProfile::where('shop_id', $shop->id)->value('report_enabled'))->toBeFalsy();
 });
@@ -220,4 +220,17 @@ it('removes reports and the activity log on shop/redact', function () {
     sendWebhook('shop/redact')->assertOk();
 
     expect(SeoReport::count() + ActivityEvent::count())->toBe(0);
+});
+
+it('keeps signed report links valid after a change of the app domain', function () {
+    $shop = reportShop();
+    fakeReportSaas();
+    $report = app(ReportBuilder::class)->create($shop, now());
+
+    config(['app.url' => 'https://old-domain.example']);
+    $url = app(App\Services\ReportMailer::class)->reportUrl($report, now()->addDay());
+    expect($url)->toStartWith('https://old-domain.example/report/');
+
+    // Same path + query on another host (redirected domain) still validates.
+    $this->get(parse_url($url, PHP_URL_PATH).'?'.parse_url($url, PHP_URL_QUERY))->assertOk();
 });

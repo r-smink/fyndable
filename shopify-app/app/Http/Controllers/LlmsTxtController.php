@@ -34,7 +34,7 @@ class LlmsTxtController extends Controller
      * based on the `full` query parameter.
      *
      * This method is mapped to the root of the API routes (e.g. GET /api)
-     * so Shopify App Proxy requests to `https://shopify.fyndable.ai/api`
+     * so Shopify App Proxy requests to `https://seosmartapp.fyndable.ai/api`
      * can be handled. Use `?full=1` to get the full version.
      */
     public function proxy(Request $request): Response

@@ -1317,7 +1317,7 @@ class LicenseAPI
     {
         $origin = defined('FYNDABLE_SHOPIFY_APP_ORIGIN') && is_string(FYNDABLE_SHOPIFY_APP_ORIGIN)
             ? FYNDABLE_SHOPIFY_APP_ORIGIN
-            : (string) get_option('sseo_ai_saas_shopify_app_origin', 'https://shopify.fyndable.ai');
+            : (string) get_option('sseo_ai_saas_shopify_app_origin', 'https://seosmartapp.fyndable.ai');
 
         return $this->siteOrigin($origin);
     }

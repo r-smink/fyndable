@@ -58,7 +58,7 @@ class ReportMailer
             $shopName,
             $this->reportUrl($report, now()->addDays(30)),
             $this->appUrl($shop),
-            URL::signedRoute('report.unsubscribe', ['shop' => $shop->id]),
+            $this->absolute(URL::signedRoute('report.unsubscribe', ['shop' => $shop->id], null, false)),
             $settings['language']
         ));
 
@@ -74,7 +74,16 @@ class ReportMailer
      */
     public function reportUrl(SeoReport $report, \DateTimeInterface $expires): string
     {
-        return URL::temporarySignedRoute('report.show', $expires, ['report' => $report->id]);
+        return $this->absolute(URL::temporarySignedRoute('report.show', $expires, ['report' => $report->id], false));
+    }
+
+    /**
+     * Signed links are signed on path + query only (route middleware
+     * signed:relative), so they keep working after a change of APP_URL.
+     */
+    private function absolute(string $relative): string
+    {
+        return rtrim((string) config('app.url'), '/').$relative;
     }
 
     public function appUrl(Shop $shop): string

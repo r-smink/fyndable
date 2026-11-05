@@ -32,8 +32,8 @@ Route::get('/dashboard/{page?}', [DashboardController::class, 'index'])
 
 // Weekly SEO report (1.7): printable page and one-click unsubscribe, opened
 // from the email or the Reports page, so they use signed URLs.
-Route::get('/report/unsubscribe/{shop}', [ReportController::class, 'unsubscribe'])->middleware('signed')->name('report.unsubscribe');
-Route::get('/report/{report}', [ReportController::class, 'show'])->middleware('signed')->whereNumber('report')->name('report.show');
+Route::get('/report/unsubscribe/{shop}', [ReportController::class, 'unsubscribe'])->middleware('signed:relative')->name('report.unsubscribe');
+Route::get('/report/{report}', [ReportController::class, 'show'])->middleware('signed:relative')->whereNumber('report')->name('report.show');
 
 // Product feeds for AI shopping and Google Merchant Center (2.1), secret token.
 Route::get('/feeds/{token}/{file}', [FeedController::class, 'show'])
