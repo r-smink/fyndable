@@ -2,35 +2,23 @@
 
 namespace App\Services;
 
-use App\Models\Shop;
-use App\Models\ShopProfile;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
  * AiCrawlers (2.2)
  *
- * Allow or block AI crawlers through the theme's robots.txt.liquid. The app
- * has no write_themes access, so it generates the Fyndable block for the
- * merchant to paste, checks the theme file (read_themes) and the live
- * /robots.txt.
- *
- * Allowed bots get no rules at all: a bot-specific group would replace
- * Shopify's default rules for that bot (cart, checkout, admin...). Blocked
- * bots get "Disallow: /".
+ * Shows which AI crawlers may read the store, from the live /robots.txt.
+ * The app does not change robots.txt: that is only possible in theme code,
+ * and App Store requirement 5.1.1 does not allow apps to ask merchants to
+ * edit their theme. Shopify's default robots.txt allows all of these bots.
  */
 class AiCrawlers
 {
-    public const BEGIN = '# Fyndable AI crawlers - begin';
-
-    public const END = '# Fyndable AI crawlers - end';
-
-    public const TEMPLATE = 'templates/robots.txt.liquid';
-
     /**
      * user agent => [company, purpose]. Purpose: search (answers in AI search
-     * and assistants, blocking hides the store there), user (fetches a page
-     * when a user asks for it), training (model training).
+     * and assistants), user (fetches a page when a user asks for it),
+     * training (model training).
      */
     public const BOTS = [
         'OAI-SearchBot' => ['OpenAI', 'search'],
@@ -48,100 +36,6 @@ class AiCrawlers
         'CCBot' => ['Common Crawl', 'training'],
         'Bytespider' => ['ByteDance', 'training'],
     ];
-
-    /**
-     * Choice per bot; everything allowed by default (maximum AI visibility).
-     *
-     * @return array<string, string> user agent => allow|block
-     */
-    public function settings(Shop $shop): array
-    {
-        $saved = ShopProfile::where('shop_id', $shop->id)->value('ai_crawlers');
-        $saved = is_string($saved) ? json_decode($saved, true) : $saved;
-
-        $settings = [];
-        foreach (array_keys(self::BOTS) as $bot) {
-            $settings[$bot] = ($saved[$bot] ?? 'allow') === 'block' ? 'block' : 'allow';
-        }
-
-        return $settings;
-    }
-
-    public function save(Shop $shop, array $choices): array
-    {
-        $settings = [];
-        foreach (array_keys(self::BOTS) as $bot) {
-            $settings[$bot] = ($choices[$bot] ?? 'allow') === 'block' ? 'block' : 'allow';
-        }
-        $profile = ShopProfile::firstOrCreate(['shop_id' => $shop->id]);
-        $profile->ai_crawlers = $settings;
-        $profile->save();
-
-        return $settings;
-    }
-
-    /**
-     * The Fyndable block (between markers) for robots.txt.liquid.
-     */
-    public function block(array $settings): string
-    {
-        $lines = [self::BEGIN, '# Managed in Fyndable Smart SEO. Allowed AI crawlers follow the default rules above.'];
-        foreach ($settings as $bot => $choice) {
-            if ($choice === 'block') {
-                $lines[] = '';
-                $lines[] = 'User-agent: '.$bot;
-                $lines[] = 'Disallow: /';
-            }
-        }
-        $lines[] = self::END;
-
-        return implode("\n", $lines)."\n";
-    }
-
-    /**
-     * A complete robots.txt.liquid: Shopify's default output + the block.
-     */
-    public function fullTemplate(array $settings): string
-    {
-        return <<<'LIQUID'
-{% for group in robots.default_groups %}
-  {{- group.user_agent }}
-
-  {%- for rule in group.rules -%}
-    {{ rule }}
-  {%- endfor -%}
-
-  {%- if group.sitemap != blank -%}
-    {{ group.sitemap }}
-  {%- endif %}
-{% endfor %}
-
-LIQUID.$this->block($settings);
-    }
-
-    /**
-     * Theme status: does the live theme have robots.txt.liquid, does it
-     * contain the Fyndable block and is that block up to date?
-     *
-     * @return array{exists:bool, has_block:bool, in_sync:bool, theme:string}|array{error:string}
-     */
-    public function themeStatus(Shop $shop, array $settings, ShopifyContentFetcher $fetcher): array
-    {
-        $result = $fetcher->getMainThemeFiles($shop, [self::TEMPLATE], 1);
-        if (isset($result['error'])) {
-            return $result;
-        }
-
-        $content = $result['files'][0]['content'] ?? null;
-        $current = $content !== null ? $this->extractBlock($content) : null;
-
-        return [
-            'theme' => $result['theme'],
-            'exists' => $content !== null,
-            'has_block' => $current !== null,
-            'in_sync' => $current !== null && $this->normalize($current) === $this->normalize($this->block($settings)),
-        ];
-    }
 
     /**
      * Fetch the live robots.txt and work out which AI bots may crawl.
@@ -238,21 +132,5 @@ LIQUID.$this->block($settings);
         }
 
         return $disallowAll;
-    }
-
-    private function extractBlock(string $content): ?string
-    {
-        $start = strpos($content, self::BEGIN);
-        $end = strpos($content, self::END);
-        if ($start === false || $end === false || $end < $start) {
-            return null;
-        }
-
-        return substr($content, $start, $end - $start + strlen(self::END))."\n";
-    }
-
-    private function normalize(string $block): string
-    {
-        return trim(preg_replace('/[ \t]+/', ' ', str_replace("\r\n", "\n", $block)));
     }
 }

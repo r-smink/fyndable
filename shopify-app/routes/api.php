@@ -95,10 +95,9 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
         Route::post('/cancel', [TranslationsController::class, 'cancel']);
     });
 
-    // AI crawler management via robots.txt.liquid (2.2)
+    // AI crawler status from the live robots.txt (2.2, read only)
     Route::get('/ai-crawlers', [AiCrawlersController::class, 'show'])->middleware('shopify.tier:ai_crawlers');
-    Route::post('/ai-crawlers', [AiCrawlersController::class, 'save'])->middleware('shopify.tier:ai_crawlers');
-    Route::post('/ai-crawlers/check', [AiCrawlersController::class, 'check'])->middleware('shopify.tier:ai_crawlers')->middleware('shopify.scope:read_themes');
+    Route::post('/ai-crawlers/check', [AiCrawlersController::class, 'check'])->middleware('shopify.tier:ai_crawlers');
 
     // AI-commerce readiness + product feeds (2.1)
     Route::middleware('shopify.tier:ai_readiness')->prefix('ai-ready')->group(function () {
@@ -156,8 +155,6 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
 
     // License
     Route::get('/license/status', [LicenseController::class, 'status']);
-    Route::post('/license/activate', [LicenseController::class, 'activate']);
-    Route::post('/license/deactivate', [LicenseController::class, 'deactivate']);
 
     // llms.txt
     Route::get('/llmstxt/status', [LlmsTxtController::class, 'status'])->middleware('shopify.tier:llmstxt');

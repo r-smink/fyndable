@@ -398,7 +398,7 @@ it('subscribes to the lifecycle and catalog webhooks and requests the redirect s
 
 it('removes redirect data on shop/redact', function () {
     Queue::fake();
-    $shop = redirectShop(['license_source' => 'manual']);
+    $shop = redirectShop();
     ResourceHandle::create(['shop_id' => $shop->id, 'type' => 'product', 'resource_id' => '1', 'handle' => 'a']);
     NotFoundUrl::create(['shop_id' => $shop->id, 'path' => '/x', 'path_hash' => NotFoundUrl::hashPath('/x'), 'first_seen_at' => now(), 'last_seen_at' => now()]);
     RedirectEvent::create(['shop_id' => $shop->id, 'source' => 'manual', 'path' => '/x', 'target' => '/y']);

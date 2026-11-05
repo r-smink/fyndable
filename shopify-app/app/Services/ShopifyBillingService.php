@@ -43,21 +43,12 @@ class ShopifyBillingService
     }
 
     /**
-     * Whether the shop runs on a manually entered agency/enterprise license
-     * (outside App Pricing).
-     */
-    public function isManual(Shop $shop): bool
-    {
-        return $shop->license_source === 'manual' && $shop->hasLicense();
-    }
-
-    /**
      * Re-read the subscription when the cached result is stale (or $force)
      * and sync changes to the SaaS. Returns the status for the dashboard.
      */
     public function refresh(Shop $shop, bool $force = false): array
     {
-        if (! $this->enabled() || $this->isManual($shop)) {
+        if (! $this->enabled()) {
             return $this->status($shop);
         }
 
@@ -112,15 +103,14 @@ class ShopifyBillingService
      */
     public function status(Shop $shop): array
     {
-        $manual = $this->isManual($shop);
-        $state = ! $this->enabled() ? 'disabled' : ($manual ? 'manual' : ($shop->billing_state ?? 'unknown'));
+        $state = ! $this->enabled() ? 'disabled' : ($shop->billing_state ?? 'unknown');
 
         return [
             'enabled' => $this->enabled(),
             'state' => $state,
             'plan' => $shop->billing_plan,
             'tier' => $shop->license_tier,
-            'required' => $this->enabled() && ! $manual && $state === 'none',
+            'required' => $this->enabled() && $state === 'none',
             'trial' => [
                 'used' => $this->trialProductsUsed($shop),
                 'max' => $this->trialLimit(),
@@ -249,7 +239,7 @@ class ShopifyBillingService
      */
     public function handleUninstall(Shop $shop): void
     {
-        if ($this->isManual($shop) || ! $shop->hasLicense()) {
+        if (! $shop->hasLicense()) {
             return;
         }
 

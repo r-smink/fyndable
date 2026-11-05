@@ -11,6 +11,7 @@ use App\Models\Shop;
 use App\Models\ShopProfile;
 use App\Models\TrackedKeyword;
 use App\Services\ReportBuilder;
+use App\Services\ReportMailer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -228,7 +229,7 @@ it('keeps signed report links valid after a change of the app domain', function 
     $report = app(ReportBuilder::class)->create($shop, now());
 
     config(['app.url' => 'https://old-domain.example']);
-    $url = app(App\Services\ReportMailer::class)->reportUrl($report, now()->addDay());
+    $url = app(ReportMailer::class)->reportUrl($report, now()->addDay());
     expect($url)->toStartWith('https://old-domain.example/report/');
 
     // Same path + query on another host (redirected domain) still validates.

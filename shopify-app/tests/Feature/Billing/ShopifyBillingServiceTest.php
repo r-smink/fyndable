@@ -167,14 +167,6 @@ it('does nothing when billing is disabled', function () {
     Http::assertNothingSent();
 });
 
-it('leaves manual agency licenses alone', function () {
-    $shop = makeTestShop(['license_source' => 'manual', 'license_key' => 'FYND-AGCY', 'tenant_key' => 'tn_agency']);
-    Http::fake();
-
-    expect(billing()->refresh($shop, true)['state'])->toBe('manual');
-    Http::assertNothingSent();
-});
-
 it('counts distinct trial products and ends the trial on the first product beyond the limit', function () {
     $shop = makeTestShop(['billing_state' => 'trial', 'license_key' => 'K', 'tenant_key' => 'T', 'license_source' => 'app_pricing']);
     fakeBilling(partnerSubscription(null), saasSyncResponse('trial', 'suspended'));

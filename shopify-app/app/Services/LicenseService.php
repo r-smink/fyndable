@@ -22,33 +22,6 @@ class LicenseService
     }
 
     /**
-     * Activate a Fyndable license for a shop.
-     *
-     * @param  Shop  $shop
-     * @param  string  $licenseKey
-     * @return array{success: bool, message?: string}
-     */
-    public function activate(Shop $shop, string $licenseKey): array
-    {
-        $result = $this->proxy->activateLicense($licenseKey, $shop->shop_domain, $shop->shop_name ?? '');
-
-        if (isset($result['error'])) {
-            return ['success' => false, 'message' => $result['error']];
-        }
-
-        $shop->license_key = $licenseKey;
-        $shop->tenant_key = $result['tenant_key'] ?? '';
-        $shop->license_tier = $result['tier'] ?? 'free';
-        $shop->license_validated_at = now();
-        $shop->save();
-
-        // Invalidate cached validation
-        Cache::forget($this->cacheKey($shop->id));
-
-        return ['success' => true, 'tier' => $shop->license_tier];
-    }
-
-    /**
      * Validate the stored license (cached for 1 hour).
      *
      * @param  Shop  $shop
@@ -167,20 +140,6 @@ class LicenseService
         }
 
         return $access;
-    }
-
-    /**
-     * Deactivate the license (clears local state; SaaS dashboard keeps the activation).
-     */
-    public function deactivate(Shop $shop): void
-    {
-        $shop->license_key = null;
-        $shop->tenant_key = null;
-        $shop->license_tier = 'free';
-        $shop->license_validated_at = null;
-        $shop->save();
-
-        Cache::forget($this->cacheKey($shop->id));
     }
 
     private function cacheKey(int $shopId): string

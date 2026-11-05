@@ -19,7 +19,7 @@ Afvinken als de feature gecommit is, de testsuite groen is en `composer audit` s
 - [ ] 1.6 Beeld-SEO
 - [x] 1.7 Rapportage (zie "Stand 1.7"; PDF als printbare pagina, server-side PDF wacht op akkoord voor een dependency)
 - [x] 2.1 AI-commerce readiness + productfeeds (zie "Stand 2.1")
-- [x] 2.2 AI-crawlerbeheer (zie "Stand 2.2")
+- [x] 2.2 AI-crawlers, alleen status (zie "Stand 2.2"; plakinstructies verwijderd na de App Store-review, 2026-11-05)
 - [x] 2.3 AI-vertalingen voor Markets (zie "Stand 2.3")
 - [-] 2.4 ApexFlow voor Shopify: vervalt (besluit 2026-11-04: ApexFlow hoeft niet op Shopify)
 - [x] 2.5 Collectiepagina's als SEO-landingspagina's (zie "Stand 2.5")
@@ -176,7 +176,10 @@ Open:
 - Gewicht/afmetingen en voorraadaantallen ontbreken (vragen `read_inventory`).
 - Shopify-standaardcategorie-metafields (taxonomiewaarden) worden niet automatisch ingevuld; de score wijst ze aan.
 
-### Stand 2.2 (2026-11-04)
+### Stand 2.2 (2026-11-04, aangepast 2026-11-05)
+
+**Wijziging 2026-11-05 na de App Store-zelfreview (eis 5.1.1):** apps mogen merchants niet vragen code in het thema te zetten. De keuzes per bot, de gegenereerde `robots.txt.liquid`, de plakinstructies en de themacontrole zijn verwijderd (besluit gebruiker). De pagina toont nu per AI-bot het doel en de status uit de live `/robots.txt`, met een waarschuwing als AI-zoekcrawlers geblokkeerd zijn. Kolom `shop_profiles.ai_crawlers` verwijderd. Hieronder de oorspronkelijke stand.
+
 
 Gebouwd: pagina "AI-crawlers" met 14 AI-bots per bedrijf en doel: AI-zoeken (OAI-SearchBot, Claude-SearchBot, PerplexityBot), bezoek op verzoek (ChatGPT-User, Claude-User, Perplexity-User) en modeltraining (GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, meta-externalagent, Amazonbot, CCBot, Bytespider), met uitleg over de gevolgen. Per bot toestaan/blokkeren (standaard alles toestaan), presets "alles toestaan" en "alleen training blokkeren". De app maakt de volledige `robots.txt.liquid` (Shopify-standaardgroepen + Fyndable-blok) en het losse Fyndable-blok met stappen om het in het thema te plakken, controleert het themabestand (`read_themes`: ontbreekt / zonder blok / verouderd / actueel) en leest de live `/robots.txt` om per bot te tonen of hij echt geblokkeerd is.
 

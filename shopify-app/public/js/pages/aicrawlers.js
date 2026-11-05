@@ -1,6 +1,7 @@
 /*
- * AI crawlers (2.2): allow or block AI bots, generate the robots.txt.liquid
- * code for the theme and check the theme file and the live robots.txt.
+ * AI crawlers (2.2): which AI bots may read the store, from the live
+ * robots.txt. Read only: the app does not change the theme (App Store
+ * requirement 5.1.1).
  */
 (function () {
     'use strict';
@@ -9,94 +10,40 @@
     let bots = {};
     let live = null;
 
-    function choices() {
-        const result = {};
-        Object.keys(bots).forEach(bot => { result[bot] = Fyn.val('bot-' + bot) || 'allow'; });
-        return result;
-    }
-
-    function render(settings) {
+    function render() {
         Fyn.html('ac-bots', Fyn.table(
-            [t('col_bot'), t('col_company'), t('col_purpose'), t('col_choice'), t('col_live')],
+            [t('col_bot'), t('col_company'), t('col_purpose'), t('col_live')],
             Object.entries(bots).map(([bot, meta]) => {
-                const liveState = live ? live[bot] : null;
-                const liveBadge = !liveState ? '-'
-                    : liveState !== settings[bot] ? Fyn.badge('warning', t('live_mismatch'))
-                        : Fyn.badge(liveState === 'block' ? 'critical' : 'success', t(liveState === 'block' ? 'live_blocked' : 'live_allowed'));
+                const state = live ? live[bot] : null;
                 return [
                     `<s-text type="strong">${esc(bot)}</s-text>`,
                     esc(meta.company),
                     `<s-stack gap="small-500"><s-text>${esc(t('purpose_' + meta.purpose))}</s-text><s-text color="subdued">${esc(t('purpose_' + meta.purpose + '_help'))}</s-text></s-stack>`,
-                    `<s-select id="bot-${esc(bot)}" label="${esc(bot)}" labelAccessibilityVisibility="exclusive">
-                        <s-option value="allow"${settings[bot] === 'allow' ? ' selected' : ''}>${esc(t('allow'))}</s-option>
-                        <s-option value="block"${settings[bot] === 'block' ? ' selected' : ''}>${esc(t('block'))}</s-option>
-                    </s-select>`,
-                    liveBadge,
+                    !state ? '-' : Fyn.badge(state === 'block' ? (meta.purpose === 'training' ? 'info' : 'warning') : 'success', t(state === 'block' ? 'live_blocked' : 'live_allowed')),
                 ];
             })));
     }
 
-    function apply(data) {
-        bots = data.bots;
-        render(data.settings);
-        Fyn.setVal('ac-template', data.template);
-        Fyn.setVal('ac-block', data.block);
-    }
-
-    window.presetCrawlers = function (preset) {
-        const settings = {};
-        Object.entries(bots).forEach(([bot, meta]) => {
-            settings[bot] = preset === 'training' && meta.purpose === 'training' ? 'block' : 'allow';
-        });
-        render(settings);
-    };
-
-    window.saveCrawlers = async function (button) {
-        const data = await Fyn.busy(button, () => Fyn.post('/ai-crawlers', { bots: choices() }));
-        if (data.error) {
-            Fyn.toast(Fyn.errorText(data), true);
-            return;
-        }
-        apply(data);
-        Fyn.toast(t('saved'));
-    };
-
-    window.checkCrawlers = async function (button) {
+    async function check(button) {
         const data = await Fyn.busy(button, () => Fyn.post('/ai-crawlers/check'));
         if (data.error) {
-            Fyn.html('ac-theme', Fyn.errorBanner(data));
+            Fyn.html('ac-status', Fyn.errorBanner(data));
             return;
         }
-        const settings = choices();
-        const anyBlocked = Object.values(settings).includes('block');
-        let html = '';
-        const theme = data.theme || {};
-        if (theme.error) html += Fyn.errorBanner(theme);
-        else if (!anyBlocked && !theme.has_block) html += Fyn.banner('info', t('nothing_blocked'));
-        else if (!theme.exists) html += Fyn.banner('warning', t('theme_missing', { theme: theme.theme || '' }));
-        else if (!theme.has_block) html += Fyn.banner('warning', t('theme_no_block'));
-        else if (!theme.in_sync) html += Fyn.banner('warning', t('theme_outdated'));
-        else html += Fyn.banner('success', t('theme_in_sync'));
-
-        if (data.live && data.live.error) {
+        if (data.live.error) {
             live = null;
-            html += Fyn.banner('info', t('live_error', { error: data.live.error }));
-        } else if (data.live) {
+            Fyn.html('ac-status', Fyn.banner('info', t('live_error', { error: data.live.error })));
+        } else {
             live = data.live.bots;
+            const blockedSearch = Object.entries(live).filter(([bot, state]) => state === 'block' && bots[bot] && bots[bot].purpose !== 'training').map(([bot]) => bot);
+            Fyn.html('ac-status', blockedSearch.length
+                ? Fyn.banner('warning', t('search_blocked', { bots: blockedSearch.join(', ') }))
+                : Fyn.banner('success', t('search_allowed')));
         }
-        Fyn.html('ac-theme', `<s-stack gap="small-200">${html}</s-stack>`);
-        render(settings);
-        Fyn.toast(t('checked'));
-    };
+        render();
+    }
 
-    window.copyCrawlerCode = async function (id) {
-        try {
-            await navigator.clipboard.writeText(Fyn.val(id));
-            Fyn.toast(t('copied'));
-        } catch (e) {
-            Fyn.toast(t('copy_failed'), true);
-        }
-    };
+    window.checkCrawlers = check;
 
     Fyn.page(async () => {
         const data = await Fyn.api('/ai-crawlers');
@@ -104,6 +51,8 @@
             Fyn.html('ac-bots', Fyn.errorBanner(data));
             return;
         }
-        apply(data);
+        bots = data.bots;
+        render();
+        await check(null);
     });
 })();

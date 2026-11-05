@@ -176,40 +176,13 @@ it('runs the uninstall sync job against the SaaS', function () {
     Http::assertSent(fn (Request $r) => str_contains($r->url(), '/shopify/subscription') && $r['state'] === 'uninstalled');
 });
 
-// --- Manual (agency) licenses --------------------------------------------
+// --- No manual license keys (App Store requirement 1.2.1) ----------------
 
-it('rejects manual license keys below the agency tier', function () {
+it('has no manual license activation in the Shopify app', function () {
     makeTestShop();
-    Http::fake([
-        'portal.test/wp-json/ai-seo-saas/v1/license/validate' => Http::response(['success' => true, 'valid' => true, 'license' => ['tier' => 'professional']]),
-    ]);
 
-    $this->postJson('/api/license/activate', ['license_key' => 'fynd-pro-key'], authHeaders())
-        ->assertOk()
-        ->assertJson(['success' => false, 'error' => 'license_tier_not_allowed']);
-
-    Http::assertNotSent(fn (Request $r) => str_contains($r->url(), '/license/activate'));
-});
-
-it('accepts an agency license key and marks it as manual', function () {
-    makeTestShop();
-    Http::fake([
-        'portal.test/wp-json/ai-seo-saas/v1/license/validate' => Http::response(['success' => true, 'valid' => true, 'license' => ['tier' => 'agency']]),
-        'portal.test/wp-json/ai-seo-saas/v1/license/activate' => Http::response(['success' => true, 'tenant_key' => 'tn_agency', 'tier' => 'agency']),
-    ]);
-
-    $this->postJson('/api/license/activate', ['license_key' => 'fynd-agency-key'], authHeaders())
-        ->assertOk()
-        ->assertJson(['success' => true]);
-
-    expect(Shop::first()->license_source)->toBe('manual');
-});
-
-it('refuses to deactivate an App Pricing license', function () {
-    makeTestShop(['license_key' => 'K', 'tenant_key' => 'T', 'license_source' => 'app_pricing']);
-
-    $this->postJson('/api/license/deactivate', [], authHeaders())
-        ->assertJson(['success' => false, 'error' => 'managed_by_shopify']);
+    $this->postJson('/api/license/activate', ['license_key' => 'FYND-AGENCY'], authHeaders())->assertNotFound();
+    $this->postJson('/api/license/deactivate', [], authHeaders())->assertNotFound();
 });
 
 // --- Signed SaaS sync ----------------------------------------------------

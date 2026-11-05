@@ -85,11 +85,6 @@ return [
         'title' => 'Abonnement',
         'intro' => 'Je Fyndable-abonnement wordt via Shopify afgerekend.',
         'modules' => 'Fyndable SEO-modules',
-        'agency_title' => 'Agency- of enterprise-licentie',
-        'agency_intro' => 'Alleen voor winkels met een Fyndable agency- of enterprise-licentie buiten Shopify-facturering om.',
-        'license_key' => 'Fyndable-licentiesleutel',
-        'activate' => 'Licentie activeren',
-        'deactivate' => 'Licentie deactiveren',
     ],
 
     'js' => [
@@ -161,18 +156,9 @@ return [
         'required_text' => 'Je gratis proefperiode is afgelopen of je abonnement is niet meer actief. Kies een abonnement in Shopify om Fyndable te blijven gebruiken.',
         'trial_exhausted' => 'Je gratis proefperiode geldt voor {max} producten. Kies een abonnement om verder te gaan.',
         'trial_expired' => 'Je gratis proefperiode van {days} dagen is afgelopen. Kies een abonnement om verder te gaan.',
-        'manual_title' => 'Agency-licentie actief',
-        'manual_text' => 'Deze winkel gebruikt een agency- of enterprise-licentie buiten Shopify-facturering om.',
         'unknown_title' => 'Abonnementsstatus niet beschikbaar',
         'unknown_text' => 'We konden je abonnement nu niet controleren. Probeer het over een paar minuten opnieuw.',
         'plan_confirmed' => 'Bedankt! Je abonnement is actief.',
-        'license_active' => 'Licentie actief',
-        'license_none' => 'Geen actieve licentie',
-        'license_enter' => 'Vul je Fyndable-licentiesleutel in.',
-        'license_activated' => 'Licentie geactiveerd ({tier})',
-        'license_failed' => 'Activeren mislukt: {message}',
-        'license_deactivate_confirm' => 'De licentie voor deze winkel deactiveren?',
-        'license_deactivated' => 'Licentie gedeactiveerd',
 
         // SEO audit (shared: home, content optimizer, SEO audit page)
         'seo_score' => 'SEO-score',

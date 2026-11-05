@@ -25,55 +25,14 @@ function crawlerShop(string $tier = 'starter'): Shop
 
 const SHOPIFY_DEFAULT_ROBOTS = "# we use Shopify as our ecommerce platform\nUser-agent: *\nDisallow: /admin\nDisallow: /cart\nDisallow: /checkout\nSitemap: https://lamps.example/sitemap.xml\n\nUser-agent: adsbot-google\nDisallow: /checkouts/\n";
 
-function fakeCrawlerShopify(?string $themeFile, string $robots = SHOPIFY_DEFAULT_ROBOTS, string $tier = 'starter'): void
+function fakeCrawlerShopify(string $robots = SHOPIFY_DEFAULT_ROBOTS, string $tier = 'starter'): void
 {
     Http::fake([
         'portal.test/*' => Http::response(['status' => 'active', 'tier' => $tier]),
         'lamps.example/robots.txt' => Http::response($robots),
-        'test-shop.myshopify.com/admin/api/*' => function (Request $request) use ($themeFile) {
-            if (str_contains($request['query'] ?? '', 'themeFiles')) {
-                return Http::response(['data' => ['themes' => ['nodes' => [[
-                    'name' => 'Dawn',
-                    'files' => ['pageInfo' => ['hasNextPage' => false, 'endCursor' => null], 'nodes' => $themeFile === null ? [] : [['filename' => 'templates/robots.txt.liquid', 'body' => ['content' => $themeFile]]]],
-                ]]]]]);
-            }
-
-            return Http::response(['data' => ['shop' => ['name' => 'Lamp Shop', 'primaryDomain' => ['url' => 'https://lamps.example']]]]);
-        },
+        'test-shop.myshopify.com/admin/api/*' => Http::response(['data' => ['shop' => ['name' => 'Lamp Shop', 'primaryDomain' => ['url' => 'https://lamps.example']]]]),
     ]);
 }
-
-// --- Generating the robots.txt code --------------------------------------------------
-
-it('allows every AI crawler by default and adds no rules for allowed bots', function () {
-    $shop = crawlerShop();
-    $crawlers = app(AiCrawlers::class);
-
-    $settings = $crawlers->settings($shop);
-    $block = $crawlers->block($settings);
-
-    expect(array_unique(array_values($settings)))->toBe(['allow'])
-        ->and($block)->toStartWith(AiCrawlers::BEGIN)->toEndWith(AiCrawlers::END."\n")
-        ->and($block)->not->toContain('User-agent');
-});
-
-it('blocks only the chosen bots and keeps Shopify defaults in the full template', function () {
-    $shop = crawlerShop();
-    $crawlers = app(AiCrawlers::class);
-
-    $settings = $crawlers->save($shop, ['GPTBot' => 'block', 'CCBot' => 'block', 'OAI-SearchBot' => 'allow', 'EvilBot' => 'block', 'ClaudeBot' => 'maybe']);
-    $template = $crawlers->fullTemplate($settings);
-
-    expect($settings)->toMatchArray(['GPTBot' => 'block', 'CCBot' => 'block', 'ClaudeBot' => 'allow'])
-        ->and($settings)->not->toHaveKey('EvilBot')
-        ->and($template)->toContain('{% for group in robots.default_groups %}')
-        ->toContain("User-agent: GPTBot\nDisallow: /")
-        ->toContain("User-agent: CCBot\nDisallow: /")
-        ->not->toContain('OAI-SearchBot')
-        ->not->toContain('Allow: /');
-});
-
-// --- Reading robots.txt ------------------------------------------------------------------
 
 it('works out per bot whether robots.txt blocks it', function (string $robots, array $expected) {
     $crawlers = app(AiCrawlers::class);
@@ -90,53 +49,43 @@ it('works out per bot whether robots.txt blocks it', function (string $robots, a
     'partial disallow only' => ["User-agent: ClaudeBot\nDisallow: /checkout\n", ['ClaudeBot' => false]],
 ]);
 
-// --- API ----------------------------------------------------------------------------------
-
-it('saves the choices and returns the code for the theme', function () {
+it('lists the AI bots with company and purpose', function () {
     crawlerShop();
-    fakeCrawlerShopify(null);
+    fakeCrawlerShopify();
 
     $this->getJson('/api/ai-crawlers', crawlerHeaders())
-        ->assertJsonPath('settings.GPTBot', 'allow')
         ->assertJsonPath('bots.GPTBot', ['company' => 'OpenAI', 'purpose' => 'training'])
         ->assertJsonPath('bots.OAI-SearchBot.purpose', 'search');
-
-    $response = $this->postJson('/api/ai-crawlers', ['bots' => ['GPTBot' => 'block']], crawlerHeaders())->assertJsonPath('settings.GPTBot', 'block');
-    expect($response->json('block'))->toContain("User-agent: GPTBot\nDisallow: /");
 });
 
-it('reports the theme file and the live robots.txt', function (?string $themeFile, array $expectTheme) {
-    $shop = crawlerShop();
-    $crawlers = app(AiCrawlers::class);
-    $settings = $crawlers->save($shop, ['GPTBot' => 'block']);
-    $themeFile = $themeFile === 'current' ? $crawlers->fullTemplate($settings) : $themeFile;
-    fakeCrawlerShopify($themeFile, SHOPIFY_DEFAULT_ROBOTS."\nUser-agent: GPTBot\nDisallow: /\n");
+it('reports the live robots.txt per bot', function () {
+    crawlerShop();
+    fakeCrawlerShopify(SHOPIFY_DEFAULT_ROBOTS."\nUser-agent: GPTBot\nDisallow: /\n");
 
-    $response = $this->postJson('/api/ai-crawlers/check', [], crawlerHeaders())->assertOk();
+    $this->postJson('/api/ai-crawlers/check', [], crawlerHeaders())
+        ->assertJsonPath('live.url', 'https://lamps.example/robots.txt')
+        ->assertJsonPath('live.bots.GPTBot', 'block')
+        ->assertJsonPath('live.bots.OAI-SearchBot', 'allow');
 
-    expect($response->json('theme'))->toMatchArray($expectTheme)
-        ->and($response->json('live.bots.GPTBot'))->toBe('block')
-        ->and($response->json('live.bots.OAI-SearchBot'))->toBe('allow')
-        ->and($response->json('live.url'))->toBe('https://lamps.example/robots.txt');
-})->with([
-    'no template' => [null, ['exists' => false, 'has_block' => false, 'in_sync' => false, 'theme' => 'Dawn']],
-    'template without block' => ['{{ robots }}', ['exists' => true, 'has_block' => false]],
-    'outdated block' => [AiCrawlers::BEGIN."\n".AiCrawlers::END, ['has_block' => true, 'in_sync' => false]],
-    'current block' => ['current', ['has_block' => true, 'in_sync' => true]],
-]);
+    Http::assertNotSent(fn (Request $r) => str_contains($r['query'] ?? '', 'themeFiles'));
+});
 
 it('reports when the live robots.txt cannot be read', function () {
     crawlerShop();
-    Http::fake([
-        'portal.test/*' => Http::response(['status' => 'active', 'tier' => 'starter']),
-        'lamps.example/robots.txt' => Http::response('<html>password</html>', 200),
-        'test-shop.myshopify.com/admin/api/*' => Http::response(['data' => ['shop' => ['primaryDomain' => ['url' => 'https://lamps.example']], 'themes' => ['nodes' => []]]]),
-    ]);
+    fakeCrawlerShopify('<html>password</html>');
 
     $this->postJson('/api/ai-crawlers/check', [], crawlerHeaders())->assertJsonPath('live.error', 'no_robots_txt');
 });
 
-it('needs a paid plan for AI crawler management', function () {
+it('does not ask merchants to edit theme code (App Store 5.1.1)', function () {
+    foreach (array_merge(glob(lang_path('*/*.php')), glob(resource_path('views/dashboard/pages/*.blade.php')), glob(public_path('js/pages/*.js'))) as $file) {
+        expect(file_get_contents($file))->not->toContain('robots.txt.liquid', basename($file))
+            ->not->toMatch('/Edit code|Code bewerken/', basename($file));
+    }
+    $this->postJson('/api/ai-crawlers', [], crawlerHeaders())->assertStatus(405);
+});
+
+it('needs a paid plan for AI crawler status', function () {
     makeTestShop();
 
     $this->getJson('/api/ai-crawlers', crawlerHeaders())->assertStatus(403);

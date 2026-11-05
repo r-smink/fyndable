@@ -197,7 +197,6 @@ class WebhookController extends Controller
         DB::table('shop_usage')->where('shop_id', $shop->id)->delete();
 
         // The App Pricing tenant belongs to this shop: delete it on the SaaS.
-        // A manual agency license belongs to the agency account: only unlink.
         if ($shop->license_source === 'app_pricing' && $shop->hasLicense()) {
             GdprDeleteTenantJob::dispatch($shop->license_key, $shop->tenant_key, $shop->shop_domain);
         }

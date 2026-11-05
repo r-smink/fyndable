@@ -92,7 +92,6 @@ it('schedules the hourly billing sync for paying App Pricing shops and expired t
     $paying = makeTestShop(['billing_state' => 'active', 'license_source' => 'app_pricing']);
     makeTestShop(['shop_domain' => 'trial-shop.myshopify.com', 'billing_state' => 'trial', 'trial_started_at' => now()->subDays(2)]);
     $expiredTrial = makeTestShop(['shop_domain' => 'old-trial.myshopify.com', 'billing_state' => 'trial', 'trial_started_at' => now()->subDays(8)]);
-    makeTestShop(['shop_domain' => 'agency.myshopify.com', 'billing_state' => 'active', 'license_source' => 'manual']);
 
     $event = collect(app(Schedule::class)->events())->first(fn ($e) => $e->description === 'shopify-billing-sync');
     expect($event)->not->toBeNull();

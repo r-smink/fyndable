@@ -43,7 +43,6 @@ return [
         'trial_days' => (int) env('SHOPIFY_TRIAL_DAYS', 7),
 
         // Manually entered license keys are only accepted for these tiers.
-        'manual_license_tiers' => ['agency', 'dev'],
 
         // Shared secret for the signed sync to the SaaS dashboard.
         'sync_secret' => env('FYNDABLE_SHOPIFY_SYNC_SECRET', ''),

@@ -4,7 +4,6 @@ use App\Jobs\GdprDeleteTenantJob;
 use App\Models\ScheduledArticle;
 use App\Models\SeoAudit;
 use App\Models\SeoAuditItem;
-use App\Models\Shop;
 use App\Models\ShopProfile;
 use App\Services\SaasProxyClient;
 use Illuminate\Http\Client\Request;
@@ -49,16 +48,6 @@ it('erases shop data on shop/redact and queues the SaaS tenant deletion', functi
         ->and(DB::table('trial_products')->where('shop_id', $shop->id)->count())->toBe(1);
 
     Queue::assertPushed(GdprDeleteTenantJob::class, fn ($job) => $job->tenantKey === 'tn_1' && $job->licenseKey === 'FYND-AAAA');
-});
-
-it('only unlinks a manual agency license on shop/redact', function () {
-    Queue::fake();
-    makeTestShop(['license_key' => 'FYND-AGENCY', 'tenant_key' => 'tn_agency', 'license_source' => 'manual']);
-
-    sendWebhook('shop/redact')->assertOk();
-
-    Queue::assertNotPushed(GdprDeleteTenantJob::class);
-    expect(Shop::first()->license_key)->toBeNull();
 });
 
 it('acknowledges the customer GDPR webhooks', function (string $topic) {

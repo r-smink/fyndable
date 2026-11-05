@@ -90,11 +90,6 @@ return [
         'title' => 'Plan',
         'intro' => 'Your Fyndable plan is billed through Shopify.',
         'modules' => 'Fyndable SEO modules',
-        'agency_title' => 'Agency or enterprise license',
-        'agency_intro' => 'Only for stores with a Fyndable agency or enterprise license outside Shopify billing.',
-        'license_key' => 'Fyndable license key',
-        'activate' => 'Activate license',
-        'deactivate' => 'Deactivate license',
     ],
 
     'js' => [
@@ -170,18 +165,9 @@ return [
         'required_text' => 'Your free trial has ended or your subscription is no longer active. Choose a plan in Shopify to keep using Fyndable.',
         'trial_exhausted' => 'Your free trial covers {max} products. Choose a plan to continue.',
         'trial_expired' => 'Your {days}-day free trial has ended. Choose a plan to continue.',
-        'manual_title' => 'Agency license active',
-        'manual_text' => 'This store uses an agency or enterprise license outside Shopify billing.',
         'unknown_title' => 'Plan status unavailable',
         'unknown_text' => 'We could not check your subscription right now. Please try again in a few minutes.',
         'plan_confirmed' => 'Thank you! Your plan is active.',
-        'license_active' => 'License active',
-        'license_none' => 'No active license',
-        'license_enter' => 'Enter your Fyndable license key.',
-        'license_activated' => 'License activated ({tier})',
-        'license_failed' => 'Activation failed: {message}',
-        'license_deactivate_confirm' => 'Deactivate the license for this store?',
-        'license_deactivated' => 'License deactivated',
 
         // Settings
         // SEO audit (shared: home, content optimizer, SEO audit page)

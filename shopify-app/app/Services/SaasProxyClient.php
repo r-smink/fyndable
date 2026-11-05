@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
  * SaasProxyClient
  *
  * Communicates with the Fyndable SaaS Dashboard (portal.fyndable.ai) for:
- *  - License activation & validation (/license/activate, /tenant/status)
+ *  - License validation (/tenant/status) and the signed App Pricing sync
  *  - AI content generation (/ai/generate)
  *  - SERP queries (/serp/query, /serp/rank-check, /serp/local-pack, /serp/local-grid)
  *
@@ -27,74 +27,6 @@ class SaasProxyClient
     {
         $this->dashboardUrl = rtrim(config('shopify.saas_dashboard_url'), '/');
         $this->namespace = config('shopify.saas_api_namespace', 'ai-seo-saas/v1');
-    }
-
-    /**
-     * Activate a Fyndable license for a Shopify shop.
-     *
-     * @param  string  $licenseKey  The Fyndable license key (uppercase).
-     * @param  string  $shopDomain  The Shopify shop domain (e.g. store.myshopify.com).
-     * @param  string  $shopName  Optional shop display name.
-     * @return array{success: bool, tenant_key?: string, tier?: string, ...}|array{error: string}
-     */
-    public function activateLicense(string $licenseKey, string $shopDomain, string $shopName = ''): array
-    {
-        $licenseKey = strtoupper(trim($licenseKey));
-        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/license/activate";
-
-        try {
-            $response = Http::timeout(60)
-                ->post($endpoint, [
-                    'license_key' => $licenseKey,
-                    'site_url' => "https://{$shopDomain}",
-                    'site_name' => $shopName ?: $shopDomain,
-                    'platform' => 'shopify',
-                ]);
-        } catch (ConnectionException $e) {
-            Log::error('SaasProxyClient: license activation failed', ['error' => $e->getMessage()]);
-
-            return ['error' => 'connection_failed'];
-        }
-
-        if ($response->failed()) {
-            return ['error' => 'activation_failed', 'status' => $response->status()];
-        }
-
-        $body = $response->json();
-        if (! is_array($body) || ! ($body['success'] ?? false)) {
-            return ['error' => $body['message'] ?? 'activation_failed'];
-        }
-
-        return $body;
-    }
-
-    /**
-     * Look up a license key without activating it (used to restrict manual
-     * keys to agency/enterprise tiers before activation).
-     *
-     * @return array{valid: bool, tier?: string}|array{error: string}
-     */
-    public function checkLicense(string $licenseKey, string $shopDomain): array
-    {
-        $endpoint = "{$this->dashboardUrl}/wp-json/{$this->namespace}/license/validate";
-
-        try {
-            $response = Http::timeout(30)->post($endpoint, [
-                'license_key' => strtoupper(trim($licenseKey)),
-                'site_url' => "https://{$shopDomain}",
-            ]);
-        } catch (ConnectionException $e) {
-            Log::warning('SaasProxyClient: license check failed (network)', ['error' => $e->getMessage()]);
-
-            return ['error' => 'connection_failed'];
-        }
-
-        $body = $response->json();
-        if (! is_array($body) || ! ($body['valid'] ?? false)) {
-            return ['valid' => false, 'error' => is_array($body) ? ($body['error'] ?? 'invalid_key') : 'invalid_key'];
-        }
-
-        return ['valid' => true, 'tier' => (string) ($body['license']['tier'] ?? '')];
     }
 
     /**
