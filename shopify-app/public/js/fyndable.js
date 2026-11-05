@@ -271,6 +271,11 @@
          * s-table markup. headers: [label | {label, format}], rows: arrays of
          * cell HTML (escape text yourself with Fyn.esc).
          */
+        /** Table cell content that wraps instead of widening the table (.fyn-wrap). */
+        wrap(html) {
+            return `<span class="fyn-wrap">${html}</span>`;
+        },
+
         table(headers, rows) {
             const head = headers.map((h, i) => {
                 const label = typeof h === 'string' ? h : h.label;

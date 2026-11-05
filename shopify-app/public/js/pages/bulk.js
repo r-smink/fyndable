@@ -81,7 +81,7 @@
         }
         Fyn.html('bulk-preview', data.items.length
             ? Fyn.table([t('col_item'), t('col_current'), t('col_new')], data.items.map(i => [
-                esc(i.title), esc(i.current || '-'), `${esc(i.new)} <s-text color="subdued">(${i.new.length})</s-text>`,
+                esc(i.title), Fyn.wrap(esc(i.current || '-')), Fyn.wrap(`${esc(i.new)} <s-text color="subdued">(${i.new.length})</s-text>`),
             ]))
             : `<s-text color="subdued">${esc(t('no_items'))}</s-text>`);
     };

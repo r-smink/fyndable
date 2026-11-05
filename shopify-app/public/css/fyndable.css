@@ -47,3 +47,13 @@ body {
     background: #f1f1f1;
     flex: none;
 }
+
+/* Long text in s-table cells: Polaris keeps cell text on one line, so a long
+   meta description pushes the other columns out of view. Fyn.wrap(). */
+.fyn-wrap {
+    display: block;
+    min-width: 12rem;
+    max-width: 32rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
