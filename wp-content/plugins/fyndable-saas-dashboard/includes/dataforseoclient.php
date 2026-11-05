@@ -178,7 +178,7 @@ class DataForSeoClient
      */
     public function aiMentionsSearchMentions(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/search_mentions/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/search_mentions/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -187,7 +187,7 @@ class DataForSeoClient
      */
     public function aiMentionsTargetMetrics(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/target_metrics/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/target_metrics/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -196,7 +196,7 @@ class DataForSeoClient
      */
     public function aiMentionsTopMentionedDomains(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/top_mentioned_domains/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/top_mentioned_domains/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -205,7 +205,7 @@ class DataForSeoClient
      */
     public function aiMentionsTopMentionedPages(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/top_mentioned_pages/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/top_mentioned_pages/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -214,7 +214,7 @@ class DataForSeoClient
      */
     public function aiMentionsTopMentionedBrands(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/top_mentioned_brands/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/top_mentioned_brands/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -223,7 +223,7 @@ class DataForSeoClient
      */
     public function aiMentionsTopMentionedBrandCategories(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/top_mentioned_brand_categories/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/top_mentioned_brand_categories/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -232,7 +232,7 @@ class DataForSeoClient
      */
     public function aiMentionsHistorical(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/historical/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/historical/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -241,7 +241,7 @@ class DataForSeoClient
      */
     public function aiMentionsTimeseriesDelta(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/timeseries_delta/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/timeseries_delta/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     /**
@@ -250,7 +250,7 @@ class DataForSeoClient
      */
     public function aiMentionsTimeseriesNewAndLost(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/llm_mentions/timeseries_new_and_lost/live', [$params], 'ai_mentions');
+        return $this->request('/ai_optimization/llm_mentions/timeseries_new_and_lost/live', [$this->mentionsParams($params)], 'ai_mentions');
     }
 
     // -------------------------------------------------------------------------
@@ -290,7 +290,134 @@ class DataForSeoClient
             return new \WP_Error('invalid_provider', sprintf(__('Unknown LLM provider: %s', 'sseo-ai-saas'), $provider));
         }
 
+        // Older callers used prompt/model; DataForSEO requires user_prompt and model_name.
+        if (!isset($params['user_prompt']) && isset($params['prompt'])) {
+            $params['user_prompt'] = $params['prompt'];
+        }
+        if (!isset($params['model_name']) && isset($params['model'])) {
+            $params['model_name'] = $params['model'];
+        }
+        unset($params['prompt'], $params['model'], $params['location_code'], $params['language_code']);
+        $params['user_prompt'] = mb_substr(trim((string) ($params['user_prompt'] ?? '')), 0, 500);
+        if ($params['user_prompt'] === '') {
+            return new \WP_Error('missing_params', __('user_prompt is required', 'sseo-ai-saas'));
+        }
+
+        $model = $this->resolveLlmModel($paths[$provider], (string) ($params['model_name'] ?? ''), !empty($params['web_search']));
+        if (is_wp_error($model)) {
+            return $model;
+        }
+        $params['model_name'] = $model;
+
         return $this->request('/ai_optimization/' . $paths[$provider] . '/llm_responses/live', [$params], 'llm_response');
+    }
+
+    /**
+     * A model_name DataForSEO currently offers for this provider: the
+     * requested one when it is listed (full name or base name), otherwise
+     * the first non-reasoning model (with web search when asked). The list
+     * comes from GET .../llm_responses/models and is cached for a day.
+     */
+    public function resolveLlmModel(string $providerPath, string $requested, bool $webSearch = false): string|\WP_Error
+    {
+        $models = $this->llmModels($providerPath);
+        if (is_wp_error($models)) {
+            return $requested !== '' ? $requested : $models;
+        }
+
+        $names = array_column($models, 'model_name');
+        if ($requested !== '') {
+            foreach ($names as $name) {
+                if ($name === $requested || str_starts_with((string) $name, $requested . '-')) {
+                    return $requested;
+                }
+            }
+        }
+
+        $candidates = array_values(array_filter($models, fn ($m) => empty($m['reasoning']) && (!$webSearch || !empty($m['web_search_supported']))));
+        $pick = $candidates[0]['model_name'] ?? ($names[0] ?? '');
+
+        return $pick !== '' ? (string) $pick : new \WP_Error('no_llm_model', __('No DataForSEO model available for this provider', 'sseo-ai-saas'));
+    }
+
+    /**
+     * @return array<int, array{model_name: string, reasoning?: bool, web_search_supported?: bool}>|\WP_Error
+     */
+    private function llmModels(string $providerPath): array|\WP_Error
+    {
+        $cacheKey = 'sseo_dfs_llm_models_' . $providerPath;
+        $cached = get_transient($cacheKey);
+        if (is_array($cached) && $cached !== []) {
+            return $cached;
+        }
+
+        $apiKey = $this->getApiKey();
+        if (empty($apiKey)) {
+            return new \WP_Error('dataforseo_not_configured', __('DataForSEO API key is not configured', 'sseo-ai-saas'));
+        }
+
+        $response = wp_remote_get(self::API_BASE . '/ai_optimization/' . $providerPath . '/llm_responses/models', [
+            'headers' => ['Authorization' => 'Basic ' . $this->authHeader($apiKey)],
+            'timeout' => 30,
+        ]);
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $models = array_values(array_filter((array) ($body['tasks'][0]['result'] ?? []), fn ($m) => is_array($m) && !empty($m['model_name'])));
+        if ($models === []) {
+            return new \WP_Error('dataforseo_error', __('DataForSEO returned no models', 'sseo-ai-saas'));
+        }
+
+        set_transient($cacheKey, $models, DAY_IN_SECONDS);
+
+        return $models;
+    }
+
+    /**
+     * LLM Mentions params: target must be an array of entities, each with
+     * one domain or one keyword. Accepts the older shapes callers send: a
+     * string target, an array of strings, or a top-level keyword.
+     */
+    public function mentionsParams(array $params): array
+    {
+        $target = $params['target'] ?? null;
+        if ($target === null && isset($params['keyword'])) {
+            $target = ['keyword' => $params['keyword']];
+        }
+        unset($params['keyword']);
+
+        if (is_string($target)) {
+            $target = [$target];
+        } elseif (is_array($target) && (isset($target['domain']) || isset($target['keyword']))) {
+            $target = [$target];
+        }
+
+        $entities = [];
+        foreach ((array) $target as $entity) {
+            if (is_string($entity)) {
+                $value = trim($entity);
+                if ($value === '') {
+                    continue;
+                }
+                // A host without spaces is a domain, anything else a keyword.
+                $entity = (!preg_match('/\s/', $value) && str_contains($value, '.'))
+                    ? ['domain' => strtok($this->normalizeTarget($value), '/')]
+                    : ['keyword' => $value];
+            }
+            if (is_array($entity) && (!empty($entity['domain']) || !empty($entity['keyword']))) {
+                $entities[] = $entity;
+            }
+        }
+
+        if ($entities !== []) {
+            $params['target'] = array_slice($entities, 0, 10);
+        } else {
+            unset($params['target']);
+        }
+
+        return $params;
     }
 
     // -------------------------------------------------------------------------
@@ -393,6 +520,15 @@ class DataForSeoClient
                 $body = json_decode(wp_remote_retrieve_body($response), true);
 
                 if ($statusCode === 200 && !empty($body['tasks'])) {
+                    $taskStatus = (int) ($body['tasks'][0]['status_code'] ?? 20000);
+                    if ($taskStatus >= 40500 && $taskStatus < 40600) {
+                        // Invalid request (405xx: invalid field, invalid POST
+                        // data): retrying cannot help and it is not a provider
+                        // outage, so no circuit breaker. Other task codes (for
+                        // example 40102 no results) keep the old behaviour.
+                        $message = $body['tasks'][0]['status_message'] ?? __('DataForSEO rejected the request', 'sseo-ai-saas');
+                        return new \WP_Error('dataforseo_task_error', (string) $message, ['status_code' => $taskStatus]);
+                    }
                     $this->recordSuccess($type);
                     return $body;
                 }
