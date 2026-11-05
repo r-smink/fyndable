@@ -55,6 +55,8 @@ return [
 
     'js' => [
         'no_items' => 'No items found.',
+        'status_draft' => 'Draft',
+        'status_archived' => 'Archived',
         'nothing_to_save' => 'Nothing to save',
         'description_generated' => 'Description generated. Review it and click "Save description".',
         'description_saved' => 'Description saved to Shopify',

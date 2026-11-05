@@ -353,11 +353,14 @@ it('adds the live SEO score to the content editor and audit scores to the list',
             return str_contains($request['query'] ?? '', 'node(')
                 ? Http::response(['data' => ['node' => ['__typename' => 'Product', 'id' => 'gid://shopify/Product/1', 'title' => 'Lamp', 'handle' => 'lamp',
                     'descriptionHtml' => '<p>Short</p>', 'seo' => ['title' => null, 'description' => null], 'images' => ['edges' => []], 'metafields' => ['edges' => []]]]])
-                : Http::response(['data' => ['products' => ['edges' => [['node' => ['id' => 'gid://shopify/Product/1', 'title' => 'Lamp', 'handle' => 'lamp']]]]]]);
+                : Http::response(['data' => ['products' => ['edges' => [['node' => ['id' => 'gid://shopify/Product/1', 'title' => 'Lamp', 'handle' => 'lamp', 'productType' => 'Lighting', 'status' => 'DRAFT']]]]]]);
         },
     ]);
 
-    $this->getJson('/api/content/product', auditHeaders())->assertJsonPath('items.0.score', 64);
+    $this->getJson('/api/content/product', auditHeaders())
+        ->assertJsonPath('items.0.score', 64)
+        ->assertJsonPath('items.0.subtitle', 'Lighting')
+        ->assertJsonPath('items.0.status', 'DRAFT');
 
     $detail = $this->getJson('/api/content/product/1', auditHeaders())->assertOk()->json('item.seo');
     expect($detail['score'])->toBe(58)

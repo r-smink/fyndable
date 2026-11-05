@@ -55,6 +55,8 @@ return [
 
     'js' => [
         'no_items' => 'Geen items gevonden.',
+        'status_draft' => 'Concept',
+        'status_archived' => 'Gearchiveerd',
         'nothing_to_save' => 'Niets om op te slaan',
         'description_generated' => 'Beschrijving gegenereerd. Controleer de tekst en klik op "Beschrijving opslaan".',
         'description_saved' => 'Beschrijving opgeslagen in Shopify',

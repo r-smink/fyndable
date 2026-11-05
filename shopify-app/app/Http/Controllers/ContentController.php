@@ -787,10 +787,12 @@ class ContentController extends Controller
             'title' => $item['title'] ?? '(untitled)',
             'handle' => $item['handle'] ?? '',
             'subtitle' => match ($type) {
-                'product' => trim(($item['productType'] ?? '').' '.($item['status'] ?? '')),
+                'product' => (string) ($item['productType'] ?? ''),
                 'article' => $item['blog']['title'] ?? '',
                 default => '',
             },
+            // Products only: ACTIVE, DRAFT or ARCHIVED (shown as a badge when not active).
+            'status' => $type === 'product' ? ($item['status'] ?? null) : null,
             'image' => $item['featuredImage']['url'] ?? $item['image']['url'] ?? null,
             // Products only: no custom SEO title or description yet.
             'seo_missing' => $type === 'product'

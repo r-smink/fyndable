@@ -58,8 +58,19 @@
             Fyn.html('content-list', `<s-text color="subdued">${esc(t('no_items'))}</s-text>`);
             return;
         }
-        Fyn.html('content-list', `<s-stack gap="small-200">${data.items.map(i => `
-            <s-button variant="tertiary" data-id="${esc(i.id)}" onclick="selectContent(this.dataset.id)">${esc(i.title)}${i.subtitle ? ' - ' + esc(i.subtitle) : ''}${i.score != null ? ` (${esc(t('seo_score'))} ${i.score})` : ''}</s-button>`).join('')}
+        // One row per item: title + type on the left, status and score badges
+        // on the right. Text wraps instead of widening the page.
+        const status = s => (s === 'DRAFT' || s === 'ARCHIVED') ? Fyn.badge('neutral', t('status_' + s.toLowerCase())) : '';
+        Fyn.html('content-list', `<s-stack gap="small-100">${data.items.map(i => `
+            <s-clickable padding="small" borderRadius="base" data-id="${esc(i.id)}" onclick="selectContent(this.dataset.id)" accessibilityLabel="${esc(i.title)}">
+                <s-stack direction="inline" gap="small-200" justifyContent="space-between" alignItems="center">
+                    <s-stack gap="none">
+                        <s-text type="strong">${esc(i.title)}</s-text>
+                        ${i.subtitle ? `<s-text color="subdued">${esc(i.subtitle)}</s-text>` : ''}
+                    </s-stack>
+                    <s-stack direction="inline" gap="small-200">${status(i.status || '')}${Fyn.scoreBadge(i.score)}</s-stack>
+                </s-stack>
+            </s-clickable>`).join('')}
         </s-stack>`);
     }
 
