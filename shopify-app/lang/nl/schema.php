@@ -37,8 +37,8 @@ return [
     'local_price' => 'Prijsklasse',
     'local_price_details' => 'Bijvoorbeeld EUR of 10-100 EUR.',
     'theme_title' => 'Controle op dubbel schema',
-    'theme_intro' => 'Veel thema\'s geven zelf al product- of kruimelpadschema mee. Twee versies van hetzelfde schema kunnen zoekmachines in de war brengen, dus controleer je thema en zet uit wat het thema al doet.',
-    'theme_run' => 'Mijn thema controleren',
+    'theme_intro' => 'Veel thema\'s geven zelf al product- of kruimelpadschema mee. Twee versies van hetzelfde schema kunnen zoekmachines in de war brengen. Test een productpagina met de Rich Results Test van Google: staat een type zoals Product of BreadcrumbList er twee keer in, zet het dan hier uit.',
+    'theme_run' => 'Rich Results Test openen',
 
     'js' => [
         'embed_title' => 'App embed',
@@ -51,12 +51,6 @@ return [
         'last_published' => 'Laatst gepubliceerd: {date}',
         'locked_local' => 'Schema voor een lokaal bedrijf is beschikbaar vanaf {tier}.',
         'invalid_settings' => 'Sommige velden zijn niet geldig: {fields}',
-        'theme_none' => 'Geen gestructureerde data gevonden in thema "{theme}" ({files} bestanden gecontroleerd). Fyndable kan alles toevoegen zonder dubbelingen.',
-        'theme_found' => 'Thema "{theme}" geeft zelf gestructureerde data mee ({files} bestanden gecontroleerd).',
-        'theme_duplicate' => 'Zet uit in Fyndable, of verwijder het uit het thema: {types}.',
-        'theme_checked' => 'Gecontroleerd: {date}',
-        'col_file' => 'Themabestand',
-        'col_types' => 'Schematypes',
         'duplicate_badge' => 'Dubbel',
         'flag_name_organization' => 'Organisatie',
         'flag_name_website' => 'WebSite',

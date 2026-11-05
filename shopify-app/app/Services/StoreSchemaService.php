@@ -18,27 +18,14 @@ use App\Models\StoreSchemaSetting;
  *   app-data metafield fyndable.schema_config (AppInstallation owner).
  * - Plan gating happens when publishing: features outside the plan are
  *   published as off (re-published daily by SyncStoreSchemaJob).
- * - The theme check scans the main theme for its own JSON-LD so the
- *   merchant can avoid duplicate schema (read_themes).
+ * - The app does not read theme files (App Store requirement 5.1.1); the
+ *   page tells merchants to verify with Google's Rich Results Test.
  */
 class StoreSchemaService
 {
     public const FLAGS = ['organization', 'website', 'breadcrumbs', 'product', 'article', 'local_business'];
 
     public const BUSINESS_TYPES = ['Store', 'ClothingStore', 'ElectronicsStore', 'FurnitureStore', 'GardenStore', 'HomeGoodsStore', 'JewelryStore', 'BookStore', 'SportingGoodsStore', 'ToyStore', 'PetStore', 'HealthAndBeautyBusiness', 'FoodEstablishment', 'LocalBusiness'];
-
-    /** Theme files that can contain hard-coded structured data. */
-    public const THEME_PATTERNS = ['layout/*.liquid', 'sections/*.liquid', 'snippets/*.liquid', 'templates/*.liquid', 'blocks/*.liquid'];
-
-    /** schema.org type -> setting that would duplicate it. */
-    private const TYPE_FLAGS = [
-        'Product' => 'product', 'ProductGroup' => 'product',
-        'Organization' => 'organization', 'Corporation' => 'organization', 'OnlineStore' => 'organization',
-        'WebSite' => 'website',
-        'BreadcrumbList' => 'breadcrumbs',
-        'Article' => 'article', 'BlogPosting' => 'article', 'NewsArticle' => 'article',
-        'LocalBusiness' => 'local_business', 'Store' => 'local_business',
-    ];
 
     public function __construct(
         private ShopifyAdminWriter $writer,
@@ -183,78 +170,6 @@ class StoreSchemaService
             : ['publish_error' => mb_substr($error, 0, 255)]);
 
         return $error;
-    }
-
-    /**
-     * Find structured data the theme itself outputs and which Fyndable
-     * settings would duplicate it.
-     *
-     * @return array{theme:string, findings:array, duplicates:array<int,string>, checked_files:int}|array{error:string}
-     */
-    public function themeCheck(Shop $shop): array
-    {
-        $result = $this->fetcher->getMainThemeFiles($shop, self::THEME_PATTERNS);
-        if (isset($result['error'])) {
-            return $result;
-        }
-
-        $findings = [];
-        foreach ($result['files'] as $file) {
-            $types = $this->schemaTypes($file['filename'], $file['content']);
-            if ($types !== []) {
-                $findings[] = ['file' => $file['filename'], 'types' => $types];
-            }
-        }
-
-        $flags = [];
-        foreach ($findings as $finding) {
-            foreach ($finding['types'] as $type) {
-                if (isset(self::TYPE_FLAGS[$type])) {
-                    $flags[self::TYPE_FLAGS[$type]] = true;
-                }
-            }
-        }
-
-        $check = [
-            'theme' => $result['theme'],
-            'findings' => $findings,
-            'duplicates' => array_keys($flags),
-            'checked_files' => count($result['files']),
-        ];
-
-        StoreSchemaSetting::updateOrCreate(['shop_id' => $shop->id], ['theme_check' => $check, 'theme_checked_at' => now()] + ($this->record($shop) ? [] : ['settings' => $this->defaults()]));
-
-        return $check;
-    }
-
-    /**
-     * schema.org types a theme file outputs: JSON-LD script blocks and
-     * Shopify's `structured_data` Liquid filter (Product or Article).
-     *
-     * @return array<int,string>
-     */
-    public function schemaTypes(string $filename, string $content): array
-    {
-        $types = [];
-
-        if (preg_match_all('#<script[^>]+application/ld\+json[^>]*>(.*?)</script>#is', $content, $blocks)) {
-            foreach ($blocks[1] as $block) {
-                if (preg_match_all('/["\']@type["\']\s*:\s*["\']([A-Za-z]+)["\']/', $block, $m)) {
-                    array_push($types, ...$m[1]);
-                }
-            }
-        }
-
-        if (preg_match_all('/(\w+)\s*\|\s*structured_data/', $content, $m)) {
-            foreach ($m[1] as $object) {
-                $types[] = str_contains($object, 'article') ? 'Article' : 'Product';
-            }
-        }
-
-        // Nested helper types are not a duplicate risk on their own.
-        $ignore = ['ListItem', 'Offer', 'AggregateOffer', 'Brand', 'PostalAddress', 'ImageObject', 'Person', 'SearchAction', 'EntryPoint', 'Rating', 'AggregateRating', 'Review', 'Thing', 'GeoCoordinates', 'ContactPoint', 'WebPage', 'PropertyValue', 'MonetaryAmount', 'OfferShippingDetails', 'QuantitativeValue'];
-
-        return array_values(array_unique(array_diff($types, $ignore)));
     }
 
     private function clean(array $data): array

@@ -66,9 +66,8 @@
         <s-stack gap="base">
             <s-paragraph>{{ __('schema.theme_intro') }}</s-paragraph>
             <s-stack direction="inline">
-                <s-button onclick="runThemeCheck(this)">{{ __('schema.theme_run') }}</s-button>
+                <s-button href="https://search.google.com/test/rich-results" target="_blank">{{ __('schema.theme_run') }}</s-button>
             </s-stack>
-            <div id="theme-check"></div>
         </s-stack>
     </s-section>
 @endsection

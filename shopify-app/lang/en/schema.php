@@ -37,8 +37,8 @@ return [
     'local_price' => 'Price range',
     'local_price_details' => 'For example $$ or 10-100 EUR.',
     'theme_title' => 'Duplicate schema check',
-    'theme_intro' => 'Many themes already output their own product or breadcrumb schema. Two versions of the same schema can confuse search engines, so check your theme and switch off whatever the theme already covers.',
-    'theme_run' => 'Check my theme',
+    'theme_intro' => 'Many themes already output their own product or breadcrumb schema. Two versions of the same schema can confuse search engines. Test a product page with Google\'s Rich Results Test: if a type such as Product or BreadcrumbList appears twice, switch it off here.',
+    'theme_run' => 'Open Rich Results Test',
 
     'js' => [
         'embed_title' => 'App embed',
@@ -51,12 +51,6 @@ return [
         'last_published' => 'Last published: {date}',
         'locked_local' => 'Local business schema is available on {tier} and higher.',
         'invalid_settings' => 'Some fields are not valid: {fields}',
-        'theme_none' => 'No structured data found in theme "{theme}" ({files} files checked). Fyndable can add everything without duplicates.',
-        'theme_found' => 'Theme "{theme}" outputs its own structured data ({files} files checked).',
-        'theme_duplicate' => 'Switch off in Fyndable, or remove it from the theme: {types}.',
-        'theme_checked' => 'Checked: {date}',
-        'col_file' => 'Theme file',
-        'col_types' => 'Schema types',
         'duplicate_badge' => 'Duplicate',
         'flag_name_organization' => 'Organization',
         'flag_name_website' => 'WebSite',

@@ -1,7 +1,8 @@
 /*
  * Structured data (1.4): app embed status (App Bridge app.extensions,
  * Built for Shopify 4.2.3), schema switches, Organization and LocalBusiness
- * details, and the duplicate schema check of the theme.
+ * details. Duplicate schema is checked by the merchant with Google's Rich
+ * Results Test (the app does not read theme files).
  */
 (function () {
     'use strict';
@@ -30,29 +31,6 @@
         } else {
             Fyn.html('schema-status', '');
         }
-    }
-
-    function renderThemeCheck(check, checkedAt) {
-        if (!check) {
-            Fyn.html('theme-check', '');
-            return;
-        }
-        const enabled = FLAGS.filter(f => Fyn.checked('flag-' + f));
-        const duplicates = (check.duplicates || []).filter(f => enabled.includes(f));
-        let html = check.findings.length
-            ? Fyn.banner(duplicates.length ? 'warning' : 'info', t('theme_found', { theme: check.theme, files: check.checked_files }))
-            : Fyn.banner('success', t('theme_none', { theme: check.theme, files: check.checked_files }));
-        if (duplicates.length) {
-            html += `<s-paragraph>${esc(t('theme_duplicate', { types: duplicates.map(f => t('flag_name_' + f)).join(', ') }))}</s-paragraph>`;
-        }
-        if (check.findings.length) {
-            html += Fyn.table([t('col_file'), t('col_types')], check.findings.map(f => [
-                esc(f.file),
-                f.types.map(type => esc(type)).join(', '),
-            ]));
-        }
-        if (checkedAt) html += `<s-text color="subdued">${esc(t('theme_checked', { date: Fyn.fmtDate(checkedAt, true) }))}</s-text>`;
-        Fyn.html('theme-check', `<s-stack gap="base">${html}</s-stack>`);
     }
 
     function fill(data) {
@@ -95,7 +73,6 @@
         state = data;
         fill(data);
         renderStatus(data);
-        renderThemeCheck(data.theme_check, data.theme_checked_at);
     }
 
     window.saveSchema = async function (button) {
@@ -141,22 +118,6 @@
         Fyn.toast(t('published'));
         load();
     };
-
-    window.runThemeCheck = async function (button) {
-        const data = await Fyn.busy(button, () => Fyn.post('/schema/theme-check'));
-        if (data.error) {
-            Fyn.html('theme-check', Fyn.errorBanner(data));
-            return;
-        }
-        renderThemeCheck(data.theme_check, new Date().toISOString());
-    };
-
-    // Re-evaluate duplicates when switches change.
-    document.addEventListener('change', e => {
-        if (state && e.target && String(e.target.id || '').startsWith('flag-')) {
-            renderThemeCheck(state.theme_check, state.theme_checked_at);
-        }
-    });
 
     Fyn.page(async () => {
         await Promise.all([load(), renderEmbed()]);

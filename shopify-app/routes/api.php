@@ -133,7 +133,6 @@ Route::middleware(['shopify.session', 'shopify.activity'])->group(function () {
     // Store-wide structured data via the app embed (1.4)
     Route::get('/schema', [SchemaController::class, 'show'])->middleware('shopify.tier:schema');
     Route::post('/schema', [SchemaController::class, 'save'])->middleware('shopify.tier:schema');
-    Route::post('/schema/theme-check', [SchemaController::class, 'themeCheck'])->middleware('shopify.tier:schema')->middleware('shopify.scope:read_themes');
 
     // Redirect manager + 404 monitor (1.2)
     Route::middleware('shopify.tier:redirects')->prefix('redirects')->group(function () {

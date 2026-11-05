@@ -26,7 +26,7 @@ class ProductControllerTest extends TestCase
             'token_expires_at' => now()->addHour(),
             'license_key' => 'FYND-TEST',
             'tenant_key' => 'tenant-test',
-            'scope' => 'read_products,write_products,read_content,write_content,read_themes,read_metaobjects,write_metaobjects,write_app_proxy',
+            'scope' => 'read_products,write_products,read_content,write_content,read_metaobjects,write_metaobjects,write_app_proxy',
             'is_installed' => true,
             'is_uninstalled' => false,
         ], $overrides));

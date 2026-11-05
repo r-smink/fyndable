@@ -275,54 +275,6 @@ class ShopifyContentFetcher
     }
 
     /**
-     * Liquid files of the published (main) theme, for the duplicate schema
-     * check (1.4). Requires read_themes.
-     *
-     * @return array{theme:string, files:array<int,array{filename:string, content:string}>}|array{error:string}
-     */
-    public function getMainThemeFiles(Shop $shop, array $patterns, int $max = 1000): array
-    {
-        $query = <<<'GRAPHQL'
-        query themeFiles($patterns: [String!]!, $after: String) {
-          themes(first: 1, roles: [MAIN]) {
-            nodes {
-              name
-              files(filenames: $patterns, first: 100, after: $after) {
-                pageInfo { hasNextPage endCursor }
-                nodes {
-                  filename
-                  body { ... on OnlineStoreThemeFileBodyText { content } }
-                }
-              }
-            }
-          }
-        }
-        GRAPHQL;
-
-        $files = [];
-        $theme = '';
-        $after = null;
-        do {
-            $response = $this->graphql($shop, $query, ['patterns' => array_values($patterns), 'after' => $after]);
-            if (isset($response['error'])) {
-                return ['error' => (string) $response['error']];
-            }
-            $node = $response['data']['themes']['nodes'][0] ?? null;
-            if ($node === null) {
-                return ['error' => 'no_main_theme'];
-            }
-            $theme = (string) ($node['name'] ?? '');
-            foreach ($node['files']['nodes'] ?? [] as $file) {
-                $files[] = ['filename' => (string) $file['filename'], 'content' => (string) ($file['body']['content'] ?? '')];
-            }
-            $pageInfo = $node['files']['pageInfo'] ?? [];
-            $after = ($pageInfo['hasNextPage'] ?? false) ? ($pageInfo['endCursor'] ?? null) : null;
-        } while ($after !== null && count($files) < $max);
-
-        return ['theme' => $theme, 'files' => $files];
-    }
-
-    /**
      * All variants with their product data for the product feed and the
      * AI-ready score (2.1). Variant pages of 50 keep the query cost low;
      * the product fields repeat per variant. Draft and archived products are

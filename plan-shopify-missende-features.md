@@ -98,6 +98,8 @@ Voor livegang (aanvulling op "Stand 0.1"):
 
 ### Stand 1.4 (2026-11-04)
 
+**Wijziging 2026-11-05 (App Store-eis 5.1.1):** de themacontrole op dubbel schema en de scope `read_themes` zijn verwijderd. De pagina verwijst nu naar de Rich Results Test van Google.
+
 Gebouwd: de bestaande app embed "Fyndable SEO schema" geeft nu ook winkelbreed schema, aan/uit te zetten op de nieuwe pagina "Gestructureerde data":
 - **Uit Liquid, zonder API-calls en altijd actueel:** Product (alle varianten als Offer met prijs, valuta, voorraad, SKU, GTIN uit de barcode, merk, afbeeldingen, `reviews.rating`-metafields als AggregateRating), BlogPosting, BreadcrumbList (home > collectie/blog > item) en WebSite + SearchAction op de homepage. Handmatig opgeslagen itemschema (Content optimizer) gaat voor.
 - **Uit de instellingen:** Organization (merknaam, logo, sociale profielen, contact) en LocalBusiness (type, adres, geo, openingstijden, prijsklasse). Gepubliceerd als app-data-metafield `fyndable.schema_config` op de AppInstallation, die de embed via `app.metafields` leest.

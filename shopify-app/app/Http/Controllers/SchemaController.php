@@ -12,7 +12,6 @@ use Illuminate\Validation\Rule;
  *
  * GET  /api/schema              - settings, plan access, theme check, publish status
  * POST /api/schema              - save settings and publish them to the app embed
- * POST /api/schema/theme-check  - scan the main theme for its own JSON-LD
  */
 class SchemaController extends Controller
 {
@@ -28,8 +27,6 @@ class SchemaController extends Controller
             'settings' => $this->schema->settings($shop),
             'allowed' => $this->schema->allowed($shop),
             'business_types' => StoreSchemaService::BUSINESS_TYPES,
-            'theme_check' => $record?->theme_check,
-            'theme_checked_at' => $record?->theme_checked_at?->toIso8601String(),
             'published_at' => $record?->published_at?->toIso8601String(),
             'publish_error' => $record?->publish_error,
         ];
@@ -84,13 +81,6 @@ class SchemaController extends Controller
         return $error === null
             ? ['success' => true, 'settings' => $this->schema->settings($shop)]
             : ['error' => 'publish_failed', 'message' => $error];
-    }
-
-    public function themeCheck(Request $request): array
-    {
-        $result = $this->schema->themeCheck($this->shop($request));
-
-        return isset($result['error']) ? $result : ['success' => true, 'theme_check' => $result];
     }
 
     private function shop(Request $request): Shop

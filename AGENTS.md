@@ -603,4 +603,6 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 ## Wijzigingen na de App Store-review (2026-11-05)
 
 - **Geen handmatige licentiesleutels meer in de Shopify-app (1.2.1):** `/api/license/activate` en `/deactivate`, `LicenseService::activate/deactivate`, `SaasProxyClient::activateLicense/checkLicense`, de billingstatus `manual` en `billing.manual_license_tiers` zijn verwijderd. Licenties komen alleen uit App Pricing (SaaS-sync). `/api/license/status` blijft.
+- **Geen `read_themes` meer (5.1.1):** de themacontrole op dubbel schema (`StoreSchemaService::themeCheck`, `getMainThemeFiles`, `POST /api/schema/theme-check`, kolommen `theme_check`/`theme_checked_at`) is verwijderd; de schemapagina verwijst naar de Rich Results Test van Google. Scope uit `shopify.app.toml`, `config/shopify.php` en `.env` (server: `SHOPIFY_SCOPES` ook aanpassen).
+- **Symfony 7.4.23** (composer audit, advisories van 2026-11-04).
 - **AI-crawlers alleen lezen (5.1.1):** `AiCrawlers` heeft alleen nog `BOTS`, `liveStatus()`, `parse()`, `isBlocked()`. API `GET /api/ai-crawlers`, `POST /api/ai-crawlers/check`. Geen themacode, geen keuzes; kolom `ai_crawlers` gedropt.

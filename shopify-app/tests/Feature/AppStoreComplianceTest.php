@@ -38,3 +38,12 @@ it('loads App Bridge as the first script on every app page (2.2.3)', function ()
     preg_match('/<script[^>]*>/', $html, $first);
     expect($first[0])->toContain('https://cdn.shopify.com/shopifycloud/app-bridge.js');
 });
+
+it('does not request or use theme file access (5.1.1)', function () {
+    expect(file_get_contents(config_path('shopify.php')))->not->toContain('read_themes')
+        ->and(file_get_contents(base_path('shopify.app.toml')))->not->toContain('_themes');
+
+    foreach (appSourceFiles('app', '/\\.php$/') as $file) {
+        expect(file_get_contents($file))->not->toContain('themeFiles', basename($file));
+    }
+});

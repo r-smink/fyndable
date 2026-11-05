@@ -31,7 +31,7 @@ api_version = "2026-07"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_content,read_locales,read_markets,read_metaobjects,read_products,read_themes,read_translations,write_app_proxy,write_content,write_metaobjects,write_online_store_navigation,write_products,write_translations"
+scopes = "read_content,read_locales,read_markets,read_metaobjects,read_products,read_translations,write_app_proxy,write_content,write_metaobjects,write_online_store_navigation,write_products,write_translations"
 
 [auth]
 redirect_urls = [ "https://smartseoapp.fyndable.ai/auth/callback" ]

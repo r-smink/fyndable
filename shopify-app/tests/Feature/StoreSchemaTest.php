@@ -191,37 +191,6 @@ it('gates the schema settings by plan', function () {
     $this->getJson('/api/schema', schemaHeaders())->assertStatus(403);
 });
 
-// --- Theme check --------------------------------------------------------------
-
-it('finds structured data in the theme and the duplicates it causes', function () {
-    schemaShop();
-    fakeSchemaShopify('starter', [
-        'sections/main-product.liquid' => '<div>{{ product | structured_data }}</div>',
-        'snippets/breadcrumbs.liquid' => '<script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem" }] }</script>',
-        'layout/theme.liquid' => "<script type='application/ld+json'>{'@type': 'Organization', 'logo': {'@type': 'ImageObject'}}</script>",
-        'sections/header.liquid' => '<header>{{ shop.name }}</header>',
-    ]);
-
-    $check = $this->postJson('/api/schema/theme-check', [], schemaHeaders())->assertOk()->json('theme_check');
-
-    expect($check['theme'])->toBe('Dawn')
-        ->and($check['checked_files'])->toBe(4)
-        ->and($check['findings'])->toBe([
-            ['file' => 'sections/main-product.liquid', 'types' => ['Product']],
-            ['file' => 'snippets/breadcrumbs.liquid', 'types' => ['BreadcrumbList']],
-            ['file' => 'layout/theme.liquid', 'types' => ['Organization']],
-        ])
-        ->and($check['duplicates'])->toBe(['product', 'breadcrumbs', 'organization']);
-
-    $this->getJson('/api/schema', schemaHeaders())->assertJsonPath('theme_check.theme', 'Dawn');
-});
-
-it('classifies the structured_data filter for articles', function () {
-    expect(app(StoreSchemaService::class)->schemaTypes('sections/main-article.liquid', '{{ article | structured_data }}'))->toBe(['Article']);
-});
-
-// --- App embed + housekeeping ------------------------------------------------------
-
 it('renders the store-wide schema from the app-data metafield in the app embed', function () {
     $liquid = file_get_contents(base_path('extensions/fyndable-seo-schema/blocks/fyndable-seo-schema.liquid'));
 
