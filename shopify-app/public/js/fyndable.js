@@ -254,7 +254,10 @@
                         <s-heading><s-text${i.tone ? ` tone="${esc(i.tone)}"` : ''}>${esc(i.value)}</s-text></s-heading>
                         ${i.sub ? `<s-text color="subdued">${esc(i.sub)}</s-text>` : ''}
                     </s-stack></s-box>`).join('');
-            return `<s-query-container><s-grid gridTemplateColumns="@container (inline-size > 640px) repeat(${cols}, 1fr), 1fr 1fr" gap="base">${boxes}</s-grid></s-query-container>`;
+            // No repeat(n, 1fr): Polaris splits responsive values on commas,
+            // so a comma inside repeat() breaks the whole value (one column).
+            const wide = Array(cols).fill('1fr').join(' ');
+            return `<s-query-container><s-grid gridTemplateColumns="@container (inline-size > 640px) ${wide}, 1fr 1fr" gap="base">${boxes}</s-grid></s-query-container>`;
         },
 
         /** Status line: title + subdued text + optional badge/action (HTML). */

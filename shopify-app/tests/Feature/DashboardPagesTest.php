@@ -192,3 +192,12 @@ it('shows the sub navigation of the group with the current page marked', functio
         ->and(collect($buttons)->firstWhere(1, 'backlinks')[3])->toBe('backlinks')
         ->and($subnav[0])->toContain('aria-current="page"');
 });
+
+it('has no commas inside Polaris responsive grid values', function () {
+    // Polaris splits responsive values ("@container (...) a, b") on commas, so
+    // repeat(n, 1fr) or minmax(a, b) inside one breaks the whole value.
+    $files = array_merge(glob(public_path('js/*.js')), glob(public_path('js/pages/*.js')), glob(resource_path('views/**/*.blade.php')) ?: [], glob(resource_path('views/dashboard/pages/*.blade.php')));
+    foreach ($files as $file) {
+        expect(file_get_contents($file))->not->toMatch('/gridTemplateColumns="[^"]*(repeat|minmax)\(/', basename($file));
+    }
+});
