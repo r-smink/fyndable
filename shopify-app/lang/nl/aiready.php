@@ -45,6 +45,7 @@ return [
         'edit' => 'Bewerken',
         'all_issues' => 'Alle producten',
         'col_product' => 'Product',
+        'show_products' => 'Producten tonen',
         'col_score' => 'Score',
         'col_issues' => 'Ontbreekt',
         'col_count' => 'Producten',

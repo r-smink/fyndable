@@ -53,7 +53,7 @@
         Fyn.html('ar-issues', codes.length ? Fyn.table(
             [t('col_issues'), { label: t('col_count'), format: 'numeric' }, t('col_action')],
             codes.map(code => {
-                let action = `<s-button variant="tertiary" onclick="filterProducts('${esc(code)}')">${esc(t('col_product'))}</s-button>`;
+                let action = `<s-button variant="tertiary" onclick="filterProducts('${esc(code)}')">${esc(t('show_products'))}</s-button>`;
                 if (code === 'missing_attributes' && bulkAllowed()) {
                     action += ` <s-button variant="tertiary" href="${esc(Fyn.url('bulk', 'type=product&action=ai_attributes'))}">${esc(t('fix_bulk'))}</s-button>`;
                 }

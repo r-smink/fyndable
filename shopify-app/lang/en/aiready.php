@@ -45,6 +45,7 @@ return [
         'edit' => 'Edit',
         'all_issues' => 'All products',
         'col_product' => 'Product',
+        'show_products' => 'Show products',
         'col_score' => 'Score',
         'col_issues' => 'Missing',
         'col_count' => 'Products',
